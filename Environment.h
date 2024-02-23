@@ -65,14 +65,12 @@ public:
     void setHeight(int height);
 
     void moveX(int i);
-
     void moveY(int i);
 
-    int GetSpeed() const;
+    [[nodiscard]] int GetSpeed() const;
 
-    int GetColor() const;
-
-    void SetColor(const int color);
+    [[nodiscard]] int GetColor() const;
+    void SetColor(int color);
 
 private:
     int _x{};
@@ -83,44 +81,50 @@ private:
     int _color{};
 };
 
-class Square : public BaseObj
+class IMovable
 {
 public:
-    Square(const int x, const int y, const int width, const int height, const int color)
-        : BaseObj(x, y, width, height, color)
-    {
-    }
-
-    void    DrawSquareObject(Environment& env)const;
-    void    RectangleMove(const Environment& env, const PlayerKeys& keys);
-
+    virtual ~IMovable() = default;
+    virtual void Move(const Environment& env) = 0;
 };
 
-class IPawn
+class IDrawable
 {
 public:
-    virtual ~IPawn() = default;
-    virtual void KeyboardEvens(Environment& env, Uint32 eventType, SDL_Keycode k) = 0;
+    virtual ~IDrawable() = default;
+    virtual void Draw(Environment& env) const = 0;
 };
 
-class PlayerOne final : public Square, IPawn
+class Pawn : public BaseObj, public IMovable, public IDrawable
+{
+public:
+    Pawn(int x, int y, int width, int height, int color);
+
+    virtual ~Pawn() = default;
+
+    void Move(const Environment& env) override;
+
+    void Draw(Environment& env) const override;
+
+    virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
+
+    PlayerKeys keyboardButtons;
+};
+
+class PlayerOne final : public Pawn
 {
 public:
     PlayerOne(int x, int y, int width, int height, int color);
 
-     void KeyboardEvens(Environment& env, Uint32 eventType, SDL_Keycode key) override;
-
-    PlayerKeys keyboardButtons;
+    void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
 };
 
-class PlayerTwo final : public Square, IPawn
+class PlayerTwo final : public Pawn
 {
 public:
     PlayerTwo(int x, int y, int width, int height, int color);
 
-    void KeyboardEvens(Environment& env, Uint32 eventType, SDL_Keycode key) override;
-
-    PlayerKeys keyboardButtons;
+    void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
 };
 
 #endif //BATTLECITY_REMASTERED_ENVIRONMENT_H

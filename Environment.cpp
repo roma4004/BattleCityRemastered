@@ -75,7 +75,7 @@ void Environment::SetPixel(const int x, const int y, const int color) const
     }
 }
 
-void Square::DrawSquareObject(Environment& env) const
+void Pawn::Draw(Environment& env) const
 {
     for (int y = getY(); y < getY() + getHeight(); y++)
     {
@@ -86,31 +86,35 @@ void Square::DrawSquareObject(Environment& env) const
     }
 }
 
-void Square::RectangleMove(const Environment& env, const PlayerKeys& keys)
-{
+void Pawn::Move(const Environment& env) {
     const int speed = GetSpeed();
-    if (keys.A && getX() - speed >= 0)
+    if (keyboardButtons.A && getX() - speed >= 0)
     {
         moveX(-speed);
     }
-    else if (keys.D && getX() + speed + getWidth() < env.windowWidth)
+    else if (keyboardButtons.D && getX() + speed + getWidth() < env.windowWidth)
     {
         moveX(speed);
     }
-    else if (keys.W && getY() - speed >= 0)
+    else if (keyboardButtons.W && getY() - speed >= 0)
     {
         moveY(-speed);
     }
-    else if (keys.S && getY() + speed + getHeight() < env.windowHeight)
+    else if (keyboardButtons.S && getY() + speed + getHeight() < env.windowHeight)
     {
         moveY(speed);
     }
 }
 
-PlayerOne::PlayerOne(const int x, const int y, const int width, const int height, const int color)
-    : Square(x, y, width, height, color) { }
+void Pawn::KeyboardEvensHandlers(Environment &env, Uint32 eventType, SDL_Keycode key) {}
 
-void PlayerOne::KeyboardEvens(Environment& env, const Uint32 eventType, const SDL_Keycode key)
+Pawn::Pawn(int x, int y, int width, int height, int color)
+        : BaseObj(x, y, width, height, color) {}
+
+PlayerOne::PlayerOne(const int x, const int y, const int width, const int height, const int color)
+    : Pawn(x, y, width, height, color) { }
+
+void PlayerOne::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key)
 {
     if  (eventType == SDL_KEYDOWN)
     {
@@ -153,9 +157,9 @@ void PlayerOne::KeyboardEvens(Environment& env, const Uint32 eventType, const SD
 }
 
 PlayerTwo::PlayerTwo(const int x, const int y, const int width, const int height, const int color)
-    : Square(x, y, width, height, color) { }
+    : Pawn(x, y, width, height, color) { }
 
-void PlayerTwo::KeyboardEvens(Environment& env, const Uint32 eventType, const SDL_Keycode key)
+void PlayerTwo::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key)
 {
     if  (eventType == SDL_KEYDOWN)
     {

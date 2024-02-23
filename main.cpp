@@ -1,6 +1,6 @@
 #include "Environment.h"
 
-static void		MouseEvents(Environment& env, const SDL_Event& event, int* windowBuffer/*, t_cam *cam*/)
+static void MouseEvents(Environment& env, const SDL_Event& event, int* windowBuffer/*, t_cam *cam*/)
 {
     if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
     {
@@ -28,7 +28,7 @@ static void		MouseEvents(Environment& env, const SDL_Event& event, int* windowBu
     }
 }
 
-void    ClearBuffer(Environment& env)
+void ClearBuffer(Environment& env)
 {
     for (int y = 0; y < env.windowHeight; y++)
     {
@@ -73,8 +73,14 @@ int Init(Environment& env)
 int main(int argc, char* argv[])
 {
     Environment env;
-    PlayerOne rect {0, 0, 100, 100, 0x00ff00};
-    PlayerTwo rectTwo {200, 200, 100, 100, 0xff0000};
+    PlayerOne playerOne {0, 0, 100, 100, 0x00ff00};
+    PlayerTwo playerTwo {200, 200, 100, 100, 0xff0000};
+
+    std::vector<Pawn*> pawns;
+    pawns.reserve(2);
+    pawns.emplace_back(&playerOne);
+    pawns.emplace_back(&playerTwo);
+
     Init(env);
     while (!env.isGameOver)
     {
@@ -87,23 +93,29 @@ int main(int argc, char* argv[])
             }
 
             MouseEvents(env, env.event, env.windowBuffer);
-            rect.KeyboardEvens(env, env.event.type, env.event.key.keysym.sym);
-            rectTwo.KeyboardEvens(env, env.event.type, env.event.key.keysym.sym);
+
+            for (auto* pawn : pawns){
+                pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
+            }
         }
 
-        rect.RectangleMove(env, rect.keyboardButtons);
-        rectTwo.RectangleMove(env, rectTwo.keyboardButtons);
+        for (auto* pawn : pawns){
+            pawn->Move(env);
+        }
 
-        rect.DrawSquareObject(env);
-        rectTwo.DrawSquareObject(env);
+        for (auto* pawn : pawns){
+            pawn->Draw(env);
+        }
 
         SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
         SDL_RenderCopy(env.renderer, env.screen, nullptr, nullptr);
 
         SDL_RenderPresent(env.renderer);
     }
+
     SDL_DestroyRenderer(env.renderer);
     SDL_DestroyWindow(env.window);
+
     delete env.windowBuffer;
 
     SDL_Quit();
