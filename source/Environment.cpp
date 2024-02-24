@@ -6,8 +6,8 @@
 
 BaseObj::BaseObj() = default;
 
-BaseObj::BaseObj(const int x,const int y,const int width,const int height,const int color)
-        : _x(x),  _y(y),  _width(width),  _height(height), _color(color)
+BaseObj::BaseObj(const int x,const int y,const int width,const int height,const int color,const int speed)
+        : _x(x),  _y(y),  _width(width),  _height(height), _color(color), _speed(speed)
 {
 
 }
@@ -87,57 +87,61 @@ void Pawn::Draw(Environment& env) const
 }
 
 
-bool Pawn::IsCollideWith(const Pawn* other) const {
+bool Pawn::IsCollideWith(const SDL_Rect* self,const Pawn* other) const {
     if (this == other)
     {
         return false;
     }
-
-    auto rect1 = SDL_Rect{ this->getX(), this->getY(), this->getWidth(), this->getHeight() };
+    
     auto rect2 = SDL_Rect{ other->getX(), other->getY(), other->getWidth(), other->getHeight() };
     SDL_Rect rect3;
-
+    
     // SDL_bool SDL_IntersectRect(const SDL_Rect* A, const SDL_Rect* B, SDL_Rect* result);
-    return (SDL_IntersectRect(&rect1, &rect2, &rect3));
+    return (SDL_IntersectRect(self, &rect2, &rect3));
 }
 
-bool Pawn::IsCanMove(const Environment& env) const {
+bool Pawn::IsCanMove(const SDL_Rect* self,const Environment& env) const {
     for (const auto* pawn : env.allPawns)
     {
-        if (IsCollideWith(pawn)) {
+        if (IsCollideWith(self, pawn)) {
+            std::cout << "Pawn::IsCanMove returned false" << '\n';
             return false;
         }
     }
-
+    std::cout << "Pawn::IsCanMove returned true" << '\n';
     return true;
 }
 
 void Pawn::Move(const Environment& env) {
     const int speed = GetSpeed();
-    if (keyboardButtons.A && getX() - speed >= 0)
+    if (keyboardButtons.A && getX() + speed >= 0)
     {
-        if (IsCanMove(env)) {
+        auto self = SDL_Rect{ this->getX() - this->GetSpeed(), this->getY(), this->getWidth(), this->getHeight() };
+        if (IsCanMove(&self, env)) {
             moveX(-speed);
         }
     }
 
-    if (keyboardButtons.D && getX() + speed + getWidth() < env.windowWidth)
+    else if (keyboardButtons.D && getX() + speed + getWidth() < env.windowWidth)
     {
-        if (IsCanMove(env)) {
+        auto self = SDL_Rect{ this->getX() + this->GetSpeed(), this->getY(), this->getWidth(), this->getHeight() };
+        if (IsCanMove(&self, env)) {
             moveX(speed);
         }
     }
 
-    if (keyboardButtons.W && getY() - speed >= 0)
+    else if (keyboardButtons.W && getY() + speed >= 0)
     {
-        if (IsCanMove(env)) {
+        auto self = SDL_Rect{ this->getX(), this->getY() - this->GetSpeed(), this->getWidth(), this->getHeight() };
+        if (IsCanMove(&self, env)) {
             moveY(-speed);
         }
     }
 
-    if (keyboardButtons.S && getY() + speed + getHeight() < env.windowHeight)
+    else if (keyboardButtons.S && getY() + speed + getHeight() < env.windowHeight)
     {
-        if (IsCanMove(env)) {
+        auto self = SDL_Rect{ this->getX(), this->getY() + this->GetSpeed(), this->getWidth(), this->getHeight() };
+        if (IsCanMove(&self, env)) {
             moveY(speed);
         }
     }
@@ -145,11 +149,11 @@ void Pawn::Move(const Environment& env) {
 
 void Pawn::KeyboardEvensHandlers(Environment &env, Uint32 eventType, SDL_Keycode key) {}
 
-Pawn::Pawn(int x, int y, int width, int height, int color)
-        : BaseObj(x, y, width, height, color) {}
+Pawn::Pawn(int x, int y, int width, int height, int color, int speed)
+        : BaseObj(x, y, width, height, color, speed) {}
 
-PlayerOne::PlayerOne(const int x, const int y, const int width, const int height, const int color)
-    : Pawn(x, y, width, height, color) { }
+PlayerOne::PlayerOne(const int x, const int y, const int width, const int height, const int color, const int speed)
+    : Pawn(x, y, width, height, color, speed) { }
 
 void PlayerOne::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key)
 {
@@ -193,8 +197,8 @@ void PlayerOne::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Ke
     }
 }
 
-PlayerTwo::PlayerTwo(const int x, const int y, const int width, const int height, const int color)
-    : Pawn(x, y, width, height, color) { }
+PlayerTwo::PlayerTwo(const int x, const int y, const int width, const int height, const int color, const int speed)
+    : Pawn(x, y, width, height, color, speed) { }
 
 void PlayerTwo::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key)
 {

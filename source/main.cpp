@@ -73,13 +73,15 @@ int Init(Environment& env)
 int main(int argc, char* argv[])
 {
     Environment env;
-    PlayerOne playerOne {0, 0, 100, 100, 0x00ff00};
-    PlayerTwo playerTwo {200, 200, 100, 100, 0xff0000};
+    int speed = 4;
+    PlayerOne playerOne {0, 0, 100, 100, 0x00ff00, speed};
+    PlayerTwo playerTwo {200, 200, 100, 100, 0xff0000, speed};
 
-    std::vector<Pawn*> allPawns;
-    allPawns.reserve(2);
-    allPawns.emplace_back(&playerOne);
-    allPawns.emplace_back(&playerTwo);
+  //  std::vector<Pawn*> allPawns;
+    
+    env.allPawns.reserve(2);
+    env.allPawns.emplace_back(&playerOne);
+    env.allPawns.emplace_back(&playerTwo);
 
     Init(env);
     while (!env.isGameOver)
@@ -95,18 +97,18 @@ int main(int argc, char* argv[])
 
             MouseEvents(env, env.event, env.windowBuffer);
 
-            for (auto* pawn : allPawns){
+            for (auto* pawn : env.allPawns){
                 pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
             }
         }
 
         // physics handling
-        for (auto* pawn : allPawns){
+        for (auto* pawn : env.allPawns){
             pawn->Move(env);
         }
 
         // draw handling
-        for (auto* pawn : allPawns){
+        for (auto* pawn : env.allPawns){
             pawn->Draw(env);
         }
 

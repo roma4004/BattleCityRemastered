@@ -128,8 +128,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Environment.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="./source/Environment.cpp" />
+    <ClCompile Include="./source/main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Environment.h" />

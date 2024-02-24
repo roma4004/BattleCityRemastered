@@ -32,7 +32,7 @@ class BaseObj
 {
 public:
     BaseObj();
-    BaseObj(int x, int y, int width, int height, int color);
+    BaseObj(int x, int y, int width, int height, int color, int speed);
 
     virtual ~BaseObj();
 
@@ -61,7 +61,7 @@ private:
     int _y{};
     int _width{};
     int _height{};
-    int _speed{4};
+    int _speed{1};
     int _color{};
 };
 
@@ -101,7 +101,7 @@ public:
 class Pawn : public BaseObj, public IMovable, public IDrawable
 {
 public:
-    Pawn(int x, int y, int width, int height, int color);
+    Pawn(int x, int y, int width, int height, int color, int speed);
 
     virtual ~Pawn() = default;
 
@@ -113,16 +113,16 @@ public:
 
     PlayerKeys keyboardButtons;
 
-    bool IsCollideWith(const Pawn* other) const;
+    bool IsCollideWith(const SDL_Rect* self,const Pawn* other) const;
 
-    bool IsCanMove(const Environment &env) const;
+    bool IsCanMove(const SDL_Rect* self, const Environment &env) const;
 };
 
 
 class PlayerOne final : public Pawn
 {
 public:
-    PlayerOne(int x, int y, int width, int height, int color);
+    PlayerOne(int x, int y, int width, int height, int color, int speed);
 
     void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
 };
@@ -130,7 +130,7 @@ public:
 class PlayerTwo final : public Pawn
 {
 public:
-    PlayerTwo(int x, int y, int width, int height, int color);
+    PlayerTwo(int x, int y, int width, int height, int color, int speed);
 
     void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
 };
