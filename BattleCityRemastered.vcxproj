@@ -132,7 +132,7 @@
     <ClCompile Include="./source/main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Environment.h" />
+    <ClInclude Include="./headers/Environment.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
