@@ -1,4 +1,4 @@
-#include "Environment.h"
+#include "../headers/Environment.h"
 
 static void MouseEvents(Environment& env, const SDL_Event& event, int* windowBuffer/*, t_cam *cam*/)
 {
@@ -76,16 +76,17 @@ int main(int argc, char* argv[])
     PlayerOne playerOne {0, 0, 100, 100, 0x00ff00};
     PlayerTwo playerTwo {200, 200, 100, 100, 0xff0000};
 
-    std::vector<Pawn*> pawns;
-    pawns.reserve(2);
-    pawns.emplace_back(&playerOne);
-    pawns.emplace_back(&playerTwo);
+    std::vector<Pawn*> allPawns;
+    allPawns.reserve(2);
+    allPawns.emplace_back(&playerOne);
+    allPawns.emplace_back(&playerTwo);
 
     Init(env);
     while (!env.isGameOver)
     {
         ClearBuffer(env);
 
+        // event handling
         while (SDL_PollEvent(&env.event))
         {
             if (env.event.type == SDL_QUIT) {
@@ -94,19 +95,22 @@ int main(int argc, char* argv[])
 
             MouseEvents(env, env.event, env.windowBuffer);
 
-            for (auto* pawn : pawns){
+            for (auto* pawn : allPawns){
                 pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
             }
         }
 
-        for (auto* pawn : pawns){
+        // physics handling
+        for (auto* pawn : allPawns){
             pawn->Move(env);
         }
 
-        for (auto* pawn : pawns){
+        // draw handling
+        for (auto* pawn : allPawns){
             pawn->Draw(env);
         }
 
+        // update screen with buffer
         SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
         SDL_RenderCopy(env.renderer, env.screen, nullptr, nullptr);
 

@@ -6,7 +6,7 @@
 #define BATTLECITY_REMASTERED_ENVIRONMENT_H
 
 #include <iostream>
-#include <SDL.h>
+#include "SDL.h"
 //#include <SDL2/SDL_image.h>
 //#include <SDL2/SDL_ttf.h>
 #include <cstdio>
@@ -27,22 +27,6 @@ struct PlayerKeys
     bool D = false;
 };
 
-
-class Environment {
-public:
-    int             windowWidth = 640;
-    int             windowHeight = 480;
-    int*            windowBuffer{};
-    SDL_Event		event{};
-    SDL_Window*     window{};
-    SDL_Renderer*	renderer{};
-    SDL_Texture*	screen{};
-    bool isGameOver = false;
-
-    void		SetPixel(const int x, const int y, const int color)const;
-
-    MouseButtons mouseButtons;
-};
 
 class BaseObj
 {
@@ -81,6 +65,25 @@ private:
     int _color{};
 };
 
+class Pawn;
+
+class Environment {
+public:
+    int             windowWidth = 640;
+    int             windowHeight = 480;
+    int*            windowBuffer{};
+    SDL_Event		event{};
+    SDL_Window*     window{};
+    SDL_Renderer*	renderer{};
+    SDL_Texture*	screen{};
+    bool            isGameOver = false;
+
+    void		SetPixel(int x, int y, int color)const;
+
+    MouseButtons        mouseButtons;
+    std::vector<Pawn*>  allPawns;
+};
+
 class IMovable
 {
 public:
@@ -109,7 +112,12 @@ public:
     virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
 
     PlayerKeys keyboardButtons;
+
+    bool IsCollideWith(const Pawn* other) const;
+
+    bool IsCanMove(const Environment &env) const;
 };
+
 
 class PlayerOne final : public Pawn
 {

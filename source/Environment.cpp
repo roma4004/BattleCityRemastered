@@ -116,7 +116,9 @@ void Pawn::Move(const Environment& env) {
     const int speed = GetSpeed();
     if (keyboardButtons.A && getX() - speed >= 0)
     {
-        moveX(-speed);
+        if (IsCanMove(env)) {
+            moveX(-speed);
+        }
     }
 
     if (keyboardButtons.D && getX() + speed + getWidth() < env.windowWidth)

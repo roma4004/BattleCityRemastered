@@ -35,10 +35,12 @@ endif ()
 
 include_directories(${SDL2_INCLUDE})
 
+include_directories(./headers)
+
 #add_executable(${PROJECT_NAME} WIN32 main.cpp )
 add_executable(${PROJECT_NAME}
-        main.cpp
-        environment.cpp)
+        source/main.cpp
+        source/Environment.cpp)
 
 #If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(
