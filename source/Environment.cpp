@@ -2,7 +2,7 @@
 // Created by Dentair on 22.02.2024.
 //
 
-#include "Environment.h"
+#include "../headers/Environment.h"
 
 BaseObj::BaseObj() = default;
 
@@ -86,23 +86,58 @@ void Pawn::Draw(Environment& env) const
     }
 }
 
+
+bool Pawn::IsCollideWith(const Pawn* other) const {
+    if (this == other)
+    {
+        return false;
+    }
+
+    auto rect1 = SDL_Rect{ this->getX(), this->getY(), this->getWidth(), this->getHeight() };
+    auto rect2 = SDL_Rect{ other->getX(), other->getY(), other->getWidth(), other->getHeight() };
+    SDL_Rect rect3;
+
+    // SDL_bool SDL_IntersectRect(const SDL_Rect* A, const SDL_Rect* B, SDL_Rect* result);
+    return (SDL_IntersectRect(&rect1, &rect2, &rect3));
+}
+
+bool Pawn::IsCanMove(const Environment& env) const {
+    for (const auto* pawn : env.allPawns)
+    {
+        if (IsCollideWith(pawn)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void Pawn::Move(const Environment& env) {
     const int speed = GetSpeed();
     if (keyboardButtons.A && getX() - speed >= 0)
     {
         moveX(-speed);
     }
-    else if (keyboardButtons.D && getX() + speed + getWidth() < env.windowWidth)
+
+    if (keyboardButtons.D && getX() + speed + getWidth() < env.windowWidth)
     {
-        moveX(speed);
+        if (IsCanMove(env)) {
+            moveX(speed);
+        }
     }
-    else if (keyboardButtons.W && getY() - speed >= 0)
+
+    if (keyboardButtons.W && getY() - speed >= 0)
     {
-        moveY(-speed);
+        if (IsCanMove(env)) {
+            moveY(-speed);
+        }
     }
-    else if (keyboardButtons.S && getY() + speed + getHeight() < env.windowHeight)
+
+    if (keyboardButtons.S && getY() + speed + getHeight() < env.windowHeight)
     {
-        moveY(speed);
+        if (IsCanMove(env)) {
+            moveY(speed);
+        }
     }
 }
 
