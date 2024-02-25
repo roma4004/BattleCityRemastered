@@ -1,6 +1,10 @@
 #include "../headers/Environment.h"
+#include "../headers/PlayerOne.h"
+#include "../headers/PlayerTwo.h"
+#include <cstdio>
+#include <iostream>
 
-static void MouseEvents(Environment& env, const SDL_Event& event, int* windowBuffer/*, t_cam *cam*/)
+static void MouseEvents(Environment& env, const SDL_Event& event)
 {
     if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
     {
@@ -28,7 +32,7 @@ static void MouseEvents(Environment& env, const SDL_Event& event, int* windowBuf
     }
 }
 
-void ClearBuffer(Environment& env)
+void ClearBuffer(const Environment& env)
 {
     for (int y = 0; y < env.windowHeight; y++)
     {
@@ -64,7 +68,7 @@ int Init(Environment& env)
         return 1;
     }
 
-    int bufferSize = (env.windowWidth * env.windowHeight);
+    const int bufferSize = env.windowWidth * env.windowHeight;
     env.windowBuffer = new int[bufferSize];
 
     return 0;
@@ -73,12 +77,10 @@ int Init(Environment& env)
 int main(int argc, char* argv[])
 {
     Environment env;
-    int speed = 4;
-    PlayerOne playerOne {0, 0, 100, 100, 0x00ff00, speed};
-    PlayerTwo playerTwo {200, 200, 100, 100, 0xff0000, speed};
+    constexpr int speed = 4;
+    PlayerOne playerOne { 0, 0, 100, 100, 0x00ff00, speed };
+    PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed };
 
-  //  std::vector<Pawn*> allPawns;
-    
     env.allPawns.reserve(2);
     env.allPawns.emplace_back(&playerOne);
     env.allPawns.emplace_back(&playerTwo);
@@ -95,7 +97,7 @@ int main(int argc, char* argv[])
                 env.isGameOver = true;
             }
 
-            MouseEvents(env, env.event, env.windowBuffer);
+            MouseEvents(env, env.event);
 
             for (auto* pawn : env.allPawns){
                 pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
@@ -108,7 +110,7 @@ int main(int argc, char* argv[])
         }
 
         // draw handling
-        for (auto* pawn : env.allPawns){
+        for (const auto* pawn : env.allPawns){
             pawn->Draw(env);
         }
 
