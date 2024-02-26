@@ -4,7 +4,7 @@ class BaseObj
 {
 public:
   BaseObj();
-  BaseObj(int x, int y, int width, int height, int color, int speed);
+  BaseObj(int x, int y, int width, int height, int color, int speed, size_t id);
 
   virtual ~BaseObj();
 
@@ -35,4 +35,5 @@ private:
   int _height{};
   int _color{};
   int _speed{};
+  size_t _id{};
 };

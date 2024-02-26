@@ -18,11 +18,11 @@ enum Direction
 class Pawn : public BaseObj, public IMovable, public IDrawable
 {
 public:
-  Pawn(int x, int y, int width, int height, int color, int speed);
+  Pawn(int x, int y, int width, int height, int color, int speed, size_t id);
 
   virtual ~Pawn();
 
-  void Move(const Environment& env) override;
+  void Move(Environment& env) override;
 
   void Draw(Environment& env) const override;
 

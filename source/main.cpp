@@ -84,7 +84,9 @@ int main(int argc, char* argv[])
     env.allPawns.reserve(2);
     env.allPawns.emplace_back(&playerOne);
     env.allPawns.emplace_back(&playerTwo);
+    std::cout << "Vector size is :" << env.allPawns.size() << '\n';
 
+    
     Init(env);
     while (!env.isGameOver)
     {

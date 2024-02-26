@@ -35,22 +35,24 @@ bool Pawn::IsCanMove(const SDL_Rect* self,const Environment& env) const {
     }
     return true;
 }
+
 void Pawn::TickUpdate(Environment& env)
 {
     Move(env);
     Shot(env);
 }
+
 void Pawn::Shot(Environment& env)
 {
     if (keyboardButtons.shot)
     {
-        Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection()};
+        Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 };
         env.allPawns.emplace_back(projectile);
         keyboardButtons.shot = false;
     }
 }
 
-void Pawn::Move(const Environment& env) {
+void Pawn::Move(Environment& env) {
     const int speed = GetSpeed();
     if (keyboardButtons.a && GetX() + speed >= 0)
     {
@@ -89,8 +91,8 @@ void Pawn::KeyboardEvensHandlers(Environment &env, Uint32 eventType, SDL_Keycode
 
 }
 
-Pawn::Pawn(const int x, const int y, const int width, const int height, const int color, const int speed)
-        : BaseObj(x, y, width, height, color, speed) {
+Pawn::Pawn(const int x, const int y, const int width, const int height, const int color, const int speed, const size_t id)
+        : BaseObj(x, y, width, height, color, speed, id) {
 }
 
 Pawn::~Pawn() = default;
