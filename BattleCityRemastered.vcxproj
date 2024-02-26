@@ -128,6 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\Bullet.cpp" />
     <ClCompile Include="source\Environment.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\BaseObj.cpp" />
@@ -136,6 +137,7 @@
     <ClCompile Include="source\PlayerTwo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\Bullet.h" />
     <ClInclude Include="headers\Environment.h" />
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\IDrawable.h" />

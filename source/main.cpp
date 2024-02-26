@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 {
     Environment env;
     constexpr int speed = 4;
-    PlayerOne playerOne { 0, 0, 100, 100, 0x00ff00, speed };
+    PlayerOne playerOne { 20, 20, 100, 100, 0x00ff00, speed };
     PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed };
 
     env.allPawns.reserve(2);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 
         // physics handling
         for (auto* pawn : env.allPawns){
-            pawn->Move(env);
+            pawn->TickUpdate(env);
         }
 
         // draw handling
