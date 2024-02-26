@@ -39,9 +39,16 @@ public:
   [[nodiscard]] Direction GetDirection() const;
 
   void SetDirection(const Direction direction);
-  
+
+  void SetIsAlive (const bool isAlive);
+
+  bool GetIsAlive () const;
+
+  void Destroy(Environment& env) const;
+
   PlayerKeys keyboardButtons;
 private:
   Direction _direction = Direction::UP;
+  bool _isAlive = true;
   
 };

@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
 {
     Environment env;
     constexpr int speed = 4;
-    PlayerOne playerOne { 20, 20, 100, 100, 0x00ff00, speed };
-    PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed };
+    PlayerOne playerOne { 20, 20, 100, 100, 0x00ff00, speed, 1 };
+    PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed, 2 };
 
     env.allPawns.reserve(2);
     env.allPawns.emplace_back(&playerOne);
@@ -107,12 +107,27 @@ int main(int argc, char* argv[])
         }
 
         // physics handling
-        for (auto* pawn : env.allPawns){
+        for (size_t i = 0; i < env.allPawns.size(); ++i){
+            Pawn* pawn = env.allPawns[i];
             pawn->TickUpdate(env);
         }
 
+        // Destroy all dead objects
+        for (size_t i = 0; i < env.allPawns.size(); ++i){
+            Pawn* pawn = env.allPawns[i];
+            if (!pawn->GetIsAlive())
+            {
+                pawn->Destroy(env);
+            }
+        }
+
+
+        // Make all new objects
+        
+        
         // draw handling
-        for (const auto* pawn : env.allPawns){
+        for (size_t i = 0; i < env.allPawns.size(); ++i){
+            Pawn* pawn = env.allPawns[i];
             pawn->Draw(env);
         }
 

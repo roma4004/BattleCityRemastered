@@ -4,6 +4,7 @@
 //#include <SDL2/SDL_image.h>
 //#include <SDL2/SDL_ttf.h>
 #include <vector>
+//#include <list>
 
 #include "../headers/MouseButton.h"
 #include "../headers/Pawn.h"
@@ -25,4 +26,5 @@ public:
 
     MouseButtons        mouseButtons;
     std::vector<Pawn*>  allPawns;
+    //std::list<Pawn*>    allPawns;
 };

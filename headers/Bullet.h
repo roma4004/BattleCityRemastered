@@ -12,19 +12,14 @@ public:
 
     void Move(Environment& env) override;
     void Draw(Environment& env) const override;
-    void Explode(Environment& env);
+    void Explode(Environment& env) const;
     void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
     
-    [[nodiscard]] size_t GetId() const;
-    
-    void SetId(const size_t id);
-    
     [[nodiscard]] int GetDamage() const;
-    
+    void Shot(Environment& env) override;
     void SetDamage(const int damage);
 
 
 private:
-    size_t _id{};
     int _damage{};
 };

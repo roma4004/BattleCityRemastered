@@ -46,8 +46,9 @@ void Pawn::Shot(Environment& env)
 {
     if (keyboardButtons.shot)
     {
-        Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 };
-        env.allPawns.emplace_back(projectile);
+        //Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 };
+        
+        env.allPawns.emplace_back(new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
         keyboardButtons.shot = false;
     }
 }
@@ -104,4 +105,19 @@ Direction Pawn::GetDirection() const
 void Pawn::SetDirection(const Direction direction)
 {
     _direction = direction;
+}
+void Pawn::SetIsAlive(const bool isAlive)
+{
+    _isAlive = isAlive;
+}
+bool Pawn::GetIsAlive() const
+{
+    return _isAlive;
+}
+
+void Pawn::Destroy(Environment& env) const
+{
+    const auto it = std::find(env.allPawns.begin(), env.allPawns.end(), this);
+    delete *it;
+    env.allPawns.erase(it);
 }

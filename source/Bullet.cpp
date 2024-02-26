@@ -8,7 +8,6 @@ Bullet::Bullet(const int x, const int y, const int width, const int height, cons
     : Pawn(x, y, width, height, color, speed, id)
 {
     SetDirection(direction);
-    SetId(id);
 }
 
 
@@ -27,7 +26,7 @@ void Bullet::Move(Environment& env)
         }
         else
         {
-            Explode(env);
+            SetIsAlive(false);
         }
     }
     else if (GetDirection() == DOWN && GetY() + GetSpeed() <= env.windowHeight)
@@ -39,7 +38,7 @@ void Bullet::Move(Environment& env)
         }
         else
         {
-            Explode(env);
+            SetIsAlive(false);
         }
     }
     else if (GetDirection() == LEFT && GetX() - GetSpeed() >= 0)
@@ -51,7 +50,7 @@ void Bullet::Move(Environment& env)
         }
         else
         {
-            Explode(env);
+            SetIsAlive(false);
         }
     }
     else if (GetDirection() == RIGHT && GetX() + GetSpeed() <= env.windowWidth)
@@ -63,11 +62,14 @@ void Bullet::Move(Environment& env)
         }
         else
         {
-            Explode(env);
+            SetIsAlive(false);
         }
     }
+    else
+    {
+        SetIsAlive(false);
+    }
 
-    
 }
 
 void Bullet::Draw(Environment& env) const
@@ -80,31 +82,17 @@ void Bullet::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keyco
     Pawn::KeyboardEvensHandlers(env, eventType, key);
 }
 
-size_t Bullet::GetId() const
-{
-    return _id;
-}
-void Bullet::SetId(const size_t id)
-{
-    _id = id;
-}
 int Bullet::GetDamage() const
 {
     return _damage;
 }
+
+void Bullet::Shot(Environment& env)
+{
+}
+
 void Bullet::SetDamage(const int damage)
 {
     _damage = damage;
 }
 
-
-void Bullet::Explode(Environment& env) 
-{
-    auto it = std::find(env.allPawns.begin(), env.allPawns.end(), GetId());
- 
-    if (it != env.allPawns.end())
-    {
-        env.allPawns.erase(it);
-    }
-    delete *it;
-}
