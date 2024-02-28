@@ -47,8 +47,22 @@ void Pawn::Shot(Environment& env)
     if (keyboardButtons.shot)
     {
         //Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 };
-        
-        env.allPawns.emplace_back(new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        if (GetDirection() == UP && this->GetY() - 13 >= 0)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth()/2 - 5, this->GetY() - 15, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        else if (GetDirection() == DOWN && this->GetY() + 13 <= env.windowHeight)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth()/2 - 5, this->GetY() + this->GetHeight() + 15, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        else if (GetDirection() == LEFT && this->GetX() - 15 >= 0)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() - 15, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        else if (GetDirection() == RIGHT && this->GetX() + this->GetWidth() + 15 <= env.windowWidth)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth() + 15, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
         keyboardButtons.shot = false;
     }
 }
@@ -102,14 +116,17 @@ Direction Pawn::GetDirection() const
 {
     return _direction;
 }
+
 void Pawn::SetDirection(const Direction direction)
 {
     _direction = direction;
 }
+
 void Pawn::SetIsAlive(const bool isAlive)
 {
     _isAlive = isAlive;
 }
+
 bool Pawn::GetIsAlive() const
 {
     return _isAlive;

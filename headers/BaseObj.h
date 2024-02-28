@@ -3,7 +3,6 @@
 class BaseObj
 {
 public:
-  BaseObj();
   BaseObj(int x, int y, int width, int height, int color, int speed, size_t id);
 
   virtual ~BaseObj();

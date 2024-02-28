@@ -84,9 +84,7 @@ int main(int argc, char* argv[])
     env.allPawns.reserve(2);
     env.allPawns.emplace_back(&playerOne);
     env.allPawns.emplace_back(&playerTwo);
-    std::cout << "Vector size is :" << env.allPawns.size() << '\n';
-
-    
+       
     Init(env);
     while (!env.isGameOver)
     {
@@ -120,10 +118,6 @@ int main(int argc, char* argv[])
                 pawn->Destroy(env);
             }
         }
-
-
-        // Make all new objects
-        
         
         // draw handling
         for (size_t i = 0; i < env.allPawns.size(); ++i){

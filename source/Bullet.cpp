@@ -10,14 +10,14 @@ Bullet::Bullet(const int x, const int y, const int width, const int height, cons
     SetDirection(direction);
 }
 
-
 Bullet::~Bullet() = default;
 
 void Bullet::Move(Environment& env)
 {
     const int speed = GetSpeed();
+    const int direction = GetDirection();
 
-    if (GetDirection() == UP && GetY() - GetSpeed() >= 0)
+    if (direction == UP && GetY() - GetSpeed() >= 0)
     {
         const auto self = SDL_Rect{ this->GetX(), this->GetY() - GetSpeed(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env))
@@ -29,7 +29,7 @@ void Bullet::Move(Environment& env)
             SetIsAlive(false);
         }
     }
-    else if (GetDirection() == DOWN && GetY() + GetSpeed() <= env.windowHeight)
+    else if (direction == DOWN && GetY() + GetSpeed() <= env.windowHeight)
     {
         const auto self = SDL_Rect{ this->GetX(), this->GetY() + GetSpeed(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env))
@@ -41,24 +41,24 @@ void Bullet::Move(Environment& env)
             SetIsAlive(false);
         }
     }
-    else if (GetDirection() == LEFT && GetX() - GetSpeed() >= 0)
+    else if (direction == LEFT && GetX() - GetSpeed() >= 0)
     {
         const auto self = SDL_Rect{ this->GetX() - this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env))
         {
-            MoveY(-speed);
+            MoveX(-speed);
         }
         else
         {
             SetIsAlive(false);
         }
     }
-    else if (GetDirection() == RIGHT && GetX() + GetSpeed() <= env.windowWidth)
+    else if (direction == RIGHT && GetX() + GetSpeed() <= env.windowWidth)
     {
         const auto self = SDL_Rect{ this->GetX() + this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env))
         {
-            MoveY(speed);
+            MoveX(speed);
         }
         else
         {
@@ -69,7 +69,6 @@ void Bullet::Move(Environment& env)
     {
         SetIsAlive(false);
     }
-
 }
 
 void Bullet::Draw(Environment& env) const
@@ -89,10 +88,12 @@ int Bullet::GetDamage() const
 
 void Bullet::Shot(Environment& env)
 {
+    
 }
 
 void Bullet::SetDamage(const int damage)
 {
     _damage = damage;
 }
+
 

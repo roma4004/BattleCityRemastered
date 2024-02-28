@@ -1,7 +1,5 @@
 #include "../headers/BaseObj.h"
 
-BaseObj::BaseObj() = default;
-
 BaseObj::BaseObj(const int x,const int y,const int width,const int height,const int color,const int speed, const size_t id)
         : _x(x),  _y(y),  _width(width),  _height(height), _color(color), _speed(speed), _id(id)
 {

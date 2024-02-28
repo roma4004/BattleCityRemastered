@@ -12,7 +12,6 @@ public:
 
     void Move(Environment& env) override;
     void Draw(Environment& env) const override;
-    void Explode(Environment& env) const;
     void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
     
     [[nodiscard]] int GetDamage() const;
