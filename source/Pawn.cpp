@@ -61,7 +61,7 @@ void Pawn::Shot(Environment& env)
         }
         else if (GetDirection() == RIGHT && this->GetX() + this->GetWidth() + 15 <= env.windowWidth)
         {
-            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth() + 15, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth() + 7, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
         }
         keyboardButtons.shot = false;
     }
