@@ -1,7 +1,11 @@
 #include "../headers/BaseObj.h"
 
-BaseObj::BaseObj(const int x,const int y,const int width,const int height,const int color,const int speed, const size_t id)
-        : _x(x),  _y(y),  _width(width),  _height(height), _color(color), _speed(speed), _id(id)
+#include <algorithm>
+
+class Environment;
+
+BaseObj::BaseObj(const int x,const int y,const int width,const int height,const int color,const int speed, int health)
+        : _x(x),  _y(y),  _width(width),  _height(height), _color(color), _speed(speed), _health(health)
 {
 
 }
@@ -64,3 +68,33 @@ void BaseObj::SetColor(const int color)
 {
   _color = color;
 }
+
+int BaseObj::GetHealth() const
+{
+  return _health;
+}
+
+void BaseObj::SetHealth(const int health)
+{
+  _health = health;
+}
+
+void BaseObj::SetIsAlive(const bool isAlive)
+{
+  _isAlive = isAlive;
+}
+
+bool BaseObj::GetIsAlive() const
+{
+  return _isAlive;
+}
+
+void BaseObj::TakeDamage(const int damage)
+{
+  _health -= damage;
+  if (_health < 1)
+  {
+    _isAlive = false;
+  }
+}
+

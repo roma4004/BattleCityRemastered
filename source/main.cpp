@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <iostream>
 
+#include "../headers/Bullet.h"
+
 static void MouseEvents(Environment& env, const SDL_Event& event)
 {
     if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
@@ -24,7 +26,7 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
         const Sint32 x = event.motion.x;
         const Sint32 y = event.motion.y;
         std::cout << "x: " << x <<  " \t y: " << y << '\n';
-        const int rowSize = env.windowWidth;
+        // const int rowSize = env.windowWidth; ???
 
         if (x < 1 || y < 1 || x >= env.windowWidth - 1 && y >= env.windowHeight - 1) {
             return;
@@ -78,8 +80,9 @@ int main(int argc, char* argv[])
 {
     Environment env;
     constexpr int speed = 4;
-    PlayerOne playerOne { 20, 20, 100, 100, 0x00ff00, speed, 1 };
-    PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed, 2 };
+    constexpr int tankHealth = 100;
+    PlayerOne playerOne { 20, 20, 100, 100, 0x00ff00, speed, tankHealth };
+    PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed, tankHealth };
 
     env.allPawns.reserve(2);
     env.allPawns.emplace_back(&playerOne);
@@ -112,16 +115,22 @@ int main(int argc, char* argv[])
 
         // Destroy all dead objects
         for (size_t i = 0; i < env.allPawns.size(); ++i){
-            Pawn* pawn = env.allPawns[i];
-            if (!pawn->GetIsAlive())
+            if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive())
             {
-                pawn->Destroy(env);
+                //pawn->Destroy(env);
+                auto it = std::find(env.allPawns.begin(), env.allPawns.end(), pawn);
+                if (typeid(pawn) == typeid(Bullet))  // TODO: Fix playerOne and PlayerTwo should be created with new and then remove this KOCTbIJIb
+                {
+                    delete *it;
+                }
+                
+                env.allPawns.erase(it);
             }
         }
         
         // draw handling
         for (size_t i = 0; i < env.allPawns.size(); ++i){
-            Pawn* pawn = env.allPawns[i];
+            const Pawn* pawn = env.allPawns[i];
             pawn->Draw(env);
         }
 

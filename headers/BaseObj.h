@@ -1,9 +1,10 @@
 #pragma once
 
+
 class BaseObj
 {
 public:
-  BaseObj(int x, int y, int width, int height, int color, int speed, size_t id);
+  BaseObj(int x, int y, int width, int height, int color, int speed, int health);
 
   virtual ~BaseObj();
 
@@ -26,13 +27,23 @@ public:
 
   [[nodiscard]] int GetColor() const;
   void SetColor(int color);
+  
+  [[nodiscard]] int GetHealth() const;
+  void SetHealth(int health);
+
+  [[nodiscard]] bool GetIsAlive () const;
+  void SetIsAlive (bool isAlive);
+
+  virtual void TakeDamage(int damage);
 
 private:
-  int _x{};
-  int _y{};
-  int _width{};
-  int _height{};
-  int _color{};
-  int _speed{};
-  size_t _id{};
+  int         _x{};
+  int         _y{};
+  int         _width{};
+  int         _height{};
+  int         _color{};
+  int         _speed{};
+  int         _health{};
+  bool        _isAlive = true;
+
 };

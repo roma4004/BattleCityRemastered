@@ -18,7 +18,7 @@ enum Direction
 class Pawn : public BaseObj, public IMovable, public IDrawable
 {
 public:
-  Pawn(int x, int y, int width, int height, int color, int speed, size_t id);
+  Pawn(int x, int y, int width, int height, int color, int speed, int health);
 
   virtual ~Pawn();
 
@@ -39,16 +39,10 @@ public:
   [[nodiscard]] Direction GetDirection() const;
 
   void SetDirection(const Direction direction);
-
-  void SetIsAlive (const bool isAlive);
-
-  bool GetIsAlive () const;
-
-  void Destroy(Environment& env) const;
-
+  
+  
   PlayerKeys keyboardButtons;
 private:
-  Direction _direction = Direction::UP;
-  bool _isAlive = true;
+  Direction   _direction = Direction::UP;
   
 };

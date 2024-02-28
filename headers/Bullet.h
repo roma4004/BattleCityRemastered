@@ -5,7 +5,7 @@
 class Bullet final : public Pawn
 {
 public:
-    Bullet(int x, int y, int width, int height, int color, int speed, Direction direction, size_t id);
+    Bullet(int x, int y, int width, int height, int color, int speed, Direction direction, int health);
     
 
     ~Bullet() override;
@@ -15,10 +15,10 @@ public:
     void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
     
     [[nodiscard]] int GetDamage() const;
-    void Shot(Environment& env) override;
     void SetDamage(const int damage);
-
+    
+    void Shot(Environment& env) override;
 
 private:
-    int _damage{};
+    int _damage{150}; 
 };

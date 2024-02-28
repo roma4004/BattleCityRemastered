@@ -4,8 +4,8 @@
 
 
 
-Bullet::Bullet(const int x, const int y, const int width, const int height, const int color, const int speed, Direction direction, const size_t id)
-    : Pawn(x, y, width, height, color, speed, id)
+Bullet::Bullet(const int x, const int y, const int width, const int height, const int color, const int speed, Direction direction, int health)
+    : Pawn(x, y, width, height, color, speed, health)
 {
     SetDirection(direction);
 }
@@ -24,10 +24,6 @@ void Bullet::Move(Environment& env)
         {
             MoveY(-speed);
         }
-        else
-        {
-            SetIsAlive(false);
-        }
     }
     else if (direction == DOWN && GetY() + GetSpeed() <= env.windowHeight)
     {
@@ -35,10 +31,6 @@ void Bullet::Move(Environment& env)
         if (IsCanMove(&self, env))
         {
             MoveY(speed);
-        }
-        else
-        {
-            SetIsAlive(false);
         }
     }
     else if (direction == LEFT && GetX() - GetSpeed() >= 0)
@@ -48,10 +40,6 @@ void Bullet::Move(Environment& env)
         {
             MoveX(-speed);
         }
-        else
-        {
-            SetIsAlive(false);
-        }
     }
     else if (direction == RIGHT && GetX() + GetSpeed() <= env.windowWidth)
     {
@@ -60,12 +48,8 @@ void Bullet::Move(Environment& env)
         {
             MoveX(speed);
         }
-        else
-        {
-            SetIsAlive(false);
-        }
     }
-    else
+    else // Self-destroy when edge of windows is reached
     {
         SetIsAlive(false);
     }

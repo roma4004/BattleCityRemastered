@@ -1,8 +1,8 @@
 #include "../headers/PlayerOne.h"
 #include "../headers/pawn.h"
 
-PlayerOne::PlayerOne(const int x, const int y, const int width, const int height, const int color, const int speed, const size_t id)
-    : Pawn(x, y, width, height, color, speed, id) { }
+PlayerOne::PlayerOne(const int x, const int y, const int width, const int height, const int color, const int speed, const int health)
+    : Pawn(x, y, width, height, color, speed, health) { }
 
 void PlayerOne::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
 {
