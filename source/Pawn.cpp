@@ -50,30 +50,36 @@ void Pawn::TickUpdate(Environment &env) {
 
 }
 
-void Pawn::Shot(Environment& env)
-{
-    if (keyboardButtons.shot)
-    {
-        constexpr int bulletHealth = 1;
-        //Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 };
-        if (GetDirection() == UP && this->GetY() - 13 >= 0)
-        {
-            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth()/2 - 5, this->GetY() - 15, 10, 10, 0xffffff, 5, GetDirection(), bulletHealth});
-        }
-        else if (GetDirection() == DOWN && this->GetY() + 13 <= env.windowHeight)
-        {
-            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth()/2 - 5, this->GetY() + this->GetHeight() + 15, 10, 10, 0xffffff, 5, GetDirection(), bulletHealth});
-        }
-        else if (GetDirection() == LEFT && this->GetX() - 15 >= 0)
-        {
-            env.allPawns.emplace_back(new Bullet{this->GetX() - 15, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), bulletHealth });
-        }
-        else if (GetDirection() == RIGHT && this->GetX() + this->GetWidth() + 15 <= env.windowWidth)
-        {
-            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth() + 7, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), bulletHealth });
-        }
-        keyboardButtons.shot = false;
-    }
+void Pawn::Shot(Environment &env) {
+	if (keyboardButtons.shot) {
+		Direction direction = GetDirection();
+		const Point tankHalf = {static_cast<int>(GetWidth()) / 2, static_cast<int>(GetHeight()) / 2};
+		int x = GetX();
+		int y = GetY();
+		const Point tankCenter = {x + tankHalf.x, y + tankHalf.y};
+		int width = static_cast<int>(GetBulletWidth());
+		int height = static_cast<int>(GetBulletHeight());
+		const Point bulletHalf = {static_cast<int>(width) / 2, static_cast<int>(height) / 2};
+		const int color = 0xffffff;
+		const int speed = GetBulletSpeed();
+		constexpr int health = 1;
+
+		if (direction == Direction::UP && y - bulletHalf.x - width >= 0u) {
+			const Point pos = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - height - bulletHalf.y};
+			env.allPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health});
+		} else if (direction == Direction::DOWN && y + bulletHalf.y + height <= env.windowHeight) {
+			const Point pos = {tankCenter.x - bulletHalf.x, tankCenter.y + tankHalf.y + height + bulletHalf.y};
+			env.allPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health});
+		} else if (direction == Direction::LEFT && x - bulletHalf.x - width >= 0u) {
+			const Point pos = {tankCenter.x - tankHalf.x - width - bulletHalf.x, tankCenter.y - bulletHalf.y};
+			env.allPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health});
+		} else if (direction == Direction::RIGHT && x + GetWidth() + bulletHalf.x + width <= env.windowWidth) {
+			const Point pos = {tankCenter.x + tankHalf.x + width + bulletHalf.x, tankCenter.y - bulletHalf.y};
+			env.allPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health});
+		}
+
+		keyboardButtons.shot = false;
+	}
 }
 
 void Pawn::Move(Environment &env) {
@@ -126,14 +132,32 @@ void Pawn::SetDirection(const Direction direction) {
 	_direction = direction;
 }
 
-/* Old destroy TODO: after making all objects creation with "new" uncomment 
-void Pawn::Destroy(Environment& env) const
-{
-    const auto it = std::find(env.allPawns.begin(), env.allPawns.end(), this);
-    delete *it;
-    env.allPawns.erase(it);
+void Pawn::Destroy(Environment &env) const {
+	auto it = std::ranges::find(env.allPawns, this);
+	delete *it;
+	env.allPawns.erase(it);
 }
-*/
 
+int Pawn::GetBulletWidth() const {
+	return _bulletWidth;
+}
 
+void Pawn::SetBulletWidth(int bulletWidth) {
+	_bulletWidth = bulletWidth;
+}
 
+int Pawn::GetBulletHeight() const {
+	return _bulletHeight;
+}
+
+void Pawn::SetBulletHeight(int bulletHeight) {
+	_bulletHeight = bulletHeight;
+}
+
+int Pawn::GetBulletSpeed() const {
+	return _bulletSpeed;
+}
+
+void Pawn::SetBulletSpeed(int bulletSpeed) {
+	_bulletSpeed = bulletSpeed;
+}

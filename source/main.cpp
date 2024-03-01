@@ -79,17 +79,15 @@ int Init(Environment &env) {
 	return 0;
 }
 
-int main(int argc, char* argv[])
-{
-    Environment env;
-    constexpr int speed = 4;
-    constexpr int tankHealth = 100;
-    PlayerOne playerOne { 20, 20, 100, 100, 0x00ff00, speed, tankHealth };
-    PlayerTwo playerTwo { 200, 200, 100, 100, 0xff0000, speed, tankHealth };
-
-    env.allPawns.reserve(2);
-    env.allPawns.emplace_back(&playerOne);
-    env.allPawns.emplace_back(&playerTwo);
+int main(int argc, char *argv[]) {
+	Environment env;
+	constexpr int speed = 4;
+	constexpr int tankHealth = 100;
+	Point playerOnePos {20, 20};
+	Point playerTwoPos {200, 200};
+	env.allPawns.reserve(2);
+	env.allPawns.emplace_back(new PlayerOne{ playerOnePos, 100, 100, 0x00ff00, speed, tankHealth});
+	env.allPawns.emplace_back(new PlayerTwo{ playerTwoPos, 100, 100, 0xff0000, speed, tankHealth});
 
 	Init(env);
 	while (!env.isGameOver) {
@@ -115,20 +113,12 @@ int main(int argc, char* argv[])
 			pawn->TickUpdate(env);
 		}
 
-        // Destroy all dead objects
-        for (size_t i = 0; i < env.allPawns.size(); ++i){
-            if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive())
-            {
-                //pawn->Destroy(env); TODO: make all objects creation with "new" and uncomment
-                auto it = std::ranges::find(env.allPawns, pawn);
-                if (typeid(pawn) == typeid(Bullet))  // TODO: Fix playerOne and PlayerTwo should be created with new and then remove this KOCTbIJIb
-                {
-                    delete *it;
-                }
-
-                env.allPawns.erase(it);
-            }
-        }
+		// Destroy all dead objects
+		for (size_t i = 0; i < env.allPawns.size(); ++i) {
+			if (Pawn *pawn = env.allPawns[i]; !pawn->GetIsAlive()) {
+				pawn->Destroy(env);
+			}
+		}
 
 		// draw handling
 		for (size_t i = 0; i < env.allPawns.size(); ++i) {
