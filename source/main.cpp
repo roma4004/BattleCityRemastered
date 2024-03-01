@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     env.allPawns.reserve(2);
     env.allPawns.emplace_back(&playerOne);
     env.allPawns.emplace_back(&playerTwo);
-       
+
     Init(env);
     while (!env.isGameOver)
     {
@@ -118,22 +118,22 @@ int main(int argc, char* argv[])
             if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive())
             {
                 //pawn->Destroy(env); TODO: make all objects creation with "new" and uncomment
-                auto it = std::find(env.allPawns.begin(), env.allPawns.end(), pawn);
+                auto it = std::ranges::find(env.allPawns, pawn);
                 if (typeid(pawn) == typeid(Bullet))  // TODO: Fix playerOne and PlayerTwo should be created with new and then remove this KOCTbIJIb
                 {
                     delete *it;
                 }
-                
+
                 env.allPawns.erase(it);
             }
         }
-        
+
         // draw handling
         for (size_t i = 0; i < env.allPawns.size(); ++i){
             const Pawn* pawn = env.allPawns[i];
             pawn->Draw(env);
         }
-        
+
         // update screen with buffer
         SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
         SDL_RenderCopy(env.renderer, env.screen, nullptr, nullptr);
