@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../headers/Environment.h"
-
 class Environment;
 
 class IDrawable {

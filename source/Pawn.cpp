@@ -1,6 +1,6 @@
 #include "../headers/Pawn.h"
 #include "../headers/Bullet.h"
-#include "Point.h"
+#include "../headers/Point.h"
 #include <iostream>
 
 Pawn::Pawn(const Point &pos, const int width, const int height,

@@ -83,8 +83,8 @@ int main(int argc, char *argv[]) {
 	Environment env;
 	constexpr int speed = 4;
 	constexpr int tankHealth = 100;
-	Point playerOnePos {20, 20};
-	Point playerTwoPos {200, 200};
+	constexpr Point playerOnePos {20, 20};
+	constexpr Point playerTwoPos {200, 200};
 	env.allPawns.reserve(2);
 	env.allPawns.emplace_back(new PlayerOne{ playerOnePos, 100, 100, 0x00ff00, speed, tankHealth});
 	env.allPawns.emplace_back(new PlayerTwo{ playerTwoPos, 100, 100, 0xff0000, speed, tankHealth});

@@ -5,7 +5,7 @@
 class Environment;
 
 BaseObj::BaseObj(const Point& pos, const int width, const int height,
-				 const int color, const int speed, int health)
+				 const int color, const int speed, const int health)
 	: _x(pos.x),
 	  _y(pos.y),
 	  _width(width),
