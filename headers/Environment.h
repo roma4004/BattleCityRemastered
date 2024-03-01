@@ -12,17 +12,17 @@ class Pawn;
 
 class Environment {
 public:
-    int             windowWidth = 640;
-    int             windowHeight = 480;
-    int*            windowBuffer{};
-    SDL_Event       event{};
-    SDL_Window*     window{};
-    SDL_Renderer*   renderer{};
-    SDL_Texture*    screen{};
-    bool            isGameOver = false;
+	int windowWidth = 640;
+	int windowHeight = 480;
+	int *windowBuffer{};
+	SDL_Event event{};
+	SDL_Window *window{};
+	SDL_Renderer *renderer{};
+	SDL_Texture *screen{};
+	bool isGameOver = false;
 
-    void            SetPixel(int x, int y, int color) const;
+	void SetPixel(int x, int y, int color) const;
 
-    MouseButtons        mouseButtons;
-    std::vector<Pawn*>  allPawns;
+	MouseButtons mouseButtons;
+	std::vector<Pawn *> allPawns;
 };

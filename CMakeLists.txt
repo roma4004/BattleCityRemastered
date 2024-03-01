@@ -46,6 +46,7 @@ add_executable(${PROJECT_NAME}
         source/PlayerOne.cpp
         source/PlayerTwo.cpp
         source/Bullet.cpp
+        source/Brick.cpp
 )
 
 #If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.

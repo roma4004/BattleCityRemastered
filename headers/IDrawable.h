@@ -4,9 +4,8 @@
 
 class Environment;
 
-class IDrawable
-{
+class IDrawable {
 public:
-  virtual ~IDrawable() = default;
-  virtual void Draw(Environment& env) const = 0;
+	virtual ~IDrawable() = default;
+	virtual void Draw(Environment &env) const = 0;
 };
