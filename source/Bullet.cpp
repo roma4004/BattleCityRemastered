@@ -1,8 +1,5 @@
 ﻿#include "../headers/Bullet.h"
 
-#include <variant>
-
-
 
 Bullet::Bullet(const int x, const int y, const int width, const int height, const int color, const int speed, Direction direction, int health)
     : Pawn(x, y, width, height, color, speed, health)

@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
         for (size_t i = 0; i < env.allPawns.size(); ++i){
             if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive())
             {
-                //pawn->Destroy(env);
+                //pawn->Destroy(env); TODO: make all objects creation with "new" and uncomment
                 auto it = std::find(env.allPawns.begin(), env.allPawns.end(), pawn);
                 if (typeid(pawn) == typeid(Bullet))  // TODO: Fix playerOne and PlayerTwo should be created with new and then remove this KOCTbIJIb
                 {
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
             const Pawn* pawn = env.allPawns[i];
             pawn->Draw(env);
         }
-
+        
         // update screen with buffer
         SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
         SDL_RenderCopy(env.renderer, env.screen, nullptr, nullptr);

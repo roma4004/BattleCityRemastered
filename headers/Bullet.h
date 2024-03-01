@@ -20,5 +20,5 @@ public:
     void Shot(Environment& env) override;
 
 private:
-    int _damage{150}; 
+    int _damage{15}; 
 };

@@ -1,7 +1,6 @@
 #include "../headers/Pawn.h"
 #include "../headers/Bullet.h"
 #include <iostream>
-#include <variant>
 
 Pawn::Pawn(const int x, const int y, const int width, const int height, const int color, const int speed, const int health)
         : BaseObj(x, y, width, height, color, speed, health) {
@@ -133,7 +132,7 @@ void Pawn::SetDirection(const Direction direction)
     _direction = direction;
 }
 
-/* Old destroy
+/* Old destroy TODO: after making all objects creation with "new" uncomment 
 void Pawn::Destroy(Environment& env) const
 {
     const auto it = std::find(env.allPawns.begin(), env.allPawns.end(), this);
