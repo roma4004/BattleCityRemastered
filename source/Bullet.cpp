@@ -69,3 +69,18 @@ int Bullet::GetDamage() const { return _damage; }
 void Bullet::Shot(Environment& env) {}
 
 void Bullet::SetDamage(const int damage) { _damage = damage; }
+
+std::tuple<bool, Pawn*> Bullet::IsCanMove(const SDL_Rect* self, const Environment& env) const
+{
+	for (auto* pawn: env.allPawns) {
+		if (IsCollideWith(self, pawn)) {
+			if (!pawn->GetIsPenetrable()) {
+				return std::make_tuple(false, pawn);
+			}
+
+			return std::make_tuple(true, pawn);
+		}
+	}
+
+	return std::make_tuple(true, nullptr);
+}

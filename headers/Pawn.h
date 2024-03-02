@@ -28,7 +28,7 @@ public:
 
 	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
 
-	[[nodiscard]] std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment& env) const;
+	[[nodiscard]] virtual std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment& env) const;
 
 	void TickUpdate(Environment& env);
 
