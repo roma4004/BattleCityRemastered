@@ -10,8 +10,8 @@ Pawn::~Pawn() = default;
 
 void Pawn::Draw(Environment& env) const
 {
-	for (int y = GetY(); y < GetY() + GetHeight(); y++) {
-		for (int x = GetX(); x < GetX() + GetWidth(); x++) {
+	for (int y = GetY(); y < GetY() + GetHeight(); ++y) {
+		for (int x = GetX(); x < GetX() + GetWidth(); ++x) {
 			env.SetPixel(x, y, GetColor());
 		}
 	}
@@ -55,13 +55,13 @@ void Pawn::Shot(Environment& env)
 {
 	if (keyboardButtons.shot) {
 		const Direction direction = GetDirection();
-		const Point tankHalf = {static_cast<int>(GetWidth()) / 2, static_cast<int>(GetHeight()) / 2};
+		const Point tankHalf = {GetWidth() / 2, GetHeight() / 2};
 		const int x = GetX();
 		const int y = GetY();
 		const Point tankCenter = {x + tankHalf.x, y + tankHalf.y};
-		const int width = static_cast<int>(GetBulletWidth());
-		const int height = static_cast<int>(GetBulletHeight());
-		const Point bulletHalf = {static_cast<int>(width) / 2, static_cast<int>(height) / 2};
+		const int width = GetBulletWidth();
+		const int height = GetBulletHeight();
+		const Point bulletHalf = {width / 2, height / 2};
 		constexpr int color = 0xffffff;
 		const int speed = GetBulletSpeed();
 		constexpr int health = 1;
@@ -124,7 +124,7 @@ void Pawn::SetDirection(const Direction direction) { _direction = direction; }
 
 void Pawn::Destroy(Environment& env) const
 {
-	auto it = std::ranges::find(env.allPawns, this);
+	const auto it = std::ranges::find(env.allPawns, this);
 	delete *it;
 	env.allPawns.erase(it);
 }

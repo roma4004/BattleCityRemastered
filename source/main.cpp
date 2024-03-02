@@ -33,8 +33,8 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 
 void ClearBuffer(const Environment& env)
 {
-	for (int y = 0; y < env.windowHeight; y++) {
-		for (int x = 0; x < env.windowWidth; x++) {
+	for (int y = 0; y < env.windowHeight; ++y) {
+		for (int x = 0; x < env.windowWidth; ++x) {
 			env.SetPixel(x, y, 0x0);
 		}
 	}
