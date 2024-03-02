@@ -12,11 +12,13 @@ struct Point;
 class Environment;
 
 enum Direction { UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3 };
-class Pawn : public BaseObj, public IMovable, public IDrawable {
+
+class Pawn : public BaseObj, public IMovable, public IDrawable
+{
 public:
 	Pawn(const Point& pos, int width, int height, int color, int speed, int health);
 
-	virtual ~Pawn();
+	~Pawn() override;
 
 	void Move(Environment& env) override;
 

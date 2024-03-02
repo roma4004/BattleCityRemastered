@@ -1,7 +1,9 @@
 #include "../headers/BaseObj.h"
 
 BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const int speed, const int health)
-	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health) {}
+	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health)
+{
+}
 
 BaseObj::~BaseObj() = default;
 
@@ -39,7 +41,10 @@ void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
 bool BaseObj::GetIsAlive() const { return _isAlive; }
 
-void BaseObj::TakeDamage(const int damage) {
+void BaseObj::TakeDamage(const int damage)
+{
 	_health -= damage;
-	if (_health < 1) { _isAlive = false; }
+	if (_health < 1) {
+		_isAlive = false;
+	}
 }

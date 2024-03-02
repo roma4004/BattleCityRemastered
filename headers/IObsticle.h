@@ -1,6 +1,7 @@
 #pragma once
 
-class IObsticle {
+class IObsticle
+{
 public:
 	virtual ~IObsticle() = default;
 

@@ -3,7 +3,8 @@
 #include "../headers/PlayerTwo.h"
 #include <iostream>
 
-static void MouseEvents(Environment& env, const SDL_Event& event) {
+static void MouseEvents(Environment& env, const SDL_Event& event)
+{
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		env.mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
@@ -24,17 +25,23 @@ static void MouseEvents(Environment& env, const SDL_Event& event) {
 		std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
-		if (x < 1 || y < 1 || x >= env.windowWidth - 1 && y >= env.windowHeight - 1) { return; }
+		if (x < 1 || y < 1 || x >= env.windowWidth - 1 && y >= env.windowHeight - 1) {
+			return;
+		}
 	}
 }
 
-void ClearBuffer(const Environment& env) {
+void ClearBuffer(const Environment& env)
+{
 	for (int y = 0; y < env.windowHeight; y++) {
-		for (int x = 0; x < env.windowWidth; x++) { env.SetPixel(x, y, 0x0); }
+		for (int x = 0; x < env.windowWidth; x++) {
+			env.SetPixel(x, y, 0x0);
+		}
 	}
 }
 
-int Init(Environment& env) {
+int Init(Environment& env)
+{
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		std::cerr << "SDL_Init Error: " << SDL_GetError() << '\n';
 		return 1;
@@ -65,7 +72,8 @@ int Init(Environment& env) {
 	return 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	Environment env;
 	constexpr int speed = 4;
 	constexpr int tankHealth = 100;
@@ -81,11 +89,15 @@ int main(int argc, char* argv[]) {
 
 		// event handling
 		while (SDL_PollEvent(&env.event)) {
-			if (env.event.type == SDL_QUIT) { env.isGameOver = true; }
+			if (env.event.type == SDL_QUIT) {
+				env.isGameOver = true;
+			}
 
 			MouseEvents(env, env.event);
 
-			for (auto* pawn: env.allPawns) { pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym); }
+			for (auto* pawn: env.allPawns) {
+				pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
+			}
 		}
 
 		// physics handling
@@ -96,7 +108,9 @@ int main(int argc, char* argv[]) {
 
 		// Destroy all dead objects
 		for (size_t i = 0; i < env.allPawns.size(); ++i) {
-			if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive()) { pawn->Destroy(env); }
+			if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive()) {
+				pawn->Destroy(env);
+			}
 		}
 
 		// draw handling

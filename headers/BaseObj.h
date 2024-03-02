@@ -2,7 +2,8 @@
 
 #include "../headers/Point.h"
 
-class BaseObj {
+class BaseObj
+{
 public:
 	BaseObj(const Point& pos, int width, int height, int color, int speed, int health);
 

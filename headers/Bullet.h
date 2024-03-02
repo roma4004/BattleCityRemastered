@@ -5,7 +5,8 @@
 struct Point;
 class Environment;
 
-class Bullet final : public Pawn {
+class Bullet final : public Pawn
+{
 public:
 	Bullet(const Point& pos, int width, int height, int color, int speed, Direction direction, int health);
 

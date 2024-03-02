@@ -10,7 +10,8 @@
 
 class Pawn;
 
-class Environment {
+class Environment
+{
 public:
 	int windowWidth = 640;
 	int windowHeight = 480;

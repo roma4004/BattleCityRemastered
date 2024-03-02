@@ -1,9 +1,12 @@
 #include "../headers/PlayerTwo.h"
 
 PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const int color, const int speed, const int health)
-	: Pawn(pos, width, height, color, speed, health) {}
+	: Pawn(pos, width, height, color, speed, health)
+{
+}
 
-void PlayerTwo::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key) {
+void PlayerTwo::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
+{
 	if (eventType == SDL_KEYDOWN) {
 		if (key == SDLK_LEFT) {
 			keyboardButtons.a = true;

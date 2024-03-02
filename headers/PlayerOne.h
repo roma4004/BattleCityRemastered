@@ -2,7 +2,8 @@
 
 #include "../headers/Pawn.h"
 
-class PlayerOne final : public Pawn {
+class PlayerOne final : public Pawn
+{
 public:
 	PlayerOne(const Point& pos, int width, int height, int color, int speed, int health);
 
