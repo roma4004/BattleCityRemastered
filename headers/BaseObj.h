@@ -4,8 +4,7 @@
 
 class BaseObj {
 public:
-	BaseObj(const Point& pos, int width, int height, int color, int speed,
-			int health);
+	BaseObj(const Point& pos, int width, int height, int color, int speed, int health);
 
 	virtual ~BaseObj();
 

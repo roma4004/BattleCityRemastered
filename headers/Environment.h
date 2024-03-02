@@ -14,15 +14,15 @@ class Environment {
 public:
 	int windowWidth = 640;
 	int windowHeight = 480;
-	int *windowBuffer{};
+	int* windowBuffer{};
 	SDL_Event event{};
-	SDL_Window *window{};
-	SDL_Renderer *renderer{};
-	SDL_Texture *screen{};
+	SDL_Window* window{};
+	SDL_Renderer* renderer{};
+	SDL_Texture* screen{};
 	bool isGameOver = false;
 
 	void SetPixel(int x, int y, int color) const;
 
 	MouseButtons mouseButtons;
-	std::vector<Pawn *> allPawns;
+	std::vector<Pawn*> allPawns;
 };
