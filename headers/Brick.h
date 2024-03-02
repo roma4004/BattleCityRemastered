@@ -6,7 +6,7 @@
 
 struct Point;
 
-class Brick : public BaseObj, public IObsticle
+class Brick : public BaseObj
 {
 public:
 	Brick(const Point& pos, int width, int height, int color, int speed, int health);
