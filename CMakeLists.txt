@@ -75,7 +75,7 @@ endif ()
 include_directories(${SDL2_INCLUDE})
 include_directories(${SDL2_Image_INCLUDE})
 include_directories(${SDL2_TTF_INCLUDE})
-#include_directories(${SDL2_Mixer_INCLUDE})
+include_directories(${SDL2_Mixer_INCLUDE})
 
 include_directories(headers)
 
