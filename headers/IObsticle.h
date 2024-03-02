@@ -5,7 +5,15 @@ class IObsticle
 public:
 	virtual ~IObsticle() = default;
 
-	virtual bool IsPassable() = 0;
-	virtual bool IsDestructible() = 0;
-	virtual bool IsPenetrating() = 0;
+	virtual bool GetIsPassable() = 0;
+	virtual bool GetIsDestructible() = 0;
+	virtual bool GetIsPenetrable() = 0;
+	virtual void SetIsPassable(bool value) = 0;
+	virtual void SetIsDestructible(bool value) = 0;
+	virtual void SetIsPenetrable(bool value) = 0;
+
+protected:
+	bool _isPassable = false;
+	bool _isDestructible = false;
+	bool _isPenetrable = false;
 };

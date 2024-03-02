@@ -3,6 +3,9 @@
 PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const int color, const int speed, const int health)
 	: Pawn(pos, width, height, color, speed, health)
 {
+	BaseObj::SetIsPassable(false);
+	BaseObj::SetIsDestructible(true);
+	BaseObj::SetIsPenetrable(false);
 }
 
 void PlayerOne::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)

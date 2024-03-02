@@ -5,6 +5,9 @@ Bullet::Bullet(const Point& pos, const int width, const int height, const int co
 	: Pawn(pos, width, height, color, speed, health)
 {
 	SetDirection(direction);
+	BaseObj::SetIsPassable(true);
+	BaseObj::SetIsDestructible(true);
+	BaseObj::SetIsPenetrable(false);
 }
 
 Bullet::~Bullet() = default;

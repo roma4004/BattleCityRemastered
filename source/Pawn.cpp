@@ -33,8 +33,11 @@ std::tuple<bool, Pawn*> Pawn::IsCanMove(const SDL_Rect* self, const Environment&
 {
 	for (auto* pawn: env.allPawns) {
 		if (IsCollideWith(self, pawn)) {
-			// TODO: check is IObsticle::isPassable, for bullet is true
-			return std::make_tuple(false, pawn);
+			if (!pawn->GetIsPassable()) {
+				return std::make_tuple(false, pawn);
+			}
+
+			return std::make_tuple(true, pawn);
 		}
 	}
 

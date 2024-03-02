@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
 	env.allPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth});
 	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth});
 
+
 	Init(env);
 	while (!env.isGameOver) {
 		ClearBuffer(env);

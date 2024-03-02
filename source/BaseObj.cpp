@@ -48,3 +48,12 @@ void BaseObj::TakeDamage(const int damage)
 		_isAlive = false;
 	}
 }
+
+bool BaseObj::GetIsPassable() { return _isPassable; }
+void BaseObj::SetIsPassable(bool value) { _isPassable = value; }
+
+bool BaseObj::GetIsDestructible() { return _isDestructible; }
+void BaseObj::SetIsDestructible(bool value) { _isDestructible = value; }
+
+bool BaseObj::GetIsPenetrable() { return _isPenetrable; }
+void BaseObj::SetIsPenetrable(bool value) { _isPenetrable = value; }

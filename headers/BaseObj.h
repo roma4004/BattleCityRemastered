@@ -1,8 +1,9 @@
 #pragma once
 
+#include "../headers/IObsticle.h"
 #include "../headers/Point.h"
 
-class BaseObj
+class BaseObj : public IObsticle
 {
 public:
 	BaseObj(const Point& pos, int width, int height, int color, int speed, int health);
@@ -36,6 +37,15 @@ public:
 	void SetIsAlive(bool isAlive);
 
 	virtual void TakeDamage(int damage);
+
+	[[nodiscard]] bool GetIsPassable() override;
+	void SetIsPassable(bool value) override;
+
+	[[nodiscard]] bool GetIsDestructible() override;
+	void SetIsDestructible(bool value) override;
+
+	[[nodiscard]] bool GetIsPenetrable() override;
+	void SetIsPenetrable(bool value) override;
 
 private:
 	int _x{};
