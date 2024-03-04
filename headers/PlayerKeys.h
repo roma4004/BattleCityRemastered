@@ -1,9 +1,11 @@
 #pragma once
 
+
 struct PlayerKeys
 {
-  bool W = false;
-  bool A = false;
-  bool S = false;
-  bool D = false;
+  bool w = false;
+  bool a = false;
+  bool s = false;
+  bool d = false;
+  bool shot = false;
 };

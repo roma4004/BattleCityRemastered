@@ -1,5 +1,7 @@
 #include "../headers/Pawn.h"
+#include "../headers/Bullet.h"
 #include <iostream>
+#include <variant>
 
 void Pawn::Draw(Environment& env) const
 {
@@ -12,7 +14,7 @@ void Pawn::Draw(Environment& env) const
     }
 }
 
-bool Pawn::IsCollideWith(const SDL_Rect* self,const Pawn* other) const {
+bool Pawn::IsCollideWith(const SDL_Rect* self, const Pawn* other) const {
     if (this == other)
     {
         return false;
@@ -28,20 +30,46 @@ bool Pawn::IsCanMove(const SDL_Rect* self,const Environment& env) const {
     for (const auto* pawn : env.allPawns)
     {
         if (IsCollideWith(self, pawn)) {
-            std::cout << "Pawn::IsCanMove returned false" << '\n';
-
             return false;
         }
     }
-
-    std::cout << "Pawn::IsCanMove returned true" << '\n';
-
     return true;
 }
 
-void Pawn::Move(const Environment& env) {
+void Pawn::TickUpdate(Environment& env)
+{
+    Move(env);
+    Shot(env);
+}
+
+void Pawn::Shot(Environment& env)
+{
+    if (keyboardButtons.shot)
+    {
+        //Bullet* projectile = new Bullet{320, 240, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 };
+        if (GetDirection() == UP && this->GetY() - 13 >= 0)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth()/2 - 5, this->GetY() - 15, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        else if (GetDirection() == DOWN && this->GetY() + 13 <= env.windowHeight)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth()/2 - 5, this->GetY() + this->GetHeight() + 15, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        else if (GetDirection() == LEFT && this->GetX() - 15 >= 0)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() - 15, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        else if (GetDirection() == RIGHT && this->GetX() + this->GetWidth() + 15 <= env.windowWidth)
+        {
+            env.allPawns.emplace_back(new Bullet{this->GetX() + this->GetWidth() + 7, this->GetY() + this->GetHeight()/2 - 5, 10, 10, 0xffffff, 5, GetDirection(), env.allPawns.size() + 5000 });
+        }
+        keyboardButtons.shot = false;
+    }
+}
+
+void Pawn::Move(Environment& env) {
     const int speed = GetSpeed();
-    if (keyboardButtons.A && GetX() + speed >= 0)
+    if (keyboardButtons.a && GetX() + speed >= 0)
     {
         const auto self = SDL_Rect{ this->GetX() - this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env)) {
@@ -49,7 +77,7 @@ void Pawn::Move(const Environment& env) {
         }
     }
 
-    if (keyboardButtons.D && GetX() + speed + GetWidth() < env.windowWidth)
+    if (keyboardButtons.d && GetX() + speed + GetWidth() < env.windowWidth)
     {
         const auto self = SDL_Rect{ this->GetX() + this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env)) {
@@ -57,7 +85,7 @@ void Pawn::Move(const Environment& env) {
         }
     }
 
-    if (keyboardButtons.W && GetY() + speed >= 0)
+    if (keyboardButtons.w && GetY() + speed >= 0)
     {
         const auto self = SDL_Rect{ this->GetX(), this->GetY() - this->GetSpeed(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env)) {
@@ -65,7 +93,7 @@ void Pawn::Move(const Environment& env) {
         }
     }
 
-    if (keyboardButtons.S && GetY() + speed + GetHeight() < env.windowHeight)
+    if (keyboardButtons.s && GetY() + speed + GetHeight() < env.windowHeight)
     {
         const auto self = SDL_Rect{ this->GetX(), this->GetY() + this->GetSpeed(), this->GetWidth(), this->GetHeight() };
         if (IsCanMove(&self, env)) {
@@ -78,8 +106,35 @@ void Pawn::KeyboardEvensHandlers(Environment &env, Uint32 eventType, SDL_Keycode
 
 }
 
-Pawn::Pawn(const int x, const int y, const int width, const int height, const int color, const int speed)
-        : BaseObj(x, y, width, height, color, speed) {
+Pawn::Pawn(const int x, const int y, const int width, const int height, const int color, const int speed, const size_t id)
+        : BaseObj(x, y, width, height, color, speed, id) {
 }
 
 Pawn::~Pawn() = default;
+
+Direction Pawn::GetDirection() const
+{
+    return _direction;
+}
+
+void Pawn::SetDirection(const Direction direction)
+{
+    _direction = direction;
+}
+
+void Pawn::SetIsAlive(const bool isAlive)
+{
+    _isAlive = isAlive;
+}
+
+bool Pawn::GetIsAlive() const
+{
+    return _isAlive;
+}
+
+void Pawn::Destroy(Environment& env) const
+{
+    const auto it = std::find(env.allPawns.begin(), env.allPawns.end(), this);
+    delete *it;
+    env.allPawns.erase(it);
+}

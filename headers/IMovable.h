@@ -6,5 +6,5 @@ class IMovable
 {
 public:
   virtual ~IMovable() = default;
-  virtual void Move(const Environment& env) = 0;
+  virtual void Move(Environment& env) = 0;
 };

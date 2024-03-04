@@ -7,14 +7,22 @@
 #include "../headers/IMovable.h"
 #include "../headers/PlayerKeys.h"
 
+enum Direction
+{
+  UP = 0,
+  LEFT = 1,
+  DOWN = 2,
+  RIGHT = 3
+};
+
 class Pawn : public BaseObj, public IMovable, public IDrawable
 {
 public:
-  Pawn(int x, int y, int width, int height, int color, int speed);
+  Pawn(int x, int y, int width, int height, int color, int speed, size_t id);
 
   virtual ~Pawn();
 
-  void Move(const Environment& env) override;
+  void Move(Environment& env) override;
 
   void Draw(Environment& env) const override;
 
@@ -24,5 +32,23 @@ public:
 
   [[nodiscard]] bool IsCanMove(const SDL_Rect* self, const Environment& env) const;
 
+  void TickUpdate(Environment& env);
+  
+  virtual void Shot(Environment& env);
+
+  [[nodiscard]] Direction GetDirection() const;
+
+  void SetDirection(const Direction direction);
+
+  void SetIsAlive (const bool isAlive);
+
+  bool GetIsAlive () const;
+
+  void Destroy(Environment& env) const;
+
   PlayerKeys keyboardButtons;
+private:
+  Direction _direction = Direction::UP;
+  bool _isAlive = true;
+  
 };
