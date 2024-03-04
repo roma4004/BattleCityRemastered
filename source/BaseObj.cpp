@@ -1,66 +1,59 @@
 #include "../headers/BaseObj.h"
 
-BaseObj::BaseObj(const int x,const int y,const int width,const int height,const int color,const int speed, const size_t id)
-        : _x(x),  _y(y),  _width(width),  _height(height), _color(color), _speed(speed), _id(id)
+BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const int speed, const int health)
+	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health)
 {
-
 }
 
 BaseObj::~BaseObj() = default;
 
-int BaseObj::GetX() const {
-  return _x;
-}
+int BaseObj::GetX() const { return _x; }
 
-void BaseObj::SetX(const int x) {
-  _x = x;
-}
+void BaseObj::SetX(const Point& pos) { _x = pos.x; }
 
-int BaseObj::GetY() const {
-  return _y;
-}
+int BaseObj::GetY() const { return _y; }
 
-void BaseObj::SetY(const int y) {
-  _y = y;
-}
+void BaseObj::SetY(const Point& pos) { _y = pos.y; }
 
-int BaseObj::GetWidth() const {
-  return _width;
-}
+int BaseObj::GetWidth() const { return _width; }
 
-void BaseObj::SetWidth(const int width) {
-  _width = width;
-}
+void BaseObj::SetWidth(const int width) { _width = width; }
 
-int BaseObj::GetHeight() const {
-  return _height;
-}
+int BaseObj::GetHeight() const { return _height; }
 
-void BaseObj::SetHeight(const int height) {
-  _height = height;
-}
+void BaseObj::SetHeight(const int height) { _height = height; }
 
-void BaseObj::MoveX(const int i)
+void BaseObj::MoveX(const int i) { _x += i; }
+
+void BaseObj::MoveY(const int i) { _y += i; }
+
+int BaseObj::GetSpeed() const { return _speed; }
+
+int BaseObj::GetColor() const { return _color; }
+
+void BaseObj::SetColor(const int color) { _color = color; }
+
+int BaseObj::GetHealth() const { return _health; }
+
+void BaseObj::SetHealth(const int health) { _health = health; }
+
+void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
+
+bool BaseObj::GetIsAlive() const { return _isAlive; }
+
+void BaseObj::TakeDamage(const int damage)
 {
-  _x += i;
+	_health -= damage;
+	if (_health < 1) {
+		_isAlive = false;
+	}
 }
 
-void BaseObj::MoveY(const int i)
-{
-  _y += i;
-}
+bool BaseObj::GetIsPassable() { return _isPassable; }
+void BaseObj::SetIsPassable(bool value) { _isPassable = value; }
 
-int BaseObj::GetSpeed() const
-{
-  return _speed;
-}
+bool BaseObj::GetIsDestructible() { return _isDestructible; }
+void BaseObj::SetIsDestructible(bool value) { _isDestructible = value; }
 
-int BaseObj::GetColor() const
-{
-  return _color;
-}
-
-void BaseObj::SetColor(const int color)
-{
-  _color = color;
-}
+bool BaseObj::GetIsPenetrable() { return _isPenetrable; }
+void BaseObj::SetIsPenetrable(bool value) { _isPenetrable = value; }

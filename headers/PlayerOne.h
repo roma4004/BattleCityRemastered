@@ -5,7 +5,7 @@
 class PlayerOne final : public Pawn
 {
 public:
-  PlayerOne(int x, int y, int width, int height, int color, int speed, size_t id);
-  
-  void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
+	PlayerOne(const Point& pos, int width, int height, int color, int speed, int health);
+
+	void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
 };

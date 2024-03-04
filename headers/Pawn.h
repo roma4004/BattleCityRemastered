@@ -6,49 +6,60 @@
 #include "../headers/IDrawable.h"
 #include "../headers/IMovable.h"
 #include "../headers/PlayerKeys.h"
+#include "../headers/Point.h"
 
-enum Direction
-{
-  UP = 0,
-  LEFT = 1,
-  DOWN = 2,
-  RIGHT = 3
-};
+struct Point;
+class Environment;
+
+enum Direction { UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3 };
 
 class Pawn : public BaseObj, public IMovable, public IDrawable
 {
 public:
-  Pawn(int x, int y, int width, int height, int color, int speed, size_t id);
+	Pawn(const Point& pos, int width, int height, int color, int speed, int health);
 
-  virtual ~Pawn();
+	~Pawn() override;
 
-  void Move(Environment& env) override;
+	void Move(Environment& env) override;
 
-  void Draw(Environment& env) const override;
+	void Draw(Environment& env) const override;
 
-  virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
+	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
 
-  [[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
+	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
 
-  [[nodiscard]] bool IsCanMove(const SDL_Rect* self, const Environment& env) const;
+	[[nodiscard]] virtual std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment& env) const;
 
-  void TickUpdate(Environment& env);
-  
-  virtual void Shot(Environment& env);
+	void TickUpdate(Environment& env);
 
-  [[nodiscard]] Direction GetDirection() const;
+	virtual void Shot(Environment& env);
 
-  void SetDirection(const Direction direction);
+	[[nodiscard]] Direction GetDirection() const;
 
-  void SetIsAlive (const bool isAlive);
+	void SetDirection(Direction direction);
 
-  bool GetIsAlive () const;
+	void Destroy(Environment& env) const;
 
-  void Destroy(Environment& env) const;
+	[[nodiscard]] int GetBulletWidth() const;
+	void SetBulletWidth(int bulletWidth);
 
-  PlayerKeys keyboardButtons;
+	[[nodiscard]] int GetBulletHeight() const;
+	void SetBulletHeight(int bulletHeight);
+
+	[[nodiscard]] int GetBulletSpeed() const;
+	void SetBulletSpeed(int bulletSpeed);
+
+	PlayerKeys keyboardButtons;
+
+
 private:
-  Direction _direction = Direction::UP;
-  bool _isAlive = true;
-  
+	Direction _direction = Direction::UP;
+
+	int _damage{1};
+
+	int _bulletWidth{10};
+
+	int _bulletHeight{10};
+
+	int _bulletSpeed{5};
 };
