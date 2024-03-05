@@ -8,22 +8,79 @@
 #include "../headers/MouseButton.h"
 #include "../headers/Pawn.h"
 
+#include <execution>
+#include <functional>
+#include <list>
+#include <map>
+#include <ranges>
+#include <string>
+#include <vector>
+
+struct Event {
+	std::string Name;
+	std::map<std::string, std::function<void()>> Listeners;
+
+	void AddListener(const std::string& listenerName, const std::function<void()>& callback) {
+		Listeners[listenerName] = callback;
+	}
+
+	void Emit() {
+		for (auto& callback: Listeners | std::views::values) {
+			if (callback != nullptr) {
+				callback();
+			}
+		}
+	}
+
+	void RemoveListener(const std::string& listenerName) {
+		Listeners.erase(listenerName);
+	}
+};
+
+struct EventSystem {
+	std::map<std::string, Event> Events;
+
+	void AddEvent(const std::string& eventName) {
+		Events[eventName] = Event{.Name = eventName};
+	}
+
+	void AddListenerToEvent(const std::string& eventName, const std::string& listenerName, const std::function<void()>& callback) {
+		Events[eventName].AddListener(listenerName, callback);
+	}
+
+	void EmitEvent(const std::string& eventName) {
+		if (const auto it = Events.find(eventName); it != Events.end()) {
+			it->second.Emit();
+		}
+	}
+
+	void RemoveListenerFromEvent(const std::string& eventName, const std::string& listenerName) {
+		if (const auto it = Events.find(eventName); it != Events.end()) {
+			Events[eventName].RemoveListener(listenerName);
+		}
+
+	}
+};
+
 class Pawn;
 
-class Environment
+struct Environment
 {
-public:
-	int windowWidth = 640;
-	int windowHeight = 480;
-	int* windowBuffer{};
-	SDL_Event event{};
-	SDL_Window* window{};
-	SDL_Renderer* renderer{};
-	SDL_Texture* screen{};
-	bool isGameOver = false;
+	int WindowWidth = 640;
+	int WindowHeight = 480;
+	int* WindowBuffer{};
+	SDL_Event Event{};
+	SDL_Window* Window{};
+	SDL_Renderer* Renderer{};
+	SDL_Texture* Screen{};
+	bool IsGameOver = false;
 
 	void SetPixel(int x, int y, int color) const;
 
-	MouseButtons mouseButtons;
-	std::vector<Pawn*> allPawns;
+	MouseButtons MouseButtons;
+	std::vector<Pawn*> AllPawns;
+	std::list<Pawn*> PawnsToDestroy;
+
+	EventSystem Events;
+
 };

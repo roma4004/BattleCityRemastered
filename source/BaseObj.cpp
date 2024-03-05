@@ -1,7 +1,9 @@
 #include "../headers/BaseObj.h"
 
-BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const int speed, const int health)
-	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health)
+struct Environment;
+
+BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const int speed, const int health, Environment* env)
+	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health), _env(env)
 {
 }
 
@@ -50,10 +52,10 @@ void BaseObj::TakeDamage(const int damage)
 }
 
 bool BaseObj::GetIsPassable() { return _isPassable; }
-void BaseObj::SetIsPassable(bool value) { _isPassable = value; }
+void BaseObj::SetIsPassable(const bool value) { _isPassable = value; }
 
 bool BaseObj::GetIsDestructible() { return _isDestructible; }
-void BaseObj::SetIsDestructible(bool value) { _isDestructible = value; }
+void BaseObj::SetIsDestructible(const bool value) { _isDestructible = value; }
 
 bool BaseObj::GetIsPenetrable() { return _isPenetrable; }
-void BaseObj::SetIsPenetrable(bool value) { _isPenetrable = value; }
+void BaseObj::SetIsPenetrable(const bool value) { _isPenetrable = value; }

@@ -1,16 +1,15 @@
-#ifndef _BRICK_H
-#define _BRICK_H
+#pragma once
 
 #include "BaseObj.h"
-#include "IObsticle.h"
 
 struct Point;
 
 class Brick : public BaseObj
 {
 public:
-	Brick(const Point& pos, int width, int height, int color, int speed, int health);
+	Brick(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
 
 	~Brick() override;
+
+	void Draw(const Environment* env) const override;
 };
-#endif

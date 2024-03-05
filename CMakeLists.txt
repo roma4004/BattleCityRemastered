@@ -33,43 +33,43 @@ find_package(SDL2_image REQUIRED CONFIG REQUIRED COMPONENTS SDL2_image)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_ttf REQUIRED CONFIG REQUIRED COMPONENTS SDL2_ttf)
 find_package(SDL2_mixer REQUIRED)
-#find_package(SDL2_mixer REQUIRED CONFIG REQUIRED COMPONENTS SDL2_mixer)
+find_package(SDL2_mixer REQUIRED CONFIG REQUIRED COMPONENTS SDL2_mixer)
 
 # Support both 32 and 64 bit builds
 if (!${CMAKE_SIZEOF_VOID_P} MATCHES 8)
     # 64 bits
-    set(SDL2_BIN        ${SDL2_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_INCLUDE    ${SDL2_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_LIBRARY    ${SDL2_PATH}/x86_64-w64-mingw32/lib)
+    set(SDL2_BIN                ${SDL2_PATH}/x86_64-w64-mingw32/bin)
+    set(SDL2_INCLUDE            ${SDL2_PATH}/x86_64-w64-mingw32/include/SDL2)
+    set(SDL2_LIBRARY            ${SDL2_PATH}/x86_64-w64-mingw32/lib)
 
-    set(SDL2_Image_BIN        ${SDL2_Image_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_Image_INCLUDE    ${SDL2_Image_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_Image_LIBRARY    ${SDL2_Image_PATH}/x86_64-w64-mingw32/lib)
+    set(SDL2_Image_BIN          ${SDL2_Image_PATH}/x86_64-w64-mingw32/bin)
+    set(SDL2_Image_INCLUDE      ${SDL2_Image_PATH}/x86_64-w64-mingw32/include/SDL2)
+    set(SDL2_Image_LIBRARY      ${SDL2_Image_PATH}/x86_64-w64-mingw32/lib)
 
-    set(SDL2_TTF_BIN        ${SDL2_TTF_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_TTF_INCLUDE    ${SDL2_TTF_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_TTF_LIBRARY    ${SDL2_TTF_PATH}/x86_64-w64-mingw32/lib)
+    set(SDL2_TTF_BIN            ${SDL2_TTF_PATH}/x86_64-w64-mingw32/bin)
+    set(SDL2_TTF_INCLUDE        ${SDL2_TTF_PATH}/x86_64-w64-mingw32/include/SDL2)
+    set(SDL2_TTF_LIBRARY        ${SDL2_TTF_PATH}/x86_64-w64-mingw32/lib)
 
-    set(SDL2_Mixer_BIN        ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_Mixer_INCLUDE    ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_Mixer_LIBRARY    ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/lib)
+    set(SDL2_Mixer_BIN          ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/bin)
+    set(SDL2_Mixer_INCLUDE      ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/include/SDL2)
+    set(SDL2_Mixer_LIBRARY      ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/lib)
 else ()
     # 32 bits
-    set(SDL2_BIN        ${SDL2_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_INCLUDE    ${SDL2_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_LIBRARY    ${SDL2_PATH}/i686-w64-mingw32/lib)
+    set(SDL2_BIN                ${SDL2_PATH}/i686-w64-mingw32/bin)
+    set(SDL2_INCLUDE            ${SDL2_PATH}/i686-w64-mingw32/include/SDL2)
+    set(SDL2_LIBRARY            ${SDL2_PATH}/i686-w64-mingw32/lib)
 
-    set(SDL2_Image_BIN        ${SDL2_Image_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_Image_INCLUDE    ${SDL2_Image_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_Image_LIBRARY    ${SDL2_Image_PATH}/i686-w64-mingw32/lib)
+    set(SDL2_Image_BIN          ${SDL2_Image_PATH}/i686-w64-mingw32/bin)
+    set(SDL2_Image_INCLUDE      ${SDL2_Image_PATH}/i686-w64-mingw32/include/SDL2)
+    set(SDL2_Image_LIBRARY      ${SDL2_Image_PATH}/i686-w64-mingw32/lib)
 
-    set(SDL2_TTF_BIN        ${SDL2_TTF_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_TTF_INCLUDE    ${SDL2_TTF_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_TTF_LIBRARY    ${SDL2_TTF_PATH}/i686-w64-mingw32/lib)
+    set(SDL2_TTF_BIN            ${SDL2_TTF_PATH}/i686-w64-mingw32/bin)
+    set(SDL2_TTF_INCLUDE        ${SDL2_TTF_PATH}/i686-w64-mingw32/include/SDL2)
+    set(SDL2_TTF_LIBRARY        ${SDL2_TTF_PATH}/i686-w64-mingw32/lib)
 
-    set(SDL2_Mixer_BIN        ${SDL2_Mixer_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_Mixer_INCLUDE    ${SDL2_Mixer_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_Mixer_LIBRARY    ${SDL2_Mixer_PATH}/i686-w64-mingw32/lib)
+    set(SDL2_Mixer_BIN          ${SDL2_Mixer_PATH}/i686-w64-mingw32/bin)
+    set(SDL2_Mixer_INCLUDE      ${SDL2_Mixer_PATH}/i686-w64-mingw32/include/SDL2)
+    set(SDL2_Mixer_LIBRARY      ${SDL2_Mixer_PATH}/i686-w64-mingw32/lib)
 endif ()
 
 include_directories(${SDL2_INCLUDE})
@@ -109,15 +109,15 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build 
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build event to MyTest
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
-        "${SDL2_Image_BIN}/SDL2_image.dll"                        # <--this is in-file
+        "${SDL2_Image_BIN}/SDL2_image.dll"                  # <--this is in-file
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)                 # <--this is out-file path
 #
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build event to MyTest
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
-        "${SDL2_TTF_BIN}/SDL2_ttf.dll"                          # <--this is in-file
+        "${SDL2_TTF_BIN}/SDL2_ttf.dll"                      # <--this is in-file
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)                 # <--this is out-file path
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build event to MyTest
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
-        "${SDL2_Mixer_BIN}/SDL2_mixer.dll"                        # <--this is in-file
+        "${SDL2_Mixer_BIN}/SDL2_mixer.dll"                  # <--this is in-file
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)                 # <--this is out-file path

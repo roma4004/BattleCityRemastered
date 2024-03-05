@@ -1,12 +1,12 @@
 #pragma once
 
-class Environment;
+struct Environment;
 
 class IMovable
 {
 public:
 	virtual ~IMovable() = default;
-	virtual void Move(Environment& env) = 0;
+	virtual void Move(Environment* env) = 0;
 
-	int speed{1};
+	int Speed{1};
 };

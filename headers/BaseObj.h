@@ -1,14 +1,19 @@
 #pragma once
 
+#include "../headers/IDestroyable.h"
+#include "../headers/IDrawable.h"
 #include "../headers/IObsticle.h"
+#include "../headers/ITickUpdatable.h"
 #include "../headers/Point.h"
 
-class BaseObj : public IObsticle
+struct Environment;
+
+class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable, public IDestroyable
 {
 public:
-	BaseObj(const Point& pos, int width, int height, int color, int speed, int health);
+	BaseObj(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
 
-	virtual ~BaseObj();
+	 ~BaseObj() override;
 
 	[[nodiscard]] int GetX() const;
 	void SetX(const Point& pos);
@@ -56,4 +61,7 @@ private:
 	int _speed{};
 	int _health{};
 	bool _isAlive = true;
+
+protected:
+	Environment* _env = nullptr;
 };
