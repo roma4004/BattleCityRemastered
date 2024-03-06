@@ -20,7 +20,7 @@ public:
 
 	~Pawn() override;
 
-	void MarkDestroy(Environment* env) const;
+	void MarkDestroy(Environment* env) const override;
 
 	void Move(Environment* env) override;
 

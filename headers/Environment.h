@@ -16,50 +16,30 @@
 #include <string>
 #include <vector>
 
-struct Event {
+struct Event
+{
 	std::string Name;
 	std::map<std::string, std::function<void()>> Listeners;
 
-	void AddListener(const std::string& listenerName, const std::function<void()>& callback) {
-		Listeners[listenerName] = callback;
-	}
+	void AddListener(const std::string& listenerName, const std::function<void()>& callback);
 
-	void Emit() {
-		for (auto& callback: Listeners | std::views::values) {
-			if (callback != nullptr) {
-				callback();
-			}
-		}
-	}
+	void Emit();
 
-	void RemoveListener(const std::string& listenerName) {
-		Listeners.erase(listenerName);
-	}
+	void RemoveListener(const std::string& listenerName);
 };
 
-struct EventSystem {
+struct EventSystem
+{
 	std::map<std::string, Event> Events;
 
-	void AddEvent(const std::string& eventName) {
-		Events[eventName] = Event{.Name = eventName};
-	}
+	void AddEvent(const std::string& eventName);
 
-	void AddListenerToEvent(const std::string& eventName, const std::string& listenerName, const std::function<void()>& callback) {
-		Events[eventName].AddListener(listenerName, callback);
-	}
+	void AddListenerToEvent(const std::string& eventName, const std::string& listenerName,
+							const std::function<void()>& callback);
 
-	void EmitEvent(const std::string& eventName) {
-		if (const auto it = Events.find(eventName); it != Events.end()) {
-			it->second.Emit();
-		}
-	}
+	void EmitEvent(const std::string& eventName);
 
-	void RemoveListenerFromEvent(const std::string& eventName, const std::string& listenerName) {
-		if (const auto it = Events.find(eventName); it != Events.end()) {
-			Events[eventName].RemoveListener(listenerName);
-		}
-
-	}
+	void RemoveListenerFromEvent(const std::string& eventName, const std::string& listenerName);
 };
 
 class Pawn;

@@ -3,7 +3,8 @@
 
 #include <string>
 
-Brick::Brick(const Point& pos, const int width, const int height, const int color, const int speed, const int health, Environment* env)
+Brick::Brick(const Point& pos, const int width, const int height, const int color, const int speed, const int health,
+			 Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
 	// subscribe
@@ -40,7 +41,8 @@ Brick::~Brick()
 
 	_env->Events.RemoveListenerFromEvent("TickUpdate", eventName);
 
-	if (const auto it = std::ranges::find(_env->AllPawns, dynamic_cast<Pawn*>(const_cast<Brick*>(this))); it != _env->AllPawns.cend()) {
+	if (const auto it = std::ranges::find(_env->AllPawns, dynamic_cast<Pawn*>(this));
+		it != _env->AllPawns.cend()) {
 		_env->AllPawns.erase(it);
 	}
 }

@@ -8,13 +8,13 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		env.MouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
-				  << "Down" << '\n';
+				<< "Down" << '\n';
 
 		return;
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		env.MouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
-				  << "Up" << '\n';
+				<< "Up" << '\n';
 
 		return;
 	}
@@ -102,9 +102,10 @@ int main(int argc, char* argv[])
 
 		env.Events.EmitEvent("TickUpdate");
 
-		env.Events.EmitEvent("MarkDestroy"); //TODO: solve not work because iterator invalidates after call delete this and unsubscribe
+		env.Events.EmitEvent("MarkDestroy");
+		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all dead objects
-		for (const auto* pawn : env.PawnsToDestroy) {
+		for (const auto* pawn: env.PawnsToDestroy) {
 			delete pawn;
 		}
 		if (!env.PawnsToDestroy.empty()) {

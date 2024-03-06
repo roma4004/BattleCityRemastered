@@ -1,6 +1,7 @@
 #include "../headers/PlayerOne.h"
 
-PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const int color, const int speed, const int health, Environment* env)
+PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const int color, const int speed, const int health,
+					 Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
 	BaseObj::SetIsPassable(false);

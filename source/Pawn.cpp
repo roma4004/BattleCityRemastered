@@ -1,10 +1,9 @@
 #include "../headers/Pawn.h"
 #include "../headers/Bullet.h"
 
-Pawn::Pawn(const Point& pos, const int width, const int height, const int color, const int speed, const int health, Environment* env)
-	: BaseObj(pos, width, height, color, speed, health, env)
-{
-}
+Pawn::Pawn(const Point& pos, const int width, const int height, const int color, const int speed, const int health,
+		   Environment* env)
+	: BaseObj(pos, width, height, color, speed, health, env) {}
 
 Pawn::~Pawn() = default;
 
@@ -53,7 +52,8 @@ std::tuple<bool, Pawn*> Pawn::IsCanMove(const SDL_Rect* self, const Environment*
 
 void Pawn::TickUpdate(Environment* env)
 {
-	/*Pawn* isItABullet =*/Move(env);
+	/*Pawn* isItABullet =*/
+	Move(env);
 	Shot(env);
 	/*if (isItABullet != nullptr){
 		DealingDamage(isItABullet);
@@ -127,18 +127,42 @@ void Pawn::Move(Environment* env)
 
 void Pawn::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) {}
 
-Direction Pawn::GetDirection() const { return _direction; }
+Direction Pawn::GetDirection() const
+{
+	return _direction;
+}
 
-void Pawn::SetDirection(const Direction direction) { _direction = direction; }
+void Pawn::SetDirection(const Direction direction)
+{
+	_direction = direction;
+}
 
-int Pawn::GetBulletWidth() const { return _bulletWidth; }
+int Pawn::GetBulletWidth() const
+{
+	return _bulletWidth;
+}
 
-void Pawn::SetBulletWidth(const int bulletWidth) { _bulletWidth = bulletWidth; }
+void Pawn::SetBulletWidth(const int bulletWidth)
+{
+	_bulletWidth = bulletWidth;
+}
 
-int Pawn::GetBulletHeight() const { return _bulletHeight; }
+int Pawn::GetBulletHeight() const
+{
+	return _bulletHeight;
+}
 
-void Pawn::SetBulletHeight(const int bulletHeight) { _bulletHeight = bulletHeight; }
+void Pawn::SetBulletHeight(const int bulletHeight)
+{
+	_bulletHeight = bulletHeight;
+}
 
-int Pawn::GetBulletSpeed() const { return _bulletSpeed; }
+int Pawn::GetBulletSpeed() const
+{
+	return _bulletSpeed;
+}
 
-void Pawn::SetBulletSpeed(const int bulletSpeed) { _bulletSpeed = bulletSpeed; }
+void Pawn::SetBulletSpeed(const int bulletSpeed)
+{
+	_bulletSpeed = bulletSpeed;
+}

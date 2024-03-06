@@ -13,7 +13,7 @@ class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable, publi
 public:
 	BaseObj(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
 
-	 ~BaseObj() override;
+	~BaseObj() override;
 
 	[[nodiscard]] int GetX() const;
 	void SetX(const Point& pos);
