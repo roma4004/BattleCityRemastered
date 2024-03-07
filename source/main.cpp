@@ -117,10 +117,10 @@ int main(int argc, char* argv[])
 		env.events.EmitEvent("MarkDestroy");
 		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all dead objects
-		for (const auto* pawn: env.pawnsToDestroy) {
-			delete pawn;
-		}
 		if (!env.pawnsToDestroy.empty()) {
+			for (const auto* pawn: env.pawnsToDestroy) {
+				delete pawn;
+			}
 			env.pawnsToDestroy.clear();
 		}
 
