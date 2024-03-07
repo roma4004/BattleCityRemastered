@@ -9,36 +9,36 @@
 #include "../headers/Point.h"
 
 struct Point;
-class Environment;
+struct Environment;
 
 enum Direction { UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3 };
 
-class Pawn : public BaseObj, public IMovable, public IDrawable
+class Pawn : public BaseObj, public IMovable
 {
 public:
-	Pawn(const Point& pos, int width, int height, int color, int speed, int health);
+	Pawn(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
 
 	~Pawn() override;
 
-	void Move(Environment& env) override;
+	void MarkDestroy(Environment* env) const override;
 
-	void Draw(Environment& env) const override;
+	void Move(Environment* env) override;
+
+	void Draw(const Environment* env) const override;
 
 	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
 
 	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
 
-	[[nodiscard]] virtual std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment& env) const;
+	[[nodiscard]] virtual std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment* env) const;
 
-	void TickUpdate(Environment& env);
+	void TickUpdate(Environment* env) override;
 
-	virtual void Shot(Environment& env);
+	virtual void Shot(Environment* env);
 
 	[[nodiscard]] Direction GetDirection() const;
 
 	void SetDirection(Direction direction);
-
-	void Destroy(Environment& env) const;
 
 	[[nodiscard]] int GetBulletWidth() const;
 	void SetBulletWidth(int bulletWidth);
@@ -51,7 +51,6 @@ public:
 
 	PlayerKeys keyboardButtons;
 
-
 private:
 	Direction _direction = Direction::UP;
 
@@ -61,5 +60,5 @@ private:
 
 	int _bulletHeight{10};
 
-	int _bulletSpeed{5};
+	int _bulletSpeed{300};
 };

@@ -142,9 +142,11 @@
     <ClInclude Include="headers\Bullet.h" />
     <ClInclude Include="headers\Environment.h" />
     <ClInclude Include="headers\BaseObj.h" />
+    <ClInclude Include="headers\IDestroyable.h" />
     <ClInclude Include="headers\IDrawable.h" />
     <ClInclude Include="headers\IMovable.h" />
     <ClInclude Include="headers\IObsticle.h" />
+    <ClInclude Include="headers\ITickUpdatable.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\Pawn.h" />
     <ClInclude Include="headers\PlayerKeys.h" />

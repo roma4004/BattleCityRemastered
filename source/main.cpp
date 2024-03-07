@@ -8,13 +8,13 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		env.mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
-				  << "Down" << '\n';
+				<< "Down" << '\n';
 
 		return;
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		env.mouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
-				  << "Up" << '\n';
+				<< "Up" << '\n';
 
 		return;
 	}
@@ -75,17 +75,28 @@ int Init(Environment& env)
 int main(int argc, char* argv[])
 {
 	Environment env;
-	constexpr int speed = 4;
+	constexpr int speed = 142;
 	constexpr int tankHealth = 100;
 	constexpr Point playerOnePos{20, 20};
 	constexpr Point playerTwoPos{200, 200};
 	env.allPawns.reserve(2);
-	env.allPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth});
-	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth});
-
+	env.allPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth, &env});
+	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth, &env});
 
 	Init(env);
+
+	Uint64 oldTime = SDL_GetTicks64();
 	while (!env.isGameOver) {
+		const Uint64 newTime = SDL_GetTicks64();
+		env.deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
+		const float fps = 1.0f / env.deltaTime;
+
+		std::cout << "fps: " << fps << '\n'; // TODO:use sdl2 ttf here
+		std::cout << "deltaTime: " << env.deltaTime << '\n'; // TODO:use sdl2 ttf here
+
+		// Cap to 60 FPS
+		// SDL_Delay(floor(16.666f - env.deltaTime));
+
 		ClearBuffer(env);
 
 		// event handling
@@ -101,30 +112,28 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		// physics handling
-		for (size_t i = 0; i < env.allPawns.size(); ++i) {
-			Pawn* pawn = env.allPawns[i];
-			pawn->TickUpdate(env);
-		}
+		env.events.EmitEvent("TickUpdate");
 
+		env.events.EmitEvent("MarkDestroy");
+		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all dead objects
-		for (size_t i = 0; i < env.allPawns.size(); ++i) {
-			if (Pawn* pawn = env.allPawns[i]; !pawn->GetIsAlive()) {
-				pawn->Destroy(env);
+		if (!env.pawnsToDestroy.empty()) {
+			for (const auto* pawn: env.pawnsToDestroy) { // maybe use parallel for
+				delete pawn;
 			}
+
+			env.pawnsToDestroy.clear();
 		}
 
-		// draw handling
-		for (size_t i = 0; i < env.allPawns.size(); ++i) {
-			const Pawn* pawn = env.allPawns[i];
-			pawn->Draw(env);
-		}
+		env.events.EmitEvent("Draw");
 
 		// update screen with buffer
 		SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
 		SDL_RenderCopy(env.renderer, env.screen, nullptr, nullptr);
 
 		SDL_RenderPresent(env.renderer);
+
+		oldTime = newTime;
 	}
 
 	SDL_DestroyRenderer(env.renderer);

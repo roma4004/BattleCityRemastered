@@ -1,6 +1,7 @@
 #pragma once
 
-struct PlayerKeys {
+struct PlayerKeys
+{
 	bool w = false;
 	bool a = false;
 	bool s = false;

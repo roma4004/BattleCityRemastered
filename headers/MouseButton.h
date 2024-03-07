@@ -1,6 +1,7 @@
 #pragma once
 
-struct MouseButtons {
+struct MouseButtons
+{
 	bool MouseLeftButton = false;
 	bool MouseMiddleButton = false;
 	bool MouseRightButton = false;
