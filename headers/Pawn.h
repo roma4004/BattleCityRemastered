@@ -60,5 +60,5 @@ private:
 
 	int _bulletHeight{10};
 
-	int _bulletSpeed{5};
+	int _bulletSpeed{300};
 };

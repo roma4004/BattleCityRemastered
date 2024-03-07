@@ -55,12 +55,12 @@ Bullet::~Bullet()
 
 void Bullet::Move(Environment* env)
 {
-	const float speed = GetSpeed();
+	const float speed = GetSpeed() * env->deltaTime;
 	const float x = GetX();
 	const float y = GetY();
-	const int width = static_cast<int>(GetWidth());
-	const int height = static_cast<int>(GetHeight());
-	if (const int direction = GetDirection(); direction == UP && y - speed >= 0) {
+	const int width = GetWidth();
+	const int height = GetHeight();
+	if (const int direction = GetDirection(); direction == UP && y - speed >= 0.0f) {
 		const auto self = SDL_Rect{ static_cast<int>(x), static_cast<int>(y - speed), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveY(-speed);

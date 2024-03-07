@@ -118,9 +118,10 @@ int main(int argc, char* argv[])
 		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all dead objects
 		if (!env.pawnsToDestroy.empty()) {
-			for (const auto* pawn: env.pawnsToDestroy) {
+			for (const auto* pawn: env.pawnsToDestroy) { // maybe use parallel for
 				delete pawn;
 			}
+
 			env.pawnsToDestroy.clear();
 		}
 

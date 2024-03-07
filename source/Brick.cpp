@@ -35,6 +35,7 @@ Brick::~Brick()
 	}
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+
 	_env->events.RemoveListenerFromEvent("Draw", eventName);
 
 	_env->events.RemoveListenerFromEvent("MarkDestroy", eventName);
@@ -49,8 +50,8 @@ Brick::~Brick()
 
 void Brick::Draw(const Environment* env) const
 {
-	for (int y = GetY(); y < GetY() + GetHeight(); ++y) {
-		for (int x = GetX(); x < GetX() + GetWidth(); ++x) {
+	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y) {
+		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX()) + GetWidth(); ++x) {
 			env->SetPixel(x, y, GetColor());
 		}
 	}

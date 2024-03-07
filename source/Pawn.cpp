@@ -11,13 +11,16 @@ void Pawn::MarkDestroy(Environment* env) const
 {
 	if (!GetIsAlive()) {
 		env->pawnsToDestroy.emplace_back(const_cast<Pawn*>(this));
+		if (const auto it = std::ranges::find(env->allPawns, const_cast<Pawn*>(this)); it != env->allPawns.end()) {
+  			env->allPawns.erase(it);
+		}
 	}
 }
 
 void Pawn::Draw(const Environment* env) const
 {
-	for (int y = GetY(); y < GetY() + GetHeight(); ++y) {
-		for (int x = GetX(); x < GetX() + GetWidth(); ++x) {
+	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y) {
+		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX()) + GetWidth(); ++x) {
 			env->SetPixel(x, y, GetColor());
 		}
 	}
@@ -99,10 +102,10 @@ void Pawn::Shot(Environment* env)
 void Pawn::Move(Environment* env)
 {
 	const float speed = GetSpeed() * env->deltaTime;
-	float x = GetX();
-	float y = GetY();
-	int width = static_cast<int>(GetWidth());
-	int height = static_cast<int>(GetHeight());
+	const float x = GetX();
+	const float y = GetY();
+	const int width = GetWidth();
+	const int height = GetHeight();
 	if (keyboardButtons.a && GetX() + speed >= 0.f) {
 		const auto self = SDL_Rect{static_cast<int>(x - speed), static_cast<int>(y), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
@@ -110,7 +113,7 @@ void Pawn::Move(Environment* env)
 		}
 	}
 
-	if (keyboardButtons.d && GetX() + speed + width < static_cast<float>(env->windowWidth)) {
+	if (keyboardButtons.d && GetX() + speed + static_cast<float>(width) < static_cast<float>(env->windowWidth)) {
 		const auto self = SDL_Rect{static_cast<int>(x + speed), static_cast<int>(y), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveX(speed);
@@ -124,7 +127,7 @@ void Pawn::Move(Environment* env)
 		}
 	}
 
-	if (keyboardButtons.s && GetY() + speed + height < static_cast<float>(env->windowHeight)) {
+	if (keyboardButtons.s && GetY() + speed + static_cast<float>(height) < static_cast<float>(env->windowHeight)) {
 		const auto self = SDL_Rect{static_cast<int>(x), static_cast<int>(y + speed), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveY(speed);
