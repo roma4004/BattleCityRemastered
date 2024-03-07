@@ -16,7 +16,7 @@ enum Direction { UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3 };
 class Pawn : public BaseObj, public IMovable
 {
 public:
-	Pawn(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
+	Pawn(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
 
 	~Pawn() override;
 
@@ -49,7 +49,7 @@ public:
 	[[nodiscard]] int GetBulletSpeed() const;
 	void SetBulletSpeed(int bulletSpeed);
 
-	PlayerKeys KeyboardButtons;
+	PlayerKeys keyboardButtons;
 
 private:
 	Direction _direction = Direction::UP;

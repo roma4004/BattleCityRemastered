@@ -2,13 +2,13 @@
 
 struct Environment;
 
-BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const int speed, const int health,
+BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 				 Environment* env)
 	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health), _env(env) {}
 
 BaseObj::~BaseObj() = default;
 
-int BaseObj::GetX() const
+float BaseObj::GetX() const
 {
 	return _x;
 }
@@ -18,7 +18,7 @@ void BaseObj::SetX(const Point& pos)
 	_x = pos.x;
 }
 
-int BaseObj::GetY() const
+float BaseObj::GetY() const
 {
 	return _y;
 }
@@ -48,17 +48,17 @@ void BaseObj::SetHeight(const int height)
 	_height = height;
 }
 
-void BaseObj::MoveX(const int i)
+void BaseObj::MoveX(const float i)
 {
 	_x += i;
 }
 
-void BaseObj::MoveY(const int i)
+void BaseObj::MoveY(const float i)
 {
 	_y += i;
 }
 
-int BaseObj::GetSpeed() const
+float BaseObj::GetSpeed() const
 {
 	return _speed;
 }

@@ -18,8 +18,8 @@
 
 struct Event
 {
-	std::string Name;
-	std::map<std::string, std::function<void()>> Listeners;
+	std::string name;
+	std::map<std::string, std::function<void()>> listeners;
 
 	void AddListener(const std::string& listenerName, const std::function<void()>& callback);
 
@@ -30,7 +30,7 @@ struct Event
 
 struct EventSystem
 {
-	std::map<std::string, Event> Events;
+	std::map<std::string, Event> events;
 
 	void AddEvent(const std::string& eventName);
 
@@ -46,21 +46,24 @@ class Pawn;
 
 struct Environment
 {
-	int WindowWidth = 640;
-	int WindowHeight = 480;
-	int* WindowBuffer{};
-	SDL_Event Event{};
-	SDL_Window* Window{};
-	SDL_Renderer* Renderer{};
-	SDL_Texture* Screen{};
-	bool IsGameOver = false;
+	int windowWidth = 640;
+	int windowHeight = 480;
+	int* windowBuffer{};
+	SDL_Event event{};
+	SDL_Window* window{};
+	SDL_Renderer* renderer{};
+	SDL_Texture* screen{};
+	bool isGameOver = false;
+
+	//fps
+	float deltaTime = 0.f;
 
 	void SetPixel(int x, int y, int color) const;
 
-	MouseButtons MouseButtons;
-	std::vector<Pawn*> AllPawns;
-	std::list<Pawn*> PawnsToDestroy;
+	MouseButtons mouseButtons;
+	std::vector<Pawn*> allPawns;
+	std::list<Pawn*> pawnsToDestroy;
 
-	EventSystem Events;
+	EventSystem events;
 
 };

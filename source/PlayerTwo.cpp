@@ -1,6 +1,6 @@
 #include "../headers/PlayerTwo.h"
 
-PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const int color, const int speed, const int health,
+PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 					 Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
@@ -14,15 +14,16 @@ PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const 
 	}
 
 	const std::string listenerName = "PlayerTwo";
-	_env->Events.AddListenerToEvent("TickUpdate", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
+
+	_env->events.AddListenerToEvent("TickUpdate", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
 		self->TickUpdate(env);
 	});
 
-	_env->Events.AddListenerToEvent("MarkDestroy", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
+	_env->events.AddListenerToEvent("MarkDestroy", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
 		self->MarkDestroy(env);
 	});
 
-	_env->Events.AddListenerToEvent("Draw", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
+	_env->events.AddListenerToEvent("Draw", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
 		self->Draw(env);
 	});
 }
@@ -35,14 +36,15 @@ PlayerTwo::~PlayerTwo()
 	}
 
 	const std::string listenerName = "PlayerTwo";
-	_env->Events.RemoveListenerFromEvent("TickUpdate", listenerName);
 
-	_env->Events.RemoveListenerFromEvent("MarkDestroy", listenerName);
+	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
 
-	_env->Events.RemoveListenerFromEvent("Draw", listenerName);
+	_env->events.RemoveListenerFromEvent("MarkDestroy", listenerName);
 
-	if (const auto it = std::ranges::find(_env->AllPawns, dynamic_cast<Pawn*>(this)); it != _env->AllPawns.end()) {
-		_env->AllPawns.erase(it);
+	_env->events.RemoveListenerFromEvent("Draw", listenerName);
+
+	if (const auto it = std::ranges::find(_env->allPawns, dynamic_cast<Pawn*>(this)); it != _env->allPawns.end()) {
+		_env->allPawns.erase(it);
 	}
 }
 
@@ -50,29 +52,29 @@ void PlayerTwo::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, 
 {
 	if (eventType == SDL_KEYDOWN) {
 		if (key == SDLK_LEFT) {
-			KeyboardButtons.a = true;
+			keyboardButtons.a = true;
 			SetDirection(Direction::LEFT);
 		} else if (key == SDLK_RIGHT) {
-			KeyboardButtons.d = true;
+			keyboardButtons.d = true;
 			SetDirection(Direction::RIGHT);
 		} else if (key == SDLK_DOWN) {
-			KeyboardButtons.s = true;
+			keyboardButtons.s = true;
 			SetDirection(Direction::DOWN);
 		} else if (key == SDLK_UP) {
-			KeyboardButtons.w = true;
+			keyboardButtons.w = true;
 			SetDirection(Direction::UP);
 		}
 	} else if (eventType == SDL_KEYUP) {
 		if (key == SDLK_LEFT) {
-			KeyboardButtons.a = false;
+			keyboardButtons.a = false;
 		} else if (key == SDLK_RIGHT) {
-			KeyboardButtons.d = false;
+			keyboardButtons.d = false;
 		} else if (key == SDLK_DOWN) {
-			KeyboardButtons.s = false;
+			keyboardButtons.s = false;
 		} else if (key == SDLK_UP) {
-			KeyboardButtons.w = false;
+			keyboardButtons.w = false;
 		} else if (key == SDLK_RCTRL) {
-			KeyboardButtons.shot = true;
+			keyboardButtons.shot = true;
 		}
 	}
 }

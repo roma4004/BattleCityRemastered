@@ -11,14 +11,14 @@ struct Environment;
 class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable, public IDestroyable
 {
 public:
-	BaseObj(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
+	BaseObj(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
 
 	~BaseObj() override;
 
-	[[nodiscard]] int GetX() const;
+	[[nodiscard]] float GetX() const;
 	void SetX(const Point& pos);
 
-	[[nodiscard]] int GetY() const;
+	[[nodiscard]] float GetY() const;
 	void SetY(const Point& pos);
 
 	[[nodiscard]] int GetWidth() const;
@@ -27,10 +27,10 @@ public:
 	[[nodiscard]] int GetHeight() const;
 	void SetHeight(int height);
 
-	void MoveX(int i);
-	void MoveY(int i);
+	void MoveX(float i);
+	void MoveY(float i);
 
-	[[nodiscard]] int GetSpeed() const;
+	[[nodiscard]] float GetSpeed() const;
 
 	[[nodiscard]] int GetColor() const;
 	void SetColor(int color);
@@ -53,12 +53,12 @@ public:
 	void SetIsPenetrable(bool value) override;
 
 private:
-	int _x{};
-	int _y{};
+	float _x{};
+	float _y{};
 	int _width{};
 	int _height{};
 	int _color{};
-	int _speed{};
+	float _speed{};
 	int _health{};
 	bool _isAlive = true;
 

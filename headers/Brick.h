@@ -7,7 +7,7 @@ struct Point;
 class Brick : public BaseObj
 {
 public:
-	Brick(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
+	Brick(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
 
 	~Brick() override;
 

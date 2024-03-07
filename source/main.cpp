@@ -6,26 +6,26 @@
 static void MouseEvents(Environment& env, const SDL_Event& event)
 {
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-		env.MouseButtons.MouseLeftButton = true;
+		env.mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
 				<< "Down" << '\n';
 
 		return;
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-		env.MouseButtons.MouseLeftButton = false;
+		env.mouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
 				<< "Up" << '\n';
 
 		return;
 	}
 
-	if (event.type == SDL_MOUSEMOTION && env.MouseButtons.MouseLeftButton) {
+	if (event.type == SDL_MOUSEMOTION && env.mouseButtons.MouseLeftButton) {
 		const Sint32 x = event.motion.x;
 		const Sint32 y = event.motion.y;
 		std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
-		if (x < 1 || y < 1 || x >= env.WindowWidth - 1 && y >= env.WindowHeight - 1) {
+		if (x < 1 || y < 1 || x >= env.windowWidth - 1 && y >= env.windowHeight - 1) {
 			return;
 		}
 	}
@@ -33,8 +33,8 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 
 void ClearBuffer(const Environment& env)
 {
-	for (int y = 0; y < env.WindowHeight; ++y) {
-		for (int x = 0; x < env.WindowWidth; ++x) {
+	for (int y = 0; y < env.windowHeight; ++y) {
+		for (int x = 0; x < env.windowWidth; ++x) {
 			env.SetPixel(x, y, 0x0);
 		}
 	}
@@ -47,27 +47,27 @@ int Init(Environment& env)
 		return 1;
 	}
 
-	env.Window = SDL_CreateWindow("Battle City remastered", 100, 100, env.WindowWidth, env.WindowHeight, SDL_WINDOW_SHOWN);
-	if (env.Window == nullptr) {
+	env.window = SDL_CreateWindow("Battle City remastered", 100, 100, env.windowWidth, env.windowHeight, SDL_WINDOW_SHOWN);
+	if (env.window == nullptr) {
 		std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << '\n';
 		return 1;
 	}
 
-	env.Renderer = SDL_CreateRenderer(env.Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	if (env.Renderer == nullptr) {
+	env.renderer = SDL_CreateRenderer(env.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (env.renderer == nullptr) {
 		std::cerr << "SDL_CreateRenderer Error: " << SDL_GetError() << '\n';
 		return 1;
 	}
 
-	env.Screen = SDL_CreateTexture(env.Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, env.WindowWidth,
-								   env.WindowHeight);
-	if (env.Screen == nullptr) {
+	env.screen = SDL_CreateTexture(env.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, env.windowWidth,
+								   env.windowHeight);
+	if (env.screen == nullptr) {
 		std::cerr << "Screen SDL_CreateTexture Error: " << SDL_GetError() << '\n';
 		return 1;
 	}
 
-	const int bufferSize = env.WindowWidth * env.WindowHeight;
-	env.WindowBuffer = new int[bufferSize];
+	const int bufferSize = env.windowWidth * env.windowHeight;
+	env.windowBuffer = new int[bufferSize];
 
 	return 0;
 }
@@ -75,56 +75,70 @@ int Init(Environment& env)
 int main(int argc, char* argv[])
 {
 	Environment env;
-	constexpr int speed = 4;
+	constexpr int speed = 142;
 	constexpr int tankHealth = 100;
 	constexpr Point playerOnePos{20, 20};
 	constexpr Point playerTwoPos{200, 200};
-	env.AllPawns.reserve(2);
-	env.AllPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth, &env});
-	env.AllPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth, &env});
+	env.allPawns.reserve(2);
+	env.allPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth, &env});
+	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth, &env});
 
 	Init(env);
-	while (!env.IsGameOver) {
+
+	Uint64 oldTime = SDL_GetTicks64();
+	while (!env.isGameOver) {
+		const Uint64 newTime = SDL_GetTicks64();
+		env.deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
+		const float fps = 1.0f / env.deltaTime;
+
+		std::cout << "fps: " << fps << '\n'; // TODO:use sdl2 ttf here
+		std::cout << "deltaTime: " << env.deltaTime << '\n'; // TODO:use sdl2 ttf here
+
+		// Cap to 60 FPS
+		// SDL_Delay(floor(16.666f - env.deltaTime));
+
 		ClearBuffer(env);
 
 		// event handling
-		while (SDL_PollEvent(&env.Event)) {
-			if (env.Event.type == SDL_QUIT) {
-				env.IsGameOver = true;
+		while (SDL_PollEvent(&env.event)) {
+			if (env.event.type == SDL_QUIT) {
+				env.isGameOver = true;
 			}
 
-			MouseEvents(env, env.Event);
+			MouseEvents(env, env.event);
 
-			for (auto* pawn: env.AllPawns) {
-				pawn->KeyboardEvensHandlers(env, env.Event.type, env.Event.key.keysym.sym);
+			for (auto* pawn: env.allPawns) {
+				pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
 			}
 		}
 
-		env.Events.EmitEvent("TickUpdate");
+		env.events.EmitEvent("TickUpdate");
 
-		env.Events.EmitEvent("MarkDestroy");
+		env.events.EmitEvent("MarkDestroy");
 		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all dead objects
-		for (const auto* pawn: env.PawnsToDestroy) {
+		for (const auto* pawn: env.pawnsToDestroy) {
 			delete pawn;
 		}
-		if (!env.PawnsToDestroy.empty()) {
-			env.PawnsToDestroy.clear();
+		if (!env.pawnsToDestroy.empty()) {
+			env.pawnsToDestroy.clear();
 		}
 
-		env.Events.EmitEvent("Draw");
+		env.events.EmitEvent("Draw");
 
 		// update screen with buffer
-		SDL_UpdateTexture(env.Screen, nullptr, env.WindowBuffer, env.WindowWidth << 2);
-		SDL_RenderCopy(env.Renderer, env.Screen, nullptr, nullptr);
+		SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
+		SDL_RenderCopy(env.renderer, env.screen, nullptr, nullptr);
 
-		SDL_RenderPresent(env.Renderer);
+		SDL_RenderPresent(env.renderer);
+
+		oldTime = newTime;
 	}
 
-	SDL_DestroyRenderer(env.Renderer);
-	SDL_DestroyWindow(env.Window);
+	SDL_DestroyRenderer(env.renderer);
+	SDL_DestroyWindow(env.window);
 
-	delete env.WindowBuffer;
+	delete env.windowBuffer;
 
 	SDL_Quit();
 

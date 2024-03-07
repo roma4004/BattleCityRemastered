@@ -8,7 +8,7 @@ struct Environment;
 class PlayerTwo final : public Pawn
 {
 public:
-	PlayerTwo(const Point& pos, int width, int height, int color, int speed, int health, Environment* env);
+	PlayerTwo(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
 
 	~PlayerTwo() override;
 

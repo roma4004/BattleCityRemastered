@@ -1,7 +1,7 @@
 #include "../headers/Pawn.h"
 #include "../headers/Bullet.h"
 
-Pawn::Pawn(const Point& pos, const int width, const int height, const int color, const int speed, const int health,
+Pawn::Pawn(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 		   Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env) {}
 
@@ -10,7 +10,7 @@ Pawn::~Pawn() = default;
 void Pawn::MarkDestroy(Environment* env) const
 {
 	if (!GetIsAlive()) {
-		env->PawnsToDestroy.emplace_back(const_cast<Pawn*>(this));
+		env->pawnsToDestroy.emplace_back(const_cast<Pawn*>(this));
 	}
 }
 
@@ -29,7 +29,7 @@ bool Pawn::IsCollideWith(const SDL_Rect* self, const Pawn* other) const
 		return false;
 	}
 
-	const auto rect2 = SDL_Rect{other->GetX(), other->GetY(), other->GetWidth(), other->GetHeight()};
+	const auto rect2 = SDL_Rect{ static_cast<int>(other->GetX()), static_cast<int>(other->GetY()), static_cast<int>(other->GetWidth()), static_cast<int>(other->GetHeight())};
 	SDL_Rect rect3;
 
 	return SDL_IntersectRect(self, &rect2, &rect3);
@@ -37,7 +37,7 @@ bool Pawn::IsCollideWith(const SDL_Rect* self, const Pawn* other) const
 
 std::tuple<bool, Pawn*> Pawn::IsCanMove(const SDL_Rect* self, const Environment* env) const
 {
-	for (auto* pawn: env->AllPawns) {
+	for (auto* pawn: env->allPawns) {
 		if (IsCollideWith(self, pawn)) {
 			if (!pawn->GetIsPassable()) {
 				return std::make_tuple(false, pawn);
@@ -62,63 +62,70 @@ void Pawn::TickUpdate(Environment* env)
 
 void Pawn::Shot(Environment* env)
 {
-	if (KeyboardButtons.shot) {
+	if (keyboardButtons.shot) {
 		const Direction direction = GetDirection();
 		const Point tankHalf = {GetWidth() / 2, GetHeight() / 2};
-		const int x = GetX();
-		const int y = GetY();
-		const Point tankCenter = {x + tankHalf.x, y + tankHalf.y};
-		const int width = GetBulletWidth();
-		const int height = GetBulletHeight();
-		const Point bulletHalf = {width / 2, height / 2};
+		const int tankX = static_cast<int>(GetX());
+		const int tankY = static_cast<int>(GetY());
+		const Point tankCenter = {tankX + tankHalf.x, tankY + tankHalf.y};
+
+		const int bulletWidth = GetBulletWidth();
+		const int bulletHeight = GetBulletHeight();
+		const Point bulletHalf = {bulletWidth / 2, bulletHeight / 2};
 		constexpr int color = 0xffffff;
 		const int speed = GetBulletSpeed();
 		constexpr int health = 1;
+		Point pos;
 
-		if (direction == Direction::UP && y - bulletHalf.x - width >= 0u) {
-			const Point pos = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - height - bulletHalf.y};
-			env->AllPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health, env});
-		} else if (direction == Direction::DOWN && y + bulletHalf.y + height <= env->WindowHeight) {
-			const Point pos = {tankCenter.x - bulletHalf.x, tankCenter.y + tankHalf.y + height + bulletHalf.y};
-			env->AllPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health, env});
-		} else if (direction == Direction::LEFT && x - bulletHalf.x - width >= 0u) {
-			const Point pos = {tankCenter.x - tankHalf.x - width - bulletHalf.x, tankCenter.y - bulletHalf.y};
-			env->AllPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health, env});
-		} else if (direction == Direction::RIGHT && x + GetWidth() + bulletHalf.x + width <= env->WindowWidth) {
-			const Point pos = {tankCenter.x + tankHalf.x + width + bulletHalf.x, tankCenter.y - bulletHalf.y};
-			env->AllPawns.emplace_back(new Bullet{pos, width, height, color, speed, direction, health, env});
+		if (direction == Direction::UP && tankY - bulletHalf.x - bulletWidth >= 0u) {
+			pos = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHeight - bulletHalf.y};
+		} else if (direction == Direction::DOWN && tankY + bulletHalf.y + bulletHeight <= env->windowHeight) {
+			pos = {tankCenter.x - bulletHalf.x, tankCenter.y + tankHalf.y + bulletHeight + bulletHalf.y};
+		} else if (direction == Direction::LEFT && tankX - bulletHalf.x - bulletWidth >= 0u) {
+			pos = {tankCenter.x - tankHalf.x - bulletWidth - bulletHalf.x, tankCenter.y - bulletHalf.y};
+		} else if (direction == Direction::RIGHT && tankX + GetWidth() + bulletHalf.x + bulletWidth <= env->windowWidth) {
+			pos = {tankCenter.x + tankHalf.x + bulletWidth + bulletHalf.x, tankCenter.y - bulletHalf.y};
+		} else {
+			keyboardButtons.shot = false;
+			return;
 		}
 
-		KeyboardButtons.shot = false;
+		env->allPawns.emplace_back(new Bullet{pos, bulletWidth, bulletHeight, color, speed, direction, health, env});
+
+		keyboardButtons.shot = false;
 	}
 }
 
 void Pawn::Move(Environment* env)
 {
-	const int speed = GetSpeed();
-	if (KeyboardButtons.a && GetX() + speed >= 0) {
-		const auto self = SDL_Rect{this->GetX() - this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight()};
+	const float speed = GetSpeed() * env->deltaTime;
+	float x = GetX();
+	float y = GetY();
+	int width = static_cast<int>(GetWidth());
+	int height = static_cast<int>(GetHeight());
+	if (keyboardButtons.a && GetX() + speed >= 0.f) {
+		const auto self = SDL_Rect{static_cast<int>(x - speed), static_cast<int>(y), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveX(-speed);
 		}
 	}
 
-	if (KeyboardButtons.d && GetX() + speed + GetWidth() < env->WindowWidth) {
-		const auto self = SDL_Rect{this->GetX() + this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight()};
+	if (keyboardButtons.d && GetX() + speed + width < static_cast<float>(env->windowWidth)) {
+		const auto self = SDL_Rect{static_cast<int>(x + speed), static_cast<int>(y), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveX(speed);
 		}
 	}
 
-	if (KeyboardButtons.w && GetY() + speed >= 0) {
-		const auto self = SDL_Rect{this->GetX(), this->GetY() - this->GetSpeed(), this->GetWidth(), this->GetHeight()};
+	if (keyboardButtons.w && GetY() + speed >= 0.0f) {
+		const auto self = SDL_Rect{static_cast<int>(x), static_cast<int>(y - speed), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveY(-speed);
 		}
 	}
 
-	if (KeyboardButtons.s && GetY() + speed + GetHeight() < env->WindowHeight) {
-		const auto self = SDL_Rect{this->GetX(), this->GetY() + this->GetSpeed(), this->GetWidth(), this->GetHeight()};
+	if (keyboardButtons.s && GetY() + speed + height < static_cast<float>(env->windowHeight)) {
+		const auto self = SDL_Rect{static_cast<int>(x), static_cast<int>(y + speed), width, height};
 		if (auto [isCanMove, pawn] = IsCanMove(&self, env); isCanMove) {
 			MoveY(speed);
 		}

@@ -24,6 +24,7 @@ public:
 	std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment* env) const override;
 
 private:
-	int _damage{15};
 	void DealDamage(Pawn* pawn);
+
+	int _damage{15};
 };
