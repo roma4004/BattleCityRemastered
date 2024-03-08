@@ -65,5 +65,4 @@ struct Environment
 	std::list<Pawn*> pawnsToDestroy;
 
 	EventSystem events;
-
 };
