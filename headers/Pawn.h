@@ -28,9 +28,9 @@ public:
 
 	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
 
-	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
+	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const BaseObj* other) const;
 
-	[[nodiscard]] virtual std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment* env) const;
+	[[nodiscard]] virtual std::tuple<bool, BaseObj*> IsCanMove(const SDL_Rect* self, const Environment* env) const;
 
 	void TickUpdate(Environment* env) override;
 
@@ -56,9 +56,9 @@ private:
 
 	int _damage{1};
 
-	int _bulletWidth{10};
+	int _bulletWidth{6};
 
-	int _bulletHeight{10};
+	int _bulletHeight{6};
 
 	int _bulletSpeed{300};
 };

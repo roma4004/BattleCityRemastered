@@ -21,10 +21,10 @@ public:
 
 	void Shot(Environment* env) override;
 
-	std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment* env) const override;
+	std::tuple<bool, BaseObj*> IsCanMove(const SDL_Rect* self, const Environment* env) const override;
 
 private:
-	void DealDamage(Pawn* pawn);
+	void DealDamage(BaseObj* object);
 
 	int _damage{15};
 };

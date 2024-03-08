@@ -1,6 +1,8 @@
 #include "../headers/Environment.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
+#include "../headers/Map.h"
+#include "../headers/Brick.h"
 #include <iostream>
 
 static void MouseEvents(Environment& env, const SDL_Event& event)
@@ -77,11 +79,20 @@ int main(int argc, char* argv[])
 	Environment env;
 	constexpr int speed = 142;
 	constexpr int tankHealth = 100;
-	constexpr Point playerOnePos{20, 20};
-	constexpr Point playerTwoPos{200, 200};
+	constexpr int tankSize = 40;
+	Point playerOnePos{env.windowWidth/2 - tankSize, env.windowHeight - tankSize};
+	Point playerTwoPos{env.windowWidth/2 + tankSize, env.windowHeight - tankSize};
 	env.allPawns.reserve(2);
-	env.allPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth, &env});
-	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth, &env});
+	env.allPawns.emplace_back(new PlayerOne{playerOnePos, tankSize, tankSize, 0xeaea00, speed, tankHealth, &env});
+	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, tankSize, tankSize, 0x408000, speed, tankHealth, &env});
+
+	
+	//Map creation
+	for (int i = 0; i < 4; ++i) {
+		Point brickPos{30 + i * 30, 30 + i * 30};
+		env.allPawns.emplace_back(new Brick(brickPos, &env));
+	}
+	
 
 	Init(env);
 
@@ -107,8 +118,11 @@ int main(int argc, char* argv[])
 
 			MouseEvents(env, env.event);
 
-			for (auto* pawn: env.allPawns) {
-				pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
+			// TODO: refactor events to handle pawns , objects and other obstacles
+			for (auto* object: env.allPawns) {
+				if (auto* pawn = dynamic_cast<Pawn*>(object)) {
+					pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
+				}
 			}
 		}
 
@@ -116,7 +130,7 @@ int main(int argc, char* argv[])
 
 		env.events.EmitEvent("MarkDestroy");
 		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
-		// Destroy all dead objects
+		// Destroy all "dead" objects (excluding mapBlocks)
 		if (!env.pawnsToDestroy.empty()) {
 			for (const auto* pawn: env.pawnsToDestroy) { // maybe use parallel for
 				delete pawn;
@@ -124,8 +138,9 @@ int main(int argc, char* argv[])
 
 			env.pawnsToDestroy.clear();
 		}
-
+		
 		env.events.EmitEvent("Draw");
+		
 
 		// update screen with buffer
 		SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);

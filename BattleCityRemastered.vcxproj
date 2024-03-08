@@ -133,6 +133,7 @@
     <ClCompile Include="source\Environment.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\BaseObj.cpp" />
+    <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\Pawn.cpp" />
     <ClCompile Include="source\PlayerOne.cpp" />
     <ClCompile Include="source\PlayerTwo.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="headers\IDrawable.h" />
     <ClInclude Include="headers\IMovable.h" />
     <ClInclude Include="headers\IObsticle.h" />
+    <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\ITickUpdatable.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\Pawn.h" />

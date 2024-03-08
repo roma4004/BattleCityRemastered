@@ -27,6 +27,28 @@ Brick::Brick(const Point& pos, const int width, const int height, const int colo
 	});
 }
 
+Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, 30, 30, 0x924b00, 0, 45, env)
+{
+	BaseObj::SetIsPassable(false);
+	BaseObj::SetIsDestructible(true);
+	BaseObj::SetIsPenetrable(false);
+	
+	// subscribe
+	if (_env == nullptr) {
+		return;
+	}
+
+	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	
+	_env->events.AddListenerToEvent("MarkDestroy", eventName, [env = _env, self = dynamic_cast<BaseObj*>(this)]() {
+		self->MarkDestroy(env);
+	});
+
+	_env->events.AddListenerToEvent("Draw", eventName, [env = _env, self = dynamic_cast<BaseObj*>(this)]() {
+		self->Draw(env);
+	});
+}
+
 Brick::~Brick()
 {
 	// unsubscribe
@@ -40,9 +62,7 @@ Brick::~Brick()
 
 	_env->events.RemoveListenerFromEvent("MarkDestroy", eventName);
 
-	_env->events.RemoveListenerFromEvent("TickUpdate", eventName);
-
-	if (const auto it = std::ranges::find(_env->allPawns, dynamic_cast<Pawn*>(this));
+	if (const auto it = std::ranges::find(_env->allPawns, dynamic_cast<BaseObj*>(this));
 		it != _env->allPawns.cend()) {
 		_env->allPawns.erase(it);
 	}
@@ -56,3 +76,13 @@ void Brick::Draw(const Environment* env) const
 		}
 	}
 }
+
+void Brick::MarkDestroy(Environment* env) const
+{
+	if (!GetIsAlive()) {
+		auto self = dynamic_cast<BaseObj*>(const_cast<Brick*>(this));
+		env->pawnsToDestroy.emplace_back(self);
+	}
+}
+
+void Brick::TickUpdate(Environment* env) {}

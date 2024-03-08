@@ -61,9 +61,10 @@ struct Environment
 	void SetPixel(int x, int y, int color) const;
 
 	MouseButtons mouseButtons;
-	std::vector<Pawn*> allPawns;
-	std::list<Pawn*> pawnsToDestroy;
-
+	std::vector<BaseObj*> allPawns;
+	std::list<BaseObj*> pawnsToDestroy;
+	
+	
 	EventSystem events;
 
 };

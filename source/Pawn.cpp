@@ -11,9 +11,6 @@ void Pawn::MarkDestroy(Environment* env) const
 {
 	if (!GetIsAlive()) {
 		env->pawnsToDestroy.emplace_back(const_cast<Pawn*>(this));
-		if (const auto it = std::ranges::find(env->allPawns, const_cast<Pawn*>(this)); it != env->allPawns.end()) {
-  			env->allPawns.erase(it);
-		}
 	}
 }
 
@@ -26,7 +23,7 @@ void Pawn::Draw(const Environment* env) const
 	}
 }
 
-bool Pawn::IsCollideWith(const SDL_Rect* self, const Pawn* other) const
+bool Pawn::IsCollideWith(const SDL_Rect* self, const BaseObj* other) const
 {
 	if (this == other) {
 		return false;
@@ -38,7 +35,7 @@ bool Pawn::IsCollideWith(const SDL_Rect* self, const Pawn* other) const
 	return SDL_IntersectRect(self, &rect2, &rect3);
 }
 
-std::tuple<bool, Pawn*> Pawn::IsCanMove(const SDL_Rect* self, const Environment* env) const
+std::tuple<bool, BaseObj*> Pawn::IsCanMove(const SDL_Rect* self, const Environment* env) const
 {
 	for (auto* pawn: env->allPawns) {
 		if (IsCollideWith(self, pawn)) {

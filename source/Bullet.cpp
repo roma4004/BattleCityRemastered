@@ -94,10 +94,10 @@ void Bullet::Move(Environment* env)
 	}
 }
 
-void Bullet::DealDamage(Pawn* pawn)
+void Bullet::DealDamage(BaseObj* object)
 {
 	const int damage = GetDamage();
-	pawn->TakeDamage(damage);
+	object->TakeDamage(damage);
 	TakeDamage(damage);
 }
 
@@ -123,7 +123,7 @@ void Bullet::SetDamage(const int damage)
 	_damage = damage;
 }
 
-std::tuple<bool, Pawn*> Bullet::IsCanMove(const SDL_Rect* self, const Environment* env) const
+std::tuple<bool, BaseObj*> Bullet::IsCanMove(const SDL_Rect* self, const Environment* env) const
 {
 	for (auto* pawn: env->allPawns) {
 		if (IsCollideWith(self, pawn)) {
