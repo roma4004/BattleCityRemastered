@@ -27,10 +27,10 @@ Iron::Iron(const Point& pos, const int width, const int height, const int color,
 	});
 }
 
-Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, 9, 9, 0xaaaaaa, 0, 5000, env)
+Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, 9, 9, 0xaaaaaa, 0, 15, env)
 {
 	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(true);
+	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
 	
 	// subscribe

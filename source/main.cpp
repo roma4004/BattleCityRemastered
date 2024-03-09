@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
 	
 	//Map creation
 	Map::BrickCreation(&env, 30,30);
+	Map::IronCreation(&env, 310,310);
 	
 
 	Init(env);

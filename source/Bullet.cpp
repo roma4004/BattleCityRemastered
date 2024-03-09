@@ -97,7 +97,9 @@ void Bullet::Move(Environment* env)
 void Bullet::DealDamage(BaseObj* object)
 {
 	const int damage = GetDamage();
-	object->TakeDamage(damage);
+	if (object->GetIsDestructible()) {
+		object->TakeDamage(damage);
+	}
 	TakeDamage(damage);
 }
 
