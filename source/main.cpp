@@ -3,6 +3,7 @@
 #include "../headers/PlayerTwo.h"
 #include "../headers/Map.h"
 #include "../headers/Brick.h"
+#include "../headers/Iron.h"
 #include <iostream>
 
 static void MouseEvents(Environment& env, const SDL_Event& event)
@@ -74,6 +75,7 @@ int Init(Environment& env)
 	return 0;
 }
 
+
 int main(int argc, char* argv[])
 {
 	Environment env;
@@ -86,11 +88,9 @@ int main(int argc, char* argv[])
 	env.allPawns.emplace_back(new PlayerOne{playerOnePos, tankSize, tankSize, 0xeaea00, speed, tankHealth, &env});
 	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, tankSize, tankSize, 0x408000, speed, tankHealth, &env});
 
-	
-	//Map creation
-	Map::BrickCreation(&env, 30,30);
-	Map::IronCreation(&env, 310,310);
-	
+    //Map creation
+	Map::BrickCreation<Brick>(&env, 30, 30);
+	Map::BrickCreation<Iron>(&env, 310, 310);
 
 	Init(env);
 
@@ -136,9 +136,9 @@ int main(int argc, char* argv[])
 
 			env.pawnsToDestroy.clear();
 		}
-		
+
 		env.events.EmitEvent("Draw");
-		
+
 
 		// update screen with buffer
 		SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);
