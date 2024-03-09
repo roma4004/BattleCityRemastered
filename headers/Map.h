@@ -10,5 +10,7 @@ public:
 	Map();
 
 	~Map();
-	static void MapCreation(Environment* env, int x, int y);
+
+	static void BrickCreation(Environment* env, int x, int y);
+	static void IronCreation(Environment* env, int x, int y);
 };

@@ -1,9 +1,9 @@
-#include "../headers/Brick.h"
+﻿#include "../headers/Iron.h"
 #include "../headers/Environment.h"
 
 #include <string>
 
-Brick::Brick(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
+Iron::Iron(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 			 Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
@@ -27,7 +27,7 @@ Brick::Brick(const Point& pos, const int width, const int height, const int colo
 	});
 }
 
-Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, 9, 9, 0x924b00, 0, 15, env)
+Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, 9, 9, 0xaaaaaa, 0, 5000, env)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -49,7 +49,7 @@ Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, 9, 9, 0x924b00, 
 	});
 }
 
-Brick::~Brick()
+Iron::~Iron()
 {
 	// unsubscribe
 	if (_env == nullptr) {
@@ -68,7 +68,7 @@ Brick::~Brick()
 	}
 }
 
-void Brick::Draw(const Environment* env) const
+void Iron::Draw(const Environment* env) const
 {
 	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y) {
 		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX()) + GetWidth(); ++x) {
@@ -77,12 +77,12 @@ void Brick::Draw(const Environment* env) const
 	}
 }
 
-void Brick::MarkDestroy(Environment* env) const
+void Iron::MarkDestroy(Environment* env) const
 {
 	if (!GetIsAlive()) {
-		auto self = dynamic_cast<BaseObj*>(const_cast<Brick*>(this));
+		auto self = dynamic_cast<BaseObj*>(const_cast<Iron*>(this));
 		env->pawnsToDestroy.emplace_back(self);
 	}
 }
 
-void Brick::TickUpdate(Environment* env) {}
+void Iron::TickUpdate(Environment* env) {}

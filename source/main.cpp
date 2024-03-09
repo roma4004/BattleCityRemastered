@@ -88,10 +88,7 @@ int main(int argc, char* argv[])
 
 	
 	//Map creation
-	for (int i = 0; i < 4; ++i) {
-		Point brickPos{30 + i * 30, 30 + i * 30};
-		env.allPawns.emplace_back(new Brick(brickPos, &env));
-	}
+	Map::BrickCreation(&env, 30,30);
 	
 
 	Init(env);
