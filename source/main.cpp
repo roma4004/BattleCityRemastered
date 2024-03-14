@@ -75,22 +75,22 @@ int Init(Environment& env)
 	return 0;
 }
 
-
 int main(int argc, char* argv[])
 {
 	Environment env;
-	constexpr int speed = 142;
-	constexpr int tankHealth = 100;
-	constexpr int tankSize = 40;
-	Point playerOnePos{env.windowWidth/2 - tankSize, env.windowHeight - tankSize};
-	Point playerTwoPos{env.windowWidth/2 + tankSize, env.windowHeight - tankSize};
+	Point playerOnePos{env.gridSize * 16, env.windowHeight - env.tankSize};
+	Point playerTwoPos{env.gridSize * 32, env.windowHeight - env.tankSize};
 	env.allPawns.reserve(2);
-	env.allPawns.emplace_back(new PlayerOne{playerOnePos, tankSize, tankSize, 0xeaea00, speed, tankHealth, &env});
-	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, tankSize, tankSize, 0x408000, speed, tankHealth, &env});
+	env.allPawns.emplace_back(new PlayerOne{playerOnePos, env.tankSize, env.tankSize, 0xeaea00, env.tankSpeed, env.tankHealth, &env});
+	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, env.tankSize, env.tankSize, 0x408000, env.tankSpeed, env.tankHealth, &env});
 
-    //Map creation
-	Map::BrickCreation<Brick>(&env, 30, 30);
-	Map::BrickCreation<Iron>(&env, 310, 310);
+	
+	//Map creation
+	//Map::ObstacleCreation<Brick>(&env, 30,30);
+	//Map::ObstacleCreation<Iron>(&env, 310,310);
+	Map field{};
+	field.MapCreation(&env);
+	
 
 	Init(env);
 
@@ -136,9 +136,9 @@ int main(int argc, char* argv[])
 
 			env.pawnsToDestroy.clear();
 		}
-
+		
 		env.events.EmitEvent("Draw");
-
+		
 
 		// update screen with buffer
 		SDL_UpdateTexture(env.screen, nullptr, env.windowBuffer, env.windowWidth << 2);

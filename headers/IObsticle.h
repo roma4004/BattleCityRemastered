@@ -5,9 +5,9 @@ class IObsticle
 public:
 	virtual ~IObsticle() = default;
 
-	virtual bool GetIsPassable() = 0;
-	virtual bool GetIsDestructible() = 0;
-	virtual bool GetIsPenetrable() = 0;
+	virtual bool GetIsPassable() const = 0;
+	virtual bool GetIsDestructible() const = 0;
+	virtual bool GetIsPenetrable() const = 0;
 	virtual void SetIsPassable(bool value) = 0;
 	virtual void SetIsDestructible(bool value) = 0;
 	virtual void SetIsPenetrable(bool value) = 0;

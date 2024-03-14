@@ -53,16 +53,12 @@ void PlayerOne::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, 
 	if (eventType == SDL_KEYDOWN) {
 		if (key == SDLK_a) {
 			keyboardButtons.a = true;
-			SetDirection(Direction::LEFT);
 		} else if (key == SDLK_d) {
 			keyboardButtons.d = true;
-			SetDirection(Direction::RIGHT);
 		} else if (key == SDLK_s) {
 			keyboardButtons.s = true;
-			SetDirection(Direction::DOWN);
 		} else if (key == SDLK_w) {
 			keyboardButtons.w = true;
-			SetDirection(Direction::UP);
 		}
 	} else if (eventType == SDL_KEYUP) {
 		if (key == SDLK_a) {

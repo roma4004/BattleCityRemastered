@@ -27,7 +27,7 @@ Brick::Brick(const Point& pos, const int width, const int height, const int colo
 	});
 }
 
-Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, 9, 9, 0x924b00, 0, 15, env)
+Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0x924b00, 0, 15, env)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

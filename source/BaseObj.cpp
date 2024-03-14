@@ -101,7 +101,7 @@ void BaseObj::TakeDamage(const int damage)
 	}
 }
 
-bool BaseObj::GetIsPassable()
+bool BaseObj::GetIsPassable() const
 {
 	return _isPassable;
 }
@@ -111,7 +111,7 @@ void BaseObj::SetIsPassable(const bool value)
 	_isPassable = value;
 }
 
-bool BaseObj::GetIsDestructible()
+bool BaseObj::GetIsDestructible() const
 {
 	return _isDestructible;
 }
@@ -121,7 +121,7 @@ void BaseObj::SetIsDestructible(const bool value)
 	_isDestructible = value;
 }
 
-bool BaseObj::GetIsPenetrable()
+bool BaseObj::GetIsPenetrable() const
 {
 	return _isPenetrable;
 }

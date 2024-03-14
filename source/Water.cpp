@@ -1,9 +1,9 @@
-﻿#include "../headers/Iron.h"
+﻿#include "../headers/Water.h"
 #include "../headers/Environment.h"
 
 #include <string>
 
-Iron::Iron(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
+Water::Water(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 			 Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
@@ -27,11 +27,11 @@ Iron::Iron(const Point& pos, const int width, const int height, const int color,
 	});
 }
 
-Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0xaaaaaa, 0, 15, env)
+Water::Water(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize, env->gridSize, 0x1e90ff, 0, 15, env)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(false);
+	BaseObj::SetIsPenetrable(true);
 	
 	// subscribe
 	if (_env == nullptr) {
@@ -49,7 +49,7 @@ Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1,
 	});
 }
 
-Iron::~Iron()
+Water::~Water()
 {
 	// unsubscribe
 	if (_env == nullptr) {
@@ -68,7 +68,7 @@ Iron::~Iron()
 	}
 }
 
-void Iron::Draw(const Environment* env) const
+void Water::Draw(const Environment* env) const
 {
 	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y) {
 		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX()) + GetWidth(); ++x) {
@@ -77,12 +77,12 @@ void Iron::Draw(const Environment* env) const
 	}
 }
 
-void Iron::MarkDestroy(Environment* env) const
+void Water::MarkDestroy(Environment* env) const
 {
 	if (!GetIsAlive()) {
-		auto self = dynamic_cast<BaseObj*>(const_cast<Iron*>(this));
+		auto self = dynamic_cast<BaseObj*>(const_cast<Water*>(this));
 		env->pawnsToDestroy.emplace_back(self);
 	}
 }
 
-void Iron::TickUpdate(Environment* env) {}
+void Water::TickUpdate(Environment* env) {}

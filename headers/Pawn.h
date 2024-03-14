@@ -1,5 +1,6 @@
 #pragma once
 #include "SDL.h"
+#include <list>
 
 #include "../headers/BaseObj.h"
 #include "../headers/Environment.h"
@@ -28,9 +29,9 @@ public:
 
 	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
 
-	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const BaseObj* other) const;
+	[[nodiscard]] static bool IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2);
 
-	[[nodiscard]] virtual std::tuple<bool, BaseObj*> IsCanMove(const SDL_Rect* self, const Environment* env) const;
+	[[nodiscard]] virtual std::tuple<bool, std::list<BaseObj*>> IsCanMove(const BaseObj* me, const Environment* env);
 
 	void TickUpdate(Environment* env) override;
 
@@ -46,8 +47,8 @@ public:
 	[[nodiscard]] int GetBulletHeight() const;
 	void SetBulletHeight(int bulletHeight);
 
-	[[nodiscard]] int GetBulletSpeed() const;
-	void SetBulletSpeed(int bulletSpeed);
+	[[nodiscard]] float GetBulletSpeed() const;
+	void SetBulletSpeed(float bulletSpeed);
 
 	PlayerKeys keyboardButtons;
 
@@ -60,5 +61,5 @@ private:
 
 	int _bulletHeight{6};
 
-	int _bulletSpeed{300};
+	float _bulletSpeed{300};
 };
