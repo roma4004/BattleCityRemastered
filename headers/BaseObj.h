@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../headers/IDestroyable.h"
 #include "../headers/IDrawable.h"
 #include "../headers/IObsticle.h"
 #include "../headers/ITickUpdatable.h"
@@ -8,7 +7,7 @@
 
 struct Environment;
 
-class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable, public IDestroyable
+class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable
 {
 public:
 	BaseObj(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);

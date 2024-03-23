@@ -1,7 +1,7 @@
 #include "../headers/PlayerOne.h"
 
-PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
-					 Environment* env)
+PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const int color, const float speed,
+					 const int health, Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
 	BaseObj::SetIsPassable(false);
@@ -9,29 +9,30 @@ PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const 
 	BaseObj::SetIsPenetrable(false);
 
 	// subscribe
-	if (_env == nullptr) {
+	if (_env == nullptr)
+	{
 		return;
 	}
 
 	const std::string listenerName = "PlayerOne";
 
-	_env->events.AddListenerToEvent("TickUpdate", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
-		self->TickUpdate(env);
-	});
+	_env->events.AddListenerToEvent("TickUpdate", listenerName,
+									[self = dynamic_cast<Pawn*>(this)]()
+									{
+										self->TickUpdate();
+									});
 
-	_env->events.AddListenerToEvent("MarkDestroy", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
-		self->MarkDestroy(env);
-	});
-
-	_env->events.AddListenerToEvent("Draw", listenerName, [env = _env, self = dynamic_cast<Pawn*>(this)]() {
-		self->Draw(env);
+	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]()
+	{
+		self->Draw();
 	});
 }
 
 PlayerOne::~PlayerOne()
 {
 	// unsubscribe
-	if (_env == nullptr) {
+	if (_env == nullptr)
+	{
 		return;
 	}
 
@@ -39,37 +40,50 @@ PlayerOne::~PlayerOne()
 
 	_env->events.RemoveListenerFromEvent("Draw", listenerName);
 
-	_env->events.RemoveListenerFromEvent("MarkDestroy", listenerName);
-
 	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
-
-	if (const auto it = std::ranges::find(_env->allPawns, dynamic_cast<Pawn*>(this)); it != _env->allPawns.end()) {
-		_env->allPawns.erase(it);
-	}
 }
 
 void PlayerOne::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
 {
-	if (eventType == SDL_KEYDOWN) {
-		if (key == SDLK_a) {
+	if (eventType == SDL_KEYDOWN)
+	{
+		if (key == SDLK_a)
+		{
 			keyboardButtons.a = true;
-		} else if (key == SDLK_d) {
+		}
+		else if (key == SDLK_d)
+		{
 			keyboardButtons.d = true;
-		} else if (key == SDLK_s) {
+		}
+		else if (key == SDLK_s)
+		{
 			keyboardButtons.s = true;
-		} else if (key == SDLK_w) {
+		}
+		else if (key == SDLK_w)
+		{
 			keyboardButtons.w = true;
 		}
-	} else if (eventType == SDL_KEYUP) {
-		if (key == SDLK_a) {
+	}
+	else if (eventType == SDL_KEYUP)
+	{
+		if (key == SDLK_a)
+		{
 			keyboardButtons.a = false;
-		} else if (key == SDLK_d) {
+		}
+		else if (key == SDLK_d)
+		{
 			keyboardButtons.d = false;
-		} else if (key == SDLK_s) {
+		}
+		else if (key == SDLK_s)
+		{
 			keyboardButtons.s = false;
-		} else if (key == SDLK_w) {
+		}
+		else if (key == SDLK_w)
+		{
 			keyboardButtons.w = false;
-		} else if (key == SDLK_SPACE) {
+		}
+		else if (key == SDLK_SPACE)
+		{
 			keyboardButtons.shot = true;
 		}
 	}

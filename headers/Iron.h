@@ -12,7 +12,6 @@ public:
 
 	~Iron() override;
 
-	void Draw(const Environment* env) const override;
-	void MarkDestroy(Environment* env) const override;
-	void TickUpdate(Environment* env) override;
+	void Draw() const override;
+	void TickUpdate() override;
 };

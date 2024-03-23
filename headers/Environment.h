@@ -54,7 +54,7 @@ struct Environment
 	SDL_Renderer* renderer{};
 	SDL_Texture* screen{};
 
-	int gridSize = windowHeight / 50 ;
+	int gridSize = windowHeight / 50;
 	float tankSpeed = 142;
 	int tankHealth = 100;
 	int tankSize = gridSize * 3; // for better turns
@@ -66,10 +66,8 @@ struct Environment
 	void SetPixel(int x, int y, int color) const;
 
 	MouseButtons mouseButtons;
-	std::vector<BaseObj*> allPawns;
+	std::vector<std::unique_ptr<BaseObj>> allPawns;
 	std::list<BaseObj*> pawnsToDestroy;
-	
-	
-	EventSystem events;
 
+	EventSystem events;
 };

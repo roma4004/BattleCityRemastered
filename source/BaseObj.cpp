@@ -4,7 +4,9 @@ struct Environment;
 
 BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 				 Environment* env)
-	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health), _env(env) {}
+	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health), _env(env)
+{
+}
 
 BaseObj::~BaseObj() = default;
 
@@ -96,7 +98,8 @@ bool BaseObj::GetIsAlive() const
 void BaseObj::TakeDamage(const int damage)
 {
 	_health -= damage;
-	if (_health < 1) {
+	if (_health < 1)
+	{
 		_isAlive = false;
 	}
 }

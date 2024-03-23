@@ -21,21 +21,19 @@ public:
 
 	~Pawn() override;
 
-	void MarkDestroy(Environment* env) const override;
+	void Move() override;
 
-	void Move(Environment* env) override;
-
-	void Draw(const Environment* env) const override;
+	void Draw() const override;
 
 	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
 
 	[[nodiscard]] static bool IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2);
 
-	[[nodiscard]] virtual std::tuple<bool, std::list<BaseObj*>> IsCanMove(const BaseObj* me, const Environment* env);
+	[[nodiscard]] virtual std::tuple<bool, std::list<BaseObj*>> IsCanMove(const BaseObj* me);
 
-	void TickUpdate(Environment* env) override;
+	void TickUpdate() override;
 
-	virtual void Shot(Environment* env);
+	virtual void Shot();
 
 	[[nodiscard]] Direction GetDirection() const;
 
