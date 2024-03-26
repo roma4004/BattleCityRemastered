@@ -180,7 +180,7 @@ void Pawn::Move()
 	}
 }
 
-void Pawn::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key)
+void Pawn::KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key)
 {
 }
 

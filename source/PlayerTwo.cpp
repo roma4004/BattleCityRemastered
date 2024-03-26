@@ -43,7 +43,7 @@ PlayerTwo::~PlayerTwo()
 	_env->events.RemoveListenerFromEvent("Draw", listenerName);
 }
 
-void PlayerTwo::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
+void PlayerTwo::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)
 {
 	if (eventType == SDL_KEYDOWN)
 	{

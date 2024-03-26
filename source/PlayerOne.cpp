@@ -38,12 +38,12 @@ PlayerOne::~PlayerOne()
 
 	const std::string listenerName = "PlayerOne";
 
-	_env->events.RemoveListenerFromEvent("Draw", listenerName);
-
 	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
+
+	_env->events.RemoveListenerFromEvent("Draw", listenerName);
 }
 
-void PlayerOne::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
+void PlayerOne::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)
 {
 	if (eventType == SDL_KEYDOWN)
 	{

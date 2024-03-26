@@ -127,12 +127,12 @@ int main(int argc, char* argv[])
 
 			MouseEvents(env, env.event);
 
-			// TODO: refactor events to handle pawns , objects and other obstacles
+			// TODO: refactor events to handle pawns, objects and other obstacles
 			for (auto& object : env.allPawns)
 			{
 				if (auto* pawn = dynamic_cast<Pawn*>(object.get()))
 				{
-					pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
+					pawn->KeyboardEvensHandlers(env.event.type, env.event.key.keysym.sym);
 				}
 			}
 		}

@@ -25,7 +25,7 @@ public:
 
 	void Draw() const override;
 
-	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
+	virtual void KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key);
 
 	[[nodiscard]] static bool IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2);
 

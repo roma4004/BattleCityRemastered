@@ -115,7 +115,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
         "${SDL2_Image_BIN}/SDL2_image.dll"                  # <--this is in-file
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)                 # <--this is out-file path
-#
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build event to MyTest
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
         "${SDL2_TTF_BIN}/SDL2_ttf.dll"                      # <--this is in-file

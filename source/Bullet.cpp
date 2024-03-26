@@ -131,11 +131,6 @@ void Bullet::Draw() const
 	Pawn::Draw();
 }
 
-void Bullet::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
-{
-	Pawn::KeyboardEvensHandlers(env, eventType, key);
-}
-
 int Bullet::GetDamage() const
 {
 	return _damage;

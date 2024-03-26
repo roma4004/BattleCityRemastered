@@ -67,7 +67,6 @@ struct Environment
 
 	MouseButtons mouseButtons;
 	std::vector<std::unique_ptr<BaseObj>> allPawns;
-	std::list<BaseObj*> pawnsToDestroy;
 
 	EventSystem events;
 };
