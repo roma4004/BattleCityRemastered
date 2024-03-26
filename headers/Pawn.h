@@ -4,7 +4,6 @@
 
 #include "../headers/BaseObj.h"
 #include "../headers/Environment.h"
-#include "../headers/IDrawable.h"
 #include "../headers/IMovable.h"
 #include "../headers/PlayerKeys.h"
 #include "../headers/Point.h"
@@ -12,7 +11,13 @@
 struct Point;
 struct Environment;
 
-enum Direction { UP = 0, LEFT = 1, DOWN = 2, RIGHT = 3 };
+enum Direction
+{
+	UP = 0,
+	LEFT = 1,
+	DOWN = 2,
+	RIGHT = 3
+};
 
 class Pawn : public BaseObj, public IMovable
 {

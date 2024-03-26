@@ -15,7 +15,7 @@ AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
-BreakBeforeBraces: Linux
+BreakBeforeBraces: Allman
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
@@ -33,7 +33,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
-ColumnLimit: 125
+ColumnLimit: 120
 CompactNamespaces: false
 ContinuationIndentWidth: 8
 IndentCaseLabels: true
