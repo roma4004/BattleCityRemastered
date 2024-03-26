@@ -15,7 +15,6 @@ public:
 
 	void Move() override;
 	void Draw() const override;
-	void KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key) override = delete;
 
 	[[nodiscard]] int GetDamage() const;
 	void SetDamage(int damage);
