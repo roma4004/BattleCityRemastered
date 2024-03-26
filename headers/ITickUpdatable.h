@@ -6,5 +6,5 @@ class ITickUpdatable
 {
 public:
 	virtual ~ITickUpdatable() = default;
-	virtual void TickUpdate(Environment* env) = 0;
+	virtual void TickUpdate() = 0;
 };

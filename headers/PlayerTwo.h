@@ -12,5 +12,5 @@ public:
 
 	~PlayerTwo() override;
 
-	void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
+	void KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key) override;
 };

@@ -46,13 +46,18 @@ class Pawn;
 
 struct Environment
 {
-	int windowWidth = 640;
-	int windowHeight = 480;
+	int windowWidth = 800;
+	int windowHeight = 600;
 	int* windowBuffer{};
 	SDL_Event event{};
 	SDL_Window* window{};
 	SDL_Renderer* renderer{};
 	SDL_Texture* screen{};
+
+	int gridSize = windowHeight / 50;
+	float tankSpeed = 142;
+	int tankHealth = 100;
+	int tankSize = gridSize * 3; // for better turns
 	bool isGameOver = false;
 
 	//fps
@@ -61,8 +66,7 @@ struct Environment
 	void SetPixel(int x, int y, int color) const;
 
 	MouseButtons mouseButtons;
-	std::vector<Pawn*> allPawns;
-	std::list<Pawn*> pawnsToDestroy;
+	std::vector<std::unique_ptr<BaseObj>> allPawns;
 
 	EventSystem events;
 };

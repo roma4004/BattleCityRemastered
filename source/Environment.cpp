@@ -7,7 +7,7 @@ void Event::AddListener(const std::string& listenerName, const std::function<voi
 
 void Event::Emit()
 {
-	for (auto& callback: listeners | std::views::values)
+	for (const auto& callback : listeners | std::views::values)
 	{
 		if (callback != nullptr)
 		{
@@ -16,9 +16,15 @@ void Event::Emit()
 	}
 }
 
-void Event::RemoveListener(const std::string& listenerName) { listeners.erase(listenerName); }
+void Event::RemoveListener(const std::string& listenerName)
+{
+	listeners.erase(listenerName);
+}
 
-void EventSystem::AddEvent(const std::string& eventName) { events[eventName] = Event{.name = eventName}; }
+void EventSystem::AddEvent(const std::string& eventName)
+{
+	events[eventName] = Event{.name = eventName};
+}
 
 void EventSystem::AddListenerToEvent(const std::string& eventName, const std::string& listenerName,
 									 const std::function<void()>& callback)

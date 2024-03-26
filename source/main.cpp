@@ -1,4 +1,5 @@
 #include "../headers/Environment.h"
+#include "../headers/Map.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
 #include <iostream>
@@ -9,7 +10,7 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 	{
 		env.mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
-				  << "Down" << '\n';
+			<< "Down" << '\n';
 
 		return;
 	}
@@ -17,7 +18,7 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 	{
 		env.mouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
-				  << "Up" << '\n';
+			<< "Up" << '\n';
 
 		return;
 	}
@@ -55,8 +56,7 @@ int Init(Environment& env)
 		return 1;
 	}
 
-	env.window =
-			SDL_CreateWindow("Battle City remastered", 100, 100, env.windowWidth, env.windowHeight, SDL_WINDOW_SHOWN);
+	env.window = SDL_CreateWindow("Battle City remastered", 100, 100, env.windowWidth, env.windowHeight, SDL_WINDOW_SHOWN);
 	if (env.window == nullptr)
 	{
 		std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << '\n';
@@ -87,15 +87,20 @@ int Init(Environment& env)
 int main(int argc, char* argv[])
 {
 	Environment env;
-	constexpr int speed = 142;
-	constexpr int tankHealth = 100;
-	constexpr Point playerOnePos{20, 20};
-	constexpr Point playerTwoPos{200, 200};
-	env.allPawns.reserve(2);
-	env.allPawns.emplace_back(new PlayerOne{playerOnePos, 100, 100, 0x00ff00, speed, tankHealth, &env});
-	env.allPawns.emplace_back(new PlayerTwo{playerTwoPos, 100, 100, 0xff0000, speed, tankHealth, &env});
-
 	Init(env);
+	Point playerOnePos{env.gridSize * 16, env.windowHeight - env.tankSize};
+	Point playerTwoPos{env.gridSize * 32, env.windowHeight - env.tankSize};
+	env.allPawns.reserve(2);
+	env.allPawns.emplace_back(std::make_unique<PlayerOne>(playerOnePos, env.tankSize, env.tankSize, 0xeaea00, env.tankSpeed,
+														  env.tankHealth, &env));
+	env.allPawns.emplace_back(std::make_unique<PlayerTwo>(playerTwoPos, env.tankSize, env.tankSize, 0x408000, env.tankSpeed,
+														  env.tankHealth, &env));
+
+	//Map creation
+	//Map::ObstacleCreation<Brick>(&env, 30,30);
+	//Map::ObstacleCreation<Iron>(&env, 310,310);
+	Map field{};
+	field.MapCreation(&env);
 
 	Uint64 oldTime = SDL_GetTicks64();
 	while (!env.isGameOver)
@@ -104,8 +109,8 @@ int main(int argc, char* argv[])
 		env.deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
 		const float fps = 1.0f / env.deltaTime;
 
-		std::cout << "fps: " << fps << '\n';				// TODO:use sdl2 ttf here
-		std::cout << "deltaTime: " << env.deltaTime << '\n';// TODO:use sdl2 ttf here
+		std::cout << "fps: " << fps << '\n'; // TODO:use sdl2 ttf here
+		std::cout << "deltaTime: " << env.deltaTime << '\n'; // TODO:use sdl2 ttf here
 
 		// Cap to 60 FPS
 		// SDL_Delay(floor(16.666f - env.deltaTime));
@@ -122,26 +127,25 @@ int main(int argc, char* argv[])
 
 			MouseEvents(env, env.event);
 
-			for (auto* pawn: env.allPawns)
+			// TODO: refactor events to handle pawns, objects and other obstacles
+			for (auto& object : env.allPawns)
 			{
-				pawn->KeyboardEvensHandlers(env, env.event.type, env.event.key.keysym.sym);
+				if (auto* pawn = dynamic_cast<Pawn*>(object.get()))
+				{
+					pawn->KeyboardEvensHandlers(env.event.type, env.event.key.keysym.sym);
+				}
 			}
 		}
 
 		env.events.EmitEvent("TickUpdate");
 
-		env.events.EmitEvent("MarkDestroy");
-		//TODO: solve not work because iterator invalidates after call delete this and unsubscribe
-		// Destroy all dead objects
-		if (!env.pawnsToDestroy.empty())
+		// TODO: solve not work because iterator invalidates after call delete this and unsubscribe
+		// Destroy all "dead" objects (excluding mapBlocks)
+		auto it = std::ranges::remove_if(env.allPawns, [&](const auto& obj)
 		{
-			for (const auto* pawn: env.pawnsToDestroy)
-			{// maybe use parallel for
-				delete pawn;
-			}
-
-			env.pawnsToDestroy.clear();
-		}
+			return !obj->GetIsAlive();
+		}).begin();
+		env.allPawns.erase(it, env.allPawns.end());
 
 		env.events.EmitEvent("Draw");
 

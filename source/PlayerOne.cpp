@@ -17,13 +17,15 @@ PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const 
 	const std::string listenerName = "PlayerOne";
 
 	_env->events.AddListenerToEvent("TickUpdate", listenerName,
-									[env = _env, self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(env); });
+									[self = dynamic_cast<Pawn*>(this)]()
+									{
+										self->TickUpdate();
+									});
 
-	_env->events.AddListenerToEvent("MarkDestroy", listenerName,
-									[env = _env, self = dynamic_cast<Pawn*>(this)]() { self->MarkDestroy(env); });
-
-	_env->events.AddListenerToEvent("Draw", listenerName,
-									[env = _env, self = dynamic_cast<Pawn*>(this)]() { self->Draw(env); });
+	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]()
+	{
+		self->Draw();
+	});
 }
 
 PlayerOne::~PlayerOne()
@@ -36,41 +38,30 @@ PlayerOne::~PlayerOne()
 
 	const std::string listenerName = "PlayerOne";
 
-	_env->events.RemoveListenerFromEvent("Draw", listenerName);
-
-	_env->events.RemoveListenerFromEvent("MarkDestroy", listenerName);
-
 	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
 
-	if (const auto it = std::ranges::find(_env->allPawns, dynamic_cast<Pawn*>(this)); it != _env->allPawns.end())
-	{
-		_env->allPawns.erase(it);
-	}
+	_env->events.RemoveListenerFromEvent("Draw", listenerName);
 }
 
-void PlayerOne::KeyboardEvensHandlers(Environment& env, const Uint32 eventType, const SDL_Keycode key)
+void PlayerOne::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)
 {
 	if (eventType == SDL_KEYDOWN)
 	{
 		if (key == SDLK_a)
 		{
 			keyboardButtons.a = true;
-			SetDirection(Direction::LEFT);
 		}
 		else if (key == SDLK_d)
 		{
 			keyboardButtons.d = true;
-			SetDirection(Direction::RIGHT);
 		}
 		else if (key == SDLK_s)
 		{
 			keyboardButtons.s = true;
-			SetDirection(Direction::DOWN);
 		}
 		else if (key == SDLK_w)
 		{
 			keyboardButtons.w = true;
-			SetDirection(Direction::UP);
 		}
 	}
 	else if (eventType == SDL_KEYUP)
