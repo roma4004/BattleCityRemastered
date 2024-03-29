@@ -8,7 +8,8 @@ project(BattleCity_remastered)
 #    )
 #endif()
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -pedantic -Everything")
+#set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
 
 set(SDL2_DIR                    ${CMAKE_SOURCE_DIR}/SDL2-2.30.0/cmake)
@@ -89,6 +90,9 @@ add_executable(${PROJECT_NAME}
         source/PlayerTwo.cpp
         source/Bullet.cpp
         source/Brick.cpp
+        source/Iron.cpp
+        source/Water.cpp
+        source/Map.cpp
 )
 
 #If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
@@ -111,7 +115,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
         "${SDL2_Image_BIN}/SDL2_image.dll"                  # <--this is in-file
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)                 # <--this is out-file path
-#
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD        # Adds a post-build event to MyTest
         COMMAND ${CMAKE_COMMAND} -E copy_if_different       # which executes "cmake - E copy_if_different..."
         "${SDL2_TTF_BIN}/SDL2_ttf.dll"                      # <--this is in-file

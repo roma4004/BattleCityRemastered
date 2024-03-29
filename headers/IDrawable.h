@@ -6,5 +6,5 @@ class IDrawable
 {
 public:
 	virtual ~IDrawable() = default;
-	virtual void Draw(const Environment* env) const = 0;
+	virtual void Draw() const = 0;
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "SDL.h"
+#include <list>
 
 #include "../headers/BaseObj.h"
 #include "../headers/Environment.h"
@@ -25,21 +26,19 @@ public:
 
 	~Pawn() override;
 
-	void MarkDestroy(Environment* env) const override;
+	void Move() override;
 
-	void Move(Environment* env) override;
+	void Draw() const override;
 
-	void Draw(const Environment* env) const override;
+	virtual void KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key);
 
-	virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
+	[[nodiscard]] static bool IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2);
 
-	[[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
+	[[nodiscard]] virtual std::tuple<bool, std::list<BaseObj*>> IsCanMove(const BaseObj* me);
 
-	[[nodiscard]] virtual std::tuple<bool, Pawn*> IsCanMove(const SDL_Rect* self, const Environment* env) const;
+	void TickUpdate() override;
 
-	void TickUpdate(Environment* env) override;
-
-	virtual void Shot(Environment* env);
+	virtual void Shot();
 
 	[[nodiscard]] Direction GetDirection() const;
 
@@ -51,8 +50,8 @@ public:
 	[[nodiscard]] int GetBulletHeight() const;
 	void SetBulletHeight(int bulletHeight);
 
-	[[nodiscard]] int GetBulletSpeed() const;
-	void SetBulletSpeed(int bulletSpeed);
+	[[nodiscard]] float GetBulletSpeed() const;
+	void SetBulletSpeed(float bulletSpeed);
 
 	PlayerKeys keyboardButtons;
 
@@ -61,9 +60,9 @@ private:
 
 	int _damage{1};
 
-	int _bulletWidth{10};
+	int _bulletWidth{6};
 
-	int _bulletHeight{10};
+	int _bulletHeight{6};
 
-	int _bulletSpeed{300};
+	float _bulletSpeed{300};
 };

@@ -1,9 +1,9 @@
-#include "../headers/Brick.h"
+﻿#include "../headers/Water.h"
 #include "../headers/Environment.h"
 
 #include <string>
 
-Brick::Brick(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
+Water::Water(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
 			 Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
@@ -26,11 +26,11 @@ Brick::Brick(const Point& pos, const int width, const int height, const int colo
 	});
 }
 
-Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0x924b00, 0, 15, env)
+Water::Water(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize, env->gridSize, 0x1e90ff, 0, 15, env)
 {
 	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(true);
-	BaseObj::SetIsPenetrable(false);
+	BaseObj::SetIsDestructible(false);
+	BaseObj::SetIsPenetrable(true);
 
 	// subscribe
 	if (_env == nullptr)
@@ -46,7 +46,7 @@ Brick::Brick(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 
 	});
 }
 
-Brick::~Brick()
+Water::~Water()
 {
 	// unsubscribe
 	if (_env == nullptr)
@@ -59,7 +59,7 @@ Brick::~Brick()
 	_env->events.RemoveListenerFromEvent("Draw", eventName);
 }
 
-void Brick::Draw() const
+void Water::Draw() const
 {
 	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y)
 	{
@@ -70,6 +70,6 @@ void Brick::Draw() const
 	}
 }
 
-void Brick::TickUpdate()
+void Water::TickUpdate()
 {
 }
