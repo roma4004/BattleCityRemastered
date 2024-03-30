@@ -67,7 +67,7 @@ void Bullet::Move()
 		}
 		else
 		{
-			DealDamage(&pawn);
+			DealDamage(pawn);
 		}
 	}
 	else if (direction == DOWN && y + speed <= static_cast<float>(_env->windowHeight))
@@ -78,7 +78,7 @@ void Bullet::Move()
 		}
 		else
 		{
-			DealDamage(&pawn);
+			DealDamage(pawn);
 		}
 	}
 	else if (direction == LEFT && x - speed >= 0.0f)
@@ -89,7 +89,7 @@ void Bullet::Move()
 		}
 		else
 		{
-			DealDamage(&pawn);
+			DealDamage(pawn);
 		}
 	}
 	else if (direction == RIGHT && x + speed <= static_cast<float>(_env->windowWidth))
@@ -100,7 +100,7 @@ void Bullet::Move()
 		}
 		else
 		{
-			DealDamage(&pawn);
+			DealDamage(pawn);
 		}
 	}
 	else // Self-destroy when edge of windows is reached
@@ -109,16 +109,16 @@ void Bullet::Move()
 	}
 }
 
-void Bullet::DealDamage(const std::list<BaseObj*>* objectList)
+void Bullet::DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList)
 {
 	const int damage = GetDamage();
-	if (!objectList->empty())
+	if (!objectList.empty())
 	{
-		for (auto* target : *objectList)
+		for (const auto& target : objectList)
 		{
-			if (target->GetIsDestructible())
+			if (const auto targetLock = target.lock(); targetLock && targetLock->GetIsDestructible())
 			{
-				target->TakeDamage(damage);
+				targetLock->TakeDamage(damage);
 			}
 		}
 	}
@@ -145,7 +145,7 @@ void Bullet::SetDamage(const int damage)
 	_damage = damage;
 }
 
-std::tuple<bool, std::list<BaseObj*>> Bullet::IsCanMove(const BaseObj* me)
+std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const BaseObj* me)
 {
 	const Direction direction = GetDirection();
 	int speedX = static_cast<int>(GetSpeed() * _env->deltaTime);
@@ -173,7 +173,7 @@ std::tuple<bool, std::list<BaseObj*>> Bullet::IsCanMove(const BaseObj* me)
 		speedY *= 0;
 	}
 
-	std::list<BaseObj*> aoeList{};
+	std::list<std::weak_ptr<BaseObj>> aoeList{};
 	const auto rect1 = SDL_Rect{
 		static_cast<int>(me->GetX()) + speedX, static_cast<int>(me->GetY()) + speedY, me->GetWidth(),
 		me->GetHeight()
@@ -193,7 +193,7 @@ std::tuple<bool, std::list<BaseObj*>> Bullet::IsCanMove(const BaseObj* me)
 		{
 			if (!pawn->GetIsPenetrable())
 			{
-				CheckAoE(me, _env, &aoeList);
+				CheckAoE(me, _env, aoeList);
 				return std::make_tuple(false, aoeList);
 			}
 
@@ -204,7 +204,7 @@ std::tuple<bool, std::list<BaseObj*>> Bullet::IsCanMove(const BaseObj* me)
 	return std::make_tuple(true, aoeList);
 }
 
-void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<BaseObj*>* aoeList) const
+void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
 	const float x = me->GetX();
 	const float y = me->GetY();
@@ -226,7 +226,7 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<BaseO
 			 {static_cast<int>(x + speed), static_cast<int>(y + speed), width, height}
 		 }; auto target : targetList)
 	{
-		for (auto& pawn : env->allPawns)
+		for (const auto& pawn : env->allPawns)
 		{
 			if (me == pawn.get())
 			{
@@ -239,7 +239,7 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<BaseO
 			};
 			if (IsCollideWith(&target, &rect2))
 			{
-				aoeList->emplace_back(pawn.get());
+				aoeList.emplace_back(std::weak_ptr(pawn));
 			}
 		}
 	}

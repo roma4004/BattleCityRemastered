@@ -10,7 +10,6 @@
 
 #include <execution>
 #include <functional>
-#include <list>
 #include <map>
 #include <ranges>
 #include <string>
@@ -66,7 +65,7 @@ struct Environment
 	void SetPixel(int x, int y, int color) const;
 
 	MouseButtons mouseButtons;
-	std::vector<std::unique_ptr<BaseObj>> allPawns;
+	std::vector<std::shared_ptr<BaseObj>> allPawns;
 
 	EventSystem events;
 };

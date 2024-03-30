@@ -91,8 +91,8 @@ int main(int argc, char* argv[])
 	Point playerOnePos{env.gridSize * 16, env.windowHeight - env.tankSize};
 	Point playerTwoPos{env.gridSize * 32, env.windowHeight - env.tankSize};
 	env.allPawns.reserve(2);
-	env.allPawns.emplace_back(std::make_unique<PlayerOne>(playerOnePos, 0xeaea00, &env));
-	env.allPawns.emplace_back(std::make_unique<PlayerTwo>(playerTwoPos, 0x408000, &env));
+	env.allPawns.emplace_back(std::make_shared<PlayerOne>(playerOnePos, 0xeaea00, &env));
+	env.allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoPos, 0x408000, &env));
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);

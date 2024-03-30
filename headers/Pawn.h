@@ -1,6 +1,7 @@
 #pragma once
-#include "SDL.h"
 #include <list>
+#include <memory>
+#include "SDL.h"
 
 #include "../headers/BaseObj.h"
 #include "../headers/Environment.h"
@@ -34,7 +35,7 @@ public:
 
 	[[nodiscard]] static bool IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2);
 
-	[[nodiscard]] virtual std::tuple<bool, std::list<BaseObj*>> IsCanMove(const BaseObj* me);
+	[[nodiscard]] virtual std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> IsCanMove(const BaseObj* me);
 
 	void TickUpdate() override;
 

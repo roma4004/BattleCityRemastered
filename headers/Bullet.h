@@ -21,11 +21,11 @@ public:
 
 	void Shot() override;
 
-	std::tuple<bool, std::list<BaseObj*>> IsCanMove(const BaseObj* me) override;
-	void CheckAoE(const BaseObj* me, const Environment* env, std::list<BaseObj*>* aoeList) const;
+	std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> IsCanMove(const BaseObj* me) override;
+	void CheckAoE(const BaseObj* me, const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 
 private:
-	void DealDamage(const std::list<BaseObj*>* objectList);
+	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList);
 
 	int _damage{15};
 };

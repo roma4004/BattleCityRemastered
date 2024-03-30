@@ -71,5 +71,5 @@ template <typename T>
 void Map::ObstacleCreation(Environment* env, const int x, const int y)
 {
 	Point position = {x, y};
-	env->allPawns.emplace_back(std::make_unique<T>(position, env));
+	env->allPawns.emplace_back(std::make_shared<T>(position, env));
 }

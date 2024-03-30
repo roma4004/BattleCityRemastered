@@ -27,7 +27,7 @@ bool Pawn::IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2)
 	return SDL_IntersectRect(rect1, rect2, &rect3);
 }
 
-std::tuple<bool, std::list<BaseObj*>> Pawn::IsCanMove(const BaseObj* me)
+std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Pawn::IsCanMove(const BaseObj* me)
 {
 	const Direction direction = GetDirection();
 	int speedX = static_cast<int>(GetSpeed() * _env->deltaTime);
@@ -55,7 +55,7 @@ std::tuple<bool, std::list<BaseObj*>> Pawn::IsCanMove(const BaseObj* me)
 		speedY *= 0;
 	}
 
-	std::list<BaseObj*> obstacle{};
+	std::list<std::weak_ptr<BaseObj>> obstacle{};
 	const auto rect1 = SDL_Rect{
 		static_cast<int>(me->GetX()) + speedX, static_cast<int>(me->GetY()) + speedY, me->GetWidth(),
 		me->GetHeight()
@@ -74,11 +74,11 @@ std::tuple<bool, std::list<BaseObj*>> Pawn::IsCanMove(const BaseObj* me)
 		{
 			if (!pawn->GetIsPassable())
 			{
-				obstacle.emplace_back(pawn.get());
+				obstacle.emplace_back(std::weak_ptr(pawn));
 				return std::make_tuple(false, obstacle);
 			}
 
-			obstacle.emplace_back(pawn.get());
+			obstacle.emplace_back(std::weak_ptr(pawn));
 			return std::make_tuple(true, obstacle);
 		}
 	}
@@ -133,7 +133,7 @@ void Pawn::Shot()
 		}
 
 		_env->allPawns.emplace_back(
-			std::make_unique<Bullet>(pos, bulletWidth, bulletHeight, color, speed, direction, health, _env));
+			std::make_shared<Bullet>(pos, bulletWidth, bulletHeight, color, speed, direction, health, _env));
 
 		keyboardButtons.shot = false;
 	}
