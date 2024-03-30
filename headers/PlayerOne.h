@@ -6,6 +6,7 @@ class PlayerOne final : public Pawn
 {
 public:
 	PlayerOne(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
+	PlayerOne(const Point& pos, int color, Environment* env);
 
 	~PlayerOne() override;
 

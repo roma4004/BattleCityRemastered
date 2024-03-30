@@ -1,8 +1,8 @@
+#include <iostream>
 #include "../headers/Environment.h"
 #include "../headers/Map.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
-#include <iostream>
 
 static void MouseEvents(Environment& env, const SDL_Event& event)
 {
@@ -91,15 +91,13 @@ int main(int argc, char* argv[])
 	Point playerOnePos{env.gridSize * 16, env.windowHeight - env.tankSize};
 	Point playerTwoPos{env.gridSize * 32, env.windowHeight - env.tankSize};
 	env.allPawns.reserve(2);
-	env.allPawns.emplace_back(std::make_unique<PlayerOne>(playerOnePos, env.tankSize, env.tankSize, 0xeaea00, env.tankSpeed,
-														  env.tankHealth, &env));
-	env.allPawns.emplace_back(std::make_unique<PlayerTwo>(playerTwoPos, env.tankSize, env.tankSize, 0x408000, env.tankSpeed,
-														  env.tankHealth, &env));
+	env.allPawns.emplace_back(std::make_unique<PlayerOne>(playerOnePos, 0xeaea00, &env));
+	env.allPawns.emplace_back(std::make_unique<PlayerTwo>(playerTwoPos, 0x408000, &env));
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
 	//Map::ObstacleCreation<Iron>(&env, 310,310);
-	Map field{};
+	const Map field{};
 	field.MapCreation(&env);
 
 	Uint64 oldTime = SDL_GetTicks64();
@@ -141,7 +139,7 @@ int main(int argc, char* argv[])
 
 		// TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all "dead" objects (excluding mapBlocks)
-		auto it = std::ranges::remove_if(env.allPawns, [&](const auto& obj)
+		const auto it = std::ranges::remove_if(env.allPawns, [&](const auto& obj)
 		{
 			return !obj->GetIsAlive();
 		}).begin();

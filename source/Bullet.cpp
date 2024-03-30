@@ -206,48 +206,25 @@ std::tuple<bool, std::list<BaseObj*>> Bullet::IsCanMove(const BaseObj* me)
 
 void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<BaseObj*>* aoeList) const
 {
-	// 123
-	// 4_6
-	// 789
-	//const int meX = static_cast<int>(me->GetX());
-	//const int meY = static_cast<int>(me->GetY());
+	const float x = me->GetX();
+	const float y = me->GetY();
+	const int width = me->GetWidth();
+	const int height = me->GetHeight();
 	const float speed = (GetSpeed() * env->deltaTime) * 2;
-	std::list<SDL_Rect> targetList;
-
-	const auto targetOne = SDL_Rect{
-		static_cast<int>(me->GetX() - speed), static_cast<int>(me->GetY() - speed),
-		me->GetWidth(), me->GetHeight()
-	};
-	targetList.emplace_back(targetOne);
-	const auto targetTwo =
-		SDL_Rect{static_cast<int>(me->GetX()), static_cast<int>(me->GetY() - speed), me->GetWidth(), me->GetHeight()};
-	targetList.emplace_back(targetTwo);
-	const auto targetThree = SDL_Rect{
-		static_cast<int>(me->GetX() + speed), static_cast<int>(me->GetY() - speed),
-		me->GetWidth(), me->GetHeight()
-	};
-	targetList.emplace_back(targetThree);
-	const auto targetFour =
-		SDL_Rect{static_cast<int>(me->GetX() - speed), static_cast<int>(me->GetY()), me->GetWidth(), me->GetHeight()};
-	targetList.emplace_back(targetFour);
-	const auto targetSix =
-		SDL_Rect{static_cast<int>(me->GetX() + speed), static_cast<int>(me->GetY()), me->GetWidth(), me->GetHeight()};
-	targetList.emplace_back(targetSix);
-	const auto targetSeven = SDL_Rect{
-		static_cast<int>(me->GetX() - speed), static_cast<int>(me->GetY() + speed),
-		me->GetWidth(), me->GetHeight()
-	};
-	targetList.emplace_back(targetSeven);
-	const auto targetEight =
-		SDL_Rect{static_cast<int>(me->GetX()), static_cast<int>(me->GetY() + speed), me->GetWidth(), me->GetHeight()};
-	targetList.emplace_back(targetEight);
-	const auto targetNine = SDL_Rect{
-		static_cast<int>(me->GetX() + speed), static_cast<int>(me->GetY() + speed),
-		me->GetWidth(), me->GetHeight()
-	};
-	targetList.emplace_back(targetNine);
-
-	for (auto target : targetList)
+	for (const std::list<SDL_Rect> targetList{
+			 // 123
+			 // 4_6
+			 // 789
+			 // NOTE: where _ is this bullet
+			 {static_cast<int>(x - speed), static_cast<int>(y - speed), width, height},
+			 {static_cast<int>(x), static_cast<int>(y - speed), width, height},
+			 {static_cast<int>(x + speed), static_cast<int>(y - speed), width, height},
+			 {static_cast<int>(x - speed), static_cast<int>(y), width, height},
+			 {static_cast<int>(x + speed), static_cast<int>(y), width, height},
+			 {static_cast<int>(x - speed), static_cast<int>(y + speed), width, height},
+			 {static_cast<int>(x), static_cast<int>(y + speed), width, height},
+			 {static_cast<int>(x + speed), static_cast<int>(y + speed), width, height}
+		 }; auto target : targetList)
 	{
 		for (auto& pawn : env->allPawns)
 		{

@@ -28,6 +28,11 @@ PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const 
 	});
 }
 
+PlayerTwo::PlayerTwo(const Point& pos, const int color, Environment* env)
+	: PlayerTwo(pos, env->tankSize, env->tankSize, color, env->tankSpeed, env->tankHealth, env)
+{
+}
+
 PlayerTwo::~PlayerTwo()
 {
 	// unsubscribe

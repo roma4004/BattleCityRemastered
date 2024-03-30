@@ -28,6 +28,11 @@ PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const 
 	});
 }
 
+PlayerOne::PlayerOne(const Point& pos, const int color, Environment* env)
+	: PlayerOne(pos, env->tankSize, env->tankSize, color, env->tankSpeed, env->tankHealth, env)
+{
+}
+
 PlayerOne::~PlayerOne()
 {
 	// unsubscribe
