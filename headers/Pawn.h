@@ -1,7 +1,9 @@
 #pragma once
+#include "SDL.h"
+
+#include <functional>
 #include <list>
 #include <memory>
-#include "SDL.h"
 
 #include "../headers/BaseObj.h"
 #include "../headers/Environment.h"
@@ -9,7 +11,7 @@
 #include "../headers/PlayerKeys.h"
 #include "../headers/Point.h"
 
-struct Point;
+struct FPoint;
 struct Environment;
 
 enum Direction
@@ -23,9 +25,12 @@ enum Direction
 class Pawn : public BaseObj, public IMovable
 {
 public:
-	Pawn(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
+	Pawn(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
 
 	~Pawn() override;
+
+	float FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
+							  const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide) const;
 
 	void Move() override;
 
@@ -33,7 +38,7 @@ public:
 
 	virtual void KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key);
 
-	[[nodiscard]] static bool IsCollideWith(const SDL_Rect* rect1, const SDL_Rect* rect2);
+	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
 	[[nodiscard]] virtual std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> IsCanMove(const BaseObj* me);
 

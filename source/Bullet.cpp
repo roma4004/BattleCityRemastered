@@ -1,6 +1,6 @@
 ﻿#include "../headers/Bullet.h"
 
-Bullet::Bullet(const Point& pos, const int width, const int height, const int color, const float speed,
+Bullet::Bullet(const FPoint& pos, const float width, const float height, const int color, const float speed,
 			   const Direction direction, const int health, Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
@@ -148,8 +148,8 @@ void Bullet::SetDamage(const int damage)
 std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const BaseObj* me)
 {
 	const Direction direction = GetDirection();
-	int speedX = static_cast<int>(GetSpeed() * _env->deltaTime);
-	int speedY = static_cast<int>(GetSpeed() * _env->deltaTime);
+	float speedX = GetSpeed() * _env->deltaTime;
+	float speedY = GetSpeed() * _env->deltaTime;
 
 	// For some reason I can't make rect1 in if's Rider say i make unused object. So I made more crutches
 	if (direction == Direction::UP)
@@ -174,10 +174,7 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const Base
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto rect1 = SDL_Rect{
-		static_cast<int>(me->GetX()) + speedX, static_cast<int>(me->GetY()) + speedY, me->GetWidth(),
-		me->GetHeight()
-	};
+	const auto rect1 = Rectangle{me->GetX() + speedX, me->GetY() + speedY, me->GetWidth(), me->GetHeight()};
 	for (auto& pawn : _env->allPawns)
 	{
 		if (me == pawn.get())
@@ -185,11 +182,8 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const Base
 			continue;
 		}
 
-		const auto rect2 = SDL_Rect{
-			static_cast<int>(pawn->GetX()), static_cast<int>(pawn->GetY()), pawn->GetWidth(),
-			pawn->GetHeight()
-		};
-		if (IsCollideWith(&rect1, &rect2))
+		const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
+		if (IsCollideWith(rect1, rect2))
 		{
 			if (!pawn->GetIsPenetrable())
 			{
@@ -208,22 +202,22 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::
 {
 	const float x = me->GetX();
 	const float y = me->GetY();
-	const int width = me->GetWidth();
-	const int height = me->GetHeight();
+	const float width = me->GetWidth();
+	const float height = me->GetHeight();
 	const float speed = (GetSpeed() * env->deltaTime) * 2;
-	for (const std::list<SDL_Rect> targetList{
+	for (const std::list<Rectangle> targetList{
 			 // 123
 			 // 4_6
 			 // 789
 			 // NOTE: where _ is this bullet
-			 {static_cast<int>(x - speed), static_cast<int>(y - speed), width, height},
-			 {static_cast<int>(x), static_cast<int>(y - speed), width, height},
-			 {static_cast<int>(x + speed), static_cast<int>(y - speed), width, height},
-			 {static_cast<int>(x - speed), static_cast<int>(y), width, height},
-			 {static_cast<int>(x + speed), static_cast<int>(y), width, height},
-			 {static_cast<int>(x - speed), static_cast<int>(y + speed), width, height},
-			 {static_cast<int>(x), static_cast<int>(y + speed), width, height},
-			 {static_cast<int>(x + speed), static_cast<int>(y + speed), width, height}
+			 {x - speed, y - speed, width, height},
+			 {x, y - speed, width, height},
+			 {x + speed, y - speed, width, height},
+			 {x - speed, y, width, height},
+			 {x + speed, y, width, height},
+			 {x - speed, y + speed, width, height},
+			 {x, y + speed, width, height},
+			 {x + speed, y + speed, width, height}
 		 }; auto target : targetList)
 	{
 		for (const auto& pawn : env->allPawns)
@@ -233,11 +227,11 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::
 				continue;
 			}
 
-			const auto rect2 = SDL_Rect{
-				static_cast<int>(pawn->GetX()), static_cast<int>(pawn->GetY()), pawn->GetWidth(),
+			const auto rect2 = Rectangle{
+				pawn->GetX(), pawn->GetY(), pawn->GetWidth(),
 				pawn->GetHeight()
 			};
-			if (IsCollideWith(&target, &rect2))
+			if (IsCollideWith(target, rect2))
 			{
 				aoeList.emplace_back(std::weak_ptr(pawn));
 			}

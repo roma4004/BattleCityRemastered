@@ -1,7 +1,13 @@
 #pragma once
 
-struct Point
+struct FPoint
 {
-	int x{};
-	int y{};
+	float x{};
+	float y{};
 };
+
+ struct Point
+ {
+ 	int x{};
+ 	int y{};
+ };

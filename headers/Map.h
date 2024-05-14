@@ -9,8 +9,8 @@ public:
 
 	~Map();
 
-	template <typename T>
-	static void ObstacleCreation(Environment* env, int x, int y);
+	template<typename T>
+	static void ObstacleCreation(Environment* env, float x, float y);
 	void MapCreation(Environment* env) const;
 
 	int fieldLevelOne[50][52] = {
@@ -67,9 +67,9 @@ public:
 	};
 };
 
-template <typename T>
-void Map::ObstacleCreation(Environment* env, const int x, const int y)
+template<typename T>
+void Map::ObstacleCreation(Environment* env, const float x, const float y)
 {
-	Point position = {x, y};
+	FPoint position = {x, y};
 	env->allPawns.emplace_back(std::make_shared<T>(position, env));
 }

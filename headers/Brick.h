@@ -2,13 +2,13 @@
 
 #include "BaseObj.h"
 
-struct Point;
+struct FPoint;
 
 class Brick final : public BaseObj
 {
 public:
-	Brick(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
-	Brick(const Point& pos, Environment* env);
+	Brick(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
+	Brick(const FPoint& pos, Environment* env);
 
 	~Brick() override;
 

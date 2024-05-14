@@ -3,7 +3,7 @@
 
 #include <string>
 
-Iron::Iron(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
+Iron::Iron(const FPoint& pos, const float width, const float height, const int color, const float speed, const int health,
 		   Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
@@ -26,7 +26,7 @@ Iron::Iron(const Point& pos, const int width, const int height, const int color,
 	});
 }
 
-Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0xaaaaaa, 0, 15, env)
+Iron::Iron(const FPoint& pos, Environment* env) : BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0xaaaaaa, 0, 15, env)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

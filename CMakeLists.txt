@@ -93,6 +93,7 @@ add_executable(${PROJECT_NAME}
         source/Iron.cpp
         source/Water.cpp
         source/Map.cpp
+        source/Rectangle.cpp
 )
 
 #If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.

@@ -2,62 +2,82 @@
 
 struct Environment;
 
-BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
+BaseObj::BaseObj(const FPoint& pos, const float width, const float height, const int color, const float speed, const int health,
 				 Environment* env)
-	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health), _env(env)
+	: shape(pos.x, pos.y, width, height), _color(color), _speed(speed), _health(health), _env(env)
 {
 }
 
 BaseObj::~BaseObj() = default;
 
-float BaseObj::GetX() const
+FPoint BaseObj::GetPos() const
 {
-	return _x;
+	return shape.pos;
 }
 
-void BaseObj::SetX(const Point& pos)
+void BaseObj::SetPos(const FPoint& pos)
 {
-	_x = pos.x;
+	shape.pos = pos;
+}
+
+float BaseObj::GetRightSide() const
+{
+	return shape.Right();
+}
+
+float BaseObj::GetBottomSide() const
+{
+	return shape.Bottom();
+}
+
+float BaseObj::GetX() const
+{
+	return shape.pos.x;
+}
+
+void BaseObj::SetX(const FPoint& pos)
+{
+	shape.pos.x = pos.x;
 }
 
 float BaseObj::GetY() const
 {
-	return _y;
+	return shape.pos.y;
 }
 
-void BaseObj::SetY(const Point& pos)
+void BaseObj::SetY(const FPoint& pos)
 {
-	_y = pos.y;
+	shape.pos.y = pos.y;
 }
 
-int BaseObj::GetWidth() const
+float BaseObj::GetWidth() const
 {
-	return _width;
+	return shape.width;
 }
 
-void BaseObj::SetWidth(const int width)
+void BaseObj::SetWidth(const float width)
 {
-	_width = width;
+	shape.width = width;
 }
 
-int BaseObj::GetHeight() const
+float BaseObj::GetHeight() const
 {
-	return _height;
+	return shape.height;
 }
 
-void BaseObj::SetHeight(const int height)
+void BaseObj::SetHeight(const float height)
 {
-	_height = height;
+	shape.height = height;
 }
 
 void BaseObj::MoveX(const float i)
 {
-	_x += i;
+	shape.pos.x += i;
 }
 
 void BaseObj::MoveY(const float i)
 {
-	_y += i;
+	shape.pos.y += i;
 }
 
 float BaseObj::GetSpeed() const

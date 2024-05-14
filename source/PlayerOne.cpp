@@ -1,6 +1,6 @@
 #include "../headers/PlayerOne.h"
 
-PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const int color, const float speed,
+PlayerOne::PlayerOne(const FPoint& pos, const float width, const float height, const int color, const float speed,
 					 const int health, Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
@@ -28,7 +28,7 @@ PlayerOne::PlayerOne(const Point& pos, const int width, const int height, const 
 	});
 }
 
-PlayerOne::PlayerOne(const Point& pos, const int color, Environment* env)
+PlayerOne::PlayerOne(const FPoint& pos, const int color, Environment* env)
 	: PlayerOne(pos, env->tankSize, env->tankSize, color, env->tankSpeed, env->tankHealth, env)
 {
 }

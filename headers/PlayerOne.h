@@ -2,11 +2,14 @@
 
 #include "../headers/Pawn.h"
 
+struct FPoint;
+struct Environment;
+
 class PlayerOne final : public Pawn
 {
 public:
-	PlayerOne(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
-	PlayerOne(const Point& pos, int color, Environment* env);
+	PlayerOne(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
+	PlayerOne(const FPoint& pos, int color, Environment* env);
 
 	~PlayerOne() override;
 

@@ -1,6 +1,6 @@
 #include "../headers/PlayerTwo.h"
 
-PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const int color, const float speed,
+PlayerTwo::PlayerTwo(const FPoint& pos, const float width, const float height, const int color, const float speed,
 					 const int health, Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
@@ -28,7 +28,7 @@ PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const 
 	});
 }
 
-PlayerTwo::PlayerTwo(const Point& pos, const int color, Environment* env)
+PlayerTwo::PlayerTwo(const FPoint& pos, const int color, Environment* env)
 	: PlayerTwo(pos, env->tankSize, env->tankSize, color, env->tankSpeed, env->tankHealth, env)
 {
 }

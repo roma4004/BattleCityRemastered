@@ -56,7 +56,7 @@ struct Environment
 	int gridSize = windowHeight / 50;
 	float tankSpeed = 142;
 	int tankHealth = 100;
-	int tankSize = gridSize * 3; // for better turns
+	int tankSize = gridSize * 3;// for better turns
 	bool isGameOver = false;
 
 	//fps

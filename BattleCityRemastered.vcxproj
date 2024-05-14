@@ -139,6 +139,7 @@
         <ClCompile Include="source\Pawn.cpp"/>
         <ClCompile Include="source\PlayerOne.cpp"/>
         <ClCompile Include="source\PlayerTwo.cpp"/>
+        <ClCompile Include="source\Rectangle.cpp" />
         <ClCompile Include="source\Water.cpp"/>
     </ItemGroup>
     <ItemGroup>
@@ -158,6 +159,7 @@
         <ClInclude Include="headers\PlayerOne.h"/>
         <ClInclude Include="headers\PlayerTwo.h"/>
         <ClInclude Include="headers\Point.h"/>
+        <ClInclude Include="headers\Rectangle.h" />
         <ClInclude Include="headers\Water.h"/>
     </ItemGroup>
     <ItemGroup>

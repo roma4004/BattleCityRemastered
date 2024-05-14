@@ -2,13 +2,13 @@
 
 #include "../headers/Pawn.h"
 
-struct Point;
+struct FPoint;
 struct Environment;
 
 class Bullet final : public Pawn
 {
 public:
-	Bullet(const Point& pos, int width, int height, int color, float speed, Direction direction, int health,
+	Bullet(const FPoint& pos, float width, float height, int color, float speed, Direction direction, int health,
 		   Environment* env);
 
 	~Bullet() override;
