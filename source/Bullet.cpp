@@ -16,18 +16,12 @@ Bullet::Bullet(const FPoint& pos, const float width, const float height, const i
 	}
 
 	const auto listenerName =
-		"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
 	_env->events.AddListenerToEvent("TickUpdate", listenerName,
-									[self = dynamic_cast<Pawn*>(this)]()
-									{
-										self->TickUpdate();
-									});
+									[self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]() { self->Draw(); });
 }
 
 Bullet::~Bullet()
@@ -39,7 +33,7 @@ Bullet::~Bullet()
 	}
 
 	const auto listenerName =
-		"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
 	_env->events.RemoveListenerFromEvent("Draw", listenerName);
 
@@ -103,7 +97,7 @@ void Bullet::Move()
 			DealDamage(pawn);
 		}
 	}
-	else // Self-destroy when edge of windows is reached
+	else// Self-destroy when edge of windows is reached
 	{
 		SetIsAlive(false);
 	}
@@ -114,7 +108,7 @@ void Bullet::DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList)
 	const int damage = GetDamage();
 	if (!objectList.empty())
 	{
-		for (const auto& target : objectList)
+		for (const auto& target: objectList)
 		{
 			if (const auto targetLock = target.lock(); targetLock && targetLock->GetIsDestructible())
 			{
@@ -126,24 +120,13 @@ void Bullet::DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList)
 	TakeDamage(damage);
 }
 
-void Bullet::Draw() const
-{
-	Pawn::Draw();
-}
+void Bullet::Draw() const { Pawn::Draw(); }
 
-int Bullet::GetDamage() const
-{
-	return _damage;
-}
+int Bullet::GetDamage() const { return _damage; }
 
-void Bullet::Shot()
-{
-}
+void Bullet::Shot() {}
 
-void Bullet::SetDamage(const int damage)
-{
-	_damage = damage;
-}
+void Bullet::SetDamage(const int damage) { _damage = damage; }
 
 std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const BaseObj* me)
 {
@@ -153,7 +136,7 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const Base
 
 	// For some reason I can't make rect1 in if's Rider say i make unused object. So I made more crutches
 	if (direction == Direction::UP)
-	{ //36 37 initialize in  if
+	{//36 37 initialize in  if
 		speedY *= -1;
 		speedX *= 0;
 	}
@@ -175,7 +158,7 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const Base
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
 	const auto rect1 = Rectangle{me->GetX() + speedX, me->GetY() + speedY, me->GetWidth(), me->GetHeight()};
-	for (auto& pawn : _env->allPawns)
+	for (auto& pawn: _env->allPawns)
 	{
 		if (me == pawn.get())
 		{
@@ -205,32 +188,28 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::
 	const float width = me->GetWidth();
 	const float height = me->GetHeight();
 	const float speed = (GetSpeed() * env->deltaTime) * 2;
-	for (const std::list<Rectangle> targetList{
-			 // 123
-			 // 4_6
-			 // 789
-			 // NOTE: where _ is this bullet
-			 {x - speed, y - speed, width, height},
-			 {x, y - speed, width, height},
-			 {x + speed, y - speed, width, height},
-			 {x - speed, y, width, height},
-			 {x + speed, y, width, height},
-			 {x - speed, y + speed, width, height},
-			 {x, y + speed, width, height},
-			 {x + speed, y + speed, width, height}
-		 }; auto target : targetList)
+	for (const std::list<Rectangle> targetList{// 123
+											   // 4_6
+											   // 789
+											   // NOTE: where _ is this bullet
+											   {x - speed, y - speed, width, height},
+											   {x, y - speed, width, height},
+											   {x + speed, y - speed, width, height},
+											   {x - speed, y, width, height},
+											   {x + speed, y, width, height},
+											   {x - speed, y + speed, width, height},
+											   {x, y + speed, width, height},
+											   {x + speed, y + speed, width, height}};
+		 auto target: targetList)
 	{
-		for (const auto& pawn : env->allPawns)
+		for (const auto& pawn: env->allPawns)
 		{
 			if (me == pawn.get())
 			{
 				continue;
 			}
 
-			const auto rect2 = Rectangle{
-				pawn->GetX(), pawn->GetY(), pawn->GetWidth(),
-				pawn->GetHeight()
-			};
+			const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
 			if (IsCollideWith(target, rect2))
 			{
 				aoeList.emplace_back(std::weak_ptr(pawn));

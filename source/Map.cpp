@@ -15,19 +15,19 @@ void Map::MapCreation(Environment* env) const
 		{
 			switch (fieldLevelOne[horizontal][vertical])
 			{
-			case 0:
-				break;
-			case 1:
-				ObstacleCreation<Brick>(env, vertical * env->gridSize, horizontal * env->gridSize);
-				break;
-			case 2:
-				ObstacleCreation<Iron>(env, vertical * env->gridSize, horizontal * env->gridSize);
-				break;
-			case 3:
-				ObstacleCreation<Water>(env, vertical * env->gridSize, horizontal * env->gridSize);
-				break;
-			default:
-				break;
+				case 0:
+					break;
+				case 1:
+					ObstacleCreation<Brick>(env, vertical * env->gridSize, horizontal * env->gridSize);
+					break;
+				case 2:
+					ObstacleCreation<Iron>(env, vertical * env->gridSize, horizontal * env->gridSize);
+					break;
+				case 3:
+					ObstacleCreation<Water>(env, vertical * env->gridSize, horizontal * env->gridSize);
+					break;
+				default:
+					break;
 			}
 		}
 	}

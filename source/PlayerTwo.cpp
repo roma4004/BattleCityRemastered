@@ -17,15 +17,9 @@ PlayerTwo::PlayerTwo(const FPoint& pos, const float width, const float height, c
 	const std::string listenerName = "PlayerTwo";
 
 	_env->events.AddListenerToEvent("TickUpdate", listenerName,
-									[self = dynamic_cast<Pawn*>(this)]()
-									{
-										self->TickUpdate();
-									});
+									[self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]() { self->Draw(); });
 }
 
 PlayerTwo::PlayerTwo(const FPoint& pos, const int color, Environment* env)

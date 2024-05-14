@@ -3,8 +3,8 @@
 
 #include <string>
 
-Brick::Brick(const FPoint& pos, const float width, const float height, const int color, const float speed, const int health,
-			 Environment* env)
+Brick::Brick(const FPoint& pos, const float width, const float height, const int color, const float speed,
+			 const int health, Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
 	// subscribe
@@ -15,15 +15,10 @@ Brick::Brick(const FPoint& pos, const float width, const float height, const int
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("TickUpdate", eventName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->TickUpdate();
-	});
+	_env->events.AddListenerToEvent("TickUpdate", eventName,
+									[self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<Pawn*>(this)]() { self->Draw(); });
 }
 
 Brick::Brick(const FPoint& pos, Environment* env)
@@ -41,10 +36,7 @@ Brick::Brick(const FPoint& pos, Environment* env)
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<BaseObj*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<BaseObj*>(this)]() { self->Draw(); });
 }
 
 Brick::~Brick()
@@ -71,6 +63,4 @@ void Brick::Draw() const
 	}
 }
 
-void Brick::TickUpdate()
-{
-}
+void Brick::TickUpdate() {}
