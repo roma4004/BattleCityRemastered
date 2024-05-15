@@ -9,14 +9,16 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
 		env.mouseButtons.MouseLeftButton = true;
-		std::cout << "MouseLeftButton: " << "Down" << '\n';
+		std::cout << "MouseLeftButton: "
+				  << "Down" << '\n';
 
 		return;
 	}
-	else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
+	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		env.mouseButtons.MouseLeftButton = false;
-		std::cout << "MouseLeftButton: " << "Up" << '\n';
+		std::cout << "MouseLeftButton: "
+				  << "Up" << '\n';
 
 		return;
 	}

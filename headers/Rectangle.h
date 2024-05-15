@@ -1,15 +1,10 @@
 #pragma once
-#include "Point.h"
 
-class Rectangle
+#include <SDL_rect.h>
+
+struct Rectangle : SDL_FRect
 {
 public:
-	FPoint pos;
-	float width;
-	float height;
-
-	Rectangle(float x, float y, float w, float h);
-
 	[[nodiscard]] float Area() const;
 
 	// Get the x-coordinate of the right side

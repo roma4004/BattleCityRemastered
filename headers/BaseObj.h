@@ -59,8 +59,10 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
-private:
+protected:
 	Rectangle shape;
+
+private:
 	int _color{};
 	float _speed{};
 	int _health{};

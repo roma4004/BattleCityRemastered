@@ -21,7 +21,7 @@ public:
 
 	void Shot() override;
 
-	std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> IsCanMove(const BaseObj* me) override;
+	std::list<std::weak_ptr<BaseObj>> IsCanMove() override;
 	void CheckAoE(const BaseObj* me, const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 
 private:

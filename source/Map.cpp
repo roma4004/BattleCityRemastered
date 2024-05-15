@@ -18,13 +18,16 @@ void Map::MapCreation(Environment* env) const
 				case 0:
 					break;
 				case 1:
-					ObstacleCreation<Brick>(env, vertical * env->gridSize, horizontal * env->gridSize);
+					ObstacleCreation<Brick>(env, static_cast<float>(vertical * env->gridSize),
+											static_cast<float>(horizontal * env->gridSize));
 					break;
 				case 2:
-					ObstacleCreation<Iron>(env, vertical * env->gridSize, horizontal * env->gridSize);
+					ObstacleCreation<Iron>(env, static_cast<float>(vertical * env->gridSize),
+										   static_cast<float>(horizontal * env->gridSize));
 					break;
 				case 3:
-					ObstacleCreation<Water>(env, vertical * env->gridSize, horizontal * env->gridSize);
+					ObstacleCreation<Water>(env, static_cast<float>(vertical * env->gridSize),
+											static_cast<float>(horizontal * env->gridSize));
 					break;
 				default:
 					break;

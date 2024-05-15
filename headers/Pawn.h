@@ -40,7 +40,7 @@ public:
 
 	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
-	[[nodiscard]] virtual std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> IsCanMove(const BaseObj* me);
+	[[nodiscard]] virtual std::list<std::weak_ptr<BaseObj>> IsCanMove();
 
 	void TickUpdate() override;
 
@@ -50,11 +50,11 @@ public:
 
 	void SetDirection(Direction direction);
 
-	[[nodiscard]] int GetBulletWidth() const;
-	void SetBulletWidth(int bulletWidth);
+	[[nodiscard]] float GetBulletWidth() const;
+	void SetBulletWidth(float bulletWidth);
 
-	[[nodiscard]] int GetBulletHeight() const;
-	void SetBulletHeight(int bulletHeight);
+	[[nodiscard]] float GetBulletHeight() const;
+	void SetBulletHeight(float bulletHeight);
 
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
@@ -62,13 +62,13 @@ public:
 	PlayerKeys keyboardButtons;
 
 private:
-	Direction _direction = Direction::UP;
+	Direction _direction = UP;
 
 	int _damage{1};
 
-	int _bulletWidth{6};
+	float _bulletWidth{6.f};
 
-	int _bulletHeight{6};
+	float _bulletHeight{6.f};
 
-	float _bulletSpeed{300};
+	float _bulletSpeed{300.f};
 };

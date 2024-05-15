@@ -24,18 +24,15 @@ void Pawn::Draw() const
 
 bool Pawn::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
-	//	SDL_Rect rect3;
-	//
-	//	return SDL_IntersectRect(rect1, rect2, &rect3);
 
 	// Check if one rectangle is to the right of the other
-	if (r1.pos.x > r2.pos.x + r2.width || r2.pos.x > r1.pos.x + r1.width)
+	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
 	{
 		return false;
 	}
 
 	// Check if one rectangle is above the other
-	if (r1.pos.y > r2.pos.y + r2.height || r2.pos.y > r1.pos.y + r1.height)
+	if (r1.y > r2.y + r2.h || r2.y > r1.y + r1.h)
 	{
 		return false;
 	}
@@ -44,40 +41,40 @@ bool Pawn::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 	return true;
 }
 
-std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Pawn::IsCanMove(const BaseObj* me)
+std::list<std::weak_ptr<BaseObj>> Pawn::IsCanMove()
 {
 	const Direction direction = GetDirection();
 	float speedX = GetSpeed() * _env->deltaTime;
 	float speedY = GetSpeed() * _env->deltaTime;
 
 	//const auto rect1 = SDL_Rect{static_cast<int>(me->GetX()) + speed, static_cast<int>(me->GetY()), me->GetWidth(), me->GetHeight()};
-	if (direction == Direction::UP)
-	{//36 37 initialize in  if
+	if (direction == UP)
+	{
+		//36 37 initialize in  if
 		speedY *= -1;
 		speedX *= 0;
 	}
-	else if (direction == Direction::DOWN)
+	else if (direction == DOWN)
 	{
 		speedY *= 1;
 		speedX *= 0;
 	}
-	else if (direction == Direction::LEFT)
+	else if (direction == LEFT)
 	{
 		speedX *= -1;
 		speedY *= 0;
 	}
-	else if (direction == Direction::RIGHT)
+	else if (direction == RIGHT)
 	{
 		speedX *= 1;
 		speedY *= 0;
 	}
 
-	std::list<std::weak_ptr<BaseObj>> obstacle{};
-	const auto rect1 = Rectangle{me->GetX() + speedX, me->GetY() + speedY, me->GetWidth(), me->GetHeight()};
-	bool isHaveCollision = true;
+	std::list<std::weak_ptr<BaseObj>> obstacles{};
+	const auto rect1 = Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
 	for (auto& pawn: _env->allPawns)
 	{
-		if (me == pawn.get())
+		if (this == pawn.get())
 		{
 			continue;
 		}
@@ -87,8 +84,7 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Pawn::IsCanMove(const BaseOb
 			if (!pawn->GetIsPassable())
 			{
 				//TODO: need fix, we broke collision detecting
-				obstacle.emplace_back(std::weak_ptr(pawn));
-				isHaveCollision = false;
+				obstacles.emplace_back(std::weak_ptr(pawn));
 				// return std::make_tuple(false, obstacle);
 			}
 			//else
@@ -100,7 +96,7 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Pawn::IsCanMove(const BaseOb
 		}
 	}
 
-	return std::make_tuple(isHaveCollision, obstacle);
+	return obstacles;
 }
 
 void Pawn::TickUpdate()
@@ -115,31 +111,31 @@ void Pawn::Shot()
 	{
 		const Direction direction = GetDirection();
 		const FPoint tankHalf = {GetWidth() / 2.f, GetHeight() / 2.f};
-		const int tankX = static_cast<int>(GetX());
-		const int tankY = static_cast<int>(GetY());
+		const float tankX = GetX();
+		const float tankY = GetY();
 		const FPoint tankCenter = {tankX + tankHalf.x, tankY + tankHalf.y};
 
-		const int bulletWidth = GetBulletWidth();
-		const int bulletHeight = GetBulletHeight();
+		const float bulletWidth = GetBulletWidth();
+		const float bulletHeight = GetBulletHeight();
 		const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
 		constexpr int color = 0xffffff;
 		const float speed = GetBulletSpeed();
 		constexpr int health = 1;
 		FPoint pos;
 
-		if (direction == Direction::UP && tankY - bulletWidth >= 0u)
+		if (direction == UP && tankY - bulletWidth >= 0.f) //TODO: rewrite check with zero to use epsilon
 		{
 			pos = {tankCenter.x - bulletHalf.x, tankCenter.y - bulletHalf.y - tankHalf.y};
 		}
-		else if (direction == Direction::DOWN && tankY + bulletHeight <= _env->windowHeight)
+		else if (direction == DOWN && tankY + bulletHeight <= static_cast<float>(_env->windowHeight))
 		{
 			pos = {tankCenter.x - bulletHalf.x, tankCenter.y + bulletHalf.y + tankHalf.y};
 		}
-		else if (direction == Direction::LEFT && tankX - bulletWidth >= 0u)
+		else if (direction == LEFT && tankX - bulletWidth >= 0.f) //TODO: rewrite check with zero to use epsilon
 		{
 			pos = {tankCenter.x - bulletHalf.x - tankHalf.x, tankCenter.y - bulletHalf.y};
 		}
-		else if (direction == Direction::RIGHT && tankX + GetWidth() + bulletHalf.x + bulletWidth <= _env->windowWidth)
+		else if (direction == RIGHT && tankX + GetWidth() + bulletHalf.x + bulletWidth <= static_cast<float>(_env->windowWidth))
 		{
 			pos = {tankCenter.x + bulletHalf.x + tankHalf.x, tankCenter.y - bulletHalf.y};
 		}
@@ -221,7 +217,7 @@ void Pawn::Move()
 	if (keyboardButtons.a && x >= 0.f + speed)
 	{
 		SetDirection(LEFT);
-		if (auto [isCanMove, pawns] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveX(-std::floor(speed));
 		}
@@ -237,10 +233,10 @@ void Pawn::Move()
 			}
 		}
 	}
-	else if (keyboardButtons.d && x + speed + static_cast<float>(width) < static_cast<float>(_env->windowWidth))
+	else if (keyboardButtons.d && x + speed + width < static_cast<float>(_env->windowWidth))
 	{
 		SetDirection(RIGHT);
-		if (auto [isCanMove, pawns] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveX(std::floor(speed));
 		}
@@ -259,7 +255,7 @@ void Pawn::Move()
 	else if (keyboardButtons.w && y >= 0.0f + speed)
 	{
 		SetDirection(UP);
-		if (auto [isCanMove, pawns] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveY(-std::floor(speed));
 		}
@@ -275,10 +271,10 @@ void Pawn::Move()
 			}
 		}
 	}
-	else if (keyboardButtons.s && y + speed + static_cast<float>(height) < static_cast<float>(_env->windowHeight))
+	else if (keyboardButtons.s && y + speed + height < static_cast<float>(_env->windowHeight))
 	{
 		SetDirection(DOWN);
-		if (auto [isCanMove, pawns] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveY(std::floor(speed));
 		}
@@ -303,13 +299,13 @@ Direction Pawn::GetDirection() const { return _direction; }
 
 void Pawn::SetDirection(const Direction direction) { _direction = direction; }
 
-int Pawn::GetBulletWidth() const { return _bulletWidth; }
+float Pawn::GetBulletWidth() const { return _bulletWidth; }
 
-void Pawn::SetBulletWidth(const int bulletWidth) { _bulletWidth = bulletWidth; }
+void Pawn::SetBulletWidth(const float bulletWidth) { _bulletWidth = bulletWidth; }
 
-int Pawn::GetBulletHeight() const { return _bulletHeight; }
+float Pawn::GetBulletHeight() const { return _bulletHeight; }
 
-void Pawn::SetBulletHeight(const int bulletHeight) { _bulletHeight = bulletHeight; }
+void Pawn::SetBulletHeight(const float bulletHeight) { _bulletHeight = bulletHeight; }
 
 float Pawn::GetBulletSpeed() const { return _bulletSpeed; }
 

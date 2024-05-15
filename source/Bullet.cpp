@@ -55,46 +55,46 @@ void Bullet::Move()
 
 	if (const int direction = GetDirection(); direction == UP && y - speed >= 0.0f)
 	{
-		if (auto [isCanMove, pawn] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveY(-speed);
 		}
 		else
 		{
-			DealDamage(pawn);
+			DealDamage(pawns);
 		}
 	}
 	else if (direction == DOWN && y + speed <= static_cast<float>(_env->windowHeight))
 	{
-		if (auto [isCanMove, pawn] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveY(speed);
 		}
 		else
 		{
-			DealDamage(pawn);
+			DealDamage(pawns);
 		}
 	}
 	else if (direction == LEFT && x - speed >= 0.0f)
 	{
-		if (auto [isCanMove, pawn] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveX(-speed);
 		}
 		else
 		{
-			DealDamage(pawn);
+			DealDamage(pawns);
 		}
 	}
 	else if (direction == RIGHT && x + speed <= static_cast<float>(_env->windowWidth))
 	{
-		if (auto [isCanMove, pawn] = IsCanMove(this); isCanMove)
+		if (const auto pawns = IsCanMove(); pawns.empty())
 		{
 			MoveX(speed);
 		}
 		else
 		{
-			DealDamage(pawn);
+			DealDamage(pawns);
 		}
 	}
 	else// Self-destroy when edge of windows is reached
@@ -128,39 +128,40 @@ void Bullet::Shot() {}
 
 void Bullet::SetDamage(const int damage) { _damage = damage; }
 
-std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const BaseObj* me)
+std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 {
 	const Direction direction = GetDirection();
 	float speedX = GetSpeed() * _env->deltaTime;
 	float speedY = GetSpeed() * _env->deltaTime;
 
 	// For some reason I can't make rect1 in if's Rider say i make unused object. So I made more crutches
-	if (direction == Direction::UP)
-	{//36 37 initialize in  if
+	if (direction == UP)
+	{
+		//36 37 initialize in  if
 		speedY *= -1;
 		speedX *= 0;
 	}
-	else if (direction == Direction::DOWN)
+	else if (direction == DOWN)
 	{
 		speedY *= 1;
 		speedX *= 0;
 	}
-	else if (direction == Direction::LEFT)
+	else if (direction == LEFT)
 	{
 		speedX *= -1;
 		speedY *= 0;
 	}
-	else if (direction == Direction::RIGHT)
+	else if (direction == RIGHT)
 	{
 		speedX *= 1;
 		speedY *= 0;
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto rect1 = Rectangle{me->GetX() + speedX, me->GetY() + speedY, me->GetWidth(), me->GetHeight()};
+	const auto rect1 = Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
 	for (auto& pawn: _env->allPawns)
 	{
-		if (me == pawn.get())
+		if (this == pawn.get())
 		{
 			continue;
 		}
@@ -170,15 +171,13 @@ std::tuple<bool, std::list<std::weak_ptr<BaseObj>>> Bullet::IsCanMove(const Base
 		{
 			if (!pawn->GetIsPenetrable())
 			{
-				CheckAoE(me, _env, aoeList);
-				return std::make_tuple(false, aoeList);
+				CheckAoE(this, _env, aoeList);
+				return aoeList;
 			}
-
-			return std::make_tuple(true, aoeList);
 		}
 	}
 
-	return std::make_tuple(true, aoeList);
+	return aoeList;
 }
 
 void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const
@@ -188,18 +187,18 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::
 	const float width = me->GetWidth();
 	const float height = me->GetHeight();
 	const float speed = (GetSpeed() * env->deltaTime) * 2;
-	for (const std::list<Rectangle> targetList{// 123
-											   // 4_6
-											   // 789
-											   // NOTE: where _ is this bullet
-											   {x - speed, y - speed, width, height},
-											   {x, y - speed, width, height},
-											   {x + speed, y - speed, width, height},
-											   {x - speed, y, width, height},
-											   {x + speed, y, width, height},
-											   {x - speed, y + speed, width, height},
-											   {x, y + speed, width, height},
-											   {x + speed, y + speed, width, height}};
+	for (const std::list<Rectangle> targetList{// NOTE: targets ordered in numpad positions
+											   /*1*/ {x - speed, y - speed, width, height},
+											   /*2*/ {x, y - speed, width, height},
+											   /*3*/ {x + speed, y - speed, width, height},
+
+											   /*4*/ {x - speed, y, width, height},
+											   /*5*/ {x, y, width, height},// bullet position
+											   /*6*/ {x + speed, y, width, height},
+
+											   /*7*/ {x - speed, y + speed, width, height},
+											   /*8*/ {x, y + speed, width, height},
+											   /*9*/ {x + speed, y + speed, width, height}};
 		 auto target: targetList)
 	{
 		for (const auto& pawn: env->allPawns)

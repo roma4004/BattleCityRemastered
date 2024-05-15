@@ -4,39 +4,43 @@ struct Environment;
 
 BaseObj::BaseObj(const FPoint& pos, const float width, const float height, const int color, const float speed,
 				 const int health, Environment* env)
-	: shape(pos.x, pos.y, width, height), _color(color), _speed(speed), _health(health), _env(env)
+	: shape{pos.x, pos.y, width, height}, _color(color), _speed(speed), _health(health), _env(env)
 {
 }
 
 BaseObj::~BaseObj() = default;
 
-FPoint BaseObj::GetPos() const { return shape.pos; }
+FPoint BaseObj::GetPos() const { return FPoint{shape.x, shape.y}; }
 
-void BaseObj::SetPos(const FPoint& pos) { shape.pos = pos; }
+void BaseObj::SetPos(const FPoint& pos)
+{
+	shape.x = pos.x;
+	shape.y = pos.y;
+}
 
 float BaseObj::GetRightSide() const { return shape.Right(); }
 
 float BaseObj::GetBottomSide() const { return shape.Bottom(); }
 
-float BaseObj::GetX() const { return shape.pos.x; }
+float BaseObj::GetX() const { return shape.x; }
 
-void BaseObj::SetX(const FPoint& pos) { shape.pos.x = pos.x; }
+void BaseObj::SetX(const FPoint& pos) { shape.x = pos.x; }
 
-float BaseObj::GetY() const { return shape.pos.y; }
+float BaseObj::GetY() const { return shape.y; }
 
-void BaseObj::SetY(const FPoint& pos) { shape.pos.y = pos.y; }
+void BaseObj::SetY(const FPoint& pos) { shape.y = pos.y; }
 
-float BaseObj::GetWidth() const { return shape.width; }
+float BaseObj::GetWidth() const { return shape.w; }
 
-void BaseObj::SetWidth(const float width) { shape.width = width; }
+void BaseObj::SetWidth(const float width) { shape.w = width; }
 
-float BaseObj::GetHeight() const { return shape.height; }
+float BaseObj::GetHeight() const { return shape.h; }
 
-void BaseObj::SetHeight(const float height) { shape.height = height; }
+void BaseObj::SetHeight(const float height) { shape.h = height; }
 
-void BaseObj::MoveX(const float i) { shape.pos.x += i; }
+void BaseObj::MoveX(const float i) { shape.x += i; }
 
-void BaseObj::MoveY(const float i) { shape.pos.y += i; }
+void BaseObj::MoveY(const float i) { shape.y += i; }
 
 float BaseObj::GetSpeed() const { return _speed; }
 
