@@ -1,4 +1,5 @@
 ﻿#include "../headers/Bullet.h"
+#include "../headers/Circle.h"
 
 Bullet::Bullet(const FPoint& pos, const float width, const float height, const int color, const float speed,
 			   const Direction direction, const int health, Environment* env)
@@ -128,6 +129,14 @@ void Bullet::Shot() {}
 
 void Bullet::SetDamage(const int damage) { _damage = damage; }
 
+bool Bullet::CheckIntersection(const Circle& circle, const Rectangle& rect)
+{
+	const double deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
+	const double deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
+
+	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
+}
+
 std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 {
 	const Direction direction = GetDirection();
@@ -171,7 +180,8 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 		{
 			if (!pawn->GetIsPenetrable())
 			{
-				CheckAoE(this, _env, aoeList);
+				//CheckAoE(_env, aoeList);
+				CheckCircleAoE(_env, FPoint{this->GetX() + speedX, this->GetY() + speedY}, aoeList);
 				return aoeList;
 			}
 		}
@@ -180,13 +190,33 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 	return aoeList;
 }
 
-void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const
+void Bullet::CheckCircleAoE(const Environment* env, FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
-	const float x = me->GetX();
-	const float y = me->GetY();
-	const float width = me->GetWidth();
-	const float height = me->GetHeight();
+	Circle circle{blowCenter, 12};
+	for (const auto& pawn: env->allPawns)
+	{
+		if (this == pawn.get())
+		{
+			continue;
+		}
+
+		const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
+
+		if (CheckIntersection(circle, rect2))
+		{
+			aoeList.emplace_back(std::weak_ptr(pawn));
+		}
+	}
+}
+
+void Bullet::CheckAoE(const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const
+{
+	const float x = GetX();
+	const float y = GetY();
+	const float width = GetWidth();
+	const float height = GetHeight();
 	const float speed = (GetSpeed() * env->deltaTime) * 2;
+
 	for (const std::list<Rectangle> targetList{// NOTE: targets ordered in numpad positions
 											   /*1*/ {x - speed, y - speed, width, height},
 											   /*2*/ {x, y - speed, width, height},
@@ -203,7 +233,7 @@ void Bullet::CheckAoE(const BaseObj* me, const Environment* env, std::list<std::
 	{
 		for (const auto& pawn: env->allPawns)
 		{
-			if (me == pawn.get())
+			if (this == pawn.get())
 			{
 				continue;
 			}

@@ -145,6 +145,7 @@
     <ItemGroup>
         <ClInclude Include="headers\Brick.h"/>
         <ClInclude Include="headers\Bullet.h"/>
+        <ClInclude Include="headers\Circle.h" />
         <ClInclude Include="headers\Environment.h"/>
         <ClInclude Include="headers\BaseObj.h"/>
         <ClInclude Include="headers\IDrawable.h"/>

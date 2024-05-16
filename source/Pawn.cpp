@@ -209,12 +209,7 @@ float Pawn::FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
 void Pawn::Move()
 {
 	const float speed = GetSpeed() * _env->deltaTime;
-	const float x = GetX();
-	const float y = GetY();
-	const float width = GetWidth();
-	const float height = GetHeight();
-
-	if (keyboardButtons.a && x >= 0.f + speed)
+	if (keyboardButtons.a && GetX() + speed >= 0.f)
 	{
 		SetDirection(LEFT);
 		if (const auto pawns = IsCanMove(); pawns.empty())
@@ -233,7 +228,7 @@ void Pawn::Move()
 			}
 		}
 	}
-	else if (keyboardButtons.d && x + speed + width < static_cast<float>(_env->windowWidth))
+	else if (keyboardButtons.d && GetRightSide() + speed < static_cast<float>(_env->windowWidth))
 	{
 		SetDirection(RIGHT);
 		if (const auto pawns = IsCanMove(); pawns.empty())
@@ -252,7 +247,7 @@ void Pawn::Move()
 			}
 		}
 	}
-	else if (keyboardButtons.w && y >= 0.0f + speed)
+	else if (keyboardButtons.w && GetY() + speed >= 0.0f)
 	{
 		SetDirection(UP);
 		if (const auto pawns = IsCanMove(); pawns.empty())
@@ -271,7 +266,7 @@ void Pawn::Move()
 			}
 		}
 	}
-	else if (keyboardButtons.s && y + speed + height < static_cast<float>(_env->windowHeight))
+	else if (keyboardButtons.s && GetBottomSide() + speed < static_cast<float>(_env->windowHeight))
 	{
 		SetDirection(DOWN);
 		if (const auto pawns = IsCanMove(); pawns.empty())

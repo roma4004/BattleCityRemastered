@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../headers/Pawn.h"
+#include "../headers/Circle.h"
 
 struct FPoint;
 struct Environment;
@@ -18,11 +19,13 @@ public:
 
 	[[nodiscard]] int GetDamage() const;
 	void SetDamage(int damage);
+	static bool CheckIntersection(const Circle& circle, const Rectangle& rect);
 
 	void Shot() override;
 
 	std::list<std::weak_ptr<BaseObj>> IsCanMove() override;
-	void CheckAoE(const BaseObj* me, const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
+	void CheckCircleAoE(const Environment* env, FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
+	void CheckAoE(const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 
 private:
 	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList);
