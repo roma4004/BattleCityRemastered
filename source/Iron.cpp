@@ -47,9 +47,12 @@ Iron::~Iron()
 		return;
 	}
 
-	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	if (!_env->isGameOver)
+	{
+		const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.RemoveListenerFromEvent("Draw", eventName);
+		_env->events.RemoveListenerFromEvent("Draw", eventName);
+	}
 }
 
 void Iron::Draw() const

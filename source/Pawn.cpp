@@ -71,7 +71,7 @@ std::list<std::weak_ptr<BaseObj>> Pawn::IsCanMove()
 	}
 
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
-	const auto rect1 = Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
+	const auto thisNextPosRect = Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
 	for (auto& pawn: _env->allPawns)
 	{
 		if (this == pawn.get())
@@ -79,7 +79,7 @@ std::list<std::weak_ptr<BaseObj>> Pawn::IsCanMove()
 			continue;
 		}
 
-		if (IsCollideWith(rect1, pawn->GetShape()))
+		if (IsCollideWith(thisNextPosRect, pawn->GetShape()))
 		{
 			if (!pawn->GetIsPassable())
 			{
@@ -118,26 +118,23 @@ void Pawn::Shot()
 		const float bulletWidth = GetBulletWidth();
 		const float bulletHeight = GetBulletHeight();
 		const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-		constexpr int color = 0xffffff;
-		const float speed = GetBulletSpeed();
-		constexpr int health = 1;
-		FPoint pos;
+		FPoint bulletPos;
 
-		if (direction == UP && tankY - bulletWidth >= 0.f) //TODO: rewrite check with zero to use epsilon
+		if (direction == UP && tankY - bulletHeight >= 0.f) //TODO: rewrite check with zero to use epsilon
 		{
-			pos = {tankCenter.x - bulletHalf.x, tankCenter.y - bulletHalf.y - tankHalf.y};
+			bulletPos = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHalf.y};
 		}
-		else if (direction == DOWN && tankY + bulletHeight <= static_cast<float>(_env->windowHeight))
+		else if (direction == DOWN && tankY + GetHeight() + bulletHeight <= static_cast<float>(_env->windowHeight))
 		{
-			pos = {tankCenter.x - bulletHalf.x, tankCenter.y + bulletHalf.y + tankHalf.y};
+			bulletPos = {tankCenter.x - bulletHalf.x, tankCenter.y + tankHalf.y + bulletHalf.y};
 		}
 		else if (direction == LEFT && tankX - bulletWidth >= 0.f) //TODO: rewrite check with zero to use epsilon
 		{
-			pos = {tankCenter.x - bulletHalf.x - tankHalf.x, tankCenter.y - bulletHalf.y};
+			bulletPos = {tankCenter.x - tankHalf.x - bulletHalf.x, tankCenter.y - bulletHalf.y};
 		}
 		else if (direction == RIGHT && tankX + GetWidth() + bulletHalf.x + bulletWidth <= static_cast<float>(_env->windowWidth))
 		{
-			pos = {tankCenter.x + bulletHalf.x + tankHalf.x, tankCenter.y - bulletHalf.y};
+			bulletPos = {tankCenter.x + tankHalf.x + bulletHalf.x, tankCenter.y - bulletHalf.y};
 		}
 		else
 		{
@@ -145,8 +142,11 @@ void Pawn::Shot()
 			return;
 		}
 
+		constexpr int color = 0xffffff;
+		const float speed = GetBulletSpeed();
+		constexpr int health = 1;
 		_env->allPawns.emplace_back(
-				std::make_shared<Bullet>(pos, bulletWidth, bulletHeight, color, speed, direction, health, _env));
+				std::make_shared<Bullet>(bulletPos, bulletWidth, bulletHeight, color, speed, direction, health, _env));
 
 		keyboardButtons.shot = false;
 	}
@@ -172,8 +172,8 @@ inline float Distance(const FPoint a, const FPoint b)
 //         return 0.0;
 //     }
 // }
-#include <functional>
-#include <memory>
+// #include <functional>
+// #include <memory>
 
 float Pawn::FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
 								const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide) const

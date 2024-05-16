@@ -33,12 +33,15 @@ Bullet::~Bullet()
 		return;
 	}
 
-	const auto listenerName =
-			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	if (!_env->isGameOver)
+	{
+		const auto listenerName =
+				"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.RemoveListenerFromEvent("Draw", listenerName);
+		_env->events.RemoveListenerFromEvent("Draw", listenerName);
 
-	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
+		_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
+	}
 }
 
 void Bullet::Move()
@@ -167,7 +170,8 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto rect1 = Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
+	const auto bulletNextPosRect =
+			Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
 	for (auto& pawn: _env->allPawns)
 	{
 		if (this == pawn.get())
@@ -175,8 +179,7 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 			continue;
 		}
 
-		const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
-		if (IsCollideWith(rect1, rect2))
+		if (IsCollideWith(bulletNextPosRect, pawn->GetShape()))
 		{
 			if (!pawn->GetIsPenetrable())
 			{
@@ -190,7 +193,8 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 	return aoeList;
 }
 
-void Bullet::CheckCircleAoE(const Environment* env, const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
+void Bullet::CheckCircleAoE(const Environment* env, const FPoint blowCenter,
+							std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
 	const Circle circle{blowCenter, 12};
 	for (const std::shared_ptr<BaseObj>& pawn: env->allPawns)

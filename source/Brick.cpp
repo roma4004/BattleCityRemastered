@@ -47,9 +47,12 @@ Brick::~Brick()
 		return;
 	}
 
-	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_env->events.RemoveListenerFromEvent("Draw", eventName);
+	if (!_env->isGameOver)
+	{
+		const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+		
+		_env->events.RemoveListenerFromEvent("Draw", eventName);
+	}
 }
 
 void Brick::Draw() const

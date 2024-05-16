@@ -35,11 +35,14 @@ PlayerTwo::~PlayerTwo()
 		return;
 	}
 
-	const std::string listenerName = "PlayerTwo";
+	if (!_env->isGameOver)
+	{
+		const std::string listenerName = "PlayerTwo";
 
-	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
+		_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
 
-	_env->events.RemoveListenerFromEvent("Draw", listenerName);
+		_env->events.RemoveListenerFromEvent("Draw", listenerName);
+	}
 }
 
 void PlayerTwo::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)
