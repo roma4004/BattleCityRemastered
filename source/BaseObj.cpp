@@ -10,6 +10,8 @@ BaseObj::BaseObj(const FPoint& pos, const float width, const float height, const
 
 BaseObj::~BaseObj() = default;
 
+const Rectangle& BaseObj::GetShape() const { return shape; }
+
 FPoint BaseObj::GetPos() const { return FPoint{shape.x, shape.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)

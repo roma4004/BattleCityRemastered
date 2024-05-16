@@ -59,6 +59,8 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
+	[[nodiscard]] const Rectangle& GetShape() const;
+
 protected:
 	Rectangle shape;
 

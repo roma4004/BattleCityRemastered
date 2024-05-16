@@ -78,8 +78,8 @@ std::list<std::weak_ptr<BaseObj>> Pawn::IsCanMove()
 		{
 			continue;
 		}
-		const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
-		if (IsCollideWith(rect1, rect2))
+
+		if (IsCollideWith(rect1, pawn->GetShape()))
 		{
 			if (!pawn->GetIsPassable())
 			{

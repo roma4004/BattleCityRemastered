@@ -190,19 +190,17 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 	return aoeList;
 }
 
-void Bullet::CheckCircleAoE(const Environment* env, FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
+void Bullet::CheckCircleAoE(const Environment* env, const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
-	Circle circle{blowCenter, 12};
-	for (const auto& pawn: env->allPawns)
+	const Circle circle{blowCenter, 12};
+	for (const std::shared_ptr<BaseObj>& pawn: env->allPawns)
 	{
 		if (this == pawn.get())
 		{
 			continue;
 		}
 
-		const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
-
-		if (CheckIntersection(circle, rect2))
+		if (CheckIntersection(circle, pawn->GetShape()))
 		{
 			aoeList.emplace_back(std::weak_ptr(pawn));
 		}
@@ -238,8 +236,7 @@ void Bullet::CheckAoE(const Environment* env, std::list<std::weak_ptr<BaseObj>>&
 				continue;
 			}
 
-			const auto rect2 = Rectangle{pawn->GetX(), pawn->GetY(), pawn->GetWidth(), pawn->GetHeight()};
-			if (IsCollideWith(target, rect2))
+			if (IsCollideWith(target, pawn->GetShape()))
 			{
 				aoeList.emplace_back(std::weak_ptr(pawn));
 			}
