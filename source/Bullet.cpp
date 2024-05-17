@@ -19,10 +19,9 @@ Bullet::Bullet(const FPoint& pos, const float width, const float height, const i
 	const auto listenerName =
 			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("TickUpdate", listenerName,
-									[self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(); });
+	_env->events.AddListenerToEvent("TickUpdate", listenerName, [this]() { this->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]() { self->Draw(); });
+	_env->events.AddListenerToEvent("Draw", listenerName, [this]() { this->Draw(); });
 }
 
 Bullet::~Bullet()

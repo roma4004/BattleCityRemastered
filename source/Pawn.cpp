@@ -13,9 +13,11 @@ Pawn::~Pawn() = default;
 
 void Pawn::Draw() const
 {
-	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY() + GetHeight()); ++y)
+	int y = static_cast<int>(GetY());
+	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
 	{
-		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX() + GetWidth()); ++x)
+		int x = static_cast<int>(GetX());
+		for (const int maxX = x + static_cast<int>(GetWidth()); x < maxX; ++x)
 		{
 			_env->SetPixel(x, y, GetColor());
 		}
@@ -157,28 +159,10 @@ inline float Distance(const FPoint a, const FPoint b)
 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 }
 
-
-// double Distance(const SDL_FRect& a, const SDL_FRect& b) {
-//     if (a.x + a.w < b.x // 'a' is left of 'b'
-//         || b.x + b.w < a.x // 'a' is right of 'b'
-//         || a.y < b.y + b.h // 'a' is above 'b'
-//         || b.y < a.y + a.h) { // 'a' is below 'b'
-// 		const double dx = std::max({a.x - b.x + b.w, b.x - a.x + a.w, 0.0f});
-// 		const double dy = std::max(    {a.y - b.y + b.h, b.y - a.y + a.h, 0.0f});
-//         return std::sqrt(dx*dx + dy*dy);
-//     }
-//     else {
-//         // The rectangles intersect, so the distance is zero.
-//         return 0.0;
-//     }
-// }
-// #include <functional>
-// #include <memory>
-
 float Pawn::FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
 								const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide) const
 {
-	float nearestDist = _env->windowWidth * _env->windowHeight;
+	float nearestDist = static_cast<float>(_env->windowWidth * _env->windowHeight);
 	// float nearestDist = 0;
 	for (const auto& pawn: pawns)
 	{

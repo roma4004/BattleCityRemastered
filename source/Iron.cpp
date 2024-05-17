@@ -15,10 +15,9 @@ Iron::Iron(const FPoint& pos, const float width, const float height, const int c
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("TickUpdate", eventName,
-									[self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(); });
+	_env->events.AddListenerToEvent("TickUpdate", eventName, [this]() { this->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<Pawn*>(this)]() { self->Draw(); });
+	_env->events.AddListenerToEvent("Draw", eventName, [this]() { this->Draw(); });
 }
 
 Iron::Iron(const FPoint& pos, Environment* env)
@@ -36,7 +35,7 @@ Iron::Iron(const FPoint& pos, Environment* env)
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<BaseObj*>(this)]() { self->Draw(); });
+	_env->events.AddListenerToEvent("Draw", eventName, [this]() { this->Draw(); });
 }
 
 Iron::~Iron()
@@ -57,9 +56,11 @@ Iron::~Iron()
 
 void Iron::Draw() const
 {
-	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y)
+	int y = static_cast<int>(GetY());
+	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
 	{
-		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX()) + GetWidth(); ++x)
+		int x = static_cast<int>(GetX());
+		for (const int maxX = x + static_cast<int>(GetWidth()); x < maxX; ++x)
 		{
 			_env->SetPixel(x, y, GetColor());
 		}

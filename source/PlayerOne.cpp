@@ -16,10 +16,9 @@ PlayerOne::PlayerOne(const FPoint& pos, const float width, const float height, c
 
 	const std::string listenerName = "PlayerOne";
 
-	_env->events.AddListenerToEvent("TickUpdate", listenerName,
-									[self = dynamic_cast<Pawn*>(this)]() { self->TickUpdate(); });
+	_env->events.AddListenerToEvent("TickUpdate", listenerName, [this]() { this->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]() { self->Draw(); });
+	_env->events.AddListenerToEvent("Draw", listenerName, [this]() { this->Draw(); });
 }
 
 PlayerOne::PlayerOne(const FPoint& pos, const int color, Environment* env)
@@ -39,7 +38,7 @@ PlayerOne::~PlayerOne()
 	if (!_env->isGameOver)
 	{
 		const std::string listenerName = "PlayerOne";
-		
+
 		_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
 
 		_env->events.RemoveListenerFromEvent("Draw", listenerName);

@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
 {
 	Environment env;
 	Init(env);
-	FPoint playerOnePos{env.gridSize * 16.f, static_cast<float>(env.windowHeight - env.tankSize)};
-	FPoint playerTwoPos{env.gridSize * 32.f, static_cast<float>(env.windowHeight - env.tankSize)};
+	FPoint playerOnePos{env.gridSize * 16.f, static_cast<float>(env.windowHeight) - env.tankSize};
+	FPoint playerTwoPos{env.gridSize * 32.f, static_cast<float>(env.windowHeight) - env.tankSize};
 	env.allPawns.reserve(2);
 	env.allPawns.emplace_back(std::make_shared<PlayerOne>(playerOnePos, 0xeaea00, &env));
 	env.allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoPos, 0x408000, &env));
