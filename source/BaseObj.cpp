@@ -2,98 +2,61 @@
 
 struct Environment;
 
-BaseObj::BaseObj(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
-				 Environment* env)
-	: _x(pos.x), _y(pos.y), _width(width), _height(height), _color(color), _speed(speed), _health(health), _env(env)
+BaseObj::BaseObj(const FPoint& pos, const float width, const float height, const int color, const float speed,
+				 const int health, Environment* env)
+	: shape{pos.x, pos.y, width, height}, _color(color), _speed(speed), _health(health), _env(env)
 {
 }
 
 BaseObj::~BaseObj() = default;
 
-float BaseObj::GetX() const
+const Rectangle& BaseObj::GetShape() const { return shape; }
+
+FPoint BaseObj::GetPos() const { return FPoint{shape.x, shape.y}; }
+
+void BaseObj::SetPos(const FPoint& pos)
 {
-	return _x;
+	shape.x = pos.x;
+	shape.y = pos.y;
 }
 
-void BaseObj::SetX(const Point& pos)
-{
-	_x = pos.x;
-}
+float BaseObj::GetRightSide() const { return shape.Right(); }
 
-float BaseObj::GetY() const
-{
-	return _y;
-}
+float BaseObj::GetBottomSide() const { return shape.Bottom(); }
 
-void BaseObj::SetY(const Point& pos)
-{
-	_y = pos.y;
-}
+float BaseObj::GetX() const { return shape.x; }
 
-int BaseObj::GetWidth() const
-{
-	return _width;
-}
+void BaseObj::SetX(const FPoint& pos) { shape.x = pos.x; }
 
-void BaseObj::SetWidth(const int width)
-{
-	_width = width;
-}
+float BaseObj::GetY() const { return shape.y; }
 
-int BaseObj::GetHeight() const
-{
-	return _height;
-}
+void BaseObj::SetY(const FPoint& pos) { shape.y = pos.y; }
 
-void BaseObj::SetHeight(const int height)
-{
-	_height = height;
-}
+float BaseObj::GetWidth() const { return shape.w; }
 
-void BaseObj::MoveX(const float i)
-{
-	_x += i;
-}
+void BaseObj::SetWidth(const float width) { shape.w = width; }
 
-void BaseObj::MoveY(const float i)
-{
-	_y += i;
-}
+float BaseObj::GetHeight() const { return shape.h; }
 
-float BaseObj::GetSpeed() const
-{
-	return _speed;
-}
+void BaseObj::SetHeight(const float height) { shape.h = height; }
 
-int BaseObj::GetColor() const
-{
-	return _color;
-}
+void BaseObj::MoveX(const float i) { shape.x += i; }
 
-void BaseObj::SetColor(const int color)
-{
-	_color = color;
-}
+void BaseObj::MoveY(const float i) { shape.y += i; }
 
-int BaseObj::GetHealth() const
-{
-	return _health;
-}
+float BaseObj::GetSpeed() const { return _speed; }
 
-void BaseObj::SetHealth(const int health)
-{
-	_health = health;
-}
+int BaseObj::GetColor() const { return _color; }
 
-void BaseObj::SetIsAlive(const bool isAlive)
-{
-	_isAlive = isAlive;
-}
+void BaseObj::SetColor(const int color) { _color = color; }
 
-bool BaseObj::GetIsAlive() const
-{
-	return _isAlive;
-}
+int BaseObj::GetHealth() const { return _health; }
+
+void BaseObj::SetHealth(const int health) { _health = health; }
+
+void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
+
+bool BaseObj::GetIsAlive() const { return _isAlive; }
 
 void BaseObj::TakeDamage(const int damage)
 {
@@ -104,32 +67,14 @@ void BaseObj::TakeDamage(const int damage)
 	}
 }
 
-bool BaseObj::GetIsPassable() const
-{
-	return _isPassable;
-}
+bool BaseObj::GetIsPassable() const { return _isPassable; }
 
-void BaseObj::SetIsPassable(const bool value)
-{
-	_isPassable = value;
-}
+void BaseObj::SetIsPassable(const bool value) { _isPassable = value; }
 
-bool BaseObj::GetIsDestructible() const
-{
-	return _isDestructible;
-}
+bool BaseObj::GetIsDestructible() const { return _isDestructible; }
 
-void BaseObj::SetIsDestructible(const bool value)
-{
-	_isDestructible = value;
-}
+void BaseObj::SetIsDestructible(const bool value) { _isDestructible = value; }
 
-bool BaseObj::GetIsPenetrable() const
-{
-	return _isPenetrable;
-}
+bool BaseObj::GetIsPenetrable() const { return _isPenetrable; }
 
-void BaseObj::SetIsPenetrable(const bool value)
-{
-	_isPenetrable = value;
-}
+void BaseObj::SetIsPenetrable(const bool value) { _isPenetrable = value; }

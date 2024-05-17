@@ -3,8 +3,8 @@
 
 #include <string>
 
-Iron::Iron(const Point& pos, const int width, const int height, const int color, const float speed, const int health,
-		   Environment* env)
+Iron::Iron(const FPoint& pos, const float width, const float height, const int color, const float speed,
+		   const int health, Environment* env)
 	: BaseObj(pos, width, height, color, speed, health, env)
 {
 	// subscribe
@@ -15,18 +15,13 @@ Iron::Iron(const Point& pos, const int width, const int height, const int color,
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("TickUpdate", eventName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->TickUpdate();
-	});
+	_env->events.AddListenerToEvent("TickUpdate", eventName, [this]() { this->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", eventName, [this]() { this->Draw(); });
 }
 
-Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0xaaaaaa, 0, 15, env)
+Iron::Iron(const FPoint& pos, Environment* env)
+	: BaseObj(pos, env->gridSize - 1, env->gridSize - 1, 0xaaaaaa, 0, 15, env)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
@@ -40,10 +35,7 @@ Iron::Iron(const Point& pos, Environment* env) : BaseObj(pos, env->gridSize - 1,
 
 	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("Draw", eventName, [self = dynamic_cast<BaseObj*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", eventName, [this]() { this->Draw(); });
 }
 
 Iron::~Iron()
@@ -54,22 +46,25 @@ Iron::~Iron()
 		return;
 	}
 
-	const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	if (!_env->isGameOver)
+	{
+		const auto eventName = std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.RemoveListenerFromEvent("Draw", eventName);
+		_env->events.RemoveListenerFromEvent("Draw", eventName);
+	}
 }
 
 void Iron::Draw() const
 {
-	for (int y = static_cast<int>(GetY()); y < static_cast<int>(GetY()) + GetHeight(); ++y)
+	int y = static_cast<int>(GetY());
+	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
 	{
-		for (int x = static_cast<int>(GetX()); x < static_cast<int>(GetX()) + GetWidth(); ++x)
+		int x = static_cast<int>(GetX());
+		for (const int maxX = x + static_cast<int>(GetWidth()); x < maxX; ++x)
 		{
 			_env->SetPixel(x, y, GetColor());
 		}
 	}
 }
 
-void Iron::TickUpdate()
-{
-}
+void Iron::TickUpdate() {}

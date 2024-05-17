@@ -1,30 +1,38 @@
 #pragma once
 
+#include "Rectangle.h"
+
 #include "../headers/IDrawable.h"
 #include "../headers/IObsticle.h"
 #include "../headers/ITickUpdatable.h"
 #include "../headers/Point.h"
 
+struct FPoint;
 struct Environment;
 
 class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable
 {
 public:
-	BaseObj(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
+	BaseObj(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
 
 	~BaseObj() override;
 
+	[[nodiscard]] FPoint GetPos() const;
+	void SetPos(const FPoint& pos);
+	[[nodiscard]] float GetRightSide() const;
+
+	[[nodiscard]] float GetBottomSide() const;
 	[[nodiscard]] float GetX() const;
-	void SetX(const Point& pos);
+	void SetX(const FPoint& pos);
 
 	[[nodiscard]] float GetY() const;
-	void SetY(const Point& pos);
+	void SetY(const FPoint& pos);
 
-	[[nodiscard]] int GetWidth() const;
-	void SetWidth(int width);
+	[[nodiscard]] float GetWidth() const;
+	void SetWidth(float width);
 
-	[[nodiscard]] int GetHeight() const;
-	void SetHeight(int height);
+	[[nodiscard]] float GetHeight() const;
+	void SetHeight(float height);
 
 	void MoveX(float i);
 	void MoveY(float i);
@@ -51,11 +59,12 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
+	[[nodiscard]] const Rectangle& GetShape() const;
+
+protected:
+	Rectangle shape;
+
 private:
-	float _x{};
-	float _y{};
-	int _width{};
-	int _height{};
 	int _color{};
 	float _speed{};
 	int _health{};

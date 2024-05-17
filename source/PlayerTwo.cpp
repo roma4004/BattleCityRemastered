@@ -1,6 +1,6 @@
 #include "../headers/PlayerTwo.h"
 
-PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const int color, const float speed,
+PlayerTwo::PlayerTwo(const FPoint& pos, const float width, const float height, const int color, const float speed,
 					 const int health, Environment* env)
 	: Pawn(pos, width, height, color, speed, health, env)
 {
@@ -16,19 +16,12 @@ PlayerTwo::PlayerTwo(const Point& pos, const int width, const int height, const 
 
 	const std::string listenerName = "PlayerTwo";
 
-	_env->events.AddListenerToEvent("TickUpdate", listenerName,
-									[self = dynamic_cast<Pawn*>(this)]()
-									{
-										self->TickUpdate();
-									});
+	_env->events.AddListenerToEvent("TickUpdate", listenerName, [this]() { this->TickUpdate(); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [self = dynamic_cast<Pawn*>(this)]()
-	{
-		self->Draw();
-	});
+	_env->events.AddListenerToEvent("Draw", listenerName, [this]() { this->Draw(); });
 }
 
-PlayerTwo::PlayerTwo(const Point& pos, const int color, Environment* env)
+PlayerTwo::PlayerTwo(const FPoint& pos, const int color, Environment* env)
 	: PlayerTwo(pos, env->tankSize, env->tankSize, color, env->tankSpeed, env->tankHealth, env)
 {
 }
@@ -41,11 +34,14 @@ PlayerTwo::~PlayerTwo()
 		return;
 	}
 
-	const std::string listenerName = "PlayerTwo";
+	if (!_env->isGameOver)
+	{
+		const std::string listenerName = "PlayerTwo";
 
-	_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
+		_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
 
-	_env->events.RemoveListenerFromEvent("Draw", listenerName);
+		_env->events.RemoveListenerFromEvent("Draw", listenerName);
+	}
 }
 
 void PlayerTwo::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)

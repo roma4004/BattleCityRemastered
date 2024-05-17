@@ -2,13 +2,13 @@
 
 #include "BaseObj.h"
 
-struct Point;
+struct FPoint;
 
 class Iron final : public BaseObj
 {
 public:
-	Iron(const Point& pos, int width, int height, int color, float speed, int health, Environment* env);
-	Iron(const Point& pos, Environment* env);
+	Iron(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
+	Iron(const FPoint& pos, Environment* env);
 
 	~Iron() override;
 

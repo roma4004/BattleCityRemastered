@@ -139,11 +139,13 @@
         <ClCompile Include="source\Pawn.cpp"/>
         <ClCompile Include="source\PlayerOne.cpp"/>
         <ClCompile Include="source\PlayerTwo.cpp"/>
+        <ClCompile Include="source\Rectangle.cpp" />
         <ClCompile Include="source\Water.cpp"/>
     </ItemGroup>
     <ItemGroup>
         <ClInclude Include="headers\Brick.h"/>
         <ClInclude Include="headers\Bullet.h"/>
+        <ClInclude Include="headers\Circle.h" />
         <ClInclude Include="headers\Environment.h"/>
         <ClInclude Include="headers\BaseObj.h"/>
         <ClInclude Include="headers\IDrawable.h"/>
@@ -158,6 +160,7 @@
         <ClInclude Include="headers\PlayerOne.h"/>
         <ClInclude Include="headers\PlayerTwo.h"/>
         <ClInclude Include="headers\Point.h"/>
+        <ClInclude Include="headers\Rectangle.h" />
         <ClInclude Include="headers\Water.h"/>
     </ItemGroup>
     <ItemGroup>

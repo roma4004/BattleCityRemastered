@@ -1,8 +1,8 @@
-#include <iostream>
 #include "../headers/Environment.h"
 #include "../headers/Map.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
+#include <iostream>
 
 static void MouseEvents(Environment& env, const SDL_Event& event)
 {
@@ -10,15 +10,15 @@ static void MouseEvents(Environment& env, const SDL_Event& event)
 	{
 		env.mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
-			<< "Down" << '\n';
+				  << "Down" << '\n';
 
 		return;
 	}
-	else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
+	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		env.mouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
-			<< "Up" << '\n';
+				  << "Up" << '\n';
 
 		return;
 	}
@@ -56,7 +56,8 @@ int Init(Environment& env)
 		return 1;
 	}
 
-	env.window = SDL_CreateWindow("Battle City remastered", 100, 100, env.windowWidth, env.windowHeight, SDL_WINDOW_SHOWN);
+	env.window =
+			SDL_CreateWindow("Battle City remastered", 100, 100, env.windowWidth, env.windowHeight, SDL_WINDOW_SHOWN);
 	if (env.window == nullptr)
 	{
 		std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << '\n';
@@ -88,8 +89,8 @@ int main(int argc, char* argv[])
 {
 	Environment env;
 	Init(env);
-	Point playerOnePos{env.gridSize * 16, env.windowHeight - env.tankSize};
-	Point playerTwoPos{env.gridSize * 32, env.windowHeight - env.tankSize};
+	FPoint playerOnePos{env.gridSize * 16.f, static_cast<float>(env.windowHeight) - env.tankSize};
+	FPoint playerTwoPos{env.gridSize * 32.f, static_cast<float>(env.windowHeight) - env.tankSize};
 	env.allPawns.reserve(2);
 	env.allPawns.emplace_back(std::make_shared<PlayerOne>(playerOnePos, 0xeaea00, &env));
 	env.allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoPos, 0x408000, &env));
@@ -107,8 +108,8 @@ int main(int argc, char* argv[])
 		env.deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
 		const float fps = 1.0f / env.deltaTime;
 
-		std::cout << "fps: " << fps << '\n'; // TODO:use sdl2 ttf here
-		std::cout << "deltaTime: " << env.deltaTime << '\n'; // TODO:use sdl2 ttf here
+		std::cout << "fps: " << fps << '\n';				// TODO:use sdl2 ttf here
+		std::cout << "deltaTime: " << env.deltaTime << '\n';// TODO:use sdl2 ttf here
 
 		// Cap to 60 FPS
 		// SDL_Delay(floor(16.666f - env.deltaTime));
@@ -126,7 +127,7 @@ int main(int argc, char* argv[])
 			MouseEvents(env, env.event);
 
 			// TODO: refactor events to handle pawns, objects and other obstacles
-			for (auto& object : env.allPawns)
+			for (auto& object: env.allPawns)
 			{
 				if (auto* pawn = dynamic_cast<Pawn*>(object.get()))
 				{
@@ -139,10 +140,8 @@ int main(int argc, char* argv[])
 
 		// TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all "dead" objects (excluding mapBlocks)
-		const auto it = std::ranges::remove_if(env.allPawns, [&](const auto& obj)
-		{
-			return !obj->GetIsAlive();
-		}).begin();
+		const auto it =
+				std::ranges::remove_if(env.allPawns, [&](const auto& obj) { return !obj->GetIsAlive(); }).begin();
 		env.allPawns.erase(it, env.allPawns.end());
 
 		env.events.EmitEvent("Draw");

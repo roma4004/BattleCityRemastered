@@ -53,10 +53,10 @@ struct Environment
 	SDL_Renderer* renderer{};
 	SDL_Texture* screen{};
 
-	int gridSize = windowHeight / 50;
+	float gridSize = windowHeight / 50.f;
 	float tankSpeed = 142;
 	int tankHealth = 100;
-	int tankSize = gridSize * 3; // for better turns
+	float tankSize = gridSize * 3;// for better turns
 	bool isGameOver = false;
 
 	//fps
