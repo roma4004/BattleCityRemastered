@@ -84,13 +84,17 @@ include_directories(headers)
 add_executable(${PROJECT_NAME}
         source/main.cpp
         source/BaseObj.cpp
-        source/Environment.cpp
         source/Pawn.cpp
         source/PlayerOne.cpp
         source/PlayerTwo.cpp
         source/Bullet.cpp
         source/Brick.cpp
+        source/Config.cpp
+        source/ConfigFailure.cpp
+        source/ConfigSuccess.cpp
+        source/Game.cpp
         source/Iron.cpp
+        source/SDLEnvironment.cpp
         source/Water.cpp
         source/Map.cpp
         source/Rectangle.cpp

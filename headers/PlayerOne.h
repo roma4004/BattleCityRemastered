@@ -3,13 +3,13 @@
 #include "../headers/Pawn.h"
 
 struct FPoint;
-struct Environment;
 
 class PlayerOne final : public Pawn
 {
 public:
-	PlayerOne(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
-	PlayerOne(const FPoint& pos, int color, Environment* env);
+	PlayerOne(const FPoint& pos, float width, float height, int color, float speed, int health, int* windowBuffer,
+			  size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+			  std::shared_ptr<EventSystem> events);
 
 	~PlayerOne() override;
 

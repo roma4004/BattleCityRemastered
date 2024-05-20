@@ -131,7 +131,10 @@
     <ItemGroup>
         <ClCompile Include="source\Brick.cpp"/>
         <ClCompile Include="source\Bullet.cpp"/>
-        <ClCompile Include="source\Environment.cpp"/>
+        <ClCompile Include="source\Game.cpp"/>
+        <ClCompile Include="source\Config.cpp"/>
+        <ClCompile Include="source\ConfigFailure.cpp"/>
+        <ClCompile Include="source\ConfigSuccess.cpp"/>
         <ClCompile Include="source\Iron.cpp"/>
         <ClCompile Include="source\main.cpp"/>
         <ClCompile Include="source\BaseObj.cpp"/>
@@ -140,16 +143,21 @@
         <ClCompile Include="source\PlayerOne.cpp"/>
         <ClCompile Include="source\PlayerTwo.cpp"/>
         <ClCompile Include="source\Rectangle.cpp" />
+        <ClCompile Include="source\SDLEnvironment.cpp"/>
         <ClCompile Include="source\Water.cpp"/>
     </ItemGroup>
     <ItemGroup>
         <ClInclude Include="headers\Brick.h"/>
         <ClInclude Include="headers\Bullet.h"/>
         <ClInclude Include="headers\Circle.h" />
-        <ClInclude Include="headers\Environment.h"/>
         <ClInclude Include="headers\BaseObj.h"/>
+        <ClInclude Include="headers\EventSystem.h" />
+        <ClInclude Include="headers\Game.h" />
         <ClInclude Include="headers\IDrawable.h"/>
         <ClInclude Include="headers\IMovable.h"/>
+        <ClInclude Include="headers\Config.h" />
+        <ClInclude Include="headers\ConfigFailure.h" />
+        <ClInclude Include="headers\ConfigSuccess.h" />
         <ClInclude Include="headers\IObsticle.h"/>
         <ClInclude Include="headers\Iron.h"/>
         <ClInclude Include="headers\Map.h"/>
@@ -161,6 +169,7 @@
         <ClInclude Include="headers\PlayerTwo.h"/>
         <ClInclude Include="headers\Point.h"/>
         <ClInclude Include="headers\Rectangle.h" />
+        <ClInclude Include="headers\SDLEnvironment.h" />
         <ClInclude Include="headers\Water.h"/>
     </ItemGroup>
     <ItemGroup>

@@ -1,10 +1,8 @@
 #pragma once
 
-struct Environment;
-
 class IMovable
 {
 public:
 	virtual ~IMovable() = default;
-	virtual void Move() = 0;
+	virtual void Move(float deltaTime) = 0;
 };

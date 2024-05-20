@@ -1,6 +1,10 @@
 ﻿#pragma once
 
-#include "../headers/Environment.h"
+#include "BaseObj.h"
+#include "EventSystem.h"
+
+#include <memory>
+#include <vector>
 
 class Map
 {
@@ -10,8 +14,10 @@ public:
 	~Map();
 
 	template<typename T>
-	static void ObstacleCreation(Environment* env, float x, float y);
-	void MapCreation(Environment* env) const;
+	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float x, float y, float gridSize,
+						  int* windowBuffer, size_t windowWidth, size_t windowHeight, std::shared_ptr<EventSystem> events) const;
+	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float gridSize, int* windowBuffer,
+					 size_t windowWidth, size_t windowHeight, const std::shared_ptr<EventSystem>& events) const;
 
 	int fieldLevelOne[50][52] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 								  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -116,8 +122,11 @@ public:
 };
 
 template<typename T>
-void Map::ObstacleCreation(Environment* env, const float x, const float y)
+void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const float x, const float y,
+						   float gridSize, int* windowBuffer, size_t windowWidth, size_t windowHeight,
+						   std::shared_ptr<EventSystem> events) const
 {
 	FPoint position = {x, y};
-	env->allPawns.emplace_back(std::make_shared<T>(position, env));
+	allPawns->emplace_back(
+			std::make_shared<T>(position, gridSize, gridSize, windowBuffer, windowWidth, windowHeight, std::move(events)));
 }

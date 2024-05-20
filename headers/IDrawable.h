@@ -1,7 +1,5 @@
 #pragma once
 
-struct Environment;
-
 class IDrawable
 {
 public:

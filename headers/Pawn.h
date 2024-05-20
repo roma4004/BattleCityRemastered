@@ -6,13 +6,12 @@
 #include <memory>
 
 #include "../headers/BaseObj.h"
-#include "../headers/Environment.h"
+#include "../headers/EventSystem.h"
 #include "../headers/IMovable.h"
 #include "../headers/PlayerKeys.h"
 #include "../headers/Point.h"
 
 struct FPoint;
-struct Environment;
 
 enum Direction
 {
@@ -25,14 +24,17 @@ enum Direction
 class Pawn : public BaseObj, public IMovable
 {
 public:
-	Pawn(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
+	Pawn(const FPoint& pos, float width, float height, int color, float speed, int health, int* windowBuffer,
+		 size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+		 std::shared_ptr<EventSystem> events);
 
 	~Pawn() override;
+	void SetPixel(size_t x, size_t y, int color) const;
 
 	float FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
 							  const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide) const;
 
-	void Move() override;
+	void Move(float deltaTime) override;
 
 	void Draw() const override;
 
@@ -40,9 +42,9 @@ public:
 
 	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
-	[[nodiscard]] virtual std::list<std::weak_ptr<BaseObj>> IsCanMove();
+	[[nodiscard]] virtual std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime);
 
-	void TickUpdate() override;
+	void TickUpdate(float deltaTime) override;
 
 	virtual void Shot();
 
@@ -71,4 +73,14 @@ private:
 	float _bulletHeight{6.f};
 
 	float _bulletSpeed{300.f};
+
+protected:
+	size_t _windowWidth{};
+	size_t _windowHeight{};
+
+	int* _windowBuffer;
+
+	std::shared_ptr<EventSystem> _events;
+
+	std::vector<std::shared_ptr<BaseObj>>* _allPawns{nullptr};
 };

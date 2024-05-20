@@ -1,20 +1,20 @@
 ﻿#pragma once
 
-#include "../headers/Pawn.h"
 #include "../headers/Circle.h"
+#include "../headers/Pawn.h"
 
 struct FPoint;
-struct Environment;
 
 class Bullet final : public Pawn
 {
 public:
 	Bullet(const FPoint& pos, float width, float height, int color, float speed, Direction direction, int health,
-		   Environment* env);
+		   int* windowBuffer, size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+		   std::shared_ptr<EventSystem> events);
 
 	~Bullet() override;
 
-	void Move() override;
+	void Move(float deltaTime) override;
 	void Draw() const override;
 
 	[[nodiscard]] int GetDamage() const;
@@ -23,9 +23,9 @@ public:
 
 	void Shot() override;
 
-	std::list<std::weak_ptr<BaseObj>> IsCanMove() override;
-	void CheckCircleAoE(const Environment* env, FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
-	void CheckAoE(const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
+	std::list<std::weak_ptr<BaseObj>> IsCanMove(const float deltaTime) override;
+	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
+	void CheckAoE(float deltaTime, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 
 private:
 	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList);
