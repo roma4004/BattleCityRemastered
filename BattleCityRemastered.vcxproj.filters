@@ -92,7 +92,7 @@
     <ClInclude Include="headers\Brick.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\IObsticle.h">
+    <ClInclude Include="headers\IObstacle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\Iron.h">

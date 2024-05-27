@@ -2,10 +2,7 @@
 
 struct Rectangle
 {
-	float x;
-	float y;
-	float w;
-	float h;
+	float x{}, y{}, w{}, h{};
 
 public:
 	[[nodiscard]] float Area() const;

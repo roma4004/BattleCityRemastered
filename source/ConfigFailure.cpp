@@ -1,5 +1,7 @@
 #include "../headers/ConfigFailure.h"
 
+#include <iostream>
+
 ConfigFailure::ConfigFailure(std::string errorType, const char* errorDescription)
 	: _error{std::move(errorType)}, _description{errorDescription}
 {

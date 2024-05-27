@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../headers/BaseObj.h"
 #include "../headers/Direction.h"
 #include "../headers/EventSystem.h"
@@ -47,7 +48,7 @@ public:
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
 
-	PlayerKeys keyboardButtons;
+	PlayerKeys keyboardButtons{};
 
 private:
 	Direction _direction = UP;
@@ -61,10 +62,10 @@ private:
 	float _bulletSpeed{300.f};
 
 protected:
-	size_t _windowWidth{};
-	size_t _windowHeight{};
+	size_t _windowWidth{0};
+	size_t _windowHeight{0};
 
-	int* _windowBuffer;
+	int* _windowBuffer{nullptr};
 
 	std::shared_ptr<EventSystem> _events;
 

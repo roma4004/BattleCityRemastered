@@ -2,12 +2,10 @@
 
 struct FPoint
 {
-	float x{};
-	float y{};
+	float x{}, y{};
 };
 
 struct Point
 {
-	int x{};
-	int y{};
+	int x{}, y{};
 };

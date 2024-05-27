@@ -2,7 +2,7 @@
 
 #include <string>
 
-//TODO: speed is not needed to obsticle, so we need new hierarchy for obst instead of baseObj
+//TODO: speed is not needed to obstacle, so we need new hierarchy for obst instead of baseObj
 Water::Water(const Rectangle& rect, int* windowBuffer, size_t windowWidth, size_t windowHeight,
 			 std::shared_ptr<EventSystem> events)
 	: BaseObj(rect, 0x1e90ff, 0, 15), _windowWidth(windowWidth), _windowHeight(windowHeight),

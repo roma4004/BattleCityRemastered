@@ -48,9 +48,6 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Screen SDL_CreateTexture Error", SDL_GetError());
 	}
 
-	const auto buffer_size = windowWidth * windowHeight;
-	windowBuffer = new int[buffer_size];
-
 	// if (TTF_Init() == -1)
 	// {
 	// 	return std::make_unique<InitFailure>("TTF_Init Error", TTF_GetError());

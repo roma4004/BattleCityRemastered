@@ -1,8 +1,8 @@
 #pragma once
 
-#include <utility>
-
 #include "../headers/PlayerOne.h"
+
+#include <utility>
 
 class MockPlayerOne final : public PlayerOne
 {

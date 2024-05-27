@@ -6,11 +6,11 @@
 
 class ConfigSuccess final : public Config
 {
-	size_t _windowWidth;
-	size_t _windowHeight;
-	int* _windowBuffer;
-	SDL_Renderer* _renderer;
-	SDL_Texture* _screen;
+	size_t _windowWidth{0};
+	size_t _windowHeight{0};
+	int* _windowBuffer{nullptr};
+	SDL_Renderer* _renderer{nullptr};
+	SDL_Texture* _screen{nullptr};
 	// TTF_Font* font;
 
 public:
@@ -18,8 +18,8 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	explicit ConfigSuccess(const size_t windowWidth, const size_t windowHeight, int* windowBuffer,
-						   SDL_Renderer* renderer, SDL_Texture* screen /*, TTF_Font* font*/);
+	explicit ConfigSuccess(size_t windowWidth, size_t windowHeight, int* windowBuffer, SDL_Renderer* renderer,
+						   SDL_Texture* screen /*, TTF_Font* font*/);
 
 	~ConfigSuccess() override = default;
 

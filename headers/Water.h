@@ -15,10 +15,10 @@ public:
 	void Draw() const override;
 	void TickUpdate(float deltaTime) override;
 
-	size_t _windowWidth{};
-	size_t _windowHeight{};
+	size_t _windowWidth{0};
+	size_t _windowHeight{0};
 
 protected:
-	int* _windowBuffer;
+	int* _windowBuffer{nullptr};
 	std::shared_ptr<EventSystem> _events;
 };

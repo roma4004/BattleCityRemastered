@@ -1,16 +1,10 @@
 #pragma once
+
 #include "BaseObj.h"
 #include "EventSystem.h"
-#include "Map.h"
 #include "MouseButton.h"
-#include "Pawn.h"
-#include "PlayerOne.h"
-#include "PlayerTwo.h"
 
 #include <SDL.h>
-#include <algorithm>
-#include <iostream>
-#include <vector>
 // #include <SDL_ttf.h>
 
 class Game
@@ -30,18 +24,19 @@ public:
 
 class GameSuccess final : public Game
 {
-	size_t _windowWidth;
-	size_t _windowHeight;
+	size_t _windowWidth{0};
+	size_t _windowHeight{0};
 
-	int* _windowBuffer;
-	SDL_Renderer* _renderer;
-	SDL_Texture* _screen;
+	int* _windowBuffer{nullptr};
+	SDL_Renderer* _renderer{nullptr};
+	SDL_Texture* _screen{nullptr};
+
+	//fps
 	// TTF_Font* _font;
 	// SDL_Surface* fpsSurface{nullptr};
 	// SDL_Texture* fpsTexture{nullptr};
 
-	//fps
-	MouseButtons mouseButtons;
+	MouseButtons mouseButtons{};
 	std::vector<std::shared_ptr<BaseObj>> allPawns;
 
 	std::shared_ptr<EventSystem> _events;

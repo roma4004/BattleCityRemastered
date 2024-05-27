@@ -1,13 +1,17 @@
 #include "../headers/Game.h"
+#include "../headers/Map.h"
+#include "../headers/PlayerOne.h"
+#include "../headers/PlayerTwo.h"
 
+#include <algorithm>
 #include <cmath>
+#include <iostream>
 
 GameSuccess::GameSuccess(const size_t windowWidth, const size_t windowHeight, int* windowBuffer, SDL_Renderer* renderer,
 						 SDL_Texture* screen)
-	: _windowWidth(windowWidth), _windowHeight(windowHeight), _windowBuffer(windowBuffer), _renderer(renderer),
-	  _screen(screen)
+	: _windowWidth{windowWidth}, _windowHeight{windowHeight}, _windowBuffer{windowBuffer}, _renderer{renderer},
+	  _screen{screen}, _events{std::make_shared<EventSystem>()}
 {
-	_events = std::make_shared<EventSystem>();
 	const float gridSize = static_cast<float>(_windowHeight) / 50.f;
 	constexpr float tankSpeed = 142;
 	constexpr int tankHealth = 100;
@@ -38,16 +42,14 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
 		mouseButtons.MouseLeftButton = true;
-		std::cout << "MouseLeftButton: "
-				  << "Down" << '\n';
+		std::cout << "MouseLeftButton: " << "Down" << '\n';
 
 		return;
 	}
 	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		mouseButtons.MouseLeftButton = false;
-		std::cout << "MouseLeftButton: "
-				  << "Up" << '\n';
+		std::cout << "MouseLeftButton: " << "Up" << '\n';
 
 		return;
 	}
@@ -159,7 +161,7 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 void GameSuccess::MainLoop()
 {
 	bool isGameOver{false};
-	float deltaTime = 0.f;
+	float deltaTime{0.f};
 	SDL_Event event{};
 	Uint64 oldTime = SDL_GetTicks64();
 	while (!isGameOver)
@@ -172,7 +174,7 @@ void GameSuccess::MainLoop()
 		std::cout << "deltaTime: " << deltaTime << '\n';// TODO:use sdl2 ttf here
 
 		// Cap to 60 FPS
-		SDL_Delay(static_cast<Uint32>(floor(16.666f - deltaTime)));
+		SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
 
 		ClearBuffer();
 

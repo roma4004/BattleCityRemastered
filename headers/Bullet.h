@@ -23,7 +23,7 @@ public:
 
 	void Shot() override;
 
-	std::list<std::weak_ptr<BaseObj>> IsCanMove(const float deltaTime) override;
+	std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) override;
 	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 	void CheckAoE(float deltaTime, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 

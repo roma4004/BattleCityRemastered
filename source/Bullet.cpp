@@ -144,7 +144,7 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove(const float deltaTime)
 	// For some reason I can't make rect1 in if's Rider say I make unused object. So I made more crutches
 	if (direction == UP)
 	{
-		//36 37 initialize in  if
+		//36 37 initialize in if
 		speedY *= -1;
 		speedX *= 0;
 	}
@@ -167,7 +167,7 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove(const float deltaTime)
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
 	const auto bulletNextPosRect =
 			Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
-	for (std::shared_ptr<BaseObj>& pawn: *_allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: *_allPawns)
 	{
 		if (this == pawn.get())
 		{

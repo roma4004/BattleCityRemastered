@@ -133,7 +133,7 @@ void Pawn::Shot()
 		const float bulletWidth = GetBulletWidth();
 		const float bulletHeight = GetBulletHeight();
 		const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-		Rectangle bulletRect;
+		Rectangle bulletRect{};
 
 		if (direction == UP && tankY - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 		{
