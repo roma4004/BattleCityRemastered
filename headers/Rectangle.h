@@ -1,9 +1,12 @@
 #pragma once
 
-#include <SDL_rect.h>
-
-struct Rectangle : SDL_FRect
+struct Rectangle
 {
+	float x;
+	float y;
+	float w;
+	float h;
+
 public:
 	[[nodiscard]] float Area() const;
 

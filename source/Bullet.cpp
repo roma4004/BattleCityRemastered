@@ -1,11 +1,10 @@
 ﻿#include "../headers/Bullet.h"
 #include "../headers/Circle.h"
 
-Bullet::Bullet(const FPoint& pos, const float width, const float height, const int color, const float speed,
-			   const Direction direction, const int health, int* windowBuffer, const size_t windowWidth,
-			   const size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
-	: Pawn(pos, width, height, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns,
-		   std::move(events))
+Bullet::Bullet(const Rectangle& rect, const int color, const float speed, const Direction direction, const int health,
+			   int* windowBuffer, const size_t windowWidth, const size_t windowHeight,
+			   std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
+	: Pawn(rect, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns, std::move(events))
 {
 	SetDirection(direction);
 	BaseObj::SetIsPassable(true);
@@ -18,13 +17,11 @@ Bullet::Bullet(const FPoint& pos, const float width, const float height, const i
 		return;
 	}
 
-	const auto listenerName =
-			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	const auto name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_events->AddListener<float>("TickUpdate", listenerName,
-								[this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<float>("TickUpdate", name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener("Draw", listenerName, [this]() { this->Draw(); });
+	_events->AddListener("Draw", name, [this]() { this->Draw(); });
 }
 
 Bullet::~Bullet()
@@ -35,15 +32,14 @@ Bullet::~Bullet()
 		return;
 	}
 
-	const auto listenerName =
-			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	const auto name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_events->RemoveListener<float>("TickUpdate", listenerName);
+	_events->RemoveListener<float>("TickUpdate", name);
 
-	_events->RemoveListener("Draw", listenerName);
+	_events->RemoveListener("Draw", name);
 }
 
-void Bullet::Move(float deltaTime)
+void Bullet::Move(const float deltaTime)
 {
 	if (!GetIsAlive())
 	{
@@ -67,7 +63,7 @@ void Bullet::Move(float deltaTime)
 			DealDamage(pawns);
 		}
 	}
-	else if (direction == DOWN && y + speed <= static_cast<float>(_windowHeight))
+	else if (direction == DOWN && GetBottomSide() + speed <= static_cast<float>(_windowHeight))
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
@@ -89,7 +85,7 @@ void Bullet::Move(float deltaTime)
 			DealDamage(pawns);
 		}
 	}
-	else if (direction == RIGHT && x + speed <= static_cast<float>(_windowWidth))
+	else if (direction == RIGHT && GetRightSide() + speed <= static_cast<float>(_windowWidth))
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{

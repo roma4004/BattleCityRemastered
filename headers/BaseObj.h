@@ -7,12 +7,10 @@
 #include "../headers/ITickUpdatable.h"
 #include "../headers/Point.h"
 
-struct FPoint;
-
 class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable
 {
 public:
-	BaseObj(const FPoint& pos, float width, float height, int color, float speed, int health);
+	BaseObj(const Rectangle& rect, int color, float speed, int health);
 
 	~BaseObj() override;
 

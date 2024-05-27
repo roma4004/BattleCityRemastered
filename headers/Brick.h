@@ -3,12 +3,10 @@
 #include "BaseObj.h"
 #include "EventSystem.h"
 
-struct FPoint;
-
 class Brick final : public BaseObj
 {
 public:
-	Brick(const FPoint& pos, float width, float height, int* windowBuffer, size_t windowWidth, size_t windowHeight,
+	Brick(const Rectangle& rect, int* windowBuffer, size_t windowWidth, size_t windowHeight,
 		  std::shared_ptr<EventSystem> events);
 
 	~Brick() override;

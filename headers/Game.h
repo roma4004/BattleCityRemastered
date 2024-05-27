@@ -47,12 +47,15 @@ class GameSuccess final : public Game
 	std::shared_ptr<EventSystem> _events;
 
 public:
-	GameSuccess(const size_t windowWidth, const size_t windowHeight, int* windowBuffer, SDL_Renderer* renderer,
+	GameSuccess(size_t windowWidth, size_t windowHeight, int* windowBuffer, SDL_Renderer* renderer,
 				SDL_Texture* screen /*, TTF_Font* font*/);
 
 	void ClearBuffer() const;
 
 	void MouseEvents(const SDL_Event& event);
+	void KeyPressed(const SDL_Event& event) const;
+	void KeyReleased(const SDL_Event& event) const;
+	void KeyboardEvents(const SDL_Event& event) const;
 
 	void MainLoop() override;
 

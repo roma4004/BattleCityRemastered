@@ -3,10 +3,10 @@
 #include "../headers/Bullet.h"
 #include "../headers/Pawn.h"
 
-Pawn::Pawn(const FPoint& pos, const float width, const float height, const int color, const float speed,
-		   const int health, int* windowBuffer, size_t windowWidth, size_t windowHeight,
-		   std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
-	: BaseObj(pos, width, height, color, speed, health), _windowWidth(windowWidth), _windowHeight(windowHeight),
+Pawn::Pawn(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
+		   size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+		   std::shared_ptr<EventSystem> events)
+	: BaseObj(rect, color, speed, health), _windowWidth(windowWidth), _windowHeight(windowHeight),
 	  _windowBuffer{windowBuffer}, _events{std::move(events)}, _allPawns(allPawns)
 {
 }
@@ -60,7 +60,6 @@ std::list<std::weak_ptr<BaseObj>> Pawn::IsCanMove(const float deltaTime)
 	float speedX = GetSpeed() * deltaTime;
 	float speedY = GetSpeed() * deltaTime;
 
-	//const auto rect1 = SDL_Rect{static_cast<int>(me->GetX()) + speed, static_cast<int>(me->GetY()), me->GetWidth(), me->GetHeight()};
 	if (direction == UP)
 	{
 		//36 37 initialize in  if
@@ -134,23 +133,24 @@ void Pawn::Shot()
 		const float bulletWidth = GetBulletWidth();
 		const float bulletHeight = GetBulletHeight();
 		const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-		FPoint bulletPos;
+		Rectangle bulletRect;
 
 		if (direction == UP && tankY - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 		{
-			bulletPos = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHalf.y};
+			bulletRect = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHalf.y, bulletWidth,
+						  bulletHeight};
 		}
 		else if (direction == DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowHeight))
 		{
-			bulletPos = {tankCenter.x - bulletHalf.x, tankBottomY + bulletHalf.y};
+			bulletRect = {tankCenter.x - bulletHalf.x, tankBottomY + bulletHalf.y, bulletWidth, bulletHeight};
 		}
 		else if (direction == LEFT && tankX - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 		{
-			bulletPos = {tankX - bulletHalf.x, tankCenter.y - bulletHalf.y};
+			bulletRect = {tankX - bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
 		}
 		else if (direction == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(_windowWidth))
 		{
-			bulletPos = {tankRightX + bulletHalf.x, tankCenter.y - bulletHalf.y};
+			bulletRect = {tankRightX + bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
 		}
 		else
 		{
@@ -161,9 +161,8 @@ void Pawn::Shot()
 		constexpr int color = 0xffffff;
 		const float speed = GetBulletSpeed();
 		constexpr int health = 1;
-		_allPawns->emplace_back(std::make_shared<Bullet>(bulletPos, bulletWidth, bulletHeight, color, speed, direction,
-														 health, _windowBuffer, _windowWidth, _windowHeight, _allPawns,
-														 _events));
+		_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, color, speed, direction, health, _windowBuffer,
+														 _windowWidth, _windowHeight, _allPawns, _events));
 
 		keyboardButtons.shot = false;
 	}
@@ -207,7 +206,7 @@ float Pawn::FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
 void Pawn::Move(const float deltaTime)
 {
 	const float speed = GetSpeed() * deltaTime;
-	if (keyboardButtons.a && GetX() + speed >= 0.f)
+	if (keyboardButtons.a && GetX() - speed >= 0.f)
 	{
 		SetDirection(LEFT);
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
@@ -245,7 +244,7 @@ void Pawn::Move(const float deltaTime)
 			}
 		}
 	}
-	else if (keyboardButtons.w && GetY() + speed >= 0.0f)
+	else if (keyboardButtons.w && GetY() - speed >= 0.0f)
 	{
 		SetDirection(UP);
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
@@ -285,8 +284,6 @@ void Pawn::Move(const float deltaTime)
 		}
 	}
 }
-
-void Pawn::KeyboardEvensHandlers(Uint32 eventType, SDL_Keycode key) {}
 
 Direction Pawn::GetDirection() const { return _direction; }
 

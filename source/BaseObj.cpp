@@ -1,8 +1,7 @@
 #include "../headers/BaseObj.h"
 
-BaseObj::BaseObj(const FPoint& pos, const float width, const float height, const int color, const float speed,
-				 const int health)
-	: shape{pos.x, pos.y, width, height}, _color(color), _speed(speed), _health(health)
+BaseObj::BaseObj(const Rectangle& rect, const int color, const float speed, const int health)
+	: shape{rect}, _color(color), _speed(speed), _health(health)
 {
 }
 

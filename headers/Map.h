@@ -15,7 +15,8 @@ public:
 
 	template<typename T>
 	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float x, float y, float gridSize,
-						  int* windowBuffer, size_t windowWidth, size_t windowHeight, std::shared_ptr<EventSystem> events) const;
+						  int* windowBuffer, size_t windowWidth, size_t windowHeight,
+						  std::shared_ptr<EventSystem> events) const;
 	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float gridSize, int* windowBuffer,
 					 size_t windowWidth, size_t windowHeight, const std::shared_ptr<EventSystem>& events) const;
 
@@ -126,7 +127,6 @@ void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, cons
 						   float gridSize, int* windowBuffer, size_t windowWidth, size_t windowHeight,
 						   std::shared_ptr<EventSystem> events) const
 {
-	FPoint position = {x, y};
-	allPawns->emplace_back(
-			std::make_shared<T>(position, gridSize, gridSize, windowBuffer, windowWidth, windowHeight, std::move(events)));
+	Rectangle rect = {x, y, gridSize, gridSize};
+	allPawns->emplace_back(std::make_shared<T>(rect, windowBuffer, windowWidth, windowHeight, std::move(events)));
 }
