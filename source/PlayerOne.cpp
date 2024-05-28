@@ -1,9 +1,9 @@
 #include "../headers/PlayerOne.h"
 
-PlayerOne::PlayerOne(const FPoint& pos, const float width, const float height, const int color, const float speed,
-					 const int health, int* windowBuffer, size_t windowWidth, size_t windowHeight,
-					 std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
-	: Pawn(pos, width, height, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns, std::move(events))
+PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
+					 const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+					 std::shared_ptr<EventSystem> events)
+	: Pawn{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -15,11 +15,22 @@ PlayerOne::PlayerOne(const FPoint& pos, const float width, const float height, c
 		return;
 	}
 
-	const std::string listenerName = "PlayerOne";
+	const std::string name = "PlayerOne";
 
-	_events->AddListener<float>("TickUpdate", listenerName, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<float>("TickUpdate", name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener("Draw", listenerName, [this]() { this->Draw(); });
+	_events->AddListener("Draw", name, [this]() { this->Draw(); });
+
+	_events->AddListener("W_Pressed", name, [&btn = keyboardButtons]() { btn.w = true; });
+	_events->AddListener("W_Released", name, [&btn = keyboardButtons]() { btn.w = false; });
+	_events->AddListener("A_Pressed", name, [&btn = keyboardButtons]() { btn.a = true; });
+	_events->AddListener("A_Released", name, [&btn = keyboardButtons]() { btn.a = false; });
+	_events->AddListener("S_Pressed", name, [&btn = keyboardButtons]() { btn.s = true; });
+	_events->AddListener("S_Released", name, [&btn = keyboardButtons]() { btn.s = false; });
+	_events->AddListener("D_Pressed", name, [&btn = keyboardButtons]() { btn.d = true; });
+	_events->AddListener("D_Released", name, [&btn = keyboardButtons]() { btn.d = false; });
+	_events->AddListener("Space_Pressed", name, [&btn = keyboardButtons]() { btn.shot = true; });
+	_events->AddListener("Space_Released", name, [&btn = keyboardButtons]() { btn.shot = false; });
 }
 
 PlayerOne::~PlayerOne()
@@ -30,55 +41,20 @@ PlayerOne::~PlayerOne()
 		return;
 	}
 
-	const std::string listenerName = "PlayerOne";
+	const std::string name = "PlayerOne";
 
-	_events->RemoveListener<float>("TickUpdate", listenerName);
+	_events->RemoveListener<float>("TickUpdate", name);
 
-	_events->RemoveListener("Draw", listenerName);
-}
+	_events->RemoveListener("Draw", name);
 
-void PlayerOne::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)
-{
-	if (eventType == SDL_KEYDOWN)
-	{
-		if (key == SDLK_a)
-		{
-			keyboardButtons.a = true;
-		}
-		else if (key == SDLK_d)
-		{
-			keyboardButtons.d = true;
-		}
-		else if (key == SDLK_s)
-		{
-			keyboardButtons.s = true;
-		}
-		else if (key == SDLK_w)
-		{
-			keyboardButtons.w = true;
-		}
-	}
-	else if (eventType == SDL_KEYUP)
-	{
-		if (key == SDLK_a)
-		{
-			keyboardButtons.a = false;
-		}
-		else if (key == SDLK_d)
-		{
-			keyboardButtons.d = false;
-		}
-		else if (key == SDLK_s)
-		{
-			keyboardButtons.s = false;
-		}
-		else if (key == SDLK_w)
-		{
-			keyboardButtons.w = false;
-		}
-		else if (key == SDLK_SPACE)
-		{
-			keyboardButtons.shot = true;
-		}
-	}
+	_events->RemoveListener("W_Pressed", name);
+	_events->RemoveListener("W_Released", name);
+	_events->RemoveListener("A_Pressed", name);
+	_events->RemoveListener("A_Released", name);
+	_events->RemoveListener("S_Pressed", name);
+	_events->RemoveListener("S_Released", name);
+	_events->RemoveListener("D_Pressed", name);
+	_events->RemoveListener("D_Released", name);
+	_events->RemoveListener("Space_Pressed", name);
+	_events->RemoveListener("Space_Released", name);
 }

@@ -10,12 +10,11 @@
 class SDLEnvironment final
 {
 public:
-	SDLEnvironment(int windowWidth, int windowHeight);
+	SDLEnvironment(UPoint windowSize);
 	~SDLEnvironment();
 	std::unique_ptr<Config> Init();
 
-	int windowWidth = 800;
-	int windowHeight = 600;
+	UPoint windowSize{800, 600};
 	int* windowBuffer{};
 	SDL_Window* window{};
 	SDL_Renderer* renderer{};

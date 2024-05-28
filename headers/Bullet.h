@@ -8,9 +8,8 @@ struct FPoint;
 class Bullet final : public Pawn
 {
 public:
-	Bullet(const FPoint& pos, float width, float height, int color, float speed, Direction direction, int health,
-		   int* windowBuffer, size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-		   std::shared_ptr<EventSystem> events);
+	Bullet(const Rectangle& pos, int color, float speed, Direction direction, int health, int* windowBuffer,
+		   UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events);
 
 	~Bullet() override;
 
@@ -23,7 +22,7 @@ public:
 
 	void Shot() override;
 
-	std::list<std::weak_ptr<BaseObj>> IsCanMove(const float deltaTime) override;
+	std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) override;
 	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 	void CheckAoE(float deltaTime, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
 

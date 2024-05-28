@@ -1,8 +1,15 @@
+# JetBrains IDE files
 .idea
+
+# Visual Studio files
 .vs
 cmake-build-debug
-x64/*
-x32/*
+
+# Compiled files
+x64/
+x32/
+UnitTests/x64/
+UnitTests/x32/
 
 # Ignore NuGet Packages
 *.nupkg

@@ -5,10 +5,9 @@ class Game;
 
 int main(int argc, char* argv[])
 {
-	constexpr auto width{800};
-	constexpr auto height{600};
+	constexpr UPoint windowSize{800, 600};
 
-	auto sdlEnv = SDLEnvironment(width, height);
+	auto sdlEnv = SDLEnvironment(windowSize);
 	const std::unique_ptr<Config> sdl = sdlEnv.Init();
 	const std::unique_ptr<Game> game = sdl->CreateGame();
 

@@ -1,9 +1,9 @@
 #include "../headers/PlayerTwo.h"
 
-PlayerTwo::PlayerTwo(const FPoint& pos, const float width, const float height, const int color, const float speed,
-					 const int health, int* windowBuffer, size_t windowWidth, size_t windowHeight,
-					 std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
-	: Pawn(pos, width, height, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns, std::move(events))
+PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
+					 const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+					 std::shared_ptr<EventSystem> events)
+	: Pawn{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -15,11 +15,22 @@ PlayerTwo::PlayerTwo(const FPoint& pos, const float width, const float height, c
 		return;
 	}
 
-	const std::string listenerName = "PlayerTwo";
+	const std::string name = "PlayerTwo";
 
-	_events->AddListener<float>("TickUpdate", listenerName, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<float>("TickUpdate", name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener("Draw", listenerName, [this]() { this->Draw(); });
+	_events->AddListener("Draw", name, [this]() { this->Draw(); });
+
+	_events->AddListener("ArrowUp_Pressed", name, [&btn = keyboardButtons]() { btn.w = true; });
+	_events->AddListener("ArrowUp_Released", name, [&btn = keyboardButtons]() { btn.w = false; });
+	_events->AddListener("ArrowLeft_Pressed", name, [&btn = keyboardButtons]() { btn.a = true; });
+	_events->AddListener("ArrowLeft_Released", name, [&btn = keyboardButtons]() { btn.a = false; });
+	_events->AddListener("ArrowDown_Pressed", name, [&btn = keyboardButtons]() { btn.s = true; });
+	_events->AddListener("ArrowDown_Released", name, [&btn = keyboardButtons]() { btn.s = false; });
+	_events->AddListener("ArrowRight_Pressed", name, [&btn = keyboardButtons]() { btn.d = true; });
+	_events->AddListener("ArrowRight_Released", name, [&btn = keyboardButtons]() { btn.d = false; });
+	_events->AddListener("RCTRL_Pressed", name, [&btn = keyboardButtons]() { btn.shot = true; });
+	_events->AddListener("RCTRL_Released", name, [&btn = keyboardButtons]() { btn.shot = false; });
 }
 
 PlayerTwo::~PlayerTwo()
@@ -30,55 +41,20 @@ PlayerTwo::~PlayerTwo()
 		return;
 	}
 
-	const std::string listenerName = "PlayerTwo";
+	const std::string name = "PlayerTwo";
 
-	_events->RemoveListener<float>("TickUpdate", listenerName);
+	_events->RemoveListener<float>("TickUpdate", name);
 
-	_events->RemoveListener("Draw", listenerName);
-}
+	_events->RemoveListener("Draw", name);
 
-void PlayerTwo::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)
-{
-	if (eventType == SDL_KEYDOWN)
-	{
-		if (key == SDLK_LEFT)
-		{
-			keyboardButtons.a = true;
-		}
-		else if (key == SDLK_RIGHT)
-		{
-			keyboardButtons.d = true;
-		}
-		else if (key == SDLK_DOWN)
-		{
-			keyboardButtons.s = true;
-		}
-		else if (key == SDLK_UP)
-		{
-			keyboardButtons.w = true;
-		}
-	}
-	else if (eventType == SDL_KEYUP)
-	{
-		if (key == SDLK_LEFT)
-		{
-			keyboardButtons.a = false;
-		}
-		else if (key == SDLK_RIGHT)
-		{
-			keyboardButtons.d = false;
-		}
-		else if (key == SDLK_DOWN)
-		{
-			keyboardButtons.s = false;
-		}
-		else if (key == SDLK_UP)
-		{
-			keyboardButtons.w = false;
-		}
-		else if (key == SDLK_RCTRL)
-		{
-			keyboardButtons.shot = true;
-		}
-	}
+	_events->RemoveListener("ArrowUp_Pressed", name);
+	_events->RemoveListener("ArrowUp_Released", name);
+	_events->RemoveListener("ArrowLeft_Pressed", name);
+	_events->RemoveListener("ArrowLeft_Released", name);
+	_events->RemoveListener("ArrowDown_Pressed", name);
+	_events->RemoveListener("ArrowDown_Released", name);
+	_events->RemoveListener("ArrowRight_Pressed", name);
+	_events->RemoveListener("ArrowRight_Released", name);
+	_events->RemoveListener("RCTRL_Pressed", name);
+	_events->RemoveListener("RCTRL_Released", name);
 }

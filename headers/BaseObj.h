@@ -3,16 +3,14 @@
 #include "Rectangle.h"
 
 #include "../headers/IDrawable.h"
-#include "../headers/IObsticle.h"
+#include "../headers/IObstacle.h"
 #include "../headers/ITickUpdatable.h"
 #include "../headers/Point.h"
 
-struct FPoint;
-
-class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable
+class BaseObj : public IObstacle, public IDrawable, public ITickUpdatable
 {
 public:
-	BaseObj(const FPoint& pos, float width, float height, int color, float speed, int health);
+	BaseObj(const Rectangle& rect, int color, float speed, int health);
 
 	~BaseObj() override;
 
@@ -61,11 +59,11 @@ public:
 	[[nodiscard]] const Rectangle& GetShape() const;
 
 protected:
-	Rectangle shape;
+	Rectangle shape{};
 
 private:
-	int _color{};
-	float _speed{};
-	int _health{};
+	int _color{0};
+	float _speed{0.f};
+	int _health{0};
 	bool _isAlive = true;
 };

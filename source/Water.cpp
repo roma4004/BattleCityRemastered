@@ -2,11 +2,9 @@
 
 #include <string>
 
-//TODO: speed is not needed to obsticle, so we need new hierarchy for obst instead of baseObj
-Water::Water(const FPoint& pos, const float width, const float height, int* windowBuffer, size_t windowWidth,
-			 size_t windowHeight, std::shared_ptr<EventSystem> events)
-	: BaseObj(pos, width, height, 0x1e90ff, 0, 15), _windowWidth(windowWidth), _windowHeight(windowHeight),
-	  _windowBuffer{windowBuffer}, _events{std::move(events)}
+//TODO: speed is not needed to obstacle, so we need new hierarchy for obst instead of baseObj
+Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
+	: BaseObj{rect, 0x1e90ff, 0, 15}, _windowSize{windowSize}, _windowBuffer{windowBuffer}, _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
@@ -18,10 +16,9 @@ Water::Water(const FPoint& pos, const float width, const float height, int* wind
 		return;
 	}
 
-	const auto eventName =
-			"Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	const auto name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_events->AddListener("Draw", eventName, [this]() { this->Draw(); });
+	_events->AddListener("Draw", name, [this]() { this->Draw(); });
 }
 
 Water::~Water()
@@ -32,18 +29,17 @@ Water::~Water()
 		return;
 	}
 
-	const auto eventName =
-			"Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	const auto name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_events->RemoveListener("Draw", eventName);
+	_events->RemoveListener("Draw", name);
 }
 
 
 void Water::SetPixel(const size_t x, const size_t y, const int color) const
 {
-	if (x < _windowWidth && y < _windowHeight)
+	if (x < _windowSize.x && y < _windowSize.y)
 	{
-		const size_t rowSize = _windowWidth;
+		const size_t rowSize = _windowSize.x;
 		_windowBuffer[y * rowSize + x] = color;
 	}
 }
