@@ -115,57 +115,57 @@ std::list<std::weak_ptr<BaseObj>> Pawn::IsCanMove(const float deltaTime)
 void Pawn::TickUpdate(float deltaTime)
 {
 	Move(deltaTime);
-	Shot();
+
+	if (keyboardButtons.shot)
+	{
+		Shot();
+		keyboardButtons.shot = false;
+	}
 }
 
 void Pawn::Shot()
 {
-	if (keyboardButtons.shot)
+	const Direction direction = GetDirection();
+	const FPoint tankHalf = {GetWidth() / 2.f, GetHeight() / 2.f};
+	const float tankX = GetX();
+	const float tankY = GetY();
+	const float tankRightX = GetRightSide();
+	const float tankBottomY = GetBottomSide();
+	const FPoint tankCenter = {tankX + tankHalf.x, tankY + tankHalf.y};
+
+	const float bulletWidth = GetBulletWidth();
+	const float bulletHeight = GetBulletHeight();
+	const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
+	Rectangle bulletRect{};
+
+	if (direction == UP && tankY - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
-		const Direction direction = GetDirection();
-		const FPoint tankHalf = {GetWidth() / 2.f, GetHeight() / 2.f};
-		const float tankX = GetX();
-		const float tankY = GetY();
-		const float tankRightX = GetRightSide();
-		const float tankBottomY = GetBottomSide();
-		const FPoint tankCenter = {tankX + tankHalf.x, tankY + tankHalf.y};
-
-		const float bulletWidth = GetBulletWidth();
-		const float bulletHeight = GetBulletHeight();
-		const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-		Rectangle bulletRect{};
-
-		if (direction == UP && tankY - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
-		{
-			bulletRect = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHalf.y, bulletWidth,
-						  bulletHeight};
-		}
-		else if (direction == DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowHeight))
-		{
-			bulletRect = {tankCenter.x - bulletHalf.x, tankBottomY + bulletHalf.y, bulletWidth, bulletHeight};
-		}
-		else if (direction == LEFT && tankX - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
-		{
-			bulletRect = {tankX - bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
-		}
-		else if (direction == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(_windowWidth))
-		{
-			bulletRect = {tankRightX + bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
-		}
-		else
-		{
-			keyboardButtons.shot = false;
-			return;
-		}
-
-		constexpr int color = 0xffffff;
-		const float speed = GetBulletSpeed();
-		constexpr int health = 1;
-		_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, color, speed, direction, health, _windowBuffer,
-														 _windowWidth, _windowHeight, _allPawns, _events));
-
-		keyboardButtons.shot = false;
+		bulletRect = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHalf.y, bulletWidth, bulletHeight};
 	}
+	else if (direction == DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowHeight))
+	{
+		bulletRect = {tankCenter.x - bulletHalf.x, tankBottomY + bulletHalf.y, bulletWidth, bulletHeight};
+	}
+	else if (direction == LEFT && tankX - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+	{
+		bulletRect = {tankX - bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
+	}
+	else if (direction == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(_windowWidth))
+	{
+		bulletRect = {tankRightX + bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
+	}
+	else
+	{
+		keyboardButtons.shot = false;
+		return;
+	}
+
+	constexpr int color = 0xffffff;
+	const float speed = GetBulletSpeed();
+	constexpr int health = 1;
+	_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, color, speed, direction, health, _windowBuffer,
+													 _windowWidth, _windowHeight, _allPawns, _events));
+
 }
 
 inline float Distance(const FPoint a, const FPoint b)

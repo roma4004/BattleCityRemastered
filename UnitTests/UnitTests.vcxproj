@@ -41,7 +41,7 @@
     <ClCompile Include="..\source\Pawn.cpp" />
     <ClCompile Include="..\source\PlayerOne.cpp" />
     <ClCompile Include="..\source\Rectangle.cpp" />
-    <ClCompile Include="tests.cpp" />
+    <ClCompile Include="PlayerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MockPlayerOne.h" />
