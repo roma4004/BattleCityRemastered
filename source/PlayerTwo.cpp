@@ -1,47 +1,40 @@
 #include "../headers/PlayerTwo.h"
 
 PlayerTwo::PlayerTwo(const FPoint& pos, const float width, const float height, const int color, const float speed,
-					 const int health, Environment* env)
-	: Pawn(pos, width, height, color, speed, health, env)
+					 const int health, int* windowBuffer, size_t windowWidth, size_t windowHeight,
+					 std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
+	: Pawn(pos, width, height, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns, std::move(events))
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
 	// subscribe
-	if (_env == nullptr)
+	if (_events == nullptr)
 	{
 		return;
 	}
 
 	const std::string listenerName = "PlayerTwo";
 
-	_env->events.AddListenerToEvent("TickUpdate", listenerName, [this]() { this->TickUpdate(); });
+	_events->AddListener<float>("TickUpdate", listenerName, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [this]() { this->Draw(); });
-}
-
-PlayerTwo::PlayerTwo(const FPoint& pos, const int color, Environment* env)
-	: PlayerTwo(pos, env->tankSize, env->tankSize, color, env->tankSpeed, env->tankHealth, env)
-{
+	_events->AddListener("Draw", listenerName, [this]() { this->Draw(); });
 }
 
 PlayerTwo::~PlayerTwo()
 {
 	// unsubscribe
-	if (_env == nullptr)
+	if (_events == nullptr)
 	{
 		return;
 	}
 
-	if (!_env->isGameOver)
-	{
-		const std::string listenerName = "PlayerTwo";
+	const std::string listenerName = "PlayerTwo";
 
-		_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
+	_events->RemoveListener<float>("TickUpdate", listenerName);
 
-		_env->events.RemoveListenerFromEvent("Draw", listenerName);
-	}
+	_events->RemoveListener("Draw", listenerName);
 }
 
 void PlayerTwo::KeyboardEvensHandlers(const Uint32 eventType, const SDL_Keycode key)

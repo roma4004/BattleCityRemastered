@@ -1,10 +1,8 @@
 #include "../headers/BaseObj.h"
 
-struct Environment;
-
 BaseObj::BaseObj(const FPoint& pos, const float width, const float height, const int color, const float speed,
-				 const int health, Environment* env)
-	: shape{pos.x, pos.y, width, height}, _color(color), _speed(speed), _health(health), _env(env)
+				 const int health)
+	: shape{pos.x, pos.y, width, height}, _color(color), _speed(speed), _health(health)
 {
 }
 

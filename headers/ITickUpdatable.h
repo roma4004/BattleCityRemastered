@@ -1,10 +1,8 @@
 #pragma once
 
-struct Environment;
-
 class ITickUpdatable
 {
 public:
 	virtual ~ITickUpdatable() = default;
-	virtual void TickUpdate() = 0;
+	virtual void TickUpdate(float deltaTime) = 0;
 };

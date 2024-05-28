@@ -2,8 +2,10 @@
 #include "../headers/Circle.h"
 
 Bullet::Bullet(const FPoint& pos, const float width, const float height, const int color, const float speed,
-			   const Direction direction, const int health, Environment* env)
-	: Pawn(pos, width, height, color, speed, health, env)
+			   const Direction direction, const int health, int* windowBuffer, const size_t windowWidth,
+			   const size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
+	: Pawn(pos, width, height, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns,
+		   std::move(events))
 {
 	SetDirection(direction);
 	BaseObj::SetIsPassable(true);
@@ -11,7 +13,7 @@ Bullet::Bullet(const FPoint& pos, const float width, const float height, const i
 	BaseObj::SetIsPenetrable(false);
 
 	// subscribe
-	if (_env == nullptr)
+	if (_events == nullptr)
 	{
 		return;
 	}
@@ -19,38 +21,36 @@ Bullet::Bullet(const FPoint& pos, const float width, const float height, const i
 	const auto listenerName =
 			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-	_env->events.AddListenerToEvent("TickUpdate", listenerName, [this]() { this->TickUpdate(); });
+	_events->AddListener<float>("TickUpdate", listenerName,
+								[this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
-	_env->events.AddListenerToEvent("Draw", listenerName, [this]() { this->Draw(); });
+	_events->AddListener("Draw", listenerName, [this]() { this->Draw(); });
 }
 
 Bullet::~Bullet()
 {
 	// unsubscribe
-	if (_env == nullptr)
+	if (_events == nullptr)
 	{
 		return;
 	}
 
-	if (!_env->isGameOver)
-	{
-		const auto listenerName =
-				"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	const auto listenerName =
+			"bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 
-		_env->events.RemoveListenerFromEvent("Draw", listenerName);
+	_events->RemoveListener<float>("TickUpdate", listenerName);
 
-		_env->events.RemoveListenerFromEvent("TickUpdate", listenerName);
-	}
+	_events->RemoveListener("Draw", listenerName);
 }
 
-void Bullet::Move()
+void Bullet::Move(float deltaTime)
 {
 	if (!GetIsAlive())
 	{
 		return;
 	}
 
-	const float speed = GetSpeed() * _env->deltaTime;
+	const float speed = GetSpeed() * deltaTime;
 	const float x = GetX();
 	const float y = GetY();
 	// const int width = GetWidth();
@@ -58,7 +58,7 @@ void Bullet::Move()
 
 	if (const int direction = GetDirection(); direction == UP && y - speed >= 0.0f)
 	{
-		if (const auto pawns = IsCanMove(); pawns.empty())
+		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
 			MoveY(-speed);
 		}
@@ -67,9 +67,9 @@ void Bullet::Move()
 			DealDamage(pawns);
 		}
 	}
-	else if (direction == DOWN && y + speed <= static_cast<float>(_env->windowHeight))
+	else if (direction == DOWN && y + speed <= static_cast<float>(_windowHeight))
 	{
-		if (const auto pawns = IsCanMove(); pawns.empty())
+		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
 			MoveY(speed);
 		}
@@ -80,7 +80,7 @@ void Bullet::Move()
 	}
 	else if (direction == LEFT && x - speed >= 0.0f)
 	{
-		if (const auto pawns = IsCanMove(); pawns.empty())
+		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
 			MoveX(-speed);
 		}
@@ -89,9 +89,9 @@ void Bullet::Move()
 			DealDamage(pawns);
 		}
 	}
-	else if (direction == RIGHT && x + speed <= static_cast<float>(_env->windowWidth))
+	else if (direction == RIGHT && x + speed <= static_cast<float>(_windowWidth))
 	{
-		if (const auto pawns = IsCanMove(); pawns.empty())
+		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
 			MoveX(speed);
 		}
@@ -139,13 +139,13 @@ bool Bullet::CheckIntersection(const Circle& circle, const Rectangle& rect)
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }
 
-std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
+std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove(const float deltaTime)
 {
 	const Direction direction = GetDirection();
-	float speedX = GetSpeed() * _env->deltaTime;
-	float speedY = GetSpeed() * _env->deltaTime;
+	float speedX = GetSpeed() * deltaTime;
+	float speedY = GetSpeed() * deltaTime;
 
-	// For some reason I can't make rect1 in if's Rider say i make unused object. So I made more crutches
+	// For some reason I can't make rect1 in if's Rider say I make unused object. So I made more crutches
 	if (direction == UP)
 	{
 		//36 37 initialize in  if
@@ -171,7 +171,7 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
 	const auto bulletNextPosRect =
 			Rectangle{this->GetX() + speedX, this->GetY() + speedY, this->GetWidth(), this->GetHeight()};
-	for (auto& pawn: _env->allPawns)
+	for (std::shared_ptr<BaseObj>& pawn: *_allPawns)
 	{
 		if (this == pawn.get())
 		{
@@ -182,8 +182,8 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 		{
 			if (!pawn->GetIsPenetrable())
 			{
-				//CheckAoE(_env, aoeList);
-				CheckCircleAoE(_env, FPoint{this->GetX() + speedX, this->GetY() + speedY}, aoeList);
+				//CheckAoE(_env, deltaTime, aoeList);
+				CheckCircleAoE(FPoint{this->GetX() + speedX, this->GetY() + speedY}, aoeList);
 				return aoeList;
 			}
 		}
@@ -192,11 +192,10 @@ std::list<std::weak_ptr<BaseObj>> Bullet::IsCanMove()
 	return aoeList;
 }
 
-void Bullet::CheckCircleAoE(const Environment* env, const FPoint blowCenter,
-							std::list<std::weak_ptr<BaseObj>>& aoeList) const
+void Bullet::CheckCircleAoE(const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
 	const Circle circle{blowCenter, 12};
-	for (const std::shared_ptr<BaseObj>& pawn: env->allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: *_allPawns)
 	{
 		if (this == pawn.get())
 		{
@@ -210,13 +209,13 @@ void Bullet::CheckCircleAoE(const Environment* env, const FPoint blowCenter,
 	}
 }
 
-void Bullet::CheckAoE(const Environment* env, std::list<std::weak_ptr<BaseObj>>& aoeList) const
+void Bullet::CheckAoE(const float deltaTime, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
 	const float x = GetX();
 	const float y = GetY();
 	const float width = GetWidth();
 	const float height = GetHeight();
-	const float speed = (GetSpeed() * env->deltaTime) * 2;
+	const float speed = (GetSpeed() * deltaTime) * 2;
 
 	for (const std::list<Rectangle> targetList{// NOTE: targets ordered in numpad positions
 											   /*1*/ {x - speed, y - speed, width, height},
@@ -232,7 +231,7 @@ void Bullet::CheckAoE(const Environment* env, std::list<std::weak_ptr<BaseObj>>&
 											   /*9*/ {x + speed, y + speed, width, height}};
 		 auto target: targetList)
 	{
-		for (const auto& pawn: env->allPawns)
+		for (const std::shared_ptr<BaseObj>& pawn: *_allPawns)
 		{
 			if (this == pawn.get())
 			{

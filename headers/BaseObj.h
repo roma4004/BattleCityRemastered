@@ -8,12 +8,11 @@
 #include "../headers/Point.h"
 
 struct FPoint;
-struct Environment;
 
 class BaseObj : public IObsticle, public IDrawable, public ITickUpdatable
 {
 public:
-	BaseObj(const FPoint& pos, float width, float height, int color, float speed, int health, Environment* env);
+	BaseObj(const FPoint& pos, float width, float height, int color, float speed, int health);
 
 	~BaseObj() override;
 
@@ -69,7 +68,4 @@ private:
 	float _speed{};
 	int _health{};
 	bool _isAlive = true;
-
-protected:
-	Environment* _env = nullptr;
 };
