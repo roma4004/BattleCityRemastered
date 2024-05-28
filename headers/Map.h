@@ -15,10 +15,9 @@ public:
 
 	template<typename T>
 	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float x, float y, float gridSize,
-						  int* windowBuffer, size_t windowWidth, size_t windowHeight,
-						  std::shared_ptr<EventSystem> events) const;
+						  int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events) const;
 	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float gridSize, int* windowBuffer,
-					 size_t windowWidth, size_t windowHeight, const std::shared_ptr<EventSystem>& events) const;
+					 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
 
 	int fieldLevelOne[50][52] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 								  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -124,9 +123,9 @@ public:
 
 template<typename T>
 void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const float x, const float y,
-						   float gridSize, int* windowBuffer, size_t windowWidth, size_t windowHeight,
+						   const float gridSize, int* windowBuffer, UPoint windowSize,
 						   std::shared_ptr<EventSystem> events) const
 {
 	Rectangle rect = {x, y, gridSize, gridSize};
-	allPawns->emplace_back(std::make_shared<T>(rect, windowBuffer, windowWidth, windowHeight, std::move(events)));
+	allPawns->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
 }

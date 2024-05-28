@@ -24,8 +24,7 @@ public:
 
 class GameSuccess final : public Game
 {
-	size_t _windowWidth{0};
-	size_t _windowHeight{0};
+	UPoint _windowSize{0, 0};
 
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
@@ -42,8 +41,7 @@ class GameSuccess final : public Game
 	std::shared_ptr<EventSystem> _events;
 
 public:
-	GameSuccess(size_t windowWidth, size_t windowHeight, int* windowBuffer, SDL_Renderer* renderer,
-				SDL_Texture* screen /*, TTF_Font* font*/);
+	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen /*, TTF_Font* font*/);
 
 	void ClearBuffer() const;
 

@@ -32,3 +32,8 @@ struct Point
 {
 	int x{}, y{};
 };
+
+struct UPoint
+{
+	size_t x{}, y{};
+};

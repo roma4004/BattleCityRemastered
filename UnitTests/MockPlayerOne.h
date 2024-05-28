@@ -7,11 +7,11 @@
 class MockPlayerOne final : public PlayerOne
 {
 public:
-	MockPlayerOne(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, size_t windowWidth,
-				  size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+	MockPlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
+				  const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
 				  std::shared_ptr<EventSystem> events)
-		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, speed, health, windowBuffer, windowWidth, windowHeight,
-					allPawns, std::move(events))
+		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, speed, health, windowBuffer, windowSize, allPawns,
+					std::move(events))
 	{
 	}
 
@@ -28,7 +28,7 @@ public:
 
 	void MockResetKeyPressed() { keyboardButtons = {}; }
 	void MockShotKeyPressed() { keyboardButtons.shot = true; }
-	void MockMoveKeyPressed(Direction dir)
+	void MockMoveKeyPressed(const Direction dir)
 	{
 		if (dir == LEFT)
 		{

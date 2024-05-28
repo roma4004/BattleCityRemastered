@@ -9,8 +9,7 @@ class Bullet final : public Pawn
 {
 public:
 	Bullet(const Rectangle& pos, int color, float speed, Direction direction, int health, int* windowBuffer,
-		   size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-		   std::shared_ptr<EventSystem> events);
+		   UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events);
 
 	~Bullet() override;
 

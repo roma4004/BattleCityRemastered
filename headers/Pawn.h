@@ -13,8 +13,8 @@
 class Pawn : public BaseObj, public IMovable
 {
 public:
-	Pawn(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, size_t windowWidth,
-		 size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events);
+	Pawn(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, UPoint windowSize,
+		 std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events);
 
 	~Pawn() override;
 
@@ -62,8 +62,7 @@ private:
 	float _bulletSpeed{300.f};
 
 protected:
-	size_t _windowWidth{0};
-	size_t _windowHeight{0};
+	UPoint _windowSize{0, 0};
 
 	int* _windowBuffer{nullptr};
 

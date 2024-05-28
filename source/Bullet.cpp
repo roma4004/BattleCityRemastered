@@ -2,9 +2,9 @@
 #include "../headers/Circle.h"
 
 Bullet::Bullet(const Rectangle& rect, const int color, const float speed, const Direction direction, const int health,
-			   int* windowBuffer, const size_t windowWidth, const size_t windowHeight,
-			   std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
-	: Pawn(rect, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns, std::move(events))
+			   int* windowBuffer, const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+			   std::shared_ptr<EventSystem> events)
+	: Pawn{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
 {
 	SetDirection(direction);
 	BaseObj::SetIsPassable(true);
@@ -63,7 +63,7 @@ void Bullet::Move(const float deltaTime)
 			DealDamage(pawns);
 		}
 	}
-	else if (direction == DOWN && GetBottomSide() + speed <= static_cast<float>(_windowHeight))
+	else if (direction == DOWN && GetBottomSide() + speed <= static_cast<float>(_windowSize.y))
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
@@ -85,7 +85,7 @@ void Bullet::Move(const float deltaTime)
 			DealDamage(pawns);
 		}
 	}
-	else if (direction == RIGHT && GetRightSide() + speed <= static_cast<float>(_windowWidth))
+	else if (direction == RIGHT && GetRightSide() + speed <= static_cast<float>(_windowSize.x))
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{

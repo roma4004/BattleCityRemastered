@@ -1,9 +1,9 @@
 #include "../headers/PlayerTwo.h"
 
 PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-					 size_t windowWidth, size_t windowHeight, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+					 const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
 					 std::shared_ptr<EventSystem> events)
-	: Pawn(rect, color, speed, health, windowBuffer, windowWidth, windowHeight, allPawns, std::move(events))
+	: Pawn{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

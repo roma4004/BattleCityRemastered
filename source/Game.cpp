@@ -7,33 +7,32 @@
 #include <cmath>
 #include <iostream>
 
-GameSuccess::GameSuccess(const size_t windowWidth, const size_t windowHeight, int* windowBuffer, SDL_Renderer* renderer,
-						 SDL_Texture* screen)
-	: _windowWidth{windowWidth}, _windowHeight{windowHeight}, _windowBuffer{windowBuffer}, _renderer{renderer},
-	  _screen{screen}, _events{std::make_shared<EventSystem>()}
+GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen)
+	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen},
+	  _events{std::make_shared<EventSystem>()}
 {
-	const float gridSize = static_cast<float>(_windowHeight) / 50.f;
+	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	constexpr float tankSpeed = 142;
 	constexpr int tankHealth = 100;
 	const float tankSize = gridSize * 3;// for better turns
-	Rectangle playerOneRect{gridSize * 16.f, static_cast<float>(_windowHeight) - tankSize, tankSize, tankSize};
-	Rectangle playerTwoRect{gridSize * 32.f, static_cast<float>(_windowHeight) - tankSize, tankSize, tankSize};
+	Rectangle playerOneRect{gridSize * 16.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
+	Rectangle playerTwoRect{gridSize * 32.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
 	allPawns.reserve(2);
 	allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
-													  _windowWidth, _windowHeight, &allPawns, _events));
+													  _windowSize, &allPawns, _events));
 	allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
-													  _windowWidth, _windowHeight, &allPawns, _events));
+													  _windowSize, &allPawns, _events));
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
 	//Map::ObstacleCreation<Iron>(&env, 310,310);
 	const Map field{};
-	field.MapCreation(&allPawns, gridSize, _windowBuffer, _windowWidth, _windowHeight, _events);
+	field.MapCreation(&allPawns, gridSize, _windowBuffer, _windowSize, _events);
 }
 
 void GameSuccess::ClearBuffer() const
 {
-	const auto size = _windowWidth * _windowHeight * sizeof(int);
+	const auto size = _windowSize.x * _windowSize.y * sizeof(int);
 	memset(_windowBuffer, 0, size);
 }
 
@@ -42,14 +41,16 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
 		mouseButtons.MouseLeftButton = true;
-		std::cout << "MouseLeftButton: " << "Down" << '\n';
+		std::cout << "MouseLeftButton: "
+				  << "Down" << '\n';
 
 		return;
 	}
 	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		mouseButtons.MouseLeftButton = false;
-		std::cout << "MouseLeftButton: " << "Up" << '\n';
+		std::cout << "MouseLeftButton: "
+				  << "Up" << '\n';
 
 		return;
 	}
@@ -61,7 +62,8 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 		std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
-		if (x < 1 || y < 1 || x >= static_cast<Sint32>(_windowWidth) - 1 && y >= static_cast<Sint32>(_windowHeight) - 1)
+		if (x < 1 || y < 1 ||
+			x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1)
 		{
 			return;
 		}
@@ -200,7 +202,7 @@ void GameSuccess::MainLoop()
 		_events->EmitEvent("Draw");
 
 		// update screen with buffer
-		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowWidth) << 2);
+		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
 
 		SDL_RenderPresent(_renderer);
