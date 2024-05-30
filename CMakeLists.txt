@@ -93,6 +93,7 @@ add_executable(${PROJECT_NAME}
         source/Bullet.cpp
         source/Enemy.cpp
         source/Brick.cpp
+        source/Config.cpp
         source/ConfigFailure.cpp
         source/ConfigSuccess.cpp
         source/Game.cpp
