@@ -4,7 +4,7 @@
 
 //TODO: speed is not needed to obstacle, so we need new hierarchy for obst instead of baseObj
 Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: BaseObj{rect, 0x1e90ff, 0, 15}, _windowSize{windowSize}, _windowBuffer{windowBuffer}, _events{std::move(events)}
+	: BaseObj{rect, 0x1e90ff, 15}, _windowSize{windowSize}, _windowBuffer{windowBuffer}, _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

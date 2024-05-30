@@ -142,11 +142,14 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
+    <ClCompile Include="source\MoveLikeBulletBeh.cpp" />
+    <ClCompile Include="source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\Pawn.cpp" />
     <ClCompile Include="source\PlayerOne.cpp" />
     <ClCompile Include="source\PlayerTwo.cpp" />
     <ClCompile Include="source\Rectangle.cpp" />
     <ClCompile Include="source\SDLEnvironment.cpp" />
+    <ClCompile Include="source\Tank.cpp" />
     <ClCompile Include="source\Water.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +170,9 @@
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\ITickUpdatable.h" />
     <ClInclude Include="headers\MouseButton.h" />
+    <ClInclude Include="headers\MoveBeh.h" />
+    <ClInclude Include="headers\MoveLikeBulletBeh.h" />
+    <ClInclude Include="headers\MoveLikeTankBeh.h" />
     <ClInclude Include="headers\Pawn.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\PlayerOne.h" />
@@ -174,10 +180,14 @@
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Rectangle.h" />
     <ClInclude Include="headers\SDLEnvironment.h" />
+    <ClInclude Include="headers\Tank.h" />
     <ClInclude Include="headers\Water.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

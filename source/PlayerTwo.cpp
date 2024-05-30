@@ -1,9 +1,11 @@
 #include "../headers/PlayerTwo.h"
+#include "../headers/Bullet.h"
+#include "../headers/EventSystem.h"
 
 PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-					 const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-					 std::shared_ptr<EventSystem> events)
-	: Pawn{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
+                     const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+                     std::shared_ptr<EventSystem> events)
+	: Tank{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -21,16 +23,20 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 
 	_events->AddListener("Draw", name, [this]() { this->Draw(); });
 
-	_events->AddListener("ArrowUp_Pressed", name, [&btn = keyboardButtons]() { btn.w = true; });
-	_events->AddListener("ArrowUp_Released", name, [&btn = keyboardButtons]() { btn.w = false; });
-	_events->AddListener("ArrowLeft_Pressed", name, [&btn = keyboardButtons]() { btn.a = true; });
-	_events->AddListener("ArrowLeft_Released", name, [&btn = keyboardButtons]() { btn.a = false; });
-	_events->AddListener("ArrowDown_Pressed", name, [&btn = keyboardButtons]() { btn.s = true; });
-	_events->AddListener("ArrowDown_Released", name, [&btn = keyboardButtons]() { btn.s = false; });
-	_events->AddListener("ArrowRight_Pressed", name, [&btn = keyboardButtons]() { btn.d = true; });
-	_events->AddListener("ArrowRight_Released", name, [&btn = keyboardButtons]() { btn.d = false; });
+	_events->AddListener("ArrowUp_Pressed", name, [&btn = keyboardButtons]() { btn.up = true; });
+	_events->AddListener("ArrowUp_Released", name, [&btn = keyboardButtons]() { btn.up = false; });
+	_events->AddListener("ArrowLeft_Pressed", name, [&btn = keyboardButtons]() { btn.left = true; });
+	_events->AddListener("ArrowLeft_Released", name, [&btn = keyboardButtons]() { btn.left = false; });
+	_events->AddListener("ArrowDown_Pressed", name, [&btn = keyboardButtons]() { btn.down = true; });
+	_events->AddListener("ArrowDown_Released", name, [&btn = keyboardButtons]() { btn.down = false; });
+	_events->AddListener("ArrowRight_Pressed", name, [&btn = keyboardButtons]() { btn.right = true; });
+	_events->AddListener("ArrowRight_Released", name, [&btn = keyboardButtons]() { btn.right = false; });
 	_events->AddListener("RCTRL_Pressed", name, [&btn = keyboardButtons]() { btn.shot = true; });
-	_events->AddListener("RCTRL_Released", name, [&btn = keyboardButtons]() { btn.shot = false; });
+	_events->AddListener("RCTRL_Released", name, [this]()
+	{
+		keyboardButtons.shot = false;
+		this->Shot();
+	});
 }
 
 PlayerTwo::~PlayerTwo()

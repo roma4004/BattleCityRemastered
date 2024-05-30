@@ -1,7 +1,8 @@
 #include "../headers/BaseObj.h"
+#include "../headers/Point.h"
 
-BaseObj::BaseObj(const Rectangle& rect, const int color, const float speed, const int health)
-	: shape{rect}, _color(color), _speed(speed), _health(health)
+BaseObj::BaseObj(const Rectangle& rect, const int color, const int health)
+	: shape{rect}, _color(color), _health(health)
 {
 }
 
@@ -40,8 +41,6 @@ void BaseObj::SetHeight(const float height) { shape.h = height; }
 void BaseObj::MoveX(const float i) { shape.x += i; }
 
 void BaseObj::MoveY(const float i) { shape.y += i; }
-
-float BaseObj::GetSpeed() const { return _speed; }
 
 int BaseObj::GetColor() const { return _color; }
 

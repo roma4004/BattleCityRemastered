@@ -2,6 +2,7 @@
 
 #include "BaseObj.h"
 #include "EventSystem.h"
+#include "Point.h"
 
 #include <memory>
 #include <vector>
@@ -14,8 +15,8 @@ public:
 	~Map();
 
 	template<typename T>
-	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float x, float y, float gridSize,
-						  int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events) const;
+	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const Rectangle& rect, int* windowBuffer,
+						  UPoint windowSize, std::shared_ptr<EventSystem> events) const;
 	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float gridSize, int* windowBuffer,
 					 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
 
@@ -122,10 +123,8 @@ public:
 };
 
 template<typename T>
-void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const float x, const float y,
-						   const float gridSize, int* windowBuffer, UPoint windowSize,
-						   std::shared_ptr<EventSystem> events) const
+void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const Rectangle& rect, int* windowBuffer,
+						   UPoint windowSize, std::shared_ptr<EventSystem> events) const
 {
-	Rectangle rect = {x, y, gridSize, gridSize};
 	allPawns->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
 }

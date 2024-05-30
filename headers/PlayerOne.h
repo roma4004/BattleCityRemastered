@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../headers/Pawn.h"
+#include "Tank.h"
 
-class PlayerOne : public Pawn
+class PlayerOne : public Tank
 {
 public:
 	PlayerOne(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, UPoint windowSize,

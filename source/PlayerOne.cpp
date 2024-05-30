@@ -1,9 +1,11 @@
 #include "../headers/PlayerOne.h"
+#include "../headers/Bullet.h"
+#include "../headers/EventSystem.h"
 
 PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-					 const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-					 std::shared_ptr<EventSystem> events)
-	: Pawn{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
+                     const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+                     std::shared_ptr<EventSystem> events)
+	: Tank{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -21,16 +23,20 @@ PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, 
 
 	_events->AddListener("Draw", name, [this]() { this->Draw(); });
 
-	_events->AddListener("W_Pressed", name, [&btn = keyboardButtons]() { btn.w = true; });
-	_events->AddListener("W_Released", name, [&btn = keyboardButtons]() { btn.w = false; });
-	_events->AddListener("A_Pressed", name, [&btn = keyboardButtons]() { btn.a = true; });
-	_events->AddListener("A_Released", name, [&btn = keyboardButtons]() { btn.a = false; });
-	_events->AddListener("S_Pressed", name, [&btn = keyboardButtons]() { btn.s = true; });
-	_events->AddListener("S_Released", name, [&btn = keyboardButtons]() { btn.s = false; });
-	_events->AddListener("D_Pressed", name, [&btn = keyboardButtons]() { btn.d = true; });
-	_events->AddListener("D_Released", name, [&btn = keyboardButtons]() { btn.d = false; });
+	_events->AddListener("W_Pressed", name, [&btn = keyboardButtons]() { btn.up = true; });
+	_events->AddListener("W_Released", name, [&btn = keyboardButtons]() { btn.up = false; });
+	_events->AddListener("A_Pressed", name, [&btn = keyboardButtons]() { btn.left = true; });
+	_events->AddListener("A_Released", name, [&btn = keyboardButtons]() { btn.left = false; });
+	_events->AddListener("S_Pressed", name, [&btn = keyboardButtons]() { btn.down = true; });
+	_events->AddListener("S_Released", name, [&btn = keyboardButtons]() { btn.down = false; });
+	_events->AddListener("D_Pressed", name, [&btn = keyboardButtons]() { btn.right = true; });
+	_events->AddListener("D_Released", name, [&btn = keyboardButtons]() { btn.right = false; });
 	_events->AddListener("Space_Pressed", name, [&btn = keyboardButtons]() { btn.shot = true; });
-	_events->AddListener("Space_Released", name, [&btn = keyboardButtons]() { btn.shot = false; });
+	_events->AddListener("Space_Released", name, [this]()
+	{
+		keyboardButtons.shot = false;
+		this->Shot();
+	});
 }
 
 PlayerOne::~PlayerOne()

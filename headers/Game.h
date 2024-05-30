@@ -3,9 +3,10 @@
 #include "BaseObj.h"
 #include "EventSystem.h"
 #include "MouseButton.h"
+#include "Point.h"
 
 #include <SDL.h>
-// #include <SDL_ttf.h>
+#include <SDL_ttf.h>
 
 class Game
 {
@@ -31,9 +32,9 @@ class GameSuccess final : public Game
 	SDL_Texture* _screen{nullptr};
 
 	//fps
-	// TTF_Font* _font;
-	// SDL_Surface* fpsSurface{nullptr};
-	// SDL_Texture* fpsTexture{nullptr};
+	TTF_Font* _fpsFont{nullptr};
+	SDL_Surface* _fpsSurface{nullptr};
+	SDL_Texture* _fpsTexture{nullptr};
 
 	MouseButtons mouseButtons{};
 	std::vector<std::shared_ptr<BaseObj>> allPawns;
@@ -41,7 +42,7 @@ class GameSuccess final : public Game
 	std::shared_ptr<EventSystem> _events;
 
 public:
-	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen /*, TTF_Font* font*/);
+	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
 
 	void ClearBuffer() const;
 

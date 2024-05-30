@@ -7,8 +7,8 @@
 #include <cmath>
 #include <iostream>
 
-GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen)
-	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen},
+GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont)
+	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
 	  _events{std::make_shared<EventSystem>()}
 {
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -162,19 +162,18 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 
 void GameSuccess::MainLoop()
 {
+	constexpr SDL_Color fpsColor{140, 0, 255, 0};
+	Uint32 frameCount{0};
+	Uint32 fps{0};
 	bool isGameOver{false};
 	float deltaTime{0.f};
 	SDL_Event event{};
 	Uint64 oldTime = SDL_GetTicks64();
+	auto fpsPrevUpdateTime = oldTime;
+	const SDL_Rect fpsRectangle{/*x*/static_cast<int>(_windowSize.x) - 80, /*y*/20, /*w*/40, /*h*/40};
+
 	while (!isGameOver)
 	{
-		const Uint64 newTime = SDL_GetTicks64();
-		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
-		const float fps = 1.0f / deltaTime;
-
-		std::cout << "fps: " << fps << '\n';			// TODO:use sdl2 ttf here
-		std::cout << "deltaTime: " << deltaTime << '\n';// TODO:use sdl2 ttf here
-
 		// Cap to 60 FPS
 		SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
 
@@ -201,12 +200,42 @@ void GameSuccess::MainLoop()
 
 		_events->EmitEvent("Draw");
 
+		const Uint64 newTime = SDL_GetTicks64();
+		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
+		++frameCount;
+		if (newTime - fpsPrevUpdateTime >= 1000)
+		{
+			if (fps != frameCount)
+			{
+				fps = frameCount;
+
+				_fpsSurface = TTF_RenderText_Solid(_fpsFont, std::to_string(fps).c_str(), fpsColor);
+				if (_fpsTexture)
+				{
+					SDL_DestroyTexture(_fpsTexture);
+				}
+				_fpsTexture = SDL_CreateTextureFromSurface(_renderer, _fpsSurface);
+
+				SDL_FreeSurface(_fpsSurface);
+			}
+			fpsPrevUpdateTime = newTime;
+			frameCount = 0;
+		}
+
 		// update screen with buffer
 		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
 
+		// Copy the texture with FPS to the renderer
+		SDL_RenderCopy(_renderer, _fpsTexture, nullptr, &fpsRectangle);
+
 		SDL_RenderPresent(_renderer);
 
 		oldTime = newTime;
+	}
+
+	if (_fpsTexture)
+	{
+		SDL_DestroyTexture(_fpsTexture);
 	}
 }

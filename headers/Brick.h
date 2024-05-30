@@ -2,6 +2,7 @@
 
 #include "BaseObj.h"
 #include "EventSystem.h"
+#include "Point.h"
 
 class Brick final : public BaseObj
 {

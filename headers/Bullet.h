@@ -1,33 +1,21 @@
 ﻿#pragma once
 
-#include "../headers/Circle.h"
-#include "../headers/Pawn.h"
+#include "MoveLikeBulletBeh.h"
+#include "Pawn.h"
 
-struct FPoint;
+struct UPoint;
+class BaseObj;
+class EventSystem;
 
 class Bullet final : public Pawn
 {
 public:
-	Bullet(const Rectangle& pos, int color, float speed, Direction direction, int health, int* windowBuffer,
+	Bullet(const Rectangle& rect, int damage, int color, float speed, Direction direction, int health, int* windowBuffer,
 		   UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events);
 
 	~Bullet() override;
 
 	void Move(float deltaTime) override;
-	void Draw() const override;
 
-	[[nodiscard]] int GetDamage() const;
-	void SetDamage(int damage);
-	static bool CheckIntersection(const Circle& circle, const Rectangle& rect);
-
-	void Shot() override;
-
-	std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) override;
-	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
-	void CheckAoE(float deltaTime, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
-
-private:
-	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList);
-
-	int _damage{15};
+	// void Shot() override;
 };

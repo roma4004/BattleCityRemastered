@@ -16,18 +16,19 @@ void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const flo
 		{
 			const float x = static_cast<float>(vertical) * gridSize;
 			const float y = static_cast<float>(horizontal) * gridSize;
+			Rectangle rect = {x, y, gridSize, gridSize};
 			switch (fieldLevelOne[horizontal][vertical])
 			{
 				case 0:
 					break;
 				case 1:
-					ObstacleCreation<Brick>(allPawns, x, y, gridSize, windowBuffer, windowSize, events);
+					ObstacleCreation<Brick>(allPawns, rect, windowBuffer, windowSize, events);
 					break;
 				case 2:
-					ObstacleCreation<Iron>(allPawns, x, y, gridSize, windowBuffer, windowSize, events);
+					ObstacleCreation<Iron>(allPawns, rect, windowBuffer, windowSize, events);
 					break;
 				case 3:
-					ObstacleCreation<Water>(allPawns, x, y, gridSize, windowBuffer, windowSize, events);
+					ObstacleCreation<Water>(allPawns, rect, windowBuffer, windowSize, events);
 					break;
 				default:
 					break;
