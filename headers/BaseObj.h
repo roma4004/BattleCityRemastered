@@ -63,4 +63,12 @@ public:
 	void SetIsPenetrable(bool value) override;
 
 	[[nodiscard]] const Rectangle& GetShape() const;
+
+protected:
+	Rectangle shape{};
+
+private:
+	int _color{0};
+	int _health{0};
+	bool _isAlive{true};
 };
