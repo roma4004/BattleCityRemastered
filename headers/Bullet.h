@@ -16,6 +16,4 @@ public:
 	~Bullet() override;
 
 	void Move(float deltaTime) override;
-
-	// void Shot() override;
 };

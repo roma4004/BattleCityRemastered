@@ -1,8 +1,9 @@
 #pragma once
-#include "BaseObj.h"
 
 #include <list>
 #include <memory>
+
+class BaseObj;
 
 class MoveBeh
 {

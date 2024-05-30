@@ -1,5 +1,4 @@
 #include "../headers/PlayerOne.h"
-#include "../headers/Bullet.h"
 #include "../headers/EventSystem.h"
 
 PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
