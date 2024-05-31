@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-MoveLikeTankBeh::MoveLikeTankBeh(UPoint windowSize, float speed, BaseObj* selfParent,
+MoveLikeTankBeh::MoveLikeTankBeh(const UPoint windowSize, const float speed, BaseObj* selfParent,
                                  std::vector<std::shared_ptr<BaseObj>>* allPawns)
 	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns} {}
 
@@ -88,8 +88,8 @@ inline float Distance(const FPoint a, const FPoint b)
 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 }
 
-float MoveLikeTankBeh::FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
-                                           const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide)
+float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
+                                       const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide)
 const
 {
 	float nearestDist = static_cast<float>(_windowSize.x * _windowSize.y);
@@ -135,7 +135,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindNearestDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
 				_selfParent->MoveX(-std::floor(distance));
 			}
@@ -161,7 +161,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindNearestDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
 				_selfParent->MoveX(std::floor(distance));
 			}
@@ -186,7 +186,7 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindNearestDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
 				_selfParent->MoveY(-std::floor(distance));
 			}
@@ -212,7 +212,7 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindNearestDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
 				_selfParent->MoveY(std::floor(distance));
 			}

@@ -135,7 +135,6 @@
     <ClCompile Include="source\Brick.cpp" />
     <ClCompile Include="source\Bullet.cpp" />
     <ClCompile Include="source\Game.cpp" />
-    <ClCompile Include="source\Config.cpp" />
     <ClCompile Include="source\ConfigFailure.cpp" />
     <ClCompile Include="source\ConfigSuccess.cpp" />
     <ClCompile Include="source\Iron.cpp" />
@@ -187,7 +186,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Resources\" />
+    <Content Include="Resources\Fonts\bc7x7.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

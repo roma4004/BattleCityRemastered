@@ -24,8 +24,9 @@ public:
 
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
-	float FindNearestDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
-	                          const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide) const;
+	float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
+	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& getNearestSide) const;
+
 	void MoveLeft(float deltaTime) const override;
 	void MoveRight(float deltaTime) const override;
 	void MoveUp(float deltaTime) const override;
@@ -33,6 +34,6 @@ public:
 
 	[[nodiscard]] Direction GetDirection() const override { return _direction; }
 	void SetDirection(const Direction direction) override { _direction = direction; }
-	
+
 	[[nodiscard]] float GetSpeed() const override { return _speed; }
 };

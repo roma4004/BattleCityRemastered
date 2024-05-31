@@ -11,32 +11,35 @@ void Tank::Shot()
 {
 	const Direction direction = _moveBeh->GetDirection();
 	const FPoint tankHalf = {GetWidth() / 2.f, GetHeight() / 2.f};
-	const float tankX = GetX();
-	const float tankY = GetY();
+	const FPoint tankPos = GetPos();
 	const float tankRightX = GetRightSide();
 	const float tankBottomY = GetBottomSide();
-	const FPoint tankCenter = {tankX + tankHalf.x, tankY + tankHalf.y};
+	const FPoint tankCenter = {tankPos.x + tankHalf.x, tankPos.y + tankHalf.y};
 
 	const float bulletWidth = GetBulletWidth();
 	const float bulletHeight = GetBulletHeight();
 	const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-	Rectangle bulletRect{};
+	Rectangle bulletRect{0,0, bulletWidth, bulletHeight};
 
-	if (direction == UP && tankY - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
+	if (direction == UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
-		bulletRect = {tankCenter.x - bulletHalf.x, tankCenter.y - tankHalf.y - bulletHalf.y, bulletWidth, bulletHeight};
+		bulletRect.x = tankCenter.x - bulletHalf.x;
+		bulletRect.y = tankPos.y - bulletHalf.y;
 	}
 	else if (direction == DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowSize.y))
 	{
-		bulletRect = {tankCenter.x - bulletHalf.x, tankBottomY + bulletHalf.y, bulletWidth, bulletHeight};
+		bulletRect.x = tankCenter.x - bulletHalf.x;
+		bulletRect.y = tankBottomY - bulletHalf.y;
 	}
-	else if (direction == LEFT && tankX - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+	else if (direction == LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
-		bulletRect = {tankX - bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
+		bulletRect.x = tankPos.x - bulletHalf.x;
+		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (direction == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(_windowSize.x))
 	{
-		bulletRect = {tankRightX + bulletHalf.x, tankCenter.y - bulletHalf.y, bulletWidth, bulletHeight};
+		bulletRect.x = tankRightX - bulletHalf.x;
+		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else
 	{
