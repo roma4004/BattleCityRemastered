@@ -4,7 +4,6 @@ struct Rectangle
 {
 	float x{}, y{}, w{}, h{};
 
-public:
 	[[nodiscard]] float Area() const;
 
 	// Get the x-coordinate of the right side

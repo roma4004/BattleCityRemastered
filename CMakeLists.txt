@@ -8,6 +8,9 @@ project(BattleCity_remastered)
 #    )
 #endif()
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -pedantic -Everything")
 #set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
@@ -88,6 +91,7 @@ add_executable(${PROJECT_NAME}
         source/PlayerOne.cpp
         source/PlayerTwo.cpp
         source/Bullet.cpp
+        source/Enemy.cpp
         source/Brick.cpp
         source/ConfigFailure.cpp
         source/ConfigSuccess.cpp
@@ -97,6 +101,7 @@ add_executable(${PROJECT_NAME}
         source/Tank.cpp
         source/Water.cpp
         source/Map.cpp
+        source/MoveLikeAIBeh.cpp
         source/MoveLikeBulletBeh.cpp
         source/MoveLikeTankBeh.cpp
         source/Rectangle.cpp

@@ -1,13 +1,13 @@
-#include "../headers/MoveLikeTankBeh.h"
+#include "../headers/MoveLikeAIBeh.h"
 
 #include <functional>
 #include <memory>
 
-MoveLikeTankBeh::MoveLikeTankBeh(const UPoint windowSize, const float speed, BaseObj* selfParent,
-                                 std::vector<std::shared_ptr<BaseObj>>* allPawns)
+MoveLikeAIBeh::MoveLikeAIBeh(const UPoint windowSize, const float speed, BaseObj* selfParent,
+                             std::vector<std::shared_ptr<BaseObj>>* allPawns)
 	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns} {}
 
-bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
+bool MoveLikeAIBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
 
 	// Check if one rectangle is to the right of the other
@@ -26,7 +26,7 @@ bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 	return true;
 }
 
-std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
+std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
 {
 	float speedX = _speed * deltaTime;
 	float speedY = _speed * deltaTime;
@@ -88,8 +88,8 @@ inline float Distance(const FPoint a, const FPoint b)
 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 }
 
-float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
-                                       const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
+                                     const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	float minDist = static_cast<float>(_windowSize.x * _windowSize.y);
 	// float nearestDist = 0;
@@ -117,7 +117,7 @@ float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& 
 	// return distance;
 }
 
-void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
+void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 {
 	if (const float speed = _speed * deltaTime; _selfParent->GetX() - speed >= 0.f)
 	{
@@ -141,7 +141,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 	}
 }
 
-void MoveLikeTankBeh::MoveRight(const float deltaTime) const
+void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 {
 	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < static_cast<float>(_windowSize.x))
 	{
@@ -166,7 +166,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 	}
 }
 
-void MoveLikeTankBeh::MoveUp(const float deltaTime) const
+void MoveLikeAIBeh::MoveUp(const float deltaTime) const
 {
 	if (const float speed = _speed * deltaTime; _selfParent->GetY() - speed >= 0.0f)
 	{
@@ -190,7 +190,7 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 	}
 }
 
-void MoveLikeTankBeh::MoveDown(const float deltaTime) const
+void MoveLikeAIBeh::MoveDown(const float deltaTime) const
 {
 	if (const float speed = _speed * deltaTime;
 		_selfParent->GetBottomSide() + speed < static_cast<float>(_windowSize.y))

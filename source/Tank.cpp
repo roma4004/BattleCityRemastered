@@ -1,11 +1,10 @@
 #include "../headers/Tank.h"
 #include "../headers/Bullet.h"
 
-Tank::Tank(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-           const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-           std::shared_ptr<EventSystem> events)
-	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events),
-	       std::make_shared<MoveLikeTankBeh>(windowSize, speed, this, allPawns)} {}
+Tank::Tank(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+           std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
+           std::shared_ptr<MoveBeh> moveBeh)
+	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events), std::move(moveBeh)} {}
 
 void Tank::Shot()
 {
@@ -19,14 +18,14 @@ void Tank::Shot()
 	const float bulletWidth = GetBulletWidth();
 	const float bulletHeight = GetBulletHeight();
 	const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-	Rectangle bulletRect{0,0, bulletWidth, bulletHeight};
+	Rectangle bulletRect{0, 0, bulletWidth, bulletHeight};
 
-	if (direction == UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
+	if (direction == UP && tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHalf.y;
 	}
-	else if (direction == DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowSize.y))
+	else if (direction == DOWN && tankBottomY + bulletHalf.y <= static_cast<float>(_windowSize.y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY - bulletHalf.y;
@@ -65,3 +64,19 @@ void Tank::SetBulletHeight(const float bulletHeight) { _bulletHeight = bulletHei
 float Tank::GetBulletSpeed() const { return _bulletSpeed; }
 
 void Tank::SetBulletSpeed(const float bulletSpeed) { _bulletSpeed = bulletSpeed; }
+
+bool Tank::IsReloadFinish() const
+{
+	const auto lastTimeFireSec =
+			std::chrono::duration_cast<std::chrono::seconds>(lastTimeFire.time_since_epoch()).count();
+	const auto currentSec =
+			std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+			.count();
+
+	if (currentSec - lastTimeFireSec >= fireCooldown)
+	{
+		return true;
+	}
+
+	return false;
+}

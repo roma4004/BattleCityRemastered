@@ -1,11 +1,22 @@
 #include "../headers/PlayerTwo.h"
+
 #include "../headers/Bullet.h"
 #include "../headers/EventSystem.h"
+#include "../headers/MoveLikeTankBeh.h"
+
+#include <chrono>
 
 PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
                      const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
                      std::shared_ptr<EventSystem> events)
-	: Tank{rect, color, speed, health, windowBuffer, windowSize, allPawns, std::move(events)}
+	: Tank{rect,
+	       color,
+	       health,
+	       windowBuffer,
+	       windowSize,
+	       allPawns,
+	       std::move(events),
+	       std::make_shared<MoveLikeTankBeh>(windowSize, speed, this, allPawns)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -32,11 +43,16 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 	_events->AddListener("ArrowRight_Pressed", name, [&btn = keyboardButtons]() { btn.right = true; });
 	_events->AddListener("ArrowRight_Released", name, [&btn = keyboardButtons]() { btn.right = false; });
 	_events->AddListener("RCTRL_Pressed", name, [&btn = keyboardButtons]() { btn.shot = true; });
-	_events->AddListener("RCTRL_Released", name, [this]()
-	{
-		keyboardButtons.shot = false;
-		this->Shot();
-	});
+	_events->AddListener("RCTRL_Released", name,
+	                     [this]()
+	                     {
+		                     if (IsReloadFinish())
+		                     {
+			                     keyboardButtons.shot = false;
+			                     this->Shot();
+			                     lastTimeFire = std::chrono::system_clock::now();
+		                     }
+	                     });
 }
 
 PlayerTwo::~PlayerTwo()

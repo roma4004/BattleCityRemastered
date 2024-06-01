@@ -7,7 +7,7 @@
 #include <SDL_ttf.h>
 #include <memory>
 
-class SDLEnvironment final
+struct SDLEnvironment final
 {
 public:
 	SDLEnvironment(UPoint windowSize, const char* fpsFontName);

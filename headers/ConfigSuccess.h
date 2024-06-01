@@ -21,8 +21,8 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	explicit ConfigSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer,
-						   SDL_Texture* screen, TTF_Font* fpsFont);
+	explicit ConfigSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
+	                       TTF_Font* fpsFont);
 
 	~ConfigSuccess() override = default;
 

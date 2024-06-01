@@ -6,7 +6,13 @@
 Bullet::Bullet(const Rectangle& rect, int damage, const int color, const float speed, const Direction direction,
                const int health, int* windowBuffer, const UPoint windowSize,
                std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
-	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events),
+	: Pawn{rect,
+	       color,
+	       health,
+	       windowBuffer,
+	       windowSize,
+	       allPawns,
+	       std::move(events),
 	       std::make_shared<MoveLikeBulletBeh>(windowSize, speed, damage, this, allPawns)}
 {
 	_moveBeh->SetDirection(direction);

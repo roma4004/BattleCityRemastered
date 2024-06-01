@@ -6,6 +6,10 @@
 
 class Water final : public BaseObj
 {
+	UPoint _windowSize{0, 0};
+	int* _windowBuffer{nullptr};
+	std::shared_ptr<EventSystem> _events;
+
 public:
 	Water(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
 
@@ -14,10 +18,4 @@ public:
 
 	void Draw() const override;
 	void TickUpdate(float deltaTime) override;
-
-	UPoint _windowSize{0, 0};
-
-protected:
-	int* _windowBuffer{nullptr};
-	std::shared_ptr<EventSystem> _events;
 };

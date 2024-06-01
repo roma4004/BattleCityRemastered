@@ -23,19 +23,17 @@ public:
 
 	~MoveLikeBulletBeh() override = default;
 
-	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
-	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
-	
 	void MoveLeft(float deltaTime) const override;
 	void MoveRight(float deltaTime) const override;
 	void MoveUp(float deltaTime) const override;
 	void MoveDown(float deltaTime) const override;
 
-	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
-	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const;
-
 	[[nodiscard]] Direction GetDirection() const override { return _direction; }
 	void SetDirection(const Direction direction) override { _direction = direction; }
-
 	[[nodiscard]] float GetSpeed() const override { return _speed; }
+
+private:
+	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
+	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const;
+	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 };

@@ -7,6 +7,7 @@
 
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <random>
 
 class Game
 {
@@ -40,6 +41,8 @@ class GameSuccess final : public Game
 	std::vector<std::shared_ptr<BaseObj>> allPawns;
 
 	std::shared_ptr<EventSystem> _events;
+
+	std::random_device _rd;
 
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);

@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="source\Brick.cpp" />
     <ClCompile Include="source\Bullet.cpp" />
+    <ClCompile Include="source\Enemy.cpp" />
     <ClCompile Include="source\Game.cpp" />
     <ClCompile Include="source\ConfigFailure.cpp" />
     <ClCompile Include="source\ConfigSuccess.cpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
+    <ClCompile Include="source\MoveLikeAIBeh.cpp" />
     <ClCompile Include="source\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\Pawn.cpp" />
@@ -157,6 +159,7 @@
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\Direction.h" />
+    <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\EventSystem.h" />
     <ClInclude Include="headers\Game.h" />
     <ClInclude Include="headers\IDrawable.h" />
@@ -170,6 +173,7 @@
     <ClInclude Include="headers\ITickUpdatable.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\MoveBeh.h" />
+    <ClInclude Include="headers\MoveLikeAIBeh.h" />
     <ClInclude Include="headers\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\MoveLikeTankBeh.h" />
     <ClInclude Include="headers\Pawn.h" />

@@ -7,9 +7,7 @@
 class Config;
 
 SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName)
-	: windowSize{windowSize}, _fpsFontPathName{fpsFontName}
-{
-}
+	: windowSize{windowSize}, _fpsFontPathName{fpsFontName} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -36,7 +34,7 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	window = SDL_CreateWindow("Battle City remastered", 100, 100, static_cast<int>(windowSize.x),
-							  static_cast<int>(windowSize.y), SDL_WINDOW_SHOWN);
+	                          static_cast<int>(windowSize.y), SDL_WINDOW_SHOWN);
 	if (window == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
@@ -49,7 +47,7 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-							   static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+	                           static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
 	if (screen == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("Screen SDL_CreateTexture Error", SDL_GetError());

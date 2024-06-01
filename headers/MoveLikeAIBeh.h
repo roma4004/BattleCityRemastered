@@ -7,9 +7,13 @@
 
 #include <functional>
 #include <memory>
+#include <random>
 
-class MoveLikeTankBeh : public MoveBeh
+class MoveLikeAIBeh : public MoveBeh
 {
+	std::mt19937 gen;
+	std::uniform_int_distribution<> distDirection;
+
 	UPoint _windowSize{0, 0};
 	BaseObj* _selfParent{nullptr};
 	Direction _direction{UP};
@@ -17,15 +21,14 @@ class MoveLikeTankBeh : public MoveBeh
 	std::vector<std::shared_ptr<BaseObj>>* _allPawns;
 
 public:
-	MoveLikeTankBeh(UPoint windowSize, float speed, BaseObj* selfParent,
-	                std::vector<std::shared_ptr<BaseObj>>* allPawns);
+	MoveLikeAIBeh(UPoint windowSize, float speed, BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allPawns);
 
-	~MoveLikeTankBeh() override = default;
+	~MoveLikeAIBeh() override = default;
 
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 	float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
-	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& getMinSide) const;
+	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	void MoveLeft(float deltaTime) const override;
 	void MoveRight(float deltaTime) const override;

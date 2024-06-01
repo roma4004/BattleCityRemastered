@@ -1,20 +1,34 @@
 #pragma once
 
-#include "MoveLikeTankBeh.h"
+#include "BaseObj.h"
 #include "IMovable.h"
+#include "MoveBeh.h"
 #include "PlayerKeys.h"
+#include "Point.h"
+#include "Rectangle.h"
 
 #include <memory>
+#include <vector>
 
-struct UPoint;
-class BaseObj;
 class EventSystem;
 
 class Pawn : public BaseObj, public IMovable
 {
+protected:
+	std::shared_ptr<MoveBeh> _moveBeh;
+
+	UPoint _windowSize{0, 0};
+
+	int* _windowBuffer{nullptr};
+
+	std::shared_ptr<EventSystem> _events;
+
+	std::vector<std::shared_ptr<BaseObj>>* _allPawns{nullptr};
+
 public:
 	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
-		 std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::shared_ptr<MoveBeh> moveBeh);
+	     std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
+	     std::shared_ptr<MoveBeh> moveBeh);
 
 	~Pawn() override;
 
@@ -27,15 +41,4 @@ public:
 	void TickUpdate(float deltaTime) override;
 
 	PlayerKeys keyboardButtons{};
-
-protected:
-	std::shared_ptr<MoveBeh> _moveBeh;
-
-	UPoint _windowSize{0, 0};
-
-	int* _windowBuffer{nullptr};
-
-	std::shared_ptr<EventSystem> _events;
-
-	std::vector<std::shared_ptr<BaseObj>>* _allPawns{nullptr};
 };

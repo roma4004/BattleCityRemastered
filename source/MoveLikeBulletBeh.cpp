@@ -7,55 +7,7 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(const UPoint windowSize, const float speed,
                                      std::vector<std::shared_ptr<BaseObj>>* allPawns)
 	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns}, _damage{damage} {}
 
-void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
-{
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
-	{
-		_selfParent->MoveX(-_speed * deltaTime);
-	}
-	else
-	{
-		DealDamage(pawns);
-	}
-}
-
-void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
-{
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
-	{
-		_selfParent->MoveX(_speed * deltaTime);
-	}
-	else
-	{
-		DealDamage(pawns);
-	}
-}
-
-void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
-{
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
-	{
-		_selfParent->MoveY(-_speed * deltaTime);
-	}
-	else
-	{
-		DealDamage(pawns);
-	}
-}
-
-void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
-{
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
-	{
-		_selfParent->MoveY(_speed * deltaTime);
-	}
-	else
-	{
-		DealDamage(pawns);
-	}
-}
-
-bool MoveLikeBulletBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
+inline bool IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
 	// Check if one rectangle is to the right of the other
 	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
@@ -122,6 +74,54 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 	}
 
 	return aoeList;
+}
+
+void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
+{
+	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	{
+		_selfParent->MoveX(-_speed * deltaTime);
+	}
+	else
+	{
+		DealDamage(pawns);
+	}
+}
+
+void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
+{
+	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	{
+		_selfParent->MoveX(_speed * deltaTime);
+	}
+	else
+	{
+		DealDamage(pawns);
+	}
+}
+
+void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
+{
+	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	{
+		_selfParent->MoveY(-_speed * deltaTime);
+	}
+	else
+	{
+		DealDamage(pawns);
+	}
+}
+
+void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
+{
+	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	{
+		_selfParent->MoveY(_speed * deltaTime);
+	}
+	else
+	{
+		DealDamage(pawns);
+	}
 }
 
 inline bool CheckIntersection(const Circle& circle, const Rectangle& rect)

@@ -3,8 +3,8 @@
 Pawn::Pawn(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
            std::shared_ptr<MoveBeh> moveBeh)
-	: BaseObj{rect, color, health}, _moveBeh{std::move(moveBeh)}, _windowSize{windowSize},
-	  _windowBuffer{windowBuffer}, _events{std::move(events)}, _allPawns{allPawns} {}
+	: BaseObj{rect, color, health}, _moveBeh{std::move(moveBeh)}, _windowSize{windowSize}, _windowBuffer{windowBuffer},
+	  _events{std::move(events)}, _allPawns{allPawns} {}
 
 Pawn::~Pawn() = default;
 
@@ -30,10 +30,7 @@ void Pawn::Draw() const
 	}
 }
 
-void Pawn::TickUpdate(const float deltaTime)
-{
-	Move(deltaTime);
-}
+void Pawn::TickUpdate(const float deltaTime) { Move(deltaTime); }
 
 //TODO make pawns into quadtree (cuz we can)
 void Pawn::Move(const float deltaTime)

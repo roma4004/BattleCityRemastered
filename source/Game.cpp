@@ -1,4 +1,5 @@
 #include "../headers/Game.h"
+#include "../headers/Enemy.h"
 #include "../headers/Map.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
@@ -7,7 +8,8 @@
 #include <cmath>
 #include <iostream>
 
-GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont)
+GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
+                         TTF_Font* fpsFont)
 	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
 	  _events{std::make_shared<EventSystem>()}
 {
@@ -17,11 +19,23 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	const float tankSize = gridSize * 3;// for better turns
 	Rectangle playerOneRect{gridSize * 16.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
 	Rectangle playerTwoRect{gridSize * 32.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
-	allPawns.reserve(2);
+	Rectangle enemyOneRect{gridSize * 16.f - tankSize * 2.f, 0, tankSize, tankSize};
+	Rectangle enemyTwoRect{gridSize * 32.f - tankSize * 2.f, 0, tankSize, tankSize};
+	Rectangle enemyThreeRect{gridSize * 16.f + tankSize * 2.f, 0, tankSize, tankSize};
+	Rectangle enemyFourRect{gridSize * 32.f + tankSize * 2.f, 0, tankSize, tankSize};
+	allPawns.reserve(6);
 	allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
-													  _windowSize, &allPawns, _events));
+	                                                  _windowSize, &allPawns, _events));
 	allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
-													  _windowSize, &allPawns, _events));
+	                                                  _windowSize, &allPawns, _events));
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyOneRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+	                                              _windowSize, &allPawns, _events, "EnemyOne"));
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyTwoRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+	                                              _windowSize, &allPawns, _events, "EnemyTwo"));
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyThreeRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+	                                              _windowSize, &allPawns, _events, "EnemyThree"));
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyFourRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+	                                              _windowSize, &allPawns, _events, "EnemyFour"));
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
@@ -42,7 +56,7 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 	{
 		mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
-				  << "Down" << '\n';
+				<< "Down" << '\n';
 
 		return;
 	}
@@ -50,7 +64,7 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 	{
 		mouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
-				  << "Up" << '\n';
+				<< "Up" << '\n';
 
 		return;
 	}
@@ -63,7 +77,7 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 		// const int rowSize = env.windowWidth; ???
 
 		if (x < 1 || y < 1 ||
-			x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1)
+		    x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1)
 		{
 			return;
 		}
@@ -170,7 +184,8 @@ void GameSuccess::MainLoop()
 	SDL_Event event{};
 	Uint64 oldTime = SDL_GetTicks64();
 	auto fpsPrevUpdateTime = oldTime;
-	const SDL_Rect fpsRectangle{/*x*/static_cast<int>(_windowSize.x) - 80, /*y*/20, /*w*/40, /*h*/40};
+	const SDL_Rect fpsRectangle{
+			/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
 
 	while (!isGameOver)
 	{

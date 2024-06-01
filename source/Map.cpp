@@ -8,7 +8,7 @@ Map::Map() = default;
 Map::~Map() = default;
 
 void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const float gridSize, int* windowBuffer,
-					  const UPoint windowSize, const std::shared_ptr<EventSystem>& events) const
+                      const UPoint windowSize, const std::shared_ptr<EventSystem>& events) const
 {
 	for (int vertical = 0; vertical < 52; ++vertical)
 	{
