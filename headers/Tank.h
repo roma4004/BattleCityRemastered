@@ -17,7 +17,10 @@ class Tank : public Pawn
 	float _bulletSpeed{300.f};
 
 protected:
+	double _bulletDamageAreaRadius{12.f};
+
 	std::chrono::time_point<std::chrono::system_clock> lastTimeFire;
+
 	int fireCooldown{2};
 
 public:

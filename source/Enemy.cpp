@@ -221,29 +221,41 @@ void Enemy::MayShoot(Direction dir)
 	}
 
 	// fire on obstacle if player not found
+	float shootDistance{0.f};
+	float bulletOffset{0.f};
 	std::shared_ptr<BaseObj> nearestObstacle{nullptr};
 	if (dir == UP && !upObstacle.empty())
 	{
 		nearestObstacle = upObstacle.front().lock();
+		shootDistance = GetY() - nearestObstacle->GetY();
+		bulletOffset = GetBulletHeight();
 	}
 	if (dir == LEFT && !leftObstacle.empty())
 	{
 		nearestObstacle = leftObstacle.front().lock();
+		shootDistance = GetX() - nearestObstacle->GetX();
+		bulletOffset = GetBulletWidth();
 	}
 	if (dir == DOWN && !downObstacle.empty())
 	{
 		nearestObstacle = downObstacle.front().lock();
+		shootDistance = nearestObstacle->GetY() - GetY();
+		bulletOffset = GetBulletHeight();
 	}
 	if (dir == RIGHT && !rightObstacle.empty())
 	{
 		nearestObstacle = rightObstacle.front().lock();
+		shootDistance = nearestObstacle->GetX() - GetX();
+		bulletOffset = GetBulletWidth();
 	}
 
 	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible() &&
 	    !dynamic_cast<Enemy*>(nearestObstacle.get()))
 	{
-		//TODO check distance to avoid self damage from bullet blow
-		Shot();
+		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
+		{
+			Shot();
+		}
 	}
 }
 

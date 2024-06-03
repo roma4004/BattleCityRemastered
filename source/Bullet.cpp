@@ -3,8 +3,8 @@
 
 #include <string>
 
-Bullet::Bullet(const Rectangle& rect, int damage, const int color, const float speed, const Direction direction,
-               const int health, int* windowBuffer, const UPoint windowSize,
+Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
+               const Direction direction, const int health, int* windowBuffer, const UPoint windowSize,
                std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
 	: Pawn{rect,
 	       color,
@@ -13,7 +13,7 @@ Bullet::Bullet(const Rectangle& rect, int damage, const int color, const float s
 	       windowSize,
 	       allPawns,
 	       std::move(events),
-	       std::make_shared<MoveLikeBulletBeh>(windowSize, speed, damage, this, allPawns)}
+	       std::make_shared<MoveLikeBulletBeh>(windowSize, speed, damage, aoeRadius, this, allPawns)}
 {
 	_moveBeh->SetDirection(direction);
 	BaseObj::SetIsPassable(true);

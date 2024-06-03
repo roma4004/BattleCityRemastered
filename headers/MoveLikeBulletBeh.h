@@ -16,9 +16,10 @@ class MoveLikeBulletBeh : public MoveBeh
 	float _speed{0.f};
 	std::vector<std::shared_ptr<BaseObj>>* _allPawns;
 	int _damage{0};
+	double _bulletDamageAreaRadius{12.f};
 
 public:
-	MoveLikeBulletBeh(UPoint windowSize, float speed, int damage, BaseObj* selfParent,
+	MoveLikeBulletBeh(UPoint windowSize, float speed, int damage, double aoeRadius, BaseObj* selfParent,
 	                  std::vector<std::shared_ptr<BaseObj>>* allPawns);
 
 	~MoveLikeBulletBeh() override = default;

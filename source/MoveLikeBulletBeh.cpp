@@ -3,9 +3,10 @@
 #include <functional>
 #include <memory>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(const UPoint windowSize, const float speed, const int damage, BaseObj* selfParent,
-                                     std::vector<std::shared_ptr<BaseObj>>* allPawns)
-	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns}, _damage{damage} {}
+MoveLikeBulletBeh::MoveLikeBulletBeh(const UPoint windowSize, const float speed, const int damage, double aoeRadius,
+                                     BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allPawns)
+	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns}, _damage{damage},
+	  _bulletDamageAreaRadius{aoeRadius} {}
 
 inline bool IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
@@ -134,7 +135,7 @@ inline bool CheckIntersection(const Circle& circle, const Rectangle& rect)
 
 void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
-	const Circle circle{blowCenter, 12};
+	const Circle circle{blowCenter, _bulletDamageAreaRadius};
 	for (const std::shared_ptr<BaseObj>& pawn: *_allPawns)
 	{
 		if (_selfParent == pawn.get())

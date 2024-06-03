@@ -49,7 +49,7 @@ void Tank::Shot()
 	constexpr int color = 0xffffff;
 	const float speed = GetBulletSpeed();
 	constexpr int health = 1;
-	_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, _damage, color, speed, direction, health,
+	_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, _damage, _bulletDamageAreaRadius, color, speed, direction, health,
 	                                                 _windowBuffer, _windowSize, _allPawns, _events));
 }
 
