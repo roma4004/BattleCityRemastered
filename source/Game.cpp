@@ -9,6 +9,14 @@
 #include <cmath>
 #include <iostream>
 
+GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
+                         TTF_Font* fpsFont)
+	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
+	  _events{std::make_shared<EventSystem>()}
+{
+	ResetBattlefield();
+}
+
 void GameSuccess::CreateEnemiesTank(const float gridSize, const float tankSpeed, const int tankHealth,
                                     const float tankSize)
 {
@@ -112,7 +120,7 @@ void GameSuccess::ResetBattlefield()
 	field.MapCreation(&allPawns, gridSize, _windowBuffer, _windowSize, _events);
 }
 
-void GameSuccess::SetGameMode(GameMode gameMode) { currentMode = gameMode; }
+void GameSuccess::SetGameMode(const GameMode gameMode) { currentMode = gameMode; }
 
 void GameSuccess::PrevGameMode()
 {
@@ -134,14 +142,6 @@ void GameSuccess::NextGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	currentMode = static_cast<GameMode>(newMode);
-}
-
-GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-                         TTF_Font* fpsFont)
-	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
-	  _events{std::make_shared<EventSystem>()}
-{
-	ResetBattlefield();
 }
 
 void GameSuccess::ClearBuffer() const
@@ -330,7 +330,7 @@ void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgr
 	textToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopAI ? ">COOP AI" : "COOP AI");
 }
 
-void GameSuccess::HandleFPS(Uint32& frameCount, Uint32 fps, Uint64& fpsPrevUpdateTime, const Uint64 newTime)
+void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32 fps, const Uint64 newTime)
 {
 	++frameCount;
 	if (newTime - fpsPrevUpdateTime >= 1000)
@@ -396,7 +396,7 @@ void GameSuccess::MainLoop()
 
 		const Uint64 newTime = SDL_GetTicks64();
 		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
-		HandleFPS(frameCount, fps, fpsPrevUpdateTime, newTime);
+		HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
 
 		if (menuShow)
 		{

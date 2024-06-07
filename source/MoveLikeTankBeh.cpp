@@ -9,7 +9,6 @@ MoveLikeTankBeh::MoveLikeTankBeh(const UPoint windowSize, const float speed, Bas
 
 bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
-
 	// Check if one rectangle is to the right of the other
 	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
 	{

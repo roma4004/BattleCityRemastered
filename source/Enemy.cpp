@@ -103,10 +103,10 @@ void Enemy::MayShoot(Direction dir)
 			{shape.x + GetWidth(), shape.y + tankHalfHeight - bulletHalfHeight, windowSize.x, GetBulletHeight()}};
 
 	// parse all seen in LOS (line of sight) obj
-	std::vector<std::weak_ptr<BaseObj>> upObstacle{};
-	std::vector<std::weak_ptr<BaseObj>> leftObstacle{};
-	std::vector<std::weak_ptr<BaseObj>> downObstacle{};
-	std::vector<std::weak_ptr<BaseObj>> rightObstacle{};
+	std::vector<std::weak_ptr<BaseObj>> upSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> leftSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> downSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
 	for (std::shared_ptr<BaseObj>& pawn: *_allPawns)
 	{
 		if (this == pawn.get())
@@ -118,105 +118,101 @@ void Enemy::MayShoot(Direction dir)
 		{
 			if (IsCollideWith(LOScheck[UP], pawn->GetShape()))
 			{
-				upObstacle.emplace_back(std::weak_ptr(pawn));
+				upSideObstacles.emplace_back(std::weak_ptr(pawn));
 			}
 			if (IsCollideWith(LOScheck[LEFT], pawn->GetShape()))
 			{
-				leftObstacle.emplace_back(std::weak_ptr(pawn));
+				leftSideObstacles.emplace_back(std::weak_ptr(pawn));
 			}
 			if (IsCollideWith(LOScheck[DOWN], pawn->GetShape()))
 			{
-				downObstacle.emplace_back(std::weak_ptr(pawn));
+				downSideObstacles.emplace_back(std::weak_ptr(pawn));
 			}
 			if (IsCollideWith(LOScheck[RIGHT], pawn->GetShape()))
 			{
-				rightObstacle.emplace_back(std::weak_ptr(pawn));
+				rightSideObstacles.emplace_back(std::weak_ptr(pawn));
 			}
 		}
 	}
 
 	// sorting to nearest
-	std::ranges::sort(upObstacle,
-	                  [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
-	                  {
-		                  const auto aLck = a.lock();
-		                  if (!aLck)
-		                  {
-			                  return false;
-		                  }
-		                  const auto bLck = b.lock();
-		                  if (!bLck)
-		                  {
-			                  return true;
-		                  }
-		                  return aLck->GetPos().y > bLck->GetPos().y;
-	                  });
-	std::ranges::sort(leftObstacle,
-	                  [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
-	                  {
-		                  const auto aLck = a.lock();
-		                  if (!aLck)
-		                  {
-			                  return false;
-		                  }
-		                  const auto bLck = b.lock();
-		                  if (!bLck)
-		                  {
-			                  return true;
-		                  }
-		                  return aLck->GetPos().x > bLck->GetPos().x;
-	                  });
-	std::ranges::sort(downObstacle,
-	                  [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
-	                  {
-		                  const auto aLck = a.lock();
-		                  if (!aLck)
-		                  {
-			                  return false;
-		                  }
-		                  const auto bLck = b.lock();
-		                  if (!bLck)
-		                  {
-			                  return true;
-		                  }
-		                  return aLck->GetPos().y < bLck->GetPos().y;
-	                  });
-	std::ranges::sort(rightObstacle,
-	                  [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
-	                  {
-		                  const auto aLck = a.lock();
-		                  if (!aLck)
-		                  {
-			                  return false;
-		                  }
-		                  const auto bLck = b.lock();
-		                  if (!bLck)
-		                  {
-			                  return true;
-		                  }
-		                  return aLck->GetPos().x < bLck->GetPos().x;
-	                  });
+	std::ranges::sort(upSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	{
+		const auto aLck = a.lock();
+		if (!aLck)
+		{
+			return false;
+		}
+		const auto bLck = b.lock();
+		if (!bLck)
+		{
+			return true;
+		}
+		return aLck->GetPos().y > bLck->GetPos().y;
+	});
+	std::ranges::sort(leftSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	{
+		const auto aLck = a.lock();
+		if (!aLck)
+		{
+			return false;
+		}
+		const auto bLck = b.lock();
+		if (!bLck)
+		{
+			return true;
+		}
+		return aLck->GetPos().x > bLck->GetPos().x;
+	});
+	std::ranges::sort(downSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	{
+		const auto aLck = a.lock();
+		if (!aLck)
+		{
+			return false;
+		}
+		const auto bLck = b.lock();
+		if (!bLck)
+		{
+			return true;
+		}
+		return aLck->GetPos().y < bLck->GetPos().y;
+	});
+	std::ranges::sort(rightSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	{
+		const auto aLck = a.lock();
+		if (!aLck)
+		{
+			return false;
+		}
+		const auto bLck = b.lock();
+		if (!bLck)
+		{
+			return true;
+		}
+		return aLck->GetPos().x < bLck->GetPos().x;
+	});
 
 	// priority fire on players
-	if (IsPlayerVisible(upObstacle, UP))
+	if (IsPlayerVisible(upSideObstacles, UP))
 	{
 		_moveBeh->SetDirection(UP);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(leftObstacle, LEFT))
+	if (IsPlayerVisible(leftSideObstacles, LEFT))
 	{
 		_moveBeh->SetDirection(LEFT);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(downObstacle, DOWN))
+	if (IsPlayerVisible(downSideObstacles, DOWN))
 	{
 		_moveBeh->SetDirection(DOWN);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(rightObstacle, RIGHT))
+	if (IsPlayerVisible(rightSideObstacles, RIGHT))
 	{
 		_moveBeh->SetDirection(RIGHT);
 		Shot();
@@ -227,34 +223,34 @@ void Enemy::MayShoot(Direction dir)
 	float shootDistance{0.f};
 	float bulletOffset{0.f};
 	std::shared_ptr<BaseObj> nearestObstacle{nullptr};
-	if (dir == UP && !upObstacle.empty())
+	if (dir == UP && !upSideObstacles.empty())
 	{
-		nearestObstacle = upObstacle.front().lock();
+		nearestObstacle = upSideObstacles.front().lock();
 		shootDistance = GetY() - nearestObstacle->GetY();
 		bulletOffset = GetBulletHeight();
 	}
-	if (dir == LEFT && !leftObstacle.empty())
+	if (dir == LEFT && !leftSideObstacles.empty())
 	{
-		nearestObstacle = leftObstacle.front().lock();
+		nearestObstacle = leftSideObstacles.front().lock();
 		shootDistance = GetX() - nearestObstacle->GetX();
 		bulletOffset = GetBulletWidth();
 	}
-	if (dir == DOWN && !downObstacle.empty())
+	if (dir == DOWN && !downSideObstacles.empty())
 	{
-		nearestObstacle = downObstacle.front().lock();
+		nearestObstacle = downSideObstacles.front().lock();
 		shootDistance = nearestObstacle->GetY() - GetY();
 		bulletOffset = GetBulletHeight();
 	}
-	if (dir == RIGHT && !rightObstacle.empty())
+	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
-		nearestObstacle = rightObstacle.front().lock();
+		nearestObstacle = rightSideObstacles.front().lock();
 		shootDistance = nearestObstacle->GetX() - GetX();
 		bulletOffset = GetBulletWidth();
 	}
 
-	auto enemy = dynamic_cast<Enemy*>(nearestObstacle.get());
-	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible()
-	    && (!enemy || enemy->_fraction != this->_fraction))
+	if (auto enemy = dynamic_cast<Enemy*>(nearestObstacle.get());
+		nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible()
+		&& (!enemy || enemy->_fraction != this->_fraction))
 	{
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{

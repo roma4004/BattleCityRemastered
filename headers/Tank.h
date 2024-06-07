@@ -22,7 +22,7 @@ protected:
 
 	std::chrono::time_point<std::chrono::system_clock> lastTimeFire;
 
-	int fireCooldown{2};
+	int fireCooldown{1};
 
 	PlayerKeys keyboardButtons{};
 
@@ -46,5 +46,5 @@ public:
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
 
-	bool IsReloadFinish() const;
+	[[nodiscard]] bool IsReloadFinish() const;
 };

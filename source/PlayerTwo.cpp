@@ -43,16 +43,15 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 	_events->AddListener("ArrowRight_Pressed", name, [&btn = keyboardButtons]() { btn.right = true; });
 	_events->AddListener("ArrowRight_Released", name, [&btn = keyboardButtons]() { btn.right = false; });
 	_events->AddListener("RCTRL_Pressed", name, [&btn = keyboardButtons]() { btn.shot = true; });
-	_events->AddListener("RCTRL_Released", name,
-	                     [this]()
-	                     {
-		                     if (IsReloadFinish())
-		                     {
-			                     keyboardButtons.shot = false;
-			                     this->Shot();
-			                     lastTimeFire = std::chrono::system_clock::now();
-		                     }
-	                     });
+	_events->AddListener("RCTRL_Released", name, [this]()
+	{
+		if (IsReloadFinish())
+		{
+			keyboardButtons.shot = false;
+			this->Shot();
+			lastTimeFire = std::chrono::system_clock::now();
+		}
+	});
 }
 
 PlayerTwo::~PlayerTwo()

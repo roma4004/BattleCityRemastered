@@ -61,13 +61,14 @@ class GameSuccess final : public Game
 	std::random_device _rd;
 
 public:
+	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
+
 	void CreateEnemiesTank(float gridSize, float tankSpeed, int tankHealth, float tankSize);
-	void CreatePlayerTanks(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize);
+	void CreatePlayerTanks(float gridSize, float tankSpeed, int tankHealth, float tankSize);
 	void ResetBattlefield();
 	void SetGameMode(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
-	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
 
 	void ClearBuffer() const;
 
@@ -77,7 +78,7 @@ public:
 	void KeyboardEvents(const SDL_Event& event) const;
 	void textToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
-	void HandleFPS(Uint32& frameCount, Uint32 fps, Uint64& fpsPrevUpdateTime, const Uint64 newTime);
+	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32 fps, Uint64 newTime);
 
 	void MainLoop() override;
 

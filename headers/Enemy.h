@@ -17,7 +17,8 @@ class Enemy : public Tank
 
 public:
 	Enemy(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, UPoint windowSize,
-	      std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::string name, std::string fraction);
+	      std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::string name,
+	      std::string fraction);
 
 	~Enemy() override;
 	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
