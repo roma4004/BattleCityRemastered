@@ -9,7 +9,7 @@
 
 Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
              const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-             std::shared_ptr<EventSystem> events, std::string name)
+             std::shared_ptr<EventSystem> events, std::string name, std::string fraction)
 	: Tank{rect,
 	       color,
 	       health,
@@ -18,7 +18,7 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	       allPawns,
 	       std::move(events),
 	       std::make_shared<MoveLikeAIBeh>(windowSize, speed, this, allPawns)},
-	  distDirection(0, 3), distTurnRate(1, 5), _name{std::move(name)}
+	  distDirection(0, 3), distTurnRate(1, 5), _name{std::move(name)}, _fraction{std::move(fraction)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -76,7 +76,10 @@ bool Enemy::IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles
 	if (!obstacles.empty())
 	{
 		std::shared_ptr<BaseObj> isPlayerAbove = obstacles.front().lock();
-		if (dynamic_cast<PlayerOne*>(isPlayerAbove.get()) || dynamic_cast<PlayerTwo*>(isPlayerAbove.get()))
+		auto enemy = dynamic_cast<Enemy*>(isPlayerAbove.get());
+		if (dynamic_cast<PlayerOne*>(isPlayerAbove.get())
+		    || dynamic_cast<PlayerTwo*>(isPlayerAbove.get())
+		    || enemy && enemy->_fraction == "PlayerTeam")
 		{
 			return true;
 		}
@@ -249,8 +252,9 @@ void Enemy::MayShoot(Direction dir)
 		bulletOffset = GetBulletWidth();
 	}
 
-	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible() &&
-	    !dynamic_cast<Enemy*>(nearestObstacle.get()))
+	auto enemy = dynamic_cast<Enemy*>(nearestObstacle.get());
+	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible()
+	    && (!enemy || enemy->_fraction != this->_fraction))
 	{
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{

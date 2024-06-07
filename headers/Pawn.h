@@ -40,5 +40,5 @@ public:
 
 	void TickUpdate(float deltaTime) override;
 
-	PlayerKeys keyboardButtons{};
+	PlayerKeys keyboardButtons{}; // Move out from this
 };

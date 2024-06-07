@@ -102,6 +102,7 @@ add_executable(${PROJECT_NAME}
         source/Tank.cpp
         source/Water.cpp
         source/Map.cpp
+        source/Menu.cpp
         source/MoveLikeAIBeh.cpp
         source/MoveLikeBulletBeh.cpp
         source/MoveLikeTankBeh.cpp

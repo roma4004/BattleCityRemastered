@@ -9,6 +9,14 @@
 #include <SDL_ttf.h>
 #include <random>
 
+enum GameMode
+{
+	Demo,
+	OnePlayer,
+	TwoPlayers,
+	CoopAI
+};
+
 class Game
 {
 public:
@@ -27,6 +35,11 @@ public:
 class GameSuccess final : public Game
 {
 	UPoint _windowSize{0, 0};
+	GameMode currentMode{Demo};
+	bool up{false};
+	bool down{false};
+	bool reset{false};
+	bool menuShow{true};
 
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
@@ -45,6 +58,10 @@ class GameSuccess final : public Game
 	std::random_device _rd;
 
 public:
+	void ResetBattlefield();
+	void SetGameMode(GameMode gameMode);
+	void PrevGameMode();
+	void NextGameMode();
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
 
 	void ClearBuffer() const;

@@ -1,6 +1,7 @@
 #include "../headers/Game.h"
 #include "../headers/Enemy.h"
 #include "../headers/Map.h"
+#include "../headers/Menu.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
 
@@ -8,10 +9,7 @@
 #include <cmath>
 #include <iostream>
 
-GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-                         TTF_Font* fpsFont)
-	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
-	  _events{std::make_shared<EventSystem>()}
+void GameSuccess::ResetBattlefield()
 {
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	constexpr float tankSpeed = 142;
@@ -23,25 +21,103 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	Rectangle enemyTwoRect{gridSize * 32.f - tankSize * 2.f, 0, tankSize, tankSize};
 	Rectangle enemyThreeRect{gridSize * 16.f + tankSize * 2.f, 0, tankSize, tankSize};
 	Rectangle enemyFourRect{gridSize * 32.f + tankSize * 2.f, 0, tankSize, tankSize};
-	allPawns.reserve(6);
-	allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
-	                                                  _windowSize, &allPawns, _events));
-	allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
-	                                                  _windowSize, &allPawns, _events));
+	allPawns.clear();
+	allPawns.reserve(1000);
+
+	auto name = "game";
+	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopAI)
+	{
+		_events->RemoveListener("ArrowUp_Released", name);
+		_events->RemoveListener("ArrowUp_Pressed", name);
+		_events->RemoveListener("ArrowDown_Released", name);
+		_events->RemoveListener("ArrowDown_Pressed", name);
+		_events->RemoveListener("Enter_Released", name);
+		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
+		                                                  _windowSize, &allPawns, _events));
+	}
+
+	if (currentMode == TwoPlayers)
+	{
+		_events->RemoveListener("ArrowUp_Released", name);
+		_events->RemoveListener("ArrowUp_Pressed", name);
+		_events->RemoveListener("ArrowDown_Released", name);
+		_events->RemoveListener("ArrowDown_Pressed", name);
+		_events->RemoveListener("Enter_Released", name);
+		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
+		                                                  _windowSize, &allPawns, _events));
+	}
+
+	if (currentMode == Demo)
+	{
+		_events->AddListener("ArrowUp_Released", name, [this]() { up = true; });
+		_events->AddListener("ArrowUp_Pressed", name, [this]() { up = false; });
+		_events->AddListener("ArrowDown_Released", name, [this]() { down = true; });
+		_events->AddListener("ArrowDown_Pressed", name, [this]() { down = false; });
+		_events->AddListener("Enter_Released", name, [this]() { reset = true; });
+		_events->AddListener("Menu_Released", name, [this, name]()
+		{
+			menuShow = !menuShow;
+			_events->AddListener("ArrowUp_Released", name, [this]() { up = true; });
+			_events->AddListener("ArrowUp_Pressed", name, [this]() { up = false; });
+			_events->AddListener("ArrowDown_Released", name, [this]() { down = true; });
+			_events->AddListener("ArrowDown_Pressed", name, [this]() { down = false; });
+			_events->AddListener("Enter_Released", name, [this]() { reset = true; });
+		});
+
+		allPawns.emplace_back(std::make_shared<Enemy>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
+		                                              _windowSize, &allPawns, _events, "PlayerOne", "PlayerTeam"));
+		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
+		                                              _windowSize, &allPawns, _events, "PlayerTwo", "PlayerTeam"));
+	}
+
+	if (currentMode == CoopAI)
+	{
+		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
+		                                              _windowSize, &allPawns, _events, "PlayerTwo", "PlayerTeam"));
+	}
+
 	allPawns.emplace_back(std::make_shared<Enemy>(enemyOneRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyOne"));
+	                                              _windowSize, &allPawns, _events, "EnemyOne", "EnemyTeam"));
 	allPawns.emplace_back(std::make_shared<Enemy>(enemyTwoRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyTwo"));
+	                                              _windowSize, &allPawns, _events, "EnemyTwo", "EnemyTeam"));
 	allPawns.emplace_back(std::make_shared<Enemy>(enemyThreeRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyThree"));
+	                                              _windowSize, &allPawns, _events, "EnemyThree", "EnemyTeam"));
 	allPawns.emplace_back(std::make_shared<Enemy>(enemyFourRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyFour"));
+	                                              _windowSize, &allPawns, _events, "EnemyFour", "EnemyTeam"));
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
 	//Map::ObstacleCreation<Iron>(&env, 310,310);
 	const Map field{};
 	field.MapCreation(&allPawns, gridSize, _windowBuffer, _windowSize, _events);
+}
+
+void GameSuccess::SetGameMode(GameMode gameMode) { currentMode = gameMode; }
+
+void GameSuccess::PrevGameMode()
+{
+	if (currentMode == Demo) { currentMode = CoopAI; }
+	else if (currentMode == OnePlayer) { currentMode = CoopAI; }
+	else if (currentMode == TwoPlayers) { currentMode = OnePlayer; }
+	else
+		if (currentMode == CoopAI) { currentMode = TwoPlayers; }
+}
+
+void GameSuccess::NextGameMode()
+{
+	if (currentMode == Demo) { currentMode = OnePlayer; }
+	else if (currentMode == OnePlayer) { currentMode = TwoPlayers; }
+	else if (currentMode == TwoPlayers) { currentMode = CoopAI; }
+	else
+		if (currentMode == CoopAI) { currentMode = OnePlayer; }
+}
+
+GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
+                         TTF_Font* fpsFont)
+	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
+	  _events{std::make_shared<EventSystem>()}
+{
+	ResetBattlefield();
 }
 
 void GameSuccess::ClearBuffer() const
@@ -118,6 +194,12 @@ void GameSuccess::KeyPressed(const SDL_Event& event) const
 		case SDLK_RCTRL:
 			_events->EmitEvent("RCTRL_Pressed");
 			break;
+		case SDLK_RETURN:
+			_events->EmitEvent("Enter_Pressed");
+			break;
+		case SDLK_m:
+			_events->EmitEvent("Menu_Pressed");
+			break;
 		default:
 			break;
 	}
@@ -157,6 +239,12 @@ void GameSuccess::KeyReleased(const SDL_Event& event) const
 		case SDLK_RCTRL:
 			_events->EmitEvent("RCTRL_Released");
 			break;
+		case SDLK_RETURN:
+			_events->EmitEvent("Enter_Released");
+			break;
+		case SDLK_m:
+			_events->EmitEvent("Menu_Released");
+			break;
 		default:
 			break;
 	}
@@ -187,6 +275,7 @@ void GameSuccess::MainLoop()
 	const SDL_Rect fpsRectangle{
 			/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
 
+	Menu menu{_windowSize, _windowBuffer};
 	while (!isGameOver)
 	{
 		// Cap to 60 FPS
@@ -237,9 +326,72 @@ void GameSuccess::MainLoop()
 			frameCount = 0;
 		}
 
+		if (menuShow)
+		{
+			menu.BlendToWindowBuffer();
+		}
+
 		// update screen with buffer
 		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
+
+		if (menuShow)
+		{
+			if (up)
+			{
+				PrevGameMode();
+				up = false;
+			}
+			else if (down)
+			{
+				NextGameMode();
+				down = false;
+			}
+			else if (reset)
+			{
+				ResetBattlefield();
+				reset = false;
+				menuShow = false;
+			}
+
+			//menu text
+			Point menuPoint = {static_cast<int>(menu._pos.x - 350), static_cast<int>(menu._pos.y - 350)};
+			SDL_Color menuColor = {0xff, 0xff, 0xff, 0xff};
+
+			std::string rowZero = "BATTLE CITY REMASTERED";
+			SDL_Surface* rowZeroMenuSurface = TTF_RenderText_Solid(_fpsFont, rowZero.c_str(), menuColor);
+			SDL_Texture* rowZeroMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowZeroMenuSurface);
+			const SDL_Rect rowZeroTextRect{menuPoint.x - 70, menuPoint.y - 100, rowZeroMenuSurface->w,
+			                               rowZeroMenuSurface->h};
+			SDL_RenderCopy(_renderer, rowZeroMenuTexture, nullptr, &rowZeroTextRect);
+			SDL_FreeSurface(rowZeroMenuSurface);
+			SDL_DestroyTexture(rowZeroMenuTexture);
+
+			std::string rowOne = currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER";
+			SDL_Surface* rowOneMenuSurface = TTF_RenderText_Solid(_fpsFont, rowOne.c_str(), menuColor);
+			SDL_Texture* rowOneMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowOneMenuSurface);
+			const SDL_Rect rowOneTextRect{menuPoint.x, menuPoint.y, rowOneMenuSurface->w, rowOneMenuSurface->h};
+			SDL_RenderCopy(_renderer, rowOneMenuTexture, nullptr, &rowOneTextRect);
+			SDL_FreeSurface(rowOneMenuSurface);
+			SDL_DestroyTexture(rowOneMenuTexture);
+
+			std::string rowTwo = currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER";
+			SDL_Surface* rowTwoMenuSurface = TTF_RenderText_Solid(_fpsFont, rowTwo.c_str(), menuColor);
+			SDL_Texture* rowTwoMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowTwoMenuSurface);
+			const SDL_Rect rowTwoTextRect{menuPoint.x, menuPoint.y + 50, rowTwoMenuSurface->w, rowTwoMenuSurface->h};
+			SDL_RenderCopy(_renderer, rowTwoMenuTexture, nullptr, &rowTwoTextRect);
+			SDL_FreeSurface(rowTwoMenuSurface);
+			SDL_DestroyTexture(rowTwoMenuTexture);
+
+			std::string rowThree = currentMode == CoopAI ? ">COOP AI" : "COOP AI";
+			SDL_Surface* rowThreeMenuSurface = TTF_RenderText_Solid(_fpsFont, rowThree.c_str(), menuColor);
+			SDL_Texture* rowThreeMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowThreeMenuSurface);
+			const SDL_Rect rowThreeTextRect{menuPoint.x, menuPoint.y + 100, rowThreeMenuSurface->w,
+			                                rowThreeMenuSurface->h};
+			SDL_RenderCopy(_renderer, rowThreeMenuTexture, nullptr, &rowThreeTextRect);
+			SDL_FreeSurface(rowThreeMenuSurface);
+			SDL_DestroyTexture(rowThreeMenuTexture);
+		}
 
 		// Copy the texture with FPS to the renderer
 		SDL_RenderCopy(_renderer, _fpsTexture, nullptr, &fpsRectangle);

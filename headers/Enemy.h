@@ -13,10 +13,11 @@ class Enemy : public Tank
 	std::chrono::time_point<std::chrono::system_clock> lastTimeTurn;
 	int turnDuration{2};
 	std::string _name;
+	std::string _fraction;
 
 public:
 	Enemy(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, UPoint windowSize,
-	      std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::string name);
+	      std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::string name, std::string fraction);
 
 	~Enemy() override;
 	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);

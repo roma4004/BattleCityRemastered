@@ -142,6 +142,7 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
+    <ClCompile Include="source\Menu.cpp" />
     <ClCompile Include="source\MoveLikeAIBeh.cpp" />
     <ClCompile Include="source\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\MoveLikeTankBeh.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\ITickUpdatable.h" />
     <ClInclude Include="headers\Tank.h" />
+    <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\MoveBeh.h" />
     <ClInclude Include="headers\MoveLikeAIBeh.h" />
