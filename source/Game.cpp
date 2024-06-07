@@ -96,20 +96,24 @@ void GameSuccess::SetGameMode(GameMode gameMode) { currentMode = gameMode; }
 
 void GameSuccess::PrevGameMode()
 {
-	if (currentMode == Demo) { currentMode = CoopAI; }
-	else if (currentMode == OnePlayer) { currentMode = CoopAI; }
-	else if (currentMode == TwoPlayers) { currentMode = OnePlayer; }
-	else
-		if (currentMode == CoopAI) { currentMode = TwoPlayers; }
+	int mode = currentMode;
+	--mode;
+
+	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
+	constexpr int minMode = 1;
+	const int newMode = mode < minMode ? maxMode : mode;
+	currentMode = static_cast<GameMode>(newMode);
 }
 
 void GameSuccess::NextGameMode()
 {
-	if (currentMode == Demo) { currentMode = OnePlayer; }
-	else if (currentMode == OnePlayer) { currentMode = TwoPlayers; }
-	else if (currentMode == TwoPlayers) { currentMode = CoopAI; }
-	else
-		if (currentMode == CoopAI) { currentMode = OnePlayer; }
+	int mode = currentMode;
+	++mode;
+
+	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
+	constexpr int minMode = 1;
+	const int newMode = mode > maxMode ? minMode : mode;
+	currentMode = static_cast<GameMode>(newMode);
 }
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
@@ -262,6 +266,49 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
+void GameSuccess::textToRender(SDL_Renderer* renderer, Point menuPos, SDL_Color menuColor, const std::string& rowZero) const
+{
+	SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont, rowZero.c_str(), menuColor);
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
+	const SDL_Rect rowZeroTextRect{menuPos.x, menuPos.y, surface->w, surface->h};
+	SDL_RenderCopy(renderer, texture, nullptr, &rowZeroTextRect);
+	SDL_FreeSurface(surface);
+	SDL_DestroyTexture(texture);
+}
+
+void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
+{
+	if (up)
+	{
+		PrevGameMode();
+		up = false;
+	}
+	else if (down)
+	{
+		NextGameMode();
+		down = false;
+	}
+	else if (reset)
+	{
+		ResetBattlefield();
+		reset = false;
+		menuShow = false;
+	}
+
+	//menu text
+	Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
+	SDL_Color сolor = {0xff, 0xff, 0xff, 0xff};
+
+	textToRender(renderer, {pos.x - 70, pos.y - 100}, сolor, "BATTLE CITY REMASTERED");
+
+	textToRender(renderer, pos, сolor, currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+
+	textToRender(renderer, {pos.x, pos.y + 50}, сolor, currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+
+	textToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopAI ? ">COOP AI" : "COOP AI");
+
+}
+
 void GameSuccess::MainLoop()
 {
 	constexpr SDL_Color fpsColor{140, 0, 255, 0};
@@ -337,60 +384,7 @@ void GameSuccess::MainLoop()
 
 		if (menuShow)
 		{
-			if (up)
-			{
-				PrevGameMode();
-				up = false;
-			}
-			else if (down)
-			{
-				NextGameMode();
-				down = false;
-			}
-			else if (reset)
-			{
-				ResetBattlefield();
-				reset = false;
-				menuShow = false;
-			}
-
-			//menu text
-			Point menuPoint = {static_cast<int>(menu._pos.x - 350), static_cast<int>(menu._pos.y - 350)};
-			SDL_Color menuColor = {0xff, 0xff, 0xff, 0xff};
-
-			std::string rowZero = "BATTLE CITY REMASTERED";
-			SDL_Surface* rowZeroMenuSurface = TTF_RenderText_Solid(_fpsFont, rowZero.c_str(), menuColor);
-			SDL_Texture* rowZeroMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowZeroMenuSurface);
-			const SDL_Rect rowZeroTextRect{menuPoint.x - 70, menuPoint.y - 100, rowZeroMenuSurface->w,
-			                               rowZeroMenuSurface->h};
-			SDL_RenderCopy(_renderer, rowZeroMenuTexture, nullptr, &rowZeroTextRect);
-			SDL_FreeSurface(rowZeroMenuSurface);
-			SDL_DestroyTexture(rowZeroMenuTexture);
-
-			std::string rowOne = currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER";
-			SDL_Surface* rowOneMenuSurface = TTF_RenderText_Solid(_fpsFont, rowOne.c_str(), menuColor);
-			SDL_Texture* rowOneMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowOneMenuSurface);
-			const SDL_Rect rowOneTextRect{menuPoint.x, menuPoint.y, rowOneMenuSurface->w, rowOneMenuSurface->h};
-			SDL_RenderCopy(_renderer, rowOneMenuTexture, nullptr, &rowOneTextRect);
-			SDL_FreeSurface(rowOneMenuSurface);
-			SDL_DestroyTexture(rowOneMenuTexture);
-
-			std::string rowTwo = currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER";
-			SDL_Surface* rowTwoMenuSurface = TTF_RenderText_Solid(_fpsFont, rowTwo.c_str(), menuColor);
-			SDL_Texture* rowTwoMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowTwoMenuSurface);
-			const SDL_Rect rowTwoTextRect{menuPoint.x, menuPoint.y + 50, rowTwoMenuSurface->w, rowTwoMenuSurface->h};
-			SDL_RenderCopy(_renderer, rowTwoMenuTexture, nullptr, &rowTwoTextRect);
-			SDL_FreeSurface(rowTwoMenuSurface);
-			SDL_DestroyTexture(rowTwoMenuTexture);
-
-			std::string rowThree = currentMode == CoopAI ? ">COOP AI" : "COOP AI";
-			SDL_Surface* rowThreeMenuSurface = TTF_RenderText_Solid(_fpsFont, rowThree.c_str(), menuColor);
-			SDL_Texture* rowThreeMenuTexture = SDL_CreateTextureFromSurface(_renderer, rowThreeMenuSurface);
-			const SDL_Rect rowThreeTextRect{menuPoint.x, menuPoint.y + 100, rowThreeMenuSurface->w,
-			                                rowThreeMenuSurface->h};
-			SDL_RenderCopy(_renderer, rowThreeMenuTexture, nullptr, &rowThreeTextRect);
-			SDL_FreeSurface(rowThreeMenuSurface);
-			SDL_DestroyTexture(rowThreeMenuTexture);
+			HandleMenuText(_renderer, menu._pos);
 		}
 
 		// Copy the texture with FPS to the renderer

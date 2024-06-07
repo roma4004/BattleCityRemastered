@@ -12,9 +12,12 @@
 enum GameMode
 {
 	Demo,
+
 	OnePlayer,
 	TwoPlayers,
-	CoopAI
+	CoopAI,
+
+	EndIterator // should be the last one
 };
 
 class Game
@@ -70,6 +73,8 @@ public:
 	void KeyPressed(const SDL_Event& event) const;
 	void KeyReleased(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
+	void textToRender(SDL_Renderer* renderer, Point menuPos, SDL_Color menuColor, const std::string& rowZero) const;
+	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
 
 	void MainLoop() override;
 
