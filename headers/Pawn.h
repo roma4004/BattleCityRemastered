@@ -3,7 +3,6 @@
 #include "BaseObj.h"
 #include "IMovable.h"
 #include "MoveBeh.h"
-#include "PlayerKeys.h"
 #include "Point.h"
 #include "Rectangle.h"
 
@@ -34,11 +33,7 @@ public:
 
 	void SetPixel(size_t x, size_t y, int color) const;
 
-	void Move(float deltaTime) override;
-
 	void Draw() const override;
 
 	void TickUpdate(float deltaTime) override;
-
-	PlayerKeys keyboardButtons{}; // Move out from this
 };

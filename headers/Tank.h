@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Pawn.h"
+#include "PlayerKeys.h"
 
 #include <chrono>
 
@@ -23,12 +24,16 @@ protected:
 
 	int fireCooldown{2};
 
+	PlayerKeys keyboardButtons{};
+
 public:
 	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
 	     std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
 	     std::shared_ptr<MoveBeh> moveBeh);
 
 	~Tank() override = default;
+
+	void Move(float deltaTime) override;
 
 	void Shot();
 

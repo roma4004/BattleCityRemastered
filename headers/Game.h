@@ -17,7 +17,7 @@ enum GameMode
 	TwoPlayers,
 	CoopAI,
 
-	EndIterator // should be the last one
+	EndIterator// should be the last one
 };
 
 class Game
@@ -61,6 +61,8 @@ class GameSuccess final : public Game
 	std::random_device _rd;
 
 public:
+	void CreateEnemiesTank(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	void CreatePlayerTanks(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize);
 	void ResetBattlefield();
 	void SetGameMode(GameMode gameMode);
 	void PrevGameMode();
@@ -75,6 +77,7 @@ public:
 	void KeyboardEvents(const SDL_Event& event) const;
 	void textToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
+	void HandleFPS(Uint32& frameCount, Uint32 fps, Uint64& fpsPrevUpdateTime, const Uint64 newTime);
 
 	void MainLoop() override;
 

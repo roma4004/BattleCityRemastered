@@ -143,7 +143,9 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 
 void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 {
-	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < static_cast<float>(_windowSize.x))
+	constexpr int sideBarWidth = 175;
+	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
+	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < maxX)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
