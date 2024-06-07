@@ -15,16 +15,14 @@ void GameSuccess::ResetBattlefield()
 	constexpr float tankSpeed = 142;
 	constexpr int tankHealth = 100;
 	const float tankSize = gridSize * 3;// for better turns
-	Rectangle playerOneRect{gridSize * 16.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
-	Rectangle playerTwoRect{gridSize * 32.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
-	Rectangle enemyOneRect{gridSize * 16.f - tankSize * 2.f, 0, tankSize, tankSize};
-	Rectangle enemyTwoRect{gridSize * 32.f - tankSize * 2.f, 0, tankSize, tankSize};
-	Rectangle enemyThreeRect{gridSize * 16.f + tankSize * 2.f, 0, tankSize, tankSize};
-	Rectangle enemyFourRect{gridSize * 32.f + tankSize * 2.f, 0, tankSize, tankSize};
+	const Rectangle playerOneRect{gridSize * 16.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
+	const Rectangle playerTwoRect{gridSize * 32.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
+
 	allPawns.clear();
 	allPawns.reserve(1000);
 
 	auto name = "game";
+	constexpr int yellow = 0xeaea00;
 	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopAI)
 	{
 		_events->RemoveListener("ArrowUp_Released", name);
@@ -32,10 +30,11 @@ void GameSuccess::ResetBattlefield()
 		_events->RemoveListener("ArrowDown_Released", name);
 		_events->RemoveListener("ArrowDown_Pressed", name);
 		_events->RemoveListener("Enter_Released", name);
-		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
+		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, tankSpeed, tankHealth, _windowBuffer,
 		                                                  _windowSize, &allPawns, _events));
 	}
 
+	constexpr int green = 0x408000;
 	if (currentMode == TwoPlayers)
 	{
 		_events->RemoveListener("ArrowUp_Released", name);
@@ -43,7 +42,7 @@ void GameSuccess::ResetBattlefield()
 		_events->RemoveListener("ArrowDown_Released", name);
 		_events->RemoveListener("ArrowDown_Pressed", name);
 		_events->RemoveListener("Enter_Released", name);
-		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
+		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
 		                                                  _windowSize, &allPawns, _events));
 	}
 
@@ -64,25 +63,33 @@ void GameSuccess::ResetBattlefield()
 			_events->AddListener("Enter_Released", name, [this]() { reset = true; });
 		});
 
-		allPawns.emplace_back(std::make_shared<Enemy>(playerOneRect, 0xeaea00, tankSpeed, tankHealth, _windowBuffer,
+		allPawns.emplace_back(std::make_shared<Enemy>(playerOneRect, yellow, tankSpeed, tankHealth, _windowBuffer,
 		                                              _windowSize, &allPawns, _events, "PlayerOne", "PlayerTeam"));
-		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
+		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
 		                                              _windowSize, &allPawns, _events, "PlayerTwo", "PlayerTeam"));
 	}
 
 	if (currentMode == CoopAI)
 	{
-		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, 0x408000, tankSpeed, tankHealth, _windowBuffer,
+		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
 		                                              _windowSize, &allPawns, _events, "PlayerTwo", "PlayerTeam"));
 	}
 
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyOneRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+	const Rectangle enemyOneRect{gridSize * 16.f - tankSize * 2.f, 0, tankSize, tankSize};
+	constexpr int gray = 0x808080;
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyOneRect, gray, tankSpeed, tankHealth, _windowBuffer,
 	                                              _windowSize, &allPawns, _events, "EnemyOne", "EnemyTeam"));
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyTwoRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+
+	const Rectangle enemyTwoRect{gridSize * 32.f - tankSize * 2.f, 0, tankSize, tankSize};
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyTwoRect, gray, tankSpeed, tankHealth, _windowBuffer,
 	                                              _windowSize, &allPawns, _events, "EnemyTwo", "EnemyTeam"));
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyThreeRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+
+	const Rectangle enemyThreeRect{gridSize * 16.f + tankSize * 2.f, 0, tankSize, tankSize};
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyThreeRect, gray, tankSpeed, tankHealth, _windowBuffer,
 	                                              _windowSize, &allPawns, _events, "EnemyThree", "EnemyTeam"));
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyFourRect, 0x808080, tankSpeed, tankHealth, _windowBuffer,
+
+	const Rectangle enemyFourRect{gridSize * 32.f + tankSize * 2.f, 0, tankSize, tankSize};
+	allPawns.emplace_back(std::make_shared<Enemy>(enemyFourRect, gray, tankSpeed, tankHealth, _windowBuffer,
 	                                              _windowSize, &allPawns, _events, "EnemyFour", "EnemyTeam"));
 
 	//Map creation
@@ -266,12 +273,14 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
-void GameSuccess::textToRender(SDL_Renderer* renderer, Point menuPos, SDL_Color menuColor, const std::string& rowZero) const
+void GameSuccess::textToRender(SDL_Renderer* renderer, Point pos, const SDL_Color color, const std::string& text) const
 {
-	SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont, rowZero.c_str(), menuColor);
+	SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
-	const SDL_Rect rowZeroTextRect{menuPos.x, menuPos.y, surface->w, surface->h};
-	SDL_RenderCopy(renderer, texture, nullptr, &rowZeroTextRect);
+
+	const SDL_Rect textRect{pos.x, pos.y, surface->w, surface->h};
+	SDL_RenderCopy(renderer, texture, nullptr, &textRect);
+
 	SDL_FreeSurface(surface);
 	SDL_DestroyTexture(texture);
 }
@@ -306,7 +315,6 @@ void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgr
 	textToRender(renderer, {pos.x, pos.y + 50}, сolor, currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
 
 	textToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopAI ? ">COOP AI" : "COOP AI");
-
 }
 
 void GameSuccess::MainLoop()
