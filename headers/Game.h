@@ -15,7 +15,7 @@ enum GameMode
 
 	OnePlayer,
 	TwoPlayers,
-	CoopAI,
+	CoopWithAI,
 
 	EndIterator// should be the last one
 };
@@ -41,6 +41,11 @@ struct GameStats
 	int enemyResurrectionCount{20};
 	int playerOneResurrectionCount{3};
 	int playerTwoResurrectionCount{3};
+	int enemyNeedRespawn{0};
+	bool playerOneNeedRespawn{false};
+	bool playerTwoNeedRespawn{false};
+	bool coopOneAINeedRespawn{false};
+	bool coopTwoAINeedRespawn{false};
 };
 
 struct MenuKeys
@@ -55,7 +60,7 @@ class GameSuccess final : public Game
 {
 	UPoint _windowSize{0, 0};
 	GameMode currentMode{Demo};
-	GameStats statitsics;
+	GameStats statistics;
 	MenuKeys menuKeys;
 	std::string name = "game";
 
@@ -78,6 +83,7 @@ class GameSuccess final : public Game
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
 	~GameSuccess() override;
+
 	void CreateEnemiesTanks(float gridSize, float tankSpeed, int tankHealth, float tankSize);
 	void ToggleMenu();
 	void CreatePlayerTanks(float gridSize, float tankSpeed, int tankHealth, float tankSize);
@@ -95,6 +101,13 @@ public:
 	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32 fps, Uint64 newTime);
+	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
+	void SpawnEnemy(float gridSize, float tankSpeed, int tankHealth, float tankSize, int gray);
+	void SpawnP1(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize);
+	void SpawnP2(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	void SpawnCoop1(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	void SpawnCoop2(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	void RespawnTanks();
 
 	void MainLoop() override;
 

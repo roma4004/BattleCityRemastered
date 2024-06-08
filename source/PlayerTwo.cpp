@@ -52,6 +52,8 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 			lastTimeFire = std::chrono::system_clock::now();
 		}
 	});
+
+	_events->EmitEvent("Statistics_P2_Respawn");
 }
 
 PlayerTwo::~PlayerTwo()
@@ -78,4 +80,6 @@ PlayerTwo::~PlayerTwo()
 	_events->RemoveListener("ArrowRight_Released", name);
 	_events->RemoveListener("RCTRL_Pressed", name);
 	_events->RemoveListener("RCTRL_Released", name);
+
+	_events->EmitEvent("Statistics_P2_Died");
 }

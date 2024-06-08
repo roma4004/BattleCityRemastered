@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="source\Brick.cpp" />
     <ClCompile Include="source\Bullet.cpp" />
+    <ClCompile Include="source\CoopAI.cpp" />
     <ClCompile Include="source\Enemy.cpp" />
     <ClCompile Include="source\Game.cpp" />
     <ClCompile Include="source\ConfigFailure.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="headers\Bullet.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\BaseObj.h" />
+    <ClInclude Include="headers\CoopAI.h" />
     <ClInclude Include="headers\Direction.h" />
     <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\EventSystem.h" />

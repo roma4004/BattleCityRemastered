@@ -51,6 +51,8 @@ PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, 
 			lastTimeFire = std::chrono::system_clock::now();
 		}
 	});
+
+	_events->EmitEvent("Statistics_P1_Respawn");
 }
 
 PlayerOne::~PlayerOne()
@@ -77,4 +79,6 @@ PlayerOne::~PlayerOne()
 	_events->RemoveListener("D_Released", name);
 	_events->RemoveListener("Space_Pressed", name);
 	_events->RemoveListener("Space_Released", name);
+
+	_events->EmitEvent("Statistics_P1_Died");
 }
