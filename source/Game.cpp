@@ -15,10 +15,17 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	  _events{std::make_shared<EventSystem>()}
 {
 	ResetBattlefield();
+
+	_events->AddListener("Menu_Released", name, [this]() { ToggleMenu(); });
 }
 
-void GameSuccess::CreateEnemiesTank(const float gridSize, const float tankSpeed, const int tankHealth,
-                                    const float tankSize)
+GameSuccess::~GameSuccess()
+{
+	_events->RemoveListener("Menu_Released", name);
+}
+
+void GameSuccess::CreateEnemiesTanks(const float gridSize, const float tankSpeed, const int tankHealth,
+                                     const float tankSize)
 {
 	const Rectangle enemyOneRect{gridSize * 16.f - tankSize * 2.f, 0, tankSize, tankSize};
 	constexpr int gray = 0x808080;
@@ -38,24 +45,41 @@ void GameSuccess::CreateEnemiesTank(const float gridSize, const float tankSpeed,
 	                                              _windowSize, &allPawns, _events, "EnemyFour", "EnemyTeam"));
 }
 
-void GameSuccess::CreatePlayerTanks(const float gridSize, const float tankSpeed, const int tankHealth,
-                                    const float tankSize)
+void GameSuccess::ToggleMenu()
 {
-	const Rectangle playerOneRect{gridSize * 16.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
-	const Rectangle playerTwoRect{gridSize * 32.f, static_cast<float>(_windowSize.y) - tankSize, tankSize, tankSize};
-
-	allPawns.clear();
-	allPawns.reserve(1000);
-
-	auto name = "game";
-	constexpr int yellow = 0xeaea00;
-	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopAI)
+	menuKeys.menuShow = !menuKeys.menuShow;
+	if (menuKeys.menuShow)
+	{
+		_events->AddListener("ArrowUp_Released", name, [&btn = menuKeys]() { btn.up = true; });
+		_events->AddListener("ArrowUp_Pressed", name, [&btn = menuKeys]() { btn.up = false; });
+		_events->AddListener("ArrowDown_Released", name, [&btn = menuKeys]() { btn.down = true; });
+		_events->AddListener("ArrowDown_Pressed", name, [&btn = menuKeys]() { btn.down = false; });
+		_events->AddListener("Enter_Released", name, [&btn = menuKeys]() { btn.reset = true; });
+	}
+	else
 	{
 		_events->RemoveListener("ArrowUp_Released", name);
 		_events->RemoveListener("ArrowUp_Pressed", name);
 		_events->RemoveListener("ArrowDown_Released", name);
 		_events->RemoveListener("ArrowDown_Pressed", name);
 		_events->RemoveListener("Enter_Released", name);
+	}
+}
+
+void GameSuccess::CreatePlayerTanks(const float gridSize, const float tankSpeed, const int tankHealth,
+                                    const float tankSize)
+{
+	const float windowSizeY = static_cast<float>(_windowSize.y);
+	const Rectangle playerOneRect{gridSize * 16.f, windowSizeY - tankSize, tankSize, tankSize};
+	const Rectangle playerTwoRect{gridSize * 32.f, windowSizeY - tankSize, tankSize, tankSize};
+
+	allPawns.clear();
+	allPawns.reserve(1000);
+
+	ToggleMenu();
+	constexpr int yellow = 0xeaea00;
+	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopAI)
+	{
 		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, tankSpeed, tankHealth, _windowBuffer,
 		                                                  _windowSize, &allPawns, _events));
 	}
@@ -63,32 +87,12 @@ void GameSuccess::CreatePlayerTanks(const float gridSize, const float tankSpeed,
 	constexpr int green = 0x408000;
 	if (currentMode == TwoPlayers)
 	{
-		_events->RemoveListener("ArrowUp_Released", name);
-		_events->RemoveListener("ArrowUp_Pressed", name);
-		_events->RemoveListener("ArrowDown_Released", name);
-		_events->RemoveListener("ArrowDown_Pressed", name);
-		_events->RemoveListener("Enter_Released", name);
 		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
 		                                                  _windowSize, &allPawns, _events));
 	}
 
 	if (currentMode == Demo)
 	{
-		_events->AddListener("ArrowUp_Released", name, [this]() { up = true; });
-		_events->AddListener("ArrowUp_Pressed", name, [this]() { up = false; });
-		_events->AddListener("ArrowDown_Released", name, [this]() { down = true; });
-		_events->AddListener("ArrowDown_Pressed", name, [this]() { down = false; });
-		_events->AddListener("Enter_Released", name, [this]() { reset = true; });
-		_events->AddListener("Menu_Released", name, [this, name]()
-		{
-			menuShow = !menuShow;
-			_events->AddListener("ArrowUp_Released", name, [this]() { up = true; });
-			_events->AddListener("ArrowUp_Pressed", name, [this]() { up = false; });
-			_events->AddListener("ArrowDown_Released", name, [this]() { down = true; });
-			_events->AddListener("ArrowDown_Pressed", name, [this]() { down = false; });
-			_events->AddListener("Enter_Released", name, [this]() { reset = true; });
-		});
-
 		allPawns.emplace_back(std::make_shared<Enemy>(playerOneRect, yellow, tankSpeed, tankHealth, _windowBuffer,
 		                                              _windowSize, &allPawns, _events, "PlayerOne", "PlayerTeam"));
 		allPawns.emplace_back(std::make_shared<Enemy>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
@@ -111,7 +115,7 @@ void GameSuccess::ResetBattlefield()
 
 	CreatePlayerTanks(gridSize, tankSpeed, tankHealth, tankSize);
 
-	CreateEnemiesTank(gridSize, tankSpeed, tankHealth, tankSize);
+	CreateEnemiesTanks(gridSize, tankSpeed, tankHealth, tankSize);
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
@@ -286,7 +290,7 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
-void GameSuccess::textToRender(SDL_Renderer* renderer, Point pos, const SDL_Color color, const std::string& text) const
+void GameSuccess::TextToRender(SDL_Renderer* renderer, Point pos, const SDL_Color color, const std::string& text) const
 {
 	SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
@@ -300,34 +304,34 @@ void GameSuccess::textToRender(SDL_Renderer* renderer, Point pos, const SDL_Colo
 
 void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
 {
-	if (up)
+	if (menuKeys.up)
 	{
 		PrevGameMode();
-		up = false;
+		menuKeys.up = false;
 	}
-	else if (down)
+	else if (menuKeys.down)
 	{
 		NextGameMode();
-		down = false;
+		menuKeys.down = false;
 	}
-	else if (reset)
+	else if (menuKeys.reset)
 	{
 		ResetBattlefield();
-		reset = false;
-		menuShow = false;
+		menuKeys.reset = false;
+		menuKeys.menuShow = false;
 	}
 
 	//menu text
 	Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
 	SDL_Color сolor = {0xff, 0xff, 0xff, 0xff};
 
-	textToRender(renderer, {pos.x - 70, pos.y - 100}, сolor, "BATTLE CITY REMASTERED");
+	TextToRender(renderer, {pos.x - 70, pos.y - 100}, сolor, "BATTLE CITY REMASTERED");
 
-	textToRender(renderer, pos, сolor, currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	TextToRender(renderer, pos, сolor, currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
 
-	textToRender(renderer, {pos.x, pos.y + 50}, сolor, currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	TextToRender(renderer, {pos.x, pos.y + 50}, сolor, currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
 
-	textToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopAI ? ">COOP AI" : "COOP AI");
+	TextToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopAI ? ">COOP AI" : "COOP AI");
 }
 
 void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32 fps, const Uint64 newTime)
@@ -398,7 +402,7 @@ void GameSuccess::MainLoop()
 		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
 		HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
 
-		if (menuShow)
+		if (menuKeys.menuShow)
 		{
 			menu.BlendToWindowBuffer();
 		}
@@ -407,7 +411,7 @@ void GameSuccess::MainLoop()
 		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
 
-		if (menuShow)
+		if (menuKeys.menuShow)
 		{
 			HandleMenuText(_renderer, menu._pos);
 		}

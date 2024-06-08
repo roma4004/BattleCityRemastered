@@ -35,14 +35,29 @@ public:
 	Game& operator=(Game&& other) noexcept = delete;
 };
 
+struct GameStats
+{
+	// TODO: use std::atomic when multithreading is used
+	int enemyResurrectionCount{20};
+	int playerOneResurrectionCount{3};
+	int playerTwoResurrectionCount{3};
+};
+
+struct MenuKeys
+{
+	bool up{false};
+	bool down{false};
+	bool reset{false};
+	bool menuShow{false};
+};
+
 class GameSuccess final : public Game
 {
 	UPoint _windowSize{0, 0};
 	GameMode currentMode{Demo};
-	bool up{false};
-	bool down{false};
-	bool reset{false};
-	bool menuShow{true};
+	GameStats statitsics;
+	MenuKeys menuKeys;
+	std::string name = "game";
 
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
@@ -62,8 +77,9 @@ class GameSuccess final : public Game
 
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
-
-	void CreateEnemiesTank(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	~GameSuccess() override;
+	void CreateEnemiesTanks(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	void ToggleMenu();
 	void CreatePlayerTanks(float gridSize, float tankSpeed, int tankHealth, float tankSize);
 	void ResetBattlefield();
 	void SetGameMode(GameMode gameMode);
@@ -76,7 +92,7 @@ public:
 	void KeyPressed(const SDL_Event& event) const;
 	void KeyReleased(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
-	void textToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
+	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32 fps, Uint64 newTime);
 
