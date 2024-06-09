@@ -16,11 +16,11 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	  _events{std::make_shared<EventSystem>()}
 {
 	_events->AddListener("Menu_Released", name, [this]() { ToggleMenu(); });
-	_events->AddListener("Statistics_Enemy_Respawn", name, [this]() { --statistics.enemyResurrectionCount; });
-	_events->AddListener("Statistics_P1_Respawn", name, [this]() { --statistics.playerOneResurrectionCount; });
-	_events->AddListener("Statistics_P2_Respawn", name, [this]() { --statistics.playerTwoResurrectionCount; });
-	_events->AddListener("Statistics_CoopOneAI_Respawn", name, [this]() { --statistics.playerOneResurrectionCount; });
-	_events->AddListener("Statistics_CoopTwoAI_Respawn", name, [this]() { --statistics.playerTwoResurrectionCount; });
+	_events->AddListener("Statistics_Enemy_Respawn", name, [this]() { --statistics.enemyRespawnResource; });
+	_events->AddListener("Statistics_P1_Respawn", name, [this]() { --statistics.playerOneRespawnResource; });
+	_events->AddListener("Statistics_P2_Respawn", name, [this]() { --statistics.playerTwoRespawnResource; });
+	_events->AddListener("Statistics_CoopOneAI_Respawn", name, [this]() { --statistics.playerOneRespawnResource; });
+	_events->AddListener("Statistics_CoopTwoAI_Respawn", name, [this]() { --statistics.playerTwoRespawnResource; });
 	_events->AddListener("Statistics_Enemy_Died", name, [this]()
 	{
 		++statistics.enemyNeedRespawn;
@@ -31,9 +31,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	_events->AddListener("Statistics_CoopTwoAI_Died", name, [this]() { statistics.coopTwoAINeedRespawn = true; });
 	_events->AddListener("Statistics_Reset", name, [this]()
 	{
-		statistics.enemyResurrectionCount = 20;
-		statistics.playerOneResurrectionCount = 3;
-		statistics.playerTwoResurrectionCount = 3;
+		statistics.enemyRespawnResource = 20;
+		statistics.playerOneRespawnResource = 3;
+		statistics.playerTwoRespawnResource = 3;
 		statistics.enemyNeedRespawn = 0;
 		statistics.playerOneNeedRespawn = false;
 		statistics.playerTwoNeedRespawn = false;
@@ -60,14 +60,13 @@ GameSuccess::~GameSuccess()
 	_events->RemoveListener("Statistics_Reset", name);
 }
 
-void GameSuccess::CreateEnemiesTanks(const float gridSize, const float tankSpeed, const int tankHealth,
-                                     const float tankSize)
+void GameSuccess::SpawnEnemyTanks(const float gridSize, const float tankSpeed, const int tankHealth,
+                                  const float tankSize)
 {
-	constexpr int gray = 0x808080;
-	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
-	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
-	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
-	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize);
 }
 
 void GameSuccess::ToggleMenu()
@@ -91,32 +90,6 @@ void GameSuccess::ToggleMenu()
 	}
 }
 
-void GameSuccess::CreatePlayerTanks(const float gridSize, const float tankSpeed, const int tankHealth,
-                                    const float tankSize)
-{
-	ToggleMenu();
-	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopWithAI)
-	{
-		SpawnP1(gridSize, tankSpeed, tankHealth, tankSize);
-	}
-
-	if (currentMode == TwoPlayers)
-	{
-		SpawnP2(gridSize, tankSpeed, tankHealth, tankSize);
-	}
-
-	if (currentMode == Demo)
-	{
-		SpawnCoop1(gridSize, tankSpeed, tankHealth, tankSize);
-		SpawnCoop2(gridSize, tankSpeed, tankHealth, tankSize);
-	}
-
-	if (currentMode == CoopWithAI)
-	{
-		SpawnCoop2(gridSize, tankSpeed, tankHealth, tankSize);
-	}
-}
-
 void GameSuccess::ResetBattlefield()
 {
 	allPawns.clear();
@@ -129,9 +102,9 @@ void GameSuccess::ResetBattlefield()
 	constexpr int tankHealth = 100;
 	const float tankSize = gridSize * 3;
 
-	CreatePlayerTanks(gridSize, tankSpeed, tankHealth, tankSize);
+	SpawnPlayerTanks(gridSize, tankSpeed, tankHealth, tankSize);
 
-	CreateEnemiesTanks(gridSize, tankSpeed, tankHealth, tankSize);
+	SpawnEnemyTanks(gridSize, tankSpeed, tankHealth, tankSize);
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
@@ -306,7 +279,8 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
-void GameSuccess::TextToRender(SDL_Renderer* renderer, Point pos, const SDL_Color color, const std::string& text) const
+void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color,
+                               const std::string& text) const
 {
 	SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
@@ -338,8 +312,8 @@ void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgr
 	}
 
 	//menu text
-	Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
-	SDL_Color сolor = {0xff, 0xff, 0xff, 0xff};
+	const Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
+	constexpr SDL_Color сolor = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender(renderer, {pos.x - 70, pos.y - 100}, сolor, "BATTLE CITY REMASTERED");
 
@@ -349,14 +323,14 @@ void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgr
 
 	TextToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
 
-	SDL_Color сolorStat = {0x00, 0xff, 0xff, 0xff};
+	constexpr SDL_Color сolorStat = {0x00, 0xff, 0xff, 0xff};
 	TextToRender(renderer, {pos.x - 100, pos.y + 150}, сolorStat, "GAME STATISTICS");
 	TextToRender(renderer, {pos.x - 100, pos.y + 200}, сolorStat,
-	             "ENEMY RESPAWN REMAIN " + std::to_string(statistics.enemyResurrectionCount));
+	             "ENEMY RESPAWN REMAIN " + std::to_string(statistics.enemyRespawnResource));
 	TextToRender(renderer, {pos.x - 100, pos.y + 250}, сolorStat,
-	             "P1 RESPAWN REMAIN " + std::to_string(statistics.playerOneResurrectionCount));
+	             "P1 RESPAWN REMAIN " + std::to_string(statistics.playerOneRespawnResource));
 	TextToRender(renderer, {pos.x - 100, pos.y + 300}, сolorStat,
-	             "P2 RESPAWN REMAIN " + std::to_string(statistics.playerTwoResurrectionCount));
+	             "P2 RESPAWN REMAIN " + std::to_string(statistics.playerTwoRespawnResource));
 
 }
 
@@ -401,14 +375,38 @@ bool GameSuccess::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 	return true;
 }
 
-void GameSuccess::SpawnEnemy(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize,
-                             const int gray)
+void GameSuccess::SpawnPlayerTanks(const float gridOffset, const float speed, const int health, const float size)
+{
+	ToggleMenu();
+	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopWithAI)
+	{
+		SpawnP1(gridOffset, speed, health, size);
+	}
+
+	if (currentMode == TwoPlayers)
+	{
+		SpawnP2(gridOffset, speed, health, size);
+	}
+
+	if (currentMode == Demo)
+	{
+		SpawnCoop1(gridOffset, speed, health, size);
+		SpawnCoop2(gridOffset, speed, health, size);
+	}
+
+	if (currentMode == CoopWithAI)
+	{
+		SpawnCoop2(gridOffset, speed, health, size);
+	}
+}
+
+void GameSuccess::SpawnEnemy(const float gridOffset, const float speed, const int health, const float size)
 {
 	std::vector<Rectangle> spawnPos{
-			{gridSize * 16.f - tankSize * 2.f, 0, tankSize, tankSize},
-			{gridSize * 32.f - tankSize * 2.f, 0, tankSize, tankSize},
-			{gridSize * 16.f + tankSize * 2.f, 0, tankSize, tankSize},
-			{gridSize * 32.f + tankSize * 2.f, 0, tankSize, tankSize}
+			{gridOffset * 16.f - size * 2.f, 0, size, size},
+			{gridOffset * 32.f - size * 2.f, 0, size, size},
+			{gridOffset * 16.f + size * 2.f, 0, size, size},
+			{gridOffset * 32.f + size * 2.f, 0, size, size}
 	};
 	for (size_t i = 0; i < spawnPos.size(); ++i)
 	{
@@ -423,19 +421,20 @@ void GameSuccess::SpawnEnemy(const float gridSize, const float tankSpeed, const 
 
 		if (isFreeSpawnSpot)
 		{
-			allPawns.emplace_back(std::make_shared<Enemy>(spawnPos[i], gray, tankSpeed, tankHealth,
-			                                              _windowBuffer, _windowSize, &allPawns, _events,
-			                                              "Enemy" + std::to_string(i), "EnemyTeam"));
+			constexpr int gray = 0x808080;
+			allPawns.emplace_back(std::make_shared<Enemy>(spawnPos[i], gray, speed, health, _windowBuffer, _windowSize,
+			                                              &allPawns, _events, "Enemy" + std::to_string(i),
+			                                              "EnemyTeam"));
 			--statistics.enemyNeedRespawn;
 			return;
 		}
 	}
 }
 
-void GameSuccess::SpawnP1(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize)
+void GameSuccess::SpawnP1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerOneRect{gridSize * 16.f, windowSizeY - tankSize, tankSize, tankSize};
+	const Rectangle playerOneRect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
 	{
@@ -448,16 +447,16 @@ void GameSuccess::SpawnP1(const float gridSize, const float tankSpeed, const int
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, tankSpeed, tankHealth,
-														  _windowBuffer, _windowSize, &allPawns, _events));
+		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, speed, health, _windowBuffer,
+		                                                  _windowSize, &allPawns, _events));
 		statistics.playerOneNeedRespawn = false;
 	}
 }
 
-void GameSuccess::SpawnP2(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize)
+void GameSuccess::SpawnP2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerTwoRect{gridSize * 32.f, windowSizeY - tankSize, tankSize, tankSize};
+	const Rectangle playerTwoRect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
 	{
@@ -470,16 +469,16 @@ void GameSuccess::SpawnP2(const float gridSize, const float tankSpeed, const int
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, tankSpeed, tankHealth,
-														  _windowBuffer, _windowSize, &allPawns, _events));
+		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, speed, health, _windowBuffer,
+		                                                  _windowSize, &allPawns, _events));
 		statistics.playerTwoNeedRespawn = false;
 	}
 }
 
-void GameSuccess::SpawnCoop1(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize)
+void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerOneRect{gridSize * 16.f, windowSizeY - tankSize, tankSize, tankSize};
+	const Rectangle playerOneRect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
 	{
@@ -492,17 +491,16 @@ void GameSuccess::SpawnCoop1(const float gridSize, const float tankSpeed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, tankSpeed, tankHealth,
-													   _windowBuffer, _windowSize, &allPawns, _events, "CoopOneAI",
-													   "PlayerTeam"));
+		allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, speed, health, _windowBuffer, _windowSize,
+		                                               &allPawns, _events, "CoopOneAI", "PlayerTeam"));
 		statistics.coopOneAINeedRespawn = false;
 	}
 }
 
-void GameSuccess::SpawnCoop2(const float gridSize, const float tankSpeed, const int tankHealth, const float tankSize)
+void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerTwoRect{gridSize * 32.f, windowSizeY - tankSize, tankSize, tankSize};
+	const Rectangle playerTwoRect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
 	{
@@ -515,39 +513,37 @@ void GameSuccess::SpawnCoop2(const float gridSize, const float tankSpeed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, tankSpeed, tankHealth,
-													   _windowBuffer, _windowSize, &allPawns, _events, "CoopTwoAI",
-													   "PlayerTeam"));
+		allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, speed, health, _windowBuffer, _windowSize,
+		                                               &allPawns, _events, "CoopTwoAI", "PlayerTeam"));
 		statistics.coopTwoAINeedRespawn = false;
 	}
 }
 
 void GameSuccess::RespawnTanks()
 {
-	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-	constexpr float tankSpeed = 142;
-	constexpr int tankHealth = 100;
-	const float tankSize = gridSize * 3;
-	constexpr int gray = 0x808080;
-	if (statistics.enemyNeedRespawn > 0 && statistics.enemyResurrectionCount > 0)
+	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
+	const float size = gridOffset * 3;
+	constexpr float speed = 142;
+	constexpr int health = 100;
+	if (statistics.enemyNeedRespawn > 0 && statistics.enemyRespawnResource > 0)
 	{
-		SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
+		SpawnEnemy(gridOffset, speed, health, size);
 	}
-	if (statistics.playerOneNeedRespawn && statistics.playerOneResurrectionCount > 0)
+	if (statistics.playerOneNeedRespawn && statistics.playerOneRespawnResource > 0)
 	{
-		SpawnP1(gridSize, tankSpeed, tankHealth, tankSize);
+		SpawnP1(gridOffset, speed, health, size);
 	}
-	if (statistics.playerTwoNeedRespawn && statistics.playerTwoResurrectionCount > 0)
+	if (statistics.playerTwoNeedRespawn && statistics.playerTwoRespawnResource > 0)
 	{
-		SpawnP2(gridSize, tankSpeed, tankHealth, tankSize);
+		SpawnP2(gridOffset, speed, health, size);
 	}
-	if (statistics.coopOneAINeedRespawn && statistics.playerOneResurrectionCount > 0)
+	if (statistics.coopOneAINeedRespawn && statistics.playerOneRespawnResource > 0)
 	{
-		SpawnCoop1(gridSize, tankSpeed, tankHealth, tankSize);
+		SpawnCoop1(gridOffset, speed, health, size);
 	}
-	if (statistics.coopTwoAINeedRespawn && statistics.playerTwoResurrectionCount > 0)
+	if (statistics.coopTwoAINeedRespawn && statistics.playerTwoRespawnResource > 0)
 	{
-		SpawnCoop2(gridSize, tankSpeed, tankHealth, tankSize);
+		SpawnCoop2(gridOffset, speed, health, size);
 	}
 }
 
