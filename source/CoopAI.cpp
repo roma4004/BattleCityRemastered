@@ -36,8 +36,6 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const 
 	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-
-	_events->EmitEvent("Statistics_" + _name + "_Respawn");
 }
 
 CoopAI::~CoopAI()

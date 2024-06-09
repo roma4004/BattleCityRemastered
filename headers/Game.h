@@ -41,7 +41,10 @@ struct GameStats
 	int enemyRespawnResource{20};
 	int playerOneRespawnResource{3};
 	int playerTwoRespawnResource{3};
-	int enemyNeedRespawn{0};
+	bool enemyOneNeedRespawn{false};
+	bool enemyTwoNeedRespawn{false};
+	bool enemyThreeNeedRespawn{false};
+	bool enemyFourNeedRespawn{false};
 	bool playerOneNeedRespawn{false};
 	bool playerTwoNeedRespawn{false};
 	bool coopOneAINeedRespawn{false};
@@ -84,7 +87,7 @@ public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
 	~GameSuccess() override;
 
-	void SpawnEnemyTanks(float gridSize, float tankSpeed, int tankHealth, float tankSize);
+	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 	void ToggleMenu();
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
 	void ResetBattlefield();
@@ -101,11 +104,11 @@ public:
 
 	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
-	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32 fps, Uint64 newTime);
+	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
 
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
-	void SpawnEnemy(float gridOffset, float speed, int health, float size);
+	void SpawnEnemy(bool& needSpawn, int enemyIndex, float gridOffset, float speed, int health, float size);
 	void SpawnP1(float gridOffset, float speed, int health, float size);
 	void SpawnP2(float gridOffset, float speed, int health, float size);
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);

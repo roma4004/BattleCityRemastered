@@ -37,8 +37,6 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-
-	_events->EmitEvent("Statistics_Enemy_Respawn");
 }
 
 Enemy::~Enemy()
@@ -53,7 +51,7 @@ Enemy::~Enemy()
 
 	_events->RemoveListener("Draw", _name);
 
-	_events->EmitEvent("Statistics_Enemy_Died");
+	_events->EmitEvent("Statistics_" + _name + "_Died");
 }
 
 bool Enemy::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
