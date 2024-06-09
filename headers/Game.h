@@ -57,6 +57,7 @@ struct MenuKeys
 	bool down{false};
 	bool reset{false};
 	bool menuShow{false};
+	bool pause{false};
 };
 
 class GameSuccess final : public Game
@@ -89,6 +90,7 @@ public:
 
 	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 	void ToggleMenu();
+	void ResetStatistics();
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
 	void ResetBattlefield();
 	void SetGameMode(GameMode gameMode);
@@ -109,8 +111,8 @@ public:
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
 	void SpawnEnemy(bool& needSpawn, int enemyIndex, float gridOffset, float speed, int health, float size);
-	void SpawnP1(float gridOffset, float speed, int health, float size);
-	void SpawnP2(float gridOffset, float speed, int health, float size);
+	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
+	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);
 	void SpawnCoop2(float gridOffset, float speed, int health, float size);
 	void RespawnTanks();
