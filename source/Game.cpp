@@ -15,8 +15,6 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
 	  _events{std::make_shared<EventSystem>()}
 {
-	ResetBattlefield();
-
 	_events->AddListener("Menu_Released", name, [this]() { ToggleMenu(); });
 	_events->AddListener("Statistics_Enemy_Respawn", name, [this]() { --statistics.enemyResurrectionCount; });
 	_events->AddListener("Statistics_P1_Respawn", name, [this]() { --statistics.playerOneResurrectionCount; });
@@ -39,7 +37,11 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 		statistics.enemyNeedRespawn = 0;
 		statistics.playerOneNeedRespawn = false;
 		statistics.playerTwoNeedRespawn = false;
+		statistics.coopOneAINeedRespawn = false;
+		statistics.coopTwoAINeedRespawn = false;
 	});
+
+	ResetBattlefield();
 }
 
 GameSuccess::~GameSuccess()
@@ -61,22 +63,11 @@ GameSuccess::~GameSuccess()
 void GameSuccess::CreateEnemiesTanks(const float gridSize, const float tankSpeed, const int tankHealth,
                                      const float tankSize)
 {
-	const Rectangle enemyOneRect{gridSize * 16.f - tankSize * 2.f, 0, tankSize, tankSize};
 	constexpr int gray = 0x808080;
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyOneRect, gray, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyOne", "EnemyTeam"));
-
-	const Rectangle enemyTwoRect{gridSize * 32.f - tankSize * 2.f, 0, tankSize, tankSize};
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyTwoRect, gray, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyTwo", "EnemyTeam"));
-
-	const Rectangle enemyThreeRect{gridSize * 16.f + tankSize * 2.f, 0, tankSize, tankSize};
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyThreeRect, gray, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyThree", "EnemyTeam"));
-
-	const Rectangle enemyFourRect{gridSize * 32.f + tankSize * 2.f, 0, tankSize, tankSize};
-	allPawns.emplace_back(std::make_shared<Enemy>(enemyFourRect, gray, tankSpeed, tankHealth, _windowBuffer,
-	                                              _windowSize, &allPawns, _events, "EnemyFour", "EnemyTeam"));
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
+	SpawnEnemy(gridSize, tankSpeed, tankHealth, tankSize, gray);
 }
 
 void GameSuccess::ToggleMenu()
@@ -103,57 +94,40 @@ void GameSuccess::ToggleMenu()
 void GameSuccess::CreatePlayerTanks(const float gridSize, const float tankSpeed, const int tankHealth,
                                     const float tankSize)
 {
-	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerOneRect{gridSize * 16.f, windowSizeY - tankSize, tankSize, tankSize};
-	const Rectangle playerTwoRect{gridSize * 32.f, windowSizeY - tankSize, tankSize, tankSize};
-
 	ToggleMenu();
-	constexpr int yellow = 0xeaea00;
 	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopWithAI)
 	{
-		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, tankSpeed, tankHealth, _windowBuffer,
-		                                                  _windowSize, &allPawns, _events));
+		SpawnP1(gridSize, tankSpeed, tankHealth, tankSize);
 	}
 
-	constexpr int green = 0x408000;
 	if (currentMode == TwoPlayers)
 	{
-		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
-		                                                  _windowSize, &allPawns, _events));
+		SpawnP2(gridSize, tankSpeed, tankHealth, tankSize);
 	}
 
 	if (currentMode == Demo)
 	{
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, tankSpeed, tankHealth, _windowBuffer,
-		                                               _windowSize, &allPawns, _events, "CoopOneAI", "PlayerTeam"));
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
-		                                               _windowSize, &allPawns, _events, "CoopTwoAI", "PlayerTeam"));
+		SpawnCoop1(gridSize, tankSpeed, tankHealth, tankSize);
+		SpawnCoop2(gridSize, tankSpeed, tankHealth, tankSize);
 	}
 
 	if (currentMode == CoopWithAI)
 	{
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, tankSpeed, tankHealth, _windowBuffer,
-		                                               _windowSize, &allPawns, _events, "CoopTwoAI", "PlayerTeam"));
+		SpawnCoop2(gridSize, tankSpeed, tankHealth, tankSize);
 	}
 }
 
 void GameSuccess::ResetBattlefield()
 {
-	_events->EmitEvent("Statistics_Reset");
 	allPawns.clear();
 	allPawns.reserve(1000);
+
+	_events->EmitEvent("Statistics_Reset");
 
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	constexpr float tankSpeed = 142;
 	constexpr int tankHealth = 100;
 	const float tankSize = gridSize * 3;
-
-	statistics.enemyResurrectionCount = 20;
-	statistics.playerOneResurrectionCount = 3;
-	statistics.playerTwoResurrectionCount = 3;
-	statistics.enemyNeedRespawn = 0;
-	statistics.playerOneNeedRespawn = false;
-	statistics.playerTwoNeedRespawn = false;
 
 	CreatePlayerTanks(gridSize, tankSpeed, tankHealth, tankSize);
 
