@@ -84,6 +84,8 @@ class GameSuccess final : public Game
 
 	std::random_device _rd;
 
+	bool _isGameOver{false};
+
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
 	~GameSuccess() override;
@@ -116,6 +118,7 @@ public:
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);
 	void SpawnCoop2(float gridOffset, float speed, int health, float size);
 	void RespawnTanks();
+	void EventHandling();
 
 	void MainLoop() override;
 

@@ -7,7 +7,6 @@
 #include "../headers/PlayerTwo.h"
 
 #include <algorithm>
-#include <cmath>
 #include <iostream>
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
@@ -574,11 +573,26 @@ void GameSuccess::RespawnTanks()
 	}
 }
 
+void GameSuccess::EventHandling()
+{
+	// event handling
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+	{
+		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
+		{
+			_isGameOver = true;
+		}
+
+		MouseEvents(event);
+		KeyboardEvents(event);
+	}
+}
+
 void GameSuccess::MainLoop()
 {
 	Uint32 frameCount{0};
 	Uint32 fps{0};
-	bool isGameOver{false};
 	float deltaTime{0.f};
 	Uint64 oldTime = SDL_GetTicks64();
 	auto fpsPrevUpdateTime = oldTime;
@@ -586,25 +600,14 @@ void GameSuccess::MainLoop()
 			/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
 
 	Menu menu{_windowSize, _windowBuffer};
-	while (!isGameOver)
+	while (!_isGameOver)
 	{
 		// Cap to 60 FPS
 		// SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
 
 		ClearBuffer();
 
-		// event handling
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
-			{
-				isGameOver = true;
-			}
-
-			MouseEvents(event);
-			KeyboardEvents(event);
-		}
+		EventHandling();
 
 		if (!menuKeys.pause)
 		{
