@@ -4,7 +4,7 @@
 
 #include <memory>
 
-class Config;
+class IConfig;
 
 SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName)
 	: windowSize{windowSize}, _fpsFontPathName{fpsFontName} {}
@@ -26,7 +26,7 @@ SDLEnvironment::~SDLEnvironment()
 	SDL_Quit();
 }
 
-[[nodiscard]] std::unique_ptr<Config> SDLEnvironment::Init()
+[[nodiscard]] std::unique_ptr<IConfig> SDLEnvironment::Init()
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{

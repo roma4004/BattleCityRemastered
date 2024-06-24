@@ -3,12 +3,12 @@
 #include "BaseObj.h"
 #include "Circle.h"
 #include "Direction.h"
-#include "MoveBeh.h"
+#include "IMoveBeh.h"
 
 #include <functional>
 #include <memory>
 
-class MoveLikeBulletBeh : public MoveBeh
+class MoveLikeBulletBeh : public IMoveBeh
 {
 	UPoint _windowSize{0, 0};
 	BaseObj* _selfParent{nullptr};

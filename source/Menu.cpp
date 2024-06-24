@@ -1,10 +1,11 @@
 #include "../headers/Menu.h"
-
 #include "../headers/Point.h"
 
-Menu::Menu(const UPoint windowSize, int* windowBuffer)
-: _windowSize{windowSize}, _windowBuffer{windowBuffer}, yOffsetStart{static_cast<unsigned int>(_windowSize.y)} {
-}
+Menu::Menu(const UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input)
+	: _windowSize{windowSize},
+	  _windowBuffer{windowBuffer},
+	  yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
+	  input{std::move(input)} {}
 
 
 inline unsigned int ChangeAlpha(unsigned int color, unsigned char alpha)
@@ -54,9 +55,9 @@ void Menu::BlendToWindowBuffer()
 				int& srcColor = _windowBuffer[_pos.y * sizeX + _pos.x];
 				srcColor = static_cast<int>(
 					BlendPixel(
-						ChangeAlpha(static_cast<unsigned int>(_windowBuffer[_pos.y * sizeX + _pos.x]), 91),
-						backgroundColor
-					)
+							ChangeAlpha(static_cast<unsigned int>(_windowBuffer[_pos.y * sizeX + _pos.x]), 91),
+							backgroundColor
+							)
 				);
 			}
 		}

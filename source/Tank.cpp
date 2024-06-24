@@ -3,33 +3,8 @@
 
 Tank::Tank(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
-           std::shared_ptr<MoveBeh> moveBeh)
+           std::shared_ptr<IMoveBeh> moveBeh)
 	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events), std::move(moveBeh)} {}
-
-//TODO make pawns into quadtree (cuz we can)
-void Tank::Move(const float deltaTime)
-{
-	if (keyboardButtons.left)
-	{
-		_moveBeh->SetDirection(LEFT);
-		_moveBeh->MoveLeft(deltaTime);
-	}
-	else if (keyboardButtons.right)
-	{
-		_moveBeh->SetDirection(RIGHT);
-		_moveBeh->MoveRight(deltaTime);
-	}
-	else if (keyboardButtons.up)
-	{
-		_moveBeh->SetDirection(UP);
-		_moveBeh->MoveUp(deltaTime);
-	}
-	else if (keyboardButtons.down)
-	{
-		_moveBeh->SetDirection(DOWN);
-		_moveBeh->MoveDown(deltaTime);
-	}
-}
 
 void Tank::Shot()
 {
@@ -67,7 +42,7 @@ void Tank::Shot()
 	}
 	else
 	{
-		keyboardButtons.shot = false;//Try shooting outside screen
+		//Try shooting outside screen
 		return;
 	}
 

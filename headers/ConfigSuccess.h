@@ -1,10 +1,12 @@
 #pragma once
-#include "Config.h"
+
+#include "IConfig.h"
+#include "Point.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-class ConfigSuccess final : public Config
+class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{0, 0};
 	int* _windowBuffer{nullptr};
@@ -26,7 +28,7 @@ public:
 
 	~ConfigSuccess() override = default;
 
-	[[nodiscard]] std::unique_ptr<Game> CreateGame() override;
+	[[nodiscard]] std::unique_ptr<IGame> CreateGame() override;
 
 	ConfigSuccess& operator=(const ConfigSuccess& other) = delete;
 	ConfigSuccess& operator=(ConfigSuccess&& other) noexcept = delete;

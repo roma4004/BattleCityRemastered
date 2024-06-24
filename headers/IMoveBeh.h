@@ -7,10 +7,10 @@
 
 class BaseObj;
 
-class MoveBeh
+class IMoveBeh
 {
 public:
-	virtual ~MoveBeh() = default;
+	virtual ~IMoveBeh() = default;
 
 	virtual void MoveLeft(float deltaTime) const = 0;
 	virtual void MoveRight(float deltaTime) const = 0;

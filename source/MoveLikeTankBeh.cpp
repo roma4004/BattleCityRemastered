@@ -66,16 +66,8 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 		{
 			if (!pawn->GetIsPassable())
 			{
-				//TODO: need fix, we broke collision detecting
 				obstacles.emplace_back(std::weak_ptr(pawn));
-				// return std::make_tuple(false, obstacle);
 			}
-			//else
-			//{
-			//	obstacle.emplace_back(std::weak_ptr(pawn));
-			//	isHaveCollision = true;
-			//	return std::make_tuple(true, obstacle);
-			//}
 		}
 	}
 
@@ -142,7 +134,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 
 void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 {
-	constexpr int sideBarWidth = 175;
+	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
 	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < maxX)
 	{

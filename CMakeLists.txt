@@ -91,12 +91,18 @@ add_executable(${PROJECT_NAME}
         source/PlayerOne.cpp
         source/PlayerTwo.cpp
         source/Bullet.cpp
+        source/CoopAI.cpp
         source/Enemy.cpp
         source/Brick.cpp
         source/Config.cpp
         source/ConfigFailure.cpp
         source/ConfigSuccess.cpp
-        source/Game.cpp
+        source/GameFailure.cpp
+        source/GameStatistics.cpp
+        source/GameSuccess.cpp
+        source/InputProviderForMenu.cpp
+        source/InputProviderForPlayerOne.cpp
+        source/InputProviderForPlayerTwo.cpp
         source/Iron.cpp
         source/SDLEnvironment.cpp
         source/Tank.cpp

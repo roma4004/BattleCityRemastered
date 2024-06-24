@@ -2,6 +2,7 @@
 #include "../headers/Brick.h"
 #include "../headers/Bullet.h"
 #include "../headers/EventSystem.h"
+#include "../headers/InputProviderForPlayerOne.h"
 
 #include "gtest/gtest.h"
 
@@ -32,9 +33,11 @@ protected:
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
 		const Rectangle playerRect{0, 0, _tankSize, _tankSize};
-		constexpr int tankColor = 0xeaea00;
-		allPawns.emplace_back(std::make_shared<MockPlayerOne>(playerRect, tankColor, _tankSpeed, _tankHealth,
-		                                                      _windowBuffer, _windowSize, &allPawns, _events));
+		constexpr int yellow = 0xeaea00;
+		std::string name = "PlayerOne";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		allPawns.emplace_back(std::make_shared<MockPlayerOne>(playerRect, yellow, _tankSpeed, _tankHealth,
+		                                                      _windowBuffer, _windowSize, &allPawns, _events, name, inputProvider));
 	}
 
 	void TearDown() override
@@ -288,8 +291,12 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	if (const auto player = dynamic_cast<MockPlayerOne*>(allPawns.back().get()))
 	{
 		const Rectangle playerRect2{0, _tankSize + 1, _tankSize, _tankSize};
-		allPawns.emplace_back(std::make_shared<MockPlayerOne>(playerRect2, 0xeaea00, _tankSpeed, _tankHealth,
-															  _windowBuffer, _windowSize, &allPawns, _events));
+		constexpr int green = 0x408000;
+		std::string name = "PlayerTwo";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		allPawns.emplace_back(std::make_shared<MockPlayerOne>(playerRect2, green, _tankSpeed, _tankHealth,
+		                                                      _windowBuffer, _windowSize, &allPawns, _events, name,
+		                                                      inputProvider));
 
 		if (const auto player2 = dynamic_cast<MockPlayerOne*>(allPawns.back().get()))
 		{

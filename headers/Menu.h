@@ -1,7 +1,7 @@
 #pragma once
 
+#include "InputProviderForMenu.h"
 #include "Point.h"
-#include "Rectangle.h"
 
 class Menu
 {
@@ -10,11 +10,12 @@ class Menu
 	unsigned int yOffsetStart;
 
 public:
-	UPoint _pos;
-
-	Menu(UPoint windowSize, int* windowBuffer);
+	Menu(UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input);
 
 	~Menu() = default;
 
 	void BlendToWindowBuffer();
+
+	std::unique_ptr<InputProviderForMenu> input;
+	UPoint _pos;
 };

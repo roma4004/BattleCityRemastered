@@ -4,6 +4,8 @@
 #include "EventSystem.h"
 #include "Point.h"
 
+#include <memory>
+
 class Water final : public BaseObj
 {
 	UPoint _windowSize{0, 0};

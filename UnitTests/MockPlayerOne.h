@@ -9,9 +9,9 @@ class MockPlayerOne final : public PlayerOne
 public:
 	MockPlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
 	              const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-	              std::shared_ptr<EventSystem> events)
+	              std::shared_ptr<EventSystem> events, std::string name, std::unique_ptr<IInputProvider>& inputProvider)
 		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, speed, health, windowBuffer, windowSize, allPawns,
-		            std::move(events)) {}
+		            std::move(events), std::move(name), inputProvider) {}
 
 	~MockPlayerOne() override = default;
 
@@ -24,26 +24,26 @@ public:
 	// MOCK_METHOD(void, Shot, (), (override));
 	// MOCK_METHOD(void, Draw, (), (const override));
 
-	void MockResetKeyPressed() { keyboardButtons = {}; }
-	void MockShotKeyPressed() { keyboardButtons.shot = true; }
+	void MockResetKeyPressed() { _inputProvider->playerKeys = {}; }
+	void MockShotKeyPressed() { _inputProvider->playerKeys.shot = true; }
 
 	void MockMoveKeyPressed(const Direction dir)
 	{
 		if (dir == LEFT)
 		{
-			keyboardButtons.left = true;
+			_inputProvider->playerKeys.left = true;
 		}
 		else if (dir == RIGHT)
 		{
-			keyboardButtons.right = true;
+			_inputProvider->playerKeys.right = true;
 		}
 		else if (dir == DOWN)
 		{
-			keyboardButtons.down = true;
+			_inputProvider->playerKeys.down = true;
 		}
 		else if (dir == UP)
 		{
-			keyboardButtons.up = true;
+			_inputProvider->playerKeys.up = true;
 		}
 	}
 

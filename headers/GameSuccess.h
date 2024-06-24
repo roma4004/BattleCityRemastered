@@ -2,6 +2,10 @@
 
 #include "BaseObj.h"
 #include "EventSystem.h"
+#include "GameStatistics.h"
+#include "IGame.h"
+#include "InputProviderForMenu.h"
+#include "Menu.h"
 #include "MouseButton.h"
 #include "Point.h"
 
@@ -20,53 +24,13 @@ enum GameMode
 	EndIterator// should be the last one
 };
 
-class Game
-{
-public:
-	Game(const Game& other) = delete;
-	Game(Game&& other) noexcept = delete;
-	Game() = default;
-	virtual ~Game() = default;
-
-	virtual void MainLoop() = 0;
-	[[nodiscard]] virtual int Result() const = 0;
-
-	Game& operator=(const Game& other) = delete;
-	Game& operator=(Game&& other) noexcept = delete;
-};
-
-struct GameStats
-{
-	// TODO: use std::atomic when multithreading is used
-	int enemyRespawnResource{20};
-	int playerOneRespawnResource{3};
-	int playerTwoRespawnResource{3};
-	bool enemyOneNeedRespawn{false};
-	bool enemyTwoNeedRespawn{false};
-	bool enemyThreeNeedRespawn{false};
-	bool enemyFourNeedRespawn{false};
-	bool playerOneNeedRespawn{false};
-	bool playerTwoNeedRespawn{false};
-	bool coopOneAINeedRespawn{false};
-	bool coopTwoAINeedRespawn{false};
-};
-
-struct MenuKeys
-{
-	bool up{false};
-	bool down{false};
-	bool reset{false};
-	bool menuShow{false};
-	bool pause{false};
-};
-
-class GameSuccess final : public Game
+class GameSuccess final : public IGame
 {
 	UPoint _windowSize{0, 0};
-	GameMode currentMode{Demo};
-	GameStats statistics;
-	MenuKeys menuKeys;
-	std::string name = "game";
+	GameMode _currentMode{Demo};
+	std::unique_ptr<GameStatistics> _statistics;
+	Menu _menu;
+	std::string _name = "game";
 
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
@@ -77,8 +41,8 @@ class GameSuccess final : public Game
 	SDL_Surface* _fpsSurface{nullptr};
 	SDL_Texture* _fpsTexture{nullptr};
 
-	MouseButtons mouseButtons{};
-	std::vector<std::shared_ptr<BaseObj>> allPawns;
+	MouseButtons _mouseButtons{};
+	std::vector<std::shared_ptr<BaseObj>> _allPawns;
 
 	std::shared_ptr<EventSystem> _events;
 
@@ -87,12 +51,13 @@ class GameSuccess final : public Game
 	bool _isGameOver{false};
 
 public:
-	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont);
+	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
+	            std::shared_ptr<EventSystem> events, std::unique_ptr<InputProviderForMenu>& menuInput,
+	            std::unique_ptr<GameStatistics>& statistics);
+
 	~GameSuccess() override;
 
 	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
-	void ToggleMenu();
-	void ResetStatistics();
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
 	void ResetBattlefield();
 	void SetGameMode(GameMode gameMode);
@@ -112,7 +77,7 @@ public:
 
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
-	void SpawnEnemy(bool& needSpawn, int enemyIndex, float gridOffset, float speed, int health, float size);
+	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
 	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
 	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);
@@ -122,13 +87,5 @@ public:
 
 	void MainLoop() override;
 
-	[[nodiscard]] int Result() const override { return 0; }
-};
-
-class GameFailure final : public Game
-{
-public:
-	void MainLoop() override {}
-
-	[[nodiscard]] int Result() const override { return 1; }
+	[[nodiscard]] int Result() const override;
 };

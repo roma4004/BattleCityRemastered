@@ -2,13 +2,13 @@
 
 #include "BaseObj.h"
 #include "Direction.h"
-#include "MoveBeh.h"
+#include "IMoveBeh.h"
 #include "Point.h"
 
 #include <functional>
 #include <memory>
 
-class MoveLikeTankBeh : public MoveBeh
+class MoveLikeTankBeh : public IMoveBeh
 {
 	UPoint _windowSize{0, 0};
 	BaseObj* _selfParent{nullptr};
@@ -25,7 +25,7 @@ public:
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 	float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
-	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& getMinSide) const;
+	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	void MoveLeft(float deltaTime) const override;
 	void MoveRight(float deltaTime) const override;

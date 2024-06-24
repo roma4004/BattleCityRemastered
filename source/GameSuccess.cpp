@@ -1,6 +1,8 @@
-#include "../headers/Game.h"
+#include "../headers/GameSuccess.h"
 #include "../headers/CoopAI.h"
 #include "../headers/Enemy.h"
+#include "../headers/InputProviderForPlayerOne.h"
+#include "../headers/InputProviderForPlayerTwo.h"
 #include "../headers/Map.h"
 #include "../headers/Menu.h"
 #include "../headers/PlayerOne.h"
@@ -10,94 +12,36 @@
 #include <iostream>
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-                         TTF_Font* fpsFont)
-	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont},
-	  _events{std::make_shared<EventSystem>()}
+                         TTF_Font* fpsFont, std::shared_ptr<EventSystem> events,
+                         std::unique_ptr<InputProviderForMenu>& menuInput, std::unique_ptr<GameStatistics>& statistics)
+	: _windowSize{windowSize},
+	  _statistics{std::move(statistics)},
+	  _menu{windowSize, windowBuffer, menuInput},
+	  _windowBuffer{windowBuffer},
+	  _renderer{renderer},
+	  _screen{screen},
+	  _fpsFont{fpsFont},
+	  _events{std::move(events)}
 {
-	_events->AddListener("Menu_Released", name, [this]() { ToggleMenu(); });
-	_events->AddListener("Pause_Released", name, [this]() { menuKeys.pause = !menuKeys.pause; });
-
-	_events->AddListener("Statistics_Enemy1_Died", name, [this]() { statistics.enemyOneNeedRespawn = true; });
-	_events->AddListener("Statistics_Enemy2_Died", name, [this]() { statistics.enemyTwoNeedRespawn = true; });
-	_events->AddListener("Statistics_Enemy3_Died", name, [this]() { statistics.enemyThreeNeedRespawn = true; });
-	_events->AddListener("Statistics_Enemy4_Died", name, [this]() { statistics.enemyFourNeedRespawn = true; });
-
-	_events->AddListener("Statistics_P1_Died", name, [this]() { statistics.playerOneNeedRespawn = true; });
-	_events->AddListener("Statistics_P2_Died", name, [this]() { statistics.playerTwoNeedRespawn = true; });
-	_events->AddListener("Statistics_CoopOneAI_Died", name, [this]() { statistics.coopOneAINeedRespawn = true; });
-	_events->AddListener("Statistics_CoopTwoAI_Died", name, [this]() { statistics.coopTwoAINeedRespawn = true; });
-
 	ResetBattlefield();
 }
 
-GameSuccess::~GameSuccess()
-{
-	_events->RemoveListener("Menu_Released", name);
-	_events->RemoveListener("Pause_Released", name);
-
-	_events->RemoveListener("Statistics_Enemy1_Died", name);
-	_events->RemoveListener("Statistics_Enemy2_Died", name);
-	_events->RemoveListener("Statistics_Enemy3_Died", name);
-	_events->RemoveListener("Statistics_Enemy4_Died", name);
-
-	_events->RemoveListener("Statistics_P1_Died", name);
-	_events->RemoveListener("Statistics_P2_Died", name);
-	_events->RemoveListener("Statistics_CoopOneAI_Died", name);
-	_events->RemoveListener("Statistics_CoopTwoAI_Died", name);
-}
+GameSuccess::~GameSuccess() = default;
 
 void GameSuccess::SpawnEnemyTanks(const float gridOffset, const float speed, const int health, const float size)
 {
-	SpawnEnemy(statistics.enemyOneNeedRespawn, 1, gridOffset, speed, health, size);
-	SpawnEnemy(statistics.enemyTwoNeedRespawn, 2, gridOffset, speed, health, size);
-	SpawnEnemy(statistics.enemyThreeNeedRespawn, 3, gridOffset, speed, health, size);
-	SpawnEnemy(statistics.enemyFourNeedRespawn, 4, gridOffset, speed, health, size);
-}
-
-void GameSuccess::ToggleMenu()
-{
-	menuKeys.menuShow = !menuKeys.menuShow;
-	if (menuKeys.menuShow)
-	{
-		_events->AddListener("ArrowUp_Released", name, [&btn = menuKeys]() { btn.up = true; });
-		_events->AddListener("ArrowUp_Pressed", name, [&btn = menuKeys]() { btn.up = false; });
-		_events->AddListener("ArrowDown_Released", name, [&btn = menuKeys]() { btn.down = true; });
-		_events->AddListener("ArrowDown_Pressed", name, [&btn = menuKeys]() { btn.down = false; });
-		_events->AddListener("Enter_Released", name, [&btn = menuKeys]() { btn.reset = true; });
-	}
-	else
-	{
-		_events->RemoveListener("ArrowUp_Released", name);
-		_events->RemoveListener("ArrowUp_Pressed", name);
-		_events->RemoveListener("ArrowDown_Released", name);
-		_events->RemoveListener("ArrowDown_Pressed", name);
-		_events->RemoveListener("Enter_Released", name);
-	}
-}
-
-void GameSuccess::ResetStatistics()
-{
-	statistics.enemyRespawnResource = 20;
-	statistics.playerOneRespawnResource = 3;
-	statistics.playerTwoRespawnResource = 3;
-
-	statistics.enemyOneNeedRespawn = false;
-	statistics.enemyTwoNeedRespawn = false;
-	statistics.enemyThreeNeedRespawn = false;
-	statistics.enemyFourNeedRespawn = false;
-
-	statistics.playerOneNeedRespawn = false;
-	statistics.playerTwoNeedRespawn = false;
-	statistics.coopOneAINeedRespawn = false;
-	statistics.coopTwoAINeedRespawn = false;
+	SpawnEnemy(1, gridOffset, speed, health, size);
+	SpawnEnemy(2, gridOffset, speed, health, size);
+	SpawnEnemy(3, gridOffset, speed, health, size);
+	SpawnEnemy(4, gridOffset, speed, health, size);
 }
 
 void GameSuccess::ResetBattlefield()
 {
-	allPawns.clear();
-	allPawns.reserve(1000);
+	_allPawns.clear();
+	_allPawns.reserve(1000);
 
-	ResetStatistics();
+	_statistics->ResetStatistics();
 
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
 	constexpr float speed = 142;
@@ -112,31 +56,31 @@ void GameSuccess::ResetBattlefield()
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
 	//Map::ObstacleCreation<Iron>(&env, 310,310);
 	const Map field{};
-	field.MapCreation(&allPawns, gridOffset, _windowBuffer, _windowSize, _events);
+	field.MapCreation(&_allPawns, gridOffset, _windowBuffer, _windowSize, _events);
 }
 
-void GameSuccess::SetGameMode(const GameMode gameMode) { currentMode = gameMode; }
+void GameSuccess::SetGameMode(const GameMode gameMode) { _currentMode = gameMode; }
 
 void GameSuccess::PrevGameMode()
 {
-	int mode = currentMode;
+	int mode = _currentMode;
 	--mode;
 
 	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
-	currentMode = static_cast<GameMode>(newMode);
+	_currentMode = static_cast<GameMode>(newMode);
 }
 
 void GameSuccess::NextGameMode()
 {
-	int mode = currentMode;
+	int mode = _currentMode;
 	++mode;
 
 	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
-	currentMode = static_cast<GameMode>(newMode);
+	_currentMode = static_cast<GameMode>(newMode);
 }
 
 void GameSuccess::ClearBuffer() const
@@ -149,7 +93,7 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 {
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
-		mouseButtons.MouseLeftButton = true;
+		_mouseButtons.MouseLeftButton = true;
 		std::cout << "MouseLeftButton: "
 				<< "Down" << '\n';
 
@@ -157,14 +101,14 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 	}
 	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
-		mouseButtons.MouseLeftButton = false;
+		_mouseButtons.MouseLeftButton = false;
 		std::cout << "MouseLeftButton: "
 				<< "Up" << '\n';
 
 		return;
 	}
 
-	if (event.type == SDL_MOUSEMOTION && mouseButtons.MouseLeftButton)
+	if (event.type == SDL_MOUSEMOTION && _mouseButtons.MouseLeftButton)
 	{
 		const Sint32 x = event.motion.x;
 		const Sint32 y = event.motion.y;
@@ -302,21 +246,21 @@ void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point pos, const SD
 
 void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
 {
-	if (menuKeys.up)
+	if (_menu.input->keys.up)
 	{
 		PrevGameMode();
-		menuKeys.up = false;
+		_menu.input->keys.up = false;
 	}
-	else if (menuKeys.down)
+	else if (_menu.input->keys.down)
 	{
 		NextGameMode();
-		menuKeys.down = false;
+		_menu.input->keys.down = false;
 	}
-	else if (menuKeys.reset)
+	else if (_menu.input->keys.reset)
 	{
 		ResetBattlefield();
-		menuKeys.reset = false;
-		menuKeys.menuShow = false;
+		_menu.input->keys.reset = false;
+		_menu.input->keys.menuShow = false;
 	}
 
 	//menu text
@@ -325,20 +269,20 @@ void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgr
 
 	TextToRender(renderer, {pos.x - 70, pos.y - 100}, сolor, "BATTLE CITY REMASTERED");
 
-	TextToRender(renderer, pos, сolor, currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	TextToRender(renderer, pos, сolor, _currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
 
-	TextToRender(renderer, {pos.x, pos.y + 50}, сolor, currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	TextToRender(renderer, {pos.x, pos.y + 50}, сolor, _currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
 
-	TextToRender(renderer, {pos.x, pos.y + 100}, сolor, currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
+	TextToRender(renderer, {pos.x, pos.y + 100}, сolor, _currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
 
 	constexpr SDL_Color сolorStat = {0x00, 0xff, 0xff, 0xff};
 	TextToRender(renderer, {pos.x - 60, pos.y + 150}, сolorStat, "GAME STATISTICS");
 	TextToRender(renderer, {pos.x - 60, pos.y + 200}, сolorStat,
-	             "ENEMY RESPAWN REMAIN " + std::to_string(statistics.enemyRespawnResource));
+	             "ENEMY RESPAWN REMAIN " + std::to_string(_statistics->enemyRespawnResource));
 	TextToRender(renderer, {pos.x - 60, pos.y + 250}, сolorStat,
-	             "P1 RESPAWN REMAIN " + std::to_string(statistics.playerOneRespawnResource));
+	             "P1 RESPAWN REMAIN " + std::to_string(_statistics->playerOneRespawnResource));
 	TextToRender(renderer, {pos.x - 60, pos.y + 300}, сolorStat,
-	             "P2 RESPAWN REMAIN " + std::to_string(statistics.playerTwoRespawnResource));
+	             "P2 RESPAWN REMAIN " + std::to_string(_statistics->playerTwoRespawnResource));
 
 }
 
@@ -385,31 +329,31 @@ bool GameSuccess::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 
 void GameSuccess::SpawnPlayerTanks(const float gridOffset, const float speed, const int health, const float size)
 {
-	ToggleMenu();
-	if (currentMode == OnePlayer || currentMode == TwoPlayers || currentMode == CoopWithAI)
+	_menu.input->ToggleMenu();
+	if (_currentMode == OnePlayer || _currentMode == TwoPlayers || _currentMode == CoopWithAI)
 	{
 		SpawnPlayer1(gridOffset, speed, health, size);
 	}
 
-	if (currentMode == TwoPlayers)
+	if (_currentMode == TwoPlayers)
 	{
 		SpawnPlayer2(gridOffset, speed, health, size);
 	}
 
-	if (currentMode == Demo)
+	if (_currentMode == Demo)
 	{
 		SpawnCoop1(gridOffset, speed, health, size);
 		SpawnCoop2(gridOffset, speed, health, size);
 	}
 
-	if (currentMode == CoopWithAI)
+	if (_currentMode == CoopWithAI)
 	{
 		SpawnCoop2(gridOffset, speed, health, size);
 	}
 }
 
-void GameSuccess::SpawnEnemy(bool& needSpawn, const int enemyIndex, const float gridOffset, const float speed,
-                             const int health, const float size)
+void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const float speed, const int health,
+                             const float size)
 {
 	std::vector<Rectangle> spawnPos{
 			{gridOffset * 16.f - size * 2.f, 0, size, size},
@@ -420,7 +364,7 @@ void GameSuccess::SpawnEnemy(bool& needSpawn, const int enemyIndex, const float 
 	for (auto& spawnSpot: spawnPos)
 	{
 		bool isFreeSpawnSpot = true;
-		for (const std::shared_ptr<BaseObj>& pawn: allPawns)
+		for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
 		{
 			if (IsCollideWith(spawnSpot, pawn->GetShape()))
 			{
@@ -431,11 +375,10 @@ void GameSuccess::SpawnEnemy(bool& needSpawn, const int enemyIndex, const float 
 		if (isFreeSpawnSpot)
 		{
 			constexpr int gray = 0x808080;
-			allPawns.emplace_back(std::make_shared<Enemy>(spawnSpot, gray, speed, health, _windowBuffer, _windowSize,
-			                                              &allPawns, _events, "Enemy" + std::to_string(enemyIndex),
-			                                              "EnemyTeam"));
-			--statistics.enemyRespawnResource;
-			needSpawn = false;
+			auto indexString = std::to_string(index);
+			_allPawns.emplace_back(std::make_shared<Enemy>(spawnSpot, gray, speed, health, _windowBuffer, _windowSize,
+			                                               &_allPawns, _events, "Enemy" + indexString, "EnemyTeam"));
+			_events->EmitEvent("Enemy" + indexString + "_Spawn");
 			return;
 		}
 	}
@@ -446,7 +389,7 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle playerOneRect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
 	{
 		if (IsCollideWith(playerOneRect, pawn->GetShape()))
 		{
@@ -457,10 +400,11 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, speed, health, _windowBuffer,
-		                                                  _windowSize, &allPawns, _events));
-		statistics.playerOneNeedRespawn = false;
-		--statistics.playerOneRespawnResource;
+		auto name = "PlayerOne";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		_allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, speed, health, _windowBuffer,
+		                                                   _windowSize, &_allPawns, _events, name, inputProvider));
+		_events->EmitEvent("P1_Spawn");
 	}
 }
 
@@ -469,7 +413,7 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle playerTwoRect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
 	{
 		if (IsCollideWith(playerTwoRect, pawn->GetShape()))
 		{
@@ -480,10 +424,11 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, speed, health, _windowBuffer,
-		                                                  _windowSize, &allPawns, _events));
-		statistics.playerTwoNeedRespawn = false;
-		--statistics.playerTwoRespawnResource;
+		auto name = "PlayerTwo";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
+		_allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, speed, health, _windowBuffer,
+		                                                   _windowSize, &_allPawns, _events, name, inputProvider));
+		_events->EmitEvent("P2_Spawn");
 	}
 }
 
@@ -492,7 +437,7 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle playerOneRect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
 	{
 		if (IsCollideWith(playerOneRect, pawn->GetShape()))
 		{
@@ -503,10 +448,10 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, speed, health, _windowBuffer, _windowSize,
-		                                               &allPawns, _events, "CoopOneAI", "PlayerTeam"));
-		statistics.coopOneAINeedRespawn = false;
-		--statistics.playerOneRespawnResource;
+		_allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, speed, health, _windowBuffer,
+		                                                _windowSize,
+		                                                &_allPawns, _events, "CoopOneAI", "PlayerTeam"));
+		_events->EmitEvent("CoopOneAI_Spawn");
 	}
 }
 
@@ -515,7 +460,7 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle playerTwoRect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
 	{
 		if (IsCollideWith(playerTwoRect, pawn->GetShape()))
 		{
@@ -526,10 +471,9 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, speed, health, _windowBuffer, _windowSize,
-		                                               &allPawns, _events, "CoopTwoAI", "PlayerTeam"));
-		statistics.coopTwoAINeedRespawn = false;
-		--statistics.playerTwoRespawnResource;
+		_allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, speed, health, _windowBuffer, _windowSize,
+		                                                &_allPawns, _events, "CoopTwoAI", "PlayerTeam"));
+		_events->EmitEvent("CoopTwoAI_Spawn");
 	}
 }
 
@@ -539,35 +483,35 @@ void GameSuccess::RespawnTanks()
 	const float size = gridOffset * 3;
 	constexpr float speed = 142;
 	constexpr int health = 100;
-	if (statistics.enemyOneNeedRespawn && statistics.enemyRespawnResource > 0)
+	if (_statistics->enemyOneNeedRespawn && _statistics->enemyRespawnResource > 0)
 	{
-		SpawnEnemy(statistics.enemyOneNeedRespawn, 1, gridOffset, speed, health, size);
+		SpawnEnemy(1, gridOffset, speed, health, size);
 	}
-	if (statistics.enemyTwoNeedRespawn && statistics.enemyRespawnResource > 0)
+	if (_statistics->enemyTwoNeedRespawn && _statistics->enemyRespawnResource > 0)
 	{
-		SpawnEnemy(statistics.enemyTwoNeedRespawn, 2, gridOffset, speed, health, size);
+		SpawnEnemy(2, gridOffset, speed, health, size);
 	}
-	if (statistics.enemyThreeNeedRespawn && statistics.enemyRespawnResource > 0)
+	if (_statistics->enemyThreeNeedRespawn && _statistics->enemyRespawnResource > 0)
 	{
-		SpawnEnemy(statistics.enemyThreeNeedRespawn, 3, gridOffset, speed, health, size);
+		SpawnEnemy(3, gridOffset, speed, health, size);
 	}
-	if (statistics.enemyFourNeedRespawn && statistics.enemyRespawnResource > 0)
+	if (_statistics->enemyFourNeedRespawn && _statistics->enemyRespawnResource > 0)
 	{
-		SpawnEnemy(statistics.enemyFourNeedRespawn, 4, gridOffset, speed, health, size);
+		SpawnEnemy(4, gridOffset, speed, health, size);
 	}
-	if (statistics.playerOneNeedRespawn && statistics.playerOneRespawnResource > 0)
+	if (_statistics->playerOneNeedRespawn && _statistics->playerOneRespawnResource > 0)
 	{
 		SpawnPlayer1(gridOffset, speed, health, size);
 	}
-	if (statistics.playerTwoNeedRespawn && statistics.playerTwoRespawnResource > 0)
+	if (_statistics->playerTwoNeedRespawn && _statistics->playerTwoRespawnResource > 0)
 	{
 		SpawnPlayer2(gridOffset, speed, health, size);
 	}
-	if (statistics.coopOneAINeedRespawn && statistics.playerOneRespawnResource > 0)
+	if (_statistics->coopOneAINeedRespawn && _statistics->playerOneRespawnResource > 0)
 	{
 		SpawnCoop1(gridOffset, speed, health, size);
 	}
-	if (statistics.coopTwoAINeedRespawn && statistics.playerTwoRespawnResource > 0)
+	if (_statistics->coopTwoAINeedRespawn && _statistics->playerTwoRespawnResource > 0)
 	{
 		SpawnCoop2(gridOffset, speed, health, size);
 	}
@@ -599,7 +543,6 @@ void GameSuccess::MainLoop()
 	const SDL_Rect fpsRectangle{
 			/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
 
-	Menu menu{_windowSize, _windowBuffer};
 	while (!_isGameOver)
 	{
 		// Cap to 60 FPS
@@ -609,15 +552,14 @@ void GameSuccess::MainLoop()
 
 		EventHandling();
 
-		if (!menuKeys.pause)
+		if (!_menu.input->keys.pause)
 		{
 			_events->EmitEvent<float>("TickUpdate", deltaTime);
 		}
 
-		// TODO: solve not work because iterator invalidates after call delete this and unsubscribe
 		// Destroy all "dead" objects (excluding mapBlocks)
-		const auto it = std::ranges::remove_if(allPawns, [&](const auto& obj) { return !obj->GetIsAlive(); }).begin();
-		allPawns.erase(it, allPawns.end());
+		const auto it = std::ranges::remove_if(_allPawns, [&](const auto& obj) { return !obj->GetIsAlive(); }).begin();
+		_allPawns.erase(it, _allPawns.end());
 
 		RespawnTanks();
 
@@ -627,18 +569,18 @@ void GameSuccess::MainLoop()
 		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
 		HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
 
-		if (menuKeys.menuShow)
+		if (_menu.input->keys.menuShow)
 		{
-			menu.BlendToWindowBuffer();
+			_menu.BlendToWindowBuffer();
 		}
 
 		// update screen with buffer
 		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
 
-		if (menuKeys.menuShow)
+		if (_menu.input->keys.menuShow)
 		{
-			HandleMenuText(_renderer, menu._pos);
+			HandleMenuText(_renderer, _menu._pos);
 		}
 
 		// Copy the texture with FPS to the renderer
@@ -654,3 +596,5 @@ void GameSuccess::MainLoop()
 		SDL_DestroyTexture(_fpsTexture);
 	}
 }
+
+int GameSuccess::Result() const { return 0; }

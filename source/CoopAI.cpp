@@ -50,7 +50,7 @@ CoopAI::~CoopAI()
 
 	_events->RemoveListener("Draw", _name);
 
-	_events->EmitEvent("Statistics_" + _name + "_Died");
+	_events->EmitEvent(_name + "_Died");
 }
 
 bool CoopAI::IsCollideWith(const Rectangle& r1, const Rectangle& r2)

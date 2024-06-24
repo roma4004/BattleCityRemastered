@@ -2,7 +2,7 @@
 
 #include "BaseObj.h"
 #include "IMovable.h"
-#include "MoveBeh.h"
+#include "IMoveBeh.h"
 #include "Point.h"
 #include "Rectangle.h"
 
@@ -14,7 +14,7 @@ class EventSystem;
 class Pawn : public BaseObj, public IMovable
 {
 protected:
-	std::shared_ptr<MoveBeh> _moveBeh;
+	std::shared_ptr<IMoveBeh> _moveBeh;
 
 	UPoint _windowSize{0, 0};
 
@@ -27,7 +27,7 @@ protected:
 public:
 	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
 	     std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
-	     std::shared_ptr<MoveBeh> moveBeh);
+	     std::shared_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;
 
