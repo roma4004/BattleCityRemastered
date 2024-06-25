@@ -55,6 +55,7 @@ void Bullet::Move(const float deltaTime)
 		return;
 	}
 
+	constexpr int sideBarWidth = 175;
 	const float speed = _moveBeh->GetSpeed() * deltaTime;
 	if (const int direction = _moveBeh->GetDirection(); direction == UP && GetY() - speed >= 0.0f)
 	{
@@ -68,7 +69,7 @@ void Bullet::Move(const float deltaTime)
 	{
 		_moveBeh->MoveLeft(deltaTime);
 	}
-	else if (direction == RIGHT && GetRightSide() + speed <= static_cast<float>(_windowSize.x))
+	else if (direction == RIGHT && GetRightSide() + speed <= static_cast<float>(_windowSize.x) - sideBarWidth)
 	{
 		_moveBeh->MoveRight(deltaTime);
 	}

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Config.h"
+#include "IConfig.h"
+#include "Point.h"
 
 #include <SDL.h>
 // #include <SDL_image.h>
@@ -12,7 +13,7 @@ struct SDLEnvironment final
 public:
 	SDLEnvironment(UPoint windowSize, const char* fpsFontName);
 	~SDLEnvironment();
-	std::unique_ptr<Config> Init();
+	std::unique_ptr<IConfig> Init();
 
 	UPoint windowSize{800, 600};
 	int* windowBuffer{};

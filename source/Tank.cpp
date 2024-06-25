@@ -3,7 +3,7 @@
 
 Tank::Tank(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
-           std::shared_ptr<MoveBeh> moveBeh)
+           std::shared_ptr<IMoveBeh> moveBeh)
 	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events), std::move(moveBeh)} {}
 
 void Tank::Shot()
@@ -42,15 +42,16 @@ void Tank::Shot()
 	}
 	else
 	{
-		keyboardButtons.shot = false;
+		//Try shooting outside screen
 		return;
 	}
 
 	constexpr int color = 0xffffff;
 	const float speed = GetBulletSpeed();
 	constexpr int health = 1;
-	_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, _damage, _bulletDamageAreaRadius, color, speed, direction, health,
-	                                                 _windowBuffer, _windowSize, _allPawns, _events));
+	_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, _damage, _bulletDamageAreaRadius, color, speed,
+	                                                 direction, health, _windowBuffer, _windowSize, _allPawns,
+	                                                 _events));
 }
 
 float Tank::GetBulletWidth() const { return _bulletWidth; }

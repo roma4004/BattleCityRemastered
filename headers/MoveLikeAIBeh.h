@@ -2,14 +2,14 @@
 
 #include "BaseObj.h"
 #include "Direction.h"
-#include "MoveBeh.h"
+#include "IMoveBeh.h"
 #include "Point.h"
 
 #include <functional>
 #include <memory>
 #include <random>
 
-class MoveLikeAIBeh : public MoveBeh
+class MoveLikeAIBeh : public IMoveBeh
 {
 	std::mt19937 gen;
 	std::uniform_int_distribution<> distDirection;

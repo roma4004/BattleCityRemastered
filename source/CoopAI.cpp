@@ -1,16 +1,15 @@
-#include "../headers/Enemy.h"
 #include "../headers/CoopAI.h"
+#include "../headers/Enemy.h"
 #include "../headers/EventSystem.h"
 #include "../headers/MoveLikeAIBeh.h"
 #include "../headers/PlayerOne.h"
-#include "../headers/PlayerTwo.h"
 
 #include <algorithm>
 #include <chrono>
 
-Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-             const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-             std::shared_ptr<EventSystem> events, std::string name, std::string fraction)
+CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
+               const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+               std::shared_ptr<EventSystem> events, std::string name, std::string fraction)
 	: Tank{rect,
 	       color,
 	       health,
@@ -39,7 +38,7 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-Enemy::~Enemy()
+CoopAI::~CoopAI()
 {
 	// unsubscribe
 	if (_events == nullptr)
@@ -54,7 +53,7 @@ Enemy::~Enemy()
 	_events->EmitEvent(_name + "_Died");
 }
 
-bool Enemy::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
+bool CoopAI::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
 
 	// Check if one rectangle is to the right of the other
@@ -73,14 +72,12 @@ bool Enemy::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 	return true;
 }
 
-bool Enemy::IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles, Direction dir)
+bool CoopAI::IsEnemyVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles, Direction dir)
 {
 	if (!obstacles.empty())
 	{
-		std::shared_ptr<BaseObj> isPlayerTeamSeen = obstacles.front().lock();
-		if (dynamic_cast<PlayerOne*>(isPlayerTeamSeen.get())
-		    || dynamic_cast<PlayerTwo*>(isPlayerTeamSeen.get())
-		    || dynamic_cast<CoopAI*>(isPlayerTeamSeen.get()))
+		std::shared_ptr<BaseObj> isEnemySeen = obstacles.front().lock();
+		if (dynamic_cast<Enemy*>(isEnemySeen.get()))
 		{
 			return true;
 		}
@@ -89,7 +86,7 @@ bool Enemy::IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles
 	return false;
 }
 
-void Enemy::MayShoot(Direction dir)
+void CoopAI::MayShoot(Direction dir)
 {
 	const FPoint windowSize = {static_cast<float>(_windowSize.x), static_cast<float>(_windowSize.y)};
 	const float tankHalfWidth = GetWidth() / 2.f;
@@ -195,25 +192,25 @@ void Enemy::MayShoot(Direction dir)
 	});
 
 	// priority fire on players
-	if (IsPlayerVisible(upSideObstacles, UP))
+	if (IsEnemyVisible(upSideObstacles, UP))
 	{
 		_moveBeh->SetDirection(UP);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(leftSideObstacles, LEFT))
+	if (IsEnemyVisible(leftSideObstacles, LEFT))
 	{
 		_moveBeh->SetDirection(LEFT);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(downSideObstacles, DOWN))
+	if (IsEnemyVisible(downSideObstacles, DOWN))
 	{
 		_moveBeh->SetDirection(DOWN);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(rightSideObstacles, RIGHT))
+	if (IsEnemyVisible(rightSideObstacles, RIGHT))
 	{
 		_moveBeh->SetDirection(RIGHT);
 		Shot();
@@ -250,7 +247,7 @@ void Enemy::MayShoot(Direction dir)
 	}
 
 	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible()
-	    && !dynamic_cast<Enemy*>(nearestObstacle.get()))
+	    && !dynamic_cast<PlayerOne*>(nearestObstacle.get()))
 	{
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{
@@ -259,7 +256,7 @@ void Enemy::MayShoot(Direction dir)
 	}
 }
 
-void Enemy::Move(const float deltaTime)
+void CoopAI::Move(const float deltaTime)
 {
 	if (IsTurnCooldownFinish())
 	{
@@ -301,7 +298,7 @@ void Enemy::Move(const float deltaTime)
 	}
 }
 
-bool Enemy::IsTurnCooldownFinish() const
+bool CoopAI::IsTurnCooldownFinish() const
 {
 	const auto lastTimeTurnSec =
 			std::chrono::duration_cast<std::chrono::seconds>(lastTimeTurn.time_since_epoch()).count();

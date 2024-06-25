@@ -4,7 +4,7 @@
 
 #include <memory>
 
-class Config;
+class IConfig;
 
 SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName)
 	: windowSize{windowSize}, _fpsFontPathName{fpsFontName} {}
@@ -26,7 +26,7 @@ SDLEnvironment::~SDLEnvironment()
 	SDL_Quit();
 }
 
-[[nodiscard]] std::unique_ptr<Config> SDLEnvironment::Init()
+[[nodiscard]] std::unique_ptr<IConfig> SDLEnvironment::Init()
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
@@ -40,7 +40,7 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED /* | SDL_RENDERER_PRESENTVSYNC*/);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED  | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());

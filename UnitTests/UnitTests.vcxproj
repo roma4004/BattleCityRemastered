@@ -37,16 +37,20 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
+    <ClCompile Include="..\source\Brick.cpp" />
     <ClCompile Include="..\source\Bullet.cpp" />
+    <ClCompile Include="..\source\InputProviderForPlayerOne.cpp" />
     <ClCompile Include="..\source\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\Pawn.cpp" />
     <ClCompile Include="..\source\PlayerOne.cpp" />
     <ClCompile Include="..\source\Rectangle.cpp" />
     <ClCompile Include="..\source\Tank.cpp" />
+    <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MockBullet.h" />
     <ClInclude Include="MockPlayerOne.h" />
   </ItemGroup>
   <ItemGroup>

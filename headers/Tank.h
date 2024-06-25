@@ -14,19 +14,19 @@ class Tank : public Pawn
 
 	float _bulletHeight{6.f};
 
-	float _bulletSpeed{300.f};
+	float _bulletSpeed{300.f}; //TODO: move outside this class to bullet calibre stats class and DI into constructor
 
 protected:
 	double _bulletDamageAreaRadius{12.f};
 
 	std::chrono::time_point<std::chrono::system_clock> lastTimeFire;
 
-	int fireCooldown{2};
+	int fireCooldown{1};
 
 public:
 	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
 	     std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
-	     std::shared_ptr<MoveBeh> moveBeh);
+	     std::shared_ptr<IMoveBeh> moveBeh);
 
 	~Tank() override = default;
 
@@ -41,5 +41,5 @@ public:
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
 
-	bool IsReloadFinish() const;
+	[[nodiscard]] bool IsReloadFinish() const;
 };

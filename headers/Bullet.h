@@ -7,7 +7,7 @@ struct UPoint;
 class BaseObj;
 class EventSystem;
 
-class Bullet final : public Pawn
+class Bullet : public Pawn
 {
 public:
 	Bullet(const Rectangle& rect, int damage, double aoeRadius, int color, float speed, Direction direction, int health,

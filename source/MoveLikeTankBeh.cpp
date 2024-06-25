@@ -9,7 +9,6 @@ MoveLikeTankBeh::MoveLikeTankBeh(const UPoint windowSize, const float speed, Bas
 
 bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
-
 	// Check if one rectangle is to the right of the other
 	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
 	{
@@ -67,16 +66,8 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 		{
 			if (!pawn->GetIsPassable())
 			{
-				//TODO: need fix, we broke collision detecting
 				obstacles.emplace_back(std::weak_ptr(pawn));
-				// return std::make_tuple(false, obstacle);
 			}
-			//else
-			//{
-			//	obstacle.emplace_back(std::weak_ptr(pawn));
-			//	isHaveCollision = true;
-			//	return std::make_tuple(true, obstacle);
-			//}
 		}
 	}
 
@@ -143,7 +134,9 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 
 void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 {
-	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < static_cast<float>(_windowSize.x))
+	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
+	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
+	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < maxX)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
