@@ -18,7 +18,7 @@ struct FPoint
 	{
 		static constexpr float epsilon = 1e-4f;
 		return x < rhs.x && std::abs(x - rhs.x) > epsilon ||
-			   (std::abs(x - rhs.x) < epsilon && y < rhs.y && std::abs(y - rhs.y) > epsilon);
+		       (std::abs(x - rhs.x) < epsilon && y < rhs.y && std::abs(y - rhs.y) > epsilon);
 	}
 
 	bool operator>(const FPoint& rhs) const { return rhs < *this; }

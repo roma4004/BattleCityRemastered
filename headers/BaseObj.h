@@ -2,15 +2,23 @@
 
 #include "Rectangle.h"
 
-#include "../headers/IDrawable.h"
-#include "../headers/IObstacle.h"
-#include "../headers/ITickUpdatable.h"
-#include "../headers/Point.h"
+#include "IDrawable.h"
+#include "IObstacle.h"
+#include "ITickUpdatable.h"
+
+struct FPoint;
 
 class BaseObj : public IObstacle, public IDrawable, public ITickUpdatable
 {
+	int _color{0};
+	int _health{0};
+	bool _isAlive{true};
+
+protected:
+	Rectangle shape{};
+
 public:
-	BaseObj(const Rectangle& rect, int color, float speed, int health);
+	BaseObj(const Rectangle& rect, int color, int health);
 
 	~BaseObj() override;
 
@@ -34,8 +42,6 @@ public:
 	void MoveX(float i);
 	void MoveY(float i);
 
-	[[nodiscard]] float GetSpeed() const;
-
 	[[nodiscard]] int GetColor() const;
 	void SetColor(int color);
 
@@ -57,13 +63,4 @@ public:
 	void SetIsPenetrable(bool value) override;
 
 	[[nodiscard]] const Rectangle& GetShape() const;
-
-protected:
-	Rectangle shape{};
-
-private:
-	int _color{0};
-	float _speed{0.f};
-	int _health{0};
-	bool _isAlive = true;
 };

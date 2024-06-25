@@ -3,14 +3,14 @@
 #include "Config.h"
 
 #include <SDL.h>
-//#include <SDL2/SDL_image.h>
-//#include <SDL2/SDL_ttf.h>
+// #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <memory>
 
-class SDLEnvironment final
+struct SDLEnvironment final
 {
 public:
-	SDLEnvironment(UPoint windowSize);
+	SDLEnvironment(UPoint windowSize, const char* fpsFontName);
 	~SDLEnvironment();
 	std::unique_ptr<Config> Init();
 
@@ -19,4 +19,8 @@ public:
 	SDL_Window* window{};
 	SDL_Renderer* renderer{};
 	SDL_Texture* screen{};
+
+	//fps
+	TTF_Font* _fpsFont{nullptr};
+	const char* _fpsFontPathName;
 };

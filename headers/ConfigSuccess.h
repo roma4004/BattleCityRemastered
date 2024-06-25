@@ -1,8 +1,8 @@
 #pragma once
-#include "../headers/Config.h"
+#include "Config.h"
 
 #include <SDL.h>
-// #include <SDL_ttf.h>
+#include <SDL_ttf.h>
 
 class ConfigSuccess final : public Config
 {
@@ -10,15 +10,19 @@ class ConfigSuccess final : public Config
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
 	SDL_Texture* _screen{nullptr};
-	// TTF_Font* font;
+
+	//fps
+	TTF_Font* _fpsFont{nullptr};
+	// SDL_Surface* fpsSurface{nullptr};
+	// SDL_Texture* fpsTexture{nullptr};
 
 public:
 	ConfigSuccess() = delete;
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	explicit ConfigSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer,
-						   SDL_Texture* screen /*, TTF_Font* font*/);
+	explicit ConfigSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
+	                       TTF_Font* fpsFont);
 
 	~ConfigSuccess() override = default;
 

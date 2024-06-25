@@ -3,7 +3,7 @@
 #include <string>
 
 Brick::Brick(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 0, 15}, _windowSize{windowSize},
+	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 15}, _windowSize{windowSize},
 	  _windowBuffer{windowBuffer}, _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);

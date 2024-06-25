@@ -8,12 +8,10 @@ class MockPlayerOne final : public PlayerOne
 {
 public:
 	MockPlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-				  const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-				  std::shared_ptr<EventSystem> events)
+	              const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+	              std::shared_ptr<EventSystem> events)
 		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, speed, health, windowBuffer, windowSize, allPawns,
-					std::move(events))
-	{
-	}
+		            std::move(events)) {}
 
 	~MockPlayerOne() override = default;
 
@@ -28,23 +26,26 @@ public:
 
 	void MockResetKeyPressed() { keyboardButtons = {}; }
 	void MockShotKeyPressed() { keyboardButtons.shot = true; }
+
 	void MockMoveKeyPressed(const Direction dir)
 	{
 		if (dir == LEFT)
 		{
-			keyboardButtons.a = true;
+			keyboardButtons.left = true;
 		}
 		else if (dir == RIGHT)
 		{
-			keyboardButtons.d = true;
+			keyboardButtons.right = true;
 		}
 		else if (dir == DOWN)
 		{
-			keyboardButtons.s = true;
+			keyboardButtons.down = true;
 		}
 		else if (dir == UP)
 		{
-			keyboardButtons.w = true;
+			keyboardButtons.up = true;
 		}
 	}
+
+	void SetDirection(Direction direction) const { _moveBeh->SetDirection(direction); }
 };
