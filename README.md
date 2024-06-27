@@ -1,5 +1,6 @@
 # BattleCityRemastered
-Please note the game is in a development state so the latest version is on the "dev" branch
+Please note the game is in a development state so the latest version is on the "dev" branch.
+
 Like my old Battle City but remastered as a mentoring project for studying new programmers
 
 ![зображення](https://github.com/roma4004/BattleCityRemastered/assets/16146920/10f3de05-6c19-4f89-a54b-19a7cb66d90e)
