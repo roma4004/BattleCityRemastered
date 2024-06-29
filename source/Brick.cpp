@@ -10,28 +10,33 @@ Brick::Brick(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, 
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	// subscribe
-	if (_events == nullptr)
-	{
-		return;
-	}
-
-	const auto name = "Brick " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_events->AddListener("Draw", name, [this]() { this->Draw(); });
+	_name = "Brick " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	Subscribe();
 }
 
 Brick::~Brick()
 {
-	// unsubscribe
+	Unsubscribe();
+}
+
+void Brick::Subscribe() const
+{
 	if (_events == nullptr)
 	{
 		return;
 	}
 
-	const auto name = "Brick " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+}
 
-	_events->RemoveListener("Draw", name);
+void Brick::Unsubscribe() const
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener("Draw", _name);
 }
 
 void Brick::SetPixel(const size_t x, const size_t y, const int color) const

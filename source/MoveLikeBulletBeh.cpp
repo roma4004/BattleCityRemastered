@@ -3,9 +3,10 @@
 #include <functional>
 #include <memory>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(const UPoint windowSize, const float speed, const int damage, double aoeRadius,
-                                     BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allPawns)
-	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns}, _damage{damage},
+MoveLikeBulletBeh::MoveLikeBulletBeh(const Direction direction, const UPoint windowSize, const float speed,
+                                     const int damage, double aoeRadius, BaseObj* selfParent,
+                                     std::vector<std::shared_ptr<BaseObj>>* allPawns)
+	: _windowSize(windowSize), _selfParent{selfParent}, _direction{direction}, _speed{speed}, _allPawns{allPawns}, _damage{damage},
 	  _bulletDamageAreaRadius{aoeRadius} {}
 
 inline bool IsCollideWith(const Rectangle& r1, const Rectangle& r2)

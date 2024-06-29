@@ -11,59 +11,59 @@ struct Event
 
 	void AddListener(const std::string& listenerName, ListenerCallback callback)
 	{
-		listeners[listenerName] = std::move(callback);
+		_listeners[listenerName] = std::move(callback);
 	}
 
 	void Emit(Args&&... args)
 	{
-		for (auto& [_, callback]: listeners)
+		for (auto& [_, callback]: _listeners)
 		{
 			callback(std::forward<Args>(args)...);
 		}
 	}
 
-	void RemoveListener(const std::string& listenerName) { listeners.erase(listenerName); }
+	void RemoveListener(const std::string& listenerName) { _listeners.erase(listenerName); }
 
 private:
-	std::unordered_map<std::string, ListenerCallback> listeners;
+	std::unordered_map<std::string, ListenerCallback> _listeners;
 };
 
 class EventSystem
 {
 	using EventVariant = std::variant<Event<>, Event<float>>;
 
-	std::unordered_map<std::string, EventVariant> events;
+	std::unordered_map<std::string, EventVariant> _events;
 
 public:
 	template<typename... Args>
 	void AddListener(const std::string& eventName, const std::string& listenerName, auto callback)
 	{
-		if (std::holds_alternative<Event<Args...>>(events[eventName]))
+		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
 		{
-			std::get<Event<Args...>>(events[eventName]).AddListener(listenerName, std::move(callback));
+			std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
 		}
 		else
 		{
-			events[eventName] = Event<Args...>{};
-			std::get<Event<Args...>>(events[eventName]).AddListener(listenerName, std::move(callback));
+			_events[eventName] = Event<Args...>{};
+			std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
 		}
 	}
 
 	template<typename... Args>
 	void EmitEvent(const std::string& eventName, Args&... args)
 	{
-		if (std::holds_alternative<Event<Args...>>(events[eventName]))
+		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
 		{
-			std::get<Event<Args...>>(events[eventName]).Emit(std::forward<Args>(args)...);
+			std::get<Event<Args...>>(_events[eventName]).Emit(std::forward<Args>(args)...);
 		}
 	}
 
 	template<typename... Args>
 	void RemoveListener(const std::string& eventName, const std::string& listenerName)
 	{
-		if (std::holds_alternative<Event<Args...>>(events[eventName]))
+		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
 		{
-			std::get<Event<Args...>>(events[eventName]).RemoveListener(listenerName);
+			std::get<Event<Args...>>(_events[eventName]).RemoveListener(listenerName);
 		}
 	}
 };

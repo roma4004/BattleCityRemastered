@@ -13,39 +13,56 @@ Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int co
 	       windowSize,
 	       allPawns,
 	       std::move(events),
-	       std::make_shared<MoveLikeBulletBeh>(windowSize, speed, damage, aoeRadius, this, allPawns)}
+	       std::make_shared<MoveLikeBulletBeh>(direction, windowSize, speed, damage, aoeRadius, this, allPawns)}
 {
-	_moveBeh->SetDirection(direction);
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	// subscribe
-	if (_events == nullptr)
-	{
-		return;
-	}
-
-	const auto name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_events->AddListener<float>("TickUpdate", name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
-
-	_events->AddListener("Draw", name, [this]() { this->Draw(); });
+	_name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	Subscribe();
 }
+
 
 Bullet::~Bullet()
 {
-	// unsubscribe
+	Unsubscribe();
+}
+
+void Bullet::Subscribe()
+{
 	if (_events == nullptr)
 	{
 		return;
 	}
 
-	const auto name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->RemoveListener<float>("TickUpdate", name);
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+}
 
-	_events->RemoveListener("Draw", name);
+void Bullet::Unsubscribe() const
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener<float>("TickUpdate", _name);
+
+	_events->RemoveListener("Draw", _name);
+}
+
+void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
+                   const Direction direction, const int health)
+{
+	SetShape(rect);
+	SetColor(color);
+	SetHealth(health);
+	_moveBeh = std::make_shared<MoveLikeBulletBeh>(direction, _windowSize, speed, damage, aoeRadius, this, _allPawns);
+	_moveBeh->SetDirection(direction);// TODO: move this to constructor
+	Subscribe();
+	SetIsAlive(true);
 }
 
 void Bullet::Move(const float deltaTime)

@@ -10,30 +10,34 @@ Iron::Iron(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, st
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
 
-	// subscribe
-	if (_events == nullptr)
-	{
-		return;
-	}
-
-	const auto name = "Iron " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_events->AddListener("Draw", name, [this]() { this->Draw(); });
+	_name = "Iron " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	Subscribe();
 }
 
 Iron::~Iron()
 {
-	// unsubscribe
+	Unsubscribe();
+}
+
+void Iron::Subscribe() const
+{
 	if (_events == nullptr)
 	{
 		return;
 	}
 
-	const auto name = "Iron " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_events->RemoveListener("Draw", name);
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
+void Iron::Unsubscribe() const
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener("Draw", _name);
+}
 void Iron::SetPixel(const size_t x, const size_t y, const int color) const
 {
 	if (x < _windowSize.x && y < _windowSize.y)

@@ -1,8 +1,23 @@
 #include "../headers/GameStatistics.h"
 
-GameStatistics::GameStatistics(std::string name, std::shared_ptr<EventSystem> events)
-	: _name{std::move(name)}, _events{std::move(events)}
+GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
+	: _name{"Statistics"}, _events{std::move(events)}
 {
+	Subscribe();
+}
+
+GameStatistics::~GameStatistics()
+{
+	Unsubscribe();
+}
+
+void GameStatistics::Subscribe()
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
 	_events->AddListener("Enemy1_Died", _name, [this]() { enemyOneNeedRespawn = true; });
 	_events->AddListener("Enemy2_Died", _name, [this]() { enemyTwoNeedRespawn = true; });
 	_events->AddListener("Enemy3_Died", _name, [this]() { enemyThreeNeedRespawn = true; });
@@ -56,8 +71,13 @@ GameStatistics::GameStatistics(std::string name, std::shared_ptr<EventSystem> ev
 	});
 }
 
-GameStatistics::~GameStatistics()
+void GameStatistics::Unsubscribe() const
 {
+	if (_events == nullptr)
+	{
+		return;
+	}
+
 	_events->RemoveListener("Enemy1_Died", _name);
 	_events->RemoveListener("Enemy2_Died", _name);
 	_events->RemoveListener("Enemy3_Died", _name);
@@ -79,7 +99,7 @@ GameStatistics::~GameStatistics()
 	_events->RemoveListener("Enemy4_Spawn", _name);
 }
 
-void GameStatistics::ResetStatistics()
+void GameStatistics::Reset()
 {
 	enemyRespawnResource = 20;
 	playerOneRespawnResource = 3;

@@ -1,12 +1,12 @@
 #include "../headers/Tank.h"
-#include "../headers/Bullet.h"
 
 Tank::Tank(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
-           std::shared_ptr<IMoveBeh> moveBeh)
-	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events), std::move(moveBeh)} {}
+           std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool)
+	: Pawn{rect, color, health, windowBuffer, windowSize, allPawns, std::move(events), std::move(moveBeh)},
+	  _bulletPool{std::move(bulletPool)} {}
 
-void Tank::Shot()
+void Tank::Shot() const
 {
 	const Direction direction = _moveBeh->GetDirection();
 	const FPoint tankHalf = {GetWidth() / 2.f, GetHeight() / 2.f};
@@ -49,9 +49,8 @@ void Tank::Shot()
 	constexpr int color = 0xffffff;
 	const float speed = GetBulletSpeed();
 	constexpr int health = 1;
-	_allPawns->emplace_back(std::make_shared<Bullet>(bulletRect, _damage, _bulletDamageAreaRadius, color, speed,
-	                                                 direction, health, _windowBuffer, _windowSize, _allPawns,
-	                                                 _events));
+	_allPawns->emplace_back(_bulletPool->GetBullet(bulletRect, _damage, _bulletDamageAreaRadius, color, speed,
+	                                               direction, health, _windowBuffer, _windowSize, _allPawns, _events));
 }
 
 float Tank::GetBulletWidth() const { return _bulletWidth; }

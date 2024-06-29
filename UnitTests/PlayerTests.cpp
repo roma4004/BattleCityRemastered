@@ -26,6 +26,7 @@ protected:
 	float _bulletSpeed{300.f};
 	int* _windowBuffer{nullptr};
 	int _tankHealth = 100;
+	std::shared_ptr<BulletPool> _bulletPool;
 
 	void SetUp() override
 	{
@@ -36,8 +37,10 @@ protected:
 		constexpr int yellow = 0xeaea00;
 		std::string name = "PlayerOne";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		_bulletPool = std::make_shared<BulletPool>();
 		allPawns.emplace_back(std::make_shared<MockPlayerOne>(playerRect, yellow, _tankSpeed, _tankHealth,
-		                                                      _windowBuffer, _windowSize, &allPawns, _events, name, inputProvider));
+		                                                      _windowBuffer, _windowSize, &allPawns, _events, name,
+		                                                      inputProvider, _bulletPool));
 	}
 
 	void TearDown() override
@@ -296,7 +299,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		allPawns.emplace_back(std::make_shared<MockPlayerOne>(playerRect2, green, _tankSpeed, _tankHealth,
 		                                                      _windowBuffer, _windowSize, &allPawns, _events, name,
-		                                                      inputProvider));
+		                                                      inputProvider, _bulletPool));
 
 		if (const auto player2 = dynamic_cast<MockPlayerOne*>(allPawns.back().get()))
 		{

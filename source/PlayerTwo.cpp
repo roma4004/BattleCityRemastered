@@ -9,7 +9,7 @@
 PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
                      const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
                      std::shared_ptr<EventSystem> events, std::string name,
-                     std::unique_ptr<IInputProvider>& inputProvider)
+                     std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
 	       color,
 	       health,
@@ -17,7 +17,8 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 	       windowSize,
 	       allPawns,
 	       std::move(events),
-	       std::make_shared<MoveLikeTankBeh>(windowSize, speed, this, allPawns)},
+		std::make_shared<MoveLikeTankBeh>(UP, windowSize, speed, this, allPawns),
+		std::move(bulletPool)},
 	  _name{std::move(name)},
 	  _inputProvider{std::move(inputProvider)}
 {
@@ -25,7 +26,16 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	// subscribe
+	Subscribe();
+}
+
+PlayerTwo::~PlayerTwo()
+{
+	Unsubscribe();
+}
+
+void PlayerTwo::Subscribe()
+{
 	if (_events == nullptr)
 	{
 		return;
@@ -47,9 +57,8 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const float speed, 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-PlayerTwo::~PlayerTwo()
+void PlayerTwo::Unsubscribe() const
 {
-	// unsubscribe
 	if (_events == nullptr)
 	{
 		return;

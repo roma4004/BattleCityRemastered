@@ -3,7 +3,7 @@
 #include "BaseObj.h"
 #include "Circle.h"
 #include "Direction.h"
-#include "IMoveBeh.h"
+#include "interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>
@@ -19,8 +19,8 @@ class MoveLikeBulletBeh : public IMoveBeh
 	double _bulletDamageAreaRadius{12.f};
 
 public:
-	MoveLikeBulletBeh(UPoint windowSize, float speed, int damage, double aoeRadius, BaseObj* selfParent,
-	                  std::vector<std::shared_ptr<BaseObj>>* allPawns);
+	MoveLikeBulletBeh(Direction direction, UPoint windowSize, float speed, int damage, double aoeRadius,
+	                  BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allPawns);
 
 	~MoveLikeBulletBeh() override = default;
 
