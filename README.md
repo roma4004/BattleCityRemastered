@@ -22,6 +22,7 @@ Used design patterns:
 * IoC
 
 TODO: 
+* (already in PR) object pool for reusing bullets,
 * bonus system,
 * unique bonuses,
 * tank heath bar,
@@ -31,5 +32,4 @@ TODO:
 * SDL_Mixer for sound,
 * QuadThree for collision detection,
 * thread pool even for faster "update" and "draw",
-* object pool for bullets,
 * network multiplayer
