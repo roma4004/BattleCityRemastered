@@ -4,11 +4,11 @@
 #include "BulletPool.h"
 #include "EventSystem.h"
 #include "GameStatistics.h"
-#include "IGame.h"
 #include "InputProviderForMenu.h"
 #include "Menu.h"
 #include "MouseButton.h"
 #include "Point.h"
+#include "interfaces/IGame.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>

@@ -2,8 +2,8 @@
 
 #include "BaseObj.h"
 #include "Direction.h"
-#include "IMoveBeh.h"
 #include "Point.h"
+#include "interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>

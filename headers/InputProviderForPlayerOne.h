@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EventSystem.h"
-#include "IInputProvider.h"
+#include "interfaces/IInputProvider.h"
 
 #include <memory>
 

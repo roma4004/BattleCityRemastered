@@ -3,7 +3,7 @@
 #include "BaseObj.h"
 #include "Circle.h"
 #include "Direction.h"
-#include "IMoveBeh.h"
+#include "interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "IDrawable.h"
-#include "IObstacle.h"
-#include "ITickUpdatable.h"
 #include "Rectangle.h"
+#include "interfaces/IDrawable.h"
+#include "interfaces/IObstacle.h"
+#include "interfaces/ITickUpdatable.h"
 
 struct FPoint;
 

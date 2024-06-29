@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IInputProvider.h"
 #include "Tank.h"
+#include "interfaces/IInputProvider.h"
 
 class PlayerOne : public Tank
 {

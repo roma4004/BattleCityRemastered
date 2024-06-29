@@ -1,7 +1,6 @@
 #include "../headers/PlayerOne.h"
 
 #include "../headers/EventSystem.h"
-#include "../headers/IInputProvider.h"
 #include "../headers/MoveLikeTankBeh.h"
 
 #include <chrono>

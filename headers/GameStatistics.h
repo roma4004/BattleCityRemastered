@@ -9,7 +9,6 @@ class GameStatistics
 {
 public:
 	GameStatistics(std::shared_ptr<EventSystem> events);
-	void Unsubscribe() const;
 
 	~GameStatistics();
 
