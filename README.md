@@ -19,10 +19,10 @@ Used design patterns:
 * event bus, 
 * observer, 
 * strategy, 
-* IoC
+* IoC,
+* (already in PR) object pool for reusing bullets
 
 TODO: 
-* (already in PR) object pool for reusing bullets,
 * bonus system,
 * unique bonuses,
 * tank heath bar,
