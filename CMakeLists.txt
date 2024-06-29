@@ -94,7 +94,6 @@ add_executable(${PROJECT_NAME}
         source/CoopAI.cpp
         source/Enemy.cpp
         source/Brick.cpp
-        source/Config.cpp
         source/ConfigFailure.cpp
         source/ConfigSuccess.cpp
         source/GameFailure.cpp
