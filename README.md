@@ -10,7 +10,6 @@ Already done moving (for both players in one keyboard), shooting with reload tim
 Used technologies:
 * C++20,
 * EventSystem,
-*object pool for 
 * SDL,
 * SDL_TTF,
 * google unit tests,
@@ -23,11 +22,11 @@ Used design patterns:
 * IoC,
 * Object Pool (already in PR)
 
-TODO: 
-* bonus system,
-* unique bonuses,
+TODO roadmap: 
 * tank heath bar,
 * detailed statistics,
+* bonus system,
+* unique bonuses,
 * use SDL_Image for texture,
 * patterns lightweight for images,
 * SDL_Mixer for sound,
