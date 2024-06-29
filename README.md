@@ -5,11 +5,12 @@ Like my old, [Battle City on C++/QT QML](https://github.com/roma4004/battle_city
 and for me to practice design patterns and game architecture in modern C++.
 
 ![зображення](https://github.com/roma4004/BattleCityRemastered/assets/16146920/10f3de05-6c19-4f89-a54b-19a7cb66d90e)
-Already done moving (for both players in one keyboard), shooting with reload timer, destroying tank and obstacle, enemyAI and coopAI, respawning, scoring, animated menu with game modes, indestructible obstacle and water which can't be passed but bullets traverse above it. 
+Already done moving (for both players in one keyboard), shooting with reload timer with reusing bullets instance, destroying tank and obstacle, enemyAI and coopAI, respawning, scoring, animated menu with game modes, indestructible obstacle and water which can't be passed but bullets traverse above it. 
 
 Used technologies:
 * C++20,
 * EventSystem,
+*object pool for 
 * SDL,
 * SDL_TTF,
 * google unit tests,
@@ -20,7 +21,7 @@ Used design patterns:
 * observer, 
 * strategy, 
 * IoC,
-* (already in PR) object pool for reusing bullets
+* Object Pool (already in PR)
 
 TODO: 
 * bonus system,
