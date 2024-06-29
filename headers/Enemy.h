@@ -18,11 +18,14 @@ class Enemy : public Tank
 public:
 	Enemy(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, UPoint windowSize,
 	      std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::string name,
-	      std::string fraction);
+	      std::string fraction, std::shared_ptr<BulletPool> bulletPool);
 	~Enemy() override;
 
+	void Subscribe();
+	void Unsubscribe() const;
+
 	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
-	[[nodiscard]] static bool IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles, Direction dir);
+	[[nodiscard]] static bool IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles);
 	void MayShoot(Direction dir);
 
 	void Move(float deltaTime) override;

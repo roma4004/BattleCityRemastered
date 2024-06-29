@@ -17,7 +17,7 @@ class MoveLikeTankBeh : public IMoveBeh
 	std::vector<std::shared_ptr<BaseObj>>* _allPawns;
 
 public:
-	MoveLikeTankBeh(UPoint windowSize, float speed, BaseObj* selfParent,
+	MoveLikeTankBeh(Direction direction, UPoint windowSize, float speed, BaseObj* selfParent,
 	                std::vector<std::shared_ptr<BaseObj>>* allPawns);
 
 	~MoveLikeTankBeh() override = default;

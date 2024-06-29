@@ -3,9 +3,9 @@
 #include <functional>
 #include <memory>
 
-MoveLikeAIBeh::MoveLikeAIBeh(const UPoint windowSize, const float speed, BaseObj* selfParent,
+MoveLikeAIBeh::MoveLikeAIBeh(const Direction direction, const UPoint windowSize, const float speed, BaseObj* selfParent,
                              std::vector<std::shared_ptr<BaseObj>>* allPawns)
-	: _windowSize(windowSize), _selfParent{selfParent}, _speed{speed}, _allPawns{allPawns} {}
+	: _windowSize(windowSize), _selfParent{selfParent}, _direction{direction}, _speed{speed}, _allPawns{allPawns} {}
 
 bool MoveLikeAIBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {

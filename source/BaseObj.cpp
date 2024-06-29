@@ -2,43 +2,45 @@
 #include "../headers/Point.h"
 
 BaseObj::BaseObj(const Rectangle& rect, const int color, const int health)
-	: _color(color), _health(health), shape{rect} {}
+	: _color(color), _health(health), _shape{rect} {}
 
 BaseObj::~BaseObj() = default;
 
-const Rectangle& BaseObj::GetShape() const { return shape; }
+const Rectangle& BaseObj::GetShape() const { return _shape; }
 
-FPoint BaseObj::GetPos() const { return FPoint{shape.x, shape.y}; }
+void BaseObj::SetShape(const Rectangle& shape) { _shape = shape; }
+
+FPoint BaseObj::GetPos() const { return FPoint{_shape.x, _shape.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)
 {
-	shape.x = pos.x;
-	shape.y = pos.y;
+	_shape.x = pos.x;
+	_shape.y = pos.y;
 }
 
-float BaseObj::GetRightSide() const { return shape.Right(); }
+float BaseObj::GetRightSide() const { return _shape.Right(); }
 
-float BaseObj::GetBottomSide() const { return shape.Bottom(); }
+float BaseObj::GetBottomSide() const { return _shape.Bottom(); }
 
-float BaseObj::GetX() const { return shape.x; }
+float BaseObj::GetX() const { return _shape.x; }
 
-void BaseObj::SetX(const FPoint& pos) { shape.x = pos.x; }
+void BaseObj::SetX(const FPoint& pos) { _shape.x = pos.x; }
 
-float BaseObj::GetY() const { return shape.y; }
+float BaseObj::GetY() const { return _shape.y; }
 
-void BaseObj::SetY(const FPoint& pos) { shape.y = pos.y; }
+void BaseObj::SetY(const FPoint& pos) { _shape.y = pos.y; }
 
-float BaseObj::GetWidth() const { return shape.w; }
+float BaseObj::GetWidth() const { return _shape.w; }
 
-void BaseObj::SetWidth(const float width) { shape.w = width; }
+void BaseObj::SetWidth(const float width) { _shape.w = width; }
 
-float BaseObj::GetHeight() const { return shape.h; }
+float BaseObj::GetHeight() const { return _shape.h; }
 
-void BaseObj::SetHeight(const float height) { shape.h = height; }
+void BaseObj::SetHeight(const float height) { _shape.h = height; }
 
-void BaseObj::MoveX(const float i) { shape.x += i; }
+void BaseObj::MoveX(const float i) { _shape.x += i; }
 
-void BaseObj::MoveY(const float i) { shape.y += i; }
+void BaseObj::MoveY(const float i) { _shape.y += i; }
 
 int BaseObj::GetColor() const { return _color; }
 

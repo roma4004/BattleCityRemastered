@@ -8,9 +8,12 @@ class PlayerOne : public Tank
 public:
 	PlayerOne(const Rectangle& rect, int color, float speed, int health, int* windowBuffer, UPoint windowSize,
 	          std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events, std::string name,
-	          std::unique_ptr<IInputProvider>& inputProvider);
+	          std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool);
 
 	~PlayerOne() override;
+
+	void Subscribe();
+	void Unsubscribe() const;
 
 	void Move(float deltaTime) override;
 

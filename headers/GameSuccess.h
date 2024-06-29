@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseObj.h"
+#include "BulletPool.h"
 #include "EventSystem.h"
 #include "GameStatistics.h"
 #include "IGame.h"
@@ -45,6 +46,8 @@ class GameSuccess final : public IGame
 	std::vector<std::shared_ptr<BaseObj>> _allPawns;
 
 	std::shared_ptr<EventSystem> _events;
+
+	std::shared_ptr<BulletPool> _bulletPool;
 
 	std::random_device _rd;
 

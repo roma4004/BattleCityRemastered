@@ -21,7 +21,8 @@ class MoveLikeAIBeh : public IMoveBeh
 	std::vector<std::shared_ptr<BaseObj>>* _allPawns;
 
 public:
-	MoveLikeAIBeh(UPoint windowSize, float speed, BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allPawns);
+	MoveLikeAIBeh(Direction direction, UPoint windowSize, float speed, BaseObj* selfParent,
+	              std::vector<std::shared_ptr<BaseObj>>* allPawns);
 
 	~MoveLikeAIBeh() override = default;
 

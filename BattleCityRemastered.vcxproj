@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="source\Brick.cpp" />
     <ClCompile Include="source\Bullet.cpp" />
+    <ClCompile Include="source\BulletPool.cpp" />
     <ClCompile Include="source\CoopAI.cpp" />
     <ClCompile Include="source\Enemy.cpp" />
     <ClCompile Include="source\GameFailure.cpp" />
@@ -163,6 +164,7 @@
   <ItemGroup>
     <ClInclude Include="headers\Brick.h" />
     <ClInclude Include="headers\Bullet.h" />
+    <ClInclude Include="headers\BulletPool.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\CoopAI.h" />

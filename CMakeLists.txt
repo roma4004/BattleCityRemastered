@@ -91,6 +91,7 @@ add_executable(${PROJECT_NAME}
         source/PlayerOne.cpp
         source/PlayerTwo.cpp
         source/Bullet.cpp
+        source/BulletPool.cpp
         source/CoopAI.cpp
         source/Enemy.cpp
         source/Brick.cpp
