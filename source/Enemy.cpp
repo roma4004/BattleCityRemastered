@@ -8,8 +8,8 @@
 #include <algorithm>
 #include <chrono>
 
-Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-             const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+Enemy::Enemy(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+             Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
              std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
              std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
@@ -17,11 +17,15 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	       health,
 	       windowBuffer,
 	       windowSize,
-	       allPawns,
+	       direction,
+	       speed,
+	       allObjects,
 	       std::move(events),
-	       std::make_shared<MoveLikeAIBeh>(DOWN, windowSize, speed, this, allPawns),
-	       std::move(bulletPool)},
-	  distDirection(0, 3), distTurnRate(1, 5), _name{std::move(name)}, _fraction{std::move(fraction)}
+	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
+	       std::move(bulletPool),
+	       std::move(name),
+	       std::move(fraction)},
+	  distDirection(0, 3), distTurnRate(1, 5)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -48,6 +52,8 @@ void Enemy::Subscribe()
 	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 }
 
 void Enemy::Unsubscribe() const
@@ -60,6 +66,8 @@ void Enemy::Unsubscribe() const
 	_events->RemoveListener<float>("TickUpdate", _name);
 
 	_events->RemoveListener("Draw", _name);
+
+	_events->RemoveListener("DrawHealthBar", _name);
 
 	_events->EmitEvent(_name + "_Died");
 }
@@ -118,7 +126,7 @@ void Enemy::MayShoot(Direction dir)
 	std::vector<std::weak_ptr<BaseObj>> leftSideObstacles{};
 	std::vector<std::weak_ptr<BaseObj>> downSideObstacles{};
 	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
-	for (std::shared_ptr<BaseObj>& pawn: *_allPawns)
+	for (std::shared_ptr<BaseObj>& pawn: *_allObjects)
 	{
 		if (this == pawn.get())
 		{
@@ -207,25 +215,25 @@ void Enemy::MayShoot(Direction dir)
 	// priority fire on players
 	if (IsPlayerVisible(upSideObstacles))
 	{
-		_moveBeh->SetDirection(UP);
+		SetDirection(UP);
 		Shot();
 		return;
 	}
 	if (IsPlayerVisible(leftSideObstacles))
 	{
-		_moveBeh->SetDirection(LEFT);
+		SetDirection(LEFT);
 		Shot();
 		return;
 	}
 	if (IsPlayerVisible(downSideObstacles))
 	{
-		_moveBeh->SetDirection(DOWN);
+		SetDirection(DOWN);
 		Shot();
 		return;
 	}
 	if (IsPlayerVisible(rightSideObstacles))
 	{
-		_moveBeh->SetDirection(RIGHT);
+		SetDirection(RIGHT);
 		Shot();
 		return;
 	}
@@ -269,44 +277,29 @@ void Enemy::MayShoot(Direction dir)
 	}
 }
 
-void Enemy::Move(const float deltaTime)
+void Enemy::TickUpdate(const float deltaTime)
 {
 	if (IsTurnCooldownFinish())
 	{
 		turnDuration = distTurnRate(gen);
 		const int randDir = distDirection(gen);
-		_moveBeh->SetDirection(static_cast<Direction>(randDir));
+		SetDirection(static_cast<Direction>(randDir));
 		lastTimeTurn = std::chrono::system_clock::now();
 	}
 
 	const auto pos = GetPos();
-	if (const auto currentDirection = _moveBeh->GetDirection(); currentDirection == LEFT)
-	{
-		_moveBeh->MoveLeft(deltaTime);
-	}
-	else if (currentDirection == RIGHT)
-	{
-		_moveBeh->MoveRight(deltaTime);
-	}
-	else if (currentDirection == UP)
-	{
-		_moveBeh->MoveUp(deltaTime);
-	}
-	else if (currentDirection == DOWN)
-	{
-		_moveBeh->MoveDown(deltaTime);
-	}
+	_moveBeh->Move(deltaTime);
 
 	//change dir it cant move
 	if (pos == GetPos())
 	{
 		const int randDir = distDirection(gen);
-		_moveBeh->SetDirection(static_cast<Direction>(randDir));
+		SetDirection(static_cast<Direction>(randDir));
 	}
 
 	if (IsReloadFinish())
 	{
-		MayShoot(_moveBeh->GetDirection());
+		MayShoot(GetDirection());
 		lastTimeFire = std::chrono::system_clock::now();
 	}
 }
@@ -325,4 +318,16 @@ bool Enemy::IsTurnCooldownFinish() const
 	}
 
 	return false;
+}
+
+void Enemy::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	std::string authorAndFractionTag = author + fraction;
+	_events->EmitEvent<std::string>("EnemyHit", authorAndFractionTag);
+
+	if (GetHealth() < 1)
+	{
+		std::string authorAndFractionDieTag = author + fraction;
+		_events->EmitEvent<std::string>("EnemyDied", authorAndFractionDieTag);
+	}
 }

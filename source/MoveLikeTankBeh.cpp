@@ -1,11 +1,11 @@
 #include "../headers/MoveLikeTankBeh.h"
+#include "../headers/Tank.h"
 
 #include <functional>
 #include <memory>
 
-MoveLikeTankBeh::MoveLikeTankBeh(const Direction direction, const UPoint windowSize, const float speed, BaseObj* selfParent,
-                                 std::vector<std::shared_ptr<BaseObj>>* allPawns)
-	: _windowSize(windowSize), _selfParent{selfParent}, _direction{direction}, _speed{speed}, _allPawns{allPawns} {}
+MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	: _selfParent{selfParent}, _allObjects{allObjects} {}
 
 bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 {
@@ -27,26 +27,34 @@ bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 
 std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
-	float speedX = _speed * deltaTime;
-	float speedY = _speed * deltaTime;
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return std::list<std::weak_ptr<BaseObj>>();
+	}
 
-	if (_direction == UP)
+	float speed = tank->GetSpeed();
+	float speedX = speed * deltaTime;
+	float speedY = speed * deltaTime;
+
+	if (Direction direction = tank->GetDirection();
+		direction == UP)
 	{
 		//36 37 initialize in  if
 		speedY *= -1;
 		speedX *= 0;
 	}
-	else if (_direction == DOWN)
+	else if (direction == DOWN)
 	{
 		speedY *= 1;
 		speedX *= 0;
 	}
-	else if (_direction == LEFT)
+	else if (direction == LEFT)
 	{
 		speedX *= -1;
 		speedY *= 0;
 	}
-	else if (_direction == RIGHT)
+	else if (direction == RIGHT)
 	{
 		speedX *= 1;
 		speedY *= 0;
@@ -55,7 +63,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
 	const auto thisNextPosRect = Rectangle{_selfParent->GetX() + speedX, _selfParent->GetY() + speedY,
 	                                       _selfParent->GetWidth(), _selfParent->GetHeight()};
-	for (std::shared_ptr<BaseObj>& pawn: *_allPawns)
+	for (std::shared_ptr<BaseObj>& pawn: *_allObjects)
 	{
 		if (_selfParent == pawn.get())
 		{
@@ -82,7 +90,13 @@ inline float Distance(const FPoint a, const FPoint b)
 float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	float minDist = static_cast<float>(_windowSize.x * _windowSize.y);
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return 0.f;
+	}
+
+	float minDist = static_cast<float>(tank->GetWindowSize().x * tank->GetWindowSize().y);
 	// float nearestDist = 0;
 	for (const auto& pawn: pawns)
 	{
@@ -108,9 +122,42 @@ float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& 
 	// return distance;
 }
 
+void MoveLikeTankBeh::Move(float deltaTime) const
+{
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return;
+	}
+
+	if (const auto currentDirection = tank->GetDirection();
+		currentDirection == UP)
+	{
+		MoveUp(deltaTime);
+	}
+	else if (currentDirection == LEFT)
+	{
+		MoveLeft(deltaTime);
+	}
+	else if (currentDirection == DOWN)
+	{
+		MoveDown(deltaTime);
+	}
+	else if (currentDirection == RIGHT)
+	{
+		MoveRight(deltaTime);
+	}
+}
+
 void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 {
-	if (const float speed = _speed * deltaTime; _selfParent->GetX() - speed >= 0.f)
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return;
+	}
+
+	if (const float speed = tank->GetSpeed() * deltaTime; _selfParent->GetX() - speed >= 0.f)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
@@ -134,9 +181,15 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 
 void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 {
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return;
+	}
+
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
-	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
-	if (const float speed = _speed * deltaTime; _selfParent->GetRightSide() + speed < maxX)
+	const float maxX = static_cast<float>(tank->GetWindowSize().x) - sideBarWidth;
+	if (const float speed = tank->GetSpeed() * deltaTime; _selfParent->GetRightSide() + speed < maxX)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
@@ -161,7 +214,13 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 
 void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 {
-	if (const float speed = _speed * deltaTime; _selfParent->GetY() - speed >= 0.0f)
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return;
+	}
+
+	if (const float speed = tank->GetSpeed() * deltaTime; _selfParent->GetY() - speed >= 0.0f)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
@@ -185,8 +244,14 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 
 void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 {
-	if (const float speed = _speed * deltaTime;
-		_selfParent->GetBottomSide() + speed < static_cast<float>(_windowSize.y))
+	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	if (tank == nullptr)
+	{
+		return;
+	}
+
+	if (const float speed = tank->GetSpeed() * deltaTime;
+		_selfParent->GetBottomSide() + speed < static_cast<float>(tank->GetWindowSize().y))
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{

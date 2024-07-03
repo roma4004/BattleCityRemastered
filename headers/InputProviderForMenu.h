@@ -24,6 +24,7 @@ public:
 	void ToggleMenu();
 
 	MenuKeys keys;
+
 private:
 	std::string _name;
 	std::shared_ptr<EventSystem> _events;

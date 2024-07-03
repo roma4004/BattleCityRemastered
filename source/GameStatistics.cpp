@@ -3,6 +3,7 @@
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}
 {
+	Reset();
 	Subscribe();
 }
 
@@ -69,6 +70,26 @@ void GameStatistics::Subscribe()
 		enemyFourNeedRespawn = false;
 		--enemyRespawnResource;
 	});
+
+	//TODO: replace <std::string> with <Enum::statisticsType>
+	_events->AddListener<std::string>("BulletHit", _name, [this](const std::string& by) { BulletHit(by); });
+
+	_events->AddListener<std::string>("EnemyHit", _name, [this](const std::string& by) { EnemyHit(by); });
+	_events->AddListener<std::string>("EnemyDied", _name, [this](const std::string& by) { EnemyDied(by); });
+
+	_events->AddListener<std::string>("PlayerOneHit", _name, [this](const std::string& by) { PlayerOneHit(by); });
+	_events->AddListener<std::string>("PlayerOneDied", _name, [this](const std::string& by) { PlayerDied(by); });
+
+	_events->AddListener<std::string>("CoopOneAIHit", _name, [this](const std::string& by) { PlayerOneHit(by); });
+	_events->AddListener<std::string>("CoopOneAIDied", _name, [this](const std::string& by) { PlayerDied(by); });
+
+	_events->AddListener<std::string>("PlayerTwoHit", _name, [this](const std::string& by) { PlayerTwoHit(by); });
+	_events->AddListener<std::string>("PlayerTwoDied", _name, [this](const std::string& by) { PlayerDied(by); });
+
+	_events->AddListener<std::string>("CoopTwoAIHit", _name, [this](const std::string& by) { PlayerTwoHit(by); });
+	_events->AddListener<std::string>("CoopTwoAIDied", _name, [this](const std::string& by) { PlayerDied(by); });
+
+	_events->AddListener<std::string>("BrickHit", _name, [this](const std::string& by) { BrickHit(by); });
 }
 
 void GameStatistics::Unsubscribe() const
@@ -97,6 +118,136 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener("Enemy2_Spawn", _name);
 	_events->RemoveListener("Enemy3_Spawn", _name);
 	_events->RemoveListener("Enemy4_Spawn", _name);
+
+	_events->RemoveListener<std::string>("BulletHit", _name);
+
+	_events->RemoveListener<std::string>("EnemyHit", _name);
+	_events->RemoveListener<std::string>("EnemyDied", _name);
+
+	_events->RemoveListener<std::string>("PlayerOneHit", _name);
+	_events->RemoveListener<std::string>("PlayerOneDied", _name);
+
+	_events->RemoveListener<std::string>("CoopOneAIHit", _name);
+	_events->RemoveListener<std::string>("CoopOneAIDied", _name);
+
+	_events->RemoveListener<std::string>("PlayerTwoHit", _name);
+	_events->RemoveListener<std::string>("PlayerTwoDied", _name);
+
+	_events->RemoveListener<std::string>("CoopTwoAIHit", _name);
+	_events->RemoveListener<std::string>("CoopTwoAIDied", _name);
+
+	_events->RemoveListener<std::string>("BrickHit", _name);
+}
+
+void GameStatistics::BulletHit(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++bulletHitByEnemy;
+	}
+	if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	{
+		++bulletHitByPlayerOne;
+	}
+	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	{
+		++bulletHitByPlayerTwo;
+	}
+}
+
+void GameStatistics::EnemyHit(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++enemyHitByFriendlyFire;
+	}
+	if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	{
+		++enemyHitByPlayerOne;
+	}
+	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	{
+		++enemyHitByPlayerTwo;
+	}
+}
+
+void GameStatistics::PlayerOneHit(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++playerOneHitByEnemyTeam;
+	}
+	if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	{
+		++playerOneHitFriendlyFire;
+	}
+}
+
+void GameStatistics::PlayerTwoHit(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++playerTwoHitByEnemyTeam;
+	}
+	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	{
+		++playerTwoHitFriendlyFire;
+	}
+}
+
+void GameStatistics::EnemyDied(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++enemyDiedByFriendlyFire;
+	}
+	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	{
+		++enemyDiedByPlayerOne;
+	}
+	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	{
+		++enemyDiedByPlayerTwo;
+	}
+}
+
+void GameStatistics::PlayerDied(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++playerDiedByEnemyTeam;
+	}
+	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	{
+		++playerTwoDiedByFriendlyFire;
+	}
+	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	{
+		++playerOneDiedByFriendlyFire;
+	}
+}
+
+void GameStatistics::BrickHit(const std::string& authorTeam)
+{
+	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
+	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	{
+		++brickDiedByEnemyTeam;
+	}
+	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	{
+		++brickDiedByPlayerOne;
+	}
+	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	{
+		++brickDiedByPlayerTwo;
+	}
 }
 
 void GameStatistics::Reset()
@@ -114,4 +265,30 @@ void GameStatistics::Reset()
 	playerTwoNeedRespawn = false;
 	coopOneAINeedRespawn = false;
 	coopTwoAINeedRespawn = false;
+
+	bulletHitByEnemy = 0;
+	bulletHitByPlayerOne = 0;
+	bulletHitByPlayerTwo = 0;
+
+	enemyHitByFriendlyFire = 0;
+	enemyHitByPlayerOne = 0;
+	enemyHitByPlayerTwo = 0;
+
+	playerOneHitFriendlyFire = 0;
+	playerOneHitByEnemyTeam = 0;
+
+	playerTwoHitFriendlyFire = 0;
+	playerTwoHitByEnemyTeam = 0;
+
+	enemyDiedByFriendlyFire = 0;
+	enemyDiedByPlayerOne = 0;
+	enemyDiedByPlayerTwo = 0;
+
+	playerOneDiedByFriendlyFire = 0;
+	playerTwoDiedByFriendlyFire = 0;
+	playerDiedByEnemyTeam = 0;
+
+	brickDiedByEnemyTeam = 0;
+	brickDiedByPlayerOne = 0;
+	brickDiedByPlayerTwo = 0;
 }

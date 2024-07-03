@@ -7,7 +7,7 @@ Map::Map() = default;
 
 Map::~Map() = default;
 
-void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const float gridSize, int* windowBuffer,
+void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const float gridSize, int* windowBuffer,
                       const UPoint windowSize, const std::shared_ptr<EventSystem>& events) const
 {
 	for (int vertical = 0; vertical < 52; ++vertical)
@@ -22,13 +22,13 @@ void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const flo
 				case 0:
 					break;
 				case 1:
-					ObstacleCreation<Brick>(allPawns, rect, windowBuffer, windowSize, events);
+					ObstacleCreation<Brick>(allObjects, rect, windowBuffer, windowSize, events);
 					break;
 				case 2:
-					ObstacleCreation<Iron>(allPawns, rect, windowBuffer, windowSize, events);
+					ObstacleCreation<Iron>(allObjects, rect, windowBuffer, windowSize, events);
 					break;
 				case 3:
-					ObstacleCreation<Water>(allPawns, rect, windowBuffer, windowSize, events);
+					ObstacleCreation<Water>(allObjects, rect, windowBuffer, windowSize, events);
 					break;
 				default:
 					break;

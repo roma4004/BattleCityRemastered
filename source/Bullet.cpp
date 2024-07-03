@@ -3,17 +3,24 @@
 
 #include <string>
 
-Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
-               const Direction direction, const int health, int* windowBuffer, const UPoint windowSize,
-               std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events)
+Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const int health,
+               int* windowBuffer, const UPoint windowSize, const Direction direction, const float speed,
+               std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+               std::string author,
+               std::string fraction)
 	: Pawn{rect,
 	       color,
 	       health,
 	       windowBuffer,
 	       windowSize,
-	       allPawns,
-	       std::move(events),
-	       std::make_shared<MoveLikeBulletBeh>(direction, windowSize, speed, damage, aoeRadius, this, allPawns)}
+	       direction,
+	       speed,
+	       allObjects,
+	       events,
+	       std::make_shared<MoveLikeBulletBeh>(this, allObjects, events)},
+	  _author{std::move(author)}, _fraction{std::move(fraction)},
+	  _damage{damage},
+	  _bulletDamageAreaRadius{aoeRadius}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
@@ -22,7 +29,6 @@ Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int co
 	_name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
 }
-
 
 Bullet::~Bullet()
 {
@@ -54,44 +60,49 @@ void Bullet::Unsubscribe() const
 }
 
 void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
-                   const Direction direction, const int health)
+                   const Direction direction, const int health, std::string author, std::string fraction)
 {
 	SetShape(rect);
 	SetColor(color);
 	SetHealth(health);
-	_moveBeh = std::make_shared<MoveLikeBulletBeh>(direction, _windowSize, speed, damage, aoeRadius, this, _allPawns);
-	_moveBeh->SetDirection(direction);// TODO: move this to constructor
+	_moveBeh = std::make_shared<MoveLikeBulletBeh>(this, _allObjects, _events);
+	SetDirection(direction);// TODO: move this to constructor
+	_author = std::move(author);
+	_fraction = std::move(fraction);
+	_damage = damage;
+	_bulletDamageAreaRadius = aoeRadius;
+	_speed = speed;
 	Subscribe();
 	SetIsAlive(true);
 }
 
-void Bullet::Move(const float deltaTime)
+void Bullet::TickUpdate(const float deltaTime)
 {
-	if (!GetIsAlive())
-	{
-		return;
-	}
+	_moveBeh->Move(deltaTime);
+}
 
-	constexpr int sideBarWidth = 175;
-	const float speed = _moveBeh->GetSpeed() * deltaTime;
-	if (const int direction = _moveBeh->GetDirection(); direction == UP && GetY() - speed >= 0.0f)
-	{
-		_moveBeh->MoveUp(deltaTime);
-	}
-	else if (direction == DOWN && GetBottomSide() + speed <= static_cast<float>(_windowSize.y))
-	{
-		_moveBeh->MoveDown(deltaTime);
-	}
-	else if (direction == LEFT && GetX() - speed >= 0.0f)
-	{
-		_moveBeh->MoveLeft(deltaTime);
-	}
-	else if (direction == RIGHT && GetRightSide() + speed <= static_cast<float>(_windowSize.x) - sideBarWidth)
-	{
-		_moveBeh->MoveRight(deltaTime);
-	}
-	else// Self-destroy when edge of windows is reached
-	{
-		SetIsAlive(false);
-	}
+int Bullet::GetDamage() const
+{
+	return _damage;
+}
+
+double Bullet::GetBulletDamageAreaRadius() const
+{
+	return _bulletDamageAreaRadius;
+}
+
+std::string Bullet::GetAuthor() const
+{
+	return _author;
+}
+
+std::string Bullet::GetFraction() const
+{
+	return _fraction;
+}
+
+void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	std::string authorAndFractionTag = author + fraction;
+	_events->EmitEvent<std::string>("BulletHit", authorAndFractionTag);
 }

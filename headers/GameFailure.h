@@ -9,4 +9,3 @@ public:
 
 	[[nodiscard]] int Result() const override;
 };
-

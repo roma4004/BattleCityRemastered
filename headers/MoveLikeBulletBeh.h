@@ -1,8 +1,7 @@
 #pragma once
 
 #include "BaseObj.h"
-#include "Circle.h"
-#include "Direction.h"
+#include "EventSystem.h"
 #include "interfaces/IMoveBeh.h"
 
 #include <functional>
@@ -10,28 +9,21 @@
 
 class MoveLikeBulletBeh : public IMoveBeh
 {
-	UPoint _windowSize{0, 0};
 	BaseObj* _selfParent{nullptr};
-	Direction _direction{UP};
-	float _speed{0.f};
-	std::vector<std::shared_ptr<BaseObj>>* _allPawns;
-	int _damage{0};
-	double _bulletDamageAreaRadius{12.f};
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+	std::shared_ptr<EventSystem> _events;
 
 public:
-	MoveLikeBulletBeh(Direction direction, UPoint windowSize, float speed, int damage, double aoeRadius,
-	                  BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allPawns);
+	MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	                  std::shared_ptr<EventSystem> events);
 
 	~MoveLikeBulletBeh() override = default;
 
+	void Move(float deltaTime) const override;
 	void MoveLeft(float deltaTime) const override;
 	void MoveRight(float deltaTime) const override;
 	void MoveUp(float deltaTime) const override;
 	void MoveDown(float deltaTime) const override;
-
-	[[nodiscard]] Direction GetDirection() const override { return _direction; }
-	void SetDirection(const Direction direction) override { _direction = direction; }
-	[[nodiscard]] float GetSpeed() const override { return _speed; }
 
 private:
 	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;

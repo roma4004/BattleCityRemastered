@@ -182,8 +182,8 @@
     <ClInclude Include="headers\Interfaces\IConfig.h" />
     <ClInclude Include="headers\Interfaces\IDrawable.h" />
     <ClInclude Include="headers\Interfaces\IGame.h" />
+    <ClInclude Include="headers\Interfaces\IHealthBar.h" />
     <ClInclude Include="headers\Interfaces\IInputProvider.h" />
-    <ClInclude Include="headers\Interfaces\IMovable.h" />
     <ClInclude Include="headers\Interfaces\IMoveBeh.h" />
     <ClInclude Include="headers\Interfaces\IObstacle.h" />
     <ClInclude Include="headers\Interfaces\ITickUpdatable.h" />
@@ -195,6 +195,7 @@
     <ClInclude Include="headers\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\MoveLikeTankBeh.h" />
     <ClInclude Include="headers\Pawn.h" />
+    <ClInclude Include="headers\PixelUtils.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\PlayerOne.h" />
     <ClInclude Include="headers\PlayerTwo.h" />

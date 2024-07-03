@@ -61,4 +61,10 @@ void Brick::Draw() const
 	}
 }
 
-void Brick::TickUpdate(float deltaTime) {}
+void Brick::TickUpdate(float deltaTime) {}//TODO: remove it via interface segregation
+
+void Brick::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	std::string authorAndFractionTag = author + fraction;
+	_events->EmitEvent<std::string>("BrickHit", authorAndFractionTag);
+}

@@ -60,4 +60,10 @@ void Water::Draw() const
 	}
 }
 
-void Water::TickUpdate(float deltaTime) {}
+void Water::TickUpdate(float deltaTime) {}//TODO: remove it via interface segregation
+
+void Water::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	// std::string authorAndFractionTag = author + fraction;
+	// _events->EmitEvent<std::string>("WaterHit", authorAndFractionTag);
+}

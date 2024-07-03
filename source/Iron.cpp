@@ -38,6 +38,7 @@ void Iron::Unsubscribe() const
 
 	_events->RemoveListener("Draw", _name);
 }
+
 void Iron::SetPixel(const size_t x, const size_t y, const int color) const
 {
 	if (x < _windowSize.x && y < _windowSize.y)
@@ -60,4 +61,10 @@ void Iron::Draw() const
 	}
 }
 
-void Iron::TickUpdate(float deltaTime) {}
+void Iron::TickUpdate(float deltaTime) {}//TODO: remove it via interface segregation
+
+void Iron::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	// std::string authorAndFractionTag = author + fraction;
+	// _events->EmitEvent<std::string>("IronHit", authorAndFractionTag);
+}

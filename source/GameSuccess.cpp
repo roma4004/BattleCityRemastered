@@ -39,8 +39,8 @@ void GameSuccess::SpawnEnemyTanks(const float gridOffset, const float speed, con
 
 void GameSuccess::ResetBattlefield()
 {
-	_allPawns.clear();
-	_allPawns.reserve(1000);
+	_allObjects.clear();
+	_allObjects.reserve(1000);
 
 	_statistics->Reset();
 
@@ -57,7 +57,7 @@ void GameSuccess::ResetBattlefield()
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
 	//Map::ObstacleCreation<Iron>(&env, 310,310);
 	const Map field{};
-	field.MapCreation(&_allPawns, gridOffset, _windowBuffer, _windowSize, _events);
+	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
 }
 
 void GameSuccess::SetGameMode(const GameMode gameMode) { _currentMode = gameMode; }
@@ -245,6 +245,53 @@ void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point pos, const SD
 	SDL_DestroyTexture(texture);
 }
 
+void GameSuccess::RenderStatistics(SDL_Renderer* renderer, const Point pos) const
+{
+	constexpr SDL_Color color = {0x00, 0xff, 0xff, 0xff};
+
+	TextToRender(renderer, {pos.x - 60, pos.y + 100}, color, "GAME STATISTICS");
+	TextToRender(renderer, {pos.x + 130, pos.y + 140}, color, "P1     P2     ENEMY");
+	TextToRender(renderer, {pos.x - 130, pos.y + 160}, color, "RESPAWN REMAIN");
+	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, std::to_string(_statistics->playerOneRespawnResource));
+	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, std::to_string(_statistics->playerTwoRespawnResource));
+	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, std::to_string(_statistics->enemyRespawnResource));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 180}, color, "BULLET HIT BY BULLET");
+	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, std::to_string(_statistics->bulletHitByPlayerOne));
+	TextToRender(renderer, {pos.x + 180, pos.y + 180}, color, std::to_string(_statistics->bulletHitByPlayerTwo));
+	TextToRender(renderer, {pos.x + 235, pos.y + 180}, color, std::to_string(_statistics->bulletHitByEnemy));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 200}, color, "PLAYER HIT BY ENEMY");
+	TextToRender(renderer, {pos.x + 130, pos.y + 200}, color, std::to_string(_statistics->playerOneHitByEnemyTeam));
+	TextToRender(renderer, {pos.x + 180, pos.y + 200}, color, std::to_string(_statistics->playerTwoHitByEnemyTeam));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 220}, color, "TANK KILLS");
+	TextToRender(renderer, {pos.x + 130, pos.y + 220}, color, std::to_string(_statistics->enemyDiedByPlayerOne));
+	TextToRender(renderer, {pos.x + 180, pos.y + 220}, color, std::to_string(_statistics->enemyDiedByPlayerTwo));
+	TextToRender(renderer, {pos.x + 235, pos.y + 220}, color, std::to_string(_statistics->playerDiedByEnemyTeam));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 240}, color, "ENEMY HIT BY");
+	TextToRender(renderer, {pos.x + 130, pos.y + 240}, color, std::to_string(_statistics->enemyHitByPlayerOne));
+	TextToRender(renderer, {pos.x + 180, pos.y + 240}, color, std::to_string(_statistics->enemyHitByPlayerTwo));
+	TextToRender(renderer, {pos.x + 235, pos.y + 240}, color, std::to_string(_statistics->enemyHitByFriendlyFire));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 260}, color, "FRIEND HIT FRIEND");
+	TextToRender(renderer, {pos.x + 130, pos.y + 260}, color, std::to_string(_statistics->playerOneHitFriendlyFire));
+	TextToRender(renderer, {pos.x + 180, pos.y + 260}, color, std::to_string(_statistics->playerTwoHitFriendlyFire));
+	TextToRender(renderer, {pos.x + 235, pos.y + 260}, color, std::to_string(_statistics->enemyHitByFriendlyFire));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 280}, color, "FRIEND KILLS FRIEND");
+	TextToRender(renderer, {pos.x + 130, pos.y + 280}, color, std::to_string(_statistics->playerOneDiedByFriendlyFire));
+	TextToRender(renderer, {pos.x + 180, pos.y + 280}, color, std::to_string(_statistics->playerTwoDiedByFriendlyFire));
+	TextToRender(renderer, {pos.x + 235, pos.y + 280}, color, std::to_string(_statistics->enemyDiedByFriendlyFire));
+
+	TextToRender(renderer, {pos.x - 130, pos.y + 300}, color, "BRICK KILLS");
+	TextToRender(renderer, {pos.x + 130, pos.y + 300}, color, std::to_string(_statistics->brickDiedByPlayerOne));
+	TextToRender(renderer, {pos.x + 180, pos.y + 300}, color, std::to_string(_statistics->brickDiedByPlayerTwo));
+	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, std::to_string(_statistics->brickDiedByEnemyTeam));
+	//TODO: write test for statistics
+}
+
 void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
 {
 	if (_menu.input->keys.up)
@@ -266,25 +313,14 @@ void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgr
 
 	//menu text
 	const Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
-	constexpr SDL_Color сolor = {0xff, 0xff, 0xff, 0xff};
+	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
-	TextToRender(renderer, {pos.x - 70, pos.y - 100}, сolor, "BATTLE CITY REMASTERED");
+	TextToRender(renderer, {pos.x - 70, pos.y - 100}, color, "BATTLE CITY REMASTERED");
+	TextToRender(renderer, {pos.x, pos.y - 40}, color, _currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	TextToRender(renderer, {pos.x, pos.y}, color, _currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	TextToRender(renderer, {pos.x, pos.y + 40}, color, _currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
 
-	TextToRender(renderer, pos, сolor, _currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
-
-	TextToRender(renderer, {pos.x, pos.y + 50}, сolor, _currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
-
-	TextToRender(renderer, {pos.x, pos.y + 100}, сolor, _currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
-
-	constexpr SDL_Color сolorStat = {0x00, 0xff, 0xff, 0xff};
-	TextToRender(renderer, {pos.x - 60, pos.y + 150}, сolorStat, "GAME STATISTICS");
-	TextToRender(renderer, {pos.x - 60, pos.y + 200}, сolorStat,
-	             "ENEMY RESPAWN REMAIN " + std::to_string(_statistics->enemyRespawnResource));
-	TextToRender(renderer, {pos.x - 60, pos.y + 250}, сolorStat,
-	             "P1 RESPAWN REMAIN " + std::to_string(_statistics->playerOneRespawnResource));
-	TextToRender(renderer, {pos.x - 60, pos.y + 300}, сolorStat,
-	             "P2 RESPAWN REMAIN " + std::to_string(_statistics->playerTwoRespawnResource));
-
+	RenderStatistics(renderer, pos);
 }
 
 void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, const Uint64 newTime)
@@ -362,12 +398,12 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 			{gridOffset * 16.f + size * 2.f, 0, size, size},
 			{gridOffset * 32.f + size * 2.f, 0, size, size}
 	};
-	for (auto& spawnSpot: spawnPos)
+	for (auto& rect: spawnPos)
 	{
 		bool isFreeSpawnSpot = true;
-		for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
+		for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
 		{
-			if (IsCollideWith(spawnSpot, pawn->GetShape()))
+			if (IsCollideWith(rect, pawn->GetShape()))
 			{
 				isFreeSpawnSpot = false;
 			}
@@ -376,10 +412,10 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 		if (isFreeSpawnSpot)
 		{
 			constexpr int gray = 0x808080;
-			auto indexString = std::to_string(index);
-			_allPawns.emplace_back(std::make_shared<Enemy>(spawnSpot, gray, speed, health, _windowBuffer, _windowSize,
-			                                               &_allPawns, _events, "Enemy" + indexString, "EnemyTeam",
-			                                               _bulletPool));
+			const auto indexString = std::to_string(index);
+			_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, health, _windowBuffer, _windowSize, DOWN,
+			                                                 speed, &_allObjects, _events, "Enemy" + indexString,
+			                                                 "EnemyTeam", _bulletPool));
 			_events->EmitEvent("Enemy" + indexString + "_Spawn");
 			return;
 		}
@@ -389,11 +425,11 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerOneRect{gridOffset * 16.f, windowSizeY - size, size, size};
+	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
 	{
-		if (IsCollideWith(playerOneRect, pawn->GetShape()))
+		if (IsCollideWith(rect, pawn->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -403,10 +439,12 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 	{
 		constexpr int yellow = 0xeaea00;
 		auto name = "PlayerOne";
+		auto fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		_allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, speed, health, _windowBuffer,
-		                                                   _windowSize, &_allPawns, _events, name, inputProvider,
-		                                                   _bulletPool));
+		_allObjects.emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
+		                                                     speed,
+		                                                     &_allObjects, _events, name, fraction, inputProvider,
+		                                                     _bulletPool));
 		_events->EmitEvent("P1_Spawn");
 	}
 }
@@ -414,11 +452,11 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerTwoRect{gridOffset * 32.f, windowSizeY - size, size, size};
+	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
 	{
-		if (IsCollideWith(playerTwoRect, pawn->GetShape()))
+		if (IsCollideWith(rect, pawn->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -428,10 +466,11 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 	{
 		constexpr int green = 0x408000;
 		auto name = "PlayerTwo";
+		auto fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
-		_allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, speed, health, _windowBuffer,
-		                                                   _windowSize, &_allPawns, _events, name, inputProvider,
-		                                                   _bulletPool));
+		_allObjects.emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
+		                                                     &_allObjects, _events, name, fraction, inputProvider,
+		                                                     _bulletPool));
 		_events->EmitEvent("P2_Spawn");
 	}
 }
@@ -439,11 +478,11 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerOneRect{gridOffset * 16.f, windowSizeY - size, size, size};
+	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
 	{
-		if (IsCollideWith(playerOneRect, pawn->GetShape()))
+		if (IsCollideWith(rect, pawn->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -452,9 +491,10 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		_allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, speed, health, _windowBuffer,
-		                                                _windowSize, &_allPawns, _events, "CoopOneAI", "PlayerTeam",
-		                                                _bulletPool));
+		auto name = "CoopOneAI";
+		auto fraction = "PlayerTeam";
+		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, yellow, health, _windowBuffer, _windowSize, UP, speed,
+		                                                  &_allObjects, _events, name, fraction, _bulletPool));
 		_events->EmitEvent("CoopOneAI_Spawn");
 	}
 }
@@ -462,11 +502,11 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle playerTwoRect{gridOffset * 32.f, windowSizeY - size, size, size};
+	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allPawns)
+	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
 	{
-		if (IsCollideWith(playerTwoRect, pawn->GetShape()))
+		if (IsCollideWith(rect, pawn->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -475,8 +515,10 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		_allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, speed, health, _windowBuffer, _windowSize,
-		                                                &_allPawns, _events, "CoopTwoAI", "PlayerTeam", _bulletPool));
+		auto name = "CoopTwoAI";
+		auto fraction = "PlayerTeam";
+		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
+		                                                  &_allObjects, _events, name, fraction, _bulletPool));
 		_events->EmitEvent("CoopTwoAI_Spawn");
 	}
 }
@@ -561,30 +603,31 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent<float>("TickUpdate", deltaTime);
 		}
 
-		// TODO: separate bullets or somehow delete and recycle in one iterating through _allPawns (because now its two)
-		// recycling bullets
-		for (std::vector<std::shared_ptr<BaseObj>>::iterator it = _allPawns.begin(); it < _allPawns.end();)
+		// TODO: separate bullets or somehow delete and recycle in one iterating through _allObjects (because now its two)
+		// TODO: create wrapper for bullet and RAII to dispose it to bullet pool
+		// Destroy all "dead" objects except bullet they will be recycled
+		for (auto it = _allObjects.begin(); it < _allObjects.end();)
 		{
 			if ((*it)->GetIsAlive() == false)
 			{
-				if (auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
+				if (const auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
 				{
 					_bulletPool->ReturnBullet(*it);
-					const auto nextIt = _allPawns.erase(it);
-					it = nextIt;
+					it = _allObjects.erase(it);
 					continue;
 				}
 			}
 			++it;
 		}
 
-		// Destroy all "dead" objects
-		const auto it = std::ranges::remove_if(_allPawns, [&](const auto& obj) { return !obj->GetIsAlive(); }).begin();
-		_allPawns.erase(it, _allPawns.end());
+		const auto it = std::ranges::remove_if(_allObjects, [&](const auto& obj) { return !obj->GetIsAlive(); }).
+				begin();
+		_allObjects.erase(it, _allObjects.end());
 
 		RespawnTanks();
 
 		_events->EmitEvent("Draw");
+		_events->EmitEvent("DrawHealthBar");// TODO: create and blend separate buff layers(objects, effect, interface)
 
 		const Uint64 newTime = SDL_GetTicks64();
 		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;

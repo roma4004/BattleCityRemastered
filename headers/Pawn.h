@@ -3,7 +3,6 @@
 #include "BaseObj.h"
 #include "Point.h"
 #include "Rectangle.h"
-#include "interfaces/IMovable.h"
 #include "interfaces/IMoveBeh.h"
 
 #include <memory>
@@ -11,7 +10,7 @@
 
 class EventSystem;
 
-class Pawn : public BaseObj, public IMovable
+class Pawn : public BaseObj
 {
 protected:
 	std::shared_ptr<IMoveBeh> _moveBeh;
@@ -20,13 +19,17 @@ protected:
 
 	int* _windowBuffer{nullptr};
 
+	Direction _direction{UP};
+
+	float _speed{0.f};
+
 	std::shared_ptr<EventSystem> _events;
 
-	std::vector<std::shared_ptr<BaseObj>>* _allPawns{nullptr};
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 public:
-	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
-	     std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
+	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
 	     std::shared_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;
@@ -35,5 +38,13 @@ public:
 
 	void Draw() const override;
 
-	void TickUpdate(float deltaTime) override;
+	//TODO: implement collision detection through quadtree
+	void TickUpdate(float deltaTime) override = 0;
+
+	[[nodiscard]] UPoint GetWindowSize() const;
+
+	[[nodiscard]] Direction GetDirection() const { return _direction; }
+	void SetDirection(const Direction direction) { _direction = direction; }
+
+	[[nodiscard]] float GetSpeed() const { return _speed; }
 };

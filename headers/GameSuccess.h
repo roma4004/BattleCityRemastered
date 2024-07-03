@@ -43,7 +43,7 @@ class GameSuccess final : public IGame
 	SDL_Texture* _fpsTexture{nullptr};
 
 	MouseButtons _mouseButtons{};
-	std::vector<std::shared_ptr<BaseObj>> _allPawns;
+	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 
 	std::shared_ptr<EventSystem> _events;
 
@@ -75,6 +75,7 @@ public:
 	void KeyboardEvents(const SDL_Event& event) const;
 
 	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
+	void RenderStatistics(SDL_Renderer* renderer, Point pos) const;
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
 
