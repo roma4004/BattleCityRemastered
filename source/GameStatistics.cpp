@@ -19,56 +19,56 @@ void GameStatistics::Subscribe()
 		return;
 	}
 
-	_events->AddListener("Enemy1_Died", _name, [this]() { enemyOneNeedRespawn = true; });
-	_events->AddListener("Enemy2_Died", _name, [this]() { enemyTwoNeedRespawn = true; });
-	_events->AddListener("Enemy3_Died", _name, [this]() { enemyThreeNeedRespawn = true; });
-	_events->AddListener("Enemy4_Died", _name, [this]() { enemyFourNeedRespawn = true; });
+	_events->AddListener("Enemy1_Died", _name, [this]() { _enemyOneNeedRespawn = true; });
+	_events->AddListener("Enemy2_Died", _name, [this]() { _enemyTwoNeedRespawn = true; });
+	_events->AddListener("Enemy3_Died", _name, [this]() { _enemyThreeNeedRespawn = true; });
+	_events->AddListener("Enemy4_Died", _name, [this]() { _enemyFourNeedRespawn = true; });
 
-	_events->AddListener("PlayerOne_Died", _name, [this]() { playerOneNeedRespawn = true; });
-	_events->AddListener("PlayerTwo_Died", _name, [this]() { playerTwoNeedRespawn = true; });
-	_events->AddListener("CoopOneAI_Died", _name, [this]() { coopOneAINeedRespawn = true; });
-	_events->AddListener("CoopTwoAI_Died", _name, [this]() { coopTwoAINeedRespawn = true; });
+	_events->AddListener("PlayerOne_Died", _name, [this]() { _playerOneNeedRespawn = true; });
+	_events->AddListener("PlayerTwo_Died", _name, [this]() { _playerTwoNeedRespawn = true; });
+	_events->AddListener("CoopOneAI_Died", _name, [this]() { _coopOneAINeedRespawn = true; });
+	_events->AddListener("CoopTwoAI_Died", _name, [this]() { _coopTwoAINeedRespawn = true; });
 
 	_events->AddListener("PlayerOne_Spawn", _name, [this]()
 	{
-		playerOneNeedRespawn = false;
-		--playerOneRespawnResource;
+		_playerOneNeedRespawn = false;
+		--_playerOneRespawnResource;
 	});
 	_events->AddListener("PlayerTwo_Spawn", _name, [this]()
 	{
-		playerTwoNeedRespawn = false;
-		--playerTwoRespawnResource;
+		_playerTwoNeedRespawn = false;
+		--_playerTwoRespawnResource;
 	});
 	_events->AddListener("CoopOneAI_Spawn", _name, [this]()
 	{
-		coopOneAINeedRespawn = false;
-		--playerOneRespawnResource;
+		_coopOneAINeedRespawn = false;
+		--_playerOneRespawnResource;
 	});
 	_events->AddListener("CoopTwoAI_Spawn", _name, [this]()
 	{
-		coopTwoAINeedRespawn = false;
-		--playerTwoRespawnResource;
+		_coopTwoAINeedRespawn = false;
+		--_playerTwoRespawnResource;
 	});
 
 	_events->AddListener("Enemy1_Spawn", _name, [this]()
 	{
-		enemyOneNeedRespawn = false;
-		--enemyRespawnResource;
+		_enemyOneNeedRespawn = false;
+		--_enemyRespawnResource;
 	});
 	_events->AddListener("Enemy2_Spawn", _name, [this]()
 	{
-		enemyTwoNeedRespawn = false;
-		--enemyRespawnResource;
+		_enemyTwoNeedRespawn = false;
+		--_enemyRespawnResource;
 	});
 	_events->AddListener("Enemy3_Spawn", _name, [this]()
 	{
-		enemyThreeNeedRespawn = false;
-		--enemyRespawnResource;
+		_enemyThreeNeedRespawn = false;
+		--_enemyRespawnResource;
 	});
 	_events->AddListener("Enemy4_Spawn", _name, [this]()
 	{
-		enemyFourNeedRespawn = false;
-		--enemyRespawnResource;
+		_enemyFourNeedRespawn = false;
+		--_enemyRespawnResource;
 	});
 
 	//TODO: replace <std::string> with <Enum::statisticsType>
@@ -144,15 +144,15 @@ void GameStatistics::BulletHit(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++bulletHitByEnemy;
+		++_bulletHitByEnemy;
 	}
 	if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
 	{
-		++bulletHitByPlayerOne;
+		++_bulletHitByPlayerOne;
 	}
 	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
 	{
-		++bulletHitByPlayerTwo;
+		++_bulletHitByPlayerTwo;
 	}
 }
 
@@ -161,15 +161,15 @@ void GameStatistics::EnemyHit(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++enemyHitByFriendlyFire;
+		++_enemyHitByFriendlyFire;
 	}
 	if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
 	{
-		++enemyHitByPlayerOne;
+		++_enemyHitByPlayerOne;
 	}
 	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
 	{
-		++enemyHitByPlayerTwo;
+		++_enemyHitByPlayerTwo;
 	}
 }
 
@@ -178,11 +178,11 @@ void GameStatistics::PlayerOneHit(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++playerOneHitByEnemyTeam;
+		++_playerOneHitByEnemyTeam;
 	}
 	if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
 	{
-		++playerOneHitFriendlyFire;
+		++_playerOneHitFriendlyFire;
 	}
 }
 
@@ -191,11 +191,11 @@ void GameStatistics::PlayerTwoHit(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++playerTwoHitByEnemyTeam;
+		++_playerTwoHitByEnemyTeam;
 	}
 	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
 	{
-		++playerTwoHitFriendlyFire;
+		++_playerTwoHitFriendlyFire;
 	}
 }
 
@@ -204,15 +204,15 @@ void GameStatistics::EnemyDied(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++enemyDiedByFriendlyFire;
+		++_enemyDiedByFriendlyFire;
 	}
 	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
 	{
-		++enemyDiedByPlayerOne;
+		++_enemyDiedByPlayerOne;
 	}
 	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
 	{
-		++enemyDiedByPlayerTwo;
+		++_enemyDiedByPlayerTwo;
 	}
 }
 
@@ -221,15 +221,15 @@ void GameStatistics::PlayerDied(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++playerDiedByEnemyTeam;
+		++_playerDiedByEnemyTeam;
 	}
 	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
 	{
-		++playerTwoDiedByFriendlyFire;
+		++_playerTwoDiedByFriendlyFire;
 	}
 	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
 	{
-		++playerOneDiedByFriendlyFire;
+		++_playerOneDiedByFriendlyFire;
 	}
 }
 
@@ -238,57 +238,57 @@ void GameStatistics::BrickDied(const std::string& authorTeam)
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
 	{
-		++brickDiedByEnemyTeam;
+		++_brickDiedByEnemyTeam;
 	}
 	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
 	{
-		++brickDiedByPlayerOne;
+		++_brickDiedByPlayerOne;
 	}
 	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
 	{
-		++brickDiedByPlayerTwo;
+		++_brickDiedByPlayerTwo;
 	}
 }
 
 void GameStatistics::Reset()
 {
-	enemyRespawnResource = 20;
-	playerOneRespawnResource = 3;
-	playerTwoRespawnResource = 3;
+	_enemyRespawnResource = 20;
+	_playerOneRespawnResource = 3;
+	_playerTwoRespawnResource = 3;
 
-	enemyOneNeedRespawn = false;
-	enemyTwoNeedRespawn = false;
-	enemyThreeNeedRespawn = false;
-	enemyFourNeedRespawn = false;
+	_enemyOneNeedRespawn = false;
+	_enemyTwoNeedRespawn = false;
+	_enemyThreeNeedRespawn = false;
+	_enemyFourNeedRespawn = false;
 
-	playerOneNeedRespawn = false;
-	playerTwoNeedRespawn = false;
-	coopOneAINeedRespawn = false;
-	coopTwoAINeedRespawn = false;
+	_playerOneNeedRespawn = false;
+	_playerTwoNeedRespawn = false;
+	_coopOneAINeedRespawn = false;
+	_coopTwoAINeedRespawn = false;
 
-	bulletHitByEnemy = 0;
-	bulletHitByPlayerOne = 0;
-	bulletHitByPlayerTwo = 0;
+	_bulletHitByEnemy = 0;
+	_bulletHitByPlayerOne = 0;
+	_bulletHitByPlayerTwo = 0;
 
-	enemyHitByFriendlyFire = 0;
-	enemyHitByPlayerOne = 0;
-	enemyHitByPlayerTwo = 0;
+	_enemyHitByFriendlyFire = 0;
+	_enemyHitByPlayerOne = 0;
+	_enemyHitByPlayerTwo = 0;
 
-	playerOneHitFriendlyFire = 0;
-	playerOneHitByEnemyTeam = 0;
+	_playerOneHitFriendlyFire = 0;
+	_playerOneHitByEnemyTeam = 0;
 
-	playerTwoHitFriendlyFire = 0;
-	playerTwoHitByEnemyTeam = 0;
+	_playerTwoHitFriendlyFire = 0;
+	_playerTwoHitByEnemyTeam = 0;
 
-	enemyDiedByFriendlyFire = 0;
-	enemyDiedByPlayerOne = 0;
-	enemyDiedByPlayerTwo = 0;
+	_enemyDiedByFriendlyFire = 0;
+	_enemyDiedByPlayerOne = 0;
+	_enemyDiedByPlayerTwo = 0;
 
-	playerOneDiedByFriendlyFire = 0;
-	playerTwoDiedByFriendlyFire = 0;
-	playerDiedByEnemyTeam = 0;
+	_playerOneDiedByFriendlyFire = 0;
+	_playerTwoDiedByFriendlyFire = 0;
+	_playerDiedByEnemyTeam = 0;
 
-	brickDiedByEnemyTeam = 0;
-	brickDiedByPlayerOne = 0;
-	brickDiedByPlayerTwo = 0;
+	_brickDiedByEnemyTeam = 0;
+	_brickDiedByPlayerOne = 0;
+	_brickDiedByPlayerTwo = 0;
 }

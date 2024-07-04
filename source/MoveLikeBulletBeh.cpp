@@ -222,13 +222,13 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 
 void MoveLikeBulletBeh::DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
+	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
+	if (thisBullet == nullptr)
 	{
 		return;
 	}
 
-	const int bulletDamage = bullet->GetDamage();
+	const int bulletDamage = thisBullet->GetDamage();
 	if (!objectList.empty())
 	{
 		for (const auto& target: objectList)
@@ -239,11 +239,11 @@ void MoveLikeBulletBeh::DealDamage(const std::list<std::weak_ptr<BaseObj>>& obje
 				targetLock->TakeDamage(bulletDamage);
 				if (const auto anotherBullet = dynamic_cast<Bullet*>(targetLock.get()))
 				{
-					_selfParent->SendDamageStatistics(anotherBullet->GetAuthor(), anotherBullet->GetFraction());
+					thisBullet->SendDamageStatistics(anotherBullet->GetAuthor(), anotherBullet->GetFraction());
 				}
 				else
 				{
-					targetLock->SendDamageStatistics(bullet->GetAuthor(), bullet->GetFraction());
+					targetLock->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
 				}
 				//TODO: use string_view here
 			}

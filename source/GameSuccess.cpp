@@ -232,6 +232,11 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
+void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Color& color, const int value) const
+{
+	TextToRender(renderer, pos, color, std::to_string(value));
+}
+
 void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color,
                                const std::string& text) const
 {
@@ -252,43 +257,43 @@ void GameSuccess::RenderStatistics(SDL_Renderer* renderer, const Point pos) cons
 	TextToRender(renderer, {pos.x - 60, pos.y + 100}, color, "GAME STATISTICS");
 	TextToRender(renderer, {pos.x + 130, pos.y + 140}, color, "P1     P2     ENEMY");
 	TextToRender(renderer, {pos.x - 130, pos.y + 160}, color, "RESPAWN REMAIN");
-	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, std::to_string(_statistics->playerOneRespawnResource));
-	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, std::to_string(_statistics->playerTwoRespawnResource));
-	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, std::to_string(_statistics->enemyRespawnResource));
+	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _statistics->GetPlayerOneRespawnResource());
+	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _statistics->GetPlayerTwoRespawnResource());
+	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _statistics->GetEnemyRespawnResource());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 180}, color, "BULLET HIT BY BULLET");
-	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, std::to_string(_statistics->bulletHitByPlayerOne));
-	TextToRender(renderer, {pos.x + 180, pos.y + 180}, color, std::to_string(_statistics->bulletHitByPlayerTwo));
-	TextToRender(renderer, {pos.x + 235, pos.y + 180}, color, std::to_string(_statistics->bulletHitByEnemy));
+	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());
+	TextToRender(renderer, {pos.x + 180, pos.y + 180}, color, _statistics->GetBulletHitByPlayerTwo());
+	TextToRender(renderer, {pos.x + 235, pos.y + 180}, color, _statistics->GetBulletHitByEnemy());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 200}, color, "PLAYER HIT BY ENEMY");
-	TextToRender(renderer, {pos.x + 130, pos.y + 200}, color, std::to_string(_statistics->playerOneHitByEnemyTeam));
-	TextToRender(renderer, {pos.x + 180, pos.y + 200}, color, std::to_string(_statistics->playerTwoHitByEnemyTeam));
+	TextToRender(renderer, {pos.x + 130, pos.y + 200}, color, _statistics->GetPlayerOneHitByEnemyTeam());
+	TextToRender(renderer, {pos.x + 180, pos.y + 200}, color, _statistics->GetPlayerTwoHitByEnemyTeam());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 220}, color, "TANK KILLS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 220}, color, std::to_string(_statistics->enemyDiedByPlayerOne));
-	TextToRender(renderer, {pos.x + 180, pos.y + 220}, color, std::to_string(_statistics->enemyDiedByPlayerTwo));
-	TextToRender(renderer, {pos.x + 235, pos.y + 220}, color, std::to_string(_statistics->playerDiedByEnemyTeam));
+	TextToRender(renderer, {pos.x + 130, pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerOne());
+	TextToRender(renderer, {pos.x + 180, pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerTwo());
+	TextToRender(renderer, {pos.x + 235, pos.y + 220}, color, _statistics->GetPlayerDiedByEnemyTeam());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 240}, color, "ENEMY HIT BY");
-	TextToRender(renderer, {pos.x + 130, pos.y + 240}, color, std::to_string(_statistics->enemyHitByPlayerOne));
-	TextToRender(renderer, {pos.x + 180, pos.y + 240}, color, std::to_string(_statistics->enemyHitByPlayerTwo));
-	TextToRender(renderer, {pos.x + 235, pos.y + 240}, color, std::to_string(_statistics->enemyHitByFriendlyFire));
+	TextToRender(renderer, {pos.x + 130, pos.y + 240}, color, _statistics->GetEnemyHitByPlayerOne());
+	TextToRender(renderer, {pos.x + 180, pos.y + 240}, color, _statistics->GetEnemyHitByPlayerTwo());
+	TextToRender(renderer, {pos.x + 235, pos.y + 240}, color, _statistics->GetEnemyHitByFriendlyFire());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 260}, color, "FRIEND HIT FRIEND");
-	TextToRender(renderer, {pos.x + 130, pos.y + 260}, color, std::to_string(_statistics->playerOneHitFriendlyFire));
-	TextToRender(renderer, {pos.x + 180, pos.y + 260}, color, std::to_string(_statistics->playerTwoHitFriendlyFire));
-	TextToRender(renderer, {pos.x + 235, pos.y + 260}, color, std::to_string(_statistics->enemyHitByFriendlyFire));
+	TextToRender(renderer, {pos.x + 130, pos.y + 260}, color, _statistics->GetPlayerOneHitFriendlyFire());
+	TextToRender(renderer, {pos.x + 180, pos.y + 260}, color, _statistics->GetPlayerTwoHitFriendlyFire());
+	TextToRender(renderer, {pos.x + 235, pos.y + 260}, color, _statistics->GetEnemyHitByFriendlyFire());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 280}, color, "FRIEND KILLS FRIEND");
-	TextToRender(renderer, {pos.x + 130, pos.y + 280}, color, std::to_string(_statistics->playerOneDiedByFriendlyFire));
-	TextToRender(renderer, {pos.x + 180, pos.y + 280}, color, std::to_string(_statistics->playerTwoDiedByFriendlyFire));
-	TextToRender(renderer, {pos.x + 235, pos.y + 280}, color, std::to_string(_statistics->enemyDiedByFriendlyFire));
+	TextToRender(renderer, {pos.x + 130, pos.y + 280}, color, _statistics->GetPlayerOneDiedByFriendlyFire());
+	TextToRender(renderer, {pos.x + 180, pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
+	TextToRender(renderer, {pos.x + 235, pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 300}, color, "BRICK KILLS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 300}, color, std::to_string(_statistics->brickDiedByPlayerOne));
-	TextToRender(renderer, {pos.x + 180, pos.y + 300}, color, std::to_string(_statistics->brickDiedByPlayerTwo));
-	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, std::to_string(_statistics->brickDiedByEnemyTeam));
+	TextToRender(renderer, {pos.x + 130, pos.y + 300}, color, _statistics->GetBrickDiedByPlayerOne());
+	TextToRender(renderer, {pos.x + 180, pos.y + 300}, color, _statistics->GetBrickDiedByPlayerTwo());
+	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, _statistics->GetBrickDiedByEnemyTeam());
 }
 
 void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
@@ -524,35 +529,35 @@ void GameSuccess::RespawnTanks()
 	const float size = gridOffset * 3;
 	constexpr float speed = 142;
 	constexpr int health = 100;
-	if (_statistics->enemyOneNeedRespawn && _statistics->enemyRespawnResource > 0)
+	if (_statistics->IsEnemyOneNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(1, gridOffset, speed, health, size);
 	}
-	if (_statistics->enemyTwoNeedRespawn && _statistics->enemyRespawnResource > 0)
+	if (_statistics->IsEnemyTwoNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(2, gridOffset, speed, health, size);
 	}
-	if (_statistics->enemyThreeNeedRespawn && _statistics->enemyRespawnResource > 0)
+	if (_statistics->IsEnemyThreeNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(3, gridOffset, speed, health, size);
 	}
-	if (_statistics->enemyFourNeedRespawn && _statistics->enemyRespawnResource > 0)
+	if (_statistics->IsEnemyFourNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(4, gridOffset, speed, health, size);
 	}
-	if (_statistics->playerOneNeedRespawn && _statistics->playerOneRespawnResource > 0)
+	if (_statistics->IsPlayerOneNeedRespawn() && _statistics->GetPlayerOneRespawnResource() > 0)
 	{
 		SpawnPlayer1(gridOffset, speed, health, size);
 	}
-	if (_statistics->playerTwoNeedRespawn && _statistics->playerTwoRespawnResource > 0)
+	if (_statistics->IsPlayerTwoNeedRespawn() && _statistics->GetPlayerTwoRespawnResource() > 0)
 	{
 		SpawnPlayer2(gridOffset, speed, health, size);
 	}
-	if (_statistics->coopOneAINeedRespawn && _statistics->playerOneRespawnResource > 0)
+	if (_statistics->IsCoopOneAINeedRespawn() && _statistics->GetPlayerOneRespawnResource() > 0)
 	{
 		SpawnCoop1(gridOffset, speed, health, size);
 	}
-	if (_statistics->coopTwoAINeedRespawn && _statistics->playerTwoRespawnResource > 0)
+	if (_statistics->IsCoopTwoAINeedRespawn() && _statistics->GetPlayerTwoRespawnResource() > 0)
 	{
 		SpawnCoop2(gridOffset, speed, health, size);
 	}

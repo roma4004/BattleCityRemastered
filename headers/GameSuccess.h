@@ -73,6 +73,7 @@ public:
 	void KeyPressed(const SDL_Event& event) const;
 	void KeyReleased(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
+	void TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Color& color, const int value) const;
 
 	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void RenderStatistics(SDL_Renderer* renderer, Point pos) const;
