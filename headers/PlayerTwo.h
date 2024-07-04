@@ -18,7 +18,7 @@ public:
 
 	void TickUpdate(float deltaTime) override;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;;
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 private:
 	std::unique_ptr<IInputProvider> _inputProvider;

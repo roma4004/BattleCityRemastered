@@ -34,11 +34,15 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const int health, int* wi
 	gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
 
 	Subscribe();
+
+	_events->EmitEvent(_name + "_Spawn");
 }
 
 CoopAI::~CoopAI()
 {
 	Unsubscribe();
+
+	_events->EmitEvent(_name + "_Died");
 }
 
 void CoopAI::Subscribe()
@@ -67,8 +71,6 @@ void CoopAI::Unsubscribe() const
 	_events->RemoveListener("Draw", _name);
 
 	_events->RemoveListener("DrawHealthBar", _name);
-
-	_events->EmitEvent(_name + "_Died");
 }
 
 bool CoopAI::IsCollideWith(const Rectangle& r1, const Rectangle& r2)

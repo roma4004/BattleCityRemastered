@@ -1,15 +1,13 @@
 #pragma once
 
 #include "Rectangle.h"
+#include "Interfaces/ISendableDamageStatistics.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IObstacle.h"
-#include "interfaces/ITickUpdatable.h"
-
-#include <string>
 
 struct FPoint;
 
-class BaseObj : public IObstacle, public IDrawable, public ITickUpdatable
+class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics
 {
 	int _color{0};
 	int _health{0};
@@ -65,7 +63,4 @@ public:
 
 	[[nodiscard]] const Rectangle& GetShape() const;
 	void SetShape(const Rectangle& shape);
-
-	// TODO: interface it
-	virtual void SendDamageStatistics(const std::string& author, const std::string& fraction) = 0;
 };

@@ -3,8 +3,14 @@
 Pawn::Pawn(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
            std::shared_ptr<EventSystem> events, std::shared_ptr<IMoveBeh> moveBeh)
-	: BaseObj{rect, color, health}, _moveBeh{std::move(moveBeh)}, _windowSize{windowSize}, _windowBuffer{windowBuffer},
-	  _direction{direction}, _speed{speed}, _events{std::move(events)}, _allObjects{allObjects} {}
+	: BaseObj{rect, color, health},
+	  _moveBeh{std::move(moveBeh)},
+	  _windowSize{windowSize},
+	  _windowBuffer{windowBuffer},
+	  _direction{direction},
+	  _speed{speed},
+	  _events{std::move(events)},
+	  _allObjects{allObjects} {}
 
 Pawn::~Pawn() = default;
 

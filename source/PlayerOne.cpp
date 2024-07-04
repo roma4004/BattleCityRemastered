@@ -30,11 +30,15 @@ PlayerOne::PlayerOne(const Rectangle& rect, const int color, const int health, i
 	BaseObj::SetIsPenetrable(false);
 
 	Subscribe();
+
+	_events->EmitEvent(_name + "_Spawn");
 }
 
 PlayerOne::~PlayerOne()
 {
 	Unsubscribe();
+
+	_events->EmitEvent(_name + "_Died");
 }
 
 void PlayerOne::Subscribe()
@@ -74,8 +78,6 @@ void PlayerOne::Unsubscribe() const
 	_events->RemoveListener("Draw", _name);
 
 	_events->RemoveListener("DrawHealthBar", _name);
-
-	_events->EmitEvent("P1_Died");
 }
 
 void PlayerOne::TickUpdate(const float deltaTime)

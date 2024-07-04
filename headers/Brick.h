@@ -24,7 +24,6 @@ public:
 	void SetPixel(size_t x, size_t y, int color) const;
 
 	void Draw() const override;
-	void TickUpdate(float deltaTime) override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 };

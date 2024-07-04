@@ -213,11 +213,6 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 	const Circle circle{blowCenter, bullet->GetBulletDamageAreaRadius()};
 	for (const std::shared_ptr<BaseObj>& pawn: *_allObjects)
 	{
-		if (bullet == pawn.get())
-		{
-			continue;
-		}
-
 		if (CheckIntersection(circle, pawn->GetShape()))
 		{
 			aoeList.emplace_back(std::weak_ptr(pawn));
@@ -246,11 +241,12 @@ void MoveLikeBulletBeh::DealDamage(const std::list<std::weak_ptr<BaseObj>>& obje
 				{
 					_selfParent->SendDamageStatistics(anotherBullet->GetAuthor(), anotherBullet->GetFraction());
 				}
-				targetLock->SendDamageStatistics(bullet->GetAuthor(), bullet->GetFraction());
+				else
+				{
+					targetLock->SendDamageStatistics(bullet->GetAuthor(), bullet->GetFraction());
+				}
 				//TODO: use string_view here
 			}
 		}
 	}
-
-	_selfParent->TakeDamage(bulletDamage);
 }

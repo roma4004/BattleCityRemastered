@@ -186,6 +186,7 @@
     <ClInclude Include="headers\Interfaces\IInputProvider.h" />
     <ClInclude Include="headers\Interfaces\IMoveBeh.h" />
     <ClInclude Include="headers\Interfaces\IObstacle.h" />
+    <ClInclude Include="headers\Interfaces\ISendableDamageStatistics.h" />
     <ClInclude Include="headers\Interfaces\ITickUpdatable.h" />
     <ClInclude Include="headers\Iron.h" />
     <ClInclude Include="headers\Map.h" />

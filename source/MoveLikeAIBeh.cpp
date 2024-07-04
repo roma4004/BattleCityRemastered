@@ -75,16 +75,8 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 		{
 			if (!object->GetIsPassable())
 			{
-				//TODO: need fix, we broke collision detecting
 				obstacles.emplace_back(std::weak_ptr(object));
-				// return std::make_tuple(false, obstacle);
 			}
-			//else
-			//{
-			//	obstacle.emplace_back(std::weak_ptr(pawn));
-			//	isHaveCollision = true;
-			//	return std::make_tuple(true, obstacle);
-			//}
 		}
 	}
 

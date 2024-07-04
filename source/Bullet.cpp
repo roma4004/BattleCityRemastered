@@ -5,9 +5,8 @@
 
 Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const int health,
                int* windowBuffer, const UPoint windowSize, const Direction direction, const float speed,
-               std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-               std::string author,
-               std::string fraction)
+               std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
+               std::string author, std::string fraction)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -66,7 +65,7 @@ void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const in
 	SetColor(color);
 	SetHealth(health);
 	_moveBeh = std::make_shared<MoveLikeBulletBeh>(this, _allObjects, _events);
-	SetDirection(direction);// TODO: move this to constructor
+	SetDirection(direction);
 	_author = std::move(author);
 	_fraction = std::move(fraction);
 	_damage = damage;

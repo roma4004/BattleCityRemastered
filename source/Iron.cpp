@@ -3,8 +3,10 @@
 #include <string>
 
 Iron::Iron(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0xaaaaaa, 15}, _windowSize{windowSize},
-	  _windowBuffer{windowBuffer}, _events{std::move(events)}
+	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0xaaaaaa, 15},
+	  _windowSize{windowSize},
+	  _windowBuffer{windowBuffer},
+	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
@@ -61,10 +63,4 @@ void Iron::Draw() const
 	}
 }
 
-void Iron::TickUpdate(float deltaTime) {}//TODO: remove it via interface segregation
-
-void Iron::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	// std::string authorAndFractionTag = author + fraction;
-	// _events->EmitEvent<std::string>("IronHit", authorAndFractionTag);
-}
+void Iron::SendDamageStatistics(const std::string& author, const std::string& fraction) {}

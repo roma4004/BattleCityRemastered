@@ -24,17 +24,17 @@ void GameStatistics::Subscribe()
 	_events->AddListener("Enemy3_Died", _name, [this]() { enemyThreeNeedRespawn = true; });
 	_events->AddListener("Enemy4_Died", _name, [this]() { enemyFourNeedRespawn = true; });
 
-	_events->AddListener("P1_Died", _name, [this]() { playerOneNeedRespawn = true; });
-	_events->AddListener("P2_Died", _name, [this]() { playerTwoNeedRespawn = true; });
+	_events->AddListener("PlayerOne_Died", _name, [this]() { playerOneNeedRespawn = true; });
+	_events->AddListener("PlayerTwo_Died", _name, [this]() { playerTwoNeedRespawn = true; });
 	_events->AddListener("CoopOneAI_Died", _name, [this]() { coopOneAINeedRespawn = true; });
 	_events->AddListener("CoopTwoAI_Died", _name, [this]() { coopTwoAINeedRespawn = true; });
 
-	_events->AddListener("P1_Spawn", _name, [this]()
+	_events->AddListener("PlayerOne_Spawn", _name, [this]()
 	{
 		playerOneNeedRespawn = false;
 		--playerOneRespawnResource;
 	});
-	_events->AddListener("P2_Spawn", _name, [this]()
+	_events->AddListener("PlayerTwo_Spawn", _name, [this]()
 	{
 		playerTwoNeedRespawn = false;
 		--playerTwoRespawnResource;
@@ -89,7 +89,7 @@ void GameStatistics::Subscribe()
 	_events->AddListener<std::string>("CoopTwoAIHit", _name, [this](const std::string& by) { PlayerTwoHit(by); });
 	_events->AddListener<std::string>("CoopTwoAIDied", _name, [this](const std::string& by) { PlayerDied(by); });
 
-	_events->AddListener<std::string>("BrickHit", _name, [this](const std::string& by) { BrickHit(by); });
+	_events->AddListener<std::string>("BrickDied", _name, [this](const std::string& by) { BrickDied(by); });
 }
 
 void GameStatistics::Unsubscribe() const
@@ -136,7 +136,7 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener<std::string>("CoopTwoAIHit", _name);
 	_events->RemoveListener<std::string>("CoopTwoAIDied", _name);
 
-	_events->RemoveListener<std::string>("BrickHit", _name);
+	_events->RemoveListener<std::string>("BrickDied", _name);
 }
 
 void GameStatistics::BulletHit(const std::string& authorTeam)
@@ -233,7 +233,7 @@ void GameStatistics::PlayerDied(const std::string& authorTeam)
 	}
 }
 
-void GameStatistics::BrickHit(const std::string& authorTeam)
+void GameStatistics::BrickDied(const std::string& authorTeam)
 {
 	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
 	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")

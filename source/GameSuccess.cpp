@@ -289,7 +289,6 @@ void GameSuccess::RenderStatistics(SDL_Renderer* renderer, const Point pos) cons
 	TextToRender(renderer, {pos.x + 130, pos.y + 300}, color, std::to_string(_statistics->brickDiedByPlayerOne));
 	TextToRender(renderer, {pos.x + 180, pos.y + 300}, color, std::to_string(_statistics->brickDiedByPlayerTwo));
 	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, std::to_string(_statistics->brickDiedByEnemyTeam));
-	//TODO: write test for statistics
 }
 
 void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
@@ -445,7 +444,6 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 		                                                     speed,
 		                                                     &_allObjects, _events, name, fraction, inputProvider,
 		                                                     _bulletPool));
-		_events->EmitEvent("P1_Spawn");
 	}
 }
 
@@ -471,7 +469,6 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 		_allObjects.emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
 		                                                     &_allObjects, _events, name, fraction, inputProvider,
 		                                                     _bulletPool));
-		_events->EmitEvent("P2_Spawn");
 	}
 }
 
@@ -495,7 +492,6 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 		auto fraction = "PlayerTeam";
 		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, yellow, health, _windowBuffer, _windowSize, UP, speed,
 		                                                  &_allObjects, _events, name, fraction, _bulletPool));
-		_events->EmitEvent("CoopOneAI_Spawn");
 	}
 }
 
@@ -519,7 +515,6 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 		auto fraction = "PlayerTeam";
 		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
 		                                                  &_allObjects, _events, name, fraction, _bulletPool));
-		_events->EmitEvent("CoopTwoAI_Spawn");
 	}
 }
 

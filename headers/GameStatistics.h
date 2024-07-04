@@ -21,7 +21,7 @@ public:
 	void PlayerTwoHit(const std::string& authorTeam);
 	void EnemyDied(const std::string& authorTeam);
 	void PlayerDied(const std::string& authorTeam);
-	void BrickHit(const std::string& authorTeam);
+	void BrickDied(const std::string& authorTeam);
 
 	void Reset();
 

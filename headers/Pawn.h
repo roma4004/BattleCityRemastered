@@ -4,13 +4,14 @@
 #include "Point.h"
 #include "Rectangle.h"
 #include "interfaces/IMoveBeh.h"
+#include "interfaces/ITickUpdatable.h"
 
 #include <memory>
 #include <vector>
 
 class EventSystem;
 
-class Pawn : public BaseObj
+class Pawn : public BaseObj, public ITickUpdatable
 {
 protected:
 	std::shared_ptr<IMoveBeh> _moveBeh;

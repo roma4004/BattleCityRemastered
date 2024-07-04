@@ -195,6 +195,136 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 	}
 }
 
+TEST_F(StatisticsTest, EnemyOneRespawnNeededFlag)
+{
+	EXPECT_EQ(_statistics->enemyOneNeedRespawn, false);
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int gray = 0x808080;
+		std::string name = "Enemy1";
+		std::string fraction = "EnemyTeam";
+		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
+		                                     &_allObjects, _events, name, fraction, _bulletPool);
+	}
+	EXPECT_EQ(_statistics->enemyOneNeedRespawn, true);
+}
+
+TEST_F(StatisticsTest, EnemyTwoRespawnNeededFlag)
+{
+	EXPECT_EQ(_statistics->enemyTwoNeedRespawn, false);
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int gray = 0x808080;
+		std::string name = "Enemy2";
+		std::string fraction = "EnemyTeam";
+		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
+		                                     &_allObjects, _events, name, fraction, _bulletPool);
+	}
+	EXPECT_EQ(_statistics->enemyTwoNeedRespawn, true);
+}
+
+TEST_F(StatisticsTest, EnemyThreeRespawnNeededFlag)
+{
+	EXPECT_EQ(_statistics->enemyThreeNeedRespawn, false);
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int gray = 0x808080;
+		std::string name = "Enemy3";
+		std::string fraction = "EnemyTeam";
+		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
+		                                     &_allObjects, _events, name, fraction, _bulletPool);
+	}
+	EXPECT_EQ(_statistics->enemyThreeNeedRespawn, true);
+}
+
+TEST_F(StatisticsTest, EnemyFourRespawnNeededFlag)
+{
+	EXPECT_EQ(_statistics->enemyFourNeedRespawn, false);
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int gray = 0x808080;
+		std::string name = "Enemy4";
+		std::string fraction = "EnemyTeam";
+		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
+		                                     &_allObjects, _events, name, fraction, _bulletPool);
+	}
+	EXPECT_EQ(_statistics->enemyFourNeedRespawn, true);
+}
+
+TEST_F(StatisticsTest, PlayerOneDiedRespawnNeededFlag)
+{
+	EXPECT_EQ(_statistics->playerOneNeedRespawn, false);
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int yellow = 0xeaea00;
+		std::string name = "PlayerOne";
+		std::string fraction = "PlayerTeam";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		auto enemy = std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
+		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+	}
+	EXPECT_EQ(_statistics->playerOneNeedRespawn, true);
+}
+
+TEST_F(StatisticsTest, PlayerTwoDiedRespawnNeededFlag)
+{
+	EXPECT_EQ(_statistics->playerTwoNeedRespawn, false);
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int green = 0x408000;
+		std::string name = "PlayerTwo";
+		std::string fraction = "PlayerTeam";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		auto enemy = std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
+		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+	}
+	EXPECT_EQ(_statistics->playerTwoNeedRespawn, true);
+}
+
+TEST_F(StatisticsTest, EnemyDiedRespawnCount)
+{
+	const auto respawnResource = _statistics->enemyRespawnResource;
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int gray = 0x808080;
+		std::string name = "Enemy1";
+		std::string fraction = "EnemyTeam";
+		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
+		                                     &_allObjects, _events, name, fraction, _bulletPool);
+	}
+	EXPECT_GT(respawnResource, _statistics->enemyRespawnResource);
+}
+
+TEST_F(StatisticsTest, PlayerOneDiedRespawnCount)
+{
+	const auto respawnResource = _statistics->playerOneRespawnResource;
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int yellow = 0xeaea00;
+		std::string name = "PlayerOne";
+		std::string fraction = "PlayerTeam";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		auto enemy = std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
+		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+	}
+	EXPECT_GT(respawnResource, _statistics->playerOneRespawnResource);
+}
+
+TEST_F(StatisticsTest, PlayerTwoDiedRespawnCount)
+{
+	const auto respawnResource = _statistics->playerTwoRespawnResource;
+	{
+		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
+		constexpr int green = 0x408000;
+		std::string name = "PlayerTwo";
+		std::string fraction = "PlayerTeam";
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		auto enemy = std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
+		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+	}
+	EXPECT_GT(respawnResource, _statistics->playerTwoRespawnResource);
+}
+
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
 	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
@@ -797,8 +927,6 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	}
 }
 
-//TODO: fix bullet self damage emit event bullet hit by another bullet and write test for it
-
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
 	constexpr Direction direction = Direction::UP;
@@ -913,9 +1041,3 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 		EXPECT_TRUE(false);
 	}
 }
-
-// TODO: write tests for
-//
-// int enemyRespawnResource{20};
-// int playerOneRespawnResource{3};
-// int playerTwoRespawnResource{3};

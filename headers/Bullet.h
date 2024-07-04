@@ -20,7 +20,7 @@ class Bullet : public Pawn
 public:
 	Bullet(const Rectangle& rect, int damage, double aoeRadius, int color, int health, int* windowBuffer,
 	       UPoint windowSize, Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	       std::shared_ptr<EventSystem> events, std::string author, std::string fraction);
+	       const std::shared_ptr<EventSystem>& events, std::string author, std::string fraction);
 
 	~Bullet() override;
 
