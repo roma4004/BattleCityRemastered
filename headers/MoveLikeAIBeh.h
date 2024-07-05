@@ -15,6 +15,12 @@ class MoveLikeAIBeh : public IMoveBeh
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
+	void Move(float deltaTime) const override;
+	void MoveLeft(float deltaTime) const override;
+	void MoveRight(float deltaTime) const override;
+	void MoveUp(float deltaTime) const override;
+	void MoveDown(float deltaTime) const override;
+
 public:
 	MoveLikeAIBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
@@ -24,10 +30,4 @@ public:
 	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 	[[nodiscard]] float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
 	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
-
-	void Move(float deltaTime) const override;
-	void MoveLeft(float deltaTime) const override;
-	void MoveRight(float deltaTime) const override;
-	void MoveUp(float deltaTime) const override;
-	void MoveDown(float deltaTime) const override;
 };

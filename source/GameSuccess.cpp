@@ -25,6 +25,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	  _bulletPool{std::make_shared<BulletPool>()}
 {
 	ResetBattlefield();
+	NextGameMode();
 }
 
 GameSuccess::~GameSuccess() = default;
@@ -100,6 +101,7 @@ void GameSuccess::MouseEvents(const SDL_Event& event)
 
 		return;
 	}
+
 	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		_mouseButtons.MouseLeftButton = false;
@@ -296,26 +298,8 @@ void GameSuccess::RenderStatistics(SDL_Renderer* renderer, const Point pos) cons
 	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, _statistics->GetBrickDiedByEnemyTeam());
 }
 
-void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos)
+void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos) const
 {
-	if (_menu.input->keys.up)
-	{
-		PrevGameMode();
-		_menu.input->keys.up = false;
-	}
-	else if (_menu.input->keys.down)
-	{
-		NextGameMode();
-		_menu.input->keys.down = false;
-	}
-	else if (_menu.input->keys.reset)
-	{
-		ResetBattlefield();
-		_menu.input->keys.reset = false;
-		_menu.input->keys.menuShow = false;
-	}
-
-	//menu text
 	const Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
@@ -370,7 +354,6 @@ bool GameSuccess::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 
 void GameSuccess::SpawnPlayerTanks(const float gridOffset, const float speed, const int health, const float size)
 {
-	_menu.input->ToggleMenu();
 	if (_currentMode == OnePlayer || _currentMode == TwoPlayers || _currentMode == CoopWithAI)
 	{
 		SpawnPlayer1(gridOffset, speed, health, size);
@@ -416,11 +399,11 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 		if (isFreeSpawnSpot)
 		{
 			constexpr int gray = 0x808080;
-			const auto indexString = std::to_string(index);
+			std::string name = "Enemy" + std::to_string(index);
+			std::string fraction = "EnemyTeam";
 			_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, health, _windowBuffer, _windowSize, DOWN,
-			                                                 speed, &_allObjects, _events, "Enemy" + indexString,
-			                                                 "EnemyTeam", _bulletPool));
-			_events->EmitEvent("Enemy" + indexString + "_Spawn");
+			                                                 speed, &_allObjects, _events, name, fraction,
+			                                                 _bulletPool));
 			return;
 		}
 	}
@@ -442,13 +425,12 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		auto name = "PlayerOne";
-		auto fraction = "PlayerTeam";
+		std::string name = "PlayerOne";
+		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		_allObjects.emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
-		                                                     speed,
-		                                                     &_allObjects, _events, name, fraction, inputProvider,
-		                                                     _bulletPool));
+		                                                     speed, &_allObjects, _events, name, fraction,
+		                                                     inputProvider, _bulletPool));
 	}
 }
 
@@ -468,8 +450,8 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		auto name = "PlayerTwo";
-		auto fraction = "PlayerTeam";
+		std::string name = "PlayerTwo";
+		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
 		_allObjects.emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
 		                                                     &_allObjects, _events, name, fraction, inputProvider,
@@ -493,8 +475,8 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		auto name = "CoopOneAI";
-		auto fraction = "PlayerTeam";
+		std::string name = "CoopOneAI";
+		std::string fraction = "PlayerTeam";
 		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, yellow, health, _windowBuffer, _windowSize, UP, speed,
 		                                                  &_allObjects, _events, name, fraction, _bulletPool));
 	}
@@ -516,8 +498,8 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		auto name = "CoopTwoAI";
-		auto fraction = "PlayerTeam";
+		std::string name = "CoopTwoAI";
+		std::string fraction = "PlayerTeam";
 		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
 		                                                  &_allObjects, _events, name, fraction, _bulletPool));
 	}
@@ -598,9 +580,10 @@ void GameSuccess::MainLoop()
 
 		EventHandling();
 
-		if (!_menu.input->keys.pause)
+		const auto menuKeysStats = _menu.input->GetKeysStats();
+		if (!menuKeysStats.pause)
 		{
-			_events->EmitEvent<float>("TickUpdate", deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 		}
 
 		// TODO: separate bullets or somehow delete and recycle in one iterating through _allObjects (because now its two)
@@ -627,13 +610,14 @@ void GameSuccess::MainLoop()
 		RespawnTanks();
 
 		_events->EmitEvent("Draw");
+
 		_events->EmitEvent("DrawHealthBar");// TODO: create and blend separate buff layers(objects, effect, interface)
 
 		const Uint64 newTime = SDL_GetTicks64();
 		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
 		HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
 
-		if (_menu.input->keys.menuShow)
+		if (menuKeysStats.menuShow)
 		{
 			_menu.BlendToWindowBuffer();
 		}
@@ -642,7 +626,23 @@ void GameSuccess::MainLoop()
 		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
 
-		if (_menu.input->keys.menuShow)
+		if (menuKeysStats.up)
+		{
+			PrevGameMode();
+			_menu.input->ToggleUp();
+		}
+		else if (menuKeysStats.down)
+		{
+			NextGameMode();
+			_menu.input->ToggleDown();
+		}
+		else if (menuKeysStats.reset)
+		{
+			ResetBattlefield();
+			_menu.input->ToggleMenu();
+		}
+
+		if (menuKeysStats.menuShow)
 		{
 			HandleMenuText(_renderer, _menu._pos);
 		}

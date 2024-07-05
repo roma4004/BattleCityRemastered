@@ -2,7 +2,8 @@
 
 class IDrawable
 {
-public:
-	virtual ~IDrawable() = default;
 	virtual void Draw() const = 0;
+
+protected:
+	virtual ~IDrawable() = default;
 };

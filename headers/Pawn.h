@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseObj.h"
+#include "Direction.h"
 #include "Point.h"
 #include "Rectangle.h"
 #include "interfaces/IMoveBeh.h"
@@ -28,19 +29,19 @@ protected:
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-public:
-	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
-	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	     std::shared_ptr<IMoveBeh> moveBeh);
-
-	~Pawn() override;
-
 	void SetPixel(size_t x, size_t y, int color) const;
 
 	void Draw() const override;
 
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(float deltaTime) override = 0;
+
+public:
+	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+	     std::shared_ptr<IMoveBeh> moveBeh);
+
+	~Pawn() override;
 
 	[[nodiscard]] UPoint GetWindowSize() const;
 

@@ -41,7 +41,7 @@ void Bullet::Subscribe()
 		return;
 	}
 
-	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
@@ -53,9 +53,19 @@ void Bullet::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener("Draw", _name);
+}
+
+void Bullet::Disable() const
+{
+	Unsubscribe();
+}
+
+void Bullet::Enable()
+{
+	Subscribe();
 }
 
 void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
@@ -71,13 +81,16 @@ void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const in
 	_damage = damage;
 	_bulletDamageAreaRadius = aoeRadius;
 	_speed = speed;
-	Subscribe();
 	SetIsAlive(true);
+	Enable();
 }
 
 void Bullet::TickUpdate(const float deltaTime)
 {
-	_moveBeh->Move(deltaTime);
+	if (GetIsAlive()) //TODO: maybe for all add check isAlive
+	{
+		_moveBeh->Move(deltaTime);
+	}
 }
 
 int Bullet::GetDamage() const
@@ -102,6 +115,5 @@ std::string Bullet::GetFraction() const
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	std::string authorAndFractionTag = author + fraction;
-	_events->EmitEvent<std::string>("BulletHit", authorAndFractionTag);
+	_events->EmitEvent<const std::string&, const std::string&>("BulletHit", author, fraction);
 }

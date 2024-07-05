@@ -27,7 +27,7 @@ void BulletPool::ReturnBullet(std::shared_ptr<BaseObj> bullet)
 {
 	if (const auto bulletCast = dynamic_cast<Bullet*>(bullet.get()); bulletCast != nullptr)
 	{
-		bulletCast->Unsubscribe();
+		bulletCast->Disable();
 		_bullets.emplace(std::move(bullet));
 	}
 }

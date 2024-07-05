@@ -13,11 +13,6 @@ class Brick final : public BaseObj
 	std::shared_ptr<EventSystem> _events;
 	std::string _name;
 
-public:
-	Brick(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
-
-	~Brick() override;
-
 	void Subscribe() const;
 	void Unsubscribe() const;
 
@@ -26,4 +21,9 @@ public:
 	void Draw() const override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+
+public:
+	Brick(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
+
+	~Brick() override;
 };

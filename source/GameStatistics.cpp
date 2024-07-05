@@ -72,24 +72,60 @@ void GameStatistics::Subscribe()
 	});
 
 	//TODO: replace <std::string> with <Enum::statisticsType>
-	_events->AddListener<std::string>("BulletHit", _name, [this](const std::string& by) { BulletHit(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"BulletHit",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { BulletHit(author, fraction); });
 
-	_events->AddListener<std::string>("EnemyHit", _name, [this](const std::string& by) { EnemyHit(by); });
-	_events->AddListener<std::string>("EnemyDied", _name, [this](const std::string& by) { EnemyDied(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"EnemyHit",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { EnemyHit(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"EnemyDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { EnemyDied(author, fraction); });
 
-	_events->AddListener<std::string>("PlayerOneHit", _name, [this](const std::string& by) { PlayerOneHit(by); });
-	_events->AddListener<std::string>("PlayerOneDied", _name, [this](const std::string& by) { PlayerDied(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"PlayerOneHit",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerOneHit(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"PlayerOneDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); });
 
-	_events->AddListener<std::string>("CoopOneAIHit", _name, [this](const std::string& by) { PlayerOneHit(by); });
-	_events->AddListener<std::string>("CoopOneAIDied", _name, [this](const std::string& by) { PlayerDied(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"CoopOneAIHit",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerOneHit(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"CoopOneAIDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); });
 
-	_events->AddListener<std::string>("PlayerTwoHit", _name, [this](const std::string& by) { PlayerTwoHit(by); });
-	_events->AddListener<std::string>("PlayerTwoDied", _name, [this](const std::string& by) { PlayerDied(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"PlayerTwoHit",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerTwoHit(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"PlayerTwoDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
 
-	_events->AddListener<std::string>("CoopTwoAIHit", _name, [this](const std::string& by) { PlayerTwoHit(by); });
-	_events->AddListener<std::string>("CoopTwoAIDied", _name, [this](const std::string& by) { PlayerDied(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"CoopTwoAIHit",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerTwoHit(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"CoopTwoAIDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
 
-	_events->AddListener<std::string>("BrickDied", _name, [this](const std::string& by) { BrickDied(by); });
+	_events->AddListener<const std::string&, const std::string&>(
+			"BrickDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { BrickDied(author, fraction); });
 }
 
 void GameStatistics::Unsubscribe() const
@@ -104,13 +140,13 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener("Enemy3_Died", _name);
 	_events->RemoveListener("Enemy4_Died", _name);
 
-	_events->RemoveListener("P1_Died", _name);
-	_events->RemoveListener("P2_Died", _name);
+	_events->RemoveListener("PlayerOne_Died", _name);
+	_events->RemoveListener("PlayerTwo_Died", _name);
 	_events->RemoveListener("CoopOneAI_Died", _name);
 	_events->RemoveListener("CoopTwoAI_Died", _name);
 
-	_events->RemoveListener("P1_Spawn", _name);
-	_events->RemoveListener("P2_Spawn", _name);
+	_events->RemoveListener("PlayerOne_Spawn", _name);
+	_events->RemoveListener("PlayerTwo_Spawn", _name);
 	_events->RemoveListener("CoopOneAI_Spawn", _name);
 	_events->RemoveListener("CoopTwoAI_Spawn", _name);
 
@@ -119,134 +155,183 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener("Enemy3_Spawn", _name);
 	_events->RemoveListener("Enemy4_Spawn", _name);
 
-	_events->RemoveListener<std::string>("BulletHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BulletHit", _name);
 
-	_events->RemoveListener<std::string>("EnemyHit", _name);
-	_events->RemoveListener<std::string>("EnemyDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("EnemyHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("EnemyDied", _name);
 
-	_events->RemoveListener<std::string>("PlayerOneHit", _name);
-	_events->RemoveListener<std::string>("PlayerOneDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("PlayerOneHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("PlayerOneDied", _name);
 
-	_events->RemoveListener<std::string>("CoopOneAIHit", _name);
-	_events->RemoveListener<std::string>("CoopOneAIDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopOneAIHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopOneAIDied", _name);
 
-	_events->RemoveListener<std::string>("PlayerTwoHit", _name);
-	_events->RemoveListener<std::string>("PlayerTwoDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("PlayerTwoHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("PlayerTwoDied", _name);
 
-	_events->RemoveListener<std::string>("CoopTwoAIHit", _name);
-	_events->RemoveListener<std::string>("CoopTwoAIDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopTwoAIHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopTwoAIDied", _name);
 
-	_events->RemoveListener<std::string>("BrickDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BrickDied", _name);
 }
 
-void GameStatistics::BulletHit(const std::string& authorTeam)
+void GameStatistics::BulletHit(const std::string& author, const std::string& fraction)
 {
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	if (fraction == "EnemyTeam")
 	{
-		++_bulletHitByEnemy;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_bulletHitByEnemy;
+		}
 	}
-	if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	else if (fraction == "PlayerTeam")
 	{
-		++_bulletHitByPlayerOne;
-	}
-	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
-	{
-		++_bulletHitByPlayerTwo;
-	}
-}
-
-void GameStatistics::EnemyHit(const std::string& authorTeam)
-{
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
-	{
-		++_enemyHitByFriendlyFire;
-	}
-	if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
-	{
-		++_enemyHitByPlayerOne;
-	}
-	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
-	{
-		++_enemyHitByPlayerTwo;
+		if (author == "PlayerOne" || author == "CoopOneAI")
+		{
+			++_bulletHitByPlayerOne;
+		}
+		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_bulletHitByPlayerTwo;
+		}
 	}
 }
 
-void GameStatistics::PlayerOneHit(const std::string& authorTeam)
+void GameStatistics::EnemyHit(const std::string& author, const std::string& fraction)
 {
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	if (fraction == "EnemyTeam")
 	{
-		++_playerOneHitByEnemyTeam;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_enemyHitByFriendlyFire;
+		}
 	}
-	if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+	else if (fraction == "PlayerTeam")
 	{
-		++_playerOneHitFriendlyFire;
+		if (author == "PlayerOne" || author == "CoopOneAI")
+		{
+			++_enemyHitByPlayerOne;
+		}
+		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_enemyHitByPlayerTwo;
+		}
 	}
 }
 
-void GameStatistics::PlayerTwoHit(const std::string& authorTeam)
+void GameStatistics::PlayerOneHit(const std::string& author, const std::string& fraction)
 {
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	if (fraction == "EnemyTeam")
 	{
-		++_playerTwoHitByEnemyTeam;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_playerOneHitByEnemyTeam;
+		}
 	}
-	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	else if (fraction == "PlayerTeam")
 	{
-		++_playerTwoHitFriendlyFire;
+		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_playerOneHitFriendlyFire;
+		}
 	}
 }
 
-void GameStatistics::EnemyDied(const std::string& authorTeam)
+void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& fraction)
 {
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	if (fraction == "EnemyTeam")
 	{
-		++_enemyDiedByFriendlyFire;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_playerTwoHitByEnemyTeam;
+		}
 	}
-	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	else if (fraction == "PlayerTeam")
 	{
-		++_enemyDiedByPlayerOne;
-	}
-	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
-	{
-		++_enemyDiedByPlayerTwo;
+		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopOneTwo")
+		{
+			++_playerTwoHitFriendlyFire;
+		}
 	}
 }
 
-void GameStatistics::PlayerDied(const std::string& authorTeam)
+void GameStatistics::EnemyDied(const std::string& author, const std::string& fraction)
 {
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	if (fraction == "EnemyTeam")
 	{
-		++_playerDiedByEnemyTeam;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_enemyDiedByFriendlyFire;
+		}
 	}
-	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	else if (fraction == "PlayerTeam")
 	{
-		++_playerTwoDiedByFriendlyFire;
-	}
-	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
-	{
-		++_playerOneDiedByFriendlyFire;
+		if (author == "PlayerOne" || author == "CoopOneAI")
+		{
+			++_enemyDiedByPlayerOne;
+		}
+		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_enemyDiedByPlayerTwo;
+		}
 	}
 }
 
-void GameStatistics::BrickDied(const std::string& authorTeam)
+void GameStatistics::PlayerOneDied(const std::string& author, const std::string& fraction)
 {
-	if (authorTeam == "Enemy1EnemyTeam" || authorTeam == "Enemy2EnemyTeam"
-	    || authorTeam == "Enemy3EnemyTeam" || authorTeam == "Enemy4EnemyTeam")
+	if (fraction == "EnemyTeam")
 	{
-		++_brickDiedByEnemyTeam;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_playerDiedByEnemyTeam;
+		}
 	}
-	else if (authorTeam == "PlayerOnePlayerTeam" || authorTeam == "CoopOneAIPlayerTeam")
+	else if (fraction == "PlayerTeam")
 	{
-		++_brickDiedByPlayerOne;
+		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_playerOneDiedByFriendlyFire;
+		}
 	}
-	else if (authorTeam == "PlayerTwoPlayerTeam" || authorTeam == "CoopTwoAIPlayerTeam")
+}
+
+void GameStatistics::PlayerTwoDied(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "EnemyTeam")
 	{
-		++_brickDiedByPlayerTwo;
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_playerDiedByEnemyTeam;
+		}
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_playerTwoDiedByFriendlyFire;
+		}
+	}
+}
+
+void GameStatistics::BrickDied(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "EnemyTeam")
+	{
+		if (author.compare(0, 4, "Enemy"))
+		{
+			++_brickDiedByEnemyTeam;
+		}
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "PlayerOne" || author == "CoopOneAI")
+		{
+			++_brickDiedByPlayerOne;
+		}
+		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		{
+			++_brickDiedByPlayerTwo;
+		}
 	}
 }
 

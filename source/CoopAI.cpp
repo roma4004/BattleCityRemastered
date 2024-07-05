@@ -52,7 +52,10 @@ void CoopAI::Subscribe()
 		return;
 	}
 
-	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
@@ -66,7 +69,7 @@ void CoopAI::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener("Draw", _name);
 
@@ -278,6 +281,7 @@ void CoopAI::MayShoot(Direction dir)
 
 void CoopAI::TickUpdate(const float deltaTime)
 {
+	// change dir when random time span left
 	if (IsTurnCooldownFinish())
 	{
 		turnDuration = distTurnRate(gen);
@@ -286,16 +290,18 @@ void CoopAI::TickUpdate(const float deltaTime)
 		lastTimeTurn = std::chrono::system_clock::now();
 	}
 
+	// move
 	const auto pos = GetPos();
 	_moveBeh->Move(deltaTime);
 
-	//change dir it cant move
+	// change dir it cant move
 	if (pos == GetPos())
 	{
 		const int randDir = distDirection(gen);
 		SetDirection(static_cast<Direction>(randDir));
 	}
 
+	// shot
 	if (IsReloadFinish())
 	{
 		MayShoot(GetDirection());
@@ -321,12 +327,10 @@ bool CoopAI::IsTurnCooldownFinish() const
 
 void CoopAI::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	std::string authorAndFractionTag = author + fraction;
-	_events->EmitEvent<std::string>("CoopAIHit", authorAndFractionTag);
+	_events->EmitEvent<const std::string&, const std::string&>("CoopAIHit", author, fraction);
 
 	if (GetHealth() < 1)
 	{
-		std::string authorAndFractionDieTag = author + fraction;
-		_events->EmitEvent<std::string>("CoopAIDied", authorAndFractionTag);
+		_events->EmitEvent<const std::string&, const std::string&>("CoopAIDied", author, fraction);
 	}
 }

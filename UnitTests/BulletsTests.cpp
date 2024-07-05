@@ -32,9 +32,12 @@ protected:
 		constexpr int health = 1;
 		constexpr int damage = 1;
 		constexpr double bulletDamageAreaRadius = 12.0;
+		std::string name = "PlayerOne";
+		std::string fraction = "PlayerTeam";
+		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                   nullptr, _windowSize, direction, _bulletSpeed, &_allObjects,
-		                                                   _events, "bullet1", "PlayerTeam"));
+		                                                  _windowBuffer, _windowSize, direction, _bulletSpeed,
+		                                                  &_allObjects, _events, name, fraction));
 	}
 
 	void TearDown() override
@@ -55,7 +58,11 @@ TEST_F(BulletTest, BulletSetPos)
 		bullet->SetPos({static_cast<float>(_windowSize.x), static_cast<float>(_windowSize.y)});
 
 		EXPECT_LT(startPos, bullet->GetPos());
+
+		return;
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can move inside of screen
@@ -70,7 +77,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success bullet move down test, try to move inside screen bullet
 			bullet->SetDirection(DOWN);
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_LT(bulletStartPos.y, bulletEndPos.y);
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
@@ -79,7 +86,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success bullet right test, try to move inside screen bullet
 			bullet->SetDirection(RIGHT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_LT(bulletStartPos.x, bulletEndPos.x);
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
@@ -93,7 +100,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success shot up test, try to create inside screen bullet
 			bullet->SetDirection(UP);
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_GT(bulletStartPos.y, bulletEndPos.y);
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
@@ -102,12 +109,16 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success move left test, try to move inside screen bullet
 			bullet->SetDirection(LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_GT(bulletStartPos.x, bulletEndPos.x);
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can't move outside of screen
@@ -127,7 +138,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			const float bulletHeight = bullet->GetHeight();
 			bullet->SetPos({windowWidth - bulletWidth, windowHeight - bulletHeight});
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_EQ(bulletStartPos.x, bullet->GetPos().x);
 			EXPECT_EQ(bulletStartPos.y, bullet->GetPos().y);
 		}
@@ -138,7 +149,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			const float bulletHeight = bullet->GetHeight();
 			bullet->SetPos({windowWidth - bulletWidth, windowHeight - bulletHeight});
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_EQ(bulletStartPos.x, bullet->GetPos().x);
 			EXPECT_EQ(bulletStartPos.y, bullet->GetPos().y);
 		}
@@ -148,7 +159,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			//fail bullet move up test, try to move outside screen bullet
 			bullet->SetDirection(UP);
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_EQ(bulletStartPos.x, bullet->GetPos().x);
 			EXPECT_EQ(bulletStartPos.y, bullet->GetPos().y);
 		}
@@ -156,11 +167,15 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			//fail bullet move left test, try to move outside screen bullet
 			bullet->SetDirection(LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_EQ(bulletStartPos.x, bullet->GetPos().x);
 			EXPECT_EQ(bulletStartPos.y, bullet->GetPos().y);
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can deal damage to other obstacle and self
@@ -177,11 +192,15 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can deal damage to other obstacle and self
@@ -198,11 +217,15 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can deal damage to other obstacle and self
@@ -219,11 +242,15 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can deal damage to other obstacle and self
@@ -240,92 +267,78 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 TEST_F(BulletTest, BulletDamageTank)
 {
-	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-	float _tankSize = gridSize * 3;// for better turns
-	float _tankSpeed{142};
-	int _tankHealth = 100;
-	const Rectangle enemy1Rect{_tankSize * 2, 0, _tankSize, _tankSize};
-	constexpr int gray = 0x808080;
-	const auto indexString = std::to_string(1);
-	std::shared_ptr<BulletPool> _bulletPool = std::make_shared<BulletPool>();
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-													 _tankSpeed, &_allObjects, _events, "Enemy" + indexString,
-													 "EnemyTeam", _bulletPool));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
-		constexpr Direction direction = Direction::UP;
+		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		const float tankSize = gridSize * 3;// for better turns
+		constexpr float tankSpeed{142};
+		constexpr int tankHealth = 100;
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		Rectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-														  _windowBuffer, _windowSize, direction, _bulletSpeed,
-														  &_allObjects, _events, "PlayerOne", "PlayerTeam"));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+		const Rectangle rect{bulletWidth, bulletHeight + 1, tankSize, tankSize};
+		constexpr int gray = 0x808080;
+		auto bulletPool = std::make_shared<BulletPool>();
+		_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, tankHealth, _windowBuffer, _windowSize, UP,
+		                                                 tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam",
+		                                                 bulletPool));
+		if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get()))
 		{
 			enemy->SetHealth(1);
 			EXPECT_EQ(enemy->GetHealth(), 1);
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_EQ(enemy->GetHealth(), 0);
-		}
-		else
-		{
-			EXPECT_TRUE(false);
+
+			return;
 		}
 	}
-	else
-	{
-		EXPECT_TRUE(false);
-	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can deal damage to other bullet and self
 TEST_F(BulletTest, BulletToBulletDamageEachOther)
 {
-	constexpr Direction direction = Direction::DOWN;
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	constexpr Rectangle bulletRect{0, 0, bulletWidth, bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                               _windowBuffer, _windowSize, direction, _bulletSpeed, &_allObjects,
-	                                               _events, "bullet2", "PlayerTeam"));
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
-		const int bulletHealth = bullet->GetHealth();
-
-		constexpr Rectangle bulletRect2{0, 6, bulletWidth, bulletHeight};
-		constexpr Direction direction2 = Direction::UP;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect2, damage, bulletDamageAreaRadius, color, health,
-		                                               _windowBuffer, _windowSize, direction2, _bulletSpeed, &_allObjects,
-		                                               _events, "bullet3", "PlayerTeam"));
+		constexpr float bulletWidth = 6;
+		constexpr float bulletHeight = 5;
+		constexpr int color = 0xffffff;
+		constexpr int health = 1;
+		constexpr int damage = 1;
+		constexpr double bulletDamageAreaRadius = 12.0;
+		constexpr Rectangle rect{0, bulletHeight + 1, bulletWidth, bulletHeight};
+		_allObjects.emplace_back(std::make_shared<Bullet>(rect, damage, bulletDamageAreaRadius, color, health,
+		                                                  _windowBuffer, _windowSize, Direction::UP, _bulletSpeed,
+		                                                  &_allObjects, _events, "PlayerTwo", "PlayerTeam"));
 
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
+			const int bulletHealth = bullet->GetHealth();
 			const int bullet2Health = bullet2->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet2->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(bullet2Health, bullet2->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can't deal damage to undestractable object
@@ -336,17 +349,21 @@ TEST_F(BulletTest, BulletCantDamageIron)
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
 		const Rectangle rect{0.f, 6.f, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events));
 		if (const auto brick = dynamic_cast<Iron*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_EQ(brickHealth, brick->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }
 
 // Check that bullet can pass through water
@@ -357,15 +374,19 @@ TEST_F(BulletTest, BulletCantDamageWater)
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
 		const Rectangle rect{0.f, 6.f, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events));
 		if (const auto brick = dynamic_cast<Water*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 			constexpr float deltaTime = 1.f / 60.f;
-			bullet->TickUpdate(deltaTime);
+			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			EXPECT_EQ(bulletHealth, bullet->GetHealth());
 			EXPECT_EQ(brickHealth, brick->GetHealth());
+
+			return;
 		}
 	}
+
+	EXPECT_TRUE(false);
 }

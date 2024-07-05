@@ -5,7 +5,12 @@
 
 class PlayerOne : public Tank
 {
-	bool _isNeedMove{false};
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void TickUpdate(float deltaTime) override;
+
+	std::unique_ptr<IInputProvider> _inputProvider;
 
 public:
 	PlayerOne(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
@@ -15,13 +20,5 @@ public:
 
 	~PlayerOne() override;
 
-	void Subscribe();
-	void Unsubscribe() const;
-
-	void TickUpdate(float deltaTime) override;
-
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-
-protected:
-	std::unique_ptr<IInputProvider> _inputProvider;
 };

@@ -48,17 +48,9 @@ void PlayerOne::Subscribe()
 		return;
 	}
 
-	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
-		// move
 		this->TickUpdate(deltaTime);
-
-		// shot
-		if (_inputProvider->playerKeys.shot && IsReloadFinish())
-		{
-			this->Shot();
-			lastTimeFire = std::chrono::system_clock::now();
-		}
 	});
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
@@ -73,7 +65,7 @@ void PlayerOne::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener("Draw", _name);
 
@@ -82,36 +74,44 @@ void PlayerOne::Unsubscribe() const
 
 void PlayerOne::TickUpdate(const float deltaTime)
 {
-	if (_inputProvider->playerKeys.up)
+	const auto playerKeys = _inputProvider->GetKeysStats();
+
+	// move
+	if (playerKeys.up)
 	{
 		SetDirection(UP);
 		_moveBeh->Move(deltaTime);
 	}
-	else if (_inputProvider->playerKeys.left)
+	else if (playerKeys.left)
 	{
 		SetDirection(LEFT);
 		_moveBeh->Move(deltaTime);
 	}
-	else if (_inputProvider->playerKeys.down)
+	else if (playerKeys.down)
 	{
 		SetDirection(DOWN);
 		_moveBeh->Move(deltaTime);
 	}
-	else if (_inputProvider->playerKeys.right)
+	else if (playerKeys.right)
 	{
 		SetDirection(RIGHT);
 		_moveBeh->Move(deltaTime);
+	}
+
+	// shot
+	if (playerKeys.shot && IsReloadFinish())
+	{
+		this->Shot();
+		lastTimeFire = std::chrono::system_clock::now();
 	}
 }
 
 void PlayerOne::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	std::string authorAndFractionTag = author + fraction;
-	_events->EmitEvent<std::string>("PlayerOneHit", authorAndFractionTag);
+	_events->EmitEvent<const std::string&, const std::string&>("PlayerOneHit", author, fraction);
 
 	if (GetHealth() < 1)
 	{
-		std::string authorAndFractionDieTag = author + fraction;
-		_events->EmitEvent<std::string>("PlayerOneDied", authorAndFractionDieTag);
+		_events->EmitEvent<const std::string&, const std::string&>("PlayerOneDied", author, fraction);
 	}
 }

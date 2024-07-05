@@ -66,8 +66,8 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto bulletNextPosRect = Rectangle{_selfParent->GetX() + speedX, _selfParent->GetY() + speedY,
-	                                         _selfParent->GetWidth(), _selfParent->GetHeight()};
+	const auto bulletNextPosRect = Rectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
+	                                         bullet->GetWidth(), bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& pawn: *_allObjects)
 	{
 		if (bullet == pawn.get())
@@ -79,7 +79,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 		{
 			if (!pawn->GetIsPenetrable())
 			{
-				CheckCircleAoE(FPoint{_selfParent->GetX() + speedX, _selfParent->GetY() + speedY}, aoeList);
+				CheckCircleAoE(FPoint{bullet->GetX() + speedX, bullet->GetY() + speedY}, aoeList);
 				return aoeList;
 			}
 		}
@@ -98,27 +98,26 @@ void MoveLikeBulletBeh::Move(const float deltaTime) const
 
 	constexpr int sideBarWidth = 175;
 	const float speed = bullet->GetSpeed() * deltaTime;
-	if (const int direction = bullet->GetDirection(); direction == UP && _selfParent->GetY() - speed >= 0.0f)
+	if (const int direction = bullet->GetDirection(); direction == UP && bullet->GetY() - speed >= 0.0f)
 	{
 		MoveUp(deltaTime);
 	}
-	else if (direction == DOWN && _selfParent->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
+	else if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
 	{
 		MoveDown(deltaTime);
 	}
-	else if (direction == LEFT && _selfParent->GetX() - speed >= 0.0f)
+	else if (direction == LEFT && bullet->GetX() - speed >= 0.0f)
 	{
 		MoveLeft(deltaTime);
 	}
-	else if (direction == RIGHT && _selfParent->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x)
-	         -
-	         sideBarWidth)
+	else if (direction == RIGHT && bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x)
+	         - sideBarWidth)
 	{
 		MoveRight(deltaTime);
 	}
 	else// Self-destroy when edge of windows is reached
 	{
-		_selfParent->SetIsAlive(false);
+		bullet->SetIsAlive(false);
 	}
 }
 
@@ -132,7 +131,7 @@ void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
 			return;
 		}
 
-		_selfParent->MoveX(-bullet->GetSpeed() * deltaTime);
+		bullet->MoveX(-bullet->GetSpeed() * deltaTime);
 	}
 	else
 	{
@@ -150,7 +149,7 @@ void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
 			return;
 		}
 
-		_selfParent->MoveX(bullet->GetSpeed() * deltaTime);
+		bullet->MoveX(bullet->GetSpeed() * deltaTime);
 	}
 	else
 	{
@@ -168,7 +167,7 @@ void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
 			return;
 		}
 
-		_selfParent->MoveY(-bullet->GetSpeed() * deltaTime);
+		bullet->MoveY(-bullet->GetSpeed() * deltaTime);
 	}
 	else
 	{
@@ -186,7 +185,7 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 			return;
 		}
 
-		_selfParent->MoveY(bullet->GetSpeed() * deltaTime);
+		bullet->MoveY(bullet->GetSpeed() * deltaTime);
 	}
 	else
 	{
@@ -213,6 +212,11 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 	const Circle circle{blowCenter, bullet->GetBulletDamageAreaRadius()};
 	for (const std::shared_ptr<BaseObj>& pawn: *_allObjects)
 	{
+		if (_selfParent == pawn.get())
+		{
+			continue;
+		}
+
 		if (CheckIntersection(circle, pawn->GetShape()))
 		{
 			aoeList.emplace_back(std::weak_ptr(pawn));
@@ -237,16 +241,14 @@ void MoveLikeBulletBeh::DealDamage(const std::list<std::weak_ptr<BaseObj>>& obje
 				targetLock && targetLock->GetIsDestructible())
 			{
 				targetLock->TakeDamage(bulletDamage);
-				if (const auto anotherBullet = dynamic_cast<Bullet*>(targetLock.get()))
+				targetLock->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
+				if (const auto otherBullet = dynamic_cast<Bullet*>(targetLock.get()))
 				{
-					thisBullet->SendDamageStatistics(anotherBullet->GetAuthor(), anotherBullet->GetFraction());
+					thisBullet->SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
 				}
-				else
-				{
-					targetLock->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
-				}
-				//TODO: use string_view here
 			}
 		}
 	}
+
+	thisBullet->TakeDamage(bulletDamage);
 }

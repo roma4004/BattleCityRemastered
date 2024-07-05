@@ -24,27 +24,4 @@ public:
 	// MOCK_METHOD(void, TickUpdate, (float), (override));
 	// MOCK_METHOD(void, Shot, (), (override));
 	// MOCK_METHOD(void, Draw, (), (const override));
-
-	void MockResetKeyPressed() const { _inputProvider->playerKeys = {}; }
-	void MockShotKeyPressed() const { _inputProvider->playerKeys.shot = true; }
-
-	void MockMoveKeyPressed(const Direction dir) const
-	{
-		if (dir == LEFT)
-		{
-			_inputProvider->playerKeys.left = true;
-		}
-		else if (dir == RIGHT)
-		{
-			_inputProvider->playerKeys.right = true;
-		}
-		else if (dir == DOWN)
-		{
-			_inputProvider->playerKeys.down = true;
-		}
-		else if (dir == UP)
-		{
-			_inputProvider->playerKeys.up = true;
-		}
-	}
 };

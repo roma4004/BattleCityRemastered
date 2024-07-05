@@ -30,7 +30,7 @@ private:
 
 class EventSystem
 {
-	using EventVariant = std::variant<Event<>, Event<float>, Event<std::string>>;
+	using EventVariant = std::variant<Event<>, Event<const float>, Event<const std::string&, const std::string&>>;
 
 	std::unordered_map<std::string, EventVariant> _events;
 

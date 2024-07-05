@@ -17,6 +17,11 @@ class Bullet : public Pawn
 	int _damage{0};
 	double _bulletDamageAreaRadius{12.f};
 
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void TickUpdate(float deltaTime) override;
+
 public:
 	Bullet(const Rectangle& rect, int damage, double aoeRadius, int color, int health, int* windowBuffer,
 	       UPoint windowSize, Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -24,12 +29,11 @@ public:
 
 	~Bullet() override;
 
-	void Subscribe();
-	void Unsubscribe() const;
 	void Reset(const Rectangle& rect, int damage, double aoeRadius, int color, float speed, Direction direction,
 	           int health, std::string author, std::string fraction);
 
-	void TickUpdate(float deltaTime) override;
+	void Disable() const;
+	void Enable();
 
 	[[nodiscard]] int GetDamage() const;
 

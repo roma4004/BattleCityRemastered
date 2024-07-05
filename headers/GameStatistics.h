@@ -57,13 +57,14 @@ public:
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void BulletHit(const std::string& authorTeam);
-	void EnemyHit(const std::string& authorTeam);
-	void PlayerOneHit(const std::string& authorTeam);
-	void PlayerTwoHit(const std::string& authorTeam);
-	void EnemyDied(const std::string& authorTeam);
-	void PlayerDied(const std::string& authorTeam);
-	void BrickDied(const std::string& authorTeam);
+	void BulletHit(const std::string& author, const std::string& fraction);
+	void EnemyHit(const std::string& author, const std::string& fraction);
+	void PlayerOneHit(const std::string& author, const std::string& fraction);
+	void PlayerTwoHit(const std::string& author, const std::string& fraction);
+	void EnemyDied(const std::string& author, const std::string& fraction);
+	void PlayerOneDied(const std::string& author, const std::string& fraction);
+	void PlayerTwoDied(const std::string& author, const std::string& fraction);
+	void BrickDied(const std::string& author, const std::string& fraction);
 
 	void Reset();
 

@@ -13,11 +13,9 @@ class MoveLikeBulletBeh : public IMoveBeh
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::shared_ptr<EventSystem> _events;
 
-public:
-	MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                  std::shared_ptr<EventSystem> events);
-
-	~MoveLikeBulletBeh() override = default;
+	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
+	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const;
+	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 
 	void Move(float deltaTime) const override;
 	void MoveLeft(float deltaTime) const override;
@@ -25,8 +23,9 @@ public:
 	void MoveUp(float deltaTime) const override;
 	void MoveDown(float deltaTime) const override;
 
-private:
-	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
-	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const;
-	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
+public:
+	MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	                  std::shared_ptr<EventSystem> events);
+
+	~MoveLikeBulletBeh() override = default;
 };

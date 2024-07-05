@@ -30,15 +30,6 @@ protected:
 	std::string _name;
 	std::string _fraction;
 
-public:
-	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
-	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	     std::shared_ptr<EventSystem> events, std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool,
-	     std::string name, std::string fraction);
-	Rectangle GetBulletStartRect() const;
-
-	~Tank() override = default;
-
 	void Shot() const;
 
 	[[nodiscard]] float GetBulletWidth() const;
@@ -53,4 +44,13 @@ public:
 	[[nodiscard]] bool IsReloadFinish() const;
 
 	void DrawHealthBar() const override;
+
+public:
+	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
+	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	     std::shared_ptr<EventSystem> events, std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool,
+	     std::string name, std::string fraction);
+	Rectangle GetBulletStartRect() const;
+
+	~Tank() override = default;
 };

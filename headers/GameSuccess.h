@@ -53,13 +53,6 @@ class GameSuccess final : public IGame
 
 	bool _isGameOver{false};
 
-public:
-	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
-	            std::shared_ptr<EventSystem> events, std::unique_ptr<InputProviderForMenu>& menuInput,
-	            std::unique_ptr<GameStatistics>& statistics);
-
-	~GameSuccess() override;
-
 	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
 	void ResetBattlefield();
@@ -77,7 +70,7 @@ public:
 
 	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
 	void RenderStatistics(SDL_Renderer* renderer, Point pos) const;
-	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos);
+	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos) const;
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
 
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
@@ -88,9 +81,17 @@ public:
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);
 	void SpawnCoop2(float gridOffset, float speed, int health, float size);
 	void RespawnTanks();
+
 	void EventHandling();
 
 	void MainLoop() override;
 
 	[[nodiscard]] int Result() const override;
+
+public:
+	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
+	            std::shared_ptr<EventSystem> events, std::unique_ptr<InputProviderForMenu>& menuInput,
+	            std::unique_ptr<GameStatistics>& statistics);
+
+	~GameSuccess() override;
 };

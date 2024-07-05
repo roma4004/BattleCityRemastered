@@ -61,11 +61,11 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 	}
 
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
-	const auto thisNextPosRect = Rectangle{_selfParent->GetX() + speedX, _selfParent->GetY() + speedY,
-	                                       _selfParent->GetWidth(), _selfParent->GetHeight()};
+	const auto thisNextPosRect = Rectangle{tank->GetX() + speedX, tank->GetY() + speedY,
+	                                       tank->GetWidth(), tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& pawn: *_allObjects)
 	{
-		if (_selfParent == pawn.get())
+		if (tank == pawn.get())
 		{
 			continue;
 		}
@@ -157,15 +157,15 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 		return;
 	}
 
-	if (const float speed = tank->GetSpeed() * deltaTime; _selfParent->GetX() - speed >= 0.f)
+	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetX() - speed >= 0.f)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
-			_selfParent->MoveX(-std::floor(speed));
+			tank->MoveX(-std::floor(speed));
 		}
 		else
 		{
-			const auto getSideDiff = [thisLeftSide = _selfParent->GetX()](const std::shared_ptr<BaseObj>& pawn) -> float
+			const auto getSideDiff = [thisLeftSide = tank->GetX()](const std::shared_ptr<BaseObj>& pawn) -> float
 			{
 				return thisLeftSide - pawn->GetRightSide();
 			};
@@ -173,7 +173,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 			constexpr float padding = 1.f;
 			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
-				_selfParent->MoveX(-std::floor(distance));
+				tank->MoveX(-std::floor(distance));
 			}
 		}
 	}
@@ -189,16 +189,15 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(tank->GetWindowSize().x) - sideBarWidth;
-	if (const float speed = tank->GetSpeed() * deltaTime; _selfParent->GetRightSide() + speed < maxX)
+	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetRightSide() + speed < maxX)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
-			_selfParent->MoveX(std::floor(speed));
+			tank->MoveX(std::floor(speed));
 		}
 		else
 		{
-			auto getSideDiff = [thisRightSide =
-						_selfParent->GetRightSide()](const std::shared_ptr<BaseObj>& pawn) -> float
+			auto getSideDiff = [thisRightSide = tank->GetRightSide()](const std::shared_ptr<BaseObj>& pawn) -> float
 			{
 				return pawn->GetX() - thisRightSide;
 			};
@@ -206,7 +205,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 			constexpr float padding = 1.f;
 			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
-				_selfParent->MoveX(std::floor(distance));
+				tank->MoveX(std::floor(distance));
 			}
 		}
 	}
@@ -220,15 +219,15 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 		return;
 	}
 
-	if (const float speed = tank->GetSpeed() * deltaTime; _selfParent->GetY() - speed >= 0.0f)
+	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetY() - speed >= 0.0f)
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
-			_selfParent->MoveY(-std::floor(speed));
+			tank->MoveY(-std::floor(speed));
 		}
 		else
 		{
-			const auto& getSideDiff = [thisTopSide = _selfParent->GetY()](const std::shared_ptr<BaseObj>& pawn) -> float
+			const auto& getSideDiff = [thisTopSide = tank->GetY()](const std::shared_ptr<BaseObj>& pawn) -> float
 			{
 				return pawn->GetBottomSide() - thisTopSide;
 			};
@@ -236,7 +235,7 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 			constexpr float padding = 1.f;
 			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
-				_selfParent->MoveY(-std::floor(distance));
+				tank->MoveY(-std::floor(distance));
 			}
 		}
 	}
@@ -251,16 +250,16 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 	}
 
 	if (const float speed = tank->GetSpeed() * deltaTime;
-		_selfParent->GetBottomSide() + speed < static_cast<float>(tank->GetWindowSize().y))
+		tank->GetBottomSide() + speed < static_cast<float>(tank->GetWindowSize().y))
 	{
 		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
 		{
-			_selfParent->MoveY(std::floor(speed));
+			tank->MoveY(std::floor(speed));
 		}
 		else
 		{
 			const auto getSideDiff =
-					[thisBottomSide = _selfParent->GetBottomSide()](const std::shared_ptr<BaseObj>& pawn) -> float
+					[thisBottomSide = tank->GetBottomSide()](const std::shared_ptr<BaseObj>& pawn) -> float
 			{
 				return pawn->GetY() - thisBottomSide;
 			};
@@ -268,7 +267,7 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 			constexpr float padding = 1.f;
 			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
 			{
-				_selfParent->MoveY(std::floor(distance));
+				tank->MoveY(std::floor(distance));
 			}
 		}
 	}
