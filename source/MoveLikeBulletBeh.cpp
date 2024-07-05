@@ -68,16 +68,16 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
 	const auto bulletNextPosRect = Rectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
 	                                         bullet->GetWidth(), bullet->GetHeight()};
-	for (const std::shared_ptr<BaseObj>& pawn: *_allObjects)
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (bullet == pawn.get())
+		if (bullet == object.get())
 		{
 			continue;
 		}
 
-		if (IsCollideWith(bulletNextPosRect, pawn->GetShape()))
+		if (IsCollideWith(bulletNextPosRect, object->GetShape()))
 		{
-			if (!pawn->GetIsPenetrable())
+			if (!object->GetIsPenetrable())
 			{
 				CheckCircleAoE(FPoint{bullet->GetX() + speedX, bullet->GetY() + speedY}, aoeList);
 				return aoeList;
@@ -123,7 +123,7 @@ void MoveLikeBulletBeh::Move(const float deltaTime) const
 
 void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
 {
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 		if (bullet == nullptr)
@@ -135,13 +135,13 @@ void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
 	}
 	else
 	{
-		DealDamage(pawns);
+		DealDamage(objects);
 	}
 }
 
 void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
 {
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 		if (bullet == nullptr)
@@ -153,13 +153,13 @@ void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
 	}
 	else
 	{
-		DealDamage(pawns);
+		DealDamage(objects);
 	}
 }
 
 void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
 {
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 		if (bullet == nullptr)
@@ -171,13 +171,13 @@ void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
 	}
 	else
 	{
-		DealDamage(pawns);
+		DealDamage(objects);
 	}
 }
 
 void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 {
-	if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 		if (bullet == nullptr)
@@ -189,7 +189,7 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 	}
 	else
 	{
-		DealDamage(pawns);
+		DealDamage(objects);
 	}
 }
 
@@ -210,16 +210,16 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 	}
 
 	const Circle circle{blowCenter, bullet->GetBulletDamageAreaRadius()};
-	for (const std::shared_ptr<BaseObj>& pawn: *_allObjects)
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (_selfParent == pawn.get())
+		if (_selfParent == object.get())
 		{
 			continue;
 		}
 
-		if (CheckIntersection(circle, pawn->GetShape()))
+		if (CheckIntersection(circle, object->GetShape()))
 		{
-			aoeList.emplace_back(std::weak_ptr(pawn));
+			aoeList.emplace_back(std::weak_ptr(object));
 		}
 	}
 }

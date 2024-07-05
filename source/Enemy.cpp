@@ -131,30 +131,30 @@ void Enemy::MayShoot(Direction dir)
 	std::vector<std::weak_ptr<BaseObj>> leftSideObstacles{};
 	std::vector<std::weak_ptr<BaseObj>> downSideObstacles{};
 	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
-	for (std::shared_ptr<BaseObj>& pawn: *_allObjects)
+	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (this == pawn.get())
+		if (this == object.get())
 		{
 			continue;
 		}
 
-		if (!pawn->GetIsPassable())
+		if (!object->GetIsPassable())
 		{
-			if (IsCollideWith(LOScheck[UP], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[UP], object->GetShape()))
 			{
-				upSideObstacles.emplace_back(std::weak_ptr(pawn));
+				upSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (IsCollideWith(LOScheck[LEFT], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[LEFT], object->GetShape()))
 			{
-				leftSideObstacles.emplace_back(std::weak_ptr(pawn));
+				leftSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (IsCollideWith(LOScheck[DOWN], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[DOWN], object->GetShape()))
 			{
-				downSideObstacles.emplace_back(std::weak_ptr(pawn));
+				downSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (IsCollideWith(LOScheck[RIGHT], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[RIGHT], object->GetShape()))
 			{
-				rightSideObstacles.emplace_back(std::weak_ptr(pawn));
+				rightSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 		}
 	}

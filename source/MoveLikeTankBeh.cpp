@@ -63,18 +63,18 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
 	const auto thisNextPosRect = Rectangle{tank->GetX() + speedX, tank->GetY() + speedY,
 	                                       tank->GetWidth(), tank->GetHeight()};
-	for (std::shared_ptr<BaseObj>& pawn: *_allObjects)
+	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (tank == pawn.get())
+		if (tank == object.get())
 		{
 			continue;
 		}
 
-		if (IsCollideWith(thisNextPosRect, pawn->GetShape()))
+		if (IsCollideWith(thisNextPosRect, object->GetShape()))
 		{
-			if (!pawn->GetIsPassable())
+			if (!object->GetIsPassable())
 			{
-				obstacles.emplace_back(std::weak_ptr(pawn));
+				obstacles.emplace_back(std::weak_ptr(object));
 			}
 		}
 	}
@@ -87,7 +87,7 @@ inline float Distance(const FPoint a, const FPoint b)
 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 }
 
-float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& pawns,
+float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
@@ -98,12 +98,12 @@ float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& 
 
 	float minDist = static_cast<float>(tank->GetWindowSize().x * tank->GetWindowSize().y);
 	// float nearestDist = 0;
-	for (const auto& pawn: pawns)
+	for (const auto& object: objects)
 	{
-		const std::shared_ptr<BaseObj> pawnLck = pawn.lock();
-		// auto getSide = [](const std::shared_ptr<BaseObj>& pawnLck) -> float { return pawnLck->GetX() + pawnLck->GetWidth();};
-		const float distance = std::abs(sideDiff(pawnLck));
-		// const float distance = abs(this->GetX() - pawnLck->GetX() + pawnLck->GetWidth());
+		const std::shared_ptr<BaseObj> objectLck = object.lock();
+		// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
+		const float distance = std::abs(sideDiff(objectLck));
+		// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
 		if (distance < minDist)//TODO: need minimal abs distance
 		{
 			minDist = distance;
@@ -159,19 +159,19 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetX() - speed >= 0.f)
 	{
-		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveX(-std::floor(speed));
 		}
 		else
 		{
-			const auto getSideDiff = [thisLeftSide = tank->GetX()](const std::shared_ptr<BaseObj>& pawn) -> float
+			const auto getSideDiff = [thisLeftSide = tank->GetX()](const std::shared_ptr<BaseObj>& object) -> float
 			{
-				return thisLeftSide - pawn->GetRightSide();
+				return thisLeftSide - object->GetRightSide();
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveX(-std::floor(distance));
 			}
@@ -191,19 +191,19 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 	const float maxX = static_cast<float>(tank->GetWindowSize().x) - sideBarWidth;
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetRightSide() + speed < maxX)
 	{
-		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveX(std::floor(speed));
 		}
 		else
 		{
-			auto getSideDiff = [thisRightSide = tank->GetRightSide()](const std::shared_ptr<BaseObj>& pawn) -> float
+			auto getSideDiff = [thisRightSide = tank->GetRightSide()](const std::shared_ptr<BaseObj>& object) -> float
 			{
-				return pawn->GetX() - thisRightSide;
+				return object->GetX() - thisRightSide;
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveX(std::floor(distance));
 			}
@@ -221,19 +221,19 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetY() - speed >= 0.0f)
 	{
-		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveY(-std::floor(speed));
 		}
 		else
 		{
-			const auto& getSideDiff = [thisTopSide = tank->GetY()](const std::shared_ptr<BaseObj>& pawn) -> float
+			const auto& getSideDiff = [thisTopSide = tank->GetY()](const std::shared_ptr<BaseObj>& object) -> float
 			{
-				return pawn->GetBottomSide() - thisTopSide;
+				return object->GetBottomSide() - thisTopSide;
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(-std::floor(distance));
 			}
@@ -252,20 +252,20 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 	if (const float speed = tank->GetSpeed() * deltaTime;
 		tank->GetBottomSide() + speed < static_cast<float>(tank->GetWindowSize().y))
 	{
-		if (const auto pawns = IsCanMove(deltaTime); pawns.empty())
+		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveY(std::floor(speed));
 		}
 		else
 		{
 			const auto getSideDiff =
-					[thisBottomSide = tank->GetBottomSide()](const std::shared_ptr<BaseObj>& pawn) -> float
+					[thisBottomSide = tank->GetBottomSide()](const std::shared_ptr<BaseObj>& object) -> float
 			{
-				return pawn->GetY() - thisBottomSide;
+				return object->GetY() - thisBottomSide;
 			};
 
 			constexpr float padding = 1.f;
-			if (const float distance = FindMinDistance(pawns, getSideDiff) - padding; distance > 0.f)
+			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(std::floor(distance));
 			}

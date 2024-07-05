@@ -388,9 +388,9 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 	for (auto& rect: spawnPos)
 	{
 		bool isFreeSpawnSpot = true;
-		for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
+		for (const std::shared_ptr<BaseObj>& object: _allObjects)
 		{
-			if (IsCollideWith(rect, pawn->GetShape()))
+			if (IsCollideWith(rect, object->GetShape()))
 			{
 				isFreeSpawnSpot = false;
 			}
@@ -414,9 +414,9 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
+	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, pawn->GetShape()))
+		if (IsCollideWith(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -439,9 +439,9 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
+	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, pawn->GetShape()))
+		if (IsCollideWith(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -464,9 +464,9 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
+	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, pawn->GetShape()))
+		if (IsCollideWith(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -487,9 +487,9 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	const float windowSizeY = static_cast<float>(_windowSize.y);
 	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& pawn: _allObjects)
+	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, pawn->GetShape()))
+		if (IsCollideWith(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
