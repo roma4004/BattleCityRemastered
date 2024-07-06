@@ -3,7 +3,7 @@
 #include "Rectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IObstacle.h"
-#include "interfaces/ITickUpdatable.h"
+#include "interfaces/ISendableDamageStatistics.h"
 
 struct FPoint;
 

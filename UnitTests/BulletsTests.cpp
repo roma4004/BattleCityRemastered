@@ -133,9 +133,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		{
 			//fail bullet move down test, try to move outside screen bullet
 			bullet->SetDirection(DOWN);
-			const float bulletWidth = bullet->GetWidth();
-			const float bulletHeight = bullet->GetHeight();
-			bullet->SetPos({windowWidth - bulletWidth, windowHeight - bulletHeight});
+			bullet->SetPos({windowWidth - _bulletSize.x, windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
 			_events->EmitEvent<const float>("TickUpdate", deltaTime);
@@ -145,9 +143,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		{
 			//fail bullet move right test, try to move outside screen bullet
 			bullet->SetDirection(RIGHT);
-			const float bulletWidth = bullet->GetWidth();
-			const float bulletHeight = bullet->GetHeight();
-			bullet->SetPos({windowWidth - bulletWidth, windowHeight - bulletHeight});
+			bullet->SetPos({windowWidth - _bulletSize.x, windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
 			_events->EmitEvent<const float>("TickUpdate", deltaTime);
@@ -297,9 +293,7 @@ TEST_F(BulletTest, BulletDamageTank)
 		const float tankSize = gridSize * 3;// for better turns
 		constexpr float tankSpeed{142};
 		constexpr int tankHealth = 100;
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		const Rectangle rect{bulletWidth, bulletHeight + 1, tankSize, tankSize};
+		const Rectangle rect{0, _bulletSize.y, tankSize, tankSize};
 		constexpr int gray = 0x808080;
 		auto bulletPool = std::make_shared<BulletPool>();
 		_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, tankHealth, _windowBuffer, _windowSize, UP,
@@ -327,13 +321,11 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
 		constexpr double bulletDamageAreaRadius = 12.0;
-		constexpr Rectangle rect{0, bulletHeight + 1, bulletWidth, bulletHeight};
+		const Rectangle rect{0, _bulletSize.y + 1, _bulletSize.x, _bulletSize.y};
 		_allObjects.emplace_back(std::make_shared<Bullet>(rect, damage, bulletDamageAreaRadius, color, health,
 		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
 		                                                  _events, "PlayerTwo", "PlayerTeam"));
