@@ -1,24 +1,47 @@
 ﻿#pragma once
-#include "../headers/Environment.h"
 
+#include "MoveLikeBulletBeh.h"
+#include "Pawn.h"
 
-class Bullet final : public Pawn
+#include <string>
+
+struct UPoint;
+class BaseObj;
+class EventSystem;
+
+class Bullet : public Pawn
 {
+	std::string _name;
+	std::string _author;
+	std::string _fraction;
+	int _damage{0};
+	double _bulletDamageAreaRadius{12.f};
+
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void TickUpdate(float deltaTime) override;
+
 public:
-    Bullet(int x, int y, int width, int height, int color, int speed, Direction direction, size_t id);
-    
+	Bullet(const Rectangle& rect, int damage, double aoeRadius, int color, int health, int* windowBuffer,
+	       UPoint windowSize, Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	       const std::shared_ptr<EventSystem>& events, std::string author, std::string fraction);
 
-    ~Bullet() override;
+	~Bullet() override;
 
-    void Move(Environment& env) override;
-    void Draw(Environment& env) const override;
-    void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key) override;
-    
-    [[nodiscard]] int GetDamage() const;
-    void Shot(Environment& env) override;
-    void SetDamage(const int damage);
+	void Reset(const Rectangle& rect, int damage, double aoeRadius, int color, float speed, Direction direction,
+	           int health, std::string author, std::string fraction);
 
+	void Disable() const;
+	void Enable();
 
-private:
-    int _damage{};
+	[[nodiscard]] int GetDamage() const;
+
+	[[nodiscard]] double GetBulletDamageAreaRadius() const;
+
+	[[nodiscard]] std::string GetAuthor() const;
+
+	[[nodiscard]] std::string GetFraction() const;
+
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 };

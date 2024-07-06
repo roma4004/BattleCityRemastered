@@ -1,99 +1,122 @@
 ﻿#include "../headers/Bullet.h"
+#include "../headers/EventSystem.h"
 
-#include <variant>
+#include <string>
 
-
-
-Bullet::Bullet(const int x, const int y, const int width, const int height, const int color, const int speed, Direction direction, const size_t id)
-    : Pawn(x, y, width, height, color, speed, id)
+Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const int health,
+               int* windowBuffer, const UPoint windowSize, const Direction direction, const float speed,
+               std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
+               std::string author, std::string fraction)
+	: Pawn{rect,
+	       color,
+	       health,
+	       windowBuffer,
+	       windowSize,
+	       direction,
+	       speed,
+	       allObjects,
+	       events,
+	       std::make_shared<MoveLikeBulletBeh>(this, allObjects, events)},
+	  _author{std::move(author)}, _fraction{std::move(fraction)},
+	  _damage{damage},
+	  _bulletDamageAreaRadius{aoeRadius}
 {
-    SetDirection(direction);
+	BaseObj::SetIsPassable(true);
+	BaseObj::SetIsDestructible(true);
+	BaseObj::SetIsPenetrable(false);
+
+	_name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	Subscribe();
 }
 
-Bullet::~Bullet() = default;
-
-void Bullet::Move(Environment& env)
+Bullet::~Bullet()
 {
-    const int speed = GetSpeed();
-    const int direction = GetDirection();
-
-    if (direction == UP && GetY() - GetSpeed() >= 0)
-    {
-        const auto self = SDL_Rect{ this->GetX(), this->GetY() - GetSpeed(), this->GetWidth(), this->GetHeight() };
-        if (IsCanMove(&self, env))
-        {
-            MoveY(-speed);
-        }
-        else
-        {
-            SetIsAlive(false);
-        }
-    }
-    else if (direction == DOWN && GetY() + GetSpeed() <= env.windowHeight)
-    {
-        const auto self = SDL_Rect{ this->GetX(), this->GetY() + GetSpeed(), this->GetWidth(), this->GetHeight() };
-        if (IsCanMove(&self, env))
-        {
-            MoveY(speed);
-        }
-        else
-        {
-            SetIsAlive(false);
-        }
-    }
-    else if (direction == LEFT && GetX() - GetSpeed() >= 0)
-    {
-        const auto self = SDL_Rect{ this->GetX() - this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight() };
-        if (IsCanMove(&self, env))
-        {
-            MoveX(-speed);
-        }
-        else
-        {
-            SetIsAlive(false);
-        }
-    }
-    else if (direction == RIGHT && GetX() + GetSpeed() <= env.windowWidth)
-    {
-        const auto self = SDL_Rect{ this->GetX() + this->GetSpeed(), this->GetY(), this->GetWidth(), this->GetHeight() };
-        if (IsCanMove(&self, env))
-        {
-            MoveX(speed);
-        }
-        else
-        {
-            SetIsAlive(false);
-        }
-    }
-    else
-    {
-        SetIsAlive(false);
-    }
+	Unsubscribe();
 }
 
-void Bullet::Draw(Environment& env) const
+void Bullet::Subscribe()
 {
-    Pawn::Draw(env);
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
+
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-void Bullet::KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key)
+void Bullet::Unsubscribe() const
 {
-    Pawn::KeyboardEvensHandlers(env, eventType, key);
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener<const float>("TickUpdate", _name);
+
+	_events->RemoveListener("Draw", _name);
+}
+
+void Bullet::Disable() const
+{
+	Unsubscribe();
+}
+
+void Bullet::Enable()
+{
+	Subscribe();
+}
+
+void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
+                   const Direction direction, const int health, std::string author, std::string fraction)
+{
+	SetShape(rect);
+	SetColor(color);
+	SetHealth(health);
+	_moveBeh = std::make_shared<MoveLikeBulletBeh>(this, _allObjects, _events);
+	SetDirection(direction);
+	_author = std::move(author);
+	_fraction = std::move(fraction);
+	_damage = damage;
+	_bulletDamageAreaRadius = aoeRadius;
+	_speed = speed;
+	SetIsAlive(true);
+	Enable();
+}
+
+void Bullet::TickUpdate(const float deltaTime)
+{
+	if (GetIsAlive())//TODO: maybe for all add check isAlive
+	{
+		_moveBeh->Move(deltaTime);
+	}
 }
 
 int Bullet::GetDamage() const
 {
-    return _damage;
+	return _damage;
 }
 
-void Bullet::Shot(Environment& env)
+double Bullet::GetBulletDamageAreaRadius() const
 {
-    
+	return _bulletDamageAreaRadius;
 }
 
-void Bullet::SetDamage(const int damage)
+std::string Bullet::GetAuthor() const
 {
-    _damage = damage;
+	return _author;
 }
 
+std::string Bullet::GetFraction() const
+{
+	return _fraction;
+}
 
+void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent<const std::string&, const std::string&>("BulletHit", author, fraction);
+}

@@ -1,54 +1,52 @@
 #pragma once
-#include "SDL.h"
 
-#include "../headers/BaseObj.h"
-#include "../headers/Environment.h"
-#include "../headers/IDrawable.h"
-#include "../headers/IMovable.h"
-#include "../headers/PlayerKeys.h"
+#include "BaseObj.h"
+#include "Direction.h"
+#include "Point.h"
+#include "Rectangle.h"
+#include "interfaces/IMoveBeh.h"
+#include "interfaces/ITickUpdatable.h"
 
-enum Direction
+#include <memory>
+#include <vector>
+
+class EventSystem;
+
+class Pawn : public BaseObj, public ITickUpdatable
 {
-  UP = 0,
-  LEFT = 1,
-  DOWN = 2,
-  RIGHT = 3
-};
+protected:
+	std::shared_ptr<IMoveBeh> _moveBeh;
 
-class Pawn : public BaseObj, public IMovable, public IDrawable
-{
+	UPoint _windowSize{0, 0};
+
+	int* _windowBuffer{nullptr};
+
+	Direction _direction{UP};
+
+	float _speed{0.f};
+
+	std::shared_ptr<EventSystem> _events;
+
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+
+	void SetPixel(size_t x, size_t y, int color) const;
+
+	void Draw() const override;
+
+	//TODO: implement collision detection through quadtree
+	void TickUpdate(float deltaTime) override = 0;
+
 public:
-  Pawn(int x, int y, int width, int height, int color, int speed, size_t id);
+	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+	     std::shared_ptr<IMoveBeh> moveBeh);
 
-  virtual ~Pawn();
+	~Pawn() override;
 
-  void Move(Environment& env) override;
+	[[nodiscard]] UPoint GetWindowSize() const;
 
-  void Draw(Environment& env) const override;
+	[[nodiscard]] Direction GetDirection() const { return _direction; }
+	void SetDirection(const Direction direction) { _direction = direction; }
 
-  virtual void KeyboardEvensHandlers(Environment& env, Uint32 eventType, SDL_Keycode key);
-
-  [[nodiscard]] bool IsCollideWith(const SDL_Rect* self, const Pawn* other) const;
-
-  [[nodiscard]] bool IsCanMove(const SDL_Rect* self, const Environment& env) const;
-
-  void TickUpdate(Environment& env);
-  
-  virtual void Shot(Environment& env);
-
-  [[nodiscard]] Direction GetDirection() const;
-
-  void SetDirection(const Direction direction);
-
-  void SetIsAlive (const bool isAlive);
-
-  bool GetIsAlive () const;
-
-  void Destroy(Environment& env) const;
-
-  PlayerKeys keyboardButtons;
-private:
-  Direction _direction = Direction::UP;
-  bool _isAlive = true;
-  
+	[[nodiscard]] float GetSpeed() const { return _speed; }
 };
