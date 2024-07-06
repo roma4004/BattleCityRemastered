@@ -15,9 +15,9 @@ public:
 	~Map();
 
 	template<typename T>
-	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const Rectangle& rect, int* windowBuffer,
+	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
 	                      UPoint windowSize, std::shared_ptr<EventSystem> events) const;
-	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, float gridSize, int* windowBuffer,
+	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize, int* windowBuffer,
 	                 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
 
 	int fieldLevelOne[50][52] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -123,8 +123,8 @@ public:
 };
 
 template<typename T>
-void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allPawns, const Rectangle& rect, int* windowBuffer,
+void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
                            UPoint windowSize, std::shared_ptr<EventSystem> events) const
 {
-	allPawns->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
+	allObjects->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
 }

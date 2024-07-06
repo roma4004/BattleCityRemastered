@@ -16,6 +16,11 @@ struct MenuKeys
 
 class InputProviderForMenu
 {
+	std::string _name;
+	std::shared_ptr<EventSystem> _events;
+
+	MenuKeys keys;
+
 public:
 	InputProviderForMenu(std::string name, std::shared_ptr<EventSystem> events);
 
@@ -23,8 +28,8 @@ public:
 
 	void ToggleMenu();
 
-	MenuKeys keys;
-private:
-	std::string _name;
-	std::shared_ptr<EventSystem> _events;
+	void ToggleUp();
+	void ToggleDown();
+
+	[[nodiscard]] MenuKeys GetKeysStats() const { return keys; }
 };

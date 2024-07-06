@@ -9,7 +9,7 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
 	auto inputProvider = std::make_unique<InputProviderForMenu>("menu", events);
-	auto statistics = std::make_unique<GameStatistics>(events);
+	auto statistics = std::make_shared<GameStatistics>(events);
 	return std::make_unique<GameSuccess>(_windowSize, _windowBuffer, _renderer, _screen, _fpsFont, events,
 	                                     inputProvider, statistics);
 }

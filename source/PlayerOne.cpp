@@ -5,20 +5,24 @@
 
 #include <chrono>
 
-PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-                     const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-                     std::shared_ptr<EventSystem> events, std::string name,
-                     std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool)
+PlayerOne::PlayerOne(const Rectangle& rect, const int color, const int health, int* windowBuffer,
+                     const UPoint windowSize, Direction direction, float speed,
+                     std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+                     std::string name, std::string fraction, std::unique_ptr<IInputProvider>& inputProvider,
+                     std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
 	       color,
 	       health,
 	       windowBuffer,
 	       windowSize,
-	       allPawns,
+	       direction,
+	       speed,
+	       allObjects,
 	       std::move(events),
-	       std::make_shared<MoveLikeTankBeh>(UP, windowSize, speed, this, allPawns),
-	       std::move(bulletPool)},
-	  _name{std::move(name)},
+	       std::make_shared<MoveLikeTankBeh>(this, allObjects),
+	       std::move(bulletPool),
+	       std::move(name),
+	       std::move(fraction)},
 	  _inputProvider{std::move(inputProvider)}
 {
 	BaseObj::SetIsPassable(false);
@@ -26,11 +30,15 @@ PlayerOne::PlayerOne(const Rectangle& rect, const int color, const float speed, 
 	BaseObj::SetIsPenetrable(false);
 
 	Subscribe();
+
+	_events->EmitEvent(_name + "_Spawn");
 }
 
 PlayerOne::~PlayerOne()
 {
 	Unsubscribe();
+
+	_events->EmitEvent(_name + "_Died");
 }
 
 void PlayerOne::Subscribe()
@@ -40,20 +48,14 @@ void PlayerOne::Subscribe()
 		return;
 	}
 
-	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
-		// move
 		this->TickUpdate(deltaTime);
-
-		// shot
-		if (_inputProvider->playerKeys.shot && IsReloadFinish())
-		{
-			this->Shot();
-			lastTimeFire = std::chrono::system_clock::now();
-		}
 	});
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 }
 
 void PlayerOne::Unsubscribe() const
@@ -63,33 +65,53 @@ void PlayerOne::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener("Draw", _name);
 
-	_events->EmitEvent("P1_Died");
+	_events->RemoveListener("DrawHealthBar", _name);
 }
 
-void PlayerOne::Move(const float deltaTime)
+void PlayerOne::TickUpdate(const float deltaTime)
 {
-	if (_inputProvider->playerKeys.left)
+	const auto playerKeys = _inputProvider->GetKeysStats();
+
+	// move
+	if (playerKeys.up)
 	{
-		_moveBeh->SetDirection(LEFT);
-		_moveBeh->MoveLeft(deltaTime);
+		SetDirection(UP);
+		_moveBeh->Move(deltaTime);
 	}
-	else if (_inputProvider->playerKeys.right)
+	else if (playerKeys.left)
 	{
-		_moveBeh->SetDirection(RIGHT);
-		_moveBeh->MoveRight(deltaTime);
+		SetDirection(LEFT);
+		_moveBeh->Move(deltaTime);
 	}
-	else if (_inputProvider->playerKeys.up)
+	else if (playerKeys.down)
 	{
-		_moveBeh->SetDirection(UP);
-		_moveBeh->MoveUp(deltaTime);
+		SetDirection(DOWN);
+		_moveBeh->Move(deltaTime);
 	}
-	else if (_inputProvider->playerKeys.down)
+	else if (playerKeys.right)
 	{
-		_moveBeh->SetDirection(DOWN);
-		_moveBeh->MoveDown(deltaTime);
+		SetDirection(RIGHT);
+		_moveBeh->Move(deltaTime);
+	}
+
+	// shot
+	if (playerKeys.shot && IsReloadFinish())
+	{
+		this->Shot();
+		lastTimeFire = std::chrono::system_clock::now();
+	}
+}
+
+void PlayerOne::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent<const std::string&, const std::string&>("PlayerOneHit", author, fraction);
+
+	if (GetHealth() < 1)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("PlayerOneDied", author, fraction);
 	}
 }

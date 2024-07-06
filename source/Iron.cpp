@@ -3,8 +3,10 @@
 #include <string>
 
 Iron::Iron(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0xaaaaaa, 15}, _windowSize{windowSize},
-	  _windowBuffer{windowBuffer}, _events{std::move(events)}
+	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0xaaaaaa, 15},
+	  _windowSize{windowSize},
+	  _windowBuffer{windowBuffer},
+	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
@@ -38,6 +40,7 @@ void Iron::Unsubscribe() const
 
 	_events->RemoveListener("Draw", _name);
 }
+
 void Iron::SetPixel(const size_t x, const size_t y, const int color) const
 {
 	if (x < _windowSize.x && y < _windowSize.y)
@@ -60,4 +63,4 @@ void Iron::Draw() const
 	}
 }
 
-void Iron::TickUpdate(float deltaTime) {}
+void Iron::SendDamageStatistics(const std::string& author, const std::string& fraction) {}

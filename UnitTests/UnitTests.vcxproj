@@ -39,18 +39,26 @@
     <ClCompile Include="..\source\BaseObj.cpp" />
     <ClCompile Include="..\source\Brick.cpp" />
     <ClCompile Include="..\source\Bullet.cpp" />
+    <ClCompile Include="..\source\BulletPool.cpp" />
+    <ClCompile Include="..\source\Enemy.cpp" />
+    <ClCompile Include="..\source\GameStatistics.cpp" />
     <ClCompile Include="..\source\InputProviderForPlayerOne.cpp" />
+    <ClCompile Include="..\source\InputProviderForPlayerTwo.cpp" />
+    <ClCompile Include="..\source\Iron.cpp" />
+    <ClCompile Include="..\source\MoveLikeAIBeh.cpp" />
     <ClCompile Include="..\source\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\Pawn.cpp" />
     <ClCompile Include="..\source\PlayerOne.cpp" />
+    <ClCompile Include="..\source\PlayerTwo.cpp" />
     <ClCompile Include="..\source\Rectangle.cpp" />
     <ClCompile Include="..\source\Tank.cpp" />
+    <ClCompile Include="..\source\Water.cpp" />
     <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
+    <ClCompile Include="StatisticsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MockBullet.h" />
     <ClInclude Include="MockPlayerOne.h" />
   </ItemGroup>
   <ItemGroup>

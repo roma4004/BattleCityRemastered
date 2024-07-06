@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <chrono>
 
-CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
-               const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
+CoopAI::CoopAI(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+               Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
                std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
@@ -16,11 +16,15 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const 
 	       health,
 	       windowBuffer,
 	       windowSize,
-	       allPawns,
+	       direction,
+	       speed,
+	       allObjects,
 	       std::move(events),
-	       std::make_shared<MoveLikeAIBeh>(UP, windowSize, speed, this, allPawns),
-	       std::move(bulletPool)},
-	  distDirection(0, 3), distTurnRate(1, 5), _name{std::move(name)}, _fraction{std::move(fraction)}
+	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
+	       std::move(bulletPool),
+	       std::move(name),
+	       std::move(fraction)},
+	  distDirection(0, 3), distTurnRate(1, 5)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -30,11 +34,15 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const 
 	gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
 
 	Subscribe();
+
+	_events->EmitEvent(_name + "_Spawn");
 }
 
 CoopAI::~CoopAI()
 {
 	Unsubscribe();
+
+	_events->EmitEvent(_name + "_Died");
 }
 
 void CoopAI::Subscribe()
@@ -44,9 +52,14 @@ void CoopAI::Subscribe()
 		return;
 	}
 
-	_events->AddListener<float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 }
 
 void CoopAI::Unsubscribe() const
@@ -56,11 +69,11 @@ void CoopAI::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener("Draw", _name);
 
-	_events->EmitEvent(_name + "_Died");
+	_events->RemoveListener("DrawHealthBar", _name);
 }
 
 bool CoopAI::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
@@ -96,7 +109,7 @@ bool CoopAI::IsEnemyVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles
 	return false;
 }
 
-void CoopAI::MayShoot(Direction dir) const
+void CoopAI::MayShoot(Direction dir)
 {
 	const FPoint windowSize = {static_cast<float>(_windowSize.x), static_cast<float>(_windowSize.y)};
 	const float tankHalfWidth = GetWidth() / 2.f;
@@ -115,30 +128,30 @@ void CoopAI::MayShoot(Direction dir) const
 	std::vector<std::weak_ptr<BaseObj>> leftSideObstacles{};
 	std::vector<std::weak_ptr<BaseObj>> downSideObstacles{};
 	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
-	for (std::shared_ptr<BaseObj>& pawn: *_allPawns)
+	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (this == pawn.get())
+		if (this == object.get())
 		{
 			continue;
 		}
 
-		if (!pawn->GetIsPassable())
+		if (!object->GetIsPassable() && !object->GetIsPenetrable())
 		{
-			if (IsCollideWith(LOScheck[UP], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[UP], object->GetShape()))
 			{
-				upSideObstacles.emplace_back(std::weak_ptr(pawn));
+				upSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (IsCollideWith(LOScheck[LEFT], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[LEFT], object->GetShape()))
 			{
-				leftSideObstacles.emplace_back(std::weak_ptr(pawn));
+				leftSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (IsCollideWith(LOScheck[DOWN], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[DOWN], object->GetShape()))
 			{
-				downSideObstacles.emplace_back(std::weak_ptr(pawn));
+				downSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (IsCollideWith(LOScheck[RIGHT], pawn->GetShape()))
+			if (IsCollideWith(LOScheck[RIGHT], object->GetShape()))
 			{
-				rightSideObstacles.emplace_back(std::weak_ptr(pawn));
+				rightSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 		}
 	}
@@ -204,25 +217,25 @@ void CoopAI::MayShoot(Direction dir) const
 	// priority fire on players
 	if (IsEnemyVisible(upSideObstacles))
 	{
-		_moveBeh->SetDirection(UP);
+		SetDirection(UP);
 		Shot();
 		return;
 	}
 	if (IsEnemyVisible(leftSideObstacles))
 	{
-		_moveBeh->SetDirection(LEFT);
+		SetDirection(LEFT);
 		Shot();
 		return;
 	}
 	if (IsEnemyVisible(downSideObstacles))
 	{
-		_moveBeh->SetDirection(DOWN);
+		SetDirection(DOWN);
 		Shot();
 		return;
 	}
 	if (IsEnemyVisible(rightSideObstacles))
 	{
-		_moveBeh->SetDirection(RIGHT);
+		SetDirection(RIGHT);
 		Shot();
 		return;
 	}
@@ -266,44 +279,32 @@ void CoopAI::MayShoot(Direction dir) const
 	}
 }
 
-void CoopAI::Move(const float deltaTime)
+void CoopAI::TickUpdate(const float deltaTime)
 {
+	// change dir when random time span left
 	if (IsTurnCooldownFinish())
 	{
 		turnDuration = distTurnRate(gen);
 		const int randDir = distDirection(gen);
-		_moveBeh->SetDirection(static_cast<Direction>(randDir));
+		SetDirection(static_cast<Direction>(randDir));
 		lastTimeTurn = std::chrono::system_clock::now();
 	}
 
+	// move
 	const auto pos = GetPos();
-	if (const auto currentDirection = _moveBeh->GetDirection(); currentDirection == LEFT)
-	{
-		_moveBeh->MoveLeft(deltaTime);
-	}
-	else if (currentDirection == RIGHT)
-	{
-		_moveBeh->MoveRight(deltaTime);
-	}
-	else if (currentDirection == UP)
-	{
-		_moveBeh->MoveUp(deltaTime);
-	}
-	else if (currentDirection == DOWN)
-	{
-		_moveBeh->MoveDown(deltaTime);
-	}
+	_moveBeh->Move(deltaTime);
 
-	//change dir it cant move
+	// change dir it cant move
 	if (pos == GetPos())
 	{
 		const int randDir = distDirection(gen);
-		_moveBeh->SetDirection(static_cast<Direction>(randDir));
+		SetDirection(static_cast<Direction>(randDir));
 	}
 
+	// shot
 	if (IsReloadFinish())
 	{
-		MayShoot(_moveBeh->GetDirection());
+		MayShoot(GetDirection());
 		lastTimeFire = std::chrono::system_clock::now();
 	}
 }
@@ -322,4 +323,14 @@ bool CoopAI::IsTurnCooldownFinish() const
 	}
 
 	return false;
+}
+
+void CoopAI::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent<const std::string&, const std::string&>("CoopAIHit", author, fraction);
+
+	if (GetHealth() < 1)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("CoopAIDied", author, fraction);
+	}
 }

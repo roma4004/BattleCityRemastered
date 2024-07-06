@@ -1,5 +1,7 @@
 #pragma once
 
+#include "GameMode.h"
+
 #include <functional>
 #include <string>
 #include <variant>
@@ -30,7 +32,11 @@ private:
 
 class EventSystem
 {
-	using EventVariant = std::variant<Event<>, Event<float>>;
+	using EventVariant = std::variant<Event<>,
+	                                  Event<const float>,
+	                                  Event<const std::string&, const std::string&>,
+	                                  Event<GameMode>,
+	                                  Event<bool>>;
 
 	std::unordered_map<std::string, EventVariant> _events;
 

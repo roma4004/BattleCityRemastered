@@ -3,11 +3,11 @@
 #include "Rectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IObstacle.h"
-#include "interfaces/ITickUpdatable.h"
+#include "interfaces/ISendableDamageStatistics.h"
 
 struct FPoint;
 
-class BaseObj : public IObstacle, public IDrawable, public ITickUpdatable
+class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics
 {
 	int _color{0};
 	int _health{0};

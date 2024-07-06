@@ -3,7 +3,10 @@
 #include <string>
 
 Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: BaseObj{rect, 0x1e90ff, 15}, _windowSize{windowSize}, _windowBuffer{windowBuffer}, _events{std::move(events)}
+	: BaseObj{rect, 0x1e90ff, 15},
+	  _windowSize{windowSize},
+	  _windowBuffer{windowBuffer},
+	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
@@ -60,4 +63,4 @@ void Water::Draw() const
 	}
 }
 
-void Water::TickUpdate(float deltaTime) {}
+void Water::SendDamageStatistics(const std::string& author, const std::string& fraction) {}
