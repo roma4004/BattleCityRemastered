@@ -12,23 +12,55 @@
 #include <iostream>
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-                         TTF_Font* fpsFont, std::shared_ptr<EventSystem> events,
-                         std::unique_ptr<InputProviderForMenu>& menuInput, std::unique_ptr<GameStatistics>& statistics)
+                         TTF_Font* fpsFont, const std::shared_ptr<EventSystem>& events,
+                         std::unique_ptr<InputProviderForMenu>& menuInput,
+                         const std::shared_ptr<GameStatistics>& statistics)
 	: _windowSize{windowSize},
-	  _statistics{std::move(statistics)},
-	  _menu{windowSize, windowBuffer, menuInput},
+	  _statistics{statistics},
+	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},
 	  _fpsFont{fpsFont},
-	  _events{std::move(events)},
+	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>()}
 {
 	ResetBattlefield();
 	NextGameMode();
+	Subscribe();
 }
 
-GameSuccess::~GameSuccess() = default;
+GameSuccess::~GameSuccess()
+{
+	Unsubscribe();
+}
+
+void GameSuccess::Subscribe()
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
+	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
+	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
+	_events->AddListener<bool>("Pause_Status", _name, [this](bool newPauseStatus) { this->_isPause = newPauseStatus; });
+
+}
+
+void GameSuccess::Unsubscribe() const
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener("PreviousGameMode", _name);
+	_events->RemoveListener("NextGameMode", _name);
+	_events->RemoveListener("ResetBattlefield", _name);
+	_events->RemoveListener<bool>("Pause_Status", _name);
+}
 
 void GameSuccess::SpawnEnemyTanks(const float gridOffset, const float speed, const int health, const float size)
 {
@@ -72,6 +104,7 @@ void GameSuccess::PrevGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
 	_currentMode = static_cast<GameMode>(newMode);
+	_events->EmitEvent<GameMode>("GameModeChangedTo", _currentMode);
 }
 
 void GameSuccess::NextGameMode()
@@ -83,6 +116,7 @@ void GameSuccess::NextGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_currentMode = static_cast<GameMode>(newMode);
+	_events->EmitEvent<GameMode>("GameModeChangedTo", _currentMode);
 }
 
 void GameSuccess::ClearBuffer() const
@@ -232,83 +266,6 @@ void GameSuccess::KeyboardEvents(const SDL_Event& event) const
 	{
 		KeyReleased(event);
 	}
-}
-
-void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Color& color, const int value) const
-{
-	TextToRender(renderer, pos, color, std::to_string(value));
-}
-
-void GameSuccess::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color,
-                               const std::string& text) const
-{
-	SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont, text.c_str(), color);
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
-
-	const SDL_Rect textRect{pos.x, pos.y, surface->w, surface->h};
-	SDL_RenderCopy(renderer, texture, nullptr, &textRect);
-
-	SDL_FreeSurface(surface);
-	SDL_DestroyTexture(texture);
-}
-
-void GameSuccess::RenderStatistics(SDL_Renderer* renderer, const Point pos) const
-{
-	constexpr SDL_Color color = {0x00, 0xff, 0xff, 0xff};
-
-	TextToRender(renderer, {pos.x - 60, pos.y + 100}, color, "GAME STATISTICS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 140}, color, "P1     P2     ENEMY");
-	TextToRender(renderer, {pos.x - 130, pos.y + 160}, color, "RESPAWN REMAIN");
-	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _statistics->GetPlayerOneRespawnResource());
-	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _statistics->GetPlayerTwoRespawnResource());
-	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _statistics->GetEnemyRespawnResource());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 180}, color, "BULLET HIT BY BULLET");
-	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 180}, color, _statistics->GetBulletHitByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 180}, color, _statistics->GetBulletHitByEnemy());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 200}, color, "PLAYER HIT BY ENEMY");
-	TextToRender(renderer, {pos.x + 130, pos.y + 200}, color, _statistics->GetPlayerOneHitByEnemyTeam());
-	TextToRender(renderer, {pos.x + 180, pos.y + 200}, color, _statistics->GetPlayerTwoHitByEnemyTeam());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 220}, color, "TANK KILLS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 220}, color, _statistics->GetPlayerDiedByEnemyTeam());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 240}, color, "ENEMY HIT BY");
-	TextToRender(renderer, {pos.x + 130, pos.y + 240}, color, _statistics->GetEnemyHitByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 240}, color, _statistics->GetEnemyHitByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 240}, color, _statistics->GetEnemyHitByFriendlyFire());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 260}, color, "FRIEND HIT FRIEND");
-	TextToRender(renderer, {pos.x + 130, pos.y + 260}, color, _statistics->GetPlayerOneHitFriendlyFire());
-	TextToRender(renderer, {pos.x + 180, pos.y + 260}, color, _statistics->GetPlayerTwoHitFriendlyFire());
-	TextToRender(renderer, {pos.x + 235, pos.y + 260}, color, _statistics->GetEnemyHitByFriendlyFire());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 280}, color, "FRIEND KILLS FRIEND");
-	TextToRender(renderer, {pos.x + 130, pos.y + 280}, color, _statistics->GetPlayerOneDiedByFriendlyFire());
-	TextToRender(renderer, {pos.x + 180, pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
-	TextToRender(renderer, {pos.x + 235, pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
-
-	TextToRender(renderer, {pos.x - 130, pos.y + 300}, color, "BRICK KILLS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 300}, color, _statistics->GetBrickDiedByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 300}, color, _statistics->GetBrickDiedByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, _statistics->GetBrickDiedByEnemyTeam());
-}
-
-void GameSuccess::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos) const
-{
-	const Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
-	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
-
-	TextToRender(renderer, {pos.x - 70, pos.y - 100}, color, "BATTLE CITY REMASTERED");
-	TextToRender(renderer, {pos.x, pos.y - 40}, color, _currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
-	TextToRender(renderer, {pos.x, pos.y}, color, _currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
-	TextToRender(renderer, {pos.x, pos.y + 40}, color, _currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
-
-	RenderStatistics(renderer, pos);
 }
 
 void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, const Uint64 newTime)
@@ -511,34 +468,42 @@ void GameSuccess::RespawnTanks()
 	const float size = gridOffset * 3;
 	constexpr float speed = 142;
 	constexpr int health = 100;
+
 	if (_statistics->IsEnemyOneNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(1, gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsEnemyTwoNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(2, gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsEnemyThreeNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(3, gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsEnemyFourNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
 	{
 		SpawnEnemy(4, gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsPlayerOneNeedRespawn() && _statistics->GetPlayerOneRespawnResource() > 0)
 	{
 		SpawnPlayer1(gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsPlayerTwoNeedRespawn() && _statistics->GetPlayerTwoRespawnResource() > 0)
 	{
 		SpawnPlayer2(gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsCoopOneAINeedRespawn() && _statistics->GetPlayerOneRespawnResource() > 0)
 	{
 		SpawnCoop1(gridOffset, speed, health, size);
 	}
+
 	if (_statistics->IsCoopTwoAINeedRespawn() && _statistics->GetPlayerTwoRespawnResource() > 0)
 	{
 		SpawnCoop2(gridOffset, speed, health, size);
@@ -561,6 +526,30 @@ void GameSuccess::EventHandling()
 	}
 }
 
+void GameSuccess::DisposeDeadObject()
+{
+	// TODO: separate bullets or somehow delete and recycle in one iterating through _allObjects (because now its two)
+	// TODO: create wrapper for bullet and RAII to dispose it to bullet pool
+	// Destroy all "dead" objects except bullet they will be recycled
+	for (auto it = _allObjects.begin(); it < _allObjects.end();)
+	{
+		if ((*it)->GetIsAlive() == false)
+		{
+			if (const auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
+			{
+				_bulletPool->ReturnBullet(*it);
+				it = _allObjects.erase(it);
+				continue;
+			}
+		}
+		++it;
+	}
+
+	const auto it = std::ranges::remove_if(_allObjects, [&](const auto& obj) { return !obj->GetIsAlive(); }).
+			begin();
+	_allObjects.erase(it, _allObjects.end());
+}
+
 void GameSuccess::MainLoop()
 {
 	Uint32 frameCount{0};
@@ -580,32 +569,14 @@ void GameSuccess::MainLoop()
 
 		EventHandling();
 
-		const auto menuKeysStats = _menu.input->GetKeysStats();
-		if (!menuKeysStats.pause)
+		_menu.Update();
+
+		if (!_isPause)
 		{
 			_events->EmitEvent<const float>("TickUpdate", deltaTime);
 		}
 
-		// TODO: separate bullets or somehow delete and recycle in one iterating through _allObjects (because now its two)
-		// TODO: create wrapper for bullet and RAII to dispose it to bullet pool
-		// Destroy all "dead" objects except bullet they will be recycled
-		for (auto it = _allObjects.begin(); it < _allObjects.end();)
-		{
-			if ((*it)->GetIsAlive() == false)
-			{
-				if (const auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
-				{
-					_bulletPool->ReturnBullet(*it);
-					it = _allObjects.erase(it);
-					continue;
-				}
-			}
-			++it;
-		}
-
-		const auto it = std::ranges::remove_if(_allObjects, [&](const auto& obj) { return !obj->GetIsAlive(); }).
-				begin();
-		_allObjects.erase(it, _allObjects.end());
+		DisposeDeadObject();
 
 		RespawnTanks();
 
@@ -613,39 +584,17 @@ void GameSuccess::MainLoop()
 
 		_events->EmitEvent("DrawHealthBar");// TODO: create and blend separate buff layers(objects, effect, interface)
 
+		_events->EmitEvent("DrawMenuBackground");
+
 		const Uint64 newTime = SDL_GetTicks64();
 		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
 		HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
-
-		if (menuKeysStats.menuShow)
-		{
-			_menu.BlendToWindowBuffer();
-		}
 
 		// update screen with buffer
 		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
 		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
 
-		if (menuKeysStats.up)
-		{
-			PrevGameMode();
-			_menu.input->ToggleUp();
-		}
-		else if (menuKeysStats.down)
-		{
-			NextGameMode();
-			_menu.input->ToggleDown();
-		}
-		else if (menuKeysStats.reset)
-		{
-			ResetBattlefield();
-			_menu.input->ToggleMenu();
-		}
-
-		if (menuKeysStats.menuShow)
-		{
-			HandleMenuText(_renderer, _menu._pos);
-		}
+		_events->EmitEvent("DrawMenuText");
 
 		// Copy the texture with FPS to the renderer
 		SDL_RenderCopy(_renderer, _fpsTexture, nullptr, &fpsRectangle);

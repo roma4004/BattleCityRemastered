@@ -49,7 +49,7 @@ protected:
 // Check that tank set their position correctly
 TEST_F(BulletTest, BulletSetPos)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({});
 		const FPoint startPos = bullet->GetPos();
@@ -67,7 +67,7 @@ TEST_F(BulletTest, BulletSetPos)
 // Check that bullet can move inside of screen
 TEST_F(BulletTest, BulletMoveInsideScreen)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
@@ -123,7 +123,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 // Check that bullet can't move outside of screen
 TEST_F(BulletTest, BulletMoveOutSideScreen)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 		const float windowWidth = static_cast<float>(_windowSize.x);
@@ -184,7 +184,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 // Check that bullet can deal damage to other obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({0.f, 7.f});
 		bullet->SetDirection(UP);
@@ -211,7 +211,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 // Check that bullet can deal damage to other obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({7.f, 0.f});
 		bullet->SetDirection(LEFT);
@@ -238,7 +238,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 // Check that bullet can deal damage to other obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
@@ -265,7 +265,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 // Check that bullet can deal damage to other obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(RIGHT);
@@ -359,7 +359,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 // Check that bullet can't deal damage to undestractable object
 TEST_F(BulletTest, BulletCantDamageIron)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
@@ -386,7 +386,7 @@ TEST_F(BulletTest, BulletCantDamageIron)
 // Check that bullet can pass through water
 TEST_F(BulletTest, BulletCantDamageWater)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);

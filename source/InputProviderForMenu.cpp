@@ -5,7 +5,12 @@ InputProviderForMenu::InputProviderForMenu(std::string name, std::shared_ptr<Eve
 {
 	this->ToggleMenu();
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenu(); });
-	_events->AddListener("Pause_Released", _name, [this]() { keys.pause = !keys.pause; });
+	_events->AddListener("Pause_Released", _name, [this]()
+	{
+		keys.pause = !keys.pause;
+
+		_events->EmitEvent<bool>("Pause_Status", keys.pause);
+	});
 }
 
 InputProviderForMenu::~InputProviderForMenu()

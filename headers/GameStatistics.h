@@ -14,14 +14,6 @@ class GameStatistics
 	int _enemyRespawnResource{20};
 	int _playerOneRespawnResource{3};
 	int _playerTwoRespawnResource{3};
-	bool _enemyOneNeedRespawn{false};
-	bool _enemyTwoNeedRespawn{false};
-	bool _enemyThreeNeedRespawn{false};
-	bool _enemyFourNeedRespawn{false};
-	bool _playerOneNeedRespawn{false};
-	bool _playerTwoNeedRespawn{false};
-	bool _coopOneAINeedRespawn{false};
-	bool _coopTwoAINeedRespawn{false};
 
 	int _bulletHitByEnemy{0};
 	int _bulletHitByPlayerOne{0};
@@ -48,6 +40,15 @@ class GameStatistics
 	int _brickDiedByEnemyTeam{0};
 	int _brickDiedByPlayerOne{0};
 	int _brickDiedByPlayerTwo{0};
+
+	bool _enemyOneNeedRespawn{false};
+	bool _enemyTwoNeedRespawn{false};
+	bool _enemyThreeNeedRespawn{false};
+	bool _enemyFourNeedRespawn{false};
+	bool _playerOneNeedRespawn{false};
+	bool _playerTwoNeedRespawn{false};
+	bool _coopOneAINeedRespawn{false};
+	bool _coopTwoAINeedRespawn{false};
 
 public:
 	GameStatistics(std::shared_ptr<EventSystem> events);

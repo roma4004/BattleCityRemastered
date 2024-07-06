@@ -8,8 +8,7 @@ public:
 	MockPlayerOne(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
 	              Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	              std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
-	              std::unique_ptr<IInputProvider>& inputProvider,
-	              std::shared_ptr<BulletPool> bulletPool)
+	              std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool)
 		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, health, windowBuffer, windowSize, direction, speed,
 		            allObjects, std::move(events), std::move(name), std::move(fraction), inputProvider,
 		            std::move(bulletPool)) {}

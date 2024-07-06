@@ -135,7 +135,7 @@ void CoopAI::MayShoot(Direction dir)
 			continue;
 		}
 
-		if (!object->GetIsPassable())
+		if (!object->GetIsPassable() && !object->GetIsPenetrable())
 		{
 			if (IsCollideWith(LOScheck[UP], object->GetShape()))
 			{

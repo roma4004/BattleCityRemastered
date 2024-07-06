@@ -41,7 +41,10 @@ void Bullet::Subscribe()
 		return;
 	}
 
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
@@ -87,7 +90,7 @@ void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const in
 
 void Bullet::TickUpdate(const float deltaTime)
 {
-	if (GetIsAlive()) //TODO: maybe for all add check isAlive
+	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
 		_moveBeh->Move(deltaTime);
 	}

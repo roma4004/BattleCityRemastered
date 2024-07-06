@@ -50,7 +50,7 @@ protected:
 // Check that tank can move inside screen
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 		const float windowHeight = static_cast<float>(_windowSize.y);
@@ -75,7 +75,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 // Check that tank can move inside screen
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 		const float windowWidth = static_cast<float>(_windowSize.x);
@@ -100,7 +100,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 // Check that tank can move inside screen
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 		player->SetPos({0.f, 0.f});
@@ -124,7 +124,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 // Check that tank can move inside screen
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 		player->SetPos({0.f, 0.f});
@@ -148,7 +148,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 // Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
@@ -169,7 +169,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 // Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
@@ -190,7 +190,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 // Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
@@ -213,7 +213,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 // Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
@@ -236,7 +236,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 // Check that tank set their position correctly
 TEST_F(PlayerTest, TankSetPos)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({});
 		const FPoint startPos = player->GetPos();
@@ -254,7 +254,7 @@ TEST_F(PlayerTest, TankSetPos)
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({static_cast<float>(_windowSize.x) / 2.f, static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(UP);
@@ -275,7 +275,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({static_cast<float>(_windowSize.x) / 2.f, static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(LEFT);
@@ -317,7 +317,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({static_cast<float>(_windowSize.x) / 2.f, static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(RIGHT);
@@ -338,7 +338,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 // Check that tank can shoot inside of screen
 TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({0.f, 0.f});
 		//success shot down test, try to create inside screen bullet
@@ -360,7 +360,7 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 // Check that tank can shoot inside of screen
 TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({0.f, 0.f});
 		//success shot right test, try to create inside screen bullet
@@ -382,7 +382,7 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 // Check that tank can shoot inside of screen
 TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({static_cast<float>(_windowSize.x) - _tankSize, static_cast<float>(_windowSize.y) - _tankSize});
 		//success shot up test, try to create inside screen bullet
@@ -404,7 +404,7 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 // Check that tank can shoot inside of screen
 TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({static_cast<float>(_windowSize.x) - _tankSize, static_cast<float>(_windowSize.y) - _tankSize});
 		//success shot left test, try to create inside screen bullet
@@ -426,7 +426,7 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 // Check that tank can't shoot outside of screen
 TEST_F(PlayerTest, TankShotOutSideScreen)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		player->SetPos({0.f, 0.f});
 		{
@@ -485,7 +485,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 // Check that tank cant move through tank
 TEST_F(PlayerTest, TankCantPassThroughTank)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const Rectangle rect{0, _tankSize + 1, _tankSize, _tankSize};
 		constexpr int green = 0x408000;
@@ -520,7 +520,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 // Check that tank cant move through brick
 TEST_F(PlayerTest, TankCantPassThroughBrick)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const Rectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
@@ -547,7 +547,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrick)
 // Check that tank cant move through iron
 TEST_F(PlayerTest, TankCantPassThroughIron)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const Rectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
@@ -574,7 +574,7 @@ TEST_F(PlayerTest, TankCantPassThroughIron)
 // Check that tank cant move through water
 TEST_F(PlayerTest, TankCantPassThroughWater)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.back().get()))
+	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const Rectangle rect{0.f, _tankSize + 1, gridSize, gridSize};

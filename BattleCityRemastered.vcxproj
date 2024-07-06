@@ -172,6 +172,7 @@
     <ClInclude Include="headers\Enemy.h" />
     <ClInclude Include="headers\EventSystem.h" />
     <ClInclude Include="headers\GameFailure.h" />
+    <ClInclude Include="headers\GameMode.h" />
     <ClInclude Include="headers\GameStatistics.h" />
     <ClInclude Include="headers\GameSuccess.h" />
     <ClInclude Include="headers\ConfigFailure.h" />

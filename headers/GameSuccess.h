@@ -3,6 +3,7 @@
 #include "BaseObj.h"
 #include "BulletPool.h"
 #include "EventSystem.h"
+#include "GameMode.h"
 #include "GameStatistics.h"
 #include "InputProviderForMenu.h"
 #include "Menu.h"
@@ -14,24 +15,13 @@
 #include <SDL_ttf.h>
 #include <random>
 
-enum GameMode
-{
-	Demo,
-
-	OnePlayer,
-	TwoPlayers,
-	CoopWithAI,
-
-	EndIterator// should be the last one
-};
-
 class GameSuccess final : public IGame
 {
 	UPoint _windowSize{0, 0};
 	GameMode _currentMode{Demo};
-	std::unique_ptr<GameStatistics> _statistics;
+	std::shared_ptr<GameStatistics> _statistics;
 	Menu _menu;
-	std::string _name = "game";
+	std::string _name = "Game";
 
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
@@ -52,6 +42,10 @@ class GameSuccess final : public IGame
 	std::random_device _rd;
 
 	bool _isGameOver{false};
+	bool _isPause{false};
+
+	void Subscribe();
+	void Unsubscribe() const;
 
 	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
@@ -66,11 +60,7 @@ class GameSuccess final : public IGame
 	void KeyPressed(const SDL_Event& event) const;
 	void KeyReleased(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
-	void TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Color& color, const int value) const;
 
-	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
-	void RenderStatistics(SDL_Renderer* renderer, Point pos) const;
-	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos) const;
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
 
 	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
@@ -83,6 +73,7 @@ class GameSuccess final : public IGame
 	void RespawnTanks();
 
 	void EventHandling();
+	void DisposeDeadObject();
 
 	void MainLoop() override;
 
@@ -90,8 +81,8 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
-	            std::shared_ptr<EventSystem> events, std::unique_ptr<InputProviderForMenu>& menuInput,
-	            std::unique_ptr<GameStatistics>& statistics);
+	            const std::shared_ptr<EventSystem>& events, std::unique_ptr<InputProviderForMenu>& menuInput,
+	            const std::shared_ptr<GameStatistics>& statistics);
 
 	~GameSuccess() override;
 };
