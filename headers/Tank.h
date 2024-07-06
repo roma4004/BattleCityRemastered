@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BulletPool.h"
 #include "Pawn.h"
 
 #include <chrono>
@@ -23,14 +24,16 @@ protected:
 
 	int fireCooldown{1};
 
+	std::shared_ptr<BulletPool> _bulletPool;
+
 public:
 	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
 	     std::vector<std::shared_ptr<BaseObj>>* allPawns, std::shared_ptr<EventSystem> events,
-	     std::shared_ptr<IMoveBeh> moveBeh);
+	     std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool);
 
 	~Tank() override = default;
 
-	void Shot();
+	void Shot() const;
 
 	[[nodiscard]] float GetBulletWidth() const;
 	void SetBulletWidth(float bulletWidth);

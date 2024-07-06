@@ -2,16 +2,15 @@
 
 #include "../headers/PlayerOne.h"
 
-#include <utility>
-
 class MockPlayerOne final : public PlayerOne
 {
 public:
 	MockPlayerOne(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
 	              const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-	              std::shared_ptr<EventSystem> events, std::string name, std::unique_ptr<IInputProvider>& inputProvider)
+	              std::shared_ptr<EventSystem> events, std::string name, std::unique_ptr<IInputProvider>& inputProvider,
+	              std::shared_ptr<BulletPool> bulletPool)
 		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, speed, health, windowBuffer, windowSize, allPawns,
-		            std::move(events), std::move(name), inputProvider) {}
+		            std::move(events), std::move(name), inputProvider, std::move(bulletPool)) {}
 
 	~MockPlayerOne() override = default;
 
@@ -24,10 +23,10 @@ public:
 	// MOCK_METHOD(void, Shot, (), (override));
 	// MOCK_METHOD(void, Draw, (), (const override));
 
-	void MockResetKeyPressed() { _inputProvider->playerKeys = {}; }
-	void MockShotKeyPressed() { _inputProvider->playerKeys.shot = true; }
+	void MockResetKeyPressed() const { _inputProvider->playerKeys = {}; }
+	void MockShotKeyPressed() const { _inputProvider->playerKeys.shot = true; }
 
-	void MockMoveKeyPressed(const Direction dir)
+	void MockMoveKeyPressed(const Direction dir) const
 	{
 		if (dir == LEFT)
 		{

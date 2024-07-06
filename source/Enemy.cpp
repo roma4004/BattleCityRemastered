@@ -10,7 +10,8 @@
 
 Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
              const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-             std::shared_ptr<EventSystem> events, std::string name, std::string fraction)
+             std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
+             std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
 	       color,
 	       health,
@@ -18,7 +19,8 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	       windowSize,
 	       allPawns,
 	       std::move(events),
-	       std::make_shared<MoveLikeAIBeh>(windowSize, speed, this, allPawns)},
+	       std::make_shared<MoveLikeAIBeh>(DOWN, windowSize, speed, this, allPawns),
+	       std::move(bulletPool)},
 	  distDirection(0, 3), distTurnRate(1, 5), _name{std::move(name)}, _fraction{std::move(fraction)}
 {
 	BaseObj::SetIsPassable(false);
@@ -28,7 +30,16 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	std::random_device rd;
 	gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
 
-	// subscribe
+	Subscribe();
+}
+
+Enemy::~Enemy()
+{
+	Unsubscribe();
+}
+
+void Enemy::Subscribe()
+{
 	if (_events == nullptr)
 	{
 		return;
@@ -39,9 +50,8 @@ Enemy::Enemy(const Rectangle& rect, const int color, const float speed, const in
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-Enemy::~Enemy()
+void Enemy::Unsubscribe() const
 {
-	// unsubscribe
 	if (_events == nullptr)
 	{
 		return;
@@ -73,7 +83,7 @@ bool Enemy::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 	return true;
 }
 
-bool Enemy::IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles, Direction dir)
+bool Enemy::IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles)
 {
 	if (!obstacles.empty())
 	{
@@ -98,10 +108,10 @@ void Enemy::MayShoot(Direction dir)
 	const float bulletHalfHeight = GetBulletHeight() / 2.f;
 	std::vector<Rectangle> LOScheck{
 			/*up, left, down, right*/
-			{shape.x + tankHalfWidth - bulletHalfWidth, 0, GetBulletWidth(), shape.y},
-			{0, shape.y + tankHalfHeight - bulletHalfHeight, shape.x, GetBulletHeight()},
-			{shape.x + tankHalfWidth - bulletHalfWidth, shape.y + GetHeight(), GetBulletWidth(), windowSize.y},
-			{shape.x + GetWidth(), shape.y + tankHalfHeight - bulletHalfHeight, windowSize.x, GetBulletHeight()}};
+			{_shape.x + tankHalfWidth - bulletHalfWidth, 0, GetBulletWidth(), _shape.y},
+			{0, _shape.y + tankHalfHeight - bulletHalfHeight, _shape.x, GetBulletHeight()},
+			{_shape.x + tankHalfWidth - bulletHalfWidth, _shape.y + GetHeight(), GetBulletWidth(), windowSize.y},
+			{_shape.x + GetWidth(), _shape.y + tankHalfHeight - bulletHalfHeight, windowSize.x, GetBulletHeight()}};
 
 	// parse all seen in LOS (line of sight) obj
 	std::vector<std::weak_ptr<BaseObj>> upSideObstacles{};
@@ -195,25 +205,25 @@ void Enemy::MayShoot(Direction dir)
 	});
 
 	// priority fire on players
-	if (IsPlayerVisible(upSideObstacles, UP))
+	if (IsPlayerVisible(upSideObstacles))
 	{
 		_moveBeh->SetDirection(UP);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(leftSideObstacles, LEFT))
+	if (IsPlayerVisible(leftSideObstacles))
 	{
 		_moveBeh->SetDirection(LEFT);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(downSideObstacles, DOWN))
+	if (IsPlayerVisible(downSideObstacles))
 	{
 		_moveBeh->SetDirection(DOWN);
 		Shot();
 		return;
 	}
-	if (IsPlayerVisible(rightSideObstacles, RIGHT))
+	if (IsPlayerVisible(rightSideObstacles))
 	{
 		_moveBeh->SetDirection(RIGHT);
 		Shot();

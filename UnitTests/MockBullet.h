@@ -2,8 +2,6 @@
 
 #include "../headers/Bullet.h"
 
-#include <utility>
-
 class MockBullet final : public Bullet
 {
 public:

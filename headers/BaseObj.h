@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Rectangle.h"
-
-#include "IDrawable.h"
-#include "IObstacle.h"
-#include "ITickUpdatable.h"
+#include "interfaces/IDrawable.h"
+#include "interfaces/IObstacle.h"
+#include "interfaces/ITickUpdatable.h"
 
 struct FPoint;
 
@@ -15,7 +14,7 @@ class BaseObj : public IObstacle, public IDrawable, public ITickUpdatable
 	bool _isAlive{true};
 
 protected:
-	Rectangle shape{};
+	Rectangle _shape{};
 
 public:
 	BaseObj(const Rectangle& rect, int color, int health);
@@ -63,4 +62,5 @@ public:
 	void SetIsPenetrable(bool value) override;
 
 	[[nodiscard]] const Rectangle& GetShape() const;
+	void SetShape(const Rectangle& shape);
 };

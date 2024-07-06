@@ -9,7 +9,8 @@
 
 CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const int health, int* windowBuffer,
                const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allPawns,
-               std::shared_ptr<EventSystem> events, std::string name, std::string fraction)
+               std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
+               std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
 	       color,
 	       health,
@@ -17,7 +18,8 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const 
 	       windowSize,
 	       allPawns,
 	       std::move(events),
-	       std::make_shared<MoveLikeAIBeh>(windowSize, speed, this, allPawns)},
+	       std::make_shared<MoveLikeAIBeh>(UP, windowSize, speed, this, allPawns),
+	       std::move(bulletPool)},
 	  distDirection(0, 3), distTurnRate(1, 5), _name{std::move(name)}, _fraction{std::move(fraction)}
 {
 	BaseObj::SetIsPassable(false);
@@ -27,7 +29,16 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const 
 	std::random_device rd;
 	gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
 
-	// subscribe
+	Subscribe();
+}
+
+CoopAI::~CoopAI()
+{
+	Unsubscribe();
+}
+
+void CoopAI::Subscribe()
+{
 	if (_events == nullptr)
 	{
 		return;
@@ -38,9 +49,8 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const float speed, const 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-CoopAI::~CoopAI()
+void CoopAI::Unsubscribe() const
 {
-	// unsubscribe
 	if (_events == nullptr)
 	{
 		return;
@@ -72,7 +82,7 @@ bool CoopAI::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
 	return true;
 }
 
-bool CoopAI::IsEnemyVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles, Direction dir)
+bool CoopAI::IsEnemyVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles)
 {
 	if (!obstacles.empty())
 	{
@@ -86,7 +96,7 @@ bool CoopAI::IsEnemyVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles
 	return false;
 }
 
-void CoopAI::MayShoot(Direction dir)
+void CoopAI::MayShoot(Direction dir) const
 {
 	const FPoint windowSize = {static_cast<float>(_windowSize.x), static_cast<float>(_windowSize.y)};
 	const float tankHalfWidth = GetWidth() / 2.f;
@@ -95,10 +105,10 @@ void CoopAI::MayShoot(Direction dir)
 	const float bulletHalfHeight = GetBulletHeight() / 2.f;
 	std::vector<Rectangle> LOScheck{
 			/*up, left, down, right*/
-			{shape.x + tankHalfWidth - bulletHalfWidth, 0, GetBulletWidth(), shape.y},
-			{0, shape.y + tankHalfHeight - bulletHalfHeight, shape.x, GetBulletHeight()},
-			{shape.x + tankHalfWidth - bulletHalfWidth, shape.y + GetHeight(), GetBulletWidth(), windowSize.y},
-			{shape.x + GetWidth(), shape.y + tankHalfHeight - bulletHalfHeight, windowSize.x, GetBulletHeight()}};
+			{_shape.x + tankHalfWidth - bulletHalfWidth, 0, GetBulletWidth(), _shape.y},
+			{0, _shape.y + tankHalfHeight - bulletHalfHeight, _shape.x, GetBulletHeight()},
+			{_shape.x + tankHalfWidth - bulletHalfWidth, _shape.y + GetHeight(), GetBulletWidth(), windowSize.y},
+			{_shape.x + GetWidth(), _shape.y + tankHalfHeight - bulletHalfHeight, windowSize.x, GetBulletHeight()}};
 
 	// parse all seen in LOS (line of sight) obj
 	std::vector<std::weak_ptr<BaseObj>> upSideObstacles{};
@@ -192,25 +202,25 @@ void CoopAI::MayShoot(Direction dir)
 	});
 
 	// priority fire on players
-	if (IsEnemyVisible(upSideObstacles, UP))
+	if (IsEnemyVisible(upSideObstacles))
 	{
 		_moveBeh->SetDirection(UP);
 		Shot();
 		return;
 	}
-	if (IsEnemyVisible(leftSideObstacles, LEFT))
+	if (IsEnemyVisible(leftSideObstacles))
 	{
 		_moveBeh->SetDirection(LEFT);
 		Shot();
 		return;
 	}
-	if (IsEnemyVisible(downSideObstacles, DOWN))
+	if (IsEnemyVisible(downSideObstacles))
 	{
 		_moveBeh->SetDirection(DOWN);
 		Shot();
 		return;
 	}
-	if (IsEnemyVisible(rightSideObstacles, RIGHT))
+	if (IsEnemyVisible(rightSideObstacles))
 	{
 		_moveBeh->SetDirection(RIGHT);
 		Shot();
@@ -247,7 +257,7 @@ void CoopAI::MayShoot(Direction dir)
 	}
 
 	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible()
-	    && !dynamic_cast<PlayerOne*>(nearestObstacle.get()))
+	    && !dynamic_cast<PlayerOne*>(nearestObstacle.get()) && !dynamic_cast<CoopAI*>(nearestObstacle.get()))
 	{
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{

@@ -8,11 +8,14 @@
 class GameStatistics
 {
 public:
-	GameStatistics(std::string name, std::shared_ptr<EventSystem> events);
+	GameStatistics(std::shared_ptr<EventSystem> events);
 
 	~GameStatistics();
 
-	void ResetStatistics();
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void Reset();
 
 	// TODO: use std::atomic when multithreading is used
 	int enemyRespawnResource{20};

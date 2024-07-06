@@ -1,10 +1,10 @@
 #pragma once
 
 #include "BaseObj.h"
-#include "IMovable.h"
-#include "IMoveBeh.h"
 #include "Point.h"
 #include "Rectangle.h"
+#include "interfaces/IMovable.h"
+#include "interfaces/IMoveBeh.h"
 
 #include <memory>
 #include <vector>

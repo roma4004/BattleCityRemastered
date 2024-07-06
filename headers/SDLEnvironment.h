@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IConfig.h"
 #include "Point.h"
+#include "interfaces/IConfig.h"
 
 #include <SDL.h>
 // #include <SDL_image.h>

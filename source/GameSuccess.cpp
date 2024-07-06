@@ -21,7 +21,8 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	  _renderer{renderer},
 	  _screen{screen},
 	  _fpsFont{fpsFont},
-	  _events{std::move(events)}
+	  _events{std::move(events)},
+	  _bulletPool{std::make_shared<BulletPool>()}
 {
 	ResetBattlefield();
 }
@@ -41,7 +42,7 @@ void GameSuccess::ResetBattlefield()
 	_allPawns.clear();
 	_allPawns.reserve(1000);
 
-	_statistics->ResetStatistics();
+	_statistics->Reset();
 
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
 	constexpr float speed = 142;
@@ -377,7 +378,8 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 			constexpr int gray = 0x808080;
 			auto indexString = std::to_string(index);
 			_allPawns.emplace_back(std::make_shared<Enemy>(spawnSpot, gray, speed, health, _windowBuffer, _windowSize,
-			                                               &_allPawns, _events, "Enemy" + indexString, "EnemyTeam"));
+			                                               &_allPawns, _events, "Enemy" + indexString, "EnemyTeam",
+			                                               _bulletPool));
 			_events->EmitEvent("Enemy" + indexString + "_Spawn");
 			return;
 		}
@@ -403,7 +405,8 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 		auto name = "PlayerOne";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		_allPawns.emplace_back(std::make_shared<PlayerOne>(playerOneRect, yellow, speed, health, _windowBuffer,
-		                                                   _windowSize, &_allPawns, _events, name, inputProvider));
+		                                                   _windowSize, &_allPawns, _events, name, inputProvider,
+		                                                   _bulletPool));
 		_events->EmitEvent("P1_Spawn");
 	}
 }
@@ -427,7 +430,8 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 		auto name = "PlayerTwo";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
 		_allPawns.emplace_back(std::make_shared<PlayerTwo>(playerTwoRect, green, speed, health, _windowBuffer,
-		                                                   _windowSize, &_allPawns, _events, name, inputProvider));
+		                                                   _windowSize, &_allPawns, _events, name, inputProvider,
+		                                                   _bulletPool));
 		_events->EmitEvent("P2_Spawn");
 	}
 }
@@ -449,8 +453,8 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	{
 		constexpr int yellow = 0xeaea00;
 		_allPawns.emplace_back(std::make_shared<CoopAI>(playerOneRect, yellow, speed, health, _windowBuffer,
-		                                                _windowSize,
-		                                                &_allPawns, _events, "CoopOneAI", "PlayerTeam"));
+		                                                _windowSize, &_allPawns, _events, "CoopOneAI", "PlayerTeam",
+		                                                _bulletPool));
 		_events->EmitEvent("CoopOneAI_Spawn");
 	}
 }
@@ -472,7 +476,7 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	{
 		constexpr int green = 0x408000;
 		_allPawns.emplace_back(std::make_shared<CoopAI>(playerTwoRect, green, speed, health, _windowBuffer, _windowSize,
-		                                                &_allPawns, _events, "CoopTwoAI", "PlayerTeam"));
+		                                                &_allPawns, _events, "CoopTwoAI", "PlayerTeam", _bulletPool));
 		_events->EmitEvent("CoopTwoAI_Spawn");
 	}
 }
@@ -557,7 +561,24 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent<float>("TickUpdate", deltaTime);
 		}
 
-		// Destroy all "dead" objects (excluding mapBlocks)
+		// TODO: separate bullets or somehow delete and recycle in one iterating through _allPawns (because now its two)
+		// recycling bullets
+		for (std::vector<std::shared_ptr<BaseObj>>::iterator it = _allPawns.begin(); it < _allPawns.end();)
+		{
+			if ((*it)->GetIsAlive() == false)
+			{
+				if (auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
+				{
+					_bulletPool->ReturnBullet(*it);
+					const auto nextIt = _allPawns.erase(it);
+					it = nextIt;
+					continue;
+				}
+			}
+			++it;
+		}
+
+		// Destroy all "dead" objects
 		const auto it = std::ranges::remove_if(_allPawns, [&](const auto& obj) { return !obj->GetIsAlive(); }).begin();
 		_allPawns.erase(it, _allPawns.end());
 

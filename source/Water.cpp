@@ -9,30 +9,34 @@ Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, 
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
 
-	// subscribe
-	if (_events == nullptr)
-	{
-		return;
-	}
-
-	const auto name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_events->AddListener("Draw", name, [this]() { this->Draw(); });
+	_name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	Subscribe();
 }
 
 Water::~Water()
 {
-	// unsubscribe
+	Unsubscribe();
+}
+
+void Water::Subscribe() const
+{
 	if (_events == nullptr)
 	{
 		return;
 	}
 
-	const auto name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-
-	_events->RemoveListener("Draw", name);
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
+void Water::Unsubscribe() const
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener("Draw", _name);
+}
 
 void Water::SetPixel(const size_t x, const size_t y, const int color) const
 {
