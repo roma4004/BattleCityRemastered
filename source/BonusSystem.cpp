@@ -4,21 +4,24 @@
 #include "../headers/ColliderCheck.h"
 
 #include <chrono>
+#include <limits>
 #include <memory>
 
 class BaseObj;
 class EventSystem;
 
 BonusSystem::BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         int* windowBuffer, const UPoint windowSize, const int sideBarWidth)
+                         int* windowBuffer, const UPoint windowSize, const int sideBarWidth, const int bonusSize)
 	: _name{"BonusSystem"},
 	  _events{std::move(events)},
 	  _windowSize{windowSize},
+	  _bonusSize{bonusSize},
 	  _windowBuffer{windowBuffer},
 	  _allObjects{allObjects},
-	  _distSpawnPosY{0, static_cast<int>(_windowSize.y)},
+	  _distSpawnPosY{0, static_cast<int>(_windowSize.y) - bonusSize},
 	  _distSpawnPosX{0, static_cast<int>(_windowSize.x) - sideBarWidth},
-	  _distSpawnType{0, 1}
+	  _distSpawnType{0, 1},
+	  _distRandColor{0, std::numeric_limits<int>::max()}
 {
 	std::random_device rd;
 	_gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
@@ -46,7 +49,7 @@ void BonusSystem::Subscribe()
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusTeamFreezeEnable",
 			_name,
-			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
 			{
 				if (fraction == "EnemyTeam")
 				{
@@ -64,7 +67,7 @@ void BonusSystem::Subscribe()
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusHelmetEnable",
 			_name,
-			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
 			{
 				_cooldownHelmet = bonusDurationTime;
 
@@ -150,7 +153,8 @@ void BonusSystem::TickUpdate(const float deltaTime)
 	if (IsCooldownFinish(_lastTimeBonusSpawn, _cooldownBonusSpawn))
 	{
 		bool isFreeSpawnSpot = true;
-		Rectangle rect{static_cast<float>(_distSpawnPosX(_gen)), static_cast<float>(_distSpawnPosY(_gen)), 36.f, 36.f};
+		const float size = static_cast<float>(_bonusSize);
+		Rectangle rect{static_cast<float>(_distSpawnPosX(_gen)), static_cast<float>(_distSpawnPosY(_gen)), size, size};
 		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 		{
 			if (ColliderCheck::IsCollide(rect, object->GetShape()))
@@ -162,18 +166,19 @@ void BonusSystem::TickUpdate(const float deltaTime)
 
 		if (isFreeSpawnSpot)
 		{
+			const int color = _distRandColor(_gen);
 			const int bonusId = _distSpawnType(_gen);
 			constexpr int bonusLifetime = 10;
 			constexpr int bonusDurationTime = 10;
 			if (bonusId == 0)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
-				                                                        bonusDurationTime, bonusLifetime));
+				                                                        bonusDurationTime, bonusLifetime, color));
 			}
 			else if (bonusId == 1)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusTeamFreeze>(rect, _windowBuffer, _windowSize, _events,
-				                                                            bonusDurationTime, bonusLifetime));
+				                                                            bonusDurationTime, bonusLifetime, color));
 			}
 
 			_lastTimeBonusSpawn = std::chrono::system_clock::now();

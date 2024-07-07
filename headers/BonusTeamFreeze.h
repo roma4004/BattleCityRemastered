@@ -15,7 +15,7 @@ class BonusTeamFreeze : public Bonus
 
 public:
 	BonusTeamFreeze(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	                int bonusDurationTimeSec, int lifeTimeSec);
+	                int bonusDurationTimeSec, int lifeTimeSec, int color = 0x00ff00);
 
 	~BonusTeamFreeze() override;
 

@@ -1,8 +1,9 @@
 #include "../headers/BonusTeamFreeze.h"
 
 BonusTeamFreeze::BonusTeamFreeze(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
-                                 std::shared_ptr<EventSystem> events, const int bonusDurationTime, const int lifeTimeSec)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), bonusDurationTime, lifeTimeSec, 0x00ff00}
+                                 std::shared_ptr<EventSystem> events, const int bonusDurationTime,
+                                 const int lifeTimeSec, const int color)
+	: Bonus{rect, windowBuffer, windowSize, std::move(events), bonusDurationTime, lifeTimeSec, color}
 {
 	_name = "BonusTeamFreeze " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
