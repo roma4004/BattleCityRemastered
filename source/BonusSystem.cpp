@@ -1,6 +1,7 @@
 #include "../headers/BonusSystem.h"
+#include "../headers/BonusGrenade.h"
 #include "../headers/BonusHelmet.h"
-#include "../headers/BonusTeamFreeze.h"
+#include "../headers/BonusTimer.h"
 #include "../headers/ColliderCheck.h"
 
 #include <chrono>
@@ -20,7 +21,7 @@ BonusSystem::BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::s
 	  _allObjects{allObjects},
 	  _distSpawnPosY{0, static_cast<int>(_windowSize.y) - bonusSize},
 	  _distSpawnPosX{0, static_cast<int>(_windowSize.x) - sideBarWidth},
-	  _distSpawnType{0, 1},
+	  _distSpawnType{0, 2},
 	  _distRandColor{0, std::numeric_limits<int>::max()}
 {
 	std::random_device rd;
@@ -47,21 +48,21 @@ void BonusSystem::Subscribe()
 	});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTeamFreezeEnable",
+			"BonusTimerEnable",
 			_name,
 			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
 			{
 				if (fraction == "EnemyTeam")
 				{
-					_playerTeamFreezeActivateTime = std::chrono::system_clock::now();
-					_isActivePlayerTeamFreeze = true;
-					_cooldownPlayerTeamFreeze = bonusDurationTime;
+					_playerTimerActivateTime = std::chrono::system_clock::now();
+					_isActivePlayerTimer = true;
+					_cooldownPlayerTimer = bonusDurationTime;
 				}
 				else if (fraction == "PlayerTeam")
 				{
-					_enemyTeamFreezeActivateTime = std::chrono::system_clock::now();
-					_isActiveEnemyTeamFreeze = true;
-					_cooldownEnemyTeamFreeze = bonusDurationTime;
+					_enemyTimerActivateTime = std::chrono::system_clock::now();
+					_isActiveEnemyTimer = true;
+					_cooldownEnemyTimer = bonusDurationTime;
 				}
 			});
 	_events->AddListener<const std::string&, const std::string&, int>(
@@ -129,7 +130,7 @@ void BonusSystem::Unsubscribe() const
 
 	_events->RemoveListener<const float>("TickUpdate", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTeamFreezeEnable", _name);
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimerEnable", _name);
 }
 
 bool BonusSystem::IsCooldownFinish(const std::chrono::system_clock::time_point activateTime, const int cooldown)
@@ -172,29 +173,34 @@ void BonusSystem::TickUpdate(const float deltaTime)
 			constexpr int bonusDurationTime = 10;
 			if (bonusId == 0)
 			{
-				_allObjects->emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
-				                                                        bonusDurationTime, bonusLifetime, color));
+				_allObjects->emplace_back(std::make_shared<BonusTimer>(rect, _windowBuffer, _windowSize, _events,
+				                                                       bonusDurationTime, bonusLifetime, color));
 			}
 			else if (bonusId == 1)
 			{
-				_allObjects->emplace_back(std::make_shared<BonusTeamFreeze>(rect, _windowBuffer, _windowSize, _events,
-				                                                            bonusDurationTime, bonusLifetime, color));
+				_allObjects->emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
+				                                                        bonusDurationTime, bonusLifetime, color));
+			}
+			else if (bonusId == 2)
+			{
+				_allObjects->emplace_back(std::make_shared<BonusGrenade>(rect, _windowBuffer, _windowSize, _events,
+				                                                         bonusDurationTime, bonusLifetime, color));
 			}
 
 			_lastTimeBonusSpawn = std::chrono::system_clock::now();
 		}
 	}
 
-	if (_isActiveEnemyTeamFreeze && IsCooldownFinish(_enemyTeamFreezeActivateTime, _cooldownEnemyTeamFreeze))
+	if (_isActiveEnemyTimer && IsCooldownFinish(_enemyTimerActivateTime, _cooldownEnemyTimer))
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("BonusTeamFreezeDisable", "Enemy1", "EnemyTeam");
-		_isActiveEnemyTeamFreeze = false;
+		_events->EmitEvent<const std::string&, const std::string&>("BonusTimerDisable", "Enemy1", "EnemyTeam");
+		_isActiveEnemyTimer = false;
 	}
 
-	if (_isActivePlayerTeamFreeze && IsCooldownFinish(_playerTeamFreezeActivateTime, _cooldownPlayerTeamFreeze))
+	if (_isActivePlayerTimer && IsCooldownFinish(_playerTimerActivateTime, _cooldownPlayerTimer))
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("BonusTeamFreezeDisable", "PlayerOne", "PlayerTeam");
-		_isActivePlayerTeamFreeze = false;
+		_events->EmitEvent<const std::string&, const std::string&>("BonusTimerDisable", "PlayerOne", "PlayerTeam");
+		_isActivePlayerTimer = false;
 	}
 
 	if (_isActiveEnemyOneHelmet && IsCooldownFinish(_enemyOneHelmetActivateTime, _cooldownHelmet))

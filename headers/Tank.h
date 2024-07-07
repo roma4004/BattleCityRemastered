@@ -31,7 +31,7 @@ protected:
 	std::string _fraction;
 
 	// bonuses
-	bool _isActiveTeamFreeze{false};
+	bool _isActiveTimer{false}; //TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating
 	bool _isActiveHelmet{false};
 
 	void Shot() const;

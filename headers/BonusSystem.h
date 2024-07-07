@@ -27,12 +27,12 @@ class BonusSystem : public ITickUpdatable
 	int _cooldownBonusSpawn{60};
 	std::chrono::system_clock::time_point _lastTimeBonusSpawn;
 
-	int _cooldownEnemyTeamFreeze{10};
-	int _cooldownPlayerTeamFreeze{10};
-	bool _isActiveEnemyTeamFreeze{false};
-	bool _isActivePlayerTeamFreeze{false};
-	std::chrono::system_clock::time_point _enemyTeamFreezeActivateTime;
-	std::chrono::system_clock::time_point _playerTeamFreezeActivateTime;
+	int _cooldownEnemyTimer{10};
+	int _cooldownPlayerTimer{10};
+	bool _isActiveEnemyTimer{false};
+	bool _isActivePlayerTimer{false};
+	std::chrono::system_clock::time_point _enemyTimerActivateTime;
+	std::chrono::system_clock::time_point _playerTimerActivateTime;
 
 	int _cooldownHelmet{10};
 	bool _isActiveEnemyOneHelmet{false};

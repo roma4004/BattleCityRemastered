@@ -8,16 +8,16 @@
 #include <chrono>
 #include <memory>
 
-class BonusTeamFreeze : public Bonus
+class BonusGrenade : public Bonus
 {
 	void Subscribe();
 	void Unsubscribe() const;
 
 public:
-	BonusTeamFreeze(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	                int bonusDurationTimeSec, int lifeTimeSec, int color = 0x00ff00);
+	BonusGrenade(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	            int durationSec, int lifeTimeSec, int color = 0xff0000);
 
-	~BonusTeamFreeze() override;
+	~BonusGrenade() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

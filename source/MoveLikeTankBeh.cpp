@@ -1,7 +1,7 @@
 #include "../headers/MoveLikeTankBeh.h"
-#include "../headers/BonusTeamFreeze.h"
 #include "../headers/ColliderCheck.h"
 #include "../headers/Tank.h"
+#include "../headers/Interfaces/IPickUpBonus.h"
 
 #include <functional>
 #include <memory>

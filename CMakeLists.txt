@@ -95,6 +95,7 @@ add_executable(${PROJECT_NAME}
         source/CoopAI.cpp
         source/Enemy.cpp
         source/Bonus.cpp
+        source/BonusGrenade.cpp
         source/BonusHelmet.cpp
         source/BonusTimeFreeze.cpp
         source/BonusSystem.cpp

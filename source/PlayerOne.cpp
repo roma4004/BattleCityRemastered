@@ -50,7 +50,7 @@ void PlayerOne::Subscribe()
 
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
-		if (!_isActiveTeamFreeze)
+		if (!_isActiveTimer)
 		{
 			this->TickUpdate(deltaTime);
 		}
@@ -61,23 +61,23 @@ void PlayerOne::Subscribe()
 	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTeamFreezeEnable",
+			"BonusTimerEnable",
 			_name,
 			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
 			{
 				if (fraction != _fraction)
 				{
-					this->_isActiveTeamFreeze = true;
+					this->_isActiveTimer = true;
 				}
 			});
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusTeamFreezeDisable",
+			"BonusTimerDisable",
 			_name,
 			[this](const std::string& author, const std::string& fraction)
 			{
 				if (fraction == _fraction)
 				{
-					this->_isActiveTeamFreeze = false;
+					this->_isActiveTimer = false;
 				}
 			});
 
@@ -101,6 +101,17 @@ void PlayerOne::Subscribe()
 					this->_isActiveHelmet = false;
 				}
 			});
+
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusGrenade",
+			_name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				if (fraction != _fraction)
+				{
+					this->SetIsAlive(false);
+				}
+			});
 }
 
 void PlayerOne::Unsubscribe() const
@@ -116,11 +127,13 @@ void PlayerOne::Unsubscribe() const
 
 	_events->RemoveListener("DrawHealthBar", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTeamFreezeEnable", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusTeamFreezeDisable", _name);
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimerEnable", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusTimerDisable", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetEnable", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetDisable", _name);
+
+	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 }
 
 void PlayerOne::TickUpdate(const float deltaTime)

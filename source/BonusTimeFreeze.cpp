@@ -1,20 +1,20 @@
-#include "../headers/BonusTeamFreeze.h"
+#include "../headers/BonusTimer.h"
 
-BonusTeamFreeze::BonusTeamFreeze(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
-                                 std::shared_ptr<EventSystem> events, const int bonusDurationTime,
-                                 const int lifeTimeSec, const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), bonusDurationTime, lifeTimeSec, color}
+BonusTimer::BonusTimer(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
+                       std::shared_ptr<EventSystem> events, const int durationSec, const int lifeTimeSec,
+                       const int color)
+	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationSec, lifeTimeSec, color}
 {
-	_name = "BonusTeamFreeze " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "BonusTimer " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
 }
 
-BonusTeamFreeze::~BonusTeamFreeze()
+BonusTimer::~BonusTimer()
 {
 	Unsubscribe();
 };
 
-void BonusTeamFreeze::Subscribe()
+void BonusTimer::Subscribe()
 {
 	if (_events == nullptr)
 	{
@@ -29,7 +29,7 @@ void BonusTeamFreeze::Subscribe()
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-void BonusTeamFreeze::Unsubscribe() const
+void BonusTimer::Unsubscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -41,14 +41,14 @@ void BonusTeamFreeze::Unsubscribe() const
 	_events->RemoveListener("Draw", _name);
 }
 
-void BonusTeamFreeze::SendDamageStatistics(const std::string& author, const std::string& fraction)
+void BonusTimer::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>("BonusTeamFreeze", author, fraction);
+	_events->EmitEvent<const std::string&, const std::string&>("BonusTimer", author, fraction);
 }
 
-void BonusTeamFreeze::PickUpBonus(const std::string& author, const std::string& fraction)
+void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, int>("BonusTeamFreezeEnable", author, fraction,
+	_events->EmitEvent<const std::string&, const std::string&, int>("BonusTimerEnable", author, fraction,
 	                                                                _bonusDurationSec);
 	SetIsAlive(false);
 }

@@ -133,6 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\Bonus.cpp" />
+    <ClCompile Include="source\BonusGrenade.cpp" />
     <ClCompile Include="source\BonusHelmet.cpp" />
     <ClCompile Include="source\BonusTimeFreeze.cpp" />
     <ClCompile Include="source\BonusSystem.cpp" />
@@ -169,8 +170,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Bonus.h" />
+    <ClInclude Include="headers\BonusGrenade.h" />
     <ClInclude Include="headers\BonusHelmet.h" />
-    <ClInclude Include="headers\BonusTeamFreeze.h" />
+    <ClInclude Include="headers\BonusTimer.h" />
     <ClInclude Include="headers\BonusSystem.h" />
     <ClInclude Include="headers\Brick.h" />
     <ClInclude Include="headers\Bullet.h" />

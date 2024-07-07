@@ -1,6 +1,4 @@
 #include "../headers/GameSuccess.h"
-#include "../headers/BonusHelmet.h"
-#include "../headers/BonusTeamFreeze.h"
 #include "../headers/ColliderCheck.h"
 #include "../headers/CoopAI.h"
 #include "../headers/Enemy.h"

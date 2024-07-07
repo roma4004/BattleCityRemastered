@@ -1,12 +1,12 @@
 #include "../headers/Bonus.h"
 
 Bonus::Bonus(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
-             int bonusDurationTime, const int lifeTimeSec, const int color)
+             int durationSec, const int lifeTimeSec, const int color)
 	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, color, 1},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
 	  _creationTime{std::chrono::system_clock::now()},
-	  _bonusDurationSec{bonusDurationTime},
+	  _bonusDurationSec{durationSec},
 	  _bonusLifetimeSec{lifeTimeSec},
 	  _events{std::move(events)}
 {
