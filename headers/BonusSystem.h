@@ -1,36 +1,54 @@
 #pragma once
 
+#include "BaseObj.h"
 #include "EventSystem.h"
+#include "Point.h"
 #include "interfaces/ITickUpdatable.h"
 
 #include <chrono>
 #include <memory>
+#include <random>
+#include <vector>
 
 class BonusSystem : public ITickUpdatable
 {
-	const char* _name;
+	std::string _name;
 	std::shared_ptr<EventSystem> _events;
+	UPoint _windowSize;
+	int* _windowBuffer;
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	std::mt19937 _gen;
+	std::uniform_int_distribution<> _distSpawnPosY;
+	std::uniform_int_distribution<> _distSpawnPosX;
+	std::uniform_int_distribution<> _distSpawnType;
 
-	int cooldownEnemyTeamFreeze{10};
-	int cooldownPlayerTeamFreeze{10};
-	bool isActiveEnemyTeamFreeze{false};
-	bool isActivePlayerTeamFreeze{false};
-	std::chrono::system_clock::time_point enemyTeamFreezeActivateTime;
-	std::chrono::system_clock::time_point playerTeamFreezeActivateTime;
+	int _cooldownBonusSpawn{60};
+	std::chrono::system_clock::time_point _lastTimeBonusSpawn;
 
-	int cooldownHelmet{10};
-	bool isActiveEnemyOneHelmet{false};
-	bool isActiveEnemyTwoHelmet{false};
-	bool isActiveEnemyThreeHelmet{false};
-	bool isActiveEnemyFourHelmet{false};
-	bool isActivePlayerOneHelmet{false};
-	bool isActivePlayerTwoHelmet{false};
-	std::chrono::system_clock::time_point enemyOneHelmetActivateTime;
-	std::chrono::system_clock::time_point enemyTwoHelmetActivateTime;
-	std::chrono::system_clock::time_point enemyThreeHelmetActivateTime;
-	std::chrono::system_clock::time_point enemyFourHelmetActivateTime;
-	std::chrono::system_clock::time_point playerOneHelmetActivateTime;
-	std::chrono::system_clock::time_point playerTwoHelmetActivateTime;
+	int _cooldownEnemyTeamFreeze{10};
+	int _cooldownPlayerTeamFreeze{10};
+	bool _isActiveEnemyTeamFreeze{false};
+	bool _isActivePlayerTeamFreeze{false};
+	std::chrono::system_clock::time_point _enemyTeamFreezeActivateTime;
+	std::chrono::system_clock::time_point _playerTeamFreezeActivateTime;
+
+	int _cooldownHelmet{10};
+	bool _isActiveEnemyOneHelmet{false};
+	bool _isActiveEnemyTwoHelmet{false};
+	bool _isActiveEnemyThreeHelmet{false};
+	bool _isActiveEnemyFourHelmet{false};
+	bool _isActivePlayerOneHelmet{false};
+	bool _isActivePlayerTwoHelmet{false};
+	bool _isActiveCoopOneAIHelmet{false};
+	bool _isActiveCoopTwoAIHelmet{false};
+	std::chrono::system_clock::time_point _enemyOneHelmetActivateTime;
+	std::chrono::system_clock::time_point _enemyTwoHelmetActivateTime;
+	std::chrono::system_clock::time_point _enemyThreeHelmetActivateTime;
+	std::chrono::system_clock::time_point _enemyFourHelmetActivateTime;
+	std::chrono::system_clock::time_point _playerOneHelmetActivateTime;
+	std::chrono::system_clock::time_point _playerTwoHelmetActivateTime;
+	std::chrono::system_clock::time_point _coopOneAIHelmetActivateTime;
+	std::chrono::system_clock::time_point _coopTwoAIHelmetActivateTime;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -40,9 +58,8 @@ class BonusSystem : public ITickUpdatable
 	void TickUpdate(float deltaTime) override;
 
 public:
-	explicit BonusSystem(std::shared_ptr<EventSystem> events);
+	BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	            int* windowBuffer, UPoint windowSize, int sideBarWidth = 175);
 
 	~BonusSystem() override;
-
-
 };

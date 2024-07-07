@@ -1,9 +1,8 @@
 #include "../headers/MoveLikeBulletBeh.h"
 #include "../headers/Bullet.h"
 #include "../headers/Circle.h"
-#include "../headers/Direction.h"
 #include "../headers/ColliderCheck.h"
-#include "../headers/Interfaces/IPickUpBonus.h"
+#include "../headers/Direction.h"
 
 #include <memory>
 

@@ -79,8 +79,7 @@ void Tank::Shot() const
 	constexpr int health = 1;
 	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, _damage, _bulletDamageAreaRadius, color, health,
 	                                                 _windowBuffer, _windowSize, _direction, speed, _allObjects,
-	                                                 _events,
-	                                                 _name, _fraction));
+	                                                 _events, _name, _fraction));
 }
 
 float Tank::GetBulletWidth() const { return _bulletWidth; }
@@ -136,4 +135,3 @@ void Tank::DrawHealthBar() const
 		}
 	}
 }
-

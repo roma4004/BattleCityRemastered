@@ -28,7 +28,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	  _fpsFont{fpsFont},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>()},
-	  _bonusSystem{events}
+	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize}
 {
 	ResetBattlefield();
 	NextGameMode();
@@ -50,7 +50,10 @@ void GameSuccess::Subscribe()
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
-	_events->AddListener<bool>("Pause_Status", _name, [this](bool newPauseStatus) { this->_isPause = newPauseStatus; });
+	_events->AddListener<bool>("Pause_Status", _name, [this](const bool newPauseStatus)
+	{
+		this->_isPause = newPauseStatus;
+	});
 
 }
 
@@ -86,17 +89,6 @@ void GameSuccess::ResetBattlefield()
 	constexpr float speed = 142;
 	constexpr int health = 100;
 	const float size = gridOffset * 3;
-
-	constexpr int bonusDurationTime = 10;
-
-	Rectangle rect{0.f, _windowSize.y - 36.f, 36.f, 36.f};
-	constexpr int bonusLifetime = 10;
-	_allObjects.emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
-	                                                           bonusDurationTime, bonusLifetime));
-
-	Rectangle rect2{_windowSize.x / 2.f + _windowSize.x / 4.f - 36.f, _windowSize.y - 36.f, 36.f, 36.f};
-	_allObjects.emplace_back(std::make_shared<BonusTeamFreeze>(rect2, _windowBuffer, _windowSize, _events,
-	                                                           bonusDurationTime, bonusLifetime));
 
 	SpawnPlayerTanks(gridOffset, speed, health, size);
 
@@ -267,13 +259,6 @@ void GameSuccess::KeyReleased(const SDL_Event& event) const
 		case SDLK_p:
 			_events->EmitEvent("Pause_Released");
 			break;
-		case SDLK_b:
-		{
-			int bonusDuration = 5;
-			_events->EmitEvent<const std::string&, const std::string&, int>("BonusTeamFreezeEnable", "PlayerOne",
-			                                                                "EnemyTeam", bonusDuration);
-		}
-		break;
 		default:
 			break;
 	}

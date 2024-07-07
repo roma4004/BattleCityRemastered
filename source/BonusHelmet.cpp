@@ -2,7 +2,7 @@
 
 BonusHelmet::BonusHelmet(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
                          std::shared_ptr<EventSystem> events, const int bonusDurationTime, const int lifeTimeSec)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), bonusDurationTime, lifeTimeSec, 0x0000ff}
+	: Bonus{rect, windowBuffer, windowSize, std::move(events), bonusDurationTime, lifeTimeSec, 0xff0000}
 {
 	_name = "BonusHelmet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
