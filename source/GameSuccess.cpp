@@ -1,4 +1,7 @@
 #include "../headers/GameSuccess.h"
+#include "../headers/BonusHelmet.h"
+#include "../headers/BonusTeamFreeze.h"
+#include "../headers/ColliderCheck.h"
 #include "../headers/CoopAI.h"
 #include "../headers/Enemy.h"
 #include "../headers/InputProviderForPlayerOne.h"
@@ -10,6 +13,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
                          TTF_Font* fpsFont, const std::shared_ptr<EventSystem>& events,
@@ -23,7 +27,8 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	  _screen{screen},
 	  _fpsFont{fpsFont},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>()}
+	  _bulletPool{std::make_shared<BulletPool>()},
+	  _bonusSystem{events}
 {
 	ResetBattlefield();
 	NextGameMode();
@@ -81,6 +86,17 @@ void GameSuccess::ResetBattlefield()
 	constexpr float speed = 142;
 	constexpr int health = 100;
 	const float size = gridOffset * 3;
+
+	constexpr int bonusDurationTime = 10;
+
+	Rectangle rect{0.f, _windowSize.y - 36.f, 36.f, 36.f};
+	constexpr int bonusLifetime = 10;
+	_allObjects.emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
+	                                                           bonusDurationTime, bonusLifetime));
+
+	Rectangle rect2{_windowSize.x / 2.f + _windowSize.x / 4.f - 36.f, _windowSize.y - 36.f, 36.f, 36.f};
+	_allObjects.emplace_back(std::make_shared<BonusTeamFreeze>(rect2, _windowBuffer, _windowSize, _events,
+	                                                           bonusDurationTime, bonusLifetime));
 
 	SpawnPlayerTanks(gridOffset, speed, health, size);
 
@@ -251,6 +267,13 @@ void GameSuccess::KeyReleased(const SDL_Event& event) const
 		case SDLK_p:
 			_events->EmitEvent("Pause_Released");
 			break;
+		case SDLK_b:
+		{
+			int bonusDuration = 5;
+			_events->EmitEvent<const std::string&, const std::string&, int>("BonusTeamFreezeEnable", "PlayerOne",
+			                                                                "EnemyTeam", bonusDuration);
+		}
+		break;
 		default:
 			break;
 	}
@@ -291,24 +314,6 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 	}
 }
 
-bool GameSuccess::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
-{
-	// Check if one rectangle is to the right of the other
-	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
-	{
-		return false;
-	}
-
-	// Check if one rectangle is above the other
-	if (r1.y > r2.y + r2.h || r2.y > r1.y + r1.h)
-	{
-		return false;
-	}
-
-	// If neither of the above conditions are met, the rectangles overlap
-	return true;
-}
-
 void GameSuccess::SpawnPlayerTanks(const float gridOffset, const float speed, const int health, const float size)
 {
 	if (_currentMode == OnePlayer || _currentMode == TwoPlayers || _currentMode == CoopWithAI)
@@ -347,7 +352,7 @@ void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const floa
 		bool isFreeSpawnSpot = true;
 		for (const std::shared_ptr<BaseObj>& object: _allObjects)
 		{
-			if (IsCollideWith(rect, object->GetShape()))
+			if (ColliderCheck::IsCollide(rect, object->GetShape()))
 			{
 				isFreeSpawnSpot = false;
 			}
@@ -373,7 +378,7 @@ void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const 
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, object->GetShape()))
+		if (ColliderCheck::IsCollide(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -398,7 +403,7 @@ void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const 
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, object->GetShape()))
+		if (ColliderCheck::IsCollide(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -423,7 +428,7 @@ void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const in
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, object->GetShape()))
+		if (ColliderCheck::IsCollide(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}
@@ -446,7 +451,7 @@ void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const in
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: _allObjects)
 	{
-		if (IsCollideWith(rect, object->GetShape()))
+		if (ColliderCheck::IsCollide(rect, object->GetShape()))
 		{
 			isFreeSpawnSpot = false;
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseObj.h"
+#include "BonusSystem.h"
 #include "BulletPool.h"
 #include "EventSystem.h"
 #include "GameMode.h"
@@ -39,6 +40,8 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<BulletPool> _bulletPool;
 
+	BonusSystem _bonusSystem;
+
 	std::random_device _rd;
 
 	bool _isGameOver{false};
@@ -62,8 +65,6 @@ class GameSuccess final : public IGame
 	void KeyboardEvents(const SDL_Event& event) const;
 
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
-
-	static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
 
 	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
 	void SpawnPlayer1(float gridOffset, float speed, int health, float size);

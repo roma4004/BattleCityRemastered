@@ -1,4 +1,6 @@
 #include "../headers/MoveLikeTankBeh.h"
+#include "../headers/BonusTeamFreeze.h"
+#include "../headers/ColliderCheck.h"
 #include "../headers/Tank.h"
 
 #include <functional>
@@ -6,24 +8,6 @@
 
 MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _selfParent{selfParent}, _allObjects{allObjects} {}
-
-bool MoveLikeTankBeh::IsCollideWith(const Rectangle& r1, const Rectangle& r2)
-{
-	// Check if one rectangle is to the right of the other
-	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
-	{
-		return false;
-	}
-
-	// Check if one rectangle is above the other
-	if (r1.y > r2.y + r2.h || r2.y > r1.y + r1.h)
-	{
-		return false;
-	}
-
-	// If neither of the above conditions are met, the rectangles overlap
-	return true;
-}
 
 std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
@@ -70,7 +54,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 			continue;
 		}
 
-		if (IsCollideWith(thisNextPosRect, object->GetShape()))
+		if (ColliderCheck::IsCollide(thisNextPosRect, object->GetShape()))
 		{
 			if (!object->GetIsPassable())
 			{
@@ -165,6 +149,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 		}
 		else
 		{
+			// move less than speed to stand next to object
 			const auto getSideDiff = [thisLeftSide = tank->GetX()](const std::shared_ptr<BaseObj>& object) -> float
 			{
 				return thisLeftSide - object->GetRightSide();
@@ -174,6 +159,16 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveX(-std::floor(distance));
+			}
+
+			// bonusPickUp
+			if (const auto objLck = objects.front().lock())
+			{
+				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				{
+					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+					objLck->TakeDamage(1);
+				}
 			}
 		}
 	}
@@ -197,6 +192,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 		}
 		else
 		{
+			// move less than speed to stand next to object
 			auto getSideDiff = [thisRightSide = tank->GetRightSide()](const std::shared_ptr<BaseObj>& object) -> float
 			{
 				return object->GetX() - thisRightSide;
@@ -206,6 +202,16 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveX(std::floor(distance));
+			}
+
+			// bonusPickUp
+			if (const auto objLck = objects.front().lock())
+			{
+				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				{
+					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+					objLck->TakeDamage(1);
+				}
 			}
 		}
 	}
@@ -227,6 +233,7 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 		}
 		else
 		{
+			// move less than speed to stand next to object
 			const auto& getSideDiff = [thisTopSide = tank->GetY()](const std::shared_ptr<BaseObj>& object) -> float
 			{
 				return object->GetBottomSide() - thisTopSide;
@@ -236,6 +243,16 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(-std::floor(distance));
+			}
+
+			// bonusPickUp
+			if (const auto objLck = objects.front().lock())
+			{
+				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				{
+					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+					objLck->TakeDamage(1);
+				}
 			}
 		}
 	}
@@ -258,6 +275,7 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 		}
 		else
 		{
+			// move less than speed to stand next to object
 			const auto getSideDiff =
 					[thisBottomSide = tank->GetBottomSide()](const std::shared_ptr<BaseObj>& object) -> float
 			{
@@ -268,6 +286,16 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(std::floor(distance));
+			}
+
+			// bonusPickUp
+			if (const auto objLck = objects.front().lock())
+			{
+				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				{
+					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+					objLck->TakeDamage(1);
+				}
 			}
 		}
 	}

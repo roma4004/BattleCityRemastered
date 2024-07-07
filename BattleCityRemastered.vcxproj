@@ -132,6 +132,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\Bonus.cpp" />
+    <ClCompile Include="source\BonusHelmet.cpp" />
+    <ClCompile Include="source\BonusTimeFreeze.cpp" />
+    <ClCompile Include="source\BonusSystem.cpp" />
     <ClCompile Include="source\Brick.cpp" />
     <ClCompile Include="source\Bullet.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
@@ -146,6 +150,7 @@
     <ClCompile Include="source\InputProviderForPlayerOne.cpp" />
     <ClCompile Include="source\InputProviderForPlayerTwo.cpp" />
     <ClCompile Include="source\Iron.cpp" />
+    <ClCompile Include="source\LineOfSight.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
@@ -157,11 +162,16 @@
     <ClCompile Include="source\PlayerOne.cpp" />
     <ClCompile Include="source\PlayerTwo.cpp" />
     <ClCompile Include="source\Rectangle.cpp" />
+    <ClCompile Include="source\ColliderCheck.cpp" />
     <ClCompile Include="source\SDLEnvironment.cpp" />
     <ClCompile Include="source\Tank.cpp" />
     <ClCompile Include="source\Water.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\Bonus.h" />
+    <ClInclude Include="headers\BonusHelmet.h" />
+    <ClInclude Include="headers\BonusTeamFreeze.h" />
+    <ClInclude Include="headers\BonusSystem.h" />
     <ClInclude Include="headers\Brick.h" />
     <ClInclude Include="headers\Bullet.h" />
     <ClInclude Include="headers\BulletPool.h" />
@@ -177,7 +187,9 @@
     <ClInclude Include="headers\GameSuccess.h" />
     <ClInclude Include="headers\ConfigFailure.h" />
     <ClInclude Include="headers\ConfigSuccess.h" />
+    <ClInclude Include="headers\Interfaces\IPickUpBonus.h" />
     <ClInclude Include="headers\Iron.h" />
+    <ClInclude Include="headers\LineOfSight.h" />
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
@@ -206,6 +218,7 @@
     <ClInclude Include="headers\PlayerTwo.h" />
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Rectangle.h" />
+    <ClInclude Include="headers\ColliderCheck.h" />
     <ClInclude Include="headers\SDLEnvironment.h" />
     <ClInclude Include="headers\Tank.h" />
     <ClInclude Include="headers\Water.h" />

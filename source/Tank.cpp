@@ -56,6 +56,14 @@ Rectangle Tank::GetBulletStartRect() const
 	return bulletRect;
 }
 
+void Tank::TakeDamage(int damage)
+{
+	if (!_isActiveHelmet)
+	{
+		Pawn::TakeDamage(damage);
+	}
+}
+
 //TODO: extract like shootComponent
 void Tank::Shot() const
 {
@@ -90,7 +98,7 @@ void Tank::SetBulletSpeed(const float bulletSpeed) { _bulletSpeed = bulletSpeed;
 bool Tank::IsReloadFinish() const
 {
 	const auto lastTimeFireSec =
-			std::chrono::duration_cast<std::chrono::seconds>(lastTimeFire.time_since_epoch()).count();
+			std::chrono::duration_cast<std::chrono::seconds>(_lastTimeFire.time_since_epoch()).count();
 	const auto currentSec =
 			std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
 			.count();
@@ -105,6 +113,11 @@ bool Tank::IsReloadFinish() const
 
 void Tank::DrawHealthBar() const
 {
+	if (_isActiveHelmet)
+	{
+		return;
+	}
+
 	const unsigned int width = static_cast<unsigned int>(_windowSize.x);
 	int y = static_cast<int>(GetY() - 10);
 	for (const int maxY = y + 5; y < maxY; ++y)
@@ -123,3 +136,4 @@ void Tank::DrawHealthBar() const
 		}
 	}
 }
+

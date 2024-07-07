@@ -51,12 +51,57 @@ void PlayerTwo::Subscribe()
 
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
-		this->TickUpdate(deltaTime);
+		if (!_isActiveTeamFreeze)
+		{
+			this->TickUpdate(deltaTime);
+		}
 	});
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
 	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+
+	_events->AddListener<const std::string&, const std::string&, int>(
+			"BonusTeamFreezeEnable",
+			_name,
+			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			{
+				if (fraction != _fraction)
+				{
+					this->_isActiveTeamFreeze = true;
+				}
+			});
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusTeamFreezeDisable",
+			_name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				if (fraction == _fraction)
+				{
+					this->_isActiveTeamFreeze = false;
+				}
+			});
+
+	_events->AddListener<const std::string&, const std::string&, int>(
+			"BonusHelmetEnable",
+			_name,
+			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			{
+				if (fraction == _fraction && author == _name)
+				{
+					this->_isActiveHelmet = true;
+				}
+			});
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusHelmetDisable",
+			_name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				if (fraction == _fraction && author == _name)
+				{
+					this->_isActiveHelmet = false;
+				}
+			});
 }
 
 void PlayerTwo::Unsubscribe() const
@@ -71,6 +116,12 @@ void PlayerTwo::Unsubscribe() const
 	_events->RemoveListener("Draw", _name);
 
 	_events->RemoveListener("DrawHealthBar", _name);
+
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTeamFreezeEnable", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusTeamFreezeDisable", _name);
+
+	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetEnable", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetDisable", _name);
 }
 
 void PlayerTwo::TickUpdate(const float deltaTime)
@@ -103,7 +154,7 @@ void PlayerTwo::TickUpdate(const float deltaTime)
 	if (playerKeys.shot && IsReloadFinish())
 	{
 		this->Shot();
-		lastTimeFire = std::chrono::system_clock::now();
+		_lastTimeFire = std::chrono::system_clock::now();
 	}
 }
 

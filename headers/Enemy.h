@@ -8,20 +8,18 @@
 
 class Enemy : public Tank
 {
-	std::mt19937 gen;
-	std::uniform_int_distribution<> distDirection;
-	std::uniform_int_distribution<> distTurnRate;
-	std::chrono::time_point<std::chrono::system_clock> lastTimeTurn;
-	int turnDuration{2};
-	std::unique_ptr<IInputProvider> _inputProvider{nullptr};
+	std::mt19937 _gen;
+	std::uniform_int_distribution<> _distDirection;
+	std::uniform_int_distribution<> _distTurnRate;
+	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn;
+	int _turnDuration{2};
 
 	void Subscribe();
 	void Unsubscribe() const;
 
-	[[nodiscard]] static bool IsCollideWith(const Rectangle& r1, const Rectangle& r2);
-	[[nodiscard]] static bool IsPlayerVisible(const std::vector<std::weak_ptr<BaseObj>>& obstacles);
-
-	void MayShoot(Direction dir);
+	[[nodiscard]] static bool IsPlayer(const std::weak_ptr<BaseObj>& obstacle);
+	[[nodiscard]] static bool IsBonus(const std::weak_ptr<BaseObj>& obstacle);
+	void HandleLineOfSight(Direction dir);
 
 	void TickUpdate(float deltaTime) override;
 	[[nodiscard]] bool IsTurnCooldownFinish() const;

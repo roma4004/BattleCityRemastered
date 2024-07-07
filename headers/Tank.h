@@ -21,7 +21,7 @@ class Tank : public Pawn, public IHealthBar
 protected:
 	double _bulletDamageAreaRadius{12.f};
 
-	std::chrono::time_point<std::chrono::system_clock> lastTimeFire;
+	std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	int fireCooldown{1};
 
@@ -29,6 +29,10 @@ protected:
 
 	std::string _name;
 	std::string _fraction;
+
+	// bonuses
+	bool _isActiveTeamFreeze{false};
+	bool _isActiveHelmet{false};
 
 	void Shot() const;
 
@@ -50,7 +54,13 @@ public:
 	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	     std::shared_ptr<EventSystem> events, std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool,
 	     std::string name, std::string fraction);
-	Rectangle GetBulletStartRect() const;
 
 	~Tank() override = default;
+
+	Rectangle GetBulletStartRect() const;
+
+	[[nodiscard]] std::string GetName() const { return _name; }
+	[[nodiscard]] std::string GetFraction() const { return _fraction; }
+
+	void TakeDamage(int damage) override;
 };

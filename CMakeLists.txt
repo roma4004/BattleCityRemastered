@@ -94,6 +94,10 @@ add_executable(${PROJECT_NAME}
         source/BulletPool.cpp
         source/CoopAI.cpp
         source/Enemy.cpp
+        source/Bonus.cpp
+        source/BonusHelmet.cpp
+        source/BonusTimeFreeze.cpp
+        source/BonusSystem.cpp
         source/Brick.cpp
         source/ConfigFailure.cpp
         source/ConfigSuccess.cpp
@@ -104,6 +108,7 @@ add_executable(${PROJECT_NAME}
         source/InputProviderForPlayerOne.cpp
         source/InputProviderForPlayerTwo.cpp
         source/Iron.cpp
+        source/LineOfSight.cpp
         source/SDLEnvironment.cpp
         source/Tank.cpp
         source/Water.cpp
@@ -113,6 +118,7 @@ add_executable(${PROJECT_NAME}
         source/MoveLikeBulletBeh.cpp
         source/MoveLikeTankBeh.cpp
         source/Rectangle.cpp
+        source/ColliderCheck.cpp
 )
 
 #If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.

@@ -35,6 +35,7 @@ class EventSystem
 	using EventVariant = std::variant<Event<>,
 	                                  Event<const float>,
 	                                  Event<const std::string&, const std::string&>,
+	                                  Event<const std::string&, const std::string&, int>,
 	                                  Event<GameMode>,
 	                                  Event<bool>>;
 
