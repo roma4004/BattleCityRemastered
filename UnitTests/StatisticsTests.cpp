@@ -1,10 +1,10 @@
-#include "MockPlayerOne.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameStatistics.h"
 #include "../headers/InputProviderForPlayerOne.h"
 #include "../headers/InputProviderForPlayerTwo.h"
 #include "../headers/obstacles/Brick.h"
 #include "../headers/pawns/Enemy.h"
+#include "../headers/pawns/PlayerOne.h"
 #include "../headers/pawns/PlayerTwo.h"
 
 #include "gtest/gtest.h"
@@ -180,126 +180,6 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 	}
 
 	EXPECT_TRUE(false);
-}
-
-TEST_F(StatisticsTest, EnemyOneRespawnNeededFlag)
-{
-	EXPECT_EQ(_statistics->IsEnemyOneNeedRespawn(), false);
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy1", "EnemyTeam", _bulletPool);
-	}
-	EXPECT_EQ(_statistics->IsEnemyOneNeedRespawn(), true);
-}
-
-TEST_F(StatisticsTest, EnemyTwoRespawnNeededFlag)
-{
-	EXPECT_EQ(_statistics->IsEnemyTwoNeedRespawn(), false);
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy2", "EnemyTeam", _bulletPool);
-	}
-	EXPECT_EQ(_statistics->IsEnemyTwoNeedRespawn(), true);
-}
-
-TEST_F(StatisticsTest, EnemyThreeRespawnNeededFlag)
-{
-	EXPECT_EQ(_statistics->IsEnemyThreeNeedRespawn(), false);
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy3", "EnemyTeam", _bulletPool);
-	}
-	EXPECT_EQ(_statistics->IsEnemyThreeNeedRespawn(), true);
-}
-
-TEST_F(StatisticsTest, EnemyFourRespawnNeededFlag)
-{
-	EXPECT_EQ(_statistics->IsEnemyFourNeedRespawn(), false);
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy4", "EnemyTeam", _bulletPool);
-	}
-	EXPECT_EQ(_statistics->IsEnemyFourNeedRespawn(), true);
-}
-
-TEST_F(StatisticsTest, PlayerOneDiedRespawnNeededFlag)
-{
-	EXPECT_EQ(_statistics->IsPlayerOneNeedRespawn(), false);
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
-	}
-	EXPECT_EQ(_statistics->IsPlayerOneNeedRespawn(), true);
-}
-
-TEST_F(StatisticsTest, PlayerTwoDiedRespawnNeededFlag)
-{
-	EXPECT_EQ(_statistics->IsPlayerTwoNeedRespawn(), false);
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
-	}
-	EXPECT_EQ(_statistics->IsPlayerTwoNeedRespawn(), true);
-}
-
-TEST_F(StatisticsTest, EnemyDiedRespawnCount)
-{
-	const int respawnResource = _statistics->GetEnemyRespawnResource();
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy1", "EnemyTeam", _bulletPool);
-	}
-	EXPECT_GT(respawnResource, _statistics->GetEnemyRespawnResource());
-}
-
-TEST_F(StatisticsTest, PlayerOneDiedRespawnCount)
-{
-	const int respawnResource = _statistics->GetPlayerOneRespawnResource();
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
-	}
-	EXPECT_GT(respawnResource, _statistics->GetPlayerOneRespawnResource());
-}
-
-TEST_F(StatisticsTest, PlayerTwoDiedRespawnCount)
-{
-	const int respawnResource = _statistics->GetPlayerTwoRespawnResource();
-	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
-	}
-	EXPECT_GT(respawnResource, _statistics->GetPlayerTwoRespawnResource());
 }
 
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)

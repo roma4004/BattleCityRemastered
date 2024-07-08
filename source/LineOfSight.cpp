@@ -27,19 +27,19 @@ LineOfSight::LineOfSight(const Rectangle shape, const UPoint windowSize, const F
 
 		if (!object->GetIsPassable() && !object->GetIsPenetrable())
 		{
-			if (ColliderCheck::IsCollide(checkLOS[UP], object->GetShape()))
+			if (ColliderUtils::IsCollide(checkLOS[UP], object->GetShape()))
 			{
 				upSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (ColliderCheck::IsCollide(checkLOS[LEFT], object->GetShape()))
+			if (ColliderUtils::IsCollide(checkLOS[LEFT], object->GetShape()))
 			{
 				leftSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (ColliderCheck::IsCollide(checkLOS[DOWN], object->GetShape()))
+			if (ColliderUtils::IsCollide(checkLOS[DOWN], object->GetShape()))
 			{
 				downSideObstacles.emplace_back(std::weak_ptr(object));
 			}
-			if (ColliderCheck::IsCollide(checkLOS[RIGHT], object->GetShape()))
+			if (ColliderUtils::IsCollide(checkLOS[RIGHT], object->GetShape()))
 			{
 				rightSideObstacles.emplace_back(std::weak_ptr(object));
 			}

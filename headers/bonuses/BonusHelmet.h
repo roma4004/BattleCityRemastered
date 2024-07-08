@@ -15,7 +15,7 @@ class BonusHelmet : public Bonus
 
 public:
 	BonusHelmet(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	            int durationSec, int lifeTimeSec, int color = 0xff0000);
+	            int durationSec, int lifeTimeSec, int color);
 
 	~BonusHelmet() override;
 

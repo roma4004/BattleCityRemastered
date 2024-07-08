@@ -5,7 +5,7 @@
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/pawns/PlayerOne.h"
-#include "../../headers/utils/ColliderCheck.h"
+#include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>

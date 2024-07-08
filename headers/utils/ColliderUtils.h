@@ -3,7 +3,7 @@
 #include "../Circle.h"
 #include "../Rectangle.h"
 
-class ColliderCheck
+class ColliderUtils
 {
 public:
 	[[nodiscard]] static bool IsCollide(const Rectangle& r1, const Rectangle& r2);

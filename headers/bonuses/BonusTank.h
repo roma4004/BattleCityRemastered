@@ -8,16 +8,16 @@
 #include <chrono>
 #include <memory>
 
-class BonusTimer : public Bonus
+class BonusTank : public Bonus
 {
 	void Subscribe();
 	void Unsubscribe() const;
 
 public:
-	BonusTimer(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	BonusTank(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	                int durationSec, int lifeTimeSec, int color);
 
-	~BonusTimer() override;
+	~BonusTank() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

@@ -11,10 +11,6 @@ class GameStatistics
 	std::shared_ptr<EventSystem> _events;
 
 	// TODO: use std::atomic when multithreading is used
-	int _enemyRespawnResource{20};
-	int _playerOneRespawnResource{3};
-	int _playerTwoRespawnResource{3};
-
 	int _bulletHitByEnemy{0};
 	int _bulletHitByPlayerOne{0};
 	int _bulletHitByPlayerTwo{0};
@@ -41,15 +37,6 @@ class GameStatistics
 	int _brickDiedByPlayerOne{0};
 	int _brickDiedByPlayerTwo{0};
 
-	bool _enemyOneNeedRespawn{false};
-	bool _enemyTwoNeedRespawn{false};
-	bool _enemyThreeNeedRespawn{false};
-	bool _enemyFourNeedRespawn{false};
-	bool _playerOneNeedRespawn{false};
-	bool _playerTwoNeedRespawn{false};
-	bool _coopOneAINeedRespawn{false};
-	bool _coopTwoAINeedRespawn{false};
-
 public:
 	GameStatistics(std::shared_ptr<EventSystem> events);
 
@@ -68,18 +55,6 @@ public:
 	void BrickDied(const std::string& author, const std::string& fraction);
 
 	void Reset();
-
-	[[nodiscard]] int GetEnemyRespawnResource() const { return _enemyRespawnResource; }
-	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _playerOneRespawnResource; }
-	[[nodiscard]] int GetPlayerTwoRespawnResource() const { return _playerTwoRespawnResource; }
-	[[nodiscard]] bool IsEnemyOneNeedRespawn() const { return _enemyOneNeedRespawn; }
-	[[nodiscard]] bool IsEnemyTwoNeedRespawn() const { return _enemyTwoNeedRespawn; }
-	[[nodiscard]] bool IsEnemyThreeNeedRespawn() const { return _enemyThreeNeedRespawn; }
-	[[nodiscard]] bool IsEnemyFourNeedRespawn() const { return _enemyFourNeedRespawn; }
-	[[nodiscard]] bool IsPlayerOneNeedRespawn() const { return _playerOneNeedRespawn; }
-	[[nodiscard]] bool IsPlayerTwoNeedRespawn() const { return _playerTwoNeedRespawn; }
-	[[nodiscard]] bool IsCoopOneAINeedRespawn() const { return _coopOneAINeedRespawn; }
-	[[nodiscard]] bool IsCoopTwoAINeedRespawn() const { return _coopTwoAINeedRespawn; }
 
 	[[nodiscard]] int GetBulletHitByEnemy() const { return _bulletHitByEnemy; }
 	[[nodiscard]] int GetBulletHitByPlayerOne() const { return _bulletHitByPlayerOne; }

@@ -56,10 +56,12 @@
     <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
     <ClCompile Include="..\source\Rectangle.cpp" />
-    <ClCompile Include="..\source\Utils\ColliderCheck.cpp" />
+    <ClCompile Include="..\source\TankSpawner.cpp" />
+    <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
+    <ClCompile Include="RespawnTankTests.cpp" />
     <ClCompile Include="StatisticsTests.cpp" />
   </ItemGroup>
   <ItemGroup>

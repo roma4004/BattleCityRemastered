@@ -9,6 +9,7 @@
 #include "Menu.h"
 #include "MouseButton.h"
 #include "Point.h"
+#include "TankSpawner.h"
 #include "bonuses/BonusSystem.h"
 #include "interfaces/IGame.h"
 
@@ -22,6 +23,7 @@ class GameSuccess final : public IGame
 	GameMode _currentMode{Demo};
 	std::shared_ptr<GameStatistics> _statistics;
 	Menu _menu;
+	TankSpawner _tankSpawner;
 	std::string _name = "Game";
 
 	int* _windowBuffer{nullptr};
@@ -50,8 +52,6 @@ class GameSuccess final : public IGame
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
-	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
 	void ResetBattlefield();
 	void SetGameMode(GameMode gameMode);
 	void PrevGameMode();
@@ -65,13 +65,6 @@ class GameSuccess final : public IGame
 	void KeyboardEvents(const SDL_Event& event) const;
 
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
-
-	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
-	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
-	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
-	void SpawnCoop1(float gridOffset, float speed, int health, float size);
-	void SpawnCoop2(float gridOffset, float speed, int health, float size);
-	void RespawnTanks();
 
 	void EventHandling();
 	void DisposeDeadObject();

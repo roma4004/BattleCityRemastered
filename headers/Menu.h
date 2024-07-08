@@ -23,6 +23,9 @@ class Menu
 	TTF_Font* _menuFont{nullptr};
 
 	std::shared_ptr<GameStatistics> _statistics;
+	int _enemyRespawnResource;
+	int _playerOneRespawnResource;
+	int _playerTwoRespawnResource;
 
 	void Subscribe();
 	void Unsubscribe() const;

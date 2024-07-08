@@ -1,7 +1,7 @@
 #include "../headers/MoveLikeTankBeh.h"
 #include "../headers/interfaces/IPickupableBonus.h"
 #include "../headers/pawns/Tank.h"
-#include "../headers/utils/ColliderCheck.h"
+#include "../headers/utils/ColliderUtils.h"
 
 #include <functional>
 #include <memory>
@@ -54,7 +54,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 			continue;
 		}
 
-		if (ColliderCheck::IsCollide(thisNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetShape()))
 		{
 			if (!object->GetIsPassable())
 			{

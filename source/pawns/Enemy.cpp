@@ -6,7 +6,7 @@
 #include "../../headers/pawns/CoopAI.h"
 #include "../../headers/pawns/PlayerOne.h"
 #include "../../headers/pawns/PlayerTwo.h"
-#include "../../headers/utils/ColliderCheck.h"
+#include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>

@@ -44,6 +44,19 @@ void Menu::Subscribe()
 			this->HandleMenuText(_renderer, _pos);
 		}
 	});
+
+	_events->AddListener<const int>("EnemyRespawnResourceChangedTo", _name, [this](const int enemyRespawnResource)
+	{
+		this->_enemyRespawnResource = enemyRespawnResource;
+	});
+	_events->AddListener<const int>("PlayerOneRespawnResourceChangedTo", _name, [this](const int playerOneRespawnResource)
+	{
+		this->_playerOneRespawnResource = playerOneRespawnResource;
+	});
+	_events->AddListener<const int>("PlayerTwoRespawnResourceChangedTo", _name, [this](const int playerTwoRespawnResource)
+	{
+		this->_playerTwoRespawnResource = playerTwoRespawnResource;
+	});
 }
 
 void Menu::Unsubscribe() const
@@ -56,6 +69,10 @@ void Menu::Unsubscribe() const
 	_events->RemoveListener("DrawMenuBackground", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("DrawMenuText", _name);
+
+	_events->RemoveListener<const int>("EnemyRespawnResourceChangedTo", _name);
+	_events->RemoveListener<const int>("PlayerOneRespawnResourceChangedTo", _name);
+	_events->RemoveListener<const int>("PlayerTwoRespawnResourceChangedTo", _name);
 }
 
 void Menu::Update() const
@@ -138,9 +155,9 @@ void Menu::RenderStatistics(SDL_Renderer* renderer, const Point pos) const
 	TextToRender(renderer, {pos.x - 60, pos.y + 100}, color, "GAME STATISTICS");
 	TextToRender(renderer, {pos.x + 130, pos.y + 140}, color, "P1     P2     ENEMY");
 	TextToRender(renderer, {pos.x - 130, pos.y + 160}, color, "RESPAWN REMAIN");
-	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _statistics->GetPlayerOneRespawnResource());
-	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _statistics->GetPlayerTwoRespawnResource());
-	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _statistics->GetEnemyRespawnResource());
+	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _playerOneRespawnResource);
+	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _playerTwoRespawnResource);
+	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _enemyRespawnResource);
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 180}, color, "BULLET HIT BY BULLET");
 	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());

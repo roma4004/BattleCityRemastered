@@ -1,13 +1,7 @@
 #include "../headers/GameSuccess.h"
-#include "../headers/InputProviderForPlayerOne.h"
-#include "../headers/InputProviderForPlayerTwo.h"
 #include "../headers/Map.h"
 #include "../headers/Menu.h"
 #include "../headers/pawns/CoopAI.h"
-#include "../headers/pawns/Enemy.h"
-#include "../headers/pawns/PlayerOne.h"
-#include "../headers/pawns/PlayerTwo.h"
-#include "../headers/utils/ColliderCheck.h"
 
 #include <algorithm>
 #include <iostream>
@@ -20,6 +14,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	: _windowSize{windowSize},
 	  _statistics{statistics},
 	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
+	  _tankSpawner{windowSize, windowBuffer, &_allObjects, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},
@@ -48,11 +43,10 @@ void GameSuccess::Subscribe()
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
-	_events->AddListener<bool>("Pause_Status", _name, [this](const bool newPauseStatus)
+	_events->AddListener<const bool>("Pause_Status", _name, [this](const bool newPauseStatus)
 	{
 		this->_isPause = newPauseStatus;
 	});
-
 }
 
 void GameSuccess::Unsubscribe() const
@@ -65,15 +59,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("PreviousGameMode", _name);
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
-	_events->RemoveListener<bool>("Pause_Status", _name);
-}
-
-void GameSuccess::SpawnEnemyTanks(const float gridOffset, const float speed, const int health, const float size)
-{
-	SpawnEnemy(1, gridOffset, speed, health, size);
-	SpawnEnemy(2, gridOffset, speed, health, size);
-	SpawnEnemy(3, gridOffset, speed, health, size);
-	SpawnEnemy(4, gridOffset, speed, health, size);
+	_events->RemoveListener<const bool>("Pause_Status", _name);
 }
 
 void GameSuccess::ResetBattlefield()
@@ -82,19 +68,12 @@ void GameSuccess::ResetBattlefield()
 	_allObjects.reserve(1000);
 
 	_statistics->Reset();
-
-	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	constexpr float speed = 142;
-	constexpr int health = 100;
-	const float size = gridOffset * 3;
-
-	SpawnPlayerTanks(gridOffset, speed, health, size);
-
-	SpawnEnemyTanks(gridOffset, speed, health, size);
+	_events->EmitEvent("InitialSpawn");
 
 	//Map creation
 	//Map::ObstacleCreation<Brick>(&env, 30,30);
 	//Map::ObstacleCreation<Iron>(&env, 310,310);
+	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
 	const Map field{};
 	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
 }
@@ -297,207 +276,6 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 	}
 }
 
-void GameSuccess::SpawnPlayerTanks(const float gridOffset, const float speed, const int health, const float size)
-{
-	if (_currentMode == OnePlayer || _currentMode == TwoPlayers || _currentMode == CoopWithAI)
-	{
-		SpawnPlayer1(gridOffset, speed, health, size);
-	}
-
-	if (_currentMode == TwoPlayers)
-	{
-		SpawnPlayer2(gridOffset, speed, health, size);
-	}
-
-	if (_currentMode == Demo)
-	{
-		SpawnCoop1(gridOffset, speed, health, size);
-		SpawnCoop2(gridOffset, speed, health, size);
-	}
-
-	if (_currentMode == CoopWithAI)
-	{
-		SpawnCoop2(gridOffset, speed, health, size);
-	}
-}
-
-void GameSuccess::SpawnEnemy(const int index, const float gridOffset, const float speed, const int health,
-                             const float size)
-{
-	std::vector<Rectangle> spawnPos{
-			{gridOffset * 16.f - size * 2.f, 0, size, size},
-			{gridOffset * 32.f - size * 2.f, 0, size, size},
-			{gridOffset * 16.f + size * 2.f, 0, size, size},
-			{gridOffset * 32.f + size * 2.f, 0, size, size}
-	};
-	for (auto& rect: spawnPos)
-	{
-		bool isFreeSpawnSpot = true;
-		for (const std::shared_ptr<BaseObj>& object: _allObjects)
-		{
-			if (ColliderCheck::IsCollide(rect, object->GetShape()))
-			{
-				isFreeSpawnSpot = false;
-			}
-		}
-
-		if (isFreeSpawnSpot)
-		{
-			constexpr int gray = 0x808080;
-			std::string name = "Enemy" + std::to_string(index);
-			std::string fraction = "EnemyTeam";
-			_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, health, _windowBuffer, _windowSize, DOWN,
-			                                                 speed, &_allObjects, _events, name, fraction,
-			                                                 _bulletPool));
-			return;
-		}
-	}
-}
-
-void GameSuccess::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size)
-{
-	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: _allObjects)
-	{
-		if (ColliderCheck::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
-
-	if (isFreeSpawnSpot)
-	{
-		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		_allObjects.emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
-		                                                     speed, &_allObjects, _events, name, fraction,
-		                                                     inputProvider, _bulletPool));
-	}
-}
-
-void GameSuccess::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size)
-{
-	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: _allObjects)
-	{
-		if (ColliderCheck::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
-
-	if (isFreeSpawnSpot)
-	{
-		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
-		_allObjects.emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
-		                                                     &_allObjects, _events, name, fraction, inputProvider,
-		                                                     _bulletPool));
-	}
-}
-
-void GameSuccess::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
-{
-	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: _allObjects)
-	{
-		if (ColliderCheck::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
-
-	if (isFreeSpawnSpot)
-	{
-		constexpr int yellow = 0xeaea00;
-		std::string name = "CoopOneAI";
-		std::string fraction = "PlayerTeam";
-		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, yellow, health, _windowBuffer, _windowSize, UP, speed,
-		                                                  &_allObjects, _events, name, fraction, _bulletPool));
-	}
-}
-
-void GameSuccess::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
-{
-	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: _allObjects)
-	{
-		if (ColliderCheck::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
-
-	if (isFreeSpawnSpot)
-	{
-		constexpr int green = 0x408000;
-		std::string name = "CoopTwoAI";
-		std::string fraction = "PlayerTeam";
-		_allObjects.emplace_back(std::make_shared<CoopAI>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
-		                                                  &_allObjects, _events, name, fraction, _bulletPool));
-	}
-}
-
-void GameSuccess::RespawnTanks()
-{
-	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	const float size = gridOffset * 3;
-	constexpr float speed = 142;
-	constexpr int health = 100;
-
-	if (_statistics->IsEnemyOneNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
-	{
-		SpawnEnemy(1, gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsEnemyTwoNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
-	{
-		SpawnEnemy(2, gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsEnemyThreeNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
-	{
-		SpawnEnemy(3, gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsEnemyFourNeedRespawn() && _statistics->GetEnemyRespawnResource() > 0)
-	{
-		SpawnEnemy(4, gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsPlayerOneNeedRespawn() && _statistics->GetPlayerOneRespawnResource() > 0)
-	{
-		SpawnPlayer1(gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsPlayerTwoNeedRespawn() && _statistics->GetPlayerTwoRespawnResource() > 0)
-	{
-		SpawnPlayer2(gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsCoopOneAINeedRespawn() && _statistics->GetPlayerOneRespawnResource() > 0)
-	{
-		SpawnCoop1(gridOffset, speed, health, size);
-	}
-
-	if (_statistics->IsCoopTwoAINeedRespawn() && _statistics->GetPlayerTwoRespawnResource() > 0)
-	{
-		SpawnCoop2(gridOffset, speed, health, size);
-	}
-}
-
 void GameSuccess::EventHandling()
 {
 	// event handling
@@ -566,7 +344,7 @@ void GameSuccess::MainLoop()
 
 		DisposeDeadObject();
 
-		RespawnTanks();
+		_events->EmitEvent("RespawnTanks");
 
 		_events->EmitEvent("Draw");
 

@@ -2,7 +2,7 @@
 #include "../headers/Circle.h"
 #include "../headers/Direction.h"
 #include "../headers/pawns/Bullet.h"
-#include "../headers/utils/ColliderCheck.h"
+#include "../headers/utils/ColliderUtils.h"
 
 #include <memory>
 
@@ -58,7 +58,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 			continue;
 		}
 
-		if (ColliderCheck::IsCollide(bulletNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(bulletNextPosRect, object->GetShape()))
 		{
 			if (!object->GetIsPenetrable())
 			{
@@ -193,7 +193,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 			continue;
 		}
 
-		if (ColliderCheck::IsCollide(circle, object->GetShape()))
+		if (ColliderUtils::IsCollide(circle, object->GetShape()))
 		{
 			aoeList.emplace_back(std::weak_ptr(object));
 		}

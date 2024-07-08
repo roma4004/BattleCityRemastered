@@ -89,6 +89,7 @@ add_executable(${PROJECT_NAME}
         source/bonuses/BonusGrenade.cpp
         source/bonuses/BonusHelmet.cpp
         source/bonuses/BonusSystem.cpp
+        source/bonuses/BonusTank.cpp
         source/bonuses/BonusTimer.cpp
         source/BulletPool.cpp
         source/GameFailure.cpp
@@ -119,7 +120,8 @@ add_executable(${PROJECT_NAME}
         source/pawns/Tank.cpp
         source/Rectangle.cpp
         source/SDLEnvironment.cpp
-        source/utils/ColliderCheck.cpp
+        source/TankSpawner.cpp
+        source/utils/ColliderUtils.cpp
         source/utils/TimeUtils.cpp
 )
 

@@ -136,6 +136,7 @@
     <ClCompile Include="source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="source\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
     <ClCompile Include="source\GameFailure.cpp" />
@@ -166,7 +167,8 @@
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\Rectangle.cpp" />
     <ClCompile Include="source\SDLEnvironment.cpp" />
-    <ClCompile Include="source\utils\ColliderCheck.cpp" />
+    <ClCompile Include="source\TankSpawner.cpp" />
+    <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +176,7 @@
     <ClInclude Include="headers\bonuses\BonusGrenade.h" />
     <ClInclude Include="headers\bonuses\BonusHelmet.h" />
     <ClInclude Include="headers\bonuses\BonusSystem.h" />
+    <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\BaseObj.h" />
@@ -220,7 +223,8 @@
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Rectangle.h" />
     <ClInclude Include="headers\SDLEnvironment.h" />
-    <ClInclude Include="headers\utils\ColliderCheck.h" />
+    <ClInclude Include="headers\TankSpawner.h" />
+    <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
   </ItemGroup>

@@ -19,58 +19,6 @@ void GameStatistics::Subscribe()
 		return;
 	}
 
-	_events->AddListener("Enemy1_Died", _name, [this]() { _enemyOneNeedRespawn = true; });
-	_events->AddListener("Enemy2_Died", _name, [this]() { _enemyTwoNeedRespawn = true; });
-	_events->AddListener("Enemy3_Died", _name, [this]() { _enemyThreeNeedRespawn = true; });
-	_events->AddListener("Enemy4_Died", _name, [this]() { _enemyFourNeedRespawn = true; });
-
-	_events->AddListener("PlayerOne_Died", _name, [this]() { _playerOneNeedRespawn = true; });
-	_events->AddListener("PlayerTwo_Died", _name, [this]() { _playerTwoNeedRespawn = true; });
-	_events->AddListener("CoopOneAI_Died", _name, [this]() { _coopOneAINeedRespawn = true; });
-	_events->AddListener("CoopTwoAI_Died", _name, [this]() { _coopTwoAINeedRespawn = true; });
-
-	_events->AddListener("PlayerOne_Spawn", _name, [this]()
-	{
-		_playerOneNeedRespawn = false;
-		--_playerOneRespawnResource;
-	});
-	_events->AddListener("PlayerTwo_Spawn", _name, [this]()
-	{
-		_playerTwoNeedRespawn = false;
-		--_playerTwoRespawnResource;
-	});
-	_events->AddListener("CoopOneAI_Spawn", _name, [this]()
-	{
-		_coopOneAINeedRespawn = false;
-		--_playerOneRespawnResource;
-	});
-	_events->AddListener("CoopTwoAI_Spawn", _name, [this]()
-	{
-		_coopTwoAINeedRespawn = false;
-		--_playerTwoRespawnResource;
-	});
-
-	_events->AddListener("Enemy1_Spawn", _name, [this]()
-	{
-		_enemyOneNeedRespawn = false;
-		--_enemyRespawnResource;
-	});
-	_events->AddListener("Enemy2_Spawn", _name, [this]()
-	{
-		_enemyTwoNeedRespawn = false;
-		--_enemyRespawnResource;
-	});
-	_events->AddListener("Enemy3_Spawn", _name, [this]()
-	{
-		_enemyThreeNeedRespawn = false;
-		--_enemyRespawnResource;
-	});
-	_events->AddListener("Enemy4_Spawn", _name, [this]()
-	{
-		_enemyFourNeedRespawn = false;
-		--_enemyRespawnResource;
-	});
-
 	//TODO: replace <std::string> with <Enum::statisticsType>
 	_events->AddListener<const std::string&, const std::string&>(
 			"BulletHit",
@@ -135,26 +83,6 @@ void GameStatistics::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener("Enemy1_Died", _name);
-	_events->RemoveListener("Enemy2_Died", _name);
-	_events->RemoveListener("Enemy3_Died", _name);
-	_events->RemoveListener("Enemy4_Died", _name);
-
-	_events->RemoveListener("PlayerOne_Died", _name);
-	_events->RemoveListener("PlayerTwo_Died", _name);
-	_events->RemoveListener("CoopOneAI_Died", _name);
-	_events->RemoveListener("CoopTwoAI_Died", _name);
-
-	_events->RemoveListener("PlayerOne_Spawn", _name);
-	_events->RemoveListener("PlayerTwo_Spawn", _name);
-	_events->RemoveListener("CoopOneAI_Spawn", _name);
-	_events->RemoveListener("CoopTwoAI_Spawn", _name);
-
-	_events->RemoveListener("Enemy1_Spawn", _name);
-	_events->RemoveListener("Enemy2_Spawn", _name);
-	_events->RemoveListener("Enemy3_Spawn", _name);
-	_events->RemoveListener("Enemy4_Spawn", _name);
-
 	_events->RemoveListener<const std::string&, const std::string&>("BulletHit", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&>("EnemyHit", _name);
@@ -179,10 +107,7 @@ void GameStatistics::BulletHit(const std::string& author, const std::string& fra
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_bulletHitByEnemy;
-		}
+		++_bulletHitByEnemy;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -201,10 +126,7 @@ void GameStatistics::EnemyHit(const std::string& author, const std::string& frac
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_enemyHitByFriendlyFire;
-		}
+		++_enemyHitByFriendlyFire;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -223,10 +145,7 @@ void GameStatistics::PlayerOneHit(const std::string& author, const std::string& 
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_playerOneHitByEnemyTeam;
-		}
+		++_playerOneHitByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -241,10 +160,7 @@ void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& 
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_playerTwoHitByEnemyTeam;
-		}
+		++_playerTwoHitByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -259,10 +175,7 @@ void GameStatistics::EnemyDied(const std::string& author, const std::string& fra
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_enemyDiedByFriendlyFire;
-		}
+		++_enemyDiedByFriendlyFire;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -281,10 +194,7 @@ void GameStatistics::PlayerOneDied(const std::string& author, const std::string&
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_playerDiedByEnemyTeam;
-		}
+		++_playerDiedByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -299,10 +209,7 @@ void GameStatistics::PlayerTwoDied(const std::string& author, const std::string&
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_playerDiedByEnemyTeam;
-		}
+		++_playerDiedByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -317,10 +224,7 @@ void GameStatistics::BrickDied(const std::string& author, const std::string& fra
 {
 	if (fraction == "EnemyTeam")
 	{
-		if (author.compare(0, 4, "Enemy"))
-		{
-			++_brickDiedByEnemyTeam;
-		}
+		++_brickDiedByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
@@ -337,20 +241,6 @@ void GameStatistics::BrickDied(const std::string& author, const std::string& fra
 
 void GameStatistics::Reset()
 {
-	_enemyRespawnResource = 20;
-	_playerOneRespawnResource = 3;
-	_playerTwoRespawnResource = 3;
-
-	_enemyOneNeedRespawn = false;
-	_enemyTwoNeedRespawn = false;
-	_enemyThreeNeedRespawn = false;
-	_enemyFourNeedRespawn = false;
-
-	_playerOneNeedRespawn = false;
-	_playerTwoNeedRespawn = false;
-	_coopOneAINeedRespawn = false;
-	_coopTwoAINeedRespawn = false;
-
 	_bulletHitByEnemy = 0;
 	_bulletHitByPlayerOne = 0;
 	_bulletHitByPlayerTwo = 0;
