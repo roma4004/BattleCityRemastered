@@ -156,7 +156,7 @@ void PlayerOne::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (playerKeys.shot && IsReloadFinish())
+	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, fireCooldown))
 	{
 		this->Shot();
 		_lastTimeFire = std::chrono::system_clock::now();

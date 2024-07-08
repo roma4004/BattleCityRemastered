@@ -148,7 +148,8 @@ bool CoopAI::IsEnemy(const std::weak_ptr<BaseObj>& obstacle)
 
 bool CoopAI::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 {
-	if (std::shared_ptr<BaseObj> isBonusSeen = obstacle.lock(); dynamic_cast<IPickupableBonus*>(isBonusSeen.get()))
+	if (const std::shared_ptr<BaseObj> isBonusSeen = obstacle.lock();
+		dynamic_cast<IPickupableBonus*>(isBonusSeen.get()))
 	{
 		return true;
 	}
@@ -268,8 +269,8 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 	}
 
 	if (nearestObstacle
-		&& nearestObstacle.get()
-		&& nearestObstacle->GetIsDestructible()
+	    && nearestObstacle.get()
+	    && nearestObstacle->GetIsDestructible()
 	    && !dynamic_cast<PlayerOne*>(nearestObstacle.get())
 	    && !dynamic_cast<CoopAI*>(nearestObstacle.get()))
 	{
@@ -303,7 +304,7 @@ void CoopAI::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (IsReloadFinish())
+	if (TimeUtils::IsCooldownFinish(_lastTimeFire, fireCooldown))
 	{
 		HandleLineOfSight(GetDirection());
 		_lastTimeFire = std::chrono::system_clock::now();

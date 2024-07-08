@@ -139,7 +139,7 @@ void Enemy::Unsubscribe() const
 
 bool Enemy::IsPlayer(const std::weak_ptr<BaseObj>& obstacle)
 {
-	if (std::shared_ptr<BaseObj> isPlayerTeamSeen = obstacle.lock();
+	if (const std::shared_ptr<BaseObj> isPlayerTeamSeen = obstacle.lock();
 		dynamic_cast<PlayerOne*>(isPlayerTeamSeen.get())
 		|| dynamic_cast<PlayerTwo*>(isPlayerTeamSeen.get())
 		|| dynamic_cast<CoopAI*>(isPlayerTeamSeen.get()))
@@ -152,7 +152,8 @@ bool Enemy::IsPlayer(const std::weak_ptr<BaseObj>& obstacle)
 
 bool Enemy::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 {
-	if (const std::shared_ptr<BaseObj> isBonusSeen = obstacle.lock(); dynamic_cast<IPickupableBonus*>(isBonusSeen.get()))
+	if (const std::shared_ptr<BaseObj> isBonusSeen = obstacle.lock();
+		dynamic_cast<IPickupableBonus*>(isBonusSeen.get()))
 	{
 		return true;
 	}
@@ -304,7 +305,7 @@ void Enemy::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (IsReloadFinish())
+	if (TimeUtils::IsCooldownFinish(_lastTimeFire, fireCooldown))
 	{
 		HandleLineOfSight(GetDirection());
 		_lastTimeFire = std::chrono::system_clock::now();

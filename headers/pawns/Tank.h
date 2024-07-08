@@ -31,7 +31,8 @@ protected:
 	std::string _fraction;
 
 	// bonuses
-	bool _isActiveTimer{false}; //TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating
+	bool _isActiveTimer{false};
+	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating
 	std::chrono::system_clock::time_point _activateTimeTimer;
 	int _cooldownTimer{0};
 
@@ -49,8 +50,6 @@ protected:
 
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
-
-	[[nodiscard]] bool IsReloadFinish() const;
 
 	void DrawHealthBar() const override;
 

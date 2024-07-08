@@ -17,11 +17,11 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 		return std::list<std::weak_ptr<BaseObj>>();
 	}
 
-	float speed = tank->GetSpeed();
+	const float speed = tank->GetSpeed();
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
 
-	if (Direction direction = tank->GetDirection();
+	if (const Direction direction = tank->GetDirection();
 		direction == UP)
 	{
 		//36 37 initialize in  if
@@ -66,10 +66,10 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 	return obstacles;
 }
 
-inline float Distance(const FPoint a, const FPoint b)
-{
-	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
-}
+// inline float Distance(const FPoint a, const FPoint b)
+// {
+// 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
+// }
 
 float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const

@@ -17,7 +17,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 		return std::list<std::weak_ptr<BaseObj>>();
 	}
 
-	float speed = tank->GetSpeed();
+	const float speed = tank->GetSpeed();
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
 
@@ -80,7 +80,7 @@ float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& ob
 		return 0.f;
 	}
 
-	UPoint windowSize = tank->GetWindowSize();
+	const UPoint windowSize = tank->GetWindowSize();
 	float minDist = static_cast<float>(windowSize.x * windowSize.y);
 	// float nearestDist = 0;
 	for (const auto& object: objects)

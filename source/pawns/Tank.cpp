@@ -15,6 +15,7 @@ Tank::Tank(const Rectangle& rect, const int color, const int health, int* window
 	       allObjects,
 	       std::move(events),
 	       std::move(moveBeh)},
+	  _lastTimeFire{std::chrono::system_clock::now()},
 	  _bulletPool{std::move(bulletPool)},
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)} {}
@@ -95,22 +96,6 @@ float Tank::GetBulletSpeed() const { return _bulletSpeed; }
 
 void Tank::SetBulletSpeed(const float bulletSpeed) { _bulletSpeed = bulletSpeed; }
 
-bool Tank::IsReloadFinish() const
-{
-	const auto lastTimeFireSec =
-			std::chrono::duration_cast<std::chrono::seconds>(_lastTimeFire.time_since_epoch()).count();
-	const auto currentSec =
-			std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
-			.count();
-
-	if (currentSec - lastTimeFireSec >= fireCooldown)
-	{
-		return true;
-	}
-
-	return false;
-}
-
 void Tank::DrawHealthBar() const
 {
 	if (_isActiveHelmet)
@@ -125,7 +110,7 @@ void Tank::DrawHealthBar() const
 		int x = static_cast<int>(GetX() + 2);
 		for (const int maxX = x + GetHealth() / 3; x < maxX; ++x)
 		{
-			unsigned int tankColor = GetColor();
+			const unsigned int tankColor = GetColor();
 			if (x < _windowSize.x && y < _windowSize.y)
 			{
 				int& targetColor = _windowBuffer[y * width + x];

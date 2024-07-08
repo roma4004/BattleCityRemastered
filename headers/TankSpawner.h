@@ -61,7 +61,6 @@ class TankSpawner final
 	void DecreasePlayerOneRespawnResource();
 	void DecreasePlayerTwoRespawnResource();
 
-
 public:
 	TankSpawner(UPoint windowSize, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	            const std::shared_ptr<EventSystem>& events);

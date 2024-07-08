@@ -15,7 +15,7 @@ class BonusTank : public Bonus
 
 public:
 	BonusTank(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	                int durationSec, int lifeTimeSec, int color);
+	          int durationSec, int lifeTimeSec, int color);
 
 	~BonusTank() override;
 

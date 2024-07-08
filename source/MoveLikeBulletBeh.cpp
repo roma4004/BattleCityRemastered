@@ -20,7 +20,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 		return std::list<std::weak_ptr<BaseObj>>();
 	}
 
-	float speed = bullet->GetSpeed();
+	const float speed = bullet->GetSpeed();
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
 

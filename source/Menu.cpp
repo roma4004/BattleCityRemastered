@@ -49,14 +49,20 @@ void Menu::Subscribe()
 	{
 		this->_enemyRespawnResource = enemyRespawnResource;
 	});
-	_events->AddListener<const int>("PlayerOneRespawnResourceChangedTo", _name, [this](const int playerOneRespawnResource)
-	{
-		this->_playerOneRespawnResource = playerOneRespawnResource;
-	});
-	_events->AddListener<const int>("PlayerTwoRespawnResourceChangedTo", _name, [this](const int playerTwoRespawnResource)
-	{
-		this->_playerTwoRespawnResource = playerTwoRespawnResource;
-	});
+	_events->AddListener<const int>(
+			"PlayerOneRespawnResourceChangedTo",
+			_name,
+			[this](const int playerOneRespawnResource)
+			{
+				this->_playerOneRespawnResource = playerOneRespawnResource;
+			});
+	_events->AddListener<const int>(
+			"PlayerTwoRespawnResourceChangedTo",
+			_name,
+			[this](const int playerTwoRespawnResource)
+			{
+				this->_playerTwoRespawnResource = playerTwoRespawnResource;
+			});
 }
 
 void Menu::Unsubscribe() const
@@ -100,8 +106,7 @@ void Menu::Update() const
 // blend menu panel and menu texture background
 void Menu::BlendBackgroundToWindowBuffer()
 {
-	const auto menuKeysStats = GetKeysStats();
-	if (!menuKeysStats.menuShow)
+	if (const auto menuKeysStats = GetKeysStats(); !menuKeysStats.menuShow)
 	{
 		return;
 	}
@@ -117,7 +122,8 @@ void Menu::BlendBackgroundToWindowBuffer()
 			{
 				constexpr unsigned int menuColor = 0xFF808080;
 				int& targetColor = _windowBuffer[_pos.y * sizeX + _pos.x];
-				unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(static_cast<unsigned int>(targetColor), 91);
+				const unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(
+						static_cast<unsigned int>(targetColor), 91);
 				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColorLessAlpha, menuColor));
 			}
 		}
@@ -135,8 +141,7 @@ void Menu::TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Colo
 	TextToRender(renderer, pos, color, std::to_string(value));
 }
 
-void Menu::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color,
-                        const std::string& text) const
+void Menu::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color, const std::string& text) const
 {
 	SDL_Surface* surface = TTF_RenderText_Solid(_menuFont, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
