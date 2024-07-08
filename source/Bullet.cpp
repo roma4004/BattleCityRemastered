@@ -71,7 +71,7 @@ void Bullet::Enable()
 	Subscribe();
 }
 
-void Bullet::Reset(const Rectangle& rect, int damage, double aoeRadius, const int color, const float speed,
+void Bullet::Reset(const Rectangle& rect, const int damage, const double aoeRadius, const int color, const float speed,
                    const Direction direction, const int health, std::string author, std::string fraction)
 {
 	SetShape(rect);

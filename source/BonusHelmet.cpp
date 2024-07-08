@@ -48,7 +48,6 @@ void BonusHelmet::SendDamageStatistics(const std::string& author, const std::str
 
 void BonusHelmet::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, int>("BonusHelmetEnable", author, fraction,
-	                                                                _bonusDurationSec);
+	_events->EmitEvent<const std::string&, const std::string&, int>("BonusHelmet", author, fraction, _bonusDurationSec);
 	SetIsAlive(false);
 }

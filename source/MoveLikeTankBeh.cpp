@@ -1,7 +1,7 @@
 #include "../headers/MoveLikeTankBeh.h"
 #include "../headers/ColliderCheck.h"
 #include "../headers/Tank.h"
-#include "../headers/Interfaces/IPickUpBonus.h"
+#include "../headers/Interfaces/IPickupableBonus.h"
 
 #include <functional>
 #include <memory>
@@ -106,7 +106,7 @@ float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& 
 	// return distance;
 }
 
-void MoveLikeTankBeh::Move(float deltaTime) const
+void MoveLikeTankBeh::Move(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -164,7 +164,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 			// bonusPickUp
 			if (const auto objLck = objects.front().lock())
 			{
-				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
 					objLck->TakeDamage(1);
@@ -207,7 +207,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 			// bonusPickUp
 			if (const auto objLck = objects.front().lock())
 			{
-				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
 					objLck->TakeDamage(1);
@@ -248,7 +248,7 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 			// bonusPickUp
 			if (const auto objLck = objects.front().lock())
 			{
-				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
 					objLck->TakeDamage(1);
@@ -291,7 +291,7 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 			// bonusPickUp
 			if (const auto objLck = objects.front().lock())
 			{
-				if (const auto bonus = dynamic_cast<IPickUpBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
 					objLck->TakeDamage(1);

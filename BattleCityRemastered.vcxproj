@@ -166,6 +166,7 @@
     <ClCompile Include="source\ColliderCheck.cpp" />
     <ClCompile Include="source\SDLEnvironment.cpp" />
     <ClCompile Include="source\Tank.cpp" />
+    <ClCompile Include="source\TimeUtils.cpp" />
     <ClCompile Include="source\Water.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -189,7 +190,7 @@
     <ClInclude Include="headers\GameSuccess.h" />
     <ClInclude Include="headers\ConfigFailure.h" />
     <ClInclude Include="headers\ConfigSuccess.h" />
-    <ClInclude Include="headers\Interfaces\IPickUpBonus.h" />
+    <ClInclude Include="headers\Interfaces\IPickupableBonus.h" />
     <ClInclude Include="headers\Iron.h" />
     <ClInclude Include="headers\LineOfSight.h" />
     <ClInclude Include="headers\Map.h" />
@@ -223,6 +224,7 @@
     <ClInclude Include="headers\ColliderCheck.h" />
     <ClInclude Include="headers\SDLEnvironment.h" />
     <ClInclude Include="headers\Tank.h" />
+    <ClInclude Include="headers\TimeUtils.h" />
     <ClInclude Include="headers\Water.h" />
   </ItemGroup>
   <ItemGroup>

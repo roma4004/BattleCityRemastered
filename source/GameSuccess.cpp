@@ -110,7 +110,7 @@ void GameSuccess::PrevGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
 	_currentMode = static_cast<GameMode>(newMode);
-	_events->EmitEvent<GameMode>("GameModeChangedTo", _currentMode);
+	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 }
 
 void GameSuccess::NextGameMode()
@@ -122,7 +122,7 @@ void GameSuccess::NextGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_currentMode = static_cast<GameMode>(newMode);
-	_events->EmitEvent<GameMode>("GameModeChangedTo", _currentMode);
+	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 }
 
 void GameSuccess::ClearBuffer() const

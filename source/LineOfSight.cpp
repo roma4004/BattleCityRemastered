@@ -3,8 +3,8 @@
 
 #include <algorithm>
 
-LineOfSight::LineOfSight(Rectangle shape, UPoint windowSize, FPoint bulletHalf,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
+LineOfSight::LineOfSight(const Rectangle shape, const UPoint windowSize, const FPoint bulletHalf,
+                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};

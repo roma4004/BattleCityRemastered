@@ -2,11 +2,12 @@
 
 #include "../headers/EventSystem.h"
 #include "../headers/MoveLikeTankBeh.h"
+#include "../headers/TimeUtils.h"
 
 #include <chrono>
 
 PlayerOne::PlayerOne(const Rectangle& rect, const int color, const int health, int* windowBuffer,
-                     const UPoint windowSize, Direction direction, float speed,
+                     const UPoint windowSize, const Direction direction, const float speed,
                      std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
                      std::string name, std::string fraction, std::unique_ptr<IInputProvider>& inputProvider,
                      std::shared_ptr<BulletPool> bulletPool)
@@ -61,51 +62,35 @@ void PlayerOne::Subscribe()
 	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTimerEnable",
+			"BonusTimer",
 			_name,
-			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTime)
 			{
 				if (fraction != _fraction)
 				{
 					this->_isActiveTimer = true;
-				}
-			});
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusTimerDisable",
-			_name,
-			[this](const std::string& author, const std::string& fraction)
-			{
-				if (fraction == _fraction)
-				{
-					this->_isActiveTimer = false;
+					_cooldownTimer += bonusDurationTime;
+					_activateTimeTimer = std::chrono::system_clock::now();
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusHelmetEnable",
+			"BonusHelmet",
 			_name,
-			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
 			{
 				if (fraction == _fraction && author == _name)
 				{
 					this->_isActiveHelmet = true;
-				}
-			});
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusHelmetDisable",
-			_name,
-			[this](const std::string& author, const std::string& fraction)
-			{
-				if (fraction == _fraction && author == _name)
-				{
-					this->_isActiveHelmet = false;
+					_cooldownHelmet += bonusDurationTime;
+					_activateTimeHelmet = std::chrono::system_clock::now();
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
 			"BonusGrenade",
 			_name,
-			[this](const std::string& author, const std::string& fraction)
+			[this](const std::string& /*author*/, const std::string& fraction)
 			{
 				if (fraction != _fraction)
 				{
@@ -127,12 +112,8 @@ void PlayerOne::Unsubscribe() const
 
 	_events->RemoveListener("DrawHealthBar", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimerEnable", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusTimerDisable", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetEnable", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetDisable", _name);
-
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 }
 
@@ -167,6 +148,18 @@ void PlayerOne::TickUpdate(const float deltaTime)
 	{
 		this->Shot();
 		_lastTimeFire = std::chrono::system_clock::now();
+	}
+
+	// bonuses
+	if (_isActiveTimer && TimeUtils::IsCooldownFinish(_activateTimeTimer, _cooldownTimer))
+	{
+		_isActiveTimer = false;
+		_cooldownTimer = 0;
+	}
+	if (_isActiveHelmet && TimeUtils::IsCooldownFinish(_activateTimeHelmet, _cooldownHelmet))
+	{
+		_isActiveHelmet = false;
+		_cooldownHelmet = 0;
 	}
 }
 

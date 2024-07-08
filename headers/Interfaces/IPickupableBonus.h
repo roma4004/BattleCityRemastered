@@ -1,10 +1,10 @@
 #pragma once
 #include <chrono>
 
-class IPickUpBonus
+class IPickupableBonus
 {
 protected:
-	virtual ~IPickUpBonus() = default;
+	virtual ~IPickupableBonus() = default;
 
 public:
 	virtual void PickUpBonus(const std::string& author, const std::string& fraction) = 0;

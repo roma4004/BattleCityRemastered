@@ -32,7 +32,7 @@ void Menu::Subscribe()
 	}
 
 	_events->AddListener("DrawMenuBackground", _name, [this]() { this->BlendBackgroundToWindowBuffer(); });
-	_events->AddListener<GameMode>("GameModeChangedTo", _name, [this](GameMode newGameMode)
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_currentMode = newGameMode;
 	});

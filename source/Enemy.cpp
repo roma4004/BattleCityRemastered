@@ -6,13 +6,14 @@
 #include "../headers/MoveLikeAIBeh.h"
 #include "../headers/PlayerOne.h"
 #include "../headers/PlayerTwo.h"
-#include "../headers/Interfaces/IPickUpBonus.h"
+#include "../headers/TimeUtils.h"
+#include "../headers/Interfaces/IPickupableBonus.h"
 
 #include <algorithm>
 #include <chrono>
 
 Enemy::Enemy(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
-             Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+             const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
              std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
              std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
@@ -69,51 +70,35 @@ void Enemy::Subscribe()
 	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTimerEnable",
+			"BonusTimer",
 			_name,
-			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTime)
 			{
 				if (fraction != _fraction)
 				{
 					this->_isActiveTimer = true;
-				}
-			});
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusTimerDisable",
-			_name,
-			[this](const std::string& author, const std::string& fraction)
-			{
-				if (fraction == _fraction)
-				{
-					this->_isActiveTimer = false;
+					_cooldownTimer += bonusDurationTime;
+					_activateTimeTimer = std::chrono::system_clock::now();
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusHelmetEnable",
+			"BonusHelmet",
 			_name,
-			[this](const std::string& author, const std::string& fraction, int bonusDurationTime)
+			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
 			{
 				if (fraction == _fraction && author == _name)
 				{
 					this->_isActiveHelmet = true;
-				}
-			});
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusHelmetDisable",
-			_name,
-			[this](const std::string& author, const std::string& fraction)
-			{
-				if (fraction == _fraction && author == _name)
-				{
-					this->_isActiveHelmet = false;
+					_cooldownHelmet += bonusDurationTime;
+					_activateTimeHelmet = std::chrono::system_clock::now();
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
 			"BonusGrenade",
 			_name,
-			[this](const std::string& author, const std::string& fraction)
+			[this](const std::string& /*author*/, const std::string& fraction)
 			{
 				if (fraction != _fraction)
 				{
@@ -135,12 +120,8 @@ void Enemy::Unsubscribe() const
 
 	_events->RemoveListener("DrawHealthBar", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimerEnable", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusTimerDisable", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmetEnable", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusHelmetDisable", _name);
-
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 }
 
@@ -159,7 +140,7 @@ bool Enemy::IsPlayer(const std::weak_ptr<BaseObj>& obstacle)
 
 bool Enemy::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 {
-	if (std::shared_ptr<BaseObj> isBonusSeen = obstacle.lock(); dynamic_cast<IPickUpBonus*>(isBonusSeen.get()))
+	if (const std::shared_ptr<BaseObj> isBonusSeen = obstacle.lock(); dynamic_cast<IPickupableBonus*>(isBonusSeen.get()))
 	{
 		return true;
 	}
@@ -167,7 +148,7 @@ bool Enemy::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 	return false;
 }
 
-void Enemy::HandleLineOfSight(Direction dir)
+void Enemy::HandleLineOfSight(const Direction dir)
 {
 	const FPoint bulletSize = {GetBulletWidth(), GetBulletHeight()};
 	const FPoint bulletHalf = {bulletSize.x / 2.f, bulletSize.y / 2.f};
@@ -291,7 +272,7 @@ void Enemy::HandleLineOfSight(Direction dir)
 void Enemy::TickUpdate(const float deltaTime)
 {
 	// change dir when random time span left
-	if (IsTurnCooldownFinish())
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{
 		_turnDuration = _distTurnRate(_gen);
 		const int randDir = _distDirection(_gen);
@@ -316,22 +297,18 @@ void Enemy::TickUpdate(const float deltaTime)
 		HandleLineOfSight(GetDirection());
 		_lastTimeFire = std::chrono::system_clock::now();
 	}
-}
 
-bool Enemy::IsTurnCooldownFinish() const
-{
-	const auto lastTimeTurnSec =
-			std::chrono::duration_cast<std::chrono::seconds>(_lastTimeTurn.time_since_epoch()).count();
-	const auto currentSec =
-			std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
-			.count();
-
-	if (currentSec - lastTimeTurnSec >= _turnDuration)
+	// bonuses
+	if (_isActiveTimer && TimeUtils::IsCooldownFinish(_activateTimeTimer, _cooldownTimer))
 	{
-		return true;
+		_isActiveTimer = false;
+		_cooldownTimer = 0;
 	}
-
-	return false;
+	if (_isActiveHelmet && TimeUtils::IsCooldownFinish(_activateTimeHelmet, _cooldownHelmet))
+	{
+		_isActiveHelmet = false;
+		_cooldownHelmet = 0;
+	}
 }
 
 void Enemy::SendDamageStatistics(const std::string& author, const std::string& fraction)

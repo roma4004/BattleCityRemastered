@@ -56,7 +56,7 @@ Rectangle Tank::GetBulletStartRect() const
 	return bulletRect;
 }
 
-void Tank::TakeDamage(int damage)
+void Tank::TakeDamage(const int damage)
 {
 	if (!_isActiveHelmet)
 	{

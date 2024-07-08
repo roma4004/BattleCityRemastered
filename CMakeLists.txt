@@ -112,6 +112,7 @@ add_executable(${PROJECT_NAME}
         source/LineOfSight.cpp
         source/SDLEnvironment.cpp
         source/Tank.cpp
+        source/TimeUtils.cpp
         source/Water.cpp
         source/Map.cpp
         source/Menu.cpp

@@ -32,7 +32,12 @@ protected:
 
 	// bonuses
 	bool _isActiveTimer{false}; //TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating
+	std::chrono::system_clock::time_point _activateTimeTimer;
+	int _cooldownTimer{0};
+
 	bool _isActiveHelmet{false};
+	std::chrono::system_clock::time_point _activateTimeHelmet;
+	int _cooldownHelmet{0};
 
 	void Shot() const;
 
@@ -57,7 +62,7 @@ public:
 
 	~Tank() override = default;
 
-	Rectangle GetBulletStartRect() const;
+	[[nodiscard]] Rectangle GetBulletStartRect() const;
 
 	[[nodiscard]] std::string GetName() const { return _name; }
 	[[nodiscard]] std::string GetFraction() const { return _fraction; }

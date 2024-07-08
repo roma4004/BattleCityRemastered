@@ -21,7 +21,6 @@ class CoopAI : public Tank
 	void HandleLineOfSight(Direction dir);
 
 	void TickUpdate(float deltaTime) override;
-	[[nodiscard]] bool IsTurnCooldownFinish() const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

@@ -3,13 +3,13 @@
 #include "BaseObj.h"
 #include "EventSystem.h"
 #include "Point.h"
-#include "Interfaces/IPickUpBonus.h"
+#include "Interfaces/IPickupableBonus.h"
 #include "interfaces/ITickUpdatable.h"
 
 #include <chrono>
 #include <memory>
 
-class Bonus : public BaseObj, public ITickUpdatable, public IPickUpBonus
+class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
 	UPoint _windowSize{0, 0};
 	int* _windowBuffer{nullptr};
@@ -29,8 +29,6 @@ protected:
 	void Draw() const override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
-
-	[[nodiscard]] static bool IsCooldownFinish(std::chrono::system_clock::time_point activateTime, int cooldown);
 
 public:
 	Bonus(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
