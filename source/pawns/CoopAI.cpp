@@ -58,6 +58,18 @@ void CoopAI::Subscribe()
 
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
+		// bonuses
+		if (_isActiveTimer && TimeUtils::IsCooldownFinish(_activateTimeTimer, _cooldownTimer))
+		{
+			_isActiveTimer = false;
+			_cooldownTimer = 0;
+		}
+		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(_activateTimeHelmet, _cooldownHelmet))
+		{
+			_isActiveHelmet = false;
+			_cooldownHelmet = 0;
+		}
+
 		if (!_isActiveTimer)
 		{
 			this->TickUpdate(deltaTime);
@@ -295,18 +307,6 @@ void CoopAI::TickUpdate(const float deltaTime)
 	{
 		HandleLineOfSight(GetDirection());
 		_lastTimeFire = std::chrono::system_clock::now();
-	}
-
-	// bonuses
-	if (_isActiveTimer && TimeUtils::IsCooldownFinish(_activateTimeTimer, _cooldownTimer))
-	{
-		_isActiveTimer = false;
-		_cooldownTimer = 0;
-	}
-	if (_isActiveHelmet && TimeUtils::IsCooldownFinish(_activateTimeHelmet, _cooldownHelmet))
-	{
-		_isActiveHelmet = false;
-		_cooldownHelmet = 0;
 	}
 }
 
