@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bullet.h"
+#include "pawns/Bullet.h"
 
 #include <queue>
 

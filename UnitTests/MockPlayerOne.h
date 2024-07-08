@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../headers/PlayerOne.h"
+#include "../headers/pawns/PlayerOne.h"
 
 class MockPlayerOne final : public PlayerOne
 {

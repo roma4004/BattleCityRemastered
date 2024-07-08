@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseObj.h"
-#include "BonusSystem.h"
 #include "BulletPool.h"
 #include "EventSystem.h"
 #include "GameMode.h"
@@ -10,6 +9,7 @@
 #include "Menu.h"
 #include "MouseButton.h"
 #include "Point.h"
+#include "bonuses/BonusSystem.h"
 #include "interfaces/IGame.h"
 
 #include <SDL.h>

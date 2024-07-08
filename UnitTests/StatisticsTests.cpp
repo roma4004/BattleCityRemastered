@@ -1,11 +1,11 @@
 #include "MockPlayerOne.h"
-#include "../headers/Brick.h"
 #include "../headers/Enemy.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameStatistics.h"
 #include "../headers/InputProviderForPlayerOne.h"
 #include "../headers/InputProviderForPlayerTwo.h"
 #include "../headers/PlayerTwo.h"
+#include "../headers/obstacles/Brick.h"
 
 #include "gtest/gtest.h"
 

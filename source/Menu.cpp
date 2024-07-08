@@ -1,7 +1,7 @@
 #include "../headers/Menu.h"
 #include "../headers/GameMode.h"
-#include "../headers/PixelUtils.h"
 #include "../headers/Point.h"
+#include "../headers/utils/PixelUtils.h"
 
 Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStatistics> statistics,
            const UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input,

@@ -1,13 +1,13 @@
 #include "../headers/GameSuccess.h"
-#include "../headers/ColliderCheck.h"
-#include "../headers/CoopAI.h"
-#include "../headers/Enemy.h"
 #include "../headers/InputProviderForPlayerOne.h"
 #include "../headers/InputProviderForPlayerTwo.h"
 #include "../headers/Map.h"
 #include "../headers/Menu.h"
-#include "../headers/PlayerOne.h"
-#include "../headers/PlayerTwo.h"
+#include "../headers/pawns/CoopAI.h"
+#include "../headers/pawns/Enemy.h"
+#include "../headers/pawns/PlayerOne.h"
+#include "../headers/pawns/PlayerTwo.h"
+#include "../headers/utils/ColliderCheck.h"
 
 #include <algorithm>
 #include <iostream>

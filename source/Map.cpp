@@ -1,7 +1,7 @@
 ﻿#include "../headers/Map.h"
-#include "../headers/Brick.h"
-#include "../headers/Iron.h"
-#include "../headers/Water.h"
+#include "../headers/obstacles/Brick.h"
+#include "../headers/obstacles/Iron.h"
+#include "../headers/obstacles/Water.h"
 
 Map::Map() = default;
 

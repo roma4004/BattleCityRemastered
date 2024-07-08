@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseObj.h"
-#include "ColliderCheck.h"
 #include "Point.h"
+#include "utils/ColliderCheck.h"
 
 #include <memory>
 #include <vector>

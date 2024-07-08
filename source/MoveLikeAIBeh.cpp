@@ -1,7 +1,7 @@
 #include "../headers/MoveLikeAIBeh.h"
-#include "../headers/ColliderCheck.h"
-#include "../headers/Tank.h"
-#include "../headers/Interfaces/IPickupableBonus.h"
+#include "../headers/interfaces/IPickupableBonus.h"
+#include "../headers/pawns/Tank.h"
+#include "../headers/utils/ColliderCheck.h"
 
 #include <functional>
 #include <memory>

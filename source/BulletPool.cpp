@@ -1,5 +1,5 @@
 #include "../headers/BulletPool.h"
-#include "../headers/Bullet.h"
+#include "../headers/pawns/Bullet.h"
 
 std::shared_ptr<BaseObj> BulletPool::GetBullet(const Rectangle& rect, int damage, double aoeRadius, int color,
                                                int health, int* windowBuffer, UPoint windowSize, Direction direction,
