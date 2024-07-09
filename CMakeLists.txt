@@ -88,6 +88,8 @@ add_executable(${PROJECT_NAME}
         source/bonuses/Bonus.cpp
         source/bonuses/BonusGrenade.cpp
         source/bonuses/BonusHelmet.cpp
+        source/bonuses/BonusShovel.cpp
+        source/bonuses/BonusStar.cpp
         source/bonuses/BonusSystem.cpp
         source/bonuses/BonusTank.cpp
         source/bonuses/BonusTimer.cpp
@@ -109,6 +111,7 @@ add_executable(${PROJECT_NAME}
         source/MoveLikeBulletBeh.cpp
         source/MoveLikeTankBeh.cpp
         source/obstacles/Brick.cpp
+        source/obstacles/ObstacleAroundFortress.cpp
         source/obstacles/Iron.cpp
         source/obstacles/Water.cpp
         source/pawns/Bullet.cpp

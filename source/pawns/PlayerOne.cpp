@@ -51,7 +51,7 @@ void PlayerOne::Subscribe()
 
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
-		// bonuses
+		// bonuses disable timer
 		if (_isActiveTimer && TimeUtils::IsCooldownFinish(_activateTimeTimer, _cooldownTimer))
 		{
 			_isActiveTimer = false;
@@ -109,6 +109,17 @@ void PlayerOne::Subscribe()
 					this->SetIsAlive(false);
 				}
 			});
+
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusStar",
+			_name,
+			[this](const std::string& /*author*/, const std::string& fraction)
+			{
+				if (fraction == _fraction)
+				{
+					++this->_tier;
+				}
+			});
 }
 
 void PlayerOne::Unsubscribe() const
@@ -127,6 +138,7 @@ void PlayerOne::Unsubscribe() const
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
 
 void PlayerOne::TickUpdate(const float deltaTime)

@@ -1,6 +1,8 @@
 #include "../../headers/bonuses/BonusSystem.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
+#include "../../headers/bonuses/BonusShovel.h"
+#include "../../headers/bonuses/BonusStar.h"
 #include "../../headers/bonuses/BonusTank.h"
 #include "../../headers/bonuses/BonusTimer.h"
 #include "../../headers/utils/ColliderUtils.h"
@@ -102,6 +104,16 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusTank>(rect, _windowBuffer, _windowSize, _events,
 				                                                      bonusDurationTime, bonusLifetime, color));
+			}
+			else if (bonusId == 4)
+			{
+				_allObjects->emplace_back(std::make_shared<BonusStar>(rect, _windowBuffer, _windowSize, _events,
+				                                                      bonusDurationTime, bonusLifetime, color));
+			}
+			else if (bonusId == 5)
+			{
+				_allObjects->emplace_back(std::make_shared<BonusShovel>(rect, _windowBuffer, _windowSize, _events,
+				                                                        bonusDurationTime, bonusLifetime, color));
 			}
 
 			_lastTimeBonusSpawn = std::chrono::system_clock::now();

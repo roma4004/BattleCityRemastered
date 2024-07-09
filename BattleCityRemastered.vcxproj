@@ -135,6 +135,8 @@
     <ClCompile Include="source\bonuses\Bonus.cpp" />
     <ClCompile Include="source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="source\bonuses\BonusHelmet.cpp" />
+    <ClCompile Include="source\bonuses\BonusShovel.cpp" />
+    <ClCompile Include="source\bonuses\BonusStar.cpp" />
     <ClCompile Include="source\bonuses\BonusSystem.cpp" />
     <ClCompile Include="source\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\bonuses\BonusTimer.cpp" />
@@ -156,6 +158,7 @@
     <ClCompile Include="source\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\obstacles\Brick.cpp" />
+    <ClCompile Include="source\obstacles\ObstacleAroundFortress.cpp" />
     <ClCompile Include="source\obstacles\Iron.cpp" />
     <ClCompile Include="source\obstacles\Water.cpp" />
     <ClCompile Include="source\pawns\Bullet.cpp" />
@@ -175,6 +178,8 @@
     <ClInclude Include="headers\bonuses\Bonus.h" />
     <ClInclude Include="headers\bonuses\BonusGrenade.h" />
     <ClInclude Include="headers\bonuses\BonusHelmet.h" />
+    <ClInclude Include="headers\bonuses\BonusShovel.h" />
+    <ClInclude Include="headers\bonuses\BonusStar.h" />
     <ClInclude Include="headers\bonuses\BonusSystem.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
@@ -196,6 +201,7 @@
     <ClInclude Include="headers\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\MoveLikeTankBeh.h" />
     <ClInclude Include="headers\obstacles\Brick.h" />
+    <ClInclude Include="headers\obstacles\ObstacleAroundFortress.h" />
     <ClInclude Include="headers\obstacles\Iron.h" />
     <ClInclude Include="headers\obstacles\Water.h" />
     <ClInclude Include="headers\BulletPool.h" />

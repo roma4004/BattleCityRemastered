@@ -7,16 +7,16 @@
 
 #include <memory>
 
-class BonusGrenade final : public Bonus
+class BonusStar final : public Bonus
 {
 	void Subscribe();
 	void Unsubscribe() const;
 
 public:
-	BonusGrenade(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	             int durationSec, int lifeTimeSec, int color);
+	BonusStar(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	          int durationSec, int lifeTimeSec, int color);
 
-	~BonusGrenade() override;
+	~BonusStar() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

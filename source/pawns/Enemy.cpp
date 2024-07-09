@@ -117,6 +117,17 @@ void Enemy::Subscribe()
 					this->SetIsAlive(false);
 				}
 			});
+
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusStar",
+			_name,
+			[this](const std::string& /*author*/, const std::string& fraction)
+			{
+				if (fraction == _fraction)
+				{
+					++this->_tier;
+				}
+			});
 }
 
 void Enemy::Unsubscribe() const
@@ -135,6 +146,7 @@ void Enemy::Unsubscribe() const
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
 
 bool Enemy::IsPlayer(const std::weak_ptr<BaseObj>& obstacle)

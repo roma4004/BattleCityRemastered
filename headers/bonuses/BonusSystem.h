@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-class BonusSystem : public ITickUpdatable
+class BonusSystem final : public ITickUpdatable
 {
 	std::string _name;
 	std::shared_ptr<EventSystem> _events;

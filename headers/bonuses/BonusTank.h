@@ -5,10 +5,9 @@
 #include "../EventSystem.h"
 #include "../Point.h"
 
-#include <chrono>
 #include <memory>
 
-class BonusTank : public Bonus
+class BonusTank final : public Bonus
 {
 	void Subscribe();
 	void Unsubscribe() const;

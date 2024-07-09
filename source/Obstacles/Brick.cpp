@@ -52,6 +52,11 @@ void Brick::SetPixel(const size_t x, const size_t y, const int color) const
 
 void Brick::Draw() const
 {
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
 	int y = static_cast<int>(GetY());
 	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
 	{
@@ -65,5 +70,8 @@ void Brick::Draw() const
 
 void Brick::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>("BrickDied", author, fraction);
+	if (GetHealth() < 1)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("BrickDied", author, fraction);
+	}
 }

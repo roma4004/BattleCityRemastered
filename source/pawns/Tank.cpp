@@ -58,6 +58,10 @@ Rectangle Tank::GetBulletStartRect() const
 	return bulletRect;
 }
 
+std::string Tank::GetName() const { return _name; }
+
+std::string Tank::GetFraction() const { return _fraction; }
+
 void Tank::TakeDamage(const int damage)
 {
 	if (!_isActiveHelmet)
@@ -65,6 +69,8 @@ void Tank::TakeDamage(const int damage)
 		Pawn::TakeDamage(damage);
 	}
 }
+
+int Tank::GetTankTier() const { return _tier; }
 
 //TODO: extract like shootComponent
 void Tank::Shot() const

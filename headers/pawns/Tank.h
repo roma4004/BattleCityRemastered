@@ -23,6 +23,7 @@ protected:
 
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
+	int _tier{0};
 	int fireCooldown{1};
 
 	std::shared_ptr<BulletPool> _bulletPool;
@@ -63,8 +64,10 @@ public:
 
 	[[nodiscard]] Rectangle GetBulletStartRect() const;
 
-	[[nodiscard]] std::string GetName() const { return _name; }
-	[[nodiscard]] std::string GetFraction() const { return _fraction; }
+	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] std::string GetFraction() const;
 
 	void TakeDamage(int damage) override;
+
+	[[nodiscard]] int GetTankTier() const;
 };

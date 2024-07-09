@@ -52,6 +52,11 @@ void Iron::SetPixel(const size_t x, const size_t y, const int color) const
 
 void Iron::Draw() const
 {
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
 	int y = static_cast<int>(GetY());
 	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
 	{
@@ -63,4 +68,10 @@ void Iron::Draw() const
 	}
 }
 
-void Iron::SendDamageStatistics(const std::string& author, const std::string& fraction) {}
+void Iron::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	if (GetHealth() < 1)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("IronDied", author, fraction);
+	}
+}
