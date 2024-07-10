@@ -37,3 +37,11 @@ void Pawn::Draw() const
 }
 
 UPoint Pawn::GetWindowSize() const { return _windowSize; }
+
+Direction Pawn::GetDirection() const { return _direction; }
+
+void Pawn::SetDirection(const Direction direction) { _direction = direction; }
+
+float Pawn::GetSpeed() const { return _speed; }
+
+void Pawn::SetSpeed(const float speed) { _speed = speed; }

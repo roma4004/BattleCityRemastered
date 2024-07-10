@@ -13,7 +13,7 @@
 
 CoopAI::CoopAI(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
                const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-               std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
+               const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
                std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
 	       color,
@@ -23,19 +23,20 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const int health, int* wi
 	       direction,
 	       speed,
 	       allObjects,
-	       std::move(events),
+	       events,
 	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
 	       std::move(bulletPool),
 	       std::move(name),
 	       std::move(fraction)},
-	  _distDirection(0, 3), _distTurnRate(1, 5)
+	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
 	std::random_device rd;
-	_gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
+	_gen = std::mt19937(static_cast<unsigned int>(
+		std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd()));
 
 	Subscribe();
 
@@ -83,12 +84,12 @@ void CoopAI::Subscribe()
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusTimer",
 			_name,
-			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTime)
+			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction != _fraction)
 				{
 					this->_isActiveTimer = true;
-					_cooldownTimer += bonusDurationTime;
+					_cooldownTimer += bonusDurationTimeMs;
 					_activateTimeTimer = std::chrono::system_clock::now();
 				}
 			});
@@ -96,12 +97,12 @@ void CoopAI::Subscribe()
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusHelmet",
 			_name,
-			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
+			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction == _fraction && author == _name)
 				{
 					this->_isActiveHelmet = true;
-					_cooldownHelmet += bonusDurationTime;
+					_cooldownHelmet += bonusDurationTimeMs;
 					_activateTimeHelmet = std::chrono::system_clock::now();
 				}
 			});
@@ -120,11 +121,23 @@ void CoopAI::Subscribe()
 	_events->AddListener<const std::string&, const std::string&>(
 			"BonusStar",
 			_name,
-			[this](const std::string& /*author*/, const std::string& fraction)
+			[this](const std::string& author, const std::string& fraction)
 			{
-				if (fraction == _fraction)
+				if (fraction == _fraction && author == _name)
 				{
+					this->SetHealth(GetHealth() + 50);
+					if (_tier > 4)
+					{
+						return;
+					}
+
 					++this->_tier;
+
+					this->SetSpeed(this->GetSpeed() * 1.10f);
+					this->SetBulletSpeed(GetBulletSpeed() * 1.10f);
+					this->SetBulletDamage(GetBulletDamage() + 15);
+					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
+					this->SetBulletDamageAreaRadius(this->GetBulletDamageAreaRadius() * 1.25f);
 				}
 			});
 }
@@ -296,9 +309,9 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 void CoopAI::TickUpdate(const float deltaTime)
 {
 	// change dir when random time span left
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDurationMs))
 	{
-		_turnDuration = _distTurnRate(_gen);
+		_turnDurationMs = _distTurnRate(_gen);
 		const int randDir = _distDirection(_gen);
 		SetDirection(static_cast<Direction>(randDir));
 		_lastTimeTurn = std::chrono::system_clock::now();
@@ -316,7 +329,7 @@ void CoopAI::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (TimeUtils::IsCooldownFinish(_lastTimeFire, fireCooldown))
+	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
 	{
 		HandleLineOfSight(GetDirection());
 		_lastTimeFire = std::chrono::system_clock::now();

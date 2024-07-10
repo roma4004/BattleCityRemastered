@@ -134,19 +134,19 @@ void ObstacleAroundFortress::Subscribe()
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusShovel",
 			_name,
-			[this](const std::string& author, const std::string& fraction, const int bonusDurationTime)
+			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction == "PlayerTeam")
 				{
 					if (_isActiveShovel)
 					{
-						_cooldownShovelSec += bonusDurationTime;
+						_cooldownShovelMs += bonusDurationTimeMs;
 						return;
 					}
 
 					_isActiveShovel = true;
 					this->BonusShovelSwitch();
-					_cooldownShovelSec = bonusDurationTime;
+					_cooldownShovelMs = bonusDurationTimeMs;
 				}
 				else if (fraction == "EnemyTeam")
 				{
@@ -158,6 +158,7 @@ void ObstacleAroundFortress::Subscribe()
 
 					this->Hide();
 				}
+
 				_activateTimeShovel = std::chrono::system_clock::now();
 			});
 }
@@ -179,10 +180,10 @@ void ObstacleAroundFortress::Draw() const {}
 void ObstacleAroundFortress::TickUpdate(const float /*deltaTime*/)
 {
 	// bonus disable timer
-	if (_isActiveShovel && TimeUtils::IsCooldownFinish(_activateTimeShovel, _cooldownShovelSec))
+	if (_isActiveShovel && TimeUtils::IsCooldownFinish(_activateTimeShovel, _cooldownShovelMs))
 	{
 		_isActiveShovel = false;
-		_cooldownShovelSec = 0;
+		_cooldownShovelMs = 0;
 		this->BonusShovelSwitch();
 	}
 }

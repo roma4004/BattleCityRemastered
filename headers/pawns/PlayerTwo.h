@@ -14,9 +14,9 @@ class PlayerTwo final : public Tank
 
 public:
 	PlayerTwo(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
-	          float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	          std::string name, std::string fraction, std::unique_ptr<IInputProvider>& inputProvider,
-	          std::shared_ptr<BulletPool> bulletPool);
+	          float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	          const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+	          std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool);
 
 	~PlayerTwo() override;
 

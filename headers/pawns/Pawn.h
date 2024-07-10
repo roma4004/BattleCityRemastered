@@ -45,8 +45,9 @@ public:
 
 	[[nodiscard]] UPoint GetWindowSize() const;
 
-	[[nodiscard]] Direction GetDirection() const { return _direction; }
-	void SetDirection(const Direction direction) { _direction = direction; }
+	[[nodiscard]] Direction GetDirection() const;
+	void SetDirection(Direction direction);
 
-	[[nodiscard]] float GetSpeed() const { return _speed; }
+	[[nodiscard]] float GetSpeed() const;
+	void SetSpeed(float speed);
 };

@@ -83,37 +83,37 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 		{
 			const int color = _distRandColor(_gen);
 			const int bonusId = _distSpawnType(_gen);
-			constexpr int bonusLifetime = 10;
-			constexpr int bonusDurationTime = 10;
+			constexpr int bonusLifetimeMs = 10 * 1000; // 10 sec
+			constexpr int bonusDurationTimeMs = 10 * 1000; // 10 sec
 			if (bonusId == 0)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusTimer>(rect, _windowBuffer, _windowSize, _events,
-				                                                       bonusDurationTime, bonusLifetime, color));
+				                                                       bonusDurationTimeMs, bonusLifetimeMs, color));
 			}
 			else if (bonusId == 1)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
-				                                                        bonusDurationTime, bonusLifetime, color));
+				                                                        bonusDurationTimeMs, bonusLifetimeMs, color));
 			}
 			else if (bonusId == 2)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusGrenade>(rect, _windowBuffer, _windowSize, _events,
-				                                                         bonusDurationTime, bonusLifetime, color));
+				                                                         bonusDurationTimeMs, bonusLifetimeMs, color));
 			}
 			else if (bonusId == 3)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusTank>(rect, _windowBuffer, _windowSize, _events,
-				                                                      bonusDurationTime, bonusLifetime, color));
+				                                                      bonusDurationTimeMs, bonusLifetimeMs, color));
 			}
 			else if (bonusId == 4)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusStar>(rect, _windowBuffer, _windowSize, _events,
-				                                                      bonusDurationTime, bonusLifetime, color));
+				                                                      bonusDurationTimeMs, bonusLifetimeMs, color));
 			}
 			else if (bonusId == 5)
 			{
 				_allObjects->emplace_back(std::make_shared<BonusShovel>(rect, _windowBuffer, _windowSize, _events,
-				                                                        bonusDurationTime, bonusLifetime, color));
+				                                                        bonusDurationTimeMs, bonusLifetimeMs, color));
 			}
 
 			_lastTimeBonusSpawn = std::chrono::system_clock::now();

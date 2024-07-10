@@ -24,7 +24,7 @@ class ObstacleAroundFortress : public BaseObj, ITickUpdatable
 	bool _isBrick{true};
 	bool _isActiveShovel{false};
 	std::chrono::system_clock::time_point _activateTimeShovel;
-	int _cooldownShovelSec{0};
+	int _cooldownShovelMs{0};
 
 	void Subscribe();
 	void Unsubscribe() const;

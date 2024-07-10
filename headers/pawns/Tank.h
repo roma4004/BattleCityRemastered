@@ -6,11 +6,12 @@
 
 #include <chrono>
 
+class ShootingBeh;
 struct UPoint;
 
 class Tank : public Pawn, public IHealthBar
 {
-	int _damage{15};
+	int _bulletDamage{15};
 
 	float _bulletWidth{6.f};
 
@@ -18,15 +19,15 @@ class Tank : public Pawn, public IHealthBar
 
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
+	std::shared_ptr<ShootingBeh> _shootingBeh;
+
 protected:
 	double _bulletDamageAreaRadius{12.f};
 
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	int _tier{0};
-	int fireCooldown{1};
-
-	std::shared_ptr<BulletPool> _bulletPool;
+	int _fireCooldownMs{1000}; //1 sec
 
 	std::string _name;
 	std::string _fraction;
@@ -43,6 +44,23 @@ protected:
 
 	void Shot() const;
 
+	void DrawHealthBar() const override;
+
+public:
+	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
+	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	     const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool,
+	     std::string name, std::string fraction);
+
+	~Tank() override = default;
+
+	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] std::string GetFraction() const;
+
+	void TakeDamage(int damage) override;
+
+	[[nodiscard]] int GetTankTier() const;
+
 	[[nodiscard]] float GetBulletWidth() const;
 	void SetBulletWidth(float bulletWidth);
 
@@ -52,22 +70,12 @@ protected:
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
 
-	void DrawHealthBar() const override;
+	[[nodiscard]] int GetBulletDamage() const;
+	void SetBulletDamage(int bulletDamage);
 
-public:
-	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
-	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	     std::shared_ptr<EventSystem> events, std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool,
-	     std::string name, std::string fraction);
+	[[nodiscard]] double GetBulletDamageAreaRadius() const;
+	void SetBulletDamageAreaRadius(double bulletDamageAreaRadius);
 
-	~Tank() override = default;
-
-	[[nodiscard]] Rectangle GetBulletStartRect() const;
-
-	[[nodiscard]] std::string GetName() const;
-	[[nodiscard]] std::string GetFraction() const;
-
-	void TakeDamage(int damage) override;
-
-	[[nodiscard]] int GetTankTier() const;
+	[[nodiscard]] int GetFireCooldownMs() const;
+	void SetFireCooldownMs(int fireCooldown);
 };

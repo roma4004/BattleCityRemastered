@@ -1,9 +1,9 @@
 #include "../../headers/Bonuses/BonusShovel.h"
 
 BonusShovel::BonusShovel(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
-                         std::shared_ptr<EventSystem> events, const int durationSec, const int lifeTimeSec,
+                         std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
                          const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationSec, lifeTimeSec, color}
+	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
 {
 	_name = "BonusShovel " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
@@ -48,6 +48,6 @@ void BonusShovel::SendDamageStatistics(const std::string& author, const std::str
 
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, int>("BonusShovel", author, fraction, _bonusDurationSec);
+	_events->EmitEvent<const std::string&, const std::string&, int>("BonusShovel", author, fraction, _bonusDurationMs);
 	SetIsAlive(false);
 }

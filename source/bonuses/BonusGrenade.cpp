@@ -1,9 +1,9 @@
 #include "../../headers/bonuses/BonusGrenade.h"
 
 BonusGrenade::BonusGrenade(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
-                           std::shared_ptr<EventSystem> events, const int durationSec, const int lifeTimeSec,
+                           std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
                            const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationSec, lifeTimeSec, color}
+	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
 {
 	_name = "BonusGrenade " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();

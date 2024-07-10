@@ -11,7 +11,7 @@ class Enemy : public Tank
 	std::uniform_int_distribution<> _distDirection;
 	std::uniform_int_distribution<> _distTurnRate;
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn;
-	int _turnDuration{2};
+	int _turnDurationMs{2000};//2 sec
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -26,7 +26,8 @@ class Enemy : public Tank
 
 public:
 	Enemy(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
-	      float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+	      float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
 	      std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool);
+
 	~Enemy() override;
 };

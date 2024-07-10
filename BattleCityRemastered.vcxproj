@@ -170,6 +170,7 @@
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\Rectangle.cpp" />
     <ClCompile Include="source\SDLEnvironment.cpp" />
+    <ClCompile Include="source\ShootingBeh.cpp" />
     <ClCompile Include="source\TankSpawner.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="headers\ConfigFailure.h" />
     <ClInclude Include="headers\ConfigSuccess.h" />
     <ClInclude Include="headers\interfaces\IPickupableBonus.h" />
+    <ClInclude Include="headers\interfaces\IShootable.h" />
     <ClInclude Include="headers\LineOfSight.h" />
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
@@ -229,6 +231,7 @@
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Rectangle.h" />
     <ClInclude Include="headers\SDLEnvironment.h" />
+    <ClInclude Include="headers\ShootingBeh.h" />
     <ClInclude Include="headers\TankSpawner.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />

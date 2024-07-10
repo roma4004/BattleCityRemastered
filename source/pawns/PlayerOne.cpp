@@ -8,7 +8,7 @@
 
 PlayerOne::PlayerOne(const Rectangle& rect, const int color, const int health, int* windowBuffer,
                      const UPoint windowSize, const Direction direction, const float speed,
-                     std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+                     std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
                      std::string name, std::string fraction, std::unique_ptr<IInputProvider>& inputProvider,
                      std::shared_ptr<BulletPool> bulletPool)
 	: Tank{rect,
@@ -19,7 +19,7 @@ PlayerOne::PlayerOne(const Rectangle& rect, const int color, const int health, i
 	       direction,
 	       speed,
 	       allObjects,
-	       std::move(events),
+	       events,
 	       std::make_shared<MoveLikeTankBeh>(this, allObjects),
 	       std::move(bulletPool),
 	       std::move(name),
@@ -113,11 +113,23 @@ void PlayerOne::Subscribe()
 	_events->AddListener<const std::string&, const std::string&>(
 			"BonusStar",
 			_name,
-			[this](const std::string& /*author*/, const std::string& fraction)
+			[this](const std::string& author, const std::string& fraction)
 			{
-				if (fraction == _fraction)
+				if (fraction == _fraction && author == _name)
 				{
+					this->SetHealth(GetHealth() + 50);
+					if (_tier > 4)
+					{
+						return;
+					}
+
 					++this->_tier;
+
+					this->SetSpeed(this->GetSpeed() * 1.10f);
+					this->SetBulletSpeed(GetBulletSpeed() * 1.10f);
+					this->SetBulletDamage(GetBulletDamage() + 15);
+					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
+					this->SetBulletDamageAreaRadius(this->GetBulletDamageAreaRadius() * 1.25f);
 				}
 			});
 }
@@ -168,7 +180,7 @@ void PlayerOne::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, fireCooldown))
+	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
 	{
 		this->Shot();
 		_lastTimeFire = std::chrono::system_clock::now();

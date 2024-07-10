@@ -123,6 +123,7 @@ add_executable(${PROJECT_NAME}
         source/pawns/Tank.cpp
         source/Rectangle.cpp
         source/SDLEnvironment.cpp
+        source/ShootingBeh.cpp
         source/TankSpawner.cpp
         source/utils/ColliderUtils.cpp
         source/utils/TimeUtils.cpp
