@@ -5,7 +5,23 @@ Like my old, [Battle City on C++/QT QML](https://github.com/roma4004/battle_city
 and for me to practice design patterns and game architecture in modern C++.
 
 ![зображення](https://github.com/roma4004/BattleCityRemastered/assets/16146920/74cca7c2-7497-441c-9652-66f47282291a)
-Already done moving (for both players on one keyboard), shooting with reload timer with reusing bullets instance, destroying tank and obstacle, enemyAI and coopAI, respawning, scoring, animated menu with game modes and pause, indestructible obstacle and water which can't be passed but bullets traverse above it, tank heath bar, detailed statistics.
+Already done:
+* moving (for both players on one keyboard),
+* shooting with reload timer with reusing bullets instance,
+* destroying tanks and obstacles, indestructible obstacles and water that can't be passed but bullets traverse above it,
+* enemy's AI and coop AI,
+* respawning tank and bonuses,
+* scoring and detailed statistics,
+* animated menu with game modes and pause,
+* tank heath bar,
+* pickupable bonuses (already in PR) from the original game like so:
+  * Grenade(destroy enemy team tank),
+  * Helmet(temporary invincibility),
+  * Shovel(temporarily turns brick walls around the fortress to stone and repair broken),
+  * Star(increases tank power),
+  * Tank(extra life),
+  * Timer(freeze enemy team),
+* all bonuses also can be pickupable for an enemy team with the opposite effect.
 
 Used technologies:
 * C++20,
@@ -23,7 +39,7 @@ Used design patterns:
 * Object Pool
 
 TODO roadmap: 
-* bonus system,
+* bonus system (already in PR),
 * unique bonuses,
 * use SDL_Image for texture,
 * patterns lightweight for images,
