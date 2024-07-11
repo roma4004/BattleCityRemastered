@@ -85,34 +85,48 @@ include_directories(headers)
 
 #add_executable(${PROJECT_NAME} WIN32 main.cpp )
 add_executable(${PROJECT_NAME}
-        source/main.cpp
-        source/BaseObj.cpp
-        source/Pawn.cpp
-        source/PlayerOne.cpp
-        source/PlayerTwo.cpp
-        source/Bullet.cpp
+        source/bonuses/Bonus.cpp
+        source/bonuses/BonusGrenade.cpp
+        source/bonuses/BonusHelmet.cpp
+        source/bonuses/BonusShovel.cpp
+        source/bonuses/BonusStar.cpp
+        source/bonuses/BonusSystem.cpp
+        source/bonuses/BonusTank.cpp
+        source/bonuses/BonusTimer.cpp
         source/BulletPool.cpp
-        source/CoopAI.cpp
-        source/Enemy.cpp
-        source/Brick.cpp
-        source/ConfigFailure.cpp
-        source/ConfigSuccess.cpp
         source/GameFailure.cpp
         source/GameStatistics.cpp
         source/GameSuccess.cpp
+        source/ConfigFailure.cpp
+        source/ConfigSuccess.cpp
         source/InputProviderForMenu.cpp
         source/InputProviderForPlayerOne.cpp
         source/InputProviderForPlayerTwo.cpp
-        source/Iron.cpp
-        source/SDLEnvironment.cpp
-        source/Tank.cpp
-        source/Water.cpp
+        source/LineOfSight.cpp
+        source/main.cpp
+        source/BaseObj.cpp
         source/Map.cpp
         source/Menu.cpp
         source/MoveLikeAIBeh.cpp
         source/MoveLikeBulletBeh.cpp
         source/MoveLikeTankBeh.cpp
+        source/obstacles/Brick.cpp
+        source/obstacles/ObstacleAroundFortress.cpp
+        source/obstacles/Iron.cpp
+        source/obstacles/Water.cpp
+        source/pawns/Bullet.cpp
+        source/pawns/CoopAI.cpp
+        source/pawns/Enemy.cpp
+        source/pawns/Pawn.cpp
+        source/pawns/PlayerOne.cpp
+        source/pawns/PlayerTwo.cpp
+        source/pawns/Tank.cpp
         source/Rectangle.cpp
+        source/SDLEnvironment.cpp
+        source/ShootingBeh.cpp
+        source/TankSpawner.cpp
+        source/utils/ColliderUtils.cpp
+        source/utils/TimeUtils.cpp
 )
 
 #If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.

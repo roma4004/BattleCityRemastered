@@ -9,7 +9,7 @@ InputProviderForMenu::InputProviderForMenu(std::string name, std::shared_ptr<Eve
 	{
 		keys.pause = !keys.pause;
 
-		_events->EmitEvent<bool>("Pause_Status", keys.pause);
+		_events->EmitEvent<const bool>("Pause_Status", keys.pause);
 	});
 }
 

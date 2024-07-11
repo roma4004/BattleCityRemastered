@@ -1,16 +1,16 @@
 #include "../headers/BulletPool.h"
-#include "../headers/Bullet.h"
+#include "../headers/pawns/Bullet.h"
 
 std::shared_ptr<BaseObj> BulletPool::GetBullet(const Rectangle& rect, int damage, double aoeRadius, int color,
                                                int health, int* windowBuffer, UPoint windowSize, Direction direction,
                                                float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                               std::shared_ptr<EventSystem> events, std::string name,
+                                               const std::shared_ptr<EventSystem>& events, std::string name,
                                                std::string fraction)
 {
 	if (_bullets.empty())
 	{
 		return std::make_shared<Bullet>(rect, damage, aoeRadius, color, health, windowBuffer, windowSize, direction,
-		                                speed, allObjects, std::move(events), std::move(name), std::move(fraction));
+		                                speed, allObjects, events, std::move(name), std::move(fraction));
 	}
 
 	std::shared_ptr<BaseObj> bulletAsBase = _bullets.front();

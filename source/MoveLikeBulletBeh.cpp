@@ -1,7 +1,8 @@
 #include "../headers/MoveLikeBulletBeh.h"
-#include "../headers/Bullet.h"
 #include "../headers/Circle.h"
 #include "../headers/Direction.h"
+#include "../headers/pawns/Bullet.h"
+#include "../headers/utils/ColliderUtils.h"
 
 #include <memory>
 
@@ -11,24 +12,6 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_pt
 	  _allObjects{allObjects},
 	  _events{std::move(events)} {}
 
-inline bool IsCollideWith(const Rectangle& r1, const Rectangle& r2)
-{
-	// Check if one rectangle is to the right of the other
-	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
-	{
-		return false;
-	}
-
-	// Check if one rectangle is above the other
-	if (r1.y > r2.y + r2.h || r2.y > r1.y + r1.h)
-	{
-		return false;
-	}
-
-	// If neither of the above conditions are met, the rectangles overlap
-	return true;
-}
-
 std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 {
 	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
@@ -37,7 +20,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 		return std::list<std::weak_ptr<BaseObj>>();
 	}
 
-	float speed = bullet->GetSpeed();
+	const float speed = bullet->GetSpeed();
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
 
@@ -75,7 +58,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 			continue;
 		}
 
-		if (IsCollideWith(bulletNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(bulletNextPosRect, object->GetShape()))
 		{
 			if (!object->GetIsPenetrable())
 			{
@@ -123,14 +106,14 @@ void MoveLikeBulletBeh::Move(const float deltaTime) const
 
 void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
 {
+	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
+	if (bullet == nullptr)
+	{
+		return;
+	}
+
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
-		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-		if (bullet == nullptr)
-		{
-			return;
-		}
-
 		bullet->MoveX(-bullet->GetSpeed() * deltaTime);
 	}
 	else
@@ -141,14 +124,14 @@ void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
 
 void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
 {
+	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
+	if (bullet == nullptr)
+	{
+		return;
+	}
+
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
-		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-		if (bullet == nullptr)
-		{
-			return;
-		}
-
 		bullet->MoveX(bullet->GetSpeed() * deltaTime);
 	}
 	else
@@ -159,14 +142,14 @@ void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
 
 void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
 {
+	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
+	if (bullet == nullptr)
+	{
+		return;
+	}
+
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
-		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-		if (bullet == nullptr)
-		{
-			return;
-		}
-
 		bullet->MoveY(-bullet->GetSpeed() * deltaTime);
 	}
 	else
@@ -177,14 +160,14 @@ void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
 
 void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 {
+	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
+	if (bullet == nullptr)
+	{
+		return;
+	}
+
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
-		const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-		if (bullet == nullptr)
-		{
-			return;
-		}
-
 		bullet->MoveY(bullet->GetSpeed() * deltaTime);
 	}
 	else
@@ -193,13 +176,6 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 	}
 }
 
-inline bool CheckIntersection(const Circle& circle, const Rectangle& rect)
-{
-	const double deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
-	const double deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
-
-	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
-}
 
 void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
@@ -217,7 +193,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 			continue;
 		}
 
-		if (CheckIntersection(circle, object->GetShape()))
+		if (ColliderUtils::IsCollide(circle, object->GetShape()))
 		{
 			aoeList.emplace_back(std::weak_ptr(object));
 		}

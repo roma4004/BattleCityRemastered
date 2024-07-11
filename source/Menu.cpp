@@ -1,7 +1,7 @@
 #include "../headers/Menu.h"
 #include "../headers/GameMode.h"
-#include "../headers/PixelUtils.h"
 #include "../headers/Point.h"
+#include "../headers/utils/PixelUtils.h"
 
 Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStatistics> statistics,
            const UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input,
@@ -32,7 +32,7 @@ void Menu::Subscribe()
 	}
 
 	_events->AddListener("DrawMenuBackground", _name, [this]() { this->BlendBackgroundToWindowBuffer(); });
-	_events->AddListener<GameMode>("GameModeChangedTo", _name, [this](GameMode newGameMode)
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_currentMode = newGameMode;
 	});
@@ -44,6 +44,25 @@ void Menu::Subscribe()
 			this->HandleMenuText(_renderer, _pos);
 		}
 	});
+
+	_events->AddListener<const int>("EnemyRespawnResourceChangedTo", _name, [this](const int enemyRespawnResource)
+	{
+		this->_enemyRespawnResource = enemyRespawnResource;
+	});
+	_events->AddListener<const int>(
+			"PlayerOneRespawnResourceChangedTo",
+			_name,
+			[this](const int playerOneRespawnResource)
+			{
+				this->_playerOneRespawnResource = playerOneRespawnResource;
+			});
+	_events->AddListener<const int>(
+			"PlayerTwoRespawnResourceChangedTo",
+			_name,
+			[this](const int playerTwoRespawnResource)
+			{
+				this->_playerTwoRespawnResource = playerTwoRespawnResource;
+			});
 }
 
 void Menu::Unsubscribe() const
@@ -56,6 +75,10 @@ void Menu::Unsubscribe() const
 	_events->RemoveListener("DrawMenuBackground", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("DrawMenuText", _name);
+
+	_events->RemoveListener<const int>("EnemyRespawnResourceChangedTo", _name);
+	_events->RemoveListener<const int>("PlayerOneRespawnResourceChangedTo", _name);
+	_events->RemoveListener<const int>("PlayerTwoRespawnResourceChangedTo", _name);
 }
 
 void Menu::Update() const
@@ -83,8 +106,7 @@ void Menu::Update() const
 // blend menu panel and menu texture background
 void Menu::BlendBackgroundToWindowBuffer()
 {
-	const auto menuKeysStats = GetKeysStats();
-	if (!menuKeysStats.menuShow)
+	if (const auto menuKeysStats = GetKeysStats(); !menuKeysStats.menuShow)
 	{
 		return;
 	}
@@ -100,7 +122,8 @@ void Menu::BlendBackgroundToWindowBuffer()
 			{
 				constexpr unsigned int menuColor = 0xFF808080;
 				int& targetColor = _windowBuffer[_pos.y * sizeX + _pos.x];
-				unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(static_cast<unsigned int>(targetColor), 91);
+				const unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(
+						static_cast<unsigned int>(targetColor), 91);
 				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColorLessAlpha, menuColor));
 			}
 		}
@@ -118,8 +141,7 @@ void Menu::TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Colo
 	TextToRender(renderer, pos, color, std::to_string(value));
 }
 
-void Menu::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color,
-                        const std::string& text) const
+void Menu::TextToRender(SDL_Renderer* renderer, const Point pos, const SDL_Color color, const std::string& text) const
 {
 	SDL_Surface* surface = TTF_RenderText_Solid(_menuFont, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
@@ -138,9 +160,9 @@ void Menu::RenderStatistics(SDL_Renderer* renderer, const Point pos) const
 	TextToRender(renderer, {pos.x - 60, pos.y + 100}, color, "GAME STATISTICS");
 	TextToRender(renderer, {pos.x + 130, pos.y + 140}, color, "P1     P2     ENEMY");
 	TextToRender(renderer, {pos.x - 130, pos.y + 160}, color, "RESPAWN REMAIN");
-	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _statistics->GetPlayerOneRespawnResource());
-	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _statistics->GetPlayerTwoRespawnResource());
-	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _statistics->GetEnemyRespawnResource());
+	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _playerOneRespawnResource);
+	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _playerTwoRespawnResource);
+	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _enemyRespawnResource);
 
 	TextToRender(renderer, {pos.x - 130, pos.y + 180}, color, "BULLET HIT BY BULLET");
 	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());

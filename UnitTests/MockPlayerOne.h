@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../headers/PlayerOne.h"
+#include "../headers/pawns/PlayerOne.h"
 
 class MockPlayerOne final : public PlayerOne
 {
 public:
 	MockPlayerOne(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
-	              Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	              const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	              std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
 	              std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool)
 		: PlayerOne({rect.x, rect.y, rect.w, rect.h}, color, health, windowBuffer, windowSize, direction, speed,

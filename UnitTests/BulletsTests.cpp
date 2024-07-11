@@ -1,10 +1,10 @@
-#include "../headers/Brick.h"
-#include "../headers/Bullet.h"
-#include "../headers/Enemy.h"
 #include "../headers/EventSystem.h"
-#include "../headers/Iron.h"
 #include "../headers/Point.h"
-#include "../headers/Water.h"
+#include "../headers/obstacles/Brick.h"
+#include "../headers/obstacles/Iron.h"
+#include "../headers/obstacles/Water.h"
+#include "../headers/pawns/Bullet.h"
+#include "../headers/pawns/Enemy.h"
 
 #include "gtest/gtest.h"
 

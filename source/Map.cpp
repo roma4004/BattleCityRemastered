@@ -1,7 +1,8 @@
 ﻿#include "../headers/Map.h"
-#include "../headers/Brick.h"
-#include "../headers/Iron.h"
-#include "../headers/Water.h"
+#include "../headers/obstacles/Brick.h"
+#include "../headers/obstacles/ObstacleAroundFortress.h"
+#include "../headers/obstacles/Iron.h"
+#include "../headers/obstacles/Water.h"
 
 Map::Map() = default;
 
@@ -29,6 +30,9 @@ void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const f
 					break;
 				case 3:
 					ObstacleCreation<Water>(allObjects, rect, windowBuffer, windowSize, events);
+					break;
+				case 4:
+					ObstacleCreation<ObstacleAroundFortress>(allObjects, rect, windowBuffer, windowSize, events);
 					break;
 				default:
 					break;

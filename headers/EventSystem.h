@@ -34,9 +34,11 @@ class EventSystem
 {
 	using EventVariant = std::variant<Event<>,
 	                                  Event<const float>,
+	                                  Event<const int>,
 	                                  Event<const std::string&, const std::string&>,
-	                                  Event<GameMode>,
-	                                  Event<bool>>;
+	                                  Event<const std::string&, const std::string&, int>,
+	                                  Event<const GameMode>,
+	                                  Event<const bool>>;
 
 	std::unordered_map<std::string, EventVariant> _events;
 
