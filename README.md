@@ -14,7 +14,7 @@ Already done:
 * scoring and detailed statistics,
 * animated menu with game modes and pause,
 * tank heath bar,
-* pickupable bonuses (already in PR) from the original game like so:
+* pickupable bonuses (spawn every 60sec in random location) from the original game like so:
   * Grenade(destroy enemy team tank),
   * Helmet(temporary invincibility),
   * Shovel(temporarily turns brick walls around the fortress to stone and repair broken),
@@ -39,7 +39,6 @@ Used design patterns:
 * Object Pool
 
 TODO roadmap: 
-* bonus system (already in PR),
 * unique bonuses,
 * use SDL_Image for texture,
 * patterns lightweight for images,
