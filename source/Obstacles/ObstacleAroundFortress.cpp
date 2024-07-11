@@ -101,6 +101,8 @@ void ObstacleAroundFortress::TakeDamage(const int damage)
 	}
 }
 
+bool ObstacleAroundFortress::IsBrick() const { return _isBrick; }
+
 void ObstacleAroundFortress::Hide()
 {
 	if (_isBrick)

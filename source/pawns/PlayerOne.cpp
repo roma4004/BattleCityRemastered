@@ -106,7 +106,7 @@ void PlayerOne::Subscribe()
 			{
 				if (fraction != _fraction)
 				{
-					this->SetIsAlive(false);
+					this->TakeDamage(GetHealth());
 				}
 			});
 

@@ -49,5 +49,4 @@ void BonusGrenade::SendDamageStatistics(const std::string& author, const std::st
 void BonusGrenade::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent<const std::string&, const std::string&>("BonusGrenade", author, fraction);
-	SetIsAlive(false);
 }

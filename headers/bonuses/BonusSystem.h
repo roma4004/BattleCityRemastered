@@ -37,4 +37,7 @@ public:
 	            int* windowBuffer, UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);
 
 	~BonusSystem() override;
+
+	void SpawnRandomBonus(Rectangle rect);
+	void SpawnBonus(Rectangle rect, int color, int bonusId);
 };

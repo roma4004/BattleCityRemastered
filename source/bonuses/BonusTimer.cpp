@@ -49,5 +49,4 @@ void BonusTimer::SendDamageStatistics(const std::string& author, const std::stri
 void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent<const std::string&, const std::string&, int>("BonusTimer", author, fraction, _bonusDurationMs);
-	SetIsAlive(false);
 }

@@ -49,5 +49,4 @@ void BonusShovel::SendDamageStatistics(const std::string& author, const std::str
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent<const std::string&, const std::string&, int>("BonusShovel", author, fraction, _bonusDurationMs);
-	SetIsAlive(false);
 }

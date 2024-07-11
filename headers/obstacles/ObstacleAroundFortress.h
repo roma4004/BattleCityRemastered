@@ -44,4 +44,6 @@ public:
 	void BonusShovelSwitch();
 
 	void TakeDamage(int damage) override;
+
+	[[nodiscard]] bool IsBrick() const;
 };

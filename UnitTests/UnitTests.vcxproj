@@ -37,6 +37,14 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
+    <ClCompile Include="..\source\bonuses\Bonus.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusGrenade.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusHelmet.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusShovel.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusStar.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\BulletPool.cpp" />
     <ClCompile Include="..\source\GameStatistics.cpp" />
     <ClCompile Include="..\source\InputProviderForPlayerOne.cpp" />
@@ -47,6 +55,7 @@
     <ClCompile Include="..\source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\Obstacles\Brick.cpp" />
     <ClCompile Include="..\source\Obstacles\Iron.cpp" />
+    <ClCompile Include="..\source\obstacles\ObstacleAroundFortress.cpp" />
     <ClCompile Include="..\source\Obstacles\Water.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopAI.cpp" />
@@ -60,6 +69,7 @@
     <ClCompile Include="..\source\TankSpawner.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
+    <ClCompile Include="BonusTests.cpp" />
     <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
     <ClCompile Include="RespawnTankTests.cpp" />

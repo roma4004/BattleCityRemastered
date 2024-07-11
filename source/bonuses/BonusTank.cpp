@@ -48,5 +48,4 @@ void BonusTank::SendDamageStatistics(const std::string& author, const std::strin
 void BonusTank::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent<const std::string&, const std::string&>("BonusTank", author, fraction);
-	SetIsAlive(false);
 }
