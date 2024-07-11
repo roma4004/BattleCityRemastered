@@ -29,7 +29,7 @@ protected:
 		Rectangle bulletRect{0.f, 0.f, _bulletSize.x, _bulletSize.y};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
-		constexpr int damage = 1;
+		constexpr int damage = 15;
 		constexpr double bulletDamageAreaRadius = 12.0;
 		std::string name = "PlayerOne";
 		std::string fraction = "PlayerTeam";

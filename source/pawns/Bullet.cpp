@@ -18,8 +18,8 @@ Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int co
 	       events,
 	       std::make_shared<MoveLikeBulletBeh>(this, allObjects, events)},
 	  _author{std::move(author)}, _fraction{std::move(fraction)},
-	  _damage{damage},
-	  _bulletDamageAreaRadius{aoeRadius}
+	  _bulletDamageAreaRadius{aoeRadius},
+	  _damage{damage}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);

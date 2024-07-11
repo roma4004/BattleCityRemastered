@@ -3,10 +3,10 @@
 #include "Pawn.h"
 #include "../BulletPool.h"
 #include "../interfaces/IHealthBar.h"
+#include "../interfaces/IShootable.h"
 
 #include <chrono>
 
-class ShootingBeh;
 struct UPoint;
 
 class Tank : public Pawn, public IHealthBar
@@ -19,7 +19,7 @@ class Tank : public Pawn, public IHealthBar
 
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
-	std::shared_ptr<ShootingBeh> _shootingBeh;
+	std::shared_ptr<IShootable> _shootingBeh;
 
 protected:
 	double _bulletDamageAreaRadius{12.f};
@@ -27,14 +27,14 @@ protected:
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	int _tier{0};
-	int _fireCooldownMs{1000}; //1 sec
+	int _fireCooldownMs{1000};//1 sec
 
 	std::string _name;
 	std::string _fraction;
 
 	// bonuses
 	bool _isActiveTimer{false};
-	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating
+	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
 	std::chrono::system_clock::time_point _activateTimeTimer;
 	int _cooldownTimer{0};
 
@@ -49,8 +49,8 @@ protected:
 public:
 	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
 	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	     const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh, std::shared_ptr<BulletPool> bulletPool,
-	     std::string name, std::string fraction);
+	     const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh,
+	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction);
 
 	~Tank() override = default;
 

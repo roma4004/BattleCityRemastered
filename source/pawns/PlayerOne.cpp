@@ -1,7 +1,7 @@
 #include "../../headers/pawns/PlayerOne.h"
-
 #include "../../headers/EventSystem.h"
 #include "../../headers/MoveLikeTankBeh.h"
+#include "../../headers/ShootingBeh.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <chrono>
@@ -21,7 +21,7 @@ PlayerOne::PlayerOne(const Rectangle& rect, const int color, const int health, i
 	       allObjects,
 	       events,
 	       std::make_shared<MoveLikeTankBeh>(this, allObjects),
-	       std::move(bulletPool),
+	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction)},
 	  _inputProvider{std::move(inputProvider)}
@@ -182,7 +182,7 @@ void PlayerOne::TickUpdate(const float deltaTime)
 	// shot
 	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
 	{
-		this->Shot();
+		Shot();
 		_lastTimeFire = std::chrono::system_clock::now();
 	}
 }

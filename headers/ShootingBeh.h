@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseObj.h"
-#include "interfaces/IMoveBeh.h"
 #include "interfaces/IShootable.h"
 
 #include <functional>
@@ -23,12 +22,12 @@ public:
 	ShootingBeh(BaseObj* selfParent, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool);
 
-	~ShootingBeh() override = default;
+	~ShootingBeh() override;
 
 	float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
 	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
-	Rectangle GetBulletStartRect() const;
+	[[nodiscard]] Rectangle GetBulletStartRect() const;
 
 	void Shot() const override;
 };

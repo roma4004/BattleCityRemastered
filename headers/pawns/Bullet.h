@@ -14,8 +14,8 @@ class Bullet : public Pawn
 	std::string _name;
 	std::string _author;
 	std::string _fraction;
-	int _damage{0};
 	double _bulletDamageAreaRadius{12.f};
+	int _damage{0};
 
 	void Subscribe();
 	void Unsubscribe() const;

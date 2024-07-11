@@ -665,6 +665,7 @@ TEST_F(StatisticsTest, BrickDiedByEnemy)
 		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
+			brick->SetHealth(1);
 			EXPECT_EQ(_statistics->GetBrickDiedByEnemyTeam(), 0);
 
 			constexpr float deltaTime = 1.f / 60.f;
@@ -700,6 +701,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerOne)
 		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
+			brick->SetHealth(1);
 			EXPECT_EQ(_statistics->GetBrickDiedByPlayerOne(), 0);
 
 			constexpr float deltaTime = 1.f / 60.f;
@@ -735,6 +737,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
+			brick->SetHealth(1);
 			EXPECT_EQ(_statistics->GetBrickDiedByPlayerTwo(), 0);
 
 			constexpr float deltaTime = 1.f / 60.f;

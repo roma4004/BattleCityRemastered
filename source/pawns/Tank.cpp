@@ -5,7 +5,7 @@
 Tank::Tank(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
            const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh,
-           std::shared_ptr<BulletPool> bulletPool, std::string name, std::string fraction)
+           std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -16,8 +16,7 @@ Tank::Tank(const Rectangle& rect, const int color, const int health, int* window
 	       allObjects,
 	       events,
 	       std::move(moveBeh)},
-	  _shootingBeh{std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool))},
-	  _lastTimeFire{std::chrono::system_clock::now()},
+	  _shootingBeh{std::move(shootingBeh)},
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)} {}
 
@@ -67,17 +66,18 @@ void Tank::SetFireCooldownMs(const int fireCooldown) { _fireCooldownMs = fireCoo
 
 void Tank::DrawHealthBar() const
 {
+	//TODO: fix recenter health bar when pickup star bonus
 	if (_isActiveHelmet)
 	{
 		return;
 	}
 
 	const unsigned int width = static_cast<unsigned int>(_windowSize.x);
-	int y = static_cast<int>(GetY() - 10);
-	for (const int maxY = y + 5; y < maxY; ++y)
+	size_t y = static_cast<size_t>(GetY()) - 10;
+	for (const size_t maxY = y + 5; y < maxY; ++y)
 	{
-		int x = static_cast<int>(GetX() + 2);
-		for (const int maxX = x + GetHealth() / 3; x < maxX; ++x)
+		size_t x = static_cast<size_t>(GetX()) + 2;
+		for (const size_t maxX = x + GetHealth() / 3; x < maxX; ++x)
 		{
 			const unsigned int tankColor = GetColor();
 			if (x < _windowSize.x && y < _windowSize.y)

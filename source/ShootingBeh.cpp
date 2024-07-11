@@ -14,6 +14,7 @@ ShootingBeh::ShootingBeh(BaseObj* selfParent, int* windowBuffer, std::vector<std
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)} {}
 
+ShootingBeh::~ShootingBeh() = default;
 
 // inline float Distance(const FPoint a, const FPoint b)
 // {
@@ -76,23 +77,26 @@ Rectangle ShootingBeh::GetBulletStartRect() const
 	Rectangle bulletRect = {-1, -1, bulletWidth, bulletHeight};
 
 	if (const Direction direction = tank->GetDirection();
-		direction == UP && tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
+		direction == UP
+		&& tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHalf.y;
 	}
-	else if (direction == DOWN && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
+	else if (direction == DOWN
+	         && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY - bulletHalf.y;
 	}
-	else if (direction == LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+	else if (direction == LEFT
+	         && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankPos.x - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (direction == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().
-		         x))
+	else if (direction == RIGHT
+	         && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
 		bulletRect.x = tankRightX - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -124,8 +128,8 @@ void ShootingBeh::Shot() const
 	const Direction direction = tank->GetDirection();
 	const float speed = tank->GetBulletSpeed();
 	std::string name = tank->GetName();
-	const std::string fraction = tank->GetFraction();
+	std::string fraction = tank->GetFraction();
 	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, _windowBuffer,
-	                                                 windowSize, direction, speed, _allObjects, _events, std::move(name),
-	                                                 fraction));
+	                                                 windowSize, direction, speed, _allObjects, _events,
+	                                                 std::move(name), std::move(fraction)));
 }

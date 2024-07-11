@@ -1,7 +1,7 @@
 #include "../../headers/pawns/PlayerTwo.h"
-
 #include "../../headers/EventSystem.h"
 #include "../../headers/MoveLikeTankBeh.h"
+#include "../../headers/ShootingBeh.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <chrono>
@@ -21,7 +21,7 @@ PlayerTwo::PlayerTwo(const Rectangle& rect, const int color, const int health, i
 	       allObjects,
 	       events,
 	       std::make_shared<MoveLikeTankBeh>(this, allObjects),
-	       std::move(bulletPool),
+	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction)},
 	  _inputProvider{std::move(inputProvider)}

@@ -2,6 +2,7 @@
 #include "../../headers/EventSystem.h"
 #include "../../headers/LineOfSight.h"
 #include "../../headers/MoveLikeAIBeh.h"
+#include "../../headers/ShootingBeh.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/CoopAI.h"
 #include "../../headers/pawns/PlayerOne.h"
@@ -26,7 +27,7 @@ Enemy::Enemy(const Rectangle& rect, const int color, const int health, int* wind
 	       allObjects,
 	       events,
 	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
-	       std::move(bulletPool),
+	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction)},
 	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)
