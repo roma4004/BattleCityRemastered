@@ -258,7 +258,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 	}
 
 	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
-	// if (isBullet && isOposit(bullet->GetDirection))
+	// if (isBullet && isOpposite(bullet->GetDirection))
 	// {
 	// 	Shot();
 	// }
