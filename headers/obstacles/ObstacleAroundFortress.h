@@ -12,7 +12,7 @@
 
 class ObstacleAroundFortress : public BaseObj, ITickUpdatable
 {
-	Rectangle _rect;
+	ObjRectangle _rect;
 	UPoint _windowSize{0, 0};
 	int* _windowBuffer{nullptr};
 	std::shared_ptr<EventSystem> _events;
@@ -36,7 +36,7 @@ class ObstacleAroundFortress : public BaseObj, ITickUpdatable
 
 	void Hide();
 public:
-	ObstacleAroundFortress(const Rectangle& rect, int* windowBuffer, UPoint windowSize,
+	ObstacleAroundFortress(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize,
 	                    const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~ObstacleAroundFortress() override;

@@ -23,7 +23,7 @@ class Brick final : public BaseObj
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	Brick(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
+	Brick(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
 
 	~Brick() override;
 };

@@ -14,7 +14,7 @@ class Menu
 	UPoint _windowSize;
 	int* _windowBuffer;
 	unsigned int yOffsetStart;
-	GameMode _currentMode;
+	GameMode _selectedGameMode{OnePlayer};
 	std::unique_ptr<InputProviderForMenu> _input;
 	std::shared_ptr<EventSystem> _events;
 	std::string _name;

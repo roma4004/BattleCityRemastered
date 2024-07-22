@@ -71,7 +71,7 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 		const float size = static_cast<float>(_bonusSize);
 		const float x = static_cast<float>(_distSpawnPosX(_gen));
 		const float y = static_cast<float>(_distSpawnPosY(_gen));
-		const Rectangle rect{x, y, size, size};
+		const ObjRectangle rect{x, y, size, size};
 		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 		{
 			if (ColliderUtils::IsCollide(rect, object->GetShape()))
@@ -88,7 +88,7 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void BonusSystem::SpawnBonus(const Rectangle rect, const int color, const int bonusId)
+void BonusSystem::SpawnBonus(const ObjRectangle rect, const int color, const int bonusId)
 {
 	constexpr int bonusLifetimeMs = 10 * 1000;// 10 sec
 	constexpr int bonusDurationTimeMs = 10 * 1000;// 10 sec
@@ -123,7 +123,7 @@ void BonusSystem::SpawnBonus(const Rectangle rect, const int color, const int bo
 	}
 }
 
-void BonusSystem::SpawnRandomBonus(const Rectangle rect)
+void BonusSystem::SpawnRandomBonus(const ObjRectangle rect)
 {
 	const int color = _distRandColor(_gen);
 	const int bonusId = _distSpawnType(_gen);

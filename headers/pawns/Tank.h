@@ -20,6 +20,7 @@ class Tank : public Pawn, public IHealthBar
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
 	std::shared_ptr<IShootable> _shootingBeh;
+	int _tankId;
 
 protected:
 	double _bulletDamageAreaRadius{12.f};
@@ -47,10 +48,10 @@ protected:
 	void DrawHealthBar() const override;
 
 public:
-	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
+	Tank(const ObjRectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
 	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	     const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh,
-	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction);
+	     std::shared_ptr<IShootable> shootingBeh, const std::string& name, std::string fraction, int tankId);
 
 	~Tank() override = default;
 
@@ -78,4 +79,6 @@ public:
 
 	[[nodiscard]] int GetFireCooldownMs() const;
 	void SetFireCooldownMs(int fireCooldown);
+
+	[[nodiscard]] int GetTankId() const;
 };

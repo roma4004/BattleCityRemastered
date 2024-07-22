@@ -1,10 +1,12 @@
 #pragma once
 
-#include "GameMode.h"
-
 #include <functional>
 #include <string>
 #include <variant>
+
+enum Direction : int;
+enum GameMode : int;
+struct FPoint;
 
 template<typename... Args>
 struct Event
@@ -32,13 +34,19 @@ private:
 
 class EventSystem
 {
-	using EventVariant = std::variant<Event<>,
-	                                  Event<const float>,
-	                                  Event<const int>,
-	                                  Event<const std::string&, const std::string&>,
-	                                  Event<const std::string&, const std::string&, int>,
-	                                  Event<const GameMode>,
-	                                  Event<const bool>>;
+	using EventVariant = std::variant<Event<>, // regular events eg method call
+	                                  Event<const float>, // update(deltaTime)
+	                                  Event<const FPoint>, // bullets tank new pos,
+	                                  Event<const FPoint, const int>, // bullets send new pos, bulletId
+	                                  Event<const FPoint, const int, const Direction>, // bullets send new pos, bulletId, direction
+	                                  Event<const FPoint, const Direction>, // send newPos and direction
+	                                  Event<const Direction>, // send shot
+	                                  Event<const int>, // respawn resource changed
+	                                  Event<const int, const int>, // send health changed
+	                                  Event<const std::string&, const std::string&>, // statistics, bomus
+	                                  Event<const std::string&, const std::string&, int>, // bonus with diration
+	                                  Event<const GameMode>, // gameMode switch
+	                                  Event<const bool>>; // pause status
 
 	std::unordered_map<std::string, EventVariant> _events;
 

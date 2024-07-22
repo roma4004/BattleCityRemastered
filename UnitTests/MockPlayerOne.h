@@ -5,7 +5,7 @@
 class MockPlayerOne final : public PlayerOne
 {
 public:
-	MockPlayerOne(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+	MockPlayerOne(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
 	              const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	              std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
 	              std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool)

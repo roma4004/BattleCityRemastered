@@ -49,7 +49,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto bulletNextPosRect = Rectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
+	const auto bulletNextPosRect = ObjRectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
 	                                         bullet->GetWidth(), bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{

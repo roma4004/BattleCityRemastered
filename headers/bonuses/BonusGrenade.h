@@ -13,7 +13,7 @@ class BonusGrenade final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusGrenade(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	BonusGrenade(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	             int durationMs, int lifeTimeMs, int color);
 
 	~BonusGrenade() override;

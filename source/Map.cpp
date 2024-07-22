@@ -17,7 +17,7 @@ void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const f
 		{
 			const float x = static_cast<float>(vertical) * gridSize;
 			const float y = static_cast<float>(horizontal) * gridSize;
-			Rectangle rect = {x, y, gridSize, gridSize};
+			ObjRectangle rect = {x, y, gridSize, gridSize};
 			switch (fieldLevelOne[horizontal][vertical])
 			{
 				case 0:

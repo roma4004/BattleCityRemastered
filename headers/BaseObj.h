@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rectangle.h"
+#include "ObjRectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
@@ -14,10 +14,10 @@ class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatis
 	bool _isAlive{true};
 
 protected:
-	Rectangle _shape{};
+	ObjRectangle _shape{};
 
 public:
-	BaseObj(const Rectangle& rect, int color, int health);
+	BaseObj(const ObjRectangle& rect, int color, int health);
 
 	~BaseObj() override;
 
@@ -61,6 +61,6 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
-	[[nodiscard]] const Rectangle& GetShape() const;
-	void SetShape(const Rectangle& shape);
+	[[nodiscard]] const ObjRectangle& GetShape() const;
+	void SetShape(const ObjRectangle& shape);
 };

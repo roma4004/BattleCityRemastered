@@ -13,10 +13,10 @@
 #include <algorithm>
 #include <chrono>
 
-Enemy::Enemy(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
              const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
              const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-             std::shared_ptr<BulletPool> bulletPool)
+             std::shared_ptr<BulletPool> bulletPool, const bool isNetworkControlled, const int tankId)
 	: Tank{rect,
 	       color,
 	       health,
@@ -29,8 +29,11 @@ Enemy::Enemy(const Rectangle& rect, const int color, const int health, int* wind
 	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
 	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
-	       std::move(fraction)},
-	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)
+	       std::move(fraction),
+	       tankId},
+	  _distDirection(0, 3),
+	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
+	  _isNetworkControlled{isNetworkControlled}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -59,6 +62,38 @@ void Enemy::Subscribe()
 		return;
 	}
 
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+
+	if (_isNetworkControlled)
+	{
+		_events->AddListener<const FPoint, const Direction>(
+				"Net_" + _name + "_NewPos",
+				_name,
+				[this](const FPoint newPos, const Direction direction)
+				{
+					this->SetPos(newPos);
+					this->SetDirection(direction);
+				});
+
+		_events->AddListener<const Direction>("Net_" + _name + "_Shot", _name, [this](const Direction direction)
+		{
+			this->SetDirection(direction);
+			this->Shot();
+		});
+
+		_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
+		{
+			this->SetHealth(health);
+		});
+	}
+
+	if (_isNetworkControlled)
+	{
+		return;
+	}
+
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
@@ -78,10 +113,6 @@ void Enemy::Subscribe()
 			this->TickUpdate(deltaTime);
 		}
 	});
-
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-
-	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusTimer",
@@ -127,7 +158,7 @@ void Enemy::Subscribe()
 			{
 				if (fraction == _fraction && author == _name)
 				{
-					this->SetHealth(GetHealth() + 50);
+					this->SetHealth(this->GetHealth() + 50);
 					if (_tier > 4)
 					{
 						return;
@@ -136,12 +167,13 @@ void Enemy::Subscribe()
 					++this->_tier;
 
 					this->SetSpeed(this->GetSpeed() * 1.10f);
-					this->SetBulletSpeed(GetBulletSpeed() * 1.10f);
-					this->SetBulletDamage(GetBulletDamage() + 15);
+					this->SetBulletSpeed(this->GetBulletSpeed() * 1.10f);
+					this->SetBulletDamage(this->GetBulletDamage() + 15);
 					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
 					this->SetBulletDamageAreaRadius(this->GetBulletDamageAreaRadius() * 1.25f);
 				}
 			});
+	//TOOD: subscribe other bonuses
 }
 
 void Enemy::Unsubscribe() const
@@ -151,11 +183,25 @@ void Enemy::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
-
 	_events->RemoveListener("Draw", _name);
 
 	_events->RemoveListener("DrawHealthBar", _name);
+
+	if (_isNetworkControlled)
+	{
+		_events->RemoveListener<const FPoint, const Direction>("Net_" + _name + "_NewPos", _name);
+
+		_events->RemoveListener<const Direction>("Net_" + _name + "_Shot", _name);
+
+		_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
+	}
+
+	if (_isNetworkControlled)
+	{
+		return;
+	}
+
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
@@ -200,6 +246,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(UP);
 			Shot();
+			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
 			return;
 		}
 		if (IsBonus(upSideObstacles.front()))
@@ -216,6 +263,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(LEFT);
 			Shot();
+			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
 			return;
 		}
 		if (IsBonus(leftSideObstacles.front()))
@@ -232,6 +280,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(DOWN);
 			Shot();
+			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
 			return;
 		}
 		if (IsBonus(downSideObstacles.front()))
@@ -248,6 +297,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(RIGHT);
 			Shot();
+			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
 			return;
 		}
 		if (IsBonus(rightSideObstacles.front()))
@@ -310,6 +360,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{
 			Shot();
+			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
 		}
 	}
 
@@ -337,6 +388,9 @@ void Enemy::TickUpdate(const float deltaTime)
 		SetDirection(static_cast<Direction>(randDir));
 	}
 
+	//TODO: add if to send only as host
+	_events->EmitEvent<const FPoint, const int, const Direction>("Enemy_NewPos", GetPos(), GetTankId(), GetDirection());
+
 	// shot
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
 	{
@@ -353,4 +407,11 @@ void Enemy::SendDamageStatistics(const std::string& author, const std::string& f
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("EnemyDied", author, fraction);
 	}
+}
+
+void Enemy::TakeDamage(const int damage)
+{
+	Tank::TakeDamage(damage);
+
+	_events->EmitEvent<const int, const int>("Enemy_NewHealth", GetTankId(), GetHealth());
 }

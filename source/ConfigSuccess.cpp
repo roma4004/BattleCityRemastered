@@ -8,7 +8,7 @@ ConfigSuccess::ConfigSuccess(const UPoint windowSize, int* windowBuffer, SDL_Ren
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
-	auto inputProvider = std::make_unique<InputProviderForMenu>("menu", events);
+	auto inputProvider = std::make_unique<InputProviderForMenu>("MenuInput", events);
 	auto statistics = std::make_shared<GameStatistics>(events);
 	return std::make_unique<GameSuccess>(_windowSize, _windowBuffer, _renderer, _screen, _fpsFont, events,
 	                                     inputProvider, statistics);

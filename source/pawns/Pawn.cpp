@@ -1,6 +1,6 @@
 #include "../../headers/pawns/Pawn.h"
 
-Pawn::Pawn(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
            std::shared_ptr<EventSystem> events, std::shared_ptr<IMoveBeh> moveBeh)
 	: BaseObj{rect, color, health},

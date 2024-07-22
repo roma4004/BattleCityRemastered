@@ -45,7 +45,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 	}
 
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
-	const auto thisNextPosRect = Rectangle{tank->GetX() + speedX, tank->GetY() + speedY,
+	const auto thisNextPosRect = ObjRectangle{tank->GetX() + speedX, tank->GetY() + speedY,
 	                                       tank->GetWidth(), tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{

@@ -1,6 +1,9 @@
 #include "../headers/TankSpawner.h"
+#include "../headers/GameMode.h"
 #include "../headers/InputProviderForPlayerOne.h"
+#include "../headers/InputProviderForPlayerOneNet.h"
 #include "../headers/InputProviderForPlayerTwo.h"
+#include "../headers/InputProviderForPlayerTwoNet.h"
 #include "../headers/pawns/CoopAI.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
@@ -14,9 +17,10 @@ TankSpawner::TankSpawner(const UPoint windowSize, int* windowBuffer, std::vector
                          const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
+	  _currentMode{Demo},
 	  _allObjects{allObjects},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>()}
+	  _bulletPool{std::make_shared<BulletPool>(events, _allObjects, windowSize, windowBuffer)}
 {
 	Subscribe();
 }
@@ -51,11 +55,11 @@ void TankSpawner::Subscribe()
 				}
 				else if (fraction == "PlayerTeam")
 				{
-					if (author == "PlayerOne" || author == "CoopOneAI")
+					if (author == "Player1" || author == "CoopAI1")
 					{
 						IncreasePlayerOneRespawnResource();
 					}
-					if (author == "PlayerTwo" || author == "CoopOneTwo")
+					if (author == "Player2" || author == "CoopAI2")
 					{
 						IncreasePlayerTwoRespawnResource();
 					}
@@ -67,27 +71,27 @@ void TankSpawner::Subscribe()
 	_events->AddListener("Enemy3_Died", _name, [this]() { _enemyThreeNeedRespawn = true; });
 	_events->AddListener("Enemy4_Died", _name, [this]() { _enemyFourNeedRespawn = true; });
 
-	_events->AddListener("PlayerOne_Died", _name, [this]() { _playerOneNeedRespawn = true; });
-	_events->AddListener("PlayerTwo_Died", _name, [this]() { _playerTwoNeedRespawn = true; });
-	_events->AddListener("CoopOneAI_Died", _name, [this]() { _coopOneAINeedRespawn = true; });
-	_events->AddListener("CoopTwoAI_Died", _name, [this]() { _coopTwoAINeedRespawn = true; });
+	_events->AddListener("Player1_Died", _name, [this]() { _playerOneNeedRespawn = true; });
+	_events->AddListener("Player2_Died", _name, [this]() { _playerTwoNeedRespawn = true; });
+	_events->AddListener("CoopAI1_Died", _name, [this]() { _coopOneAINeedRespawn = true; });
+	_events->AddListener("CoopAI2_Died", _name, [this]() { _coopTwoAINeedRespawn = true; });
 
-	_events->AddListener("PlayerOne_Spawn", _name, [this]()
+	_events->AddListener("Player1_Spawn", _name, [this]()
 	{
 		_playerOneNeedRespawn = false;
 		DecreasePlayerOneRespawnResource();
 	});
-	_events->AddListener("PlayerTwo_Spawn", _name, [this]()
+	_events->AddListener("Player2_Spawn", _name, [this]()
 	{
 		_playerTwoNeedRespawn = false;
 		DecreasePlayerTwoRespawnResource();
 	});
-	_events->AddListener("CoopOneAI_Spawn", _name, [this]()
+	_events->AddListener("CoopAI1_Spawn", _name, [this]()
 	{
 		_coopOneAINeedRespawn = false;
 		DecreasePlayerOneRespawnResource();
 	});
-	_events->AddListener("CoopTwoAI_Spawn", _name, [this]()
+	_events->AddListener("CoopAI2_Spawn", _name, [this]()
 	{
 		_coopTwoAINeedRespawn = false;
 		DecreasePlayerTwoRespawnResource();
@@ -132,15 +136,15 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener("Enemy3_Died", _name);
 	_events->RemoveListener("Enemy4_Died", _name);
 
-	_events->RemoveListener("PlayerOne_Died", _name);
-	_events->RemoveListener("PlayerTwo_Died", _name);
-	_events->RemoveListener("CoopOneAI_Died", _name);
-	_events->RemoveListener("CoopTwoAI_Died", _name);
+	_events->RemoveListener("Player1_Died", _name);
+	_events->RemoveListener("Player2_Died", _name);
+	_events->RemoveListener("CoopAI1_Died", _name);
+	_events->RemoveListener("CoopAI2_Died", _name);
 
-	_events->RemoveListener("PlayerOne_Spawn", _name);
-	_events->RemoveListener("PlayerTwo_Spawn", _name);
-	_events->RemoveListener("CoopOneAI_Spawn", _name);
-	_events->RemoveListener("CoopTwoAI_Spawn", _name);
+	_events->RemoveListener("Player1_Spawn", _name);
+	_events->RemoveListener("Player2_Spawn", _name);
+	_events->RemoveListener("CoopAI1_Spawn", _name);
+	_events->RemoveListener("CoopAI2_Spawn", _name);
 
 	_events->RemoveListener("Enemy1_Spawn", _name);
 	_events->RemoveListener("Enemy2_Spawn", _name);
@@ -150,10 +154,11 @@ void TankSpawner::Unsubscribe() const
 
 void TankSpawner::SpawnEnemyTanks(const float gridOffset, const float speed, const int health, const float size)
 {
-	SpawnEnemy(1, gridOffset, speed, health, size);
-	SpawnEnemy(2, gridOffset, speed, health, size);
-	SpawnEnemy(3, gridOffset, speed, health, size);
-	SpawnEnemy(4, gridOffset, speed, health, size);
+	const bool isNetworkControlled = _currentMode == PlayAsClient;
+	SpawnEnemy(1, gridOffset, speed, health, size, isNetworkControlled);
+	SpawnEnemy(2, gridOffset, speed, health, size, isNetworkControlled);
+	SpawnEnemy(3, gridOffset, speed, health, size, isNetworkControlled);
+	SpawnEnemy(4, gridOffset, speed, health, size, isNetworkControlled);
 }
 
 void TankSpawner::ResetRespawnStat()
@@ -191,12 +196,12 @@ void TankSpawner::SpawnPlayerTanks(const float gridOffset, const float speed, co
 {
 	if (_currentMode == OnePlayer || _currentMode == TwoPlayers || _currentMode == CoopWithAI)
 	{
-		SpawnPlayer1(gridOffset, speed, health, size);
+		SpawnPlayer1(gridOffset, speed, health, size, false);
 	}
 
 	if (_currentMode == TwoPlayers)
 	{
-		SpawnPlayer2(gridOffset, speed, health, size);
+		SpawnPlayer2(gridOffset, speed, health, size, false);
 	}
 
 	if (_currentMode == Demo)
@@ -209,12 +214,24 @@ void TankSpawner::SpawnPlayerTanks(const float gridOffset, const float speed, co
 	{
 		SpawnCoop2(gridOffset, speed, health, size);
 	}
+
+	if (_currentMode == PlayAsHost)
+	{
+		SpawnPlayer1(gridOffset, speed, health, size, false);
+		SpawnPlayer2(gridOffset, speed, health, size, true);
+	}
+
+	if (_currentMode == PlayAsClient)
+	{
+		SpawnPlayer1(gridOffset, speed, health, size, true);
+		SpawnPlayer2(gridOffset, speed, health, size, true);
+	}
 }
 
 void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const float speed, const int health,
-                             const float size)
+                             const float size, const bool isNetworkControlled)
 {
-	std::vector<Rectangle> spawnPos{
+	std::vector<ObjRectangle> spawnPos{
 			{gridOffset * 16.f - size * 2.f, 0, size, size},
 			{gridOffset * 32.f - size * 2.f, 0, size, size},
 			{gridOffset * 16.f + size * 2.f, 0, size, size},
@@ -234,20 +251,21 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 		if (isFreeSpawnSpot)
 		{
 			constexpr int gray = 0x808080;
-			std::string name = "Enemy" + std::to_string(index);
+			std::string name = "Enemy";
 			std::string fraction = "EnemyTeam";
 			_allObjects->emplace_back(std::make_shared<Enemy>(rect, gray, health, _windowBuffer, _windowSize, DOWN,
-			                                                  speed, _allObjects, _events, name, fraction,
-			                                                  _bulletPool));
+			                                                  speed, _allObjects, _events, name, fraction, _bulletPool,
+			                                                  isNetworkControlled, index));
 			return;
 		}
 	}
 }
 
-void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size)
+void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size,
+                               const bool isNetworkControlled)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -260,19 +278,34 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
+		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		_allObjects->emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
-		                                                      speed, _allObjects, _events, name, fraction,
-		                                                      inputProvider, _bulletPool));
+
+		if (isNetworkControlled)
+		{
+			std::unique_ptr<IInputProvider> inputProvider =
+					std::make_unique<InputProviderForPlayerOneNet>(name, _events);
+
+			_allObjects->emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
+			                                                      speed, _allObjects, _events, name, fraction,
+			                                                      inputProvider, _bulletPool, isNetworkControlled, 1));
+		}
+		else
+		{
+			std::unique_ptr<IInputProvider> inputProvider =
+					std::make_unique<InputProviderForPlayerOne>(name, _events);
+			_allObjects->emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
+			                                                      speed, _allObjects, _events, name, fraction,
+			                                                      inputProvider, _bulletPool, isNetworkControlled, 1));
+		}
 	}
 }
 
-void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size)
+void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size,
+                               const bool isNetworkControlled)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -285,19 +318,34 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
+		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
-		_allObjects->emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP,
-		                                                      speed, _allObjects, _events, name, fraction,
-		                                                      inputProvider, _bulletPool));
+		bool isHost = _currentMode == PlayAsHost;
+		if (isNetworkControlled)
+		{
+			std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwoNet>(
+					name, _events);
+			_allObjects->emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP,
+			                                                      speed, _allObjects, _events, name, fraction,
+			                                                      inputProvider, _bulletPool, isNetworkControlled,
+			                                                      isHost, 2));
+		}
+		else
+		{
+			std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(
+					name, _events);
+			_allObjects->emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP,
+			                                                      speed, _allObjects, _events, name, fraction,
+			                                                      inputProvider, _bulletPool, isNetworkControlled,
+			                                                      isHost, 2));
+		}
 	}
 }
 
 void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -310,17 +358,17 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow = 0xeaea00;
-		std::string name = "CoopOneAI";
+		std::string name = "CoopAI1";
 		std::string fraction = "PlayerTeam";
 		_allObjects->emplace_back(std::make_shared<CoopAI>(rect, yellow, health, _windowBuffer, _windowSize, UP, speed,
-		                                                   _allObjects, _events, name, fraction, _bulletPool));
+		                                                   _allObjects, _events, name, fraction, _bulletPool, 1));
 	}
 }
 
 void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const float windowSizeY = static_cast<float>(_windowSize.y);
-	const Rectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -333,10 +381,10 @@ void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green = 0x408000;
-		std::string name = "CoopTwoAI";
+		std::string name = "CoopAI2";
 		std::string fraction = "PlayerTeam";
 		_allObjects->emplace_back(std::make_shared<CoopAI>(rect, green, health, _windowBuffer, _windowSize, UP, speed,
-		                                                   _allObjects, _events, name, fraction, _bulletPool));
+		                                                   _allObjects, _events, name, fraction, _bulletPool, 2));
 	}
 }
 
@@ -346,35 +394,36 @@ void TankSpawner::RespawnTanks()
 	const float size = gridOffset * 3;
 	constexpr float speed = 142;
 	constexpr int health = 100;
+	const bool playAsClient = _currentMode == PlayAsClient;
 
 	if (IsEnemyOneNeedRespawn() && GetEnemyRespawnResource() > 0)
 	{
-		SpawnEnemy(1, gridOffset, speed, health, size);
+		SpawnEnemy(1, gridOffset, speed, health, size, playAsClient);
 	}
 
 	if (IsEnemyTwoNeedRespawn() && GetEnemyRespawnResource() > 0)
 	{
-		SpawnEnemy(2, gridOffset, speed, health, size);
+		SpawnEnemy(2, gridOffset, speed, health, size, playAsClient);
 	}
 
 	if (IsEnemyThreeNeedRespawn() && GetEnemyRespawnResource() > 0)
 	{
-		SpawnEnemy(3, gridOffset, speed, health, size);
+		SpawnEnemy(3, gridOffset, speed, health, size, playAsClient);
 	}
 
 	if (IsEnemyFourNeedRespawn() && GetEnemyRespawnResource() > 0)
 	{
-		SpawnEnemy(4, gridOffset, speed, health, size);
+		SpawnEnemy(4, gridOffset, speed, health, size, playAsClient);
 	}
 
 	if (IsPlayerOneNeedRespawn() && GetPlayerOneRespawnResource() > 0)
 	{
-		SpawnPlayer1(gridOffset, speed, health, size);
+		SpawnPlayer1(gridOffset, speed, health, size, playAsClient);
 	}
 
 	if (IsPlayerTwoNeedRespawn() && GetPlayerTwoRespawnResource() > 0)
 	{
-		SpawnPlayer2(gridOffset, speed, health, size);
+		SpawnPlayer2(gridOffset, speed, health, size, !playAsClient);
 	}
 
 	if (IsCoopOneAINeedRespawn() && GetPlayerOneRespawnResource() > 0)
@@ -397,13 +446,13 @@ void TankSpawner::IncreaseEnemyRespawnResource()
 void TankSpawner::IncreasePlayerOneRespawnResource()
 {
 	++_playerOneRespawnResource;
-	_events->EmitEvent<const int>("PlayerOneRespawnResourceChangedTo", _playerOneRespawnResource);
+	_events->EmitEvent<const int>("Player1RespawnResourceChangedTo", _playerOneRespawnResource);
 }
 
 void TankSpawner::IncreasePlayerTwoRespawnResource()
 {
 	++_playerTwoRespawnResource;
-	_events->EmitEvent<const int>("PlayerTwoRespawnResourceChangedTo", _playerTwoRespawnResource);
+	_events->EmitEvent<const int>("Player2RespawnResourceChangedTo", _playerTwoRespawnResource);
 }
 
 void TankSpawner::DecreaseEnemyRespawnResource()
@@ -415,11 +464,11 @@ void TankSpawner::DecreaseEnemyRespawnResource()
 void TankSpawner::DecreasePlayerOneRespawnResource()
 {
 	--_playerOneRespawnResource;
-	_events->EmitEvent<const int>("PlayerOneRespawnResourceChangedTo", _playerOneRespawnResource);
+	_events->EmitEvent<const int>("Player1RespawnResourceChangedTo", _playerOneRespawnResource);
 }
 
 void TankSpawner::DecreasePlayerTwoRespawnResource()
 {
 	--_playerTwoRespawnResource;
-	_events->EmitEvent<const int>("PlayerTwoRespawnResourceChangedTo", _playerTwoRespawnResource);
+	_events->EmitEvent<const int>("Player2RespawnResourceChangedTo", _playerTwoRespawnResource);
 }

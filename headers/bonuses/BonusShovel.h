@@ -13,7 +13,7 @@ class BonusShovel final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusShovel(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	BonusShovel(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	          int durationMs, int lifeTimeMs, int color);
 
 	~BonusShovel() override;

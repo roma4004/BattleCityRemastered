@@ -16,10 +16,15 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
+#include <boost/asio/ip/tcp.hpp>
+
+struct Server;
+class Client;
 
 class GameSuccess final : public IGame
 {
 	UPoint _windowSize{0, 0};
+	GameMode _selectedGameMode{OnePlayer};
 	GameMode _currentMode{Demo};
 	std::shared_ptr<GameStatistics> _statistics;
 	Menu _menu;

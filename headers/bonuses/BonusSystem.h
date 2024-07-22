@@ -38,6 +38,6 @@ public:
 
 	~BonusSystem() override;
 
-	void SpawnRandomBonus(Rectangle rect);
-	void SpawnBonus(Rectangle rect, int color, int bonusId);
+	void SpawnRandomBonus(ObjRectangle rect);
+	void SpawnBonus(ObjRectangle rect, int color, int bonusId);
 };

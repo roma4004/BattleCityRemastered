@@ -3,13 +3,13 @@
 
 #include <algorithm>
 
-LineOfSight::LineOfSight(const Rectangle shape, const UPoint windowSize, const FPoint bulletHalf,
+LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint windowSize, const FPoint bulletHalf,
                          std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
 	const FPoint tankHalf = {shape.w / 2.f, shape.h / 2.f};
-	checkLOS = std::vector<Rectangle>{
+	checkLOS = std::vector<ObjRectangle>{
 			/*up, left, down, right*/
 			{shape.x + tankHalf.x - bulletHalf.x, 0.f, bulletHalf.x, shape.y},
 			{0.f, shape.y + tankHalf.y - bulletHalf.y, shape.x, bulletHalf.y},

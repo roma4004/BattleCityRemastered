@@ -1,6 +1,6 @@
 #include "../../headers/Bonuses/BonusShovel.h"
 
-BonusShovel::BonusShovel(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
+BonusShovel::BonusShovel(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize,
                          std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
                          const int color)
 	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}

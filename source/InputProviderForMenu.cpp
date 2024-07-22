@@ -11,12 +11,19 @@ InputProviderForMenu::InputProviderForMenu(std::string name, std::shared_ptr<Eve
 
 		_events->EmitEvent<const bool>("Pause_Status", keys.pause);
 	});
+	_events->AddListener("Net_Pause_Released", _name, [this]()
+	{
+		keys.pause = !keys.pause;
+
+		_events->EmitEvent<const bool>("Pause_Status", keys.pause);
+	});
 }
 
 InputProviderForMenu::~InputProviderForMenu()
 {
 	_events->RemoveListener("Menu_Released", _name);
 	_events->RemoveListener("Pause_Released", _name);
+	_events->RemoveListener("Net_Pause_Released", _name);
 }
 
 void InputProviderForMenu::ToggleMenu()

@@ -1,14 +1,14 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
-BaseObj::BaseObj(const Rectangle& rect, const int color, const int health)
+BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health)
 	: _color(color), _health(health), _shape{rect} {}
 
 BaseObj::~BaseObj() = default;
 
-const Rectangle& BaseObj::GetShape() const { return _shape; }
+const ObjRectangle& BaseObj::GetShape() const { return _shape; }
 
-void BaseObj::SetShape(const Rectangle& shape) { _shape = shape; }
+void BaseObj::SetShape(const ObjRectangle& shape) { _shape = shape; }
 
 FPoint BaseObj::GetPos() const { return FPoint{_shape.x, _shape.y}; }
 

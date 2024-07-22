@@ -38,7 +38,7 @@ class GameStatistics
 	int _brickDiedByPlayerTwo{0};
 
 public:
-	GameStatistics(std::shared_ptr<EventSystem> events);
+	explicit GameStatistics(std::shared_ptr<EventSystem> events);
 
 	~GameStatistics();
 

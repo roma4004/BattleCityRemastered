@@ -6,7 +6,7 @@
 
 #include <string>
 
-ObstacleAroundFortress::ObstacleAroundFortress(const Rectangle& rect, int* windowBuffer, UPoint windowSize,
+ObstacleAroundFortress::ObstacleAroundFortress(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize,
                                                const std::shared_ptr<EventSystem>& events,
                                                std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 15},

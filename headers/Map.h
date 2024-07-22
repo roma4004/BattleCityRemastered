@@ -16,7 +16,7 @@ public:
 	~Map();
 
 	template<typename T>
-	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
+	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect, int* windowBuffer,
 	                      UPoint windowSize, std::shared_ptr<EventSystem> events) const;
 	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize, int* windowBuffer,
 	                 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
@@ -124,7 +124,7 @@ public:
 };
 
 template<typename T>
-void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
+void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect, int* windowBuffer,
                            UPoint windowSize, std::shared_ptr<EventSystem> events) const
 {
 	allObjects->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
@@ -132,7 +132,7 @@ void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, co
 
 template<>
 inline void Map::ObstacleCreation<ObstacleAroundFortress>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                                          const Rectangle& rect, int* windowBuffer, UPoint windowSize,
+                                                          const ObjRectangle& rect, int* windowBuffer, UPoint windowSize,
                                                           std::shared_ptr<EventSystem> events) const
 {
 	allObjects->emplace_back(

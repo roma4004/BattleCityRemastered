@@ -8,12 +8,14 @@
 
 #include <random>
 
+enum GameMode : int;
+
 class TankSpawner final
 {
 	UPoint _windowSize{0, 0};
 	std::string _name = "TankSpawner";
 	int* _windowBuffer{nullptr};
-	GameMode _currentMode{Demo};
+	GameMode _currentMode;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
@@ -40,11 +42,11 @@ class TankSpawner final
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
+	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size, bool isNetworkControlled);
 	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 
-	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
-	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
+	void SpawnPlayer1(float gridOffset, float speed, int health, float size, bool isNetworkControlled);
+	void SpawnPlayer2(float gridOffset, float speed, int health, float size, bool isNetworkControlled);
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);
 	void SpawnCoop2(float gridOffset, float speed, int health, float size);
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);

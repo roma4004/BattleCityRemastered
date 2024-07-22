@@ -3,7 +3,7 @@
 #include "../BaseObj.h"
 #include "../Direction.h"
 #include "../Point.h"
-#include "../Rectangle.h"
+#include "../ObjRectangle.h"
 #include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -37,7 +37,7 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	Pawn(const ObjRectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
 	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
 	     std::shared_ptr<IMoveBeh> moveBeh);
 

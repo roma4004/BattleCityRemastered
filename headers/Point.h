@@ -6,6 +6,13 @@ struct FPoint
 {
 	float x{}, y{};
 
+	template<class Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & x;
+		ar & y;
+	}
+
 	bool operator==(const FPoint& rhs) const
 	{
 		static constexpr float epsilon = 1e-4f;
@@ -31,9 +38,47 @@ struct FPoint
 struct Point
 {
 	int x{}, y{};
+
+	template<class Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & x;
+		ar & y;
+	}
+
+	bool operator==(const Point& rhs) const { return x == rhs.x && y == rhs.y; }
+
+	bool operator!=(const Point& rhs) const { return !(*this == rhs); }
+
+	bool operator<(const Point& rhs) const { return x < rhs.x && y < rhs.y; }
+
+	bool operator>(const Point& rhs) const { return rhs < *this; }
+
+	bool operator<=(const Point& rhs) const { return *this == rhs || *this < rhs; }
+
+	bool operator>=(const Point& rhs) const { return *this == rhs || *this > rhs; }
 };
 
 struct UPoint
 {
 	size_t x{}, y{};
+
+	template<class Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & x;
+		ar & y;
+	}
+
+	bool operator==(const UPoint& rhs) const { return x == rhs.x && y == rhs.y; }
+
+	bool operator!=(const UPoint& rhs) const { return !(*this == rhs); }
+
+	bool operator<(const UPoint& rhs) const { return x < rhs.x && y < rhs.y; }
+
+	bool operator>(const UPoint& rhs) const { return rhs < *this; }
+
+	bool operator<=(const UPoint& rhs) const { return *this == rhs || *this < rhs; }
+
+	bool operator>=(const UPoint& rhs) const { return *this == rhs || *this > rhs; }
 };

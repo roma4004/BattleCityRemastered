@@ -48,7 +48,9 @@
     <ClCompile Include="..\source\BulletPool.cpp" />
     <ClCompile Include="..\source\GameStatistics.cpp" />
     <ClCompile Include="..\source\InputProviderForPlayerOne.cpp" />
+    <ClCompile Include="..\source\InputProviderForPlayerOneNet.cpp" />
     <ClCompile Include="..\source\InputProviderForPlayerTwo.cpp" />
+    <ClCompile Include="..\source\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\LineOfSight.cpp" />
     <ClCompile Include="..\source\MoveLikeAIBeh.cpp" />
     <ClCompile Include="..\source\MoveLikeBulletBeh.cpp" />
@@ -64,7 +66,7 @@
     <ClCompile Include="..\source\pawns\PlayerOne.cpp" />
     <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
-    <ClCompile Include="..\source\Rectangle.cpp" />
+    <ClCompile Include="..\source\ObjRectangle.cpp" />
     <ClCompile Include="..\source\ShootingBeh.cpp" />
     <ClCompile Include="..\source\TankSpawner.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />

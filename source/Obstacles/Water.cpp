@@ -2,7 +2,7 @@
 
 #include <string>
 
-Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
+Water::Water(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
 	: BaseObj{rect, 0x1e90ff, 15},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},

@@ -57,7 +57,7 @@ float ShootingBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& obje
 }
 
 //Note: {-1.f, -1.f} this is try shooting outside screen
-Rectangle ShootingBeh::GetBulletStartRect() const
+ObjRectangle ShootingBeh::GetBulletStartRect() const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -74,7 +74,7 @@ Rectangle ShootingBeh::GetBulletStartRect() const
 	const float bulletWidth = tank->GetBulletWidth();
 	const float bulletHeight = tank->GetBulletHeight();
 	const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-	Rectangle bulletRect = {-1, -1, bulletWidth, bulletHeight};
+	ObjRectangle bulletRect = {-1, -1, bulletWidth, bulletHeight};
 
 	if (const Direction direction = tank->GetDirection();
 		direction == UP
@@ -113,7 +113,7 @@ void ShootingBeh::Shot() const
 		return;
 	}
 
-	const Rectangle bulletRect = GetBulletStartRect();
+	const ObjRectangle bulletRect = GetBulletStartRect();
 	if (bulletRect.x < 0.f || bulletRect.y < 0.f)
 	{
 		//Try shooting outside screen
@@ -124,12 +124,10 @@ void ShootingBeh::Shot() const
 	const int damage = tank->GetBulletDamage();
 	const double aoeRadius = tank->GetBulletDamageAreaRadius();
 	constexpr int health = 1;
-	const UPoint windowSize = tank->GetWindowSize();
 	const Direction direction = tank->GetDirection();
 	const float speed = tank->GetBulletSpeed();
 	std::string name = tank->GetName();
 	std::string fraction = tank->GetFraction();
-	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, _windowBuffer,
-	                                                 windowSize, direction, speed, _allObjects, _events,
-	                                                 std::move(name), std::move(fraction)));
+	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, direction,
+	                                                 speed, std::move(name), std::move(fraction)));
 }

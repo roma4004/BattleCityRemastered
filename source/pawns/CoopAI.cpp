@@ -12,10 +12,10 @@
 #include <algorithm>
 #include <chrono>
 
-CoopAI::CoopAI(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
                const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-               std::shared_ptr<BulletPool> bulletPool)
+               std::shared_ptr<BulletPool> bulletPool, const int tankId)
 	: Tank{rect,
 	       color,
 	       health,
@@ -28,7 +28,8 @@ CoopAI::CoopAI(const Rectangle& rect, const int color, const int health, int* wi
 	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
 	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
-	       std::move(fraction)},
+	       std::move(fraction),
+	       tankId},
 	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)
 {
 	BaseObj::SetIsPassable(false);
@@ -58,6 +59,10 @@ void CoopAI::Subscribe()
 		return;
 	}
 
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
@@ -77,10 +82,6 @@ void CoopAI::Subscribe()
 			this->TickUpdate(deltaTime);
 		}
 	});
-
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-
-	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusTimer",
@@ -126,7 +127,7 @@ void CoopAI::Subscribe()
 			{
 				if (fraction == _fraction && author == _name)
 				{
-					this->SetHealth(GetHealth() + 50);
+					this->SetHealth(this->GetHealth() + 50);
 					if (_tier > 4)
 					{
 						return;
@@ -135,8 +136,8 @@ void CoopAI::Subscribe()
 					++this->_tier;
 
 					this->SetSpeed(this->GetSpeed() * 1.10f);
-					this->SetBulletSpeed(GetBulletSpeed() * 1.10f);
-					this->SetBulletDamage(GetBulletDamage() + 15);
+					this->SetBulletSpeed(this->GetBulletSpeed() * 1.10f);
+					this->SetBulletDamage(this->GetBulletDamage() + 15);
 					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
 					this->SetBulletDamageAreaRadius(this->GetBulletDamageAreaRadius() * 1.25f);
 				}
@@ -150,11 +151,11 @@ void CoopAI::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
-
 	_events->RemoveListener("Draw", _name);
 
 	_events->RemoveListener("DrawHealthBar", _name);
+
+	_events->RemoveListener<const float>("TickUpdate", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);

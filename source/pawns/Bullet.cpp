@@ -3,10 +3,10 @@
 
 #include <string>
 
-Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const int health,
+Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
                int* windowBuffer, const UPoint windowSize, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string author, std::string fraction)
+               std::string author, std::string fraction, int bulletId, const bool isNetworkControlled)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -17,15 +17,18 @@ Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int co
 	       allObjects,
 	       events,
 	       std::make_shared<MoveLikeBulletBeh>(this, allObjects, events)},
-	  _author{std::move(author)}, _fraction{std::move(fraction)},
+	  _author{std::move(author)},
+	  _fraction{std::move(fraction)},
 	  _bulletDamageAreaRadius{aoeRadius},
-	  _damage{damage}
+	  _damage{damage},
+	  _isNetworkControlled{isNetworkControlled}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "bullet" + std::to_string(bulletId);
+	_bulletId = bulletId;
 	Subscribe();
 }
 
@@ -41,12 +44,22 @@ void Bullet::Subscribe()
 		return;
 	}
 
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	if (_isNetworkControlled)
+	{
+		_events->AddListener<const FPoint>("Net_" + _name + "_NewPos", _name, [this](const FPoint newPos)
+		{
+			this->SetPos(newPos);
+		});
+
+		return;
+	}
+
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
-
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
 void Bullet::Unsubscribe() const
@@ -56,9 +69,16 @@ void Bullet::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
-
 	_events->RemoveListener("Draw", _name);
+
+	if (_isNetworkControlled)
+	{
+		_events->RemoveListener<const FPoint>("Net_" + _name + "_NewPos", _name);
+
+		return;
+	}
+
+	_events->RemoveListener<const float>("TickUpdate", _name);
 }
 
 void Bullet::Disable() const
@@ -71,8 +91,9 @@ void Bullet::Enable()
 	Subscribe();
 }
 
-void Bullet::Reset(const Rectangle& rect, const int damage, const double aoeRadius, const int color, const float speed,
-                   const Direction direction, const int health, std::string author, std::string fraction)
+void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
+                   const float speed, const Direction direction, const int health, std::string author,
+                   std::string fraction, const bool isNetworkControlled)
 {
 	SetShape(rect);
 	SetColor(color);
@@ -85,6 +106,7 @@ void Bullet::Reset(const Rectangle& rect, const int damage, const double aoeRadi
 	_bulletDamageAreaRadius = aoeRadius;
 	_speed = speed;
 	SetIsAlive(true);
+	_isNetworkControlled = isNetworkControlled;
 	Enable();
 }
 
@@ -93,6 +115,8 @@ void Bullet::TickUpdate(const float deltaTime)
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
 		_moveBeh->Move(deltaTime);
+
+		_events->EmitEvent<const FPoint, const int>("Bullet_NewPos", GetPos(), _bulletId);
 	}
 }
 

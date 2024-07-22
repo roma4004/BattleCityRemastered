@@ -2,10 +2,10 @@
 #include "../../headers/ShootingBeh.h"
 #include "../../headers/utils/PixelUtils.h"
 
-Tank::Tank(const Rectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
+Tank::Tank(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
            const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh,
-           std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction)
+           std::shared_ptr<IShootable> shootingBeh, const std::string& name, std::string fraction, const int tankId)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -17,7 +17,8 @@ Tank::Tank(const Rectangle& rect, const int color, const int health, int* window
 	       events,
 	       std::move(moveBeh)},
 	  _shootingBeh{std::move(shootingBeh)},
-	  _name{std::move(name)},
+	  _tankId{tankId},
+	  _name{name + std::to_string(_tankId)},
 	  _fraction{std::move(fraction)} {}
 
 
@@ -63,6 +64,8 @@ void Tank::SetBulletDamageAreaRadius(const double bulletDamageAreaRadius)
 int Tank::GetFireCooldownMs() const { return _fireCooldownMs; }
 
 void Tank::SetFireCooldownMs(const int fireCooldown) { _fireCooldownMs = fireCooldown; }
+
+int Tank::GetTankId() const { return _tankId; }
 
 void Tank::DrawHealthBar() const
 {

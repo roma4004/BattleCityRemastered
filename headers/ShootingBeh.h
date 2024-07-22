@@ -27,7 +27,7 @@ public:
 	float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
 	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
-	[[nodiscard]] Rectangle GetBulletStartRect() const;
+	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 	void Shot() const override;
 };

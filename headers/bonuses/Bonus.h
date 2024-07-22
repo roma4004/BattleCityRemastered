@@ -31,7 +31,7 @@ protected:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
 
 public:
-	Bonus(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	Bonus(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	      int durationMs, int lifeTimeMs, int color);
 
 	~Bonus() override;

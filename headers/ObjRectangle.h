@@ -1,6 +1,6 @@
 #pragma once
 
-struct Rectangle
+struct ObjRectangle
 {
 	float x{}, y{}, w{}, h{};
 

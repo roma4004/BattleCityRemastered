@@ -13,7 +13,7 @@ class BonusHelmet final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusHelmet(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	BonusHelmet(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	            int durationMs, int lifeTimeMs, int color);
 
 	~BonusHelmet() override;
