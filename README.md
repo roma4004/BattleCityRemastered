@@ -39,10 +39,11 @@ Used design patterns:
 * Object Pool
 
 TODO roadmap: 
+* network multiplayer (in progress)
 * unique bonuses,
 * use SDL_Image for texture,
-* patterns lightweight for images,
+* patterns Lightweight for images,
 * SDL_Mixer for sound,
 * QuadThree for collision detection,
-* thread pool even for faster "update" and "draw",
-* network multiplayer
+* Thread Pool even for faster "update" and "draw",
+* ECS (entity component system)
