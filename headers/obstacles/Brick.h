@@ -13,7 +13,7 @@ class Brick final : public BaseObj
 	std::shared_ptr<EventSystem> _events;
 	std::string _name;
 
-	void Subscribe() const;
+	void Subscribe();
 	void Unsubscribe() const;
 
 	void SetPixel(size_t x, size_t y, int color) const;
@@ -22,8 +22,11 @@ class Brick final : public BaseObj
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
+	[[nodiscard]] std::string GetName() const;
+
 public:
-	Brick(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
+	Brick(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	      int obstacleId);
 
 	~Brick() override;
 };

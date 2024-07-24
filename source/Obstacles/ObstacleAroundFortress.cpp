@@ -8,21 +8,21 @@
 
 ObstacleAroundFortress::ObstacleAroundFortress(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize,
                                                const std::shared_ptr<EventSystem>& events,
-                                               std::vector<std::shared_ptr<BaseObj>>* allObjects)
+                                               std::vector<std::shared_ptr<BaseObj>>* allObjects, const int obstacleId)
 	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 15},
 	  _rect{rect},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
 	  _events{events},
 	  _allObjects{allObjects},
-	  _brick{std::make_unique<Brick>(rect, windowBuffer, windowSize, events)}
-
+	  _obstacleId{obstacleId}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
-	_name = "BrickAroundFortress " + std::to_string(
-			        reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+
+	_brick = {std::make_unique<Brick>(rect, windowBuffer, windowSize, events, _obstacleId)};
+	_name = "BrickAroundFortress" + std::to_string(_obstacleId);
 	Subscribe();
 }
 
@@ -57,7 +57,7 @@ void ObstacleAroundFortress::BonusShovelSwitch()
 		if (_isBrick)
 		{
 			_brick = nullptr;
-			_iron = std::make_unique<Iron>(_rect, _windowBuffer, _windowSize, _events);
+			_iron = std::make_unique<Iron>(_rect, _windowBuffer, _windowSize, _events, _obstacleId);
 			SetColor(0xaaaaaa);
 			BaseObj::SetIsPassable(false);
 			BaseObj::SetIsDestructible(false);
@@ -66,7 +66,7 @@ void ObstacleAroundFortress::BonusShovelSwitch()
 		else
 		{
 			_iron = nullptr;
-			_brick = std::make_unique<Brick>(_rect, _windowBuffer, _windowSize, _events);
+			_brick = std::make_unique<Brick>(_rect, _windowBuffer, _windowSize, _events, _obstacleId);
 			SetColor(0x924b00);
 			BaseObj::SetIsPassable(false);
 			BaseObj::SetIsDestructible(true);

@@ -463,7 +463,7 @@ TEST_F(BonusTest, ShovelPickUpBrickAroundFortressTurnIntoIron)
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
 		if (const auto obstacleAroundFortress =
-				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects))
+				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
 		{
 			if (obstacleAroundFortress->IsBrick())
 			{
@@ -514,7 +514,7 @@ TEST_F(BonusTest, ShovelNotPickUpBrickAroundFortressTheSame)
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
 		if (const auto obstacleAroundFortress =
-				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects))
+				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
 		{
 			if (obstacleAroundFortress->IsBrick())
 			{

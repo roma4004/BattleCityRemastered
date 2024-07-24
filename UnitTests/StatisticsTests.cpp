@@ -664,7 +664,7 @@ TEST_F(StatisticsTest, BrickDiedByEnemy)
 	{
 		constexpr float gridSize = 1;
 		const ObjRectangle rect{0, _tankSize + bulletHeight + 2 + gridSize, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			brick->SetHealth(1);
@@ -700,7 +700,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerOne)
 	{
 		constexpr float gridSize = 1;
 		const ObjRectangle rect{0, _tankSize + bulletHeight + 2 + gridSize, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			brick->SetHealth(1);
@@ -736,7 +736,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	{
 		constexpr float gridSize = 1;
 		const ObjRectangle rect{0, _tankSize + bulletHeight + gridSize, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			brick->SetHealth(1);

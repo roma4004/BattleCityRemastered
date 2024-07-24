@@ -526,7 +526,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrick)
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
@@ -553,7 +553,7 @@ TEST_F(PlayerTest, TankCantPassThroughIron)
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events, 0));
 
 		if (const auto brick = dynamic_cast<Iron*>(_allObjects.back().get()))
 		{
@@ -580,7 +580,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events));
+		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events, 0));
 
 		if (const auto water = dynamic_cast<Water*>(_allObjects.back().get()))
 		{

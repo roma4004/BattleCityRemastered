@@ -2,7 +2,8 @@
 
 #include <string>
 
-Brick::Brick(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
+Brick::Brick(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
+             const int obstacleId)
 	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 15},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
@@ -12,7 +13,7 @@ Brick::Brick(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSiz
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "Brick " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "Brick" + std::to_string(obstacleId);
 	Subscribe();
 }
 
@@ -21,7 +22,7 @@ Brick::~Brick()
 	Unsubscribe();
 }
 
-void Brick::Subscribe() const
+void Brick::Subscribe()
 {
 	if (_events == nullptr)
 	{
@@ -29,6 +30,15 @@ void Brick::Subscribe() const
 	}
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+
+	_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
+	{
+		this->SetHealth(health);
+		if (GetHealth() < 1)
+		{
+			this->SetIsAlive(false);
+		}
+	});
 }
 
 void Brick::Unsubscribe() const
@@ -39,6 +49,8 @@ void Brick::Unsubscribe() const
 	}
 
 	_events->RemoveListener("Draw", _name);
+
+	_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
 }
 
 void Brick::SetPixel(const size_t x, const size_t y, const int color) const
@@ -73,5 +85,10 @@ void Brick::SendDamageStatistics(const std::string& author, const std::string& f
 	if (GetHealth() < 1)
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("BrickDied", author, fraction);
+
+		_events->EmitEvent<const std::string, const std::string, const int>(
+				"SendHealth", GetName(), "_NewHealth", GetHealth());
 	}
 }
+
+std::string Brick::GetName() const { return _name; }

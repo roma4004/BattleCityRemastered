@@ -25,6 +25,7 @@ class ObstacleAroundFortress : public BaseObj, ITickUpdatable
 	bool _isActiveShovel{false};
 	std::chrono::system_clock::time_point _activateTimeShovel;
 	int _cooldownShovelMs{0};
+	int _obstacleId{0};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -35,9 +36,11 @@ class ObstacleAroundFortress : public BaseObj, ITickUpdatable
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	void Hide();
+
 public:
 	ObstacleAroundFortress(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize,
-	                    const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects);
+	                       const std::shared_ptr<EventSystem>& events,
+	                       std::vector<std::shared_ptr<BaseObj>>* allObjects, int obstacleId);
 
 	~ObstacleAroundFortress() override;
 

@@ -23,7 +23,8 @@ class Water final : public BaseObj
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	Water(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
+	Water(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	      int obstacleId);
 
 	~Water() override;
 };

@@ -77,6 +77,7 @@ void Client::ReadResponse()
 
 			_read_buffer.consume(length);// Now we can consume the written data
 
+			//TODO: replicate tank died and spawn, now only next move update them or new health update health
 			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game 
 			if (data.eventName == "_NewHealth")
 			{
