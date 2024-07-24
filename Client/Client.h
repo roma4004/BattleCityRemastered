@@ -21,6 +21,7 @@ struct Data
 	void serialize(Archive& ar, const unsigned int version)
 	{
 		ar & health;
+		ar & objectName;
 		ar & eventName;
 		ar & names;
 		ar & newPos;
@@ -28,6 +29,7 @@ struct Data
 	}
 
 	int health{-1};
+	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;
 	FPoint newPos{0.f, 0.f};

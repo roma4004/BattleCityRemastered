@@ -44,6 +44,8 @@ class EventSystem
 	                                  Event<const int>, // respawn resource changed
 	                                  Event<const int, const int>, // send health changed
 	                                  Event<const std::string, const int>, // send health changed
+	                                  Event<const std::string, const std::string, const int>, // send health changed
+	                                  Event<const std::string, const std::string, const FPoint, const Direction>, // send new pos and direction
 	                                  Event<const std::string&, const std::string&>, // statistics, bonus
 	                                  Event<const std::string&, const std::string&, int>, // bonus with duration
 	                                  Event<const GameMode>, // gameMode switch

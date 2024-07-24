@@ -138,37 +138,21 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 	_events->AddListener("Pause_Pressed", _name, [this]() { this->SendKeyState("Pause_Pressed"); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->SendKeyState("Pause_Released"); });
 
-	//TODO: refactoring needed _NewPos to universal event instead of each type enemy, player, bullet
-	_events->AddListener<const FPoint, const int, const Direction>(
-			"Enemy_NewPos",
+	_events->AddListener<const std::string, const std::string, const FPoint, const Direction>(
+			"_NewPos",
 			_name,
-			[this](const FPoint newPos, const int enemyId, const Direction direction)
+			[this](const std::string objectName, const std::string eventName, const FPoint newPos,
+			       const Direction direction)
 			{
-				this->SendKeyState("Enemy" + std::to_string(enemyId) + "_NewPos", newPos, direction);
+				this->SendNewPos(objectName, eventName, newPos, direction);
 			});
 
-	_events->AddListener<const FPoint, const int, const Direction>(
-			"Player_NewPos",
-			_name,
-			[this](const FPoint newPos, const int tankId, const Direction direction)
-			{
-				this->SendKeyState("Player" + std::to_string(tankId) + "_NewPos", newPos, direction);
-			});
-
-	_events->AddListener<const FPoint, const int, const Direction>(
-			"Bullet_NewPos",
-			_name,
-			[this](const FPoint newPos, const int bulletId, const Direction direction)
-			{
-				this->SendKeyState("Bullet" + std::to_string(bulletId) + "_NewPos", newPos, direction);
-			});
-
-	_events->AddListener<const std::string, const int>(
+	_events->AddListener<const std::string, const std::string, const int>(
 			"SendHealth",
 			_name,
-			[this](const std::string eventName, const int health)
+			[this](const std::string objectName, const std::string eventName, const int health)
 			{
-				this->SendHealth(eventName, health);
+				this->SendHealth(objectName, eventName, health);
 			});
 
 	_events->AddListener<const int>(
@@ -214,10 +198,7 @@ Server::~Server()
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
 
-	_events->RemoveListener<const FPoint, const int, const Direction>("Enemy_NewPos", _name);
-	_events->RemoveListener<const FPoint, const int, const Direction>("Player_NewPos", _name);
-
-	_events->RemoveListener<const FPoint, const int, const Direction>("Bullet_NewPos", _name);
+	_events->RemoveListener<const std::string, const std::string, const FPoint, const Direction>("_NewPos", _name);
 	_events->RemoveListener<const std::string, const int>("SendHealth", _name);
 	_events->RemoveListener<const int>("Bullet_Dispose", _name);
 
@@ -319,10 +300,27 @@ void Server::SendKeyState(const std::string& state, const FPoint newPos, const D
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendHealth(const std::string& eventName, const int health) const
+void Server::SendNewPos(const std::string& objectName, const std::string& eventName, const FPoint newPos,
+                        const Direction direction) const
+{
+	Data data;
+	data.objectName = objectName;
+	data.eventName = eventName;
+	data.newPos = newPos;
+	data.direction = direction;
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendHealth(const std::string& objectName, const std::string& eventName, const int health) const
 {
 	Data data;
 	data.health = health;
+	data.objectName = objectName;
 	data.eventName = eventName;
 
 	std::ostringstream archiveStream;

@@ -195,8 +195,12 @@ void PlayerOne::MoveTo(const float deltaTime, const Direction direction)
 {
 	SetDirection(direction);
 	_moveBeh->Move(deltaTime);
-	_events->EmitEvent<const FPoint, const int, const Direction>(
-			"Player_NewPos", GetPos(), GetTankId(), GetDirection());
+
+	if (!_isNetworkControlled)
+	{
+		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
+				"_NewPos", "Player" + std::to_string(GetTankId()), "_NewPos", GetPos(), GetDirection());
+	}
 }
 
 void PlayerOne::TickUpdate(const float deltaTime)
@@ -230,7 +234,12 @@ void PlayerOne::TickUpdate(const float deltaTime)
 	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
 	{
 		Shot();
-		_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+
+		if (!_isNetworkControlled)
+		{
+			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+		}
+
 		_lastTimeFire = std::chrono::system_clock::now();
 	}
 }
@@ -251,6 +260,7 @@ void PlayerOne::TakeDamage(const int damage)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+		_events->EmitEvent<const std::string, const std::string, const int>(
+				"SendHealth", GetName(), "_NewHealth", GetHealth());
 	}
 }

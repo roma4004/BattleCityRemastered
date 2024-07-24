@@ -62,13 +62,10 @@ void Bullet::Subscribe()
 			this->SetHealth(health);
 		});
 
-		_events->AddListener(
-				"Net_" + _name + "_Dispose",
-				_name,
-				[this]()
-				{
-					this->SetIsAlive(false);
-				});
+		_events->AddListener("Net_" + _name + "_Dispose", _name, [this]()
+		{
+			this->SetIsAlive(false);
+		});
 
 		return;
 	}
@@ -135,8 +132,11 @@ void Bullet::TickUpdate(const float deltaTime)
 	{
 		_moveBeh->Move(deltaTime);
 
-		_events->EmitEvent<const FPoint, const int, const Direction>("Bullet_NewPos", GetPos(), _bulletId,
-		                                                             GetDirection());
+		// if (!_isNetworkControlled)
+		// {
+			_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
+					"_NewPos", "Bullet" + std::to_string(GetBulletId()), "_NewPos", GetPos(), GetDirection());
+		// }
 	}
 }
 

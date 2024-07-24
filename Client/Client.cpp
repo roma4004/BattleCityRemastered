@@ -77,12 +77,10 @@ void Client::ReadResponse()
 
 			_read_buffer.consume(length);// Now we can consume the written data
 
-			//TODO: нужно отправлять отдельно действия для существубщий объектов
-			// стартуем хост и потом стартуем клиент
-
-			if (data.eventName.ends_with("_NewHealth"))
+			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game 
+			if (data.eventName == "_NewHealth")
 			{
-				events->EmitEvent<const int>("Net_" + data.eventName, data.health);
+				events->EmitEvent<const int>("Net_" + data.objectName + data.eventName, data.health);
 			}
 			else if (data.eventName.ends_with("_Shot"))
 			{
@@ -92,13 +90,9 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent<const FPoint, const Direction>("Net_" + data.eventName, data.newPos, data.direction);
 			}
-			else if ((data.newPos.x > 0 || data.newPos.y > 0) && data.eventName.starts_with("Bullet"))
+			else if (data.eventName == "_NewPos")
 			{
-				events->EmitEvent<const FPoint, const Direction>("Net_" + data.eventName, data.newPos, data.direction);
-			}
-			else if (data.newPos.x > 0 || data.newPos.y > 0)
-			{
-				events->EmitEvent<const FPoint, const Direction>("Net_" + data.eventName, data.newPos, data.direction);
+				events->EmitEvent<const FPoint, const Direction>("Net_" + data.objectName + data.eventName, data.newPos, data.direction);
 			}
 			else
 			{

@@ -20,6 +20,7 @@ struct Data
 	void serialize(Archive& ar, const unsigned int version)
 	{
 		ar & health;
+		ar & objectName;
 		ar & eventName;
 		ar & names;
 		ar & newPos;
@@ -27,6 +28,7 @@ struct Data
 	}
 
 	int health{-1};
+	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;
 	FPoint newPos{0.f, 0.f};
@@ -67,7 +69,9 @@ struct Server
 	void SendKeyState(const std::string& state, FPoint newPos) const;
 	void SendShot(const std::string& state, Direction direction) const;
 	void SendKeyState(const std::string& state, FPoint newPos, Direction direction) const;
-	void SendHealth(const std::string& eventName, int health) const;
+	void SendNewPos(const std::string& objectName, const std::string& eventName, FPoint newPos,
+	                Direction direction) const;
+	void SendHealth(const std::string& objectName, const std::string& eventName, int health) const;
 
 	// void stop() {
 	// 	// Останавливаем принятие входящих подключений

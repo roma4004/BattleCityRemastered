@@ -246,7 +246,12 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(UP);
 			Shot();
-			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+
+			if (!_isNetworkControlled)
+			{
+				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+			}
+
 			return;
 		}
 		if (IsBonus(upSideObstacles.front()))
@@ -263,7 +268,12 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(LEFT);
 			Shot();
-			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+
+			if (!_isNetworkControlled)
+			{
+				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+			}
+
 			return;
 		}
 		if (IsBonus(leftSideObstacles.front()))
@@ -280,7 +290,12 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(DOWN);
 			Shot();
-			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+
+			if (!_isNetworkControlled)
+			{
+				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+			}
+
 			return;
 		}
 		if (IsBonus(downSideObstacles.front()))
@@ -297,7 +312,12 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(RIGHT);
 			Shot();
-			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+
+			if (!_isNetworkControlled)
+			{
+				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+			}
+
 			return;
 		}
 		if (IsBonus(rightSideObstacles.front()))
@@ -360,7 +380,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{
 			Shot();
-			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+
+			if (!_isNetworkControlled)
+			{
+				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+			}
 		}
 	}
 
@@ -388,8 +412,11 @@ void Enemy::TickUpdate(const float deltaTime)
 		SetDirection(static_cast<Direction>(randDir));
 	}
 
-	//TODO: add if to send only as host
-	_events->EmitEvent<const FPoint, const int, const Direction>("Enemy_NewPos", GetPos(), GetTankId(), GetDirection());
+	if (!_isNetworkControlled)
+	{
+		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
+				"_NewPos", "Enemy" + std::to_string(GetTankId()), "_NewPos", GetPos(), GetDirection());
+	}
 
 	// shot
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
@@ -415,6 +442,7 @@ void Enemy::TakeDamage(const int damage)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+		_events->EmitEvent<const std::string, const std::string, const int>(
+				"SendHealth", GetName(), "_NewHealth", GetHealth());
 	}
 }

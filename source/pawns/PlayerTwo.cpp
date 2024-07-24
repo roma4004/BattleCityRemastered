@@ -206,8 +206,12 @@ void PlayerTwo::MoveTo(const float deltaTime, const Direction direction)
 {
 	SetDirection(direction);
 	_moveBeh->Move(deltaTime);
-	_events->EmitEvent<const FPoint, const int, const Direction>(
-			"Player_NewPos", GetPos(), GetTankId(), GetDirection());
+
+	if (/*!_isNetworkControlled ||*/ _isHost)
+	{
+		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
+				"_NewPos", "Player" + std::to_string(GetTankId()), "_NewPos", GetPos(), GetDirection());
+	}
 }
 
 void PlayerTwo::TickUpdate(const float deltaTime)
@@ -260,8 +264,9 @@ void PlayerTwo::TakeDamage(const int damage)
 {
 	Tank::TakeDamage(damage);
 
-	if (!_isNetworkControlled || _isHost)
+	if (/*!_isNetworkControlled ||*/ _isHost)
 	{
-		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+		_events->EmitEvent<const std::string, const std::string, const int>(
+				"SendHealth", GetName(), "_NewHealth", GetHealth());
 	}
 }
