@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "interfaces/IMoveBeh.h"
+#include "../BaseObj.h"
+#include "../interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>

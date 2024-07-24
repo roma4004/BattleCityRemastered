@@ -80,13 +80,21 @@ void Client::ReadResponse()
 			//TODO: нужно отправлять отдельно действия для существубщий объектов
 			// стартуем хост и потом стартуем клиент
 
-			if (data.health > 0)
+			if (data.eventName.ends_with("_NewHealth"))
 			{
 				events->EmitEvent<const int>("Net_" + data.eventName, data.health);
 			}
 			else if (data.eventName.ends_with("_Shot"))
 			{
 				events->EmitEvent<const Direction>("Net_" + data.eventName, data.direction);
+			}
+			else if (data.eventName.starts_with("_Dispose"))
+			{
+				events->EmitEvent<const FPoint, const Direction>("Net_" + data.eventName, data.newPos, data.direction);
+			}
+			else if ((data.newPos.x > 0 || data.newPos.y > 0) && data.eventName.starts_with("Bullet"))
+			{
+				events->EmitEvent<const FPoint, const Direction>("Net_" + data.eventName, data.newPos, data.direction);
 			}
 			else if (data.newPos.x > 0 || data.newPos.y > 0)
 			{

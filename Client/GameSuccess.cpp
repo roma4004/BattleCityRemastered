@@ -16,19 +16,20 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
                          std::unique_ptr<InputProviderForMenu>& menuInput,
                          const std::shared_ptr<GameStatistics>& statistics)
 	: _windowSize{windowSize},
+	  _selectedGameMode{Demo},
+	  _currentMode{Demo},
 	  _statistics{statistics},
 	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
-	  _tankSpawner{windowSize, windowBuffer, &_allObjects, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},
 	  _fpsFont{fpsFont},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer)},
-	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize},
-	  _selectedGameMode{OnePlayer},
-	  _currentMode{Demo}
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer, &_currentMode)},
+	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize}
 {
+	_tankSpawner = std::make_shared<TankSpawner>(windowSize, windowBuffer, &_allObjects, events, _bulletPool);
+
 	ResetBattlefield();
 	NextGameMode();
 	Subscribe();
@@ -70,6 +71,7 @@ void GameSuccess::Unsubscribe() const
 
 void GameSuccess::ResetBattlefield()
 {
+	_bulletPool->Clear();
 	_currentMode = _selectedGameMode;
 	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 
@@ -357,7 +359,7 @@ void GameSuccess::MainLoop()
 
 			_menu.Update();
 
-			if (!_isPause)
+			if (!_isPause && _currentMode != PlayAsClient)
 			{
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}

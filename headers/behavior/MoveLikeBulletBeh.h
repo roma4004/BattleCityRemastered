@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "EventSystem.h"
-#include "interfaces/IMoveBeh.h"
+#include "../BaseObj.h"
+#include "../EventSystem.h"
+#include "../interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>

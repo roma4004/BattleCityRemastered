@@ -1,9 +1,9 @@
 #include "../headers/TankSpawner.h"
 #include "../headers/GameMode.h"
-#include "../headers/InputProviderForPlayerOne.h"
-#include "../headers/InputProviderForPlayerOneNet.h"
-#include "../headers/InputProviderForPlayerTwo.h"
-#include "../headers/InputProviderForPlayerTwoNet.h"
+#include "../headers/input/InputProviderForPlayerOne.h"
+#include "../headers/input/InputProviderForPlayerOneNet.h"
+#include "../headers/input/InputProviderForPlayerTwo.h"
+#include "../headers/input/InputProviderForPlayerTwoNet.h"
 #include "../headers/pawns/CoopAI.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
@@ -14,13 +14,13 @@
 #include <memory>
 
 TankSpawner::TankSpawner(const UPoint windowSize, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         const std::shared_ptr<EventSystem>& events)
+                         const std::shared_ptr<EventSystem>& events, std::shared_ptr<BulletPool> bulletPool)
 	: _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
 	  _currentMode{Demo},
 	  _allObjects{allObjects},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, _allObjects, windowSize, windowBuffer)}
+	  _bulletPool{std::move(bulletPool)}
 {
 	Subscribe();
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-enum GameMode
+enum GameMode : int
 {
 	Demo,
 

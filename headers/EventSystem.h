@@ -43,8 +43,9 @@ class EventSystem
 	                                  Event<const Direction>, // send shot
 	                                  Event<const int>, // respawn resource changed
 	                                  Event<const int, const int>, // send health changed
-	                                  Event<const std::string&, const std::string&>, // statistics, bomus
-	                                  Event<const std::string&, const std::string&, int>, // bonus with diration
+	                                  Event<const std::string, const int>, // send health changed
+	                                  Event<const std::string&, const std::string&>, // statistics, bonus
+	                                  Event<const std::string&, const std::string&, int>, // bonus with duration
 	                                  Event<const GameMode>, // gameMode switch
 	                                  Event<const bool>>; // pause status
 

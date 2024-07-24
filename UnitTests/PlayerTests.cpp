@@ -1,5 +1,6 @@
 #include "../headers/EventSystem.h"
-#include "../headers/InputProviderForPlayerOne.h"
+#include "../headers/GameMode.h"
+#include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/Brick.h"
 #include "../headers/obstacles/Iron.h"
 #include "../headers/obstacles/Water.h"
@@ -33,8 +34,9 @@ protected:
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		auto currentGameMode = OnePlayer;
 		//TODO: initialize with btn names
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP,
 		                                                     _tankSpeed, &_allObjects, _events, name, fraction,

@@ -1,6 +1,6 @@
-#include "../headers/ShootingBeh.h"
-#include "../headers/pawns/Tank.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/pawns/Tank.h"
+#include "../../headers/utils/ColliderUtils.h"
 
 #include <functional>
 
@@ -126,8 +126,8 @@ void ShootingBeh::Shot() const
 	constexpr int health = 1;
 	const Direction direction = tank->GetDirection();
 	const float speed = tank->GetBulletSpeed();
-	std::string name = tank->GetName();
+	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
 	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, direction,
-	                                                 speed, std::move(name), std::move(fraction)));
+	                                                 speed, std::move(author), std::move(fraction)));
 }

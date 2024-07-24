@@ -1,5 +1,5 @@
 #include "../../headers/pawns/Tank.h"
-#include "../../headers/ShootingBeh.h"
+#include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/utils/PixelUtils.h"
 
 Tank::Tank(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,

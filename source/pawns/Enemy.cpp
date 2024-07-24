@@ -1,8 +1,8 @@
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/EventSystem.h"
 #include "../../headers/LineOfSight.h"
-#include "../../headers/MoveLikeAIBeh.h"
-#include "../../headers/ShootingBeh.h"
+#include "../../headers/behavior/MoveLikeAIBeh.h"
+#include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/CoopAI.h"
 #include "../../headers/pawns/PlayerOne.h"
@@ -413,5 +413,8 @@ void Enemy::TakeDamage(const int damage)
 {
 	Tank::TakeDamage(damage);
 
-	_events->EmitEvent<const int, const int>("Enemy_NewHealth", GetTankId(), GetHealth());
+	if (!_isNetworkControlled)
+	{
+		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+	}
 }

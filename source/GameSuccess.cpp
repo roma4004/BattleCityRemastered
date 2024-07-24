@@ -23,15 +23,16 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	: _windowSize{windowSize},
 	  _statistics{statistics},
 	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
-	  _tankSpawner{windowSize, windowBuffer, &_allObjects, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},
 	  _fpsFont{fpsFont},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer, &_currentMode)},
 	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize}
 {
+	_tankSpawner = std::make_shared<TankSpawner>(windowSize, windowBuffer, &_allObjects, events, _bulletPool);
+
 	ResetBattlefield();
 	NextGameMode();
 	Subscribe();
@@ -73,6 +74,7 @@ void GameSuccess::Unsubscribe() const
 
 void GameSuccess::ResetBattlefield()
 {
+	_bulletPool->Clear();
 	_currentMode = _selectedGameMode;
 	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 

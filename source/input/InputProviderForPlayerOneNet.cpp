@@ -1,4 +1,4 @@
-#include "../headers/InputProviderForPlayerOneNet.h"
+#include "../../headers/input/InputProviderForPlayerOneNet.h"
 
 InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(std::string name, std::shared_ptr<EventSystem> events)
 	: _name{std::move(name)}, _events{std::move(events)}

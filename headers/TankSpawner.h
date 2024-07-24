@@ -65,7 +65,7 @@ class TankSpawner final
 
 public:
 	TankSpawner(UPoint windowSize, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<EventSystem>& events);
+	            const std::shared_ptr<EventSystem>& events, std::shared_ptr<BulletPool> bulletPool);
 
 	~TankSpawner();
 

@@ -2,8 +2,8 @@
 
 #include "../BaseObj.h"
 #include "../Direction.h"
-#include "../Point.h"
 #include "../ObjRectangle.h"
+#include "../Point.h"
 #include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
 

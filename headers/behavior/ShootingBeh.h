@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "interfaces/IShootable.h"
+#include "../BaseObj.h"
+#include "../interfaces/IShootable.h"
 
 #include <functional>
 #include <memory>

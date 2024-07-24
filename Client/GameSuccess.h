@@ -6,18 +6,17 @@
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
-#include "../headers/InputProviderForMenu.h"
 #include "../headers/Menu.h"
 #include "../headers/MouseButton.h"
 #include "../headers/Point.h"
 #include "../headers/TankSpawner.h"
 #include "../headers/bonuses/BonusSystem.h"
+#include "../headers/input/InputProviderForMenu.h"
 #include "../headers/interfaces/IGame.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
-// #include <boost/asio/ip/tcp.hpp>
 
 class GameSuccess final : public IGame
 {
@@ -26,7 +25,7 @@ class GameSuccess final : public IGame
 	GameMode _currentMode;
 	std::shared_ptr<GameStatistics> _statistics;
 	Menu _menu;
-	TankSpawner _tankSpawner;
+	std::shared_ptr<TankSpawner> _tankSpawner;
 	std::string _name = "Game";
 
 	int* _windowBuffer{nullptr};

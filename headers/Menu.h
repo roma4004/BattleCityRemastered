@@ -2,8 +2,8 @@
 
 #include "GameMode.h"
 #include "GameStatistics.h"
-#include "InputProviderForMenu.h"
 #include "Point.h"
+#include "input/InputProviderForMenu.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>

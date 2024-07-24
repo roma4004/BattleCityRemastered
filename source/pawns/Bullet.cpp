@@ -27,7 +27,7 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "bullet" + std::to_string(bulletId);
+	_name = "Bullet" + std::to_string(bulletId);
 	_bulletId = bulletId;
 	Subscribe();
 }
@@ -48,10 +48,27 @@ void Bullet::Subscribe()
 
 	if (_isNetworkControlled)
 	{
-		_events->AddListener<const FPoint>("Net_" + _name + "_NewPos", _name, [this](const FPoint newPos)
+		_events->AddListener<const FPoint, const Direction>(
+				"Net_" + _name + "_NewPos",
+				_name,
+				[this](const FPoint newPos, const Direction direction)
+				{
+					this->SetDirection(direction);
+					this->SetPos(newPos);
+				});
+
+		_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
 		{
-			this->SetPos(newPos);
+			this->SetHealth(health);
 		});
+
+		_events->AddListener(
+				"Net_" + _name + "_Dispose",
+				_name,
+				[this]()
+				{
+					this->SetIsAlive(false);
+				});
 
 		return;
 	}
@@ -73,7 +90,9 @@ void Bullet::Unsubscribe() const
 
 	if (_isNetworkControlled)
 	{
-		_events->RemoveListener<const FPoint>("Net_" + _name + "_NewPos", _name);
+		_events->RemoveListener<const FPoint, const Direction>("Net_" + _name + "_NewPos", _name);
+		_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
+		_events->RemoveListener("Net_" + _name + "_Dispose", _name);
 
 		return;
 	}
@@ -116,7 +135,8 @@ void Bullet::TickUpdate(const float deltaTime)
 	{
 		_moveBeh->Move(deltaTime);
 
-		_events->EmitEvent<const FPoint, const int>("Bullet_NewPos", GetPos(), _bulletId);
+		_events->EmitEvent<const FPoint, const int, const Direction>("Bullet_NewPos", GetPos(), _bulletId,
+		                                                             GetDirection());
 	}
 }
 
@@ -129,6 +149,8 @@ double Bullet::GetBulletDamageAreaRadius() const
 {
 	return _bulletDamageAreaRadius;
 }
+
+std::string Bullet::GetName() const { return _name; }
 
 std::string Bullet::GetAuthor() const
 {
@@ -144,3 +166,15 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 {
 	_events->EmitEvent<const std::string&, const std::string&>("BulletHit", author, fraction);
 }
+
+void Bullet::TakeDamage(const int damage)
+{
+	BaseObj::TakeDamage(damage);
+
+	if (!_isNetworkControlled)
+	{
+		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+	}
+}
+
+int Bullet::GetBulletId() const { return _bulletId; }

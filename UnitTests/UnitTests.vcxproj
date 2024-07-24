@@ -37,6 +37,10 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
+    <ClCompile Include="..\source\behavior\MoveLikeAIBeh.cpp" />
+    <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
+    <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
+    <ClCompile Include="..\source\behavior\ShootingBeh.cpp" />
     <ClCompile Include="..\source\bonuses\Bonus.cpp" />
     <ClCompile Include="..\source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="..\source\bonuses\BonusHelmet.cpp" />
@@ -47,14 +51,12 @@
     <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\BulletPool.cpp" />
     <ClCompile Include="..\source\GameStatistics.cpp" />
-    <ClCompile Include="..\source\InputProviderForPlayerOne.cpp" />
-    <ClCompile Include="..\source\InputProviderForPlayerOneNet.cpp" />
-    <ClCompile Include="..\source\InputProviderForPlayerTwo.cpp" />
-    <ClCompile Include="..\source\InputProviderForPlayerTwoNet.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForMenu.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerOne.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerOneNet.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerTwo.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\LineOfSight.cpp" />
-    <ClCompile Include="..\source\MoveLikeAIBeh.cpp" />
-    <ClCompile Include="..\source\MoveLikeBulletBeh.cpp" />
-    <ClCompile Include="..\source\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\Obstacles\Brick.cpp" />
     <ClCompile Include="..\source\Obstacles\Iron.cpp" />
     <ClCompile Include="..\source\obstacles\ObstacleAroundFortress.cpp" />
@@ -67,7 +69,6 @@
     <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
     <ClCompile Include="..\source\ObjRectangle.cpp" />
-    <ClCompile Include="..\source\ShootingBeh.cpp" />
     <ClCompile Include="..\source\TankSpawner.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />

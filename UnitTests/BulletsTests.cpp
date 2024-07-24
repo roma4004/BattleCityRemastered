@@ -1,4 +1,5 @@
 #include "../headers/EventSystem.h"
+#include "../headers/GameMode.h"
 #include "../headers/Point.h"
 #include "../headers/obstacles/Brick.h"
 #include "../headers/obstacles/Iron.h"
@@ -295,7 +296,8 @@ TEST_F(BulletTest, BulletDamageTank)
 		constexpr int tankHealth = 100;
 		const ObjRectangle rect{0, _bulletSize.y, tankSize, tankSize};
 		constexpr int gray = 0x808080;
-		auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer);
+		auto currentGameMode = OnePlayer;
+		auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
 		_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, tankHealth, _windowBuffer, _windowSize, UP,
 		                                                 tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 		                                                 bulletPool, false, 1));

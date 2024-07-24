@@ -1,7 +1,7 @@
 #include "../../headers/pawns/PlayerOne.h"
 #include "../../headers/EventSystem.h"
-#include "../../headers/MoveLikeTankBeh.h"
-#include "../../headers/ShootingBeh.h"
+#include "../../headers/behavior/MoveLikeTankBeh.h"
+#include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <chrono>
@@ -249,5 +249,8 @@ void PlayerOne::TakeDamage(const int damage)
 {
 	Tank::TakeDamage(damage);
 
-	_events->EmitEvent<const int, const int>("Player_NewHealth", GetTankId(), GetHealth());
+	if (!_isNetworkControlled)
+	{
+		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+	}
 }

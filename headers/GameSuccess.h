@@ -5,12 +5,12 @@
 #include "EventSystem.h"
 #include "GameMode.h"
 #include "GameStatistics.h"
-#include "InputProviderForMenu.h"
 #include "Menu.h"
 #include "MouseButton.h"
 #include "Point.h"
 #include "TankSpawner.h"
 #include "bonuses/BonusSystem.h"
+#include "input/InputProviderForMenu.h"
 #include "interfaces/IGame.h"
 
 #include <SDL.h>
@@ -28,7 +28,7 @@ class GameSuccess final : public IGame
 	GameMode _currentMode{Demo};
 	std::shared_ptr<GameStatistics> _statistics;
 	Menu _menu;
-	TankSpawner _tankSpawner;
+	std::shared_ptr<TankSpawner> _tankSpawner;
 	std::string _name = "Game";
 
 	int* _windowBuffer{nullptr};

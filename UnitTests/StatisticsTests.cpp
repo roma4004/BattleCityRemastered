@@ -1,7 +1,8 @@
 #include "../headers/EventSystem.h"
+#include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
-#include "../headers/InputProviderForPlayerOne.h"
-#include "../headers/InputProviderForPlayerTwo.h"
+#include "../headers/input/InputProviderForPlayerOne.h"
+#include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/obstacles/Brick.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
@@ -36,7 +37,8 @@ protected:
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer);
+		auto currentGameMode = OnePlayer;
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<PlayerOne>(playerRect, yellow, _tankHealth, _windowBuffer,
 		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,

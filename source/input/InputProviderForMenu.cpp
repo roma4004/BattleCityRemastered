@@ -1,4 +1,4 @@
-#include "../headers/InputProviderForMenu.h"
+#include "../../headers/input/InputProviderForMenu.h"
 
 InputProviderForMenu::InputProviderForMenu(std::string name, std::shared_ptr<EventSystem> events)
 	: _name{std::move(name)}, _events{std::move(events)}

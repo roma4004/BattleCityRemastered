@@ -27,7 +27,7 @@ struct Data
 		ar & direction;
 	}
 
-	int health;
+	int health{-1};
 	std::string eventName;
 	std::vector<std::string> names;
 	FPoint newPos{0.f, 0.f};

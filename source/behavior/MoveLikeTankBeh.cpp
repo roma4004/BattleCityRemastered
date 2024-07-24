@@ -1,7 +1,7 @@
-#include "../headers/MoveLikeTankBeh.h"
-#include "../headers/interfaces/IPickupableBonus.h"
-#include "../headers/pawns/Tank.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/behavior/MoveLikeTankBeh.h"
+#include "../../headers/interfaces/IPickupableBonus.h"
+#include "../../headers/pawns/Tank.h"
+#include "../../headers/utils/ColliderUtils.h"
 
 #include <functional>
 #include <memory>

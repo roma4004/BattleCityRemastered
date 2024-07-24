@@ -1,8 +1,8 @@
-#include "../headers/MoveLikeBulletBeh.h"
-#include "../headers/Circle.h"
-#include "../headers/Direction.h"
-#include "../headers/pawns/Bullet.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/behavior/MoveLikeBulletBeh.h"
+#include "../../headers/Circle.h"
+#include "../../headers/Direction.h"
+#include "../../headers/pawns/Bullet.h"
+#include "../../headers/utils/ColliderUtils.h"
 
 #include <memory>
 

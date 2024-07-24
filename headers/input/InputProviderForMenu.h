@@ -1,6 +1,6 @@
 #pragma once
 
-#include "EventSystem.h"
+#include "../EventSystem.h"
 
 #include <memory>
 #include <string>
