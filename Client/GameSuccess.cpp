@@ -1,6 +1,8 @@
 #include "../Client/GameSuccess.h"
+#include "../headers/BulletPool.h"
 #include "../headers/Map.h"
 #include "../headers/Menu.h"
+#include "../headers/pawns/Bullet.h"
 
 #include <algorithm>
 #include <iostream>
@@ -88,8 +90,6 @@ void GameSuccess::ResetBattlefield()
 	const Map field{};
 	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
 }
-
-void GameSuccess::SetGameMode(const GameMode gameMode) { _selectedGameMode = gameMode; }
 
 void GameSuccess::PrevGameMode()
 {
@@ -312,7 +312,7 @@ void GameSuccess::DisposeDeadObject()
 	{
 		if ((*it)->GetIsAlive() == false)
 		{
-			if (const auto bullet = dynamic_cast<Bullet*>(it->get());
+			if (const auto* bullet = dynamic_cast<Bullet*>(it->get());
 				bullet != nullptr)
 			{
 				_bulletPool->ReturnBullet(*it);

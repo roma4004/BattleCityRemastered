@@ -1,7 +1,11 @@
 #include "../headers/GameSuccess.h"
+#include "../headers/BulletPool.h"
+#include "../headers/EventSystem.h"
+#include "../headers/GameStatistics.h"
 #include "../headers/Map.h"
-#include "../headers/Menu.h"
 #include "../headers/Server.h"
+#include "../headers/TankSpawner.h"
+#include "../headers/pawns/Bullet.h"
 
 #include <algorithm>
 #include <fstream>
@@ -91,8 +95,6 @@ void GameSuccess::ResetBattlefield()
 	const Map field{};
 	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
 }
-
-void GameSuccess::SetGameMode(const GameMode gameMode) { _selectedGameMode = gameMode; }
 
 void GameSuccess::PrevGameMode()
 {
@@ -314,9 +316,9 @@ void GameSuccess::DisposeDeadObject()
 	// Destroy all "dead" objects except bullet they will be recycled
 	for (auto it = _allObjects.begin(); it < _allObjects.end();)
 	{
-		if ((*it)->GetIsAlive() == false)
+		if (!(*it)->GetIsAlive())
 		{
-			if (const auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
+			if (const auto* bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
 			{
 				_bulletPool->ReturnBullet(*it);
 				it = _allObjects.erase(it);
@@ -345,7 +347,7 @@ void GameSuccess::MainLoop()
 
 		boost::asio::io_service io_service;
 		Server server(io_service, "127.0.0.1", "1234", _events);
-		//TODO: сервер должен поднимать у себя слушателя в отдельном потоке, а так же хранить у себя io_service
+		//TODO: encapsulate separated thread into server for storing and running io_service
 		std::thread t([&]()
 		{
 			try

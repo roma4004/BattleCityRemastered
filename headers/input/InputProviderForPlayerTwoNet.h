@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../EventSystem.h"
 #include "../interfaces/IInputProvider.h"
 
 #include <memory>
+#include <string>
+
+class EventSystem;
 
 class InputProviderForPlayerTwoNet final : public IInputProvider
 {

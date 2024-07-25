@@ -4,6 +4,7 @@
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/obstacles/Brick.h"
+#include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
 #include "../headers/pawns/PlayerTwo.h"

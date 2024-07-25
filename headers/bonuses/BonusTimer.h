@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Bonus.h"
-#include "../BaseObj.h"
-#include "../EventSystem.h"
-#include "../Point.h"
 
 #include <memory>
+
+struct UPoint;
+struct ObjRectangle;
+class BaseObj;
+class EventSystem;
 
 class BonusTimer final : public Bonus
 {

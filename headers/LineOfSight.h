@@ -1,12 +1,14 @@
 #pragma once
-#include "BaseObj.h"
-#include "Point.h"
-#include "utils/ColliderUtils.h"
 
 #include <memory>
 #include <vector>
 
-class LineOfSight
+struct ObjRectangle;
+struct UPoint;
+struct FPoint;
+class BaseObj;
+
+class LineOfSight final
 {
 	std::vector<ObjRectangle> checkLOS;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};

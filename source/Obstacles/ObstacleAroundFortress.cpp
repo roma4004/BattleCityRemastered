@@ -1,6 +1,8 @@
 #include "../../headers/obstacles/ObstacleAroundFortress.h"
-
+#include "../../headers/EventSystem.h"
 #include "../../headers/obstacles/Water.h"
+#include "../../headers/obstacles/Brick.h"
+#include "../../headers/obstacles/Iron.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 

@@ -1,5 +1,6 @@
 ﻿#include "../../headers/pawns/Bullet.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/behavior/MoveLikeBulletBeh.h"
 
 #include <string>
 

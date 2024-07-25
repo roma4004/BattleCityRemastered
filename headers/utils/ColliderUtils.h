@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Circle.h"
-#include "../ObjRectangle.h"
+struct ObjRectangle;
+struct Circle;
 
-class ColliderUtils
+class ColliderUtils final
 {
 public:
 	[[nodiscard]] static bool IsCollide(const ObjRectangle& r1, const ObjRectangle& r2);

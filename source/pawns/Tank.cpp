@@ -75,7 +75,7 @@ void Tank::DrawHealthBar() const
 		return;
 	}
 
-	const unsigned int width = static_cast<unsigned int>(_windowSize.x);
+	const auto width = static_cast<unsigned int>(_windowSize.x);
 	size_t y = static_cast<size_t>(GetY()) - 10;
 	for (const size_t maxY = y + 5; y < maxY; ++y)
 	{

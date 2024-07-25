@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../EventSystem.h"
 #include "../interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>
 
-class MoveLikeBulletBeh : public IMoveBeh
+class EventSystem;
+
+class MoveLikeBulletBeh final : public IMoveBeh
 {
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;

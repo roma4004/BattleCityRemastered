@@ -1,12 +1,13 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "BulletPool.h"
-#include "EventSystem.h"
 #include "Point.h"
-#include "bonuses/BonusSystem.h"
 
+#include <memory>
 #include <random>
+
+class BaseObj;
+class BulletPool;
+class EventSystem;
 
 enum GameMode : int;
 

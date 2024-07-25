@@ -1,10 +1,19 @@
 #pragma once
 
-#include "pawns/Bullet.h"
+#include "Point.h"
 
+#include <memory>
 #include <queue>
+#include <string>
 
-class BulletPool
+enum GameMode : int;
+enum Direction : int;
+struct ObjRectangle;
+class Bullet;
+class BaseObj;
+class EventSystem;
+
+class BulletPool final
 {
 	std::queue<std::shared_ptr<BaseObj>> _bullets;
 	int lastId{0};

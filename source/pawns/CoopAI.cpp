@@ -6,7 +6,6 @@
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/pawns/PlayerOne.h"
-#include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>
@@ -14,7 +13,7 @@
 
 CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
                const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-               const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+               const std::shared_ptr<EventSystem>& events, const std::string& name, std::string fraction,
                std::shared_ptr<BulletPool> bulletPool, const int tankId)
 	: Tank{rect,
 	       color,
@@ -26,8 +25,8 @@ CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, int*
 	       allObjects,
 	       events,
 	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
-	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
-	       std::move(name),
+	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
+	       name,
 	       std::move(fraction),
 	       tankId},
 	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)

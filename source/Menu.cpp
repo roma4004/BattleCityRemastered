@@ -1,6 +1,6 @@
 #include "../headers/Menu.h"
-#include "../headers/GameMode.h"
-#include "../headers/Point.h"
+#include "../headers/EventSystem.h"
+#include "../headers/GameStatistics.h"
 #include "../headers/utils/PixelUtils.h"
 
 Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStatistics> statistics,
@@ -8,7 +8,7 @@ Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStati
            std::shared_ptr<EventSystem> events)
 	: _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
-	  yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
+	  _yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
 	  _input{std::move(input)},
 	  _events{std::move(events)},
 	  _name{std::string("Menu")},
@@ -111,10 +111,10 @@ void Menu::BlendBackgroundToWindowBuffer()
 		return;
 	}
 
-	const unsigned int sizeX = static_cast<unsigned int>(_windowSize.x);
+	const auto sizeX = static_cast<unsigned int>(_windowSize.x);
 	const unsigned menuHeight = static_cast<unsigned int>(_windowSize.y) - 50;
 	const unsigned menuWidth = sizeX - 228;
-	for (_pos.y = 50 + yOffsetStart; _pos.y < menuHeight + yOffsetStart; ++_pos.y)
+	for (_pos.y = 50 + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
 	{
 		for (_pos.x = 50; _pos.x < menuWidth; ++_pos.x)
 		{
@@ -130,9 +130,9 @@ void Menu::BlendBackgroundToWindowBuffer()
 	}
 
 	// animation
-	if (constexpr unsigned int yOffsetEnd = 0; yOffsetStart > yOffsetEnd)
+	if (constexpr unsigned int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
-		yOffsetStart -= 3;
+		_yOffsetStart -= 3;
 	}
 }
 

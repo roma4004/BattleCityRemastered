@@ -12,7 +12,7 @@ BonusShovel::BonusShovel(const ObjRectangle& rect, int* windowBuffer, const UPoi
 BonusShovel::~BonusShovel()
 {
 	Unsubscribe();
-};
+}
 
 void BonusShovel::Subscribe()
 {

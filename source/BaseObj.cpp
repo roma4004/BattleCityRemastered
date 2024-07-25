@@ -2,7 +2,9 @@
 #include "../headers/Point.h"
 
 BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health)
-	: _color(color), _health(health), _shape{rect} {}
+	: _color(color),
+	  _health(health),
+	  _shape{rect} {}
 
 BaseObj::~BaseObj() = default;
 

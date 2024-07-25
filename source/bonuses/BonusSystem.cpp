@@ -38,7 +38,7 @@ BonusSystem::BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::s
 BonusSystem::~BonusSystem()
 {
 	Unsubscribe();
-};
+}
 
 void BonusSystem::Subscribe()
 {
@@ -68,9 +68,9 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 	if (TimeUtils::IsCooldownFinish(_lastTimeBonusSpawn, _cooldownBonusSpawn))
 	{
 		bool isFreeSpawnSpot = true;
-		const float size = static_cast<float>(_bonusSize);
-		const float x = static_cast<float>(_distSpawnPosX(_gen));
-		const float y = static_cast<float>(_distSpawnPosY(_gen));
+		const auto size = static_cast<float>(_bonusSize);
+		const auto x = static_cast<float>(_distSpawnPosX(_gen));
+		const auto y = static_cast<float>(_distSpawnPosY(_gen));
 		const ObjRectangle rect{x, y, size, size};
 		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 		{
@@ -78,7 +78,7 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 			{
 				isFreeSpawnSpot = false;
 				break;
-			}
+			}//TODO: use std::any_of algorithm
 		}
 
 		if (isFreeSpawnSpot)

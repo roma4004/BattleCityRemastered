@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../EventSystem.h"
-
 #include <memory>
 #include <string>
 
-struct MenuKeys
+class EventSystem;
+
+struct MenuKeys final
 {
 	bool up{false};
 	bool down{false};
@@ -14,7 +14,7 @@ struct MenuKeys
 	bool pause{false};
 };
 
-class InputProviderForMenu
+class InputProviderForMenu final
 {
 	std::string _name;
 	std::shared_ptr<EventSystem> _events;

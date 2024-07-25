@@ -11,10 +11,10 @@ MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_pt
 
 std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return std::list<std::weak_ptr<BaseObj>>();
+		return {};
 	}
 
 	const float speed = tank->GetSpeed();
@@ -24,7 +24,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 	if (const Direction direction = tank->GetDirection();
 		direction == UP)
 	{
-		//36 37 initialize in  if
+		//36 37 initialize in if
 		speedY *= -1;
 		speedX *= 0;
 	}
@@ -74,7 +74,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return 0.f;
@@ -108,7 +108,7 @@ float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& 
 
 void MoveLikeTankBeh::Move(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return;

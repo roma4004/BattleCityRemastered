@@ -1,4 +1,5 @@
 #include "../headers/GameStatistics.h"
+#include "../headers/EventSystem.h"
 
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}

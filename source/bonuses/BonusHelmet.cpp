@@ -12,7 +12,7 @@ BonusHelmet::BonusHelmet(const ObjRectangle& rect, int* windowBuffer, const UPoi
 BonusHelmet::~BonusHelmet()
 {
 	Unsubscribe();
-};
+}
 
 void BonusHelmet::Subscribe()
 {

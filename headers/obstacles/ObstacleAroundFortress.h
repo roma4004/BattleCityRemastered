@@ -1,16 +1,17 @@
 #pragma once
 
-#include "Brick.h"
-#include "Iron.h"
 #include "../BaseObj.h"
-#include "../EventSystem.h"
 #include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <chrono>
 #include <memory>
 
-class ObstacleAroundFortress : public BaseObj, ITickUpdatable
+class EventSystem;
+class Iron;
+class Brick;
+
+class ObstacleAroundFortress final : public BaseObj, ITickUpdatable
 {
 	ObjRectangle _rect;
 	UPoint _windowSize{0, 0};

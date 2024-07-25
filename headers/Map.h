@@ -1,14 +1,15 @@
 ﻿#pragma once
 
-#include "BaseObj.h"
-#include "EventSystem.h"
-#include "Point.h"
 #include "obstacles/ObstacleAroundFortress.h"
 
 #include <memory>
 #include <vector>
 
-class Map
+struct UPoint;
+class BaseObj;
+class EventSystem;
+
+class Map final
 {
 public:
 	Map();

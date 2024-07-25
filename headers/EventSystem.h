@@ -9,7 +9,7 @@ enum GameMode : int;
 struct FPoint;
 
 template<typename... Args>
-struct Event
+struct Event final
 {
 	using ListenerCallback = std::function<void(Args...)>;
 
@@ -32,7 +32,7 @@ private:
 	std::unordered_map<std::string, ListenerCallback> _listeners;
 };
 
-class EventSystem
+class EventSystem final
 {
 	using EventVariant = std::variant<Event<>, // regular events eg method call
 	                                  Event<const float>, // update(deltaTime)

@@ -7,7 +7,7 @@
 #include <memory>
 #include <random>
 
-class MoveLikeAIBeh : public IMoveBeh
+class MoveLikeAIBeh final : public IMoveBeh
 {
 	std::mt19937 gen;
 	std::uniform_int_distribution<> distDirection;

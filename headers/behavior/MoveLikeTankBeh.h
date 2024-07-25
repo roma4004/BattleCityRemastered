@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 
-class MoveLikeTankBeh : public IMoveBeh
+class MoveLikeTankBeh final : public IMoveBeh
 {
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;

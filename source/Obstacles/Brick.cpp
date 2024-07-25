@@ -1,4 +1,5 @@
 #include "../../headers/obstacles/Brick.h"
+#include "../../headers/EventSystem.h"
 
 #include <string>
 

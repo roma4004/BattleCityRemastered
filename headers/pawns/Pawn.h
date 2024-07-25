@@ -2,7 +2,6 @@
 
 #include "../BaseObj.h"
 #include "../Direction.h"
-#include "../ObjRectangle.h"
 #include "../Point.h"
 #include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
@@ -10,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+struct ObjRectangle;
 class EventSystem;
 
 class Pawn : public BaseObj, public ITickUpdatable

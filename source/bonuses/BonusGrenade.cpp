@@ -12,7 +12,7 @@ BonusGrenade::BonusGrenade(const ObjRectangle& rect, int* windowBuffer, const UP
 BonusGrenade::~BonusGrenade()
 {
 	Unsubscribe();
-};
+}
 
 void BonusGrenade::Subscribe()
 {

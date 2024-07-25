@@ -13,7 +13,7 @@
 class BaseObj;
 using boost::asio::ip::tcp;
 
-struct Data
+struct Data final
 {
 	friend class boost::serialization::access;
 
@@ -36,7 +36,7 @@ struct Data
 	Direction direction{NONE};
 };
 
-class Client //: public std::enable_shared_from_this<Client>
+class Client final //: public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_service& ioService, const std::string& host, const std::string& port,

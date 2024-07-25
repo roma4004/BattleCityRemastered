@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../BaseObj.h"
-#include "../EventSystem.h"
 #include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -9,6 +7,11 @@
 #include <memory>
 #include <random>
 #include <vector>
+
+struct UPoint;
+struct ObjRectangle;
+class BaseObj;
+class EventSystem;
 
 class BonusSystem final : public ITickUpdatable
 {

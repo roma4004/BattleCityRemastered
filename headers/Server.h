@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Direction.h"
-#include "EventSystem.h"
 #include "Point.h"
 
 #include <string>
@@ -12,7 +11,9 @@
 
 using boost::asio::ip::tcp;
 
-struct Data
+class EventSystem;
+
+struct Data final
 {
 	friend class boost::serialization::access;
 
@@ -35,7 +36,7 @@ struct Data
 	Direction direction{NONE};
 };
 
-struct Session : public std::enable_shared_from_this<Session>
+struct Session final : public std::enable_shared_from_this<Session>
 {
 	tcp::socket _socket;
 	boost::asio::streambuf _read_buffer;
@@ -51,7 +52,7 @@ struct Session : public std::enable_shared_from_this<Session>
 	void DoWrite(const std::string& message);
 };
 
-struct Server
+struct Server final
 {
 	tcp::acceptor _acceptor;
 	std::shared_ptr<EventSystem> _events;
@@ -60,6 +61,7 @@ struct Server
 
 	Server(boost::asio::io_service& ioService, const std::string& host, const std::string& port,
 	       std::shared_ptr<EventSystem> events);
+
 	~Server();
 
 	void DoAccept();

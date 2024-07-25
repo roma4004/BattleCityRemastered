@@ -11,10 +11,10 @@ MoveLikeAIBeh::MoveLikeAIBeh(BaseObj* selfParent, std::vector<std::shared_ptr<Ba
 
 std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return std::list<std::weak_ptr<BaseObj>>();
+		return {};
 	}
 
 	const float speed = tank->GetSpeed();
@@ -24,7 +24,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 	if (const Direction direction = tank->GetDirection();
 		direction == UP)
 	{
-		//36 37 initialize in  if
+		//36 37 initialize in if
 		speedY *= -1;
 		speedX *= 0;
 	}
@@ -74,14 +74,14 @@ inline float Distance(const FPoint a, const FPoint b)
 float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
                                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return 0.f;
 	}
 
 	const UPoint windowSize = tank->GetWindowSize();
-	float minDist = static_cast<float>(windowSize.x * windowSize.y);
+	auto minDist = static_cast<float>(windowSize.x * windowSize.y);
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
@@ -109,7 +109,7 @@ float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& ob
 
 void MoveLikeAIBeh::Move(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return;

@@ -11,7 +11,7 @@ BonusStar::BonusStar(const ObjRectangle& rect, int* windowBuffer, const UPoint w
 BonusStar::~BonusStar()
 {
 	Unsubscribe();
-};
+}
 
 void BonusStar::Subscribe()
 {

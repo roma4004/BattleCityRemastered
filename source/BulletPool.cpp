@@ -1,5 +1,5 @@
 #include "../headers/BulletPool.h"
-
+#include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/pawns/Bullet.h"
 
@@ -60,7 +60,7 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
 
 	std::shared_ptr<BaseObj> bulletAsBase = _bullets.front();
 	_bullets.pop();
-	if (const auto bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
+	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
 		bullet->Reset(rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction),
 		              isNetworkControlled);
@@ -71,7 +71,7 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
 
 void BulletPool::ReturnBullet(std::shared_ptr<BaseObj> bullet)
 {
-	if (const auto bulletCast = dynamic_cast<Bullet*>(bullet.get()); bulletCast != nullptr)
+	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet.get()); bulletCast != nullptr)
 	{
 		bulletCast->Disable();
 		_bullets.emplace(std::move(bullet));

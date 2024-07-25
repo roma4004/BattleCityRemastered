@@ -1,15 +1,15 @@
 ﻿#pragma once
 
 #include "Pawn.h"
-#include "../behavior/MoveLikeBulletBeh.h"
 
+#include <memory>
 #include <string>
 
 struct UPoint;
 class BaseObj;
 class EventSystem;
 
-class Bullet : public Pawn
+class Bullet final : public Pawn
 {
 	std::string _name;
 	std::string _author;

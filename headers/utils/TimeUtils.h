@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-class TimeUtils
+class TimeUtils final
 {
 public:
 	static bool IsCooldownFinish(std::chrono::system_clock::time_point activateTime, int cooldownMs);

@@ -12,7 +12,7 @@ BonusTimer::BonusTimer(const ObjRectangle& rect, int* windowBuffer, const UPoint
 BonusTimer::~BonusTimer()
 {
 	Unsubscribe();
-};
+}
 
 void BonusTimer::Subscribe()
 {

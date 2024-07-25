@@ -1,4 +1,5 @@
 #include "../headers/TankSpawner.h"
+#include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerOneNet.h"
@@ -264,7 +265,7 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size,
                                const bool isNetworkControlled)
 {
-	const float windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY = static_cast<float>(_windowSize.y);
 	const ObjRectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -304,7 +305,7 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size,
                                const bool isNetworkControlled)
 {
-	const float windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY = static_cast<float>(_windowSize.y);
 	const ObjRectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -344,7 +345,7 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 
 void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
-	const float windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY = static_cast<float>(_windowSize.y);
 	const ObjRectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -367,7 +368,7 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 
 void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
-	const float windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY = static_cast<float>(_windowSize.y);
 	const ObjRectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)

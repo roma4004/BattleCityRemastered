@@ -11,7 +11,7 @@ BonusTank::BonusTank(const ObjRectangle& rect, int* windowBuffer, const UPoint w
 BonusTank::~BonusTank()
 {
 	Unsubscribe();
-};
+}
 
 void BonusTank::Subscribe()
 {

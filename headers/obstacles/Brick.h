@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../EventSystem.h"
 #include "../Point.h"
 
 #include <memory>
+
+struct ObjRectangle;
+class EventSystem;
 
 class Brick final : public BaseObj
 {

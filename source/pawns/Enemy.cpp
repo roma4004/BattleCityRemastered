@@ -7,7 +7,6 @@
 #include "../../headers/pawns/CoopAI.h"
 #include "../../headers/pawns/PlayerOne.h"
 #include "../../headers/pawns/PlayerTwo.h"
-#include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>
@@ -15,7 +14,7 @@
 
 Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
              const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-             const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+             const std::shared_ptr<EventSystem>& events, const std::string& name, std::string fraction,
              std::shared_ptr<BulletPool> bulletPool, const bool isNetworkControlled, const int tankId)
 	: Tank{rect,
 	       color,
@@ -27,8 +26,8 @@ Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, int* w
 	       allObjects,
 	       events,
 	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
-	       std::make_shared<ShootingBeh>(this, windowBuffer, allObjects, events, std::move(bulletPool)),
-	       std::move(name),
+	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
+	       name,
 	       std::move(fraction),
 	       tankId},
 	  _distDirection(0, 3),

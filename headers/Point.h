@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-struct FPoint
+struct FPoint final
 {
 	float x{}, y{};
 
@@ -35,7 +35,7 @@ struct FPoint
 	bool operator>=(const FPoint& rhs) const { return *this == rhs || *this > rhs; }
 };
 
-struct Point
+struct Point final
 {
 	int x{}, y{};
 
@@ -59,7 +59,7 @@ struct Point
 	bool operator>=(const Point& rhs) const { return *this == rhs || *this > rhs; }
 };
 
-struct UPoint
+struct UPoint final
 {
 	size_t x{}, y{};
 

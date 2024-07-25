@@ -55,7 +55,6 @@ class GameSuccess final : public IGame
 	void Unsubscribe() const;
 
 	void ResetBattlefield();
-	void SetGameMode(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
 

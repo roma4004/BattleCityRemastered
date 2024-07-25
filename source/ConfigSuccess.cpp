@@ -1,9 +1,15 @@
 #include "../headers/ConfigSuccess.h"
+#include "../headers/EventSystem.h"
+#include "../headers/GameStatistics.h"
 #include "../headers/GameSuccess.h"
 
 ConfigSuccess::ConfigSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
                              TTF_Font* fpsFont)
-	: _windowSize{windowSize}, _windowBuffer{windowBuffer}, _renderer{renderer}, _screen{screen}, _fpsFont{fpsFont} {}
+	: _windowSize{windowSize},
+	  _windowBuffer{windowBuffer},
+	  _renderer{renderer},
+	  _screen{screen},
+	  _fpsFont{fpsFont} {}
 
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
