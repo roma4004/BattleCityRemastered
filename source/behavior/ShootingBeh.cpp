@@ -1,15 +1,13 @@
-#include "../headers/ShootingBeh.h"
-#include "../headers/pawns/Tank.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/pawns/Tank.h"
 
 #include <functional>
 
 #include <memory>
 
-ShootingBeh::ShootingBeh(BaseObj* selfParent, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
+ShootingBeh::ShootingBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+						 std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
 	: _selfParent{selfParent},
-	  _windowBuffer{windowBuffer},
 	  _allObjects{allObjects},
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)} {}
@@ -22,9 +20,9 @@ ShootingBeh::~ShootingBeh() = default;
 // }
 
 float ShootingBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
-                                   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return 0.f;
@@ -57,9 +55,9 @@ float ShootingBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& obje
 }
 
 //Note: {-1.f, -1.f} this is try shooting outside screen
-Rectangle ShootingBeh::GetBulletStartRect() const
+ObjRectangle ShootingBeh::GetBulletStartRect() const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return {};
@@ -74,7 +72,7 @@ Rectangle ShootingBeh::GetBulletStartRect() const
 	const float bulletWidth = tank->GetBulletWidth();
 	const float bulletHeight = tank->GetBulletHeight();
 	const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-	Rectangle bulletRect = {-1, -1, bulletWidth, bulletHeight};
+	ObjRectangle bulletRect = {-1, -1, bulletWidth, bulletHeight};
 
 	if (const Direction direction = tank->GetDirection();
 		direction == UP
@@ -84,19 +82,19 @@ Rectangle ShootingBeh::GetBulletStartRect() const
 		bulletRect.y = tankPos.y - bulletHalf.y;
 	}
 	else if (direction == DOWN
-	         && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
+			 && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY - bulletHalf.y;
 	}
 	else if (direction == LEFT
-	         && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+			 && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankPos.x - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (direction == RIGHT
-	         && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
+			 && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
 		bulletRect.x = tankRightX - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -107,13 +105,13 @@ Rectangle ShootingBeh::GetBulletStartRect() const
 
 void ShootingBeh::Shot() const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return;
 	}
 
-	const Rectangle bulletRect = GetBulletStartRect();
+	const ObjRectangle bulletRect = GetBulletStartRect();
 	if (bulletRect.x < 0.f || bulletRect.y < 0.f)
 	{
 		//Try shooting outside screen
@@ -124,12 +122,10 @@ void ShootingBeh::Shot() const
 	const int damage = tank->GetBulletDamage();
 	const double aoeRadius = tank->GetBulletDamageAreaRadius();
 	constexpr int health = 1;
-	const UPoint windowSize = tank->GetWindowSize();
 	const Direction direction = tank->GetDirection();
 	const float speed = tank->GetBulletSpeed();
-	std::string name = tank->GetName();
+	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
-	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, _windowBuffer,
-	                                                 windowSize, direction, speed, _allObjects, _events,
-	                                                 std::move(name), std::move(fraction)));
+	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, direction, speed,
+													 std::move(author), std::move(fraction)));
 }

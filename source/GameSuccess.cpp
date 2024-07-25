@@ -1,11 +1,24 @@
 #include "../headers/GameSuccess.h"
+#include "../headers/BulletPool.h"
+#include "../headers/EventSystem.h"
+#include "../headers/GameStatistics.h"
 #include "../headers/Map.h"
-#include "../headers/Menu.h"
-#include "../headers/pawns/CoopAI.h"
+#include "../headers/Server.h"
+#include "../headers/TankSpawner.h"
+#include "../headers/pawns/Bullet.h"
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <memory>
+
+#ifdef _WIN32
+#define _WIN32_WINNT 0x0A00
+#endif
+#define ASIO_STANDALONE
+#include <boost/asio/io_service.hpp>
+
+std::ofstream error_log_server("error_log_Server.txt");
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
                          TTF_Font* fpsFont, const std::shared_ptr<EventSystem>& events,
@@ -14,15 +27,16 @@ GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Rendere
 	: _windowSize{windowSize},
 	  _statistics{statistics},
 	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
-	  _tankSpawner{windowSize, windowBuffer, &_allObjects, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},
 	  _fpsFont{fpsFont},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>()},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer, &_currentMode)},
 	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize}
 {
+	_tankSpawner = std::make_shared<TankSpawner>(windowSize, windowBuffer, &_allObjects, events, _bulletPool);
+
 	ResetBattlefield();
 	NextGameMode();
 	Subscribe();
@@ -64,6 +78,10 @@ void GameSuccess::Unsubscribe() const
 
 void GameSuccess::ResetBattlefield()
 {
+	_bulletPool->Clear();
+	_currentMode = _selectedGameMode;
+	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
+
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 
@@ -78,30 +96,28 @@ void GameSuccess::ResetBattlefield()
 	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
 }
 
-void GameSuccess::SetGameMode(const GameMode gameMode) { _currentMode = gameMode; }
-
 void GameSuccess::PrevGameMode()
 {
-	int mode = _currentMode;
+	int mode = _selectedGameMode;
 	--mode;
 
 	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
-	_currentMode = static_cast<GameMode>(newMode);
-	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
+	_selectedGameMode = static_cast<GameMode>(newMode);
+	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
 void GameSuccess::NextGameMode()
 {
-	int mode = _currentMode;
+	int mode = _selectedGameMode;
 	++mode;
 
 	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
-	_currentMode = static_cast<GameMode>(newMode);
-	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
+	_selectedGameMode = static_cast<GameMode>(newMode);
+	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
 void GameSuccess::ClearBuffer() const
@@ -267,6 +283,7 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 			{
 				SDL_DestroyTexture(_fpsTexture);
 			}
+
 			_fpsTexture = SDL_CreateTextureFromSurface(_renderer, _fpsSurface);
 
 			SDL_FreeSurface(_fpsSurface);
@@ -299,9 +316,9 @@ void GameSuccess::DisposeDeadObject()
 	// Destroy all "dead" objects except bullet they will be recycled
 	for (auto it = _allObjects.begin(); it < _allObjects.end();)
 	{
-		if ((*it)->GetIsAlive() == false)
+		if (!(*it)->GetIsAlive())
 		{
-			if (const auto bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
+			if (const auto* bullet = dynamic_cast<Bullet*>(it->get()); bullet != nullptr)
 			{
 				_bulletPool->ReturnBullet(*it);
 				it = _allObjects.erase(it);
@@ -318,61 +335,98 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::MainLoop()
 {
-	Uint32 frameCount{0};
-	Uint32 fps{0};
-	float deltaTime{0.f};
-	Uint64 oldTime = SDL_GetTicks64();
-	auto fpsPrevUpdateTime = oldTime;
-	const SDL_Rect fpsRectangle{
-			/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
-
-	while (!_isGameOver)
+	try
 	{
-		// Cap to 60 FPS
-		// SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
+		Uint32 frameCount{0};
+		Uint32 fps{0};
+		float deltaTime{0.f};
+		Uint64 oldTime = SDL_GetTicks64();
+		auto fpsPrevUpdateTime = oldTime;
+		const SDL_Rect fpsRectangle{
+				/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
 
-		ClearBuffer();
-
-		EventHandling();
-
-		_menu.Update();
-
-		if (!_isPause)
+		boost::asio::io_service io_service;
+		Server server(io_service, "127.0.0.1", "1234", _events);
+		//TODO: encapsulate separated thread into server for storing and running io_service
+		std::thread t([&]()
 		{
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+			try
+			{
+				io_service.run();
+			}
+			catch (std::exception& e)
+			{
+				error_log_server << "thread " << e.what() << '\n';
+			}
+			catch (...)
+			{
+				error_log_server << "thread error ..." << '\n';
+			}
+		});
+		t.detach();
+
+		while (!_isGameOver)
+		{
+			// Cap to 60 FPS
+			// SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
+
+			ClearBuffer();
+
+			// TODO: current mode demo in game fix this
+			EventHandling();
+
+			_menu.Update();
+
+			if (!_isPause)
+			{
+				_events->EmitEvent<const float>("TickUpdate", deltaTime);
+			}
+
+			DisposeDeadObject();
+
+			_events->EmitEvent("RespawnTanks");
+
+			_events->EmitEvent("Draw");
+
+			_events->EmitEvent("DrawHealthBar");
+			// TODO: create and blend separate buff layers(objects, effect, interface)
+
+			_events->EmitEvent("DrawMenuBackground");
+
+			const Uint64 newTime = SDL_GetTicks64();
+			deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
+			HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
+
+			// update screen with buffer
+			SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
+			SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
+
+			_events->EmitEvent("DrawMenuText");
+
+			// Copy the texture with FPS to the renderer
+			SDL_RenderCopy(_renderer, _fpsTexture, nullptr, &fpsRectangle);
+
+			SDL_RenderPresent(_renderer);
+
+			oldTime = newTime;
 		}
 
-		DisposeDeadObject();
+		if (_fpsTexture)
+		{
+			SDL_DestroyTexture(_fpsTexture);
+		}
 
-		_events->EmitEvent("RespawnTanks");
-
-		_events->EmitEvent("Draw");
-
-		_events->EmitEvent("DrawHealthBar");// TODO: create and blend separate buff layers(objects, effect, interface)
-
-		_events->EmitEvent("DrawMenuBackground");
-
-		const Uint64 newTime = SDL_GetTicks64();
-		deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
-		HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
-
-		// update screen with buffer
-		SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
-		SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
-
-		_events->EmitEvent("DrawMenuText");
-
-		// Copy the texture with FPS to the renderer
-		SDL_RenderCopy(_renderer, _fpsTexture, nullptr, &fpsRectangle);
-
-		SDL_RenderPresent(_renderer);
-
-		oldTime = newTime;
+		// if (t.joinable()) {
+		// t.join();//TODO: create signal for closing listening server
+		// }
 	}
-
-	if (_fpsTexture)
+	catch (std::exception& e)
 	{
-		SDL_DestroyTexture(_fpsTexture);
+		error_log_server << e.what() << '\n';
+	}
+	catch (...)
+	{
+		error_log_server << "error ..." << '\n';
 	}
 }
 

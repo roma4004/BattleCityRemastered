@@ -1,10 +1,12 @@
 ﻿#pragma once
 
 #include "../BaseObj.h"
-#include "../EventSystem.h"
 #include "../Point.h"
 
 #include <memory>
+
+struct ObjRectangle;
+class EventSystem;
 
 class Iron final : public BaseObj
 {
@@ -23,7 +25,8 @@ class Iron final : public BaseObj
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	Iron(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events);
+	Iron(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	     int obstacleId);
 
 	~Iron() override;
 };

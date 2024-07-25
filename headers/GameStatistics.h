@@ -1,11 +1,11 @@
 #pragma once
 
-#include "EventSystem.h"
-
 #include <memory>
 #include <string>
 
-class GameStatistics
+class EventSystem;
+
+class GameStatistics final
 {
 	std::string _name;
 	std::shared_ptr<EventSystem> _events;
@@ -38,7 +38,7 @@ class GameStatistics
 	int _brickDiedByPlayerTwo{0};
 
 public:
-	GameStatistics(std::shared_ptr<EventSystem> events);
+	explicit GameStatistics(std::shared_ptr<EventSystem> events);
 
 	~GameStatistics();
 

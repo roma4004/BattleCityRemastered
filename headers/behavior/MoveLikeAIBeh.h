@@ -1,13 +1,13 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "interfaces/IMoveBeh.h"
+#include "../BaseObj.h"
+#include "../interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>
 #include <random>
 
-class MoveLikeAIBeh : public IMoveBeh
+class MoveLikeAIBeh final : public IMoveBeh
 {
 	std::mt19937 gen;
 	std::uniform_int_distribution<> distDirection;

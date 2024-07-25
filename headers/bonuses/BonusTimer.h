@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Bonus.h"
-#include "../BaseObj.h"
-#include "../EventSystem.h"
-#include "../Point.h"
 
 #include <memory>
+
+struct UPoint;
+struct ObjRectangle;
+class BaseObj;
+class EventSystem;
 
 class BonusTimer final : public Bonus
 {
@@ -13,7 +15,7 @@ class BonusTimer final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusTimer(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	BonusTimer(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	           int durationMs, int lifeTimeMs, int color);
 
 	~BonusTimer() override;

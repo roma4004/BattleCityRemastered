@@ -1,6 +1,6 @@
 #include "../headers/Menu.h"
-#include "../headers/GameMode.h"
-#include "../headers/Point.h"
+#include "../headers/EventSystem.h"
+#include "../headers/GameStatistics.h"
 #include "../headers/utils/PixelUtils.h"
 
 Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStatistics> statistics,
@@ -8,10 +8,10 @@ Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStati
            std::shared_ptr<EventSystem> events)
 	: _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
-	  yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
+	  _yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
 	  _input{std::move(input)},
 	  _events{std::move(events)},
-	  _name{std::string("Statistics")},
+	  _name{std::string("Menu")},
 	  _renderer{renderer},
 	  _menuFont{menuFont},
 	  _statistics{std::move(statistics)}
@@ -32,9 +32,9 @@ void Menu::Subscribe()
 	}
 
 	_events->AddListener("DrawMenuBackground", _name, [this]() { this->BlendBackgroundToWindowBuffer(); });
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		this->_currentMode = newGameMode;
+		this->_selectedGameMode = newGameMode;
 	});
 	_events->AddListener("DrawMenuText", _name, [this]()
 	{
@@ -50,14 +50,14 @@ void Menu::Subscribe()
 		this->_enemyRespawnResource = enemyRespawnResource;
 	});
 	_events->AddListener<const int>(
-			"PlayerOneRespawnResourceChangedTo",
+			"Player1RespawnResourceChangedTo",
 			_name,
 			[this](const int playerOneRespawnResource)
 			{
 				this->_playerOneRespawnResource = playerOneRespawnResource;
 			});
 	_events->AddListener<const int>(
-			"PlayerTwoRespawnResourceChangedTo",
+			"Player2RespawnResourceChangedTo",
 			_name,
 			[this](const int playerTwoRespawnResource)
 			{
@@ -73,12 +73,12 @@ void Menu::Unsubscribe() const
 	}
 
 	_events->RemoveListener("DrawMenuBackground", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener("DrawMenuText", _name);
 
 	_events->RemoveListener<const int>("EnemyRespawnResourceChangedTo", _name);
-	_events->RemoveListener<const int>("PlayerOneRespawnResourceChangedTo", _name);
-	_events->RemoveListener<const int>("PlayerTwoRespawnResourceChangedTo", _name);
+	_events->RemoveListener<const int>("Player1RespawnResourceChangedTo", _name);
+	_events->RemoveListener<const int>("Player2RespawnResourceChangedTo", _name);
 }
 
 void Menu::Update() const
@@ -111,10 +111,10 @@ void Menu::BlendBackgroundToWindowBuffer()
 		return;
 	}
 
-	const unsigned int sizeX = static_cast<unsigned int>(_windowSize.x);
+	const auto sizeX = static_cast<unsigned int>(_windowSize.x);
 	const unsigned menuHeight = static_cast<unsigned int>(_windowSize.y) - 50;
 	const unsigned menuWidth = sizeX - 228;
-	for (_pos.y = 50 + yOffsetStart; _pos.y < menuHeight + yOffsetStart; ++_pos.y)
+	for (_pos.y = 50 + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
 	{
 		for (_pos.x = 50; _pos.x < menuWidth; ++_pos.x)
 		{
@@ -130,9 +130,9 @@ void Menu::BlendBackgroundToWindowBuffer()
 	}
 
 	// animation
-	if (constexpr unsigned int yOffsetEnd = 0; yOffsetStart > yOffsetEnd)
+	if (constexpr unsigned int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
-		yOffsetStart -= 3;
+		_yOffsetStart -= 3;
 	}
 }
 
@@ -205,9 +205,13 @@ void Menu::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender(renderer, {pos.x - 70, pos.y - 100}, color, "BATTLE CITY REMASTERED");
-	TextToRender(renderer, {pos.x, pos.y - 40}, color, _currentMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
-	TextToRender(renderer, {pos.x, pos.y}, color, _currentMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
-	TextToRender(renderer, {pos.x, pos.y + 40}, color, _currentMode == CoopWithAI ? ">COOP AI" : "COOP AI");
+	TextToRender(renderer, {pos.x, pos.y - 60}, color, _selectedGameMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	TextToRender(renderer, {pos.x, pos.y - 30}, color, _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	TextToRender(renderer, {pos.x, pos.y}, color, _selectedGameMode == CoopWithAI ? ">COOP AI" : "COOP AI");
+	TextToRender(renderer, {pos.x, pos.y + 30}, color,
+	             _selectedGameMode == PlayAsHost ? ">PLAY AS HOST" : "PLAY AS HOST");
+	TextToRender(renderer, {pos.x, pos.y + 60}, color,
+	             _selectedGameMode == PlayAsClient ? ">PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(renderer, pos);
 }

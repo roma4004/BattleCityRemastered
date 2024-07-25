@@ -1,20 +1,20 @@
-#include "../headers/MoveLikeAIBeh.h"
-#include "../headers/interfaces/IPickupableBonus.h"
-#include "../headers/pawns/Tank.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/behavior/MoveLikeTankBeh.h"
+#include "../../headers/interfaces/IPickupableBonus.h"
+#include "../../headers/pawns/Tank.h"
+#include "../../headers/utils/ColliderUtils.h"
 
 #include <functional>
 #include <memory>
 
-MoveLikeAIBeh::MoveLikeAIBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
+MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _selfParent{selfParent}, _allObjects{allObjects} {}
 
-std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
+std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return std::list<std::weak_ptr<BaseObj>>();
+		return {};
 	}
 
 	const float speed = tank->GetSpeed();
@@ -24,7 +24,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 	if (const Direction direction = tank->GetDirection();
 		direction == UP)
 	{
-		//36 37 initialize in  if
+		//36 37 initialize in if
 		speedY *= -1;
 		speedX *= 0;
 	}
@@ -45,7 +45,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 	}
 
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
-	const auto thisNextPosRect = Rectangle{tank->GetX() + speedX, tank->GetY() + speedY,
+	const auto thisNextPosRect = ObjRectangle{tank->GetX() + speedX, tank->GetY() + speedY,
 	                                       tank->GetWidth(), tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -66,22 +66,21 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 	return obstacles;
 }
 
-inline float Distance(const FPoint a, const FPoint b)
-{
-	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
-}
+// inline float Distance(const FPoint a, const FPoint b)
+// {
+// 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
+// }
 
-float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
-                                     const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
+                                       const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return 0.f;
 	}
 
-	const UPoint windowSize = tank->GetWindowSize();
-	float minDist = static_cast<float>(windowSize.x * windowSize.y);
+	float minDist = static_cast<float>(tank->GetWindowSize().x * tank->GetWindowSize().y);
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
@@ -107,9 +106,9 @@ float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& ob
 	// return distance;
 }
 
-void MoveLikeAIBeh::Move(const float deltaTime) const
+void MoveLikeTankBeh::Move(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return;
@@ -134,7 +133,7 @@ void MoveLikeAIBeh::Move(const float deltaTime) const
 	}
 }
 
-void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
+void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -175,7 +174,7 @@ void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 	}
 }
 
-void MoveLikeAIBeh::MoveRight(const float deltaTime) const
+void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -183,7 +182,7 @@ void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 		return;
 	}
 
-	constexpr int sideBarWidth = 175;
+	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(tank->GetWindowSize().x) - sideBarWidth;
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetRightSide() + speed < maxX)
 	{
@@ -218,7 +217,7 @@ void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 	}
 }
 
-void MoveLikeAIBeh::MoveUp(const float deltaTime) const
+void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -259,7 +258,7 @@ void MoveLikeAIBeh::MoveUp(const float deltaTime) const
 	}
 }
 
-void MoveLikeAIBeh::MoveDown(const float deltaTime) const
+void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)

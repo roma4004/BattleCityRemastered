@@ -1,8 +1,10 @@
 ﻿#include "../../headers/obstacles/Iron.h"
+#include "../../headers/EventSystem.h"
 
 #include <string>
 
-Iron::Iron(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
+Iron::Iron(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
+			 const int obstacleId)
 	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0xaaaaaa, 15},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
@@ -12,7 +14,7 @@ Iron::Iron(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, st
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "Iron " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "Iron " + std::to_string(obstacleId);
 	Subscribe();
 }
 

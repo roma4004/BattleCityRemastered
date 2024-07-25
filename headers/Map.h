@@ -1,14 +1,15 @@
 ﻿#pragma once
 
-#include "BaseObj.h"
-#include "EventSystem.h"
-#include "Point.h"
 #include "obstacles/ObstacleAroundFortress.h"
 
 #include <memory>
 #include <vector>
 
-class Map
+struct UPoint;
+class BaseObj;
+class EventSystem;
+
+class Map final
 {
 public:
 	Map();
@@ -16,8 +17,10 @@ public:
 	~Map();
 
 	template<typename T>
-	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
-	                      UPoint windowSize, std::shared_ptr<EventSystem> events) const;
+	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect,
+	                      int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	                      int obstacleId) const;
+
 	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize, int* windowBuffer,
 	                 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
 
@@ -124,17 +127,20 @@ public:
 };
 
 template<typename T>
-void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
-                           UPoint windowSize, std::shared_ptr<EventSystem> events) const
+void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect,
+                           int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+                           const int obstacleId) const
 {
-	allObjects->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
+	allObjects->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events), obstacleId));
 }
 
 template<>
 inline void Map::ObstacleCreation<ObstacleAroundFortress>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                                          const Rectangle& rect, int* windowBuffer, UPoint windowSize,
-                                                          std::shared_ptr<EventSystem> events) const
+                                                          const ObjRectangle& rect, int* windowBuffer,
+                                                          UPoint windowSize, std::shared_ptr<EventSystem> events,
+                                                          const int obstacleId) const
 {
 	allObjects->emplace_back(
-			std::make_shared<ObstacleAroundFortress>(rect, windowBuffer, windowSize, std::move(events), allObjects));
+			std::make_shared<ObstacleAroundFortress>(
+					rect, windowBuffer, windowSize, std::move(events), allObjects, obstacleId));
 }

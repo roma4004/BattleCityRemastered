@@ -1,7 +1,7 @@
 #include "../../headers/bonuses/Bonus.h"
 #include "../../headers/utils/TimeUtils.h"
 
-Bonus::Bonus(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
+Bonus::Bonus(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
              const int durationMs, const int lifeTimeMs, const int color)
 	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, color, 1},
 	  _windowSize{windowSize},

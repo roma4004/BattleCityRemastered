@@ -1,29 +1,34 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "BulletPool.h"
-#include "EventSystem.h"
 #include "GameMode.h"
-#include "GameStatistics.h"
-#include "InputProviderForMenu.h"
 #include "Menu.h"
 #include "MouseButton.h"
 #include "Point.h"
-#include "TankSpawner.h"
 #include "bonuses/BonusSystem.h"
 #include "interfaces/IGame.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
+#include <boost/asio/ip/tcp.hpp>
+
+struct Server;
+class BaseObj;
+class BulletPool;
+class InputProviderForMenu;
+class EventSystem;
+class TankSpawner;
+class GameStatistics;
+//class Client;
 
 class GameSuccess final : public IGame
 {
 	UPoint _windowSize{0, 0};
+	GameMode _selectedGameMode{Demo};
 	GameMode _currentMode{Demo};
 	std::shared_ptr<GameStatistics> _statistics;
 	Menu _menu;
-	TankSpawner _tankSpawner;
+	std::shared_ptr<TankSpawner> _tankSpawner;
 	std::string _name = "Game";
 
 	int* _windowBuffer{nullptr};
@@ -53,7 +58,6 @@ class GameSuccess final : public IGame
 	void Unsubscribe() const;
 
 	void ResetBattlefield();
-	void SetGameMode(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
 

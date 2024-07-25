@@ -1,9 +1,10 @@
 #include "../headers/EventSystem.h"
-#include "../headers/InputProviderForPlayerOne.h"
+#include "../headers/GameMode.h"
 #include "../headers/TankSpawner.h"
 #include "../headers/bonuses/BonusSystem.h"
-#include "../headers/bonuses/bonusGrenade.h"
+#include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/ObstacleAroundFortress.h"
+#include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
 
@@ -29,21 +30,24 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, _windowBuffer, &_allObjects, _events);
+		GameMode currentMode = OnePlayer;
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentMode);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, _windowBuffer, &_allObjects, _events, _bulletPool);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
-		const Rectangle rect{0, 0, _tankSize, _tankSize};
+		const ObjRectangle rect{0, 0, _tankSize, _tankSize};
 		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
+		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		//TODO: initialize with btn names
-		_bulletPool = std::make_shared<BulletPool>();
+		auto currentGameMode = OnePlayer;
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
 		_bonusSystem = std::make_unique<BonusSystem>(_events, &_allObjects, _windowBuffer, _windowSize);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP,
 		                                                     _tankSpeed, &_allObjects, _events, name, fraction,
-		                                                     inputProvider, _bulletPool));
+		                                                     inputProvider, _bulletPool, false, 1));
 	}
 
 	void TearDown() override
@@ -109,24 +113,25 @@ TEST_F(BonusTest, BonusNotPickUp)
 // Check that tank can pick up random bonus
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
+	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
 		_bonusSystem->SpawnBonus({0.f, _tankSize + 1.f, _tankSize, _tankSize}, 0xffffff, 0);
 		_events->EmitEvent("S_Pressed");
 
-		const Rectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
+		const ObjRectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
 		constexpr int gray = 0x808080;
 		const auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-		                                           _tankSpeed,
-		                                           &_allObjects, _events, "Enemy1", "EnemyTeam", _bulletPool);
+		                                           _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
+		                                           _bulletPool, false, 1);
 
 		const FPoint enemyPos = enemy->GetPos();
 
 		_events->EmitEvent<const float>("TickUpdate", deltaTime);
 
-		EXPECT_EQ(enemyPos, enemy->GetPos());
+		EXPECT_EQ(enemyPos.x, enemy->GetPos().x);
+		EXPECT_EQ(enemyPos.y, enemy->GetPos().y);
 
 		return;
 	}
@@ -144,11 +149,11 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 		_bonusSystem->SpawnBonus({0.f, _tankSize + 1.f, _tankSize, _tankSize}, 0xffffff, 0);
 		_events->EmitEvent("W_Pressed");
 
-		const Rectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
+		const ObjRectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
 		constexpr int gray = 0x808080;
 		const auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-		                                           _tankSpeed,
-		                                           &_allObjects, _events, "Enemy1", "EnemyTeam", _bulletPool);
+		                                           _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
+		                                           _bulletPool, false, 1);
 
 		const FPoint enemyPos = enemy->GetPos();
 
@@ -186,10 +191,10 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 		constexpr int damage = 1;
 		constexpr double bulletDamageAreaRadius = 12.0;
 		const auto [bulletW, bulletH] = FPoint{6.f, 5.f};
-		const Rectangle rect{_tankSize + 1.f, 0.f, bulletW, bulletH};
+		const ObjRectangle rect{_tankSize + 1.f, 0.f, bulletW, bulletH};
 		_allObjects.emplace_back(std::make_shared<Bullet>(rect, damage, bulletDamageAreaRadius, color, health,
 		                                                  _windowBuffer, _windowSize, LEFT, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam"));
+		                                                  _events, "Enemy1", "EnemyTeam", 0, false));
 
 		if (dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -231,10 +236,10 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		constexpr int damage = 1;
 		constexpr double bulletDamageAreaRadius = 12.0;
 		const auto [bulletW, bulletH] = FPoint{6.f, 5.f};
-		const Rectangle rect{_tankSize + 1.f, 0.f, bulletW, bulletH};
+		const ObjRectangle rect{_tankSize + 1.f, 0.f, bulletW, bulletH};
 		_allObjects.emplace_back(std::make_shared<Bullet>(rect, damage, bulletDamageAreaRadius, color, health,
 		                                                  _windowBuffer, _windowSize, LEFT, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam"));
+		                                                  _events, "Enemy1", "EnemyTeam", 0, false));
 
 		if (dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -260,11 +265,11 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 		_bonusSystem->SpawnBonus({0.f, _tankSize + 1.f, _tankSize, _tankSize}, 0xffffff, 2);
 		_events->EmitEvent("S_Pressed");
 
-		const Rectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
+		const ObjRectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
 		constexpr int gray = 0x808080;
 		const auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-		                                           _tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam",
-		                                           _bulletPool);
+		                                           _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
+		                                           _bulletPool, false, 1);
 
 		EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -290,18 +295,18 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
+	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
 		_bonusSystem->SpawnBonus({0.f, _tankSize + 1.f, _tankSize, _tankSize}, 0xffffff, 2);
 		_events->EmitEvent("W_Pressed");
 
-		const Rectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
+		const ObjRectangle rect{_tankSize * 2, _tankSize * 2, _tankSize, _tankSize};
 		constexpr int gray = 0x808080;
 		const auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-		                                           _tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam",
-		                                           _bulletPool);
+		                                           _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
+		                                           _bulletPool, false, 1);
 
 		EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -357,7 +362,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
+	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		constexpr float deltaTime = 1.f / 60.f;
 
@@ -456,9 +461,9 @@ TEST_F(BonusTest, ShovelPickUpBrickAroundFortressTurnIntoIron)
 		_events->EmitEvent("S_Pressed");
 
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const Rectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
+		const ObjRectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
 		if (const auto obstacleAroundFortress =
-				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects))
+				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
 		{
 			if (obstacleAroundFortress->IsBrick())
 			{
@@ -507,9 +512,9 @@ TEST_F(BonusTest, ShovelNotPickUpBrickAroundFortressTheSame)
 		_events->EmitEvent("W_Pressed");
 
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const Rectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
+		const ObjRectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
 		if (const auto obstacleAroundFortress =
-				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects))
+				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
 		{
 			if (obstacleAroundFortress->IsBrick())
 			{

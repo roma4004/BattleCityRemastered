@@ -1,6 +1,6 @@
 #include "../../headers/Bonuses/BonusStar.h"
 
-BonusStar::BonusStar(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
+BonusStar::BonusStar(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize,
                      std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs, const int color)
 	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
 {
@@ -11,7 +11,7 @@ BonusStar::BonusStar(const Rectangle& rect, int* windowBuffer, const UPoint wind
 BonusStar::~BonusStar()
 {
 	Unsubscribe();
-};
+}
 
 void BonusStar::Subscribe()
 {

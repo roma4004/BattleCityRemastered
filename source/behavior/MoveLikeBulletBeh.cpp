@@ -1,8 +1,8 @@
-#include "../headers/MoveLikeBulletBeh.h"
-#include "../headers/Circle.h"
-#include "../headers/Direction.h"
-#include "../headers/pawns/Bullet.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/behavior/MoveLikeBulletBeh.h"
+#include "../../headers/Circle.h"
+#include "../../headers/Direction.h"
+#include "../../headers/pawns/Bullet.h"
+#include "../../headers/utils/ColliderUtils.h"
 
 #include <memory>
 
@@ -14,10 +14,10 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_pt
 
 std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
+	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
-		return std::list<std::weak_ptr<BaseObj>>();
+		return {};
 	}
 
 	const float speed = bullet->GetSpeed();
@@ -49,7 +49,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto bulletNextPosRect = Rectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
+	const auto bulletNextPosRect = ObjRectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
 	                                         bullet->GetWidth(), bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -179,7 +179,7 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 
 void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
+	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
 		return;
@@ -218,7 +218,7 @@ void MoveLikeBulletBeh::DealDamage(const std::list<std::weak_ptr<BaseObj>>& obje
 			{
 				targetLock->TakeDamage(bulletDamage);
 				targetLock->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
-				if (const auto otherBullet = dynamic_cast<Bullet*>(targetLock.get()))
+				if (const auto* otherBullet = dynamic_cast<Bullet*>(targetLock.get()))
 				{
 					thisBullet->SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
 				}
