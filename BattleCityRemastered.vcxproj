@@ -161,7 +161,7 @@
     <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\Menu.cpp" />
     <ClCompile Include="source\obstacles\Brick.cpp" />
-    <ClCompile Include="source\obstacles\ObstacleAroundFortress.cpp" />
+    <ClCompile Include="source\obstacles\FortressObstacle.cpp" />
     <ClCompile Include="source\obstacles\Iron.cpp" />
     <ClCompile Include="source\obstacles\Water.cpp" />
     <ClCompile Include="source\pawns\Bullet.cpp" />
@@ -212,7 +212,7 @@
     <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\obstacles\Brick.h" />
-    <ClInclude Include="headers\obstacles\ObstacleAroundFortress.h" />
+    <ClInclude Include="headers\obstacles\FortressObstacle.h" />
     <ClInclude Include="headers\obstacles\Iron.h" />
     <ClInclude Include="headers\obstacles\Water.h" />
     <ClInclude Include="headers\BulletPool.h" />

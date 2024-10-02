@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "obstacles/ObstacleAroundFortress.h"
+#include "obstacles/FortressObstacle.h"
 
 #include <memory>
 #include <vector>
@@ -135,12 +135,12 @@ void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, co
 }
 
 template<>
-inline void Map::ObstacleCreation<ObstacleAroundFortress>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
+inline void Map::ObstacleCreation<FortressObstacle>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
                                                           const ObjRectangle& rect, int* windowBuffer,
                                                           UPoint windowSize, std::shared_ptr<EventSystem> events,
                                                           const int obstacleId) const
 {
 	allObjects->emplace_back(
-			std::make_shared<ObstacleAroundFortress>(
+			std::make_shared<FortressObstacle>(
 					rect, windowBuffer, windowSize, std::move(events), allObjects, obstacleId));
 }

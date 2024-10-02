@@ -1,46 +1,3 @@
-cmake_minimum_required(VERSION 3.27)
-project(BattleCity_remastered)
-
-#if(WIN32)
-#    set(
-#            CMAKE_EXE_LINKER_FLAGS
-#            "${CMAKE_EXE_LINKER_FLAGS} -Wl,--subsystem,windows"
-#    )
-#endif()
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -pedantic -Everything")
-#set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-
-set(SDL2_PATH                   ${CMAKE_CURRENT_SOURCE_DIR}/libraries/SDL2-2.30.0)
-set(SDL2_Image_PATH             ${CMAKE_CURRENT_SOURCE_DIR}/libraries/SDL2_image-2.8.2)
-set(SDL2_TTF_PATH               ${CMAKE_CURRENT_SOURCE_DIR}/libraries/SDL2_ttf-2.22.0)
-set(SDL2_Mixer_PATH             ${CMAKE_CURRENT_SOURCE_DIR}/libraries/SDL2_mixer-2.8.0)
-set(BOOST_ROOT                  ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_gcc/)
-set(Boost_LIBRARY_DIRS          ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_gcc/lib/)
-
-set(FONT_PATH                   Resources/Fonts)
-set(FONT_PATH_NAME              ${FONT_PATH}/bc7x7.ttf)
-set(CMAKE_CXX_STANDARD 20)
-
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SDL2_LIBRARY}/cmake/sdl2-config.cmake")
-find_package(SDL2       REQUIRED)
-## 1. Look for a SDL2 package, 2. look for the SDL2 component and 3. fail if none can be found
-find_package(SDL2       REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-## 1. Look for a SDL2 package, 2. Look for the SDL2main component and 3. DO NOT fail when SDL2main is not available
-find_package(SDL2       REQUIRED CONFIG COMPONENTS SDL2main)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_image REQUIRED CONFIG REQUIRED COMPONENTS SDL2_image)
-find_package(SDL2_ttf   REQUIRED)
-find_package(SDL2_ttf   REQUIRED CONFIG REQUIRED COMPONENTS SDL2_ttf)
-find_package(SDL2_mixer REQUIRED)
-find_package(SDL2_mixer REQUIRED CONFIG REQUIRED COMPONENTS SDL2_mixer)
-
 #NOTE: to build boost from source, run from boots source folder
 #(example for MinGW, if you using MSVC replace "--toolset=gcc" to "--toolset=msvc")
 # and replace {path_to_project_source} with your project path to install boost --prefix={path_to_project_source}
@@ -48,59 +5,283 @@ find_package(SDL2_mixer REQUIRED CONFIG REQUIRED COMPONENTS SDL2_mixer)
 # then run this for build only required boost component:
 # ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install
 # or run this for build all boost component:
-# ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serializatio
-find_package(Boost 1.85.0 COMPONENTS serialization REQUIRED)
+# ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serialization
 
-# Support both 32 and 64 bit builds
-if (!${CMAKE_SIZEOF_VOID_P} MATCHES 8)
-    # 64 bits
-    set(SDL2_BIN                ${SDL2_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_INCLUDE            ${SDL2_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_LIBRARY            ${SDL2_PATH}/x86_64-w64-mingw32/lib)
+cmake_minimum_required(VERSION 3.28.6)
+#cmake_minimum_required(VERSION 3.11...3.15)
+project(BattleCity_remastered)
+#TODO: create compiler switch msvc, mingw(gcc)
+#TODO: migrate to SDL2 to SDL2pp
+#TODO: migrate to MSYS2 to install all dependency
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-    set(SDL2_Image_BIN          ${SDL2_Image_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_Image_INCLUDE      ${SDL2_Image_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_Image_LIBRARY      ${SDL2_Image_PATH}/x86_64-w64-mingw32/lib)
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -pedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 
-    set(SDL2_TTF_BIN            ${SDL2_TTF_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_TTF_INCLUDE        ${SDL2_TTF_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_TTF_LIBRARY        ${SDL2_TTF_PATH}/x86_64-w64-mingw32/lib)
+include(FetchContent)
+set(vendored_default FALSE)
+#set(SDL2_DOWNLOAD_URL "https://github.com/libsdl-org/SDL/archive/refs/tags/release-2.30.5.zip")
+#set(SDL2_TTF_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_ttf/archive/refs/tags/release-2.22.0.zip")
+#set(SDL2_IMAGE_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_image/archive/refs/tags/release-2.8.2.zip")
+set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
+#set(SDL2_TAG "release-2.30.5")
+set(SDL2_TAG "release-2.30.8")
+set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
+set(SDL2_TTF_TAG "release-2.22.0")
+set(SDL2_IMG_URL "https://github.com/libsdl-org/SDL_image.git")
+set(SDL2_IMG_TAG "release-2.8.2")
+#set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
+#set(SDL2_MXR_TAG "release-2.8.0")
+set(BOOST_URL "https://github.com/boostorg/boost.git")
+set(BOOST_VERSION "1.85.0")
+string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE "${BOOST_VERSION}")
+set(BOOST_TAG "boost-${BOOST_VERSION}")
+set(SDL2_MIXER_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_mixer.git")
+#set(OPUSFILE_DOWNLOAD_URL "https://github.com/xiph/opusfile/releases/download/v0.12/opusfile-0.12.zip")
+#set(SDL2_OPUSFILE_EXTRACTION_DIRECTORY "${CMAKE_SOURCE_DIR}/dependencies/opusfile")
 
-    set(SDL2_Mixer_BIN          ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/bin)
-    set(SDL2_Mixer_INCLUDE      ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/include/SDL2)
-    set(SDL2_Mixer_LIBRARY      ${SDL2_Mixer_PATH}/x86_64-w64-mingw32/lib)
+cmake_policy(SET CMP0148 NEW)
+include (FindPython)
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+set(SDL_SHARED OFF CACHE BOOL "Build shared SDL2 libraries")
+set(SDL_STATIC ON CACHE BOOL "Build static SDL2 libraries")
+set(SDL_TTF_SHARED OFF CACHE BOOL "Build shared SDL2_ttf library")
+set(SDL_TTF_STATIC ON CACHE BOOL "Build static SDL2_ttf library")
+
+set(DEP_DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
+set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
+
+FetchContent_Declare(SDL2 GIT_REPOSITORY ${SDL2_URL} GIT_TAG ${SDL2_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(SDL2)
+set(FREETYPE_INCLUDE_DIRS "${SDL2_ttf_SOURCE_DIR}/external/freetype/include")
+set(FREETYPE_LIBRARY "${SDL2_ttf_SOURCE_DIR}/external/freetype")
+#FetchContent_Declare(Harfbuzz GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git GIT_TAG 8.1.1)
+FetchContent_Declare(Freetype GIT_REPOSITORY https://github.com/freetype/freetype.git GIT_TAG VER-2-13-2)
+
+FetchContent_Declare(SDL2_ttf GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+#FetchContent_MakeAvailable(SDL2_ttf)
+FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(SDL2_image)
+#FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MIXER_DOWNLOAD_URL} GIT_TAG "release-2.8.0")
+
+#FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
+#    FetchContent_GetProperties(SDL2_image)
+#    if(NOT SDL2_image_POPULATED)
+#            FetchContent_Populate(SDL2_image)
+#            add_subdirectory(${SDL2_image_SOURCE_DIR} ${SDL2_image_BINARY_DIR})
+#    #        add_subdirectory(${sdl2_image_SOURCE_DIR})
+#    #        add_subdirectory(${sdl2_image_SOURCE_DIR}/external/zlib)
+#    #        add_subdirectory(${sdl2_image_SOURCE_DIR}/external/libpng)
+#    #        message(FATAL_ERROR ${sdl2_image_BINARY_DIR})
+#    endif()
+
+#find_package(OpusFile REQUIRED)
+#message(STATUS "sdl2_mixer_SOURCE_DIR is located at ${${sdl2_mixer_SOURCE_DIR}}")
+#FetchContent_GetProperties(SDL2_mixer)
+#if(NOT sdl2_mixer_POPULATED)
+#        FetchContent_Populate(SDL2_mixer)
+#        add_subdirectory(${sdl2_mixer_SOURCE_DIR} ${sdl2_mixer_BINARY_DIR}  EXCLUDE_FROM_ALL)
+#endif()
+#add_library(opusfile STATIC ${source_files})
+#add_library(opusfile SHARED ${OPUSFILE_SOURCES})
+#FetchContent_Declare(opusfile
+#        URL ${OPUSFILE_DOWNLOAD_URL}
+#        SOURCE_DIR ${OPUSFILE_EXTRACTION_DIRECTORY}
+#)
+#TODO: try to fetch opus instead of opusfile
+#FetchContent_MakeAvailable(opusfile)
+#FetchContent_GetProperties(opusfile)
+#if(NOT opusfile_POPULATED)
+#        FetchContent_Populate(opusfile)
+#        add_subdirectory(${opusfile_SOURCE_DIR} ${opusfile_BINARY_DIR}  EXCLUDE_FROM_ALL)
+#endif()
+
+
+#add_subdirectory(${SDL2_ttf_SOURCE_DIR}/external/harfbuzz EXCLUDE_FROM_ALL)
+add_subdirectory(${SDL2_ttf_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
+add_library(SDL2_ttf-static STATIC ${SDL2_ttf_SOURCE_DIR}/SDL_ttf.c)
+set(SDL2_ttf_DIR ${SDL2_ttf_SOURCE_DIR}/)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SDL2_ttf_SOURCE_DIR}/)
+message(STATUS "ttf path --------${SDL2_ttf_DIR}")
+#add_subdirectory(${SDL2_ttf_SOURCE_DIR} EXCLUDE_FROM_ALL)
+#find_package(SDL2_ttf REQUIRED)
+
+#target_include_directories(SDL2_ttf-static PRIVATE
+#        ${SDL2_SOURCE_DIR}/include
+#        ${SDL2_ttf_SOURCE_DIR})
+#FetchContent_Declare(boost
+##        GIT_REPOSITORY ""
+##        GIT_TAG "boost-1.85.0"
+##        GIT_SUBMODULES_RECURSE ON
+#        URL https://github.com/boostorg/boost/archive/refs/tags/boost-1.85.0.zip
+#        SOURCE_DIR ${Boost_EXTRACTION_DIRECTORY}
+#)
+#set(BOOST_ROOT                  ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_gcc/)
+##FetchContent_MakeAvailable(Boost)
+#FetchContent_GetProperties(boost)
+#if(NOT boost_POPULATED)
+#    FetchContent_Populate(Boost)
+##    set(BOOST_ROOT ${Boost_SOURCE_DIR})
+##    set(Boost_LIBRARY_DIRS ${Boost_SOURCE_DIR}/libs)
+##    set(Boost_NO_SYSTEM_PATHS TRUE)
+##    set(Boost_USE_STATIC_LIBS ON)
+#    set(boost_INCLUDE_DIR ${boost_SOURCE_DIR})
+#    execute_process(COMMAND git submodule update --init WORKING_DIRECTORY
+#            find_package(boost #[[1.85.0]]#[[ COMPONENTS Serialization]] REQUIRED)
+##    message(FATAL_ERROR ${Boost_INCLUDE_DIR})
+##    message(STATUS "Boost include directories: ${Boost_INCLUDE_DIRS}") # log the
+#    if(Boost_FOUND)
+##        include_directories(${Boost_SOURCE_DIR}/libs/serialization/include)
+##        include_directories(${Boost_SOURCE_DIR}/libs/asio/include)
+#    endif()
+#endif()
+cmake_policy(SET CMP0144 NEW)
+include(ExternalProject)
+
+include(ProcessorCount)
+ProcessorCount(ThreadAmount)
+
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_install_done)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Using Release build of Boost in Debug configuration")
+    set(Boost_USE_DEBUG_LIBS ON)
+    set(Boost_DEBUG ON)
+#    set(BOOST_VARIANT debug)
+#    set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_debug_install_done)
+else()
+    set(Boost_USE_DEBUG_LIBS OFF)
+#    set(BOOST_VARIANT release)
+#    set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_release_install_done)
+endif()
+#set(boost_configure_command ./bootstrap.sh gcc)
+#set(boost_build_command ./b2.exe --toolset=gcc link=static --build-type=complete runtime-link=shared variant=release --prefix=<INSTALL_DIR> --with-serialization -j8 stage install)
+set(BOOST_SUBMODULES
+    "tools/build
+    tools/boost_install
+    libs/headers
+    libs/asio
+    libs/assert
+    libs/config
+    libs/core
+    libs/mpl
+    libs/array
+    libs/smart_ptr
+    libs/bind
+    libs/move
+    libs/detail
+    libs/io
+    libs/iterator
+    libs/preprocessor
+    libs/static_assert
+    libs/throw_exception
+    libs/type_traits
+    libs/serialization
+    libs/spirit
+    libs/integer
+    libs/predef
+    libs/optional
+    libs/function
+    libs/utility
+    libs/align
+    libs/system
+    libs/winapi
+    libs/date_time
+    libs/numeric")
+
+if (NOT EXISTS ${BOOST_SEMAPHORE})
+    ExternalProject_Add(Boost
+            GIT_REPOSITORY ${BOOST_URL}
+            GIT_TAG ${BOOST_TAG}
+            GIT_PROGRESS 1
+            GIT_SHALLOW 1
+            GIT_SHALLOW TRUE
+#            UPDATE_DISCONNECTED TRUE
+            GIT_SUBMODULES ${BOOST_SUBMODULES} # load only specified submodules instead of all
+            PREFIX boost
+            DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}
+            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_VERSION_UNDERSCORE}
+#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_VERSION_UNDERSCORE}_build
+            INSTALL_DIR ${DEP_DOWNLOAD_DIR}/boost_install
+#            TMP_DIR Boost/tmp
+#            STAMP_DIR Boost/stamp
+
+#            LOG_DOWNLOAD ON
+#            LOG_CONFIGURE ON
+#            LOG_BUILD ON
+#            LOG_INSTALL ON
+
+#            UPDATE_COMMAND git submodule update --init libs/serialization
+#                   GIT_SUBMODULES_RECURSE OFF
+#            PATCH_COMMAND ./bootstrap.sh gcc
+            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
+#            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
+            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
+            BUILD_IN_SOURCE 1
+            INSTALL_COMMAND ""
+            DOWNLOAD_EXTRACT_TIMESTAMP true
+            BUILD_ALWAYS TRUE
+    )
+
+    ExternalProject_Add_Step(Boost create_semaphore
+            COMMAND ${CMAKE_COMMAND} -E touch ${BOOST_SEMAPHORE}
+            DEPENDEES install
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+else()
+    message(STATUS "--------------------------------------------------")
+    message(STATUS "Boost: is already installed, so sipping this step.")
+    message(STATUS "--------------------------------------------------")
+endif()
+
+#Set(ZLIB_LIBRARY C:/git/BattleCityRemastered/cmake-build-release-mingw/cmake-build-release-mingw/_deps/sdl2_image-src/external/zlib)
+#find_package(SDL2_image REQUIRED CONFIG #[[COMPONENTS SDL2_image]])
+#add_subdirectory(${sdl2_image_SOURCE_DIR}/external/libpng)
+#list(APPEND CMAKE_PREFIX_PATH "${sdl2_image_SOURCE_DIR}/external/libpng")
+#list(APPEND CMAKE_PREFIX_PATH "${sdl2_image_SOURCE_DIR}/external/zlib")
+#find_package(ZLIB HINTS C:/git/BattleCityRemastered/cmake-build-release-mingw/cmake-build-release-mingw/_deps/sdl2_image-src/external/zlib)
+#find_package(PNG)
+#find_package(BZip2)
+#find_package(brotlidec)
+#add_subdirectory(${sdl2_image_SOURCE_DIR}/external/zlib)
+#find_package(ZLIB REQUIRED)
+#find_package(SDL2_mixer-static REQUIRED CONFIG #[[COMPONENTS SDL2_mixer OpusFile FluidSynth]])
+#find_package(OpusFile CONFIG REQUIRED)
+#find_package(libxmp CONFIG REQUIRED)
+#find_package(opusfile REQUIRED CONFIG REQUIRED COMPONENTS opusfile)
+
+set(Boost_NO_SYSTEM_PATHS ON)
+set(BOOST_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_install)
+find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization)
+if(Boost_FOUND)
+    message(STATUS "------------------------------------------------------------")
+    message(STATUS "Found Boost ${Boost_VERSION} with libraries: ${Boost_LIBRARIES}")
+    message(STATUS "include directory: ${Boost_INCLUDE_DIRS}")
+    include_directories(${Boost_INCLUDE_DIRS})
+    message(STATUS "------------------------------------------------------------")
 else ()
-    # 32 bits
-    set(SDL2_BIN                ${SDL2_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_INCLUDE            ${SDL2_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_LIBRARY            ${SDL2_PATH}/i686-w64-mingw32/lib)
+    message(STATUS "------------------------------------------------------------")
+    message(STATUS "Could not find Boost, for the first time ignore it, will be downloaded as dependency during build run.")
+    message(STATUS "If you see ninja: error: loading 'build.ninja': The system cannot find the file specified,")
+    message(STATUS "just reload cmake project to fix it, then run the build")
+    message(STATUS "------------------------------------------------------------")
+endif()
 
-    set(SDL2_Image_BIN          ${SDL2_Image_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_Image_INCLUDE      ${SDL2_Image_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_Image_LIBRARY      ${SDL2_Image_PATH}/i686-w64-mingw32/lib)
-
-    set(SDL2_TTF_BIN            ${SDL2_TTF_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_TTF_INCLUDE        ${SDL2_TTF_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_TTF_LIBRARY        ${SDL2_TTF_PATH}/i686-w64-mingw32/lib)
-
-    set(SDL2_Mixer_BIN          ${SDL2_Mixer_PATH}/i686-w64-mingw32/bin)
-    set(SDL2_Mixer_INCLUDE      ${SDL2_Mixer_PATH}/i686-w64-mingw32/include/SDL2)
-    set(SDL2_Mixer_LIBRARY      ${SDL2_Mixer_PATH}/i686-w64-mingw32/lib)
-endif ()
-
-include_directories(${SDL2_INCLUDE})
-include_directories(${SDL2_Image_INCLUDE})
-include_directories(${SDL2_TTF_INCLUDE})
-include_directories(${SDL2_Mixer_INCLUDE})
-
-include_directories(${Boost_INCLUDE_DIRS})
-
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+#include_directories(${SDL2_SOURCE_DIR}/include)
+#include_directories(${SDL2_SOURCE_DIR}/include/SDL2)
+#include_directories(${SDL2_image_DIR}/include)
+include_directories(${SDL2_ttf_SOURCE_DIR})
+#include_directories(${SDL2_Mixer_SOURCE_DIR}/include)
+#include_directories(${opusfile_SOURCE_DIR}/include)
 
 include_directories(headers)
 
-link_directories(${Boost_LIBRARY_DIRS})
-#message(FATAL_ERROR ${Boost_LIBRARY_DIRS})
+target_link_libraries(SDL2_ttf-static PRIVATE SDL2-static freetype)
 
 add_executable(${PROJECT_NAME}
         source/behavior/MoveLikeAIBeh.cpp
@@ -132,7 +313,7 @@ add_executable(${PROJECT_NAME}
         source/Map.cpp
         source/Menu.cpp
         source/obstacles/Brick.cpp
-        source/obstacles/ObstacleAroundFortress.cpp
+        source/obstacles/FortressObstacle.cpp
         source/obstacles/Iron.cpp
         source/obstacles/Water.cpp
         source/pawns/Bullet.cpp
@@ -150,40 +331,37 @@ add_executable(${PROJECT_NAME}
         source/utils/TimeUtils.cpp
 )
 
-#If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
-target_link_libraries(
-        ${PROJECT_NAME}
-        mingw32
+if (NOT EXISTS ${BOOST_SEMAPHORE})
+    add_dependencies(${PROJECT_NAME} Boost)
+    message(STATUS "dependency boost------------------------------------------------------------")
+endif()
+
+#NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
+target_link_libraries(${PROJECT_NAME}
+        SDL2-static
         SDL2main
-        SDL2
-        SDL2_image
-        SDL2_ttf
-        SDL2_mixer
+        freetype
+        SDL2_ttf-static
+#        PRIVATE zlib
+#        PRIVATE zlib1
+#        PRIVATE OpusFile::opusfile
+#        PRIVATE $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>
+#        mingw32
+#        SDL2_mixer::SDL2_mixer-static
+#        SDL2_image-static
+#        SDL2_image
+#        SDL2_mixer
+#        PRIVATE ${SDL2_mixer}
         ${Boost_LIBRARIES}
-        wsock32
-        ws2_32
+        wsock32  #NOTE: this for windows socket
+        ws2_32   #NOTE: this for windows socket
 )
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
-        "${SDL2_BIN}/SDL2.dll"                                  # <--this is in-file
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>")                   # <--this is out-file path
+install(TARGETS SDL2_ttf-static DESTINATION lib)
+install(FILES ${SDL2_ttf_SOURCE_DIR}/SDL_ttf.h DESTINATION include)
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
-        "${SDL2_Image_BIN}/SDL2_image.dll"                      # <--this is in-file
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>")                   # <--this is out-file path
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
-        "${SDL2_TTF_BIN}/SDL2_ttf.dll"                          # <--this is in-file
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>")                   # <--this is out-file path
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
-        "${SDL2_Mixer_BIN}/SDL2_mixer.dll"                      # <--this is in-file
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>")                   # <--this is out-file path
-
+set(FONT_PATH                   Resources/Fonts)
+set(FONT_PATH_NAME              ${FONT_PATH}/bc7x7.ttf)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
         "../${FONT_PATH_NAME}"                                  # <--this is in-file

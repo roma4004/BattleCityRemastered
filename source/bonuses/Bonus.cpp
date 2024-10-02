@@ -40,7 +40,7 @@ void Bonus::Draw() const
 	}
 }
 
-void Bonus::TickUpdate(float deltaTime)
+void Bonus::TickUpdate(float /*deltaTime*/)
 {
 	if (TimeUtils::IsCooldownFinish(_creationTime, _bonusLifetimeMs))
 	{

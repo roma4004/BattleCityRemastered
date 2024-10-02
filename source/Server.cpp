@@ -139,6 +139,10 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 	_events->AddListener("Pause_Pressed", _name, [this]() { this->SendKeyState("Pause_Pressed"); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->SendKeyState("Pause_Released"); });
 
+
+	//TODO: send player die (last time)
+	//TODO: send bonus spawn/pickup
+	
 	_events->AddListener<const std::string, const std::string, const FPoint, const Direction>(
 			"_NewPos",
 			_name,

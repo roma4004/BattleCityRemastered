@@ -3,7 +3,7 @@
 #include "../headers/TankSpawner.h"
 #include "../headers/bonuses/BonusSystem.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
-#include "../headers/obstacles/ObstacleAroundFortress.h"
+#include "../headers/obstacles/FortressObstacle.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
@@ -451,7 +451,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	EXPECT_TRUE(false);
 }
 
-TEST_F(BonusTest, ShovelPickUpBrickAroundFortressTurnIntoIron)
+TEST_F(BonusTest, ShovelPickUpFortressObstacleTurnIntoIron)
 {
 	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
@@ -463,7 +463,7 @@ TEST_F(BonusTest, ShovelPickUpBrickAroundFortressTurnIntoIron)
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
 		if (const auto obstacleAroundFortress =
-				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
+				std::make_shared<FortressObstacle>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
 		{
 			if (obstacleAroundFortress->IsBrick())
 			{
@@ -502,7 +502,7 @@ TEST_F(BonusTest, ShovelPickUpBrickAroundFortressTurnIntoIron)
 }
 
 
-TEST_F(BonusTest, ShovelNotPickUpBrickAroundFortressTheSame)
+TEST_F(BonusTest, ShovelNotPickUpFortressObstacleTheSame)
 {
 	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
@@ -514,7 +514,7 @@ TEST_F(BonusTest, ShovelNotPickUpBrickAroundFortressTheSame)
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{_tankSize + 1.f, 0, gridSize, gridSize};
 		if (const auto obstacleAroundFortress =
-				std::make_shared<ObstacleAroundFortress>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
+				std::make_shared<FortressObstacle>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0))
 		{
 			if (obstacleAroundFortress->IsBrick())
 			{

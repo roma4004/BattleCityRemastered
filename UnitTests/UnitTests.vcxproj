@@ -59,7 +59,7 @@
     <ClCompile Include="..\source\LineOfSight.cpp" />
     <ClCompile Include="..\source\Obstacles\Brick.cpp" />
     <ClCompile Include="..\source\Obstacles\Iron.cpp" />
-    <ClCompile Include="..\source\obstacles\ObstacleAroundFortress.cpp" />
+    <ClCompile Include="..\source\obstacles\FortressObstacle.cpp" />
     <ClCompile Include="..\source\Obstacles\Water.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopAI.cpp" />

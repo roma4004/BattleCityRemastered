@@ -12,9 +12,9 @@
 #include <iostream>
 #include <memory>
 
-#ifdef _WIN32
-#define _WIN32_WINNT 0x0A00
-#endif
+//#ifdef _WIN32
+//#define _WIN32_WINNT 0x0A00
+//#endif
 #define ASIO_STANDALONE
 #include <boost/asio/io_service.hpp>
 
