@@ -22,6 +22,7 @@ class Menu final
 	SDL_Renderer* _renderer;
 
 	TTF_Font* _menuFont{nullptr};
+	SDL_Texture* _menuLogo{nullptr};
 
 	std::shared_ptr<GameStatistics> _statistics;
 	int _enemyRespawnResource{20};
@@ -39,8 +40,9 @@ class Menu final
 	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos) const;
 
 public:
-	Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
-	     int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input, std::shared_ptr<EventSystem> events);
+	Menu(SDL_Renderer* renderer, TTF_Font* menuFont, SDL_Texture* menuLogo, std::shared_ptr<GameStatistics> statistics,
+	     UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input,
+	     std::shared_ptr<EventSystem> events);
 
 	~Menu();
 

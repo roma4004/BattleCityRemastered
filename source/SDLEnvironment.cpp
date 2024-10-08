@@ -6,8 +6,8 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName)
-	: windowSize{windowSize}, _fpsFontPathName{fpsFontName} {}
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName)
+	: windowSize{windowSize}, _fpsFontPathName{fpsFontName}, _logoPathName{logoName} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -22,6 +22,10 @@ SDLEnvironment::~SDLEnvironment()
 	TTF_CloseFont(_fpsFont);
 	_fpsFont = nullptr;
 	TTF_Quit();
+
+	//TODO: destroy all img surface and texture before it
+    SDL_DestroyTexture(_logoTexture);
+	IMG_Quit();
 
 	SDL_Quit();
 }
@@ -63,8 +67,23 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 	}
 
+	if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
+	}
+
+	SDL_Surface* logoSurface = IMG_Load(_logoPathName);
+	if (logoSurface == nullptr) {
+		return std::make_unique<ConfigFailure>("IMG Logo Loading Error", IMG_GetError());
+	}
+
+	_logoTexture = SDL_CreateTextureFromSurface(renderer, logoSurface);
+	SDL_FreeSurface(logoSurface);
+	if (_logoTexture == nullptr) {
+		return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
+	}
+
 	const auto size = windowSize.x * windowSize.y;
 	windowBuffer = new int[size];
 
-	return std::make_unique<ConfigSuccess>(windowSize, windowBuffer, renderer, screen, _fpsFont);
+	return std::make_unique<ConfigSuccess>(windowSize, windowBuffer, renderer, screen, _fpsFont, _logoTexture);
 }

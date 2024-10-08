@@ -21,16 +21,17 @@
 std::ofstream error_log_server("error_log_Server.txt");
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-                         TTF_Font* fpsFont, const std::shared_ptr<EventSystem>& events,
+                         TTF_Font* fpsFont, SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
                          std::unique_ptr<InputProviderForMenu>& menuInput,
                          const std::shared_ptr<GameStatistics>& statistics)
 	: _windowSize{windowSize},
 	  _statistics{statistics},
-	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
+	  _menu{renderer, fpsFont, logoTexture, statistics, windowSize, windowBuffer, menuInput, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},
 	  _fpsFont{fpsFont},
+	  _logoTexture{logoTexture},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer, &_currentMode)},
 	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize}
@@ -414,6 +415,11 @@ void GameSuccess::MainLoop()
 		if (_fpsTexture)
 		{
 			SDL_DestroyTexture(_fpsTexture);
+		}
+
+		if (_logoTexture)
+		{
+			SDL_DestroyTexture(_logoTexture);
 		}
 
 		// if (t.joinable()) {

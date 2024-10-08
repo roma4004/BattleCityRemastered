@@ -11,7 +11,7 @@
 struct SDLEnvironment final
 {
 public:
-	SDLEnvironment(UPoint windowSize, const char* fpsFontName);
+	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName);
 	~SDLEnvironment();
 	std::unique_ptr<IConfig> Init();
 
@@ -21,7 +21,11 @@ public:
 	SDL_Renderer* renderer{};
 	SDL_Texture* screen{};
 
+
 	//fps
 	TTF_Font* _fpsFont{nullptr};
 	const char* _fpsFontPathName;
+
+	SDL_Texture* _logoTexture{nullptr};
+	const char* _logoPathName;
 };

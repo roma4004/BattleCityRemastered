@@ -3,9 +3,9 @@
 #include "../headers/GameStatistics.h"
 #include "../headers/utils/PixelUtils.h"
 
-Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStatistics> statistics,
-           const UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input,
-           std::shared_ptr<EventSystem> events)
+Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, SDL_Texture* menuLogo,
+           std::shared_ptr<GameStatistics> statistics, const UPoint windowSize, int* windowBuffer,
+           std::unique_ptr<InputProviderForMenu>& input, std::shared_ptr<EventSystem> events)
 	: _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
 	  _yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
@@ -14,6 +14,7 @@ Menu::Menu(SDL_Renderer* renderer, TTF_Font* menuFont, std::shared_ptr<GameStati
 	  _name{std::string("Menu")},
 	  _renderer{renderer},
 	  _menuFont{menuFont},
+	  _menuLogo{menuLogo},
 	  _statistics{std::move(statistics)}
 {
 	Subscribe();
@@ -42,6 +43,8 @@ void Menu::Subscribe()
 		if (menuKeysStats.menuShow)
 		{
 			this->HandleMenuText(_renderer, _pos);
+			const SDL_Rect logoRectangle{static_cast<int>(_pos.x - 420), static_cast<int>(_pos.y - 490), /*w*/ 300, /*h*/ 75};
+			SDL_RenderCopy(_renderer, _menuLogo, nullptr, &logoRectangle);
 		}
 	});
 
@@ -204,13 +207,12 @@ void Menu::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos
 	const Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
-	TextToRender(renderer, {pos.x - 70, pos.y - 100}, color, "BATTLE CITY REMASTERED");
-	TextToRender(renderer, {pos.x, pos.y - 60}, color, _selectedGameMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
-	TextToRender(renderer, {pos.x, pos.y - 30}, color, _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	TextToRender(renderer, {pos.x, pos.y - 50}, color, _selectedGameMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	TextToRender(renderer, {pos.x, pos.y - 25}, color, _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
 	TextToRender(renderer, {pos.x, pos.y}, color, _selectedGameMode == CoopWithAI ? ">COOP AI" : "COOP AI");
-	TextToRender(renderer, {pos.x, pos.y + 30}, color,
+	TextToRender(renderer, {pos.x, pos.y + 25}, color,
 	             _selectedGameMode == PlayAsHost ? ">PLAY AS HOST" : "PLAY AS HOST");
-	TextToRender(renderer, {pos.x, pos.y + 60}, color,
+	TextToRender(renderer, {pos.x, pos.y + 50}, color,
 	             _selectedGameMode == PlayAsClient ? ">PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(renderer, pos);

@@ -16,16 +16,12 @@ project(BattleCity_remastered)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -pedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 
 include(FetchContent)
 set(vendored_default FALSE)
-#set(SDL2_DOWNLOAD_URL "https://github.com/libsdl-org/SDL/archive/refs/tags/release-2.30.5.zip")
-#set(SDL2_TTF_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_ttf/archive/refs/tags/release-2.22.0.zip")
-#set(SDL2_IMAGE_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_image/archive/refs/tags/release-2.8.2.zip")
 set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
-#set(SDL2_TAG "release-2.30.5")
 set(SDL2_TAG "release-2.30.8")
 set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
 set(SDL2_TTF_TAG "release-2.22.0")
@@ -50,33 +46,32 @@ set(SDL_SHARED OFF CACHE BOOL "Build shared SDL2 libraries")
 set(SDL_STATIC ON CACHE BOOL "Build static SDL2 libraries")
 set(SDL_TTF_SHARED OFF CACHE BOOL "Build shared SDL2_ttf library")
 set(SDL_TTF_STATIC ON CACHE BOOL "Build static SDL2_ttf library")
+option(SDL2_TTF_STATIC "Build static SDL2_ttf library" ON)
 
-set(DEP_DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libraries)
+set(DEP_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/libraries)
 set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
 
-FetchContent_Declare(SDL2 GIT_REPOSITORY ${SDL2_URL} GIT_TAG ${SDL2_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-FetchContent_MakeAvailable(SDL2)
-set(FREETYPE_INCLUDE_DIRS "${SDL2_ttf_SOURCE_DIR}/external/freetype/include")
-set(FREETYPE_LIBRARY "${SDL2_ttf_SOURCE_DIR}/external/freetype")
-#FetchContent_Declare(Harfbuzz GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git GIT_TAG 8.1.1)
-FetchContent_Declare(Freetype GIT_REPOSITORY https://github.com/freetype/freetype.git GIT_TAG VER-2-13-2)
+if(DEFINED VCPKG_TARGET_TRIPLET)
+    message(STATUS "Using VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+endif()
 
+FetchContent_Declare(SDL2 GIT_REPOSITORY ${SDL2_URL} GIT_TAG ${SDL2_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
 FetchContent_Declare(SDL2_ttf GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-#FetchContent_MakeAvailable(SDL2_ttf)
-FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
+FetchContent_MakeAvailable(SDL2)
+FetchContent_GetProperties(SDL2)
+
+set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/include")
+set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/libfreetype.a")
+
+FetchContent_MakeAvailable(SDL2_ttf)
+add_subdirectory(${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype)
+FetchContent_GetProperties(SDL2_ttf)
 FetchContent_MakeAvailable(SDL2_image)
+FetchContent_GetProperties(SDL2_image)
 #FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MIXER_DOWNLOAD_URL} GIT_TAG "release-2.8.0")
 
 #FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
-#    FetchContent_GetProperties(SDL2_image)
-#    if(NOT SDL2_image_POPULATED)
-#            FetchContent_Populate(SDL2_image)
-#            add_subdirectory(${SDL2_image_SOURCE_DIR} ${SDL2_image_BINARY_DIR})
-#    #        add_subdirectory(${sdl2_image_SOURCE_DIR})
-#    #        add_subdirectory(${sdl2_image_SOURCE_DIR}/external/zlib)
-#    #        add_subdirectory(${sdl2_image_SOURCE_DIR}/external/libpng)
-#    #        message(FATAL_ERROR ${sdl2_image_BINARY_DIR})
-#    endif()
 
 #find_package(OpusFile REQUIRED)
 #message(STATUS "sdl2_mixer_SOURCE_DIR is located at ${${sdl2_mixer_SOURCE_DIR}}")
@@ -99,19 +94,6 @@ FetchContent_MakeAvailable(SDL2_image)
 #        add_subdirectory(${opusfile_SOURCE_DIR} ${opusfile_BINARY_DIR}  EXCLUDE_FROM_ALL)
 #endif()
 
-
-#add_subdirectory(${SDL2_ttf_SOURCE_DIR}/external/harfbuzz EXCLUDE_FROM_ALL)
-add_subdirectory(${SDL2_ttf_SOURCE_DIR}/external/freetype EXCLUDE_FROM_ALL)
-add_library(SDL2_ttf-static STATIC ${SDL2_ttf_SOURCE_DIR}/SDL_ttf.c)
-set(SDL2_ttf_DIR ${SDL2_ttf_SOURCE_DIR}/)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${SDL2_ttf_SOURCE_DIR}/)
-message(STATUS "ttf path --------${SDL2_ttf_DIR}")
-#add_subdirectory(${SDL2_ttf_SOURCE_DIR} EXCLUDE_FROM_ALL)
-#find_package(SDL2_ttf REQUIRED)
-
-#target_include_directories(SDL2_ttf-static PRIVATE
-#        ${SDL2_SOURCE_DIR}/include
-#        ${SDL2_ttf_SOURCE_DIR})
 #FetchContent_Declare(boost
 ##        GIT_REPOSITORY ""
 ##        GIT_TAG "boost-1.85.0"
@@ -216,8 +198,6 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 #            LOG_BUILD ON
 #            LOG_INSTALL ON
 
-#            UPDATE_COMMAND git submodule update --init libs/serialization
-#                   GIT_SUBMODULES_RECURSE OFF
 #            PATCH_COMMAND ./bootstrap.sh gcc
             CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
 #            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
@@ -239,24 +219,13 @@ else()
     message(STATUS "--------------------------------------------------")
 endif()
 
-#Set(ZLIB_LIBRARY C:/git/BattleCityRemastered/cmake-build-release-mingw/cmake-build-release-mingw/_deps/sdl2_image-src/external/zlib)
-#find_package(SDL2_image REQUIRED CONFIG #[[COMPONENTS SDL2_image]])
-#add_subdirectory(${sdl2_image_SOURCE_DIR}/external/libpng)
-#list(APPEND CMAKE_PREFIX_PATH "${sdl2_image_SOURCE_DIR}/external/libpng")
-#list(APPEND CMAKE_PREFIX_PATH "${sdl2_image_SOURCE_DIR}/external/zlib")
-#find_package(ZLIB HINTS C:/git/BattleCityRemastered/cmake-build-release-mingw/cmake-build-release-mingw/_deps/sdl2_image-src/external/zlib)
-#find_package(PNG)
-#find_package(BZip2)
-#find_package(brotlidec)
-#add_subdirectory(${sdl2_image_SOURCE_DIR}/external/zlib)
-#find_package(ZLIB REQUIRED)
 #find_package(SDL2_mixer-static REQUIRED CONFIG #[[COMPONENTS SDL2_mixer OpusFile FluidSynth]])
 #find_package(OpusFile CONFIG REQUIRED)
 #find_package(libxmp CONFIG REQUIRED)
 #find_package(opusfile REQUIRED CONFIG REQUIRED COMPONENTS opusfile)
 
 set(Boost_NO_SYSTEM_PATHS ON)
-set(BOOST_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_install)
+set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/libraries/boost_install)
 find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization)
 if(Boost_FOUND)
     message(STATUS "------------------------------------------------------------")
@@ -272,16 +241,13 @@ else ()
     message(STATUS "------------------------------------------------------------")
 endif()
 
-#include_directories(${SDL2_SOURCE_DIR}/include)
-#include_directories(${SDL2_SOURCE_DIR}/include/SDL2)
-#include_directories(${SDL2_image_DIR}/include)
+include_directories(${SDL2_image_SOURCE_DIR}/include)
 include_directories(${SDL2_ttf_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/)
 #include_directories(${SDL2_Mixer_SOURCE_DIR}/include)
 #include_directories(${opusfile_SOURCE_DIR}/include)
 
 include_directories(headers)
-
-target_link_libraries(SDL2_ttf-static PRIVATE SDL2-static freetype)
 
 add_executable(${PROJECT_NAME}
         source/behavior/MoveLikeAIBeh.cpp
@@ -333,32 +299,24 @@ add_executable(${PROJECT_NAME}
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     add_dependencies(${PROJECT_NAME} Boost)
-    message(STATUS "dependency boost------------------------------------------------------------")
 endif()
 
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(${PROJECT_NAME}
         SDL2-static
         SDL2main
-        freetype
-        SDL2_ttf-static
-#        PRIVATE zlib
-#        PRIVATE zlib1
+        SDL2_ttf
+        SDL2_image
 #        PRIVATE OpusFile::opusfile
 #        PRIVATE $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>
 #        mingw32
 #        SDL2_mixer::SDL2_mixer-static
-#        SDL2_image-static
-#        SDL2_image
 #        SDL2_mixer
 #        PRIVATE ${SDL2_mixer}
         ${Boost_LIBRARIES}
         wsock32  #NOTE: this for windows socket
         ws2_32   #NOTE: this for windows socket
 )
-
-install(TARGETS SDL2_ttf-static DESTINATION lib)
-install(FILES ${SDL2_ttf_SOURCE_DIR}/SDL_ttf.h DESTINATION include)
 
 set(FONT_PATH                   Resources/Fonts)
 set(FONT_PATH_NAME              ${FONT_PATH}/bc7x7.ttf)

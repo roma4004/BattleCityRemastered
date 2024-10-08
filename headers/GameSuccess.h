@@ -40,6 +40,8 @@ class GameSuccess final : public IGame
 	SDL_Surface* _fpsSurface{nullptr};
 	SDL_Texture* _fpsTexture{nullptr};
 
+	SDL_Texture* _logoTexture{nullptr};
+
 	MouseButtons _mouseButtons{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 
@@ -79,8 +81,8 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
-	            const std::shared_ptr<EventSystem>& events, std::unique_ptr<InputProviderForMenu>& menuInput,
-	            const std::shared_ptr<GameStatistics>& statistics);
+	            SDL_Texture* _logoTexture, const std::shared_ptr<EventSystem>& events,
+	            std::unique_ptr<InputProviderForMenu>& menuInput, const std::shared_ptr<GameStatistics>& statistics);
 
 	~GameSuccess() override;
 };
