@@ -2,12 +2,16 @@
 #include "../headers/ConfigFailure.h"
 #include "../headers/ConfigSuccess.h"
 
+#include <SDL_image.h>
+#include <SDL_mixer.h>
 #include <memory>
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName)
-	: windowSize{windowSize}, _fpsFontPathName{fpsFontName}, _logoPathName{logoName} {}
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
+                               const char* levelStartedName)
+	: windowSize{windowSize}, _fpsFontPathName{fpsFontName}, _logoPathName{logoName},
+	  _levelStartedPathName{levelStartedName} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -24,8 +28,11 @@ SDLEnvironment::~SDLEnvironment()
 	TTF_Quit();
 
 	//TODO: destroy all img surface and texture before it
-    SDL_DestroyTexture(_logoTexture);
+	SDL_DestroyTexture(_logoTexture);
 	IMG_Quit();
+
+	Mix_FreeChunk(_levelStartedSound);
+	Mix_CloseAudio();
 
 	SDL_Quit();
 }
@@ -67,19 +74,38 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 	}
 
-	if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+	if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
+	{
 		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
 	}
 
 	SDL_Surface* logoSurface = IMG_Load(_logoPathName);
-	if (logoSurface == nullptr) {
+	if (logoSurface == nullptr)
+	{
 		return std::make_unique<ConfigFailure>("IMG Logo Loading Error", IMG_GetError());
 	}
 
 	_logoTexture = SDL_CreateTextureFromSurface(renderer, logoSurface);
 	SDL_FreeSurface(logoSurface);
-	if (_logoTexture == nullptr) {
+	if (_logoTexture == nullptr)
+	{
 		return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
+	}
+
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+	{
+		return std::make_unique<ConfigFailure>("Mix_OpenAudio Error", Mix_GetError());
+	}
+
+	if (_levelStartedSound = Mix_LoadWAV(_levelStartedPathName);
+		_levelStartedSound == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
+	}
+
+	if (Mix_PlayChannel(-1, _levelStartedSound, 0) == -1)
+	{
+		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
 	const auto size = windowSize.x * windowSize.y;

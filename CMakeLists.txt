@@ -27,15 +27,13 @@ set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
 set(SDL2_TTF_TAG "release-2.22.0")
 set(SDL2_IMG_URL "https://github.com/libsdl-org/SDL_image.git")
 set(SDL2_IMG_TAG "release-2.8.2")
-#set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
-#set(SDL2_MXR_TAG "release-2.8.0")
+set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
+set(SDL2_MXR_TAG "release-2.8.0")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
 set(BOOST_VERSION "1.85.0")
 string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE "${BOOST_VERSION}")
 set(BOOST_TAG "boost-${BOOST_VERSION}")
 set(SDL2_MIXER_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_mixer.git")
-#set(OPUSFILE_DOWNLOAD_URL "https://github.com/xiph/opusfile/releases/download/v0.12/opusfile-0.12.zip")
-#set(SDL2_OPUSFILE_EXTRACTION_DIRECTORY "${CMAKE_SOURCE_DIR}/dependencies/opusfile")
 
 cmake_policy(SET CMP0148 NEW)
 include (FindPython)
@@ -48,6 +46,16 @@ set(SDL_TTF_SHARED OFF CACHE BOOL "Build shared SDL2_ttf library")
 set(SDL_TTF_STATIC ON CACHE BOOL "Build static SDL2_ttf library")
 option(SDL2_TTF_STATIC "Build static SDL2_ttf library" ON)
 
+set(SDL2MIXER_FLUIDSYNTH OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_LIBXMP OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MODPLUG OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MIDI OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_OGG OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MP3 OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_TREMOR OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_OPUS OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
+
 set(DEP_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/libraries)
 set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
 
@@ -58,41 +66,27 @@ endif()
 FetchContent_Declare(SDL2 GIT_REPOSITORY ${SDL2_URL} GIT_TAG ${SDL2_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
 FetchContent_Declare(SDL2_ttf GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
 FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
+FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MXR_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
+
 FetchContent_MakeAvailable(SDL2)
 FetchContent_GetProperties(SDL2)
 
 set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/include")
 set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/libfreetype.a")
-
 FetchContent_MakeAvailable(SDL2_ttf)
 add_subdirectory(${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype)
 FetchContent_GetProperties(SDL2_ttf)
+
 FetchContent_MakeAvailable(SDL2_image)
 FetchContent_GetProperties(SDL2_image)
-#FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MIXER_DOWNLOAD_URL} GIT_TAG "release-2.8.0")
+
+set(libxmp_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/include")
+set(libxmp_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/libxmp.a")
+FetchContent_MakeAvailable(SDL2_mixer)
+add_subdirectory(${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp)
+FetchContent_GetProperties(SDL2_mixer)
 
 #FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
-
-#find_package(OpusFile REQUIRED)
-#message(STATUS "sdl2_mixer_SOURCE_DIR is located at ${${sdl2_mixer_SOURCE_DIR}}")
-#FetchContent_GetProperties(SDL2_mixer)
-#if(NOT sdl2_mixer_POPULATED)
-#        FetchContent_Populate(SDL2_mixer)
-#        add_subdirectory(${sdl2_mixer_SOURCE_DIR} ${sdl2_mixer_BINARY_DIR}  EXCLUDE_FROM_ALL)
-#endif()
-#add_library(opusfile STATIC ${source_files})
-#add_library(opusfile SHARED ${OPUSFILE_SOURCES})
-#FetchContent_Declare(opusfile
-#        URL ${OPUSFILE_DOWNLOAD_URL}
-#        SOURCE_DIR ${OPUSFILE_EXTRACTION_DIRECTORY}
-#)
-#TODO: try to fetch opus instead of opusfile
-#FetchContent_MakeAvailable(opusfile)
-#FetchContent_GetProperties(opusfile)
-#if(NOT opusfile_POPULATED)
-#        FetchContent_Populate(opusfile)
-#        add_subdirectory(${opusfile_SOURCE_DIR} ${opusfile_BINARY_DIR}  EXCLUDE_FROM_ALL)
-#endif()
 
 #FetchContent_Declare(boost
 ##        GIT_REPOSITORY ""
@@ -219,11 +213,6 @@ else()
     message(STATUS "--------------------------------------------------")
 endif()
 
-#find_package(SDL2_mixer-static REQUIRED CONFIG #[[COMPONENTS SDL2_mixer OpusFile FluidSynth]])
-#find_package(OpusFile CONFIG REQUIRED)
-#find_package(libxmp CONFIG REQUIRED)
-#find_package(opusfile REQUIRED CONFIG REQUIRED COMPONENTS opusfile)
-
 set(Boost_NO_SYSTEM_PATHS ON)
 set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/libraries/boost_install)
 find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization)
@@ -240,12 +229,6 @@ else ()
     message(STATUS "just reload cmake project to fix it, then run the build")
     message(STATUS "------------------------------------------------------------")
 endif()
-
-include_directories(${SDL2_image_SOURCE_DIR}/include)
-include_directories(${SDL2_ttf_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/)
-#include_directories(${SDL2_Mixer_SOURCE_DIR}/include)
-#include_directories(${opusfile_SOURCE_DIR}/include)
 
 include_directories(headers)
 
@@ -307,12 +290,7 @@ target_link_libraries(${PROJECT_NAME}
         SDL2main
         SDL2_ttf
         SDL2_image
-#        PRIVATE OpusFile::opusfile
-#        PRIVATE $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>
-#        mingw32
-#        SDL2_mixer::SDL2_mixer-static
-#        SDL2_mixer
-#        PRIVATE ${SDL2_mixer}
+        SDL2_mixer
         ${Boost_LIBRARIES}
         wsock32  #NOTE: this for windows socket
         ws2_32   #NOTE: this for windows socket
@@ -324,3 +302,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-bu
         COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
         "../${FONT_PATH_NAME}"                                  # <--this is in-file
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${FONT_PATH_NAME}") # <--this is out-file path
+
+set(LOGO_PATH                   Resources/Images)
+set(LOGO_PATH_NAME              ${LOGO_PATH}/Title.png)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${LOGO_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LOGO_PATH_NAME}")
+
+set(LEVEL_STARTED_PATH                   Resources/Sounds)
+set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${LEVEL_STARTED_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LEVEL_STARTED_PATH_NAME}")

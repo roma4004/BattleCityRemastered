@@ -4,8 +4,8 @@
 #include "interfaces/IConfig.h"
 
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include <SDL_ttf.h>
-#include <SDL_image.h>
 
 class ConfigSuccess final : public IConfig
 {
@@ -20,6 +20,8 @@ class ConfigSuccess final : public IConfig
 	// SDL_Texture* fpsTexture{nullptr}
 
 	SDL_Texture* _logoTexture{nullptr};
+
+	Mix_Chunk* _levelStartedSound{nullptr};
 
 public:
 	ConfigSuccess() = delete;
