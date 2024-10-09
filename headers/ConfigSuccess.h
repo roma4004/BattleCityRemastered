@@ -4,6 +4,7 @@
 #include "interfaces/IConfig.h"
 
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
 class ConfigSuccess final : public IConfig
@@ -16,7 +17,11 @@ class ConfigSuccess final : public IConfig
 	//fps
 	TTF_Font* _fpsFont{nullptr};
 	// SDL_Surface* fpsSurface{nullptr};
-	// SDL_Texture* fpsTexture{nullptr};
+	// SDL_Texture* fpsTexture{nullptr}
+
+	SDL_Texture* _logoTexture{nullptr};
+
+	Mix_Chunk* _levelStartedSound{nullptr};
 
 public:
 	ConfigSuccess() = delete;
@@ -24,7 +29,7 @@ public:
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
 	explicit ConfigSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-	                       TTF_Font* fpsFont);
+	                       TTF_Font* fpsFont, SDL_Texture* _logoTexture);
 
 	~ConfigSuccess() override = default;
 

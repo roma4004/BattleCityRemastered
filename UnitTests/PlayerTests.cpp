@@ -1,5 +1,6 @@
 #include "../headers/EventSystem.h"
-#include "../headers/InputProviderForPlayerOne.h"
+#include "../headers/GameMode.h"
+#include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/Brick.h"
 #include "../headers/obstacles/Iron.h"
 #include "../headers/obstacles/Water.h"
@@ -28,17 +29,18 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
-		const Rectangle rect{0, 0, _tankSize, _tankSize};
+		const ObjRectangle rect{0, 0, _tankSize, _tankSize};
 		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
+		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		auto currentGameMode = OnePlayer;
 		//TODO: initialize with btn names
-		_bulletPool = std::make_shared<BulletPool>();
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP,
 		                                                     _tankSpeed, &_allObjects, _events, name, fraction,
-		                                                     inputProvider, _bulletPool));
+		                                                     inputProvider, _bulletPool, false, 1));
 	}
 
 	void TearDown() override
@@ -487,14 +489,14 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const Rectangle rect{0, _tankSize + 1, _tankSize, _tankSize};
+		const ObjRectangle rect{0, _tankSize + 1, _tankSize, _tankSize};
 		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
+		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		_allObjects.emplace_back(std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP,
 		                                                     _tankSpeed, &_allObjects, _events, name, fraction,
-		                                                     inputProvider, _bulletPool));
+		                                                     inputProvider, _bulletPool, false, true, 2));
 
 		if (const auto player2 = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
 		{
@@ -523,8 +525,8 @@ TEST_F(PlayerTest, TankCantPassThroughBrick)
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const Rectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
@@ -550,8 +552,8 @@ TEST_F(PlayerTest, TankCantPassThroughIron)
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const Rectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
+		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events, 0));
 
 		if (const auto brick = dynamic_cast<Iron*>(_allObjects.back().get()))
 		{
@@ -577,8 +579,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const Rectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
-		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0.f, _tankSize + 1, gridSize, gridSize};
+		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events, 0));
 
 		if (const auto water = dynamic_cast<Water*>(_allObjects.back().get()))
 		{

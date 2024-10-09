@@ -1,8 +1,10 @@
 ﻿#include "../../headers/obstacles/Water.h"
+#include "../../headers/EventSystem.h"
 
 #include <string>
 
-Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
+Water::Water(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
+             const int obstacleId)
 	: BaseObj{rect, 0x1e90ff, 15},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
@@ -12,7 +14,7 @@ Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, 
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
 
-	_name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "Water " + std::to_string(obstacleId);
 	Subscribe();
 }
 

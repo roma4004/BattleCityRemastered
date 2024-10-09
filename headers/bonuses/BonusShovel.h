@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Bonus.h"
-#include "../BaseObj.h"
-#include "../EventSystem.h"
-#include "../Point.h"
 
 #include <memory>
+
+struct UPoint;
+class BaseObj;
+class EventSystem;
 
 class BonusShovel final : public Bonus
 {
@@ -13,7 +14,7 @@ class BonusShovel final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusShovel(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	BonusShovel(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	          int durationMs, int lifeTimeMs, int color);
 
 	~BonusShovel() override;

@@ -1,4 +1,5 @@
 #include "../headers/EventSystem.h"
+#include "../headers/GameMode.h"
 #include "../headers/Point.h"
 #include "../headers/obstacles/Brick.h"
 #include "../headers/obstacles/Iron.h"
@@ -26,17 +27,17 @@ protected:
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_events = std::make_shared<EventSystem>();
 		_bulletSize = FPoint{6.f, 5.f};
-		Rectangle bulletRect{0.f, 0.f, _bulletSize.x, _bulletSize.y};
+		ObjRectangle bulletRect{0.f, 0.f, _bulletSize.x, _bulletSize.y};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
 		constexpr double bulletDamageAreaRadius = 12.0;
-		std::string name = "PlayerOne";
+		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
 		                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-		                                                  _events, name, fraction));
+		                                                  _events, name, fraction, 0, false));
 	}
 
 	void TearDown() override
@@ -184,8 +185,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	{
 		bullet->SetPos({0.f, 7.f});
 		bullet->SetDirection(UP);
-		const Rectangle rect{0, 0, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0, 0, _gridSize, _gridSize};
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -211,8 +212,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	{
 		bullet->SetPos({7.f, 0.f});
 		bullet->SetDirection(LEFT);
-		const Rectangle rect{0, 0, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0, 0, _gridSize, _gridSize};
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -238,8 +239,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
-		const Rectangle rect{0.f, 6.f, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0.f, 6.f, _gridSize, _gridSize};
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -265,8 +266,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(RIGHT);
-		const Rectangle rect{7.f, 0.f, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{7.f, 0.f, _gridSize, _gridSize};
+		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -293,12 +294,13 @@ TEST_F(BulletTest, BulletDamageTank)
 		const float tankSize = gridSize * 3;// for better turns
 		constexpr float tankSpeed{142};
 		constexpr int tankHealth = 100;
-		const Rectangle rect{0, _bulletSize.y, tankSize, tankSize};
+		const ObjRectangle rect{0, _bulletSize.y, tankSize, tankSize};
 		constexpr int gray = 0x808080;
-		auto bulletPool = std::make_shared<BulletPool>();
+		auto currentGameMode = OnePlayer;
+		auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
 		_allObjects.emplace_back(std::make_shared<Enemy>(rect, gray, tankHealth, _windowBuffer, _windowSize, UP,
-		                                                 tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam",
-		                                                 bulletPool));
+		                                                 tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
+		                                                 bulletPool, false, 1));
 		if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get()))
 		{
 			enemy->SetHealth(1);
@@ -325,10 +327,10 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		constexpr int health = 1;
 		constexpr int damage = 1;
 		constexpr double bulletDamageAreaRadius = 12.0;
-		const Rectangle rect{0, _bulletSize.y + 1, _bulletSize.x, _bulletSize.y};
+		const ObjRectangle rect{0, _bulletSize.y + 1, _bulletSize.x, _bulletSize.y};
 		_allObjects.emplace_back(std::make_shared<Bullet>(rect, damage, bulletDamageAreaRadius, color, health,
 		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "PlayerTwo", "PlayerTeam"));
+		                                                  _events, "Player2", "PlayerTeam", 1, false));
 
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -355,8 +357,8 @@ TEST_F(BulletTest, BulletCantDamageIron)
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
-		const Rectangle rect{0.f, 6.f, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0.f, 6.f, _gridSize, _gridSize};
+		_allObjects.emplace_back(std::make_shared<Iron>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Iron*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -382,8 +384,8 @@ TEST_F(BulletTest, BulletCantDamageWater)
 	{
 		bullet->SetPos({0.f, 0.f});
 		bullet->SetDirection(DOWN);
-		const Rectangle rect{0.f, 6.f, _gridSize, _gridSize};
-		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events));
+		const ObjRectangle rect{0.f, 6.f, _gridSize, _gridSize};
+		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Water*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();

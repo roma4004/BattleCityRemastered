@@ -1,6 +1,6 @@
 #pragma once
 
-class PixelUtils
+class PixelUtils final
 {
 public:
 	static unsigned int ChangeAlpha(unsigned int color, const unsigned char alpha)
