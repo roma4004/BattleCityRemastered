@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <iostream>
 #include <memory>
 #include <boost/asio.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -14,14 +13,14 @@
 struct Server;
 
 GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-                         TTF_Font* fpsFont, const std::shared_ptr<EventSystem>& events,
+						 TTF_Font* fpsFont, SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
                          std::unique_ptr<InputProviderForMenu>& menuInput,
                          const std::shared_ptr<GameStatistics>& statistics)
 	: _windowSize{windowSize},
 	  _selectedGameMode{Demo},
 	  _currentMode{Demo},
 	  _statistics{statistics},
-	  _menu{renderer, fpsFont, statistics, windowSize, windowBuffer, menuInput, events},
+	  _menu{renderer, fpsFont, logoTexture, statistics, windowSize, windowBuffer, menuInput, events},
 	  _windowBuffer{windowBuffer},
 	  _renderer{renderer},
 	  _screen{screen},

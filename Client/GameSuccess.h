@@ -76,7 +76,8 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
-	            const std::shared_ptr<EventSystem>& events, std::unique_ptr<InputProviderForMenu>& menuInput,
+				SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
+				std::unique_ptr<InputProviderForMenu>& menuInput,
 	            const std::shared_ptr<GameStatistics>& statistics);
 
 	~GameSuccess() override;
