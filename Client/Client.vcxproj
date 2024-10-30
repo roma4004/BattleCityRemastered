@@ -212,6 +212,10 @@
   <ItemGroup>
     <ClInclude Include="Client.h" />
     <ClInclude Include="GameSuccess.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Client.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Resources\Images\Title.png" />

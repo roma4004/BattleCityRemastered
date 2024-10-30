@@ -245,12 +245,13 @@
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\Fonts\bc7x7.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BattleCityRemastered.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Images\Title.png" />
