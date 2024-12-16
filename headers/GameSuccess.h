@@ -23,7 +23,7 @@ class GameStatistics;
 
 class GameSuccess final : public IGame
 {
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	GameMode _selectedGameMode{Demo};
 	GameMode _currentMode{Demo};
 	std::shared_ptr<GameStatistics> _statistics;

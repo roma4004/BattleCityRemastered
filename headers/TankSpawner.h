@@ -9,11 +9,11 @@ class BaseObj;
 class BulletPool;
 class EventSystem;
 
-enum GameMode : int;
+enum GameMode : char8_t;
 
 class TankSpawner final
 {
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	std::string _name = "TankSpawner";
 	int* _windowBuffer{nullptr};
 	GameMode _currentMode;

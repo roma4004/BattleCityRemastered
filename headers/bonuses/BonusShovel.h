@@ -15,7 +15,7 @@ class BonusShovel final : public Bonus
 
 public:
 	BonusShovel(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	          int durationMs, int lifeTimeMs, int color);
+	            int durationMs, int lifeTimeMs, int color);
 
 	~BonusShovel() override;
 

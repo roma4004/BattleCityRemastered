@@ -136,9 +136,9 @@ void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, co
 
 template<>
 inline void Map::ObstacleCreation<FortressObstacle>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                                          const ObjRectangle& rect, int* windowBuffer,
-                                                          UPoint windowSize, std::shared_ptr<EventSystem> events,
-                                                          const int obstacleId) const
+                                                    const ObjRectangle& rect, int* windowBuffer,
+                                                    UPoint windowSize, std::shared_ptr<EventSystem> events,
+                                                    const int obstacleId) const
 {
 	allObjects->emplace_back(
 			std::make_shared<FortressObstacle>(

@@ -71,7 +71,7 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 		const auto size = static_cast<float>(_bonusSize);
 		const auto x = static_cast<float>(_distSpawnPosX(_gen));
 		const auto y = static_cast<float>(_distSpawnPosY(_gen));
-		const ObjRectangle rect{x, y, size, size};
+		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 		{
 			if (ColliderUtils::IsCollide(rect, object->GetShape()))

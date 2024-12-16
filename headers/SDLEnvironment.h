@@ -15,7 +15,7 @@ public:
 	~SDLEnvironment();
 	std::unique_ptr<IConfig> Init();
 
-	UPoint windowSize{800, 600};
+	UPoint windowSize{.x = 800, .y = 600};
 	int* windowBuffer{};
 	SDL_Window* window{};
 	SDL_Renderer* renderer{};

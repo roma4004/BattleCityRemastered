@@ -52,8 +52,8 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
 	if (_bullets.empty())
 	{
 		auto bullet = std::make_shared<Bullet>(rect, damage, aoeRadius, color, health, _windowBuffer, _windowSize,
-		                                       direction, speed, _allObjects, _events, std::move(author), std::move(fraction),
-		                                       lastId++, isNetworkControlled);
+		                                       direction, speed, _allObjects, _events, std::move(author),
+		                                       std::move(fraction), lastId++, isNetworkControlled);
 
 		return bullet;
 	}

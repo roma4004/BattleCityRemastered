@@ -18,7 +18,7 @@ struct Data final
 	friend class boost::serialization::access;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int version)
+	void serialize(Archive& ar, const unsigned int /*version*/)
 	{
 		ar & health;
 		ar & objectName;
@@ -32,7 +32,7 @@ struct Data final
 	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;
-	FPoint newPos{0.f, 0.f};
+	FPoint newPos{.x = 0.f, .y = 0.f};
 	Direction direction{NONE};
 };
 

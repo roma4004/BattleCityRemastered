@@ -6,7 +6,7 @@
 #include <memory>
 
 ShootingBeh::ShootingBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
+                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
 	: _selfParent{selfParent},
 	  _allObjects{allObjects},
 	  _events{std::move(events)},
@@ -20,7 +20,7 @@ ShootingBeh::~ShootingBeh() = default;
 // }
 
 float ShootingBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
-								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+                                   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -63,16 +63,16 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 		return {};
 	}
 
-	const FPoint tankHalf = {tank->GetWidth() / 2.f, tank->GetHeight() / 2.f};
+	const FPoint tankHalf = {.x = tank->GetWidth() / 2.f, .y = tank->GetHeight() / 2.f};
 	const FPoint tankPos = tank->GetPos();
 	const float tankRightX = tank->GetRightSide();
 	const float tankBottomY = tank->GetBottomSide();
-	const FPoint tankCenter = {tankPos.x + tankHalf.x, tankPos.y + tankHalf.y};
+	const FPoint tankCenter = {.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
 
 	const float bulletWidth = tank->GetBulletWidth();
 	const float bulletHeight = tank->GetBulletHeight();
-	const FPoint bulletHalf = {bulletWidth / 2.f, bulletHeight / 2.f};
-	ObjRectangle bulletRect = {-1, -1, bulletWidth, bulletHeight};
+	const FPoint bulletHalf = {.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
+	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction direction = tank->GetDirection();
 		direction == UP
@@ -82,19 +82,19 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 		bulletRect.y = tankPos.y - bulletHalf.y;
 	}
 	else if (direction == DOWN
-			 && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
+	         && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY - bulletHalf.y;
 	}
 	else if (direction == LEFT
-			 && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+	         && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankPos.x - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (direction == RIGHT
-			 && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
+	         && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
 		bulletRect.x = tankRightX - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -127,5 +127,5 @@ void ShootingBeh::Shot() const
 	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
 	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, direction, speed,
-													 std::move(author), std::move(fraction)));
+	                                                 std::move(author), std::move(fraction)));
 }

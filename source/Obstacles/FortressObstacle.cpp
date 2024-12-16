@@ -1,8 +1,8 @@
 #include "../../headers/obstacles/FortressObstacle.h"
 #include "../../headers/EventSystem.h"
-#include "../../headers/obstacles/Water.h"
 #include "../../headers/obstacles/Brick.h"
 #include "../../headers/obstacles/Iron.h"
+#include "../../headers/obstacles/Water.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
@@ -11,7 +11,7 @@
 FortressObstacle::FortressObstacle(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize,
                                    const std::shared_ptr<EventSystem>& events,
                                    std::vector<std::shared_ptr<BaseObj>>* allObjects, const int obstacleId)
-	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 15},
+	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 15},
 	  _rect{rect},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
@@ -138,7 +138,7 @@ void FortressObstacle::Subscribe()
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusShovel",
 			_name,
-			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
+			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction == "PlayerTeam")
 				{
@@ -192,4 +192,4 @@ void FortressObstacle::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void FortressObstacle::SendDamageStatistics(const std::string& author, const std::string& fraction) {}
+void FortressObstacle::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}

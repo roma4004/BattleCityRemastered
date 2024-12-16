@@ -11,7 +11,7 @@
 
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	int* _windowBuffer{nullptr};
 	std::chrono::system_clock::time_point _creationTime;
 

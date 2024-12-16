@@ -6,8 +6,8 @@
 #include <queue>
 #include <string>
 
-enum GameMode : int;
-enum Direction : int;
+enum GameMode : char8_t;
+enum Direction : char8_t;
 struct ObjRectangle;
 class Bullet;
 class BaseObj;

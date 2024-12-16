@@ -4,8 +4,8 @@
 #include <string>
 #include <variant>
 
-enum Direction : int;
-enum GameMode : int;
+enum Direction : char8_t;
+enum GameMode : char8_t;
 struct FPoint;
 
 template<typename... Args>
@@ -34,22 +34,24 @@ private:
 
 class EventSystem final
 {
-	using EventVariant = std::variant<Event<>, // regular events eg method call
-	                                  Event<const float>, // update(deltaTime)
-	                                  Event<const FPoint>, // bullets tank new pos,
-	                                  Event<const FPoint, const int>, // bullets send new pos, bulletId
-	                                  Event<const FPoint, const int, const Direction>, // bullets send new pos, bulletId, direction
-	                                  Event<const FPoint, const Direction>, // send newPos and direction
-	                                  Event<const Direction>, // send shot
-	                                  Event<const int>, // respawn resource changed
-	                                  Event<const int, const int>, // send health changed
-	                                  Event<const std::string, const int>, // send health changed
-	                                  Event<const std::string, const std::string, const int>, // send health changed
-	                                  Event<const std::string, const std::string, const FPoint, const Direction>, // send new pos and direction
-	                                  Event<const std::string&, const std::string&>, // statistics, bonus
-	                                  Event<const std::string&, const std::string&, int>, // bonus with duration
-	                                  Event<const GameMode>, // gameMode switch
-	                                  Event<const bool>>; // pause status
+	using EventVariant = std::variant<
+		Event<>,// regular events eg method call
+		Event<const float>,// update(deltaTime)
+		Event<const FPoint>,// bullets tank new pos,
+		Event<const FPoint, const int>,// bullets send new pos, bulletId
+		Event<const FPoint, const int, const Direction>,// bullets send new pos, bulletId, direction
+		Event<const FPoint, const Direction>,// send newPos and direction
+		Event<const Direction>,// send shot
+		Event<const int>,// respawn resource changed
+		Event<const int, const int>,// send health changed
+		Event<const std::string, const int>,// send health changed
+		Event<const std::string, const std::string, const int>,// send health changed
+		Event<const std::string, const std::string, const FPoint, const Direction>,// send new pos and direction
+		Event<const std::string&, const std::string&>,// statistics, bonus
+		Event<const std::string&, const std::string&, int>,// bonus with duration
+		Event<const GameMode>,// gameMode switch
+		Event<const bool>// pause status
+	>;
 
 	std::unordered_map<std::string, EventVariant> _events;
 

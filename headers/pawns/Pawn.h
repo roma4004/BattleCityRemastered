@@ -17,7 +17,7 @@ class Pawn : public BaseObj, public ITickUpdatable
 protected:
 	std::shared_ptr<IMoveBeh> _moveBeh;
 
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 
 	int* _windowBuffer{nullptr};
 

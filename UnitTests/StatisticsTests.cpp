@@ -19,7 +19,7 @@ protected:
 	std::shared_ptr<EventSystem> _events;
 	std::shared_ptr<GameStatistics> _statistics;
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{800, 600};
+	UPoint _windowSize{.x = 800, .y = 600};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
@@ -33,7 +33,7 @@ protected:
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
-		const ObjRectangle playerRect{0, 0, _tankSize, _tankSize};
+		const ObjRectangle playerRect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		constexpr int yellow = 0xeaea00;
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
@@ -45,14 +45,15 @@ protected:
 		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,
 		                                                     name, fraction, inputProvider, _bulletPool, false, 1));
 
-		const ObjRectangle player2Rect{_tankSize, 0, _tankSize, _tankSize};
+		const ObjRectangle player2Rect{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
 		constexpr int green = 0x408000;
 		std::string name2 = "Player";
 		std::string fraction2 = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(name2, _events);
 		_allObjects.emplace_back(std::make_shared<PlayerTwo>(player2Rect, green, _tankHealth, _windowBuffer,
 		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,
-		                                                     name2, fraction2, inputProvider2, _bulletPool, false, true, 2));
+		                                                     name2, fraction2, inputProvider2, _bulletPool, false, true,
+		                                                     2));
 	}
 
 	void TearDown() override
@@ -65,10 +66,10 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -96,10 +97,10 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -127,10 +128,10 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
 	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -158,10 +159,10 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
 	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -189,10 +190,10 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -221,10 +222,10 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
 	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -253,10 +254,10 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({0.f, 0.f});
+		player->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -287,7 +288,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 	{
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize + _tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -315,17 +316,17 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
 	_allObjects.clear();
-	const ObjRectangle enemy1Rect{_tankSize * 2, 0, _tankSize, _tankSize};
+	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
 	constexpr int gray = 0x808080;
 	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
 	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 	                                                 _bulletPool, false, 1));
 	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
+		enemy->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -352,17 +353,17 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
 	_allObjects.clear();
-	const ObjRectangle enemy1Rect{_tankSize * 2, 0, _tankSize, _tankSize};
+	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
 	constexpr int gray = 0x808080;
 	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
 	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 	                                                 _bulletPool, false, 1));
 	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
+		enemy->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -389,17 +390,17 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
 	_allObjects.clear();
-	const ObjRectangle enemy1Rect{_tankSize * 2, 0, _tankSize, _tankSize};
+	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
 	constexpr int gray = 0x808080;
 	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
 	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 	                                                 _bulletPool, false, 1));
 	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
+		enemy->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -426,17 +427,17 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
 	_allObjects.clear();
-	const ObjRectangle enemy1Rect{_tankSize * 2, 0, _tankSize, _tankSize};
+	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
 	constexpr int gray = 0x808080;
 	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
 	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 	                                                 _bulletPool, false, 1));
 	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
+		enemy->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -464,17 +465,17 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
 	_allObjects.clear();
-	const ObjRectangle enemy1Rect{0, 0, _tankSize, _tankSize};
+	const ObjRectangle enemy1Rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	constexpr int gray = 0x808080;
 	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize,
 	                                                 DOWN, _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 	                                                 _bulletPool, false, 1));
 	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
+		enemy->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -503,17 +504,17 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
 	_allObjects.clear();
-	const ObjRectangle enemy1Rect{_tankSize * 2, 0, _tankSize, _tankSize};
+	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
 	constexpr int gray = 0x808080;
 	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
 	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
 	                                                 _bulletPool, false, 1));
 	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
 	{
-		enemy->SetPos({0.f, 0.f});
+		enemy->SetPos({.x = 0.f, .y = 0.f});
 		constexpr float bulletWidth = 6;
 		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{_tankSize / 2.f, _tankSize, bulletWidth, bulletHeight};
+		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
@@ -543,7 +544,7 @@ TEST_F(StatisticsTest, BulletHitByEnemy)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -558,7 +559,7 @@ TEST_F(StatisticsTest, BulletHitByEnemy)
 		                                                  _events, "Enemy1", "EnemyTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
@@ -580,7 +581,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerOne)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -595,7 +596,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerOne)
 		                                                  _events, "Player1", "PlayerTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 
 			constexpr float deltaTime = 1.f / 60.f;
@@ -615,7 +616,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -630,7 +631,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 		                                                  _events, "Player2", "PlayerTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
@@ -653,7 +654,7 @@ TEST_F(StatisticsTest, BrickDiedByEnemy)
 	constexpr Direction direction = DOWN;
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize + 1, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize + 1, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -664,7 +665,7 @@ TEST_F(StatisticsTest, BrickDiedByEnemy)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		constexpr float gridSize = 1;
-		const ObjRectangle rect{0, _tankSize + bulletHeight + 2 + gridSize, gridSize, gridSize};
+		const ObjRectangle rect{.x = 0, .y = _tankSize + bulletHeight + 2 + gridSize, .w = gridSize, .h = gridSize};
 		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
@@ -689,7 +690,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerOne)
 	constexpr Direction direction = DOWN;
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize + 1, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize + 1, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -700,7 +701,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerOne)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		constexpr float gridSize = 1;
-		const ObjRectangle rect{0, _tankSize + bulletHeight + 2 + gridSize, gridSize, gridSize};
+		const ObjRectangle rect{.x = 0, .y = _tankSize + bulletHeight + 2 + gridSize, .w = gridSize, .h = gridSize};
 		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
@@ -725,7 +726,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	constexpr Direction direction = DOWN;
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -736,7 +737,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		constexpr float gridSize = 1;
-		const ObjRectangle rect{0, _tankSize + bulletHeight + gridSize, gridSize, gridSize};
+		const ObjRectangle rect{.x = 0, .y = _tankSize + bulletHeight + gridSize, .w = gridSize, .h = gridSize};
 		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
 		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
 		{
@@ -760,7 +761,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -775,7 +776,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 		                                                  _events, "Enemy2", "EnemyTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
 			constexpr float deltaTime = 1.f / 60.f;
@@ -795,7 +796,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -810,7 +811,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 		                                                  _events, "Player2", "PlayerTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
@@ -832,7 +833,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -848,7 +849,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 		                                                  &_allObjects, _events, "Enemy1", "EnemyTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 
@@ -870,7 +871,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	_allObjects.clear();
 	constexpr float bulletWidth = 6;
 	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{0, _tankSize, bulletWidth, bulletHeight};
+	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
 	constexpr int color = 0xffffff;
 	constexpr int health = 1;
 	constexpr int damage = 1;
@@ -885,7 +886,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 		                                                  _events, "Enemy1", "EnemyTeam", 1, false));
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			bullet2->SetPos({0, _tankSize + bulletHeight + 1});
+			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
 			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 

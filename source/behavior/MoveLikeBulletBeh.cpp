@@ -49,8 +49,8 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 	}
 
 	std::list<std::weak_ptr<BaseObj>> aoeList{};
-	const auto bulletNextPosRect = ObjRectangle{bullet->GetX() + speedX, bullet->GetY() + speedY,
-	                                         bullet->GetWidth(), bullet->GetHeight()};
+	const auto bulletNextPosRect = ObjRectangle{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY,
+	                                            .w = bullet->GetWidth(), .h = bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (bullet == object.get())
@@ -62,7 +62,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 		{
 			if (!object->GetIsPenetrable())
 			{
-				CheckCircleAoE(FPoint{bullet->GetX() + speedX, bullet->GetY() + speedY}, aoeList);
+				CheckCircleAoE(FPoint{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY}, aoeList);
 				return aoeList;
 			}
 		}
@@ -185,7 +185,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 		return;
 	}
 
-	const Circle circle{blowCenter, bullet->GetBulletDamageAreaRadius()};
+	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageAreaRadius()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (_selfParent == object.get())

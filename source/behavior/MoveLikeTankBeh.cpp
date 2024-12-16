@@ -45,8 +45,8 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 	}
 
 	std::list<std::weak_ptr<BaseObj>> obstacles{};
-	const auto thisNextPosRect = ObjRectangle{tank->GetX() + speedX, tank->GetY() + speedY,
-	                                       tank->GetWidth(), tank->GetHeight()};
+	const auto thisNextPosRect = ObjRectangle{.x = tank->GetX() + speedX, .y = tank->GetY() + speedY,
+	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (tank == object.get())

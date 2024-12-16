@@ -14,7 +14,7 @@ class Brick;
 class FortressObstacle final : public BaseObj, ITickUpdatable
 {
 	ObjRectangle _rect;
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	int* _windowBuffer{nullptr};
 	std::shared_ptr<EventSystem> _events;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;

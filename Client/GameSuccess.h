@@ -20,7 +20,7 @@
 
 class GameSuccess final : public IGame
 {
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	GameMode _selectedGameMode;
 	GameMode _currentMode;
 	std::shared_ptr<GameStatistics> _statistics;
@@ -76,8 +76,8 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
-				SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
-				std::unique_ptr<InputProviderForMenu>& menuInput,
+	            SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
+	            std::unique_ptr<InputProviderForMenu>& menuInput,
 	            const std::shared_ptr<GameStatistics>& statistics);
 
 	~GameSuccess() override;

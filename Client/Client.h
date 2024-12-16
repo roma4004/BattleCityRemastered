@@ -32,11 +32,11 @@ struct Data final
 	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;
-	FPoint newPos{0.f, 0.f};
+	FPoint newPos{.x = 0.f, .y = 0.f};
 	Direction direction{NONE};
 };
 
-class Client final //: public std::enable_shared_from_this<Client>
+class Client final//: public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_service& ioService, const std::string& host, const std::string& port,

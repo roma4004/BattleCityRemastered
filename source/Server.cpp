@@ -142,7 +142,7 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 
 	//TODO: send player die (last time)
 	//TODO: send bonus spawn/pickup
-	
+
 	_events->AddListener<const std::string, const std::string, const FPoint, const Direction>(
 			"_NewPos",
 			_name,

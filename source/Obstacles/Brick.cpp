@@ -5,7 +5,7 @@
 
 Brick::Brick(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
              const int obstacleId)
-	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, 0x924b00, 15},
+	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 15},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
 	  _events{std::move(events)}

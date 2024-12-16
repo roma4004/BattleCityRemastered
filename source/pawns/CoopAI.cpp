@@ -185,8 +185,8 @@ bool CoopAI::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 
 void CoopAI::HandleLineOfSight(const Direction dir)
 {
-	const FPoint bulletSize = {GetBulletWidth(), GetBulletHeight()};
-	const FPoint bulletHalf = {bulletSize.x / 2.f, bulletSize.y / 2.f};
+	const FPoint bulletSize = {.x = GetBulletWidth(), .y = GetBulletHeight()};
+	const FPoint bulletHalf = {.x = bulletSize.x / 2.f, .y = bulletSize.y / 2.f};
 	LineOfSight lineOfSight(_shape, _windowSize, bulletHalf, _allObjects, this);
 
 	const auto upSideObstacles = lineOfSight.GetUpSideObstacles();

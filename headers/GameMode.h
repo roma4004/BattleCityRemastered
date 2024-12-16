@@ -1,6 +1,6 @@
 #pragma once
 
-enum GameMode : int
+enum GameMode : char8_t
 {
 	Demo,
 

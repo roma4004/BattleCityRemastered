@@ -233,10 +233,10 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
                              const float size, const bool isNetworkControlled)
 {
 	std::vector<ObjRectangle> spawnPos{
-			{gridOffset * 16.f - size * 2.f, 0, size, size},
-			{gridOffset * 32.f - size * 2.f, 0, size, size},
-			{gridOffset * 16.f + size * 2.f, 0, size, size},
-			{gridOffset * 32.f + size * 2.f, 0, size, size}
+			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
+			{.x = gridOffset * 32.f - size * 2.f, .y = 0, .w = size, .h = size},
+			{.x = gridOffset * 16.f + size * 2.f, .y = 0, .w = size, .h = size},
+			{.x = gridOffset * 32.f + size * 2.f, .y = 0, .w = size, .h = size}
 	};
 	for (auto& rect: spawnPos)
 	{
@@ -266,7 +266,7 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
                                const bool isNetworkControlled)
 {
 	const auto windowSizeY = static_cast<float>(_windowSize.y);
-	const ObjRectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -306,7 +306,7 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
                                const bool isNetworkControlled)
 {
 	const auto windowSizeY = static_cast<float>(_windowSize.y);
-	const ObjRectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -346,7 +346,7 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY = static_cast<float>(_windowSize.y);
-	const ObjRectangle rect{gridOffset * 16.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -369,7 +369,7 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY = static_cast<float>(_windowSize.y);
-	const ObjRectangle rect{gridOffset * 32.f, windowSizeY - size, size, size};
+	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
 	bool isFreeSpawnSpot = true;
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{

@@ -3,7 +3,7 @@
 
 Bonus::Bonus(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
              const int durationMs, const int lifeTimeMs, const int color)
-	: BaseObj{{rect.x, rect.y, rect.w - 1, rect.h - 1}, color, 1},
+	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1},
 	  _windowSize{windowSize},
 	  _windowBuffer{windowBuffer},
 	  _creationTime{std::chrono::system_clock::now()},

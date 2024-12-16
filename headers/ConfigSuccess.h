@@ -9,7 +9,7 @@
 
 class ConfigSuccess final : public IConfig
 {
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	int* _windowBuffer{nullptr};
 	SDL_Renderer* _renderer{nullptr};
 	SDL_Texture* _screen{nullptr};

@@ -65,4 +65,4 @@ void Water::Draw() const
 	}
 }
 
-void Water::SendDamageStatistics(const std::string& author, const std::string& fraction) {}
+void Water::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}

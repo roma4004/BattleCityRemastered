@@ -43,7 +43,11 @@ void Menu::Subscribe()
 		if (menuKeysStats.menuShow)
 		{
 			this->HandleMenuText(_renderer, _pos);
-			const SDL_Rect logoRectangle{static_cast<int>(_pos.x - 420), static_cast<int>(_pos.y - 490), /*w*/ 300, /*h*/ 75};
+			const SDL_Rect logoRectangle{.x = static_cast<int>(_pos.x - 420),
+			                             .y = static_cast<int>(_pos.y - 490),
+			                             .w = 300,
+			                             .h = 75
+			};
 			SDL_RenderCopy(_renderer, _menuLogo, nullptr, &logoRectangle);
 		}
 	});
@@ -160,59 +164,62 @@ void Menu::RenderStatistics(SDL_Renderer* renderer, const Point pos) const
 {
 	constexpr SDL_Color color = {0x00, 0xff, 0xff, 0xff};
 
-	TextToRender(renderer, {pos.x - 60, pos.y + 100}, color, "GAME STATISTICS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 140}, color, "P1     P2     ENEMY");
-	TextToRender(renderer, {pos.x - 130, pos.y + 160}, color, "RESPAWN REMAIN");
-	TextToRender(renderer, {pos.x + 130, pos.y + 160}, color, _playerOneRespawnResource);
-	TextToRender(renderer, {pos.x + 180, pos.y + 160}, color, _playerTwoRespawnResource);
-	TextToRender(renderer, {pos.x + 235, pos.y + 160}, color, _enemyRespawnResource);
+	TextToRender(renderer, {.x = pos.x - 60, .y = pos.y + 100}, color, "GAME STATISTICS");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 140}, color, "P1     P2     ENEMY");
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 160}, color, _playerOneRespawnResource);
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 160}, color, _playerTwoRespawnResource);
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 160}, color, _enemyRespawnResource);
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 180}, color, "BULLET HIT BY BULLET");
-	TextToRender(renderer, {pos.x + 130, pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 180}, color, _statistics->GetBulletHitByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 180}, color, _statistics->GetBulletHitByEnemy());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 180}, color, _statistics->GetBulletHitByPlayerTwo());
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 180}, color, _statistics->GetBulletHitByEnemy());
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 200}, color, "PLAYER HIT BY ENEMY");
-	TextToRender(renderer, {pos.x + 130, pos.y + 200}, color, _statistics->GetPlayerOneHitByEnemyTeam());
-	TextToRender(renderer, {pos.x + 180, pos.y + 200}, color, _statistics->GetPlayerTwoHitByEnemyTeam());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 200}, color, "PLAYER HIT BY ENEMY");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 200}, color, _statistics->GetPlayerOneHitByEnemyTeam());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 200}, color, _statistics->GetPlayerTwoHitByEnemyTeam());
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 220}, color, "TANK KILLS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 220}, color, _statistics->GetPlayerDiedByEnemyTeam());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 220}, color, "TANK KILLS");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerOne());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerTwo());
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 220}, color, _statistics->GetPlayerDiedByEnemyTeam());
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 240}, color, "ENEMY HIT BY");
-	TextToRender(renderer, {pos.x + 130, pos.y + 240}, color, _statistics->GetEnemyHitByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 240}, color, _statistics->GetEnemyHitByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 240}, color, _statistics->GetEnemyHitByFriendlyFire());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 240}, color, "ENEMY HIT BY");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 240}, color, _statistics->GetEnemyHitByPlayerOne());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 240}, color, _statistics->GetEnemyHitByPlayerTwo());
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 240}, color, _statistics->GetEnemyHitByFriendlyFire());
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 260}, color, "FRIEND HIT FRIEND");
-	TextToRender(renderer, {pos.x + 130, pos.y + 260}, color, _statistics->GetPlayerOneHitFriendlyFire());
-	TextToRender(renderer, {pos.x + 180, pos.y + 260}, color, _statistics->GetPlayerTwoHitFriendlyFire());
-	TextToRender(renderer, {pos.x + 235, pos.y + 260}, color, _statistics->GetEnemyHitByFriendlyFire());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 260}, color, "FRIEND HIT FRIEND");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 260}, color, _statistics->GetPlayerOneHitFriendlyFire());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 260}, color, _statistics->GetPlayerTwoHitFriendlyFire());
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 260}, color, _statistics->GetEnemyHitByFriendlyFire());
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 280}, color, "FRIEND KILLS FRIEND");
-	TextToRender(renderer, {pos.x + 130, pos.y + 280}, color, _statistics->GetPlayerOneDiedByFriendlyFire());
-	TextToRender(renderer, {pos.x + 180, pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
-	TextToRender(renderer, {pos.x + 235, pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 280}, color, "FRIEND KILLS FRIEND");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 280}, color, _statistics->GetPlayerOneDiedByFriendlyFire());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
 
-	TextToRender(renderer, {pos.x - 130, pos.y + 300}, color, "BRICK KILLS");
-	TextToRender(renderer, {pos.x + 130, pos.y + 300}, color, _statistics->GetBrickDiedByPlayerOne());
-	TextToRender(renderer, {pos.x + 180, pos.y + 300}, color, _statistics->GetBrickDiedByPlayerTwo());
-	TextToRender(renderer, {pos.x + 235, pos.y + 300}, color, _statistics->GetBrickDiedByEnemyTeam());
+	TextToRender(renderer, {.x = pos.x - 130, .y = pos.y + 300}, color, "BRICK KILLS");
+	TextToRender(renderer, {.x = pos.x + 130, .y = pos.y + 300}, color, _statistics->GetBrickDiedByPlayerOne());
+	TextToRender(renderer, {.x = pos.x + 180, .y = pos.y + 300}, color, _statistics->GetBrickDiedByPlayerTwo());
+	TextToRender(renderer, {.x = pos.x + 235, .y = pos.y + 300}, color, _statistics->GetBrickDiedByEnemyTeam());
 }
 
 void Menu::HandleMenuText(SDL_Renderer* renderer, const UPoint menuBackgroundPos) const
 {
-	const Point pos = {static_cast<int>(menuBackgroundPos.x - 350), static_cast<int>(menuBackgroundPos.y - 350)};
+	const Point pos = {.x = static_cast<int>(menuBackgroundPos.x - 350),
+	                   .y = static_cast<int>(menuBackgroundPos.y - 350)};
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
-	TextToRender(renderer, {pos.x, pos.y - 50}, color, _selectedGameMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
-	TextToRender(renderer, {pos.x, pos.y - 25}, color, _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
-	TextToRender(renderer, {pos.x, pos.y}, color, _selectedGameMode == CoopWithAI ? ">COOP AI" : "COOP AI");
-	TextToRender(renderer, {pos.x, pos.y + 25}, color,
+	TextToRender(renderer, {.x = pos.x, .y = pos.y - 50}, color,
+	             _selectedGameMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	TextToRender(renderer, {.x = pos.x, .y = pos.y - 25}, color,
+	             _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	TextToRender(renderer, {.x = pos.x, .y = pos.y}, color, _selectedGameMode == CoopWithAI ? ">COOP AI" : "COOP AI");
+	TextToRender(renderer, {.x = pos.x, .y = pos.y + 25}, color,
 	             _selectedGameMode == PlayAsHost ? ">PLAY AS HOST" : "PLAY AS HOST");
-	TextToRender(renderer, {pos.x, pos.y + 50}, color,
+	TextToRender(renderer, {.x = pos.x, .y = pos.y + 50}, color,
 	             _selectedGameMode == PlayAsClient ? ">PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(renderer, pos);

@@ -12,7 +12,7 @@ const ObjRectangle& BaseObj::GetShape() const { return _shape; }
 
 void BaseObj::SetShape(const ObjRectangle& shape) { _shape = shape; }
 
-FPoint BaseObj::GetPos() const { return FPoint{_shape.x, _shape.y}; }
+FPoint BaseObj::GetPos() const { return FPoint{.x = _shape.x, .y = _shape.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)
 {

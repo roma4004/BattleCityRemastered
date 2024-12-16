@@ -334,6 +334,9 @@ void GameSuccess::DisposeDeadObject()
 	_allObjects.erase(it, _allObjects.end());
 }
 
+//TODO: recheck rule of 3 for all classes
+//TODO: convert enum to enum classes
+
 void GameSuccess::MainLoop()
 {
 	try
