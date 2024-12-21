@@ -20,7 +20,7 @@ protected:
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	int* _windowBuffer{nullptr};
-	float _gridSize = 1;
+	float _gridSize{1};
 
 	void SetUp() override
 	{

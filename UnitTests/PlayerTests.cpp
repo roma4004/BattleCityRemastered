@@ -21,7 +21,7 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	int* _windowBuffer{nullptr};
-	int _tankHealth = 100;
+	int _tankHealth{100};
 	std::shared_ptr<BulletPool> _bulletPool;
 
 	void SetUp() override

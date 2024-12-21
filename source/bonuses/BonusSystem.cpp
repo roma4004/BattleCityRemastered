@@ -30,7 +30,8 @@ BonusSystem::BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::s
 	  _lastTimeBonusSpawn{std::chrono::system_clock::now()}
 {
 	std::random_device rd;
-	_gen = std::mt19937(std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd());
+	_gen = std::mt19937(
+			static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + rd());
 
 	Subscribe();
 }
