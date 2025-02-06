@@ -26,8 +26,7 @@ Already done:
 Used technologies:
 * C++20,
 * EventSystem,
-* SDL,
-* SDL_TTF,
+* SDL2, SDL2_TTF, SDL2_Image, SDL2_Mixer
 * google unit tests,
 * NuGet dependencies for *.sln and lib source for CMake, so it can be compiled for both CMake (CLion) or *.sln project (Rider, Visual Studio)
 
@@ -39,11 +38,12 @@ Used design patterns:
 * Object Pool
 
 TODO roadmap: 
-* network multiplayer (in progress)
+* network multiplayer (in progress, ~80%)
+* use SDL_Image for texture (in progress, one logo in menu),
+* SDL_Mixer for sound (in progress, one start music),
 * unique bonuses,
-* use SDL_Image for texture,
 * patterns Lightweight for images,
-* SDL_Mixer for sound,
 * QuadThree for collision detection,
 * Thread Pool even for faster "update" and "draw",
 * ECS (entity component system)
+* maybe rewrite for DOTs using
