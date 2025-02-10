@@ -43,7 +43,7 @@ TODO roadmap:
 * SDL_Mixer for sound (in progress, one start music),
 * unique bonuses,
 * patterns Lightweight for images,
-* QuadThree for collision detection,
+* QuadTree for collision detection,
 * Thread Pool even for faster "update" and "draw",
 * ECS (entity component system)
 * maybe rewrite for DOTs using
