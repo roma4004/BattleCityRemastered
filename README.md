@@ -41,9 +41,9 @@ TODO roadmap:
 * network multiplayer (in progress, ~80%)
 * use SDL_Image for texture (in progress, one logo in menu),
 * SDL_Mixer for sound (in progress, one start music),
+* Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
 * unique bonuses,
 * patterns Lightweight for images,
 * QuadTree for collision detection,
 * Thread Pool even for faster "update" and "draw",
-* ECS (entity component system)
 * maybe rewrite for DOTs using
