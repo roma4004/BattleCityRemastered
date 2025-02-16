@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint windowSize, const FPoint bulletHalf,
+LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, const FPoint bulletHalf,
                          std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
 	: _allObjects{allObjects}
 {

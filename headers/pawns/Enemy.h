@@ -27,10 +27,10 @@ class Enemy final : public Tank
 	void TakeDamage(int damage) override;
 
 public:
-	Enemy(const ObjRectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
-	      float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	      const std::string& name, std::string fraction, std::shared_ptr<BulletPool> bulletPool,
-	      bool isNetworkControlled, int tankId);
+	Enemy(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	      Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	      const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+	      std::shared_ptr<BulletPool> bulletPool, bool isNetworkControlled, int tankId);
 
 	~Enemy() override;
 };

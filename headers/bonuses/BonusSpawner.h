@@ -13,13 +13,13 @@ struct ObjRectangle;
 class BaseObj;
 class EventSystem;
 
-class BonusSystem final : public ITickUpdatable
+class BonusSpawner final : public ITickUpdatable
 {
 	std::string _name;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 	UPoint _windowSize;
 	int _bonusSize;
-	int* _windowBuffer;
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::mt19937 _gen;
 	std::uniform_int_distribution<> _distSpawnPosY;
@@ -31,16 +31,20 @@ class BonusSystem final : public ITickUpdatable
 	std::chrono::system_clock::time_point _lastTimeBonusSpawn;
 
 	void Subscribe();
+
 	void Unsubscribe() const;
 
 	void TickUpdate(float deltaTime) override;
 
 public:
-	BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            int* windowBuffer, UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);
+	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	             std::shared_ptr<int[]> windowBuffer, UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);
 
-	~BonusSystem() override;
+	~BonusSpawner() override;
 
 	void SpawnRandomBonus(ObjRectangle rect);
 	void SpawnBonus(ObjRectangle rect, int color, int bonusId);
+
+	template<typename TBonusType>
+	void SpawnBonus(ObjRectangle rect, int color);
 };

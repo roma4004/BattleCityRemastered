@@ -25,9 +25,10 @@ class CoopAI final : public Tank
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	CoopAI(const ObjRectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	CoopAI(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	       Direction direction,
 	       float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	       const std::string& name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, int tankId);
+	       std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, int tankId);
 
 	~CoopAI() override;
 };

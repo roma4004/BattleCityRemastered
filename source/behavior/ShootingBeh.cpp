@@ -19,7 +19,7 @@ ShootingBeh::~ShootingBeh() = default;
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float ShootingBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
+float ShootingBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);

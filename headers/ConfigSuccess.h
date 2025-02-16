@@ -4,32 +4,28 @@
 #include "interfaces/IConfig.h"
 
 #include <SDL.h>
-#include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
 class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{.x = 0, .y = 0};
-	int* _windowBuffer{nullptr};
-	SDL_Renderer* _renderer{nullptr};
-	SDL_Texture* _screen{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
+	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
 	//fps
-	TTF_Font* _fpsFont{nullptr};
-	// SDL_Surface* fpsSurface{nullptr};
-	// SDL_Texture* fpsTexture{nullptr}
+	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 
-	SDL_Texture* _logoTexture{nullptr};
-
-	Mix_Chunk* _levelStartedSound{nullptr};
+	std::shared_ptr<SDL_Texture> _logoTexture{nullptr};
 
 public:
 	ConfigSuccess() = delete;
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	explicit ConfigSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-	                       TTF_Font* fpsFont, SDL_Texture* _logoTexture);
+	ConfigSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
+	              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
+	              std::shared_ptr<SDL_Texture> logoTexture);
 
 	~ConfigSuccess() override = default;
 

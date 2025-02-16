@@ -6,15 +6,20 @@
 #include <functional>
 #include <memory>
 
+///TODO: change selfParent to Tank to avoid check on each IsCanMove
 MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _selfParent{selfParent}, _allObjects{allObjects} {}
 
-std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
+std::vector<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
+	std::vector<std::weak_ptr<BaseObj>> obstacles{};
+	constexpr int defaultCollisionReserve = 5;
+	obstacles.reserve(defaultCollisionReserve);
 	if (tank == nullptr)
 	{
-		return {};
+		// TODO: assert component must be in tank class
+		return obstacles;
 	}
 
 	const float speed = tank->GetSpeed();
@@ -44,7 +49,6 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 		speedY *= 0;
 	}
 
-	std::list<std::weak_ptr<BaseObj>> obstacles{};
 	const auto thisNextPosRect = ObjRectangle{.x = tank->GetX() + speedX, .y = tank->GetY() + speedY,
 	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -71,7 +75,7 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTi
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float MoveLikeTankBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
+float MoveLikeTankBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
@@ -210,6 +214,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+					//TODO: destroy bonus on emit in PickUpBonus by subscription
 					objLck->TakeDamage(1);
 				}
 			}

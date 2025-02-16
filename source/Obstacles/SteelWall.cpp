@@ -1,29 +1,29 @@
-﻿#include "../../headers/obstacles/Water.h"
+﻿#include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/EventSystem.h"
 
 #include <string>
 
-Water::Water(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-             std::shared_ptr<EventSystem> events, const int obstacleId)
-	: BaseObj{rect, 0x1e90ff, 1},
+SteelWall::SteelWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+           std::shared_ptr<EventSystem> events, const int obstacleId)
+	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0xaaaaaa, 1},
 	  _windowSize{std::move(windowSize)},
 	  _windowBuffer{std::move(windowBuffer)},
 	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(true);
+	BaseObj::SetIsPenetrable(false);
 
-	_name = "Water " + std::to_string(obstacleId);
+	_name = "SteelWall " + std::to_string(obstacleId);//TODO: change name for statistics
 	Subscribe();
 }
 
-Water::~Water()
+SteelWall::~SteelWall()
 {
 	Unsubscribe();
 }
 
-void Water::Subscribe() const
+void SteelWall::Subscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -33,7 +33,7 @@ void Water::Subscribe() const
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-void Water::Unsubscribe() const
+void SteelWall::Unsubscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -43,7 +43,7 @@ void Water::Unsubscribe() const
 	_events->RemoveListener("Draw", _name);
 }
 
-void Water::SetPixel(const size_t x, const size_t y, const int color) const
+void SteelWall::SetPixel(const size_t x, const size_t y, const int color) const
 {
 	if (_windowBuffer == nullptr)
 	{
@@ -57,8 +57,13 @@ void Water::SetPixel(const size_t x, const size_t y, const int color) const
 	}
 }
 
-void Water::Draw() const
+void SteelWall::Draw() const
 {
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
 	int y = static_cast<int>(GetY());
 	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
 	{
@@ -70,4 +75,10 @@ void Water::Draw() const
 	}
 }
 
-void Water::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
+void SteelWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	if (GetHealth() < 1)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("SteelWallDied", author, fraction);
+	}
+}

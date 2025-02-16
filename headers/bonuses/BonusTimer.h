@@ -15,8 +15,8 @@ class BonusTimer final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusTimer(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	           int durationMs, int lifeTimeMs, int color);
+	BonusTimer(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	           std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color);
 
 	~BonusTimer() override;
 

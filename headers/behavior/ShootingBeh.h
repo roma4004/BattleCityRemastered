@@ -3,7 +3,6 @@
 #include "../interfaces/IShootable.h"
 
 #include <functional>
-#include <list>
 #include <memory>
 
 struct ObjRectangle;
@@ -15,11 +14,11 @@ class ShootingBeh final : public IShootable
 {
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::shared_ptr<BulletPool> _bulletPool;
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
-	[[nodiscard]] float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
+	[[nodiscard]] float FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
 	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;

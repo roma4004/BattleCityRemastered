@@ -146,7 +146,7 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 	_events->AddListener<const std::string, const std::string, const FPoint, const Direction>(
 			"_NewPos",
 			_name,
-			[this](const std::string objectName, const std::string eventName, const FPoint newPos,
+			[this](const std::string& objectName, const std::string& eventName, const FPoint newPos,
 			       const Direction direction)
 			{
 				this->SendNewPos(objectName, eventName, newPos, direction);
@@ -155,13 +155,13 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 	_events->AddListener<const std::string, const std::string, const int>(
 			"SendHealth",
 			_name,
-			[this](const std::string objectName, const std::string eventName, const int health)
+			[this](const std::string& objectName, const std::string& eventName, const int health)
 			{
 				this->SendHealth(objectName, eventName, health);
 			});
 
 	_events->AddListener<const int>(
-			"Bullet_Dispose",
+			"Net_Bullet_Dispose",
 			_name,
 			[this](const int bulletId)
 			{
@@ -205,7 +205,7 @@ Server::~Server()
 
 	_events->RemoveListener<const std::string, const std::string, const FPoint, const Direction>("_NewPos", _name);
 	_events->RemoveListener<const std::string, const int>("SendHealth", _name);
-	_events->RemoveListener<const int>("Bullet_Dispose", _name);
+	_events->RemoveListener<const int>("Net_Bullet_Dispose", _name);
 
 	_events->RemoveListener<const Direction>("Enemy1_Shot", _name);
 	_events->RemoveListener<const Direction>("Enemy2_Shot", _name);
@@ -265,7 +265,7 @@ void Server::SendKeyState(const std::string& state) const
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendKeyState(const std::string& state, FPoint newPos) const
+void Server::SendKeyState(const std::string& state, const FPoint newPos) const
 {
 	Data data;
 	data.eventName = state;
@@ -278,7 +278,7 @@ void Server::SendKeyState(const std::string& state, FPoint newPos) const
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendShot(const std::string& state, Direction direction) const
+void Server::SendShot(const std::string& state, const Direction direction) const
 {
 	Data data;
 	data.eventName = state;

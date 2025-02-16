@@ -8,11 +8,12 @@
 struct ObjRectangle;
 class EventSystem;
 
-class Iron final : public BaseObj
+//TODO: implement that steel wall can be destroyer when player have 3 bonus stars
+class SteelWall final : public BaseObj
 {
 	UPoint _windowSize{.x = 0, .y = 0};
-	int* _windowBuffer{nullptr};
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
 
 	void Subscribe() const;
@@ -25,8 +26,8 @@ class Iron final : public BaseObj
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	Iron(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	     int obstacleId);
+	SteelWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	     std::shared_ptr<EventSystem> events, int obstacleId);
 
-	~Iron() override;
+	~SteelWall() override;
 };

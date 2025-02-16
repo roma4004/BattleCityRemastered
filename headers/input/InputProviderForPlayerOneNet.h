@@ -10,7 +10,7 @@ class EventSystem;
 class InputProviderForPlayerOneNet final : public IInputProvider
 {
 	std::string _name;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
 	InputProviderForPlayerOneNet(std::string name, std::shared_ptr<EventSystem> events);

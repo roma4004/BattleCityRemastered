@@ -18,15 +18,7 @@ struct Data final
 	friend class boost::serialization::access;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/)
-	{
-		ar & health;
-		ar & objectName;
-		ar & eventName;
-		ar & names;
-		ar & newPos;
-		ar & direction;
-	}
+	void serialize(Archive& ar, unsigned int /*version*/);
 
 	int health{-1};
 	std::string objectName;
@@ -41,7 +33,7 @@ struct Session final : public std::enable_shared_from_this<Session>
 	tcp::socket _socket;
 	boost::asio::streambuf _read_buffer;
 	boost::asio::streambuf _write_buffer;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	Session(tcp::socket sock, std::shared_ptr<EventSystem> events);
 
@@ -55,7 +47,7 @@ struct Session final : public std::enable_shared_from_this<Session>
 struct Server final
 {
 	tcp::acceptor _acceptor;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<Session>> sessions;
 	std::string _name;
 
@@ -91,3 +83,6 @@ struct Server final
 	// 	_io_service.stop();
 	// }
 };
+
+// Include the template implementation
+#include "Server.tpp"

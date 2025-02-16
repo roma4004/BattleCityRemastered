@@ -12,12 +12,15 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_pt
 	  _allObjects{allObjects},
 	  _events{std::move(events)} {}
 
-std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
+std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
+	std::vector<std::weak_ptr<BaseObj>> aoeCollisions{};
+	constexpr int defaultCollisionReserve = 5;
+	aoeCollisions.reserve(defaultCollisionReserve);
 	if (bullet == nullptr)
 	{
-		return {};
+		return aoeCollisions;
 	}
 
 	const float speed = bullet->GetSpeed();
@@ -48,7 +51,6 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 		speedY *= 0;
 	}
 
-	std::list<std::weak_ptr<BaseObj>> aoeList{};
 	const auto bulletNextPosRect = ObjRectangle{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY,
 	                                            .w = bullet->GetWidth(), .h = bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -62,13 +64,13 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float delta
 		{
 			if (!object->GetIsPenetrable())
 			{
-				CheckCircleAoE(FPoint{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY}, aoeList);
-				return aoeList;
+				CheckCircleAoE(FPoint{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY}, aoeCollisions);
+				return aoeCollisions;
 			}
 		}
 	}
 
-	return aoeList;
+	return aoeCollisions;
 }
 
 void MoveLikeBulletBeh::Move(const float deltaTime) const
@@ -177,7 +179,7 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 }
 
 
-void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const
+void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std::weak_ptr<BaseObj>>& aoeList) const
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
@@ -200,7 +202,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::list<std::w
 	}
 }
 
-void MoveLikeBulletBeh::DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const
+void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const
 {
 	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
 	if (thisBullet == nullptr)

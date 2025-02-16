@@ -19,7 +19,7 @@ class LineOfSight final
 	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
 
 public:
-	LineOfSight(ObjRectangle shape, UPoint windowSize, FPoint bulletHalf,
+	LineOfSight(ObjRectangle shape, const UPoint& windowSize, FPoint bulletHalf,
 	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf);
 	~LineOfSight();
 

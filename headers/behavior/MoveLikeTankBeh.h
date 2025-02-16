@@ -16,8 +16,8 @@ public:
 
 	~MoveLikeTankBeh() override = default;
 
-	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
-	float FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
+	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
+	float FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
 	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	void Move(float deltaTime) const override;

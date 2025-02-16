@@ -1,4 +1,4 @@
-#include "../../headers/bonuses/BonusSystem.h"
+#include "../../headers/bonuses/BonusSpawner.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
 #include "../../headers/bonuses/BonusShovel.h"
@@ -15,13 +15,14 @@
 class BaseObj;
 class EventSystem;
 
-BonusSystem::BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         int* windowBuffer, const UPoint windowSize, const int sideBarWidth, const int bonusSize)
-	: _name{"BonusSystem"},
+BonusSpawner::BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+                           std::shared_ptr<int[]> windowBuffer, UPoint windowSize, const int sideBarWidth,
+                           const int bonusSize)
+	: _name{"BonusSpawner"},
 	  _events{std::move(events)},
-	  _windowSize{windowSize},
+	  _windowSize{std::move(windowSize)},
 	  _bonusSize{bonusSize},
-	  _windowBuffer{windowBuffer},
+	  _windowBuffer{std::move(windowBuffer)},
 	  _allObjects{allObjects},
 	  _distSpawnPosY{0, static_cast<int>(_windowSize.y) - bonusSize},
 	  _distSpawnPosX{0, static_cast<int>(_windowSize.x) - sideBarWidth - bonusSize},
@@ -36,12 +37,12 @@ BonusSystem::BonusSystem(std::shared_ptr<EventSystem> events, std::vector<std::s
 	Subscribe();
 }
 
-BonusSystem::~BonusSystem()
+BonusSpawner::~BonusSpawner()
 {
 	Unsubscribe();
 }
 
-void BonusSystem::Subscribe()
+void BonusSpawner::Subscribe()
 {
 	if (_events == nullptr)
 	{
@@ -54,7 +55,7 @@ void BonusSystem::Subscribe()
 	});
 }
 
-void BonusSystem::Unsubscribe() const
+void BonusSpawner::Unsubscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -64,7 +65,7 @@ void BonusSystem::Unsubscribe() const
 	_events->RemoveListener<const float>("TickUpdate", _name);
 }
 
-void BonusSystem::TickUpdate(const float /*deltaTime*/)
+void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 {
 	if (TimeUtils::IsCooldownFinish(_lastTimeBonusSpawn, _cooldownBonusSpawn))
 	{
@@ -89,46 +90,47 @@ void BonusSystem::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void BonusSystem::SpawnBonus(const ObjRectangle rect, const int color, const int bonusId)
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const int bonusId)
 {
-	constexpr int bonusLifetimeMs = 10 * 1000;// 10 sec
-	constexpr int bonusDurationTimeMs = 10 * 1000;// 10 sec
 	switch (bonusId)
 	{
 		case 0:
-			_allObjects->emplace_back(std::make_shared<BonusTimer>(rect, _windowBuffer, _windowSize, _events,
-			                                                       bonusDurationTimeMs, bonusLifetimeMs, color));
+			SpawnBonus<BonusTimer>(rect, color);
 			break;
 		case 1:
-			_allObjects->emplace_back(std::make_shared<BonusHelmet>(rect, _windowBuffer, _windowSize, _events,
-			                                                        bonusDurationTimeMs, bonusLifetimeMs, color));
+			SpawnBonus<BonusHelmet>(rect, color);
 			break;
 		case 2:
-			_allObjects->emplace_back(std::make_shared<BonusGrenade>(rect, _windowBuffer, _windowSize, _events,
-			                                                         bonusDurationTimeMs, bonusLifetimeMs, color));
+			SpawnBonus<BonusGrenade>(rect, color);
 			break;
 		case 3:
-			_allObjects->emplace_back(std::make_shared<BonusTank>(rect, _windowBuffer, _windowSize, _events,
-			                                                      bonusDurationTimeMs, bonusLifetimeMs, color));
+			SpawnBonus<BonusTank>(rect, color);
 			break;
 		case 4:
-			_allObjects->emplace_back(std::make_shared<BonusStar>(rect, _windowBuffer, _windowSize, _events,
-			                                                      bonusDurationTimeMs, bonusLifetimeMs, color));
+			SpawnBonus<BonusStar>(rect, color);
 			break;
 		case 5:
-			_allObjects->emplace_back(std::make_shared<BonusShovel>(rect, _windowBuffer, _windowSize, _events,
-			                                                        bonusDurationTimeMs, bonusLifetimeMs, color));
+			SpawnBonus<BonusShovel>(rect, color);
 			break;
 		default:
 			break;
 	}
 }
 
-void BonusSystem::SpawnRandomBonus(const ObjRectangle rect)
+void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
 	const int color = _distRandColor(_gen);
 	const int bonusId = _distSpawnType(_gen);
 	SpawnBonus(rect, color, bonusId);
 
 	_lastTimeBonusSpawn = std::chrono::system_clock::now();
+}
+
+template<typename TBonusType>
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color) {
+	constexpr int bonusLifetimeMs = 10 * 1000;// 10 sec
+	constexpr int bonusDurationTimeMs = 10 * 1000;// 10 sec
+
+	_allObjects->emplace_back(std::make_shared<TBonusType>(rect, _windowBuffer, _windowSize, _events,
+														   bonusDurationTimeMs, bonusLifetimeMs, color));
 }

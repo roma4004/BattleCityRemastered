@@ -11,22 +11,22 @@
 #include <algorithm>
 #include <chrono>
 
-CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, int* windowBuffer, const UPoint windowSize,
-               const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-               const std::shared_ptr<EventSystem>& events, const std::string& name, std::string fraction,
-               std::shared_ptr<BulletPool> bulletPool, const int tankId)
+CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
+               UPoint windowSize, const Direction direction, const float speed,
+               std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
+               std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, const int tankId)
 	: Tank{rect,
 	       color,
 	       health,
-	       windowBuffer,
-	       windowSize,
+	       std::move(windowBuffer),
+	       std::move(windowSize),
 	       direction,
 	       speed,
 	       allObjects,
 	       events,
-	       std::make_shared<MoveLikeAIBeh>(this, allObjects),
+	       std::make_unique<MoveLikeAIBeh>(this, allObjects),
 	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
-	       name,
+	       std::move(name),
 	       std::move(fraction),
 	       tankId},
 	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)

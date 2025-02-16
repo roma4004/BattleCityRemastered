@@ -13,35 +13,38 @@ class Menu final
 {
 	UPoint _pos;
 	UPoint _windowSize;
-	int* _windowBuffer;
 	unsigned int _yOffsetStart;
 	GameMode _selectedGameMode{Demo};
-	std::unique_ptr<InputProviderForMenu> _input;
-	std::shared_ptr<EventSystem> _events;
-	std::string _name;
-	SDL_Renderer* _renderer;
 
-	TTF_Font* _menuFont{nullptr};
-	SDL_Texture* _menuLogo{nullptr};
+	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<TTF_Font> _menuFont{nullptr};
+	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
+	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
-	std::shared_ptr<GameStatistics> _statistics;
+	//TODO: extract to separate sidebar class
 	int _enemyRespawnResource{20};
 	int _playerOneRespawnResource{3};
 	int _playerTwoRespawnResource{3};
 
+	std::string _name;
+
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void TextToRender(SDL_Renderer* renderer, const Point& pos, const SDL_Color& color, int value) const;
-	void TextToRender(SDL_Renderer* renderer, Point pos, SDL_Color color, const std::string& text) const;
-	void RenderStatistics(SDL_Renderer* renderer, Point pos) const;
+	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
+	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
+	void RenderStatistics(Point pos) const;
 
 	void BlendBackgroundToWindowBuffer();
-	void HandleMenuText(SDL_Renderer* renderer, UPoint menuBackgroundPos) const;
+	void HandleMenuText(UPoint menuBackgroundPos) const;
 
 public:
-	Menu(SDL_Renderer* renderer, TTF_Font* menuFont, SDL_Texture* menuLogo, std::shared_ptr<GameStatistics> statistics,
-	     UPoint windowSize, int* windowBuffer, std::unique_ptr<InputProviderForMenu>& input,
+	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
+	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
+	     std::shared_ptr<int[]> windowBuffer, std::unique_ptr<InputProviderForMenu> input,
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();

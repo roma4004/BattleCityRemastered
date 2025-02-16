@@ -3,7 +3,7 @@
 #include "../headers/GameStatistics.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
-#include "../headers/obstacles/Brick.h"
+#include "../headers/obstacles/BrickWall.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
@@ -16,44 +16,57 @@
 class StatisticsTest : public testing::Test
 {
 protected:
-	std::shared_ptr<EventSystem> _events;
-	std::shared_ptr<GameStatistics> _statistics;
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
-	float _tankSize{};
-	float _tankSpeed{142};
+	int _tankHealth{1};
+	int _bulletHealth{1};
+	int _bulletColor{0xffffff};
+	int _yellow{0xffffff};
+	int _green = 0x408000;
+	int _gray = 0x808080;
+	int _bulletDamage{1};
+	float _tankSize{0.f};
+	float _tankSpeed{142.f};
 	float _bulletSpeed{300.f};
-	int* _windowBuffer{nullptr};
-	int _tankHealth{100};
-	std::shared_ptr<BulletPool> _bulletPool;
+	float _deltaTimeOneFrame{1.f / 60.f};//TODO: Implement this in other tests
+	float _bulletWidth{6.f};
+	float _bulletHeight{5.f};
+	double _bulletDamageAreaRadius{12.0};
+	std::string _name{"Player"};
+	std::string _fraction{"PlayerTeam"};
+	std::string _name2{"Player"};
+	std::string _fraction2{"PlayerTeam"};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		_tankSize = gridSize * 3;// for better turns
-		const ObjRectangle playerRect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		constexpr int yellow = 0xeaea00;
-		std::string name = "Player";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
+		_tankSize = gridSize * 3.f;// for better turns
+		const ObjRectangle playerRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+		const ObjRectangle player2Rect{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+		const ObjRectangle enemy1Rect{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_name, _events);
+		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_name2, _events);
 		auto currentGameMode = OnePlayer;
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, &currentGameMode);
-		_allObjects.reserve(4);
-		_allObjects.emplace_back(std::make_shared<PlayerOne>(playerRect, yellow, _tankHealth, _windowBuffer,
-		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,
-		                                                     name, fraction, inputProvider, _bulletPool, false, 1));
-
-		const ObjRectangle player2Rect{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
-		constexpr int green = 0x408000;
-		std::string name2 = "Player";
-		std::string fraction2 = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(name2, _events);
-		_allObjects.emplace_back(std::make_shared<PlayerTwo>(player2Rect, green, _tankHealth, _windowBuffer,
-		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,
-		                                                     name2, fraction2, inputProvider2, _bulletPool, false, true,
-		                                                     2));
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, currentGameMode);
+		_allObjects.reserve(5);
+		_allObjects.emplace_back(
+				std::make_shared<PlayerOne>(
+						playerRect, _yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects,
+						_events, _name, _fraction, std::move(inputProvider), _bulletPool, false, 1));
+		_allObjects.emplace_back(
+				std::make_shared<PlayerTwo>(
+						player2Rect, _green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects,
+						_events, _name2, _fraction2, std::move(inputProvider2), _bulletPool, false, true, 2));
+		_allObjects.emplace_back(
+				std::make_shared<Enemy>(
+						enemy1Rect, _gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed, &_allObjects,
+						_events, "Enemy", "EnemyTeam", _bulletPool, false, 1));
 	}
 
 	void TearDown() override
@@ -64,841 +77,427 @@ protected:
 
 TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
+	ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerOneHitByFriend)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player2", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
+	const ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP,
+					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
+	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 1);
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
-	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
+	const ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                              .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
-	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player1", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
+	ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player2", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			player->SetHealth(1);
-			EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
+	ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
-	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			player->SetHealth(1);
-			EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
+	ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
-	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			player->SetHealth(1);
-			EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
+	ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
 }
 
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 {
-	if (const auto player = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
-	{
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player1", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			player->SetHealth(1);
-			EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
+	ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
 
-			EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 1);
 }
 
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
-	_allObjects.clear();
-	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-	constexpr int gray = 0x808080;
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
-	                                                 _bulletPool, false, 1));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy2", "EnemyTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
+	ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                        .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy2", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
 
-			EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 1);
 }
 
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
-	_allObjects.clear();
-	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-	constexpr int gray = 0x808080;
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
-	                                                 _bulletPool, false, 1));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player1", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
+	ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                        .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
 
-			EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 1);
 }
 
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
-	_allObjects.clear();
-	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-	constexpr int gray = 0x808080;
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
-	                                                 _bulletPool, false, 1));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player2", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
+	ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                        .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 1);
 }
 
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
-	_allObjects.clear();
-	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-	constexpr int gray = 0x808080;
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
-	                                                 _bulletPool, false, 1));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy2", "EnemyTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			enemy->SetHealth(1);
-			EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
+	const ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                              .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy2", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
 
-			EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 1);
 }
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
-	_allObjects.clear();
-	const ObjRectangle enemy1Rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-	constexpr int gray = 0x808080;
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize,
-	                                                 DOWN, _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
-	                                                 _bulletPool, false, 1));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player1", "PlayerTeam", 0, false));
+	const ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                              .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
 
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			enemy->SetHealth(1);
-			EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 1);
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 1);
 }
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
-	_allObjects.clear();
-	const ObjRectangle enemy1Rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-	constexpr int gray = 0x808080;
-	_allObjects.emplace_back(std::make_shared<Enemy>(enemy1Rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN,
-	                                                 _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam",
-	                                                 _bulletPool, false, 1));
-	if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos({.x = 0.f, .y = 0.f});
-		constexpr float bulletWidth = 6;
-		constexpr float bulletHeight = 5;
-		ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-		constexpr int color = 0xffffff;
-		constexpr int health = 1;
-		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player2", "PlayerTeam", 0, false));
-		if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			enemy->SetHealth(1);
-			EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
+	const ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                              .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 1);
 }
 
-TEST_F(StatisticsTest, BulletHitByEnemy)
+TEST_F(StatisticsTest, BulletHitByEnemyBullet)
 {
-	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player1", "PlayerTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, health, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, health, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
 }
 
 TEST_F(StatisticsTest, BulletHitByPlayerOne)
 {
 	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player2", "PlayerTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player1", "PlayerTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
+	                               .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
 }
 
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 {
-	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player1", "PlayerTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player2", "PlayerTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
 }
 
-TEST_F(StatisticsTest, BrickDiedByEnemy)
+TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	_allObjects.clear();
-	constexpr Direction direction = DOWN;
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize + 1, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, direction, _bulletSpeed, &_allObjects,
-	                                                  _events, "Enemy1", "EnemyTeam", 0, false));
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		constexpr float gridSize = 1;
-		const ObjRectangle rect{.x = 0, .y = _tankSize + bulletHeight + 2 + gridSize, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
-		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
-		{
-			brick->SetHealth(1);
-			EXPECT_EQ(_statistics->GetBrickDiedByEnemyTeam(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _windowBuffer, _windowSize, _events, 0));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0);
 
-			EXPECT_EQ(_statistics->GetBrickDiedByEnemyTeam(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 1);
 }
 
-TEST_F(StatisticsTest, BrickDiedByPlayerOne)
+TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	_allObjects.clear();
-	constexpr Direction direction = DOWN;
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize + 1, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, direction, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player1", "PlayerTeam", 0, false));
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		constexpr float gridSize = 1;
-		const ObjRectangle rect{.x = 0, .y = _tankSize + bulletHeight + 2 + gridSize, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
-		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
-		{
-			brick->SetHealth(1);
-			EXPECT_EQ(_statistics->GetBrickDiedByPlayerOne(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _windowBuffer, _windowSize, _events, 0));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0);
 
-			EXPECT_EQ(_statistics->GetBrickDiedByPlayerOne(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 1);
 }
 
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
-	_allObjects.clear();
-	constexpr Direction direction = DOWN;
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, direction, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player2", "PlayerTeam", 0, false));
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		constexpr float gridSize = 1;
-		const ObjRectangle rect{.x = 0, .y = _tankSize + bulletHeight + gridSize, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<Brick>(rect, _windowBuffer, _windowSize, _events, 0));
-		if (const auto brick = dynamic_cast<Brick*>(_allObjects.back().get()))
-		{
-			brick->SetHealth(1);
-			EXPECT_EQ(_statistics->GetBrickDiedByPlayerTwo(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _windowBuffer, _windowSize, _events, 0));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBrickDiedByPlayerTwo(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 1);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
-	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-	                                                  _events, "Enemy1", "EnemyTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy2", "EnemyTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
+	                               .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy2", "EnemyTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 2);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 2);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 {
-	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player1", "PlayerTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Player2", "PlayerTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
+	                               .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 {
-	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed,
-	                                                  &_allObjects,
-	                                                  _events, "Player1", "PlayerTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed,
-		                                                  &_allObjects, _events, "Enemy1", "EnemyTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
+	                               .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 {
-	_allObjects.clear();
-	constexpr float bulletWidth = 6;
-	constexpr float bulletHeight = 5;
-	const ObjRectangle bulletRect{.x = 0, .y = _tankSize, .w = bulletWidth, .h = bulletHeight};
-	constexpr int color = 0xffffff;
-	constexpr int health = 1;
-	constexpr int damage = 1;
-	constexpr double bulletDamageAreaRadius = 12.0;
-	_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-	                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-	                                                  _events, "Player2", "PlayerTeam", 0, false));
-	if (const auto bullet1 = dynamic_cast<Bullet*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, UP, _bulletSpeed, &_allObjects,
-		                                                  _events, "Enemy1", "EnemyTeam", 1, false));
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
-		{
-			bullet2->SetPos({.x = 0, .y = _tankSize + bulletHeight + 1});
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
+	                               .h = _bulletHeight};
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, DOWN, _bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 0, false));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect2, _bulletDamage, _bulletDamageAreaRadius, _bulletColor, _bulletHealth, _windowBuffer,
+					_windowSize, UP, _bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 1, false));
 
-			constexpr float deltaTime = 1.f / 60.f;
-			_events->EmitEvent<const float>("TickUpdate", deltaTime);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
-			EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
 }

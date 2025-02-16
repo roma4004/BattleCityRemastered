@@ -2,38 +2,25 @@
 #include "../headers/ConfigFailure.h"
 #include "../headers/ConfigSuccess.h"
 
+#include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <memory>
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
-                               const char* levelStartedName)
-	: windowSize{windowSize}, _fpsFontPathName{fpsFontName}, _logoPathName{logoName},
-	  _levelStartedPathName{levelStartedName} {}
+SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
+                               const char* introMusicName)
+	: windowSize{std::move(windowSize)},
+	  fpsFontPathName{fpsFontName},
+	  logoPathName{logoName},
+	  introMusicPathName{introMusicName} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
-	SDL_DestroyRenderer(renderer);
-	renderer = nullptr;
-	SDL_DestroyWindow(window);
-	window = nullptr;
-
-	delete windowBuffer;
-	windowBuffer = nullptr;
-
-	TTF_CloseFont(_fpsFont);
-	_fpsFont = nullptr;
-	TTF_Quit();
-
-	//TODO: destroy all img surface and texture before it
-	SDL_DestroyTexture(_logoTexture);
-	IMG_Quit();
-
-	Mix_FreeChunk(_levelStartedSound);
 	Mix_CloseAudio();
-
+	TTF_Quit();
+	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -44,21 +31,27 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_Init Error: ", SDL_GetError());
 	}
 
-	window = SDL_CreateWindow("Battle City remastered", 100, 100, static_cast<int>(windowSize.x),
-	                          static_cast<int>(windowSize.y), SDL_WINDOW_SHOWN);
+	window = std::shared_ptr<SDL_Window>(
+			SDL_CreateWindow("Battle City remastered", 100, 100, static_cast<int>(windowSize.x),
+			                 static_cast<int>(windowSize.y), SDL_WINDOW_SHOWN),
+			SDL_DestroyWindow);
 	if (window == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	renderer = std::shared_ptr<SDL_Renderer>(
+			SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC),
+			SDL_DestroyRenderer);
 	if (renderer == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
-	screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-	                           static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+	std::shared_ptr<SDL_Texture> screen(
+			SDL_CreateTexture(renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
+			                  static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)),
+			SDL_DestroyTexture);
 	if (screen == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("Screen SDL_CreateTexture Error", SDL_GetError());
@@ -68,8 +61,8 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
 	}
-
-	if (_fpsFont = TTF_OpenFont(_fpsFontPathName, 14); _fpsFont == nullptr)
+	std::shared_ptr<TTF_Font> fpsFont(TTF_OpenFont(fpsFontPathName, 14), TTF_CloseFont);
+	if (fpsFont == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 	}
@@ -79,15 +72,15 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
 	}
 
-	SDL_Surface* logoSurface = IMG_Load(_logoPathName);
+	std::shared_ptr<SDL_Surface> logoSurface(IMG_Load(logoPathName), SDL_FreeSurface);
 	if (logoSurface == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG Logo Loading Error", IMG_GetError());
 	}
 
-	_logoTexture = SDL_CreateTextureFromSurface(renderer, logoSurface);
-	SDL_FreeSurface(logoSurface);
-	if (_logoTexture == nullptr)
+	std::shared_ptr<SDL_Texture> logoTexture(SDL_CreateTextureFromSurface(renderer.get(), logoSurface.get()),
+	                                         SDL_DestroyTexture);
+	if (logoTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
 	}
@@ -97,19 +90,19 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_OpenAudio Error", Mix_GetError());
 	}
 
-	if (_levelStartedSound = Mix_LoadWAV(_levelStartedPathName);
-		_levelStartedSound == nullptr)
+	levelStartedSound = std::shared_ptr<Mix_Chunk>(Mix_LoadWAV(introMusicPathName), Mix_FreeChunk);
+	if (levelStartedSound == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
 	}
 
-	if (Mix_PlayChannel(-1, _levelStartedSound, 0) == -1)
+	if (Mix_PlayChannel(-1, levelStartedSound.get(), 0) == -1)
 	{
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
 	const auto size = windowSize.x * windowSize.y;
-	windowBuffer = new int[size];
+	auto windowBuffer = std::shared_ptr<int[]>(new int[size], std::default_delete<int[]>());
 
-	return std::make_unique<ConfigSuccess>(windowSize, windowBuffer, renderer, screen, _fpsFont, _logoTexture);
+	return std::make_unique<ConfigSuccess>(windowSize, windowBuffer, renderer, screen, fpsFont, logoTexture);
 }

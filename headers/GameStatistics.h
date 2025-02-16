@@ -8,7 +8,7 @@ class EventSystem;
 class GameStatistics final
 {
 	std::string _name;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
 	int _bulletHitByEnemy{0};
@@ -33,9 +33,9 @@ class GameStatistics final
 	int _playerTwoDiedByFriendlyFire{0};
 	int _playerDiedByEnemyTeam{0};
 
-	int _brickDiedByEnemyTeam{0};
-	int _brickDiedByPlayerOne{0};
-	int _brickDiedByPlayerTwo{0};
+	int _brickWallDiedByEnemyTeam{0};
+	int _brickWallDiedByPlayerOne{0};
+	int _brickWallDiedByPlayerTwo{0};
 
 public:
 	explicit GameStatistics(std::shared_ptr<EventSystem> events);
@@ -52,7 +52,7 @@ public:
 	void EnemyDied(const std::string& author, const std::string& fraction);
 	void PlayerOneDied(const std::string& author, const std::string& fraction);
 	void PlayerTwoDied(const std::string& author, const std::string& fraction);
-	void BrickDied(const std::string& author, const std::string& fraction);
+	void BrickWallDied(const std::string& author, const std::string& fraction);
 
 	void Reset();
 
@@ -78,7 +78,7 @@ public:
 	[[nodiscard]] int GetPlayerTwoDiedByFriendlyFire() const { return _playerTwoDiedByFriendlyFire; }
 	[[nodiscard]] int GetPlayerDiedByEnemyTeam() const { return _playerDiedByEnemyTeam; }
 
-	[[nodiscard]] int GetBrickDiedByEnemyTeam() const { return _brickDiedByEnemyTeam; }
-	[[nodiscard]] int GetBrickDiedByPlayerOne() const { return _brickDiedByPlayerOne; }
-	[[nodiscard]] int GetBrickDiedByPlayerTwo() const { return _brickDiedByPlayerTwo; }
+	[[nodiscard]] int GetBrickWallDiedByEnemyTeam() const { return _brickWallDiedByEnemyTeam; }
+	[[nodiscard]] int GetBrickWallDiedByPlayerOne() const { return _brickWallDiedByPlayerOne; }
+	[[nodiscard]] int GetBrickWallDiedByPlayerTwo() const { return _brickWallDiedByPlayerTwo; }
 };

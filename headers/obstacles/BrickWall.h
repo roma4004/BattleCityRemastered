@@ -1,18 +1,18 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "../ObjRectangle.h"
 #include "../Point.h"
 
 #include <memory>
 
-struct ObjRectangle;
 class EventSystem;
 
-class Brick final : public BaseObj
+class BrickWall final : public BaseObj
 {
 	UPoint _windowSize{.x = 0, .y = 0};
-	int* _windowBuffer{nullptr};
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
 
 	void Subscribe();
@@ -27,8 +27,8 @@ class Brick final : public BaseObj
 	[[nodiscard]] std::string GetName() const;
 
 public:
-	Brick(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	      int obstacleId);
+	BrickWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	      std::shared_ptr<EventSystem> events, int obstacleId);
 
-	~Brick() override;
+	~BrickWall() override;
 };

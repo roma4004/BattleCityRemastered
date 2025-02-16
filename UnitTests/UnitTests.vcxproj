@@ -46,7 +46,7 @@
     <ClCompile Include="..\source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="..\source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="..\source\bonuses\BonusStar.cpp" />
-    <ClCompile Include="..\source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusSpawner.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\BulletPool.cpp" />
@@ -57,9 +57,9 @@
     <ClCompile Include="..\source\input\InputProviderForPlayerTwo.cpp" />
     <ClCompile Include="..\source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\LineOfSight.cpp" />
-    <ClCompile Include="..\source\Obstacles\Brick.cpp" />
-    <ClCompile Include="..\source\Obstacles\Iron.cpp" />
-    <ClCompile Include="..\source\obstacles\FortressObstacle.cpp" />
+    <ClCompile Include="..\source\Obstacles\BrickWall.cpp" />
+    <ClCompile Include="..\source\Obstacles\SteelWall.cpp" />
+    <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
     <ClCompile Include="..\source\Obstacles\Water.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopAI.cpp" />
@@ -72,14 +72,11 @@
     <ClCompile Include="..\source\TankSpawner.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
+    <ClCompile Include="RespawnTankTests.cpp" />
     <ClCompile Include="BonusTests.cpp" />
     <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
-    <ClCompile Include="RespawnTankTests.cpp" />
     <ClCompile Include="StatisticsTests.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="MockPlayerOne.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

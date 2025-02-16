@@ -18,15 +18,7 @@ struct Data final
 	friend class boost::serialization::access;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int version)
-	{
-		ar & health;
-		ar & objectName;
-		ar & eventName;
-		ar & names;
-		ar & newPos;
-		ar & direction;
-	}
+	void serialize(Archive& ar, unsigned int version);
 
 	int health{-1};
 	std::string objectName;
@@ -52,6 +44,9 @@ private:
 	boost::asio::ip::tcp::socket _socket;
 	boost::asio::streambuf _read_buffer;
 	boost::asio::streambuf _write_buffer;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
 };
+
+// Include the template implementation
+#include "Client.tpp"

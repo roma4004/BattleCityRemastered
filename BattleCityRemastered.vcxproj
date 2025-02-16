@@ -144,7 +144,7 @@
     <ClCompile Include="source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="source\bonuses\BonusStar.cpp" />
-    <ClCompile Include="source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="source\bonuses\BonusSpawner.cpp" />
     <ClCompile Include="source\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
@@ -163,9 +163,9 @@
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\Menu.cpp" />
-    <ClCompile Include="source\obstacles\Brick.cpp" />
-    <ClCompile Include="source\obstacles\FortressObstacle.cpp" />
-    <ClCompile Include="source\obstacles\Iron.cpp" />
+    <ClCompile Include="source\obstacles\BrickWall.cpp" />
+    <ClCompile Include="source\obstacles\FortressWall.cpp" />
+    <ClCompile Include="source\obstacles\SteelWall.cpp" />
     <ClCompile Include="source\obstacles\Water.cpp" />
     <ClCompile Include="source\pawns\Bullet.cpp" />
     <ClCompile Include="source\pawns\CoopAI.cpp" />
@@ -191,7 +191,7 @@
     <ClInclude Include="headers\bonuses\BonusHelmet.h" />
     <ClInclude Include="headers\bonuses\BonusShovel.h" />
     <ClInclude Include="headers\bonuses\BonusStar.h" />
-    <ClInclude Include="headers\bonuses\BonusSystem.h" />
+    <ClInclude Include="headers\bonuses\BonusSpawner.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
     <ClInclude Include="headers\Circle.h" />
@@ -214,9 +214,9 @@
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
-    <ClInclude Include="headers\obstacles\Brick.h" />
-    <ClInclude Include="headers\obstacles\FortressObstacle.h" />
-    <ClInclude Include="headers\obstacles\Iron.h" />
+    <ClInclude Include="headers\obstacles\BrickWall.h" />
+    <ClInclude Include="headers\obstacles\FortressWall.h" />
+    <ClInclude Include="headers\obstacles\SteelWall.h" />
     <ClInclude Include="headers\obstacles\Water.h" />
     <ClInclude Include="headers\BulletPool.h" />
     <ClInclude Include="headers\GameMode.h" />

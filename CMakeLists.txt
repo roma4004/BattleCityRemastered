@@ -6,13 +6,14 @@
 # ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install
 # or run this for build all boost component:
 # ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serialization
-
+#TODO: use std::filesystem for resource loading in code
 cmake_minimum_required(VERSION 3.28.6)
 #cmake_minimum_required(VERSION 3.11...3.15)
 project(BattleCity_remastered)
 #TODO: create compiler switch msvc, mingw(gcc)
 #TODO: migrate to SDL2 to SDL2pp
 #TODO: migrate to MSYS2 to install all dependency
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
@@ -247,7 +248,7 @@ add_executable(${PROJECT_NAME}
         source/bonuses/BonusHelmet.cpp
         source/bonuses/BonusShovel.cpp
         source/bonuses/BonusStar.cpp
-        source/bonuses/BonusSystem.cpp
+        source/bonuses/BonusSpawner.cpp
         source/bonuses/BonusTank.cpp
         source/bonuses/BonusTimer.cpp
         source/BulletPool.cpp
@@ -266,9 +267,9 @@ add_executable(${PROJECT_NAME}
         source/BaseObj.cpp
         source/Map.cpp
         source/Menu.cpp
-        source/obstacles/Brick.cpp
-        source/obstacles/FortressObstacle.cpp
-        source/obstacles/Iron.cpp
+        source/obstacles/BrickWall.cpp
+        source/obstacles/FortressWall.cpp
+        source/obstacles/SteelWall.cpp
         source/obstacles/Water.cpp
         source/pawns/Bullet.cpp
         source/pawns/CoopAI.cpp

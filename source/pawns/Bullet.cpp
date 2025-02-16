@@ -5,19 +5,19 @@
 #include <string>
 
 Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
-               int* windowBuffer, const UPoint windowSize, const Direction direction, const float speed,
+               std::shared_ptr<int[]> windowBuffer, UPoint windowSize, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
                std::string author, std::string fraction, int bulletId, const bool isNetworkControlled)
 	: Pawn{rect,
 	       color,
 	       health,
-	       windowBuffer,
-	       windowSize,
+	       std::move(windowBuffer),
+	       std::move(windowSize),
 	       direction,
 	       speed,
 	       allObjects,
 	       events,
-	       std::make_shared<MoveLikeBulletBeh>(this, allObjects, events)},
+	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events)},
 	  _author{std::move(author)},
 	  _fraction{std::move(fraction)},
 	  _bulletDamageAreaRadius{aoeRadius},
@@ -115,7 +115,7 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 	SetShape(rect);
 	SetColor(color);
 	SetHealth(health);
-	_moveBeh = std::make_shared<MoveLikeBulletBeh>(this, _allObjects, _events);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
 	SetDirection(direction);
 	_author = std::move(author);
 	_fraction = std::move(fraction);
@@ -135,8 +135,8 @@ void Bullet::TickUpdate(const float deltaTime)
 
 		// if (!_isNetworkControlled)
 		// {
-			_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
-					"_NewPos", "Bullet" + std::to_string(GetBulletId()), "_NewPos", GetPos(), GetDirection());
+		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
+				"_NewPos", "Bullet" + std::to_string(GetBulletId()), "_NewPos", GetPos(), GetDirection());
 		// }
 	}
 }

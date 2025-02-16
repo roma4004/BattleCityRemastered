@@ -15,14 +15,14 @@ class TankSpawner final
 {
 	UPoint _windowSize{.x = 0, .y = 0};
 	std::string _name = "TankSpawner";
-	int* _windowBuffer{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	GameMode _currentMode;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::shared_ptr<BulletPool> _bulletPool;
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
 	std::random_device _rd;
 
@@ -65,8 +65,9 @@ class TankSpawner final
 	void DecreasePlayerTwoRespawnResource();
 
 public:
-	TankSpawner(UPoint windowSize, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<EventSystem>& events, std::shared_ptr<BulletPool> bulletPool);
+	TankSpawner(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
+	            std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+	            std::shared_ptr<BulletPool> bulletPool);
 
 	~TankSpawner();
 

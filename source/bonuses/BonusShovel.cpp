@@ -1,9 +1,9 @@
 #include "../../headers/Bonuses/BonusShovel.h"
 
-BonusShovel::BonusShovel(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize,
+BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
                          std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
                          const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
+	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color}
 {
 	_name = "BonusShovel " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();

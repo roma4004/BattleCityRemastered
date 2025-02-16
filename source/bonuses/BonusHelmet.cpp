@@ -1,9 +1,9 @@
 #include "../../headers/bonuses/BonusHelmet.h"
 
-BonusHelmet::BonusHelmet(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize,
+BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
                          std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
                          const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
+	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color}
 {
 	_name = "BonusHelmet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();

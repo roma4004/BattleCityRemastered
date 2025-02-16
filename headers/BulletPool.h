@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameMode.h"
 #include "Point.h"
 
 #include <memory>
@@ -17,19 +18,19 @@ class BulletPool final
 {
 	std::queue<std::shared_ptr<BaseObj>> _bullets;
 	int lastId{0};
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
-	GameMode* _currentMode;
+	GameMode _currentMode;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	UPoint _windowSize;
-	int* _windowBuffer;
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	           UPoint windowSize, int* windowBuffer, GameMode* currentGameMode);
+	           UPoint windowSize, std::shared_ptr<int[]> windowBuffer, GameMode currentGameMode = GameMode::Demo);
 
 	~BulletPool();
-	void Subscribe() const;
+	void Subscribe();
 	void Unsubscribe() const;
 
 	std::shared_ptr<BaseObj> GetBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,

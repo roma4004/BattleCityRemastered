@@ -9,12 +9,15 @@
 MoveLikeAIBeh::MoveLikeAIBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _selfParent{selfParent}, _allObjects{allObjects} {}
 
-std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
+std::vector<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
+	std::vector<std::weak_ptr<BaseObj>> obstacles{};
+	constexpr int defaultCollisionReserve = 5;
+	obstacles.reserve(defaultCollisionReserve);
 	if (tank == nullptr)
 	{
-		return {};
+		return obstacles;
 	}
 
 	const float speed = tank->GetSpeed();
@@ -44,7 +47,6 @@ std::list<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime
 		speedY *= 0;
 	}
 
-	std::list<std::weak_ptr<BaseObj>> obstacles{};
 	const auto thisNextPosRect = ObjRectangle{.x = tank->GetX() + speedX, .y = tank->GetY() + speedY,
 	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -71,7 +73,7 @@ inline float Distance(const FPoint a, const FPoint b)
 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 }
 
-float MoveLikeAIBeh::FindMinDistance(const std::list<std::weak_ptr<BaseObj>>& objects,
+float MoveLikeAIBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
                                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);

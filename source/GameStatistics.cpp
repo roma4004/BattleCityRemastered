@@ -72,9 +72,9 @@ void GameStatistics::Subscribe()
 			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BrickDied",
+			"BrickWallDied",
 			_name,
-			[this](const std::string& author, const std::string& fraction) { BrickDied(author, fraction); });
+			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
 }
 
 void GameStatistics::Unsubscribe() const
@@ -101,7 +101,7 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener<const std::string&, const std::string&>("CoopAI2Hit", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("CoopAI2Died", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("BrickDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BrickWallDied", _name);
 }
 
 void GameStatistics::BulletHit(const std::string& author, const std::string& fraction)
@@ -221,21 +221,21 @@ void GameStatistics::PlayerTwoDied(const std::string& author, const std::string&
 	}
 }
 
-void GameStatistics::BrickDied(const std::string& author, const std::string& fraction)
+void GameStatistics::BrickWallDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
-		++_brickDiedByEnemyTeam;
+		++_brickWallDiedByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
 		if (author == "Player1" || author == "CoopAI1")
 		{
-			++_brickDiedByPlayerOne;
+			++_brickWallDiedByPlayerOne;
 		}
 		else if (author == "Player2" || author == "CoopAI2")
 		{
-			++_brickDiedByPlayerTwo;
+			++_brickWallDiedByPlayerTwo;
 		}
 	}
 }
@@ -264,7 +264,7 @@ void GameStatistics::Reset()
 	_playerTwoDiedByFriendlyFire = 0;
 	_playerDiedByEnemyTeam = 0;
 
-	_brickDiedByEnemyTeam = 0;
-	_brickDiedByPlayerOne = 0;
-	_brickDiedByPlayerTwo = 0;
+	_brickWallDiedByEnemyTeam = 0;
+	_brickWallDiedByPlayerOne = 0;
+	_brickWallDiedByPlayerTwo = 0;
 }

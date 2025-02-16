@@ -12,7 +12,7 @@
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
 	UPoint _windowSize{.x = 0, .y = 0};
-	int* _windowBuffer{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::chrono::system_clock::time_point _creationTime;
 
 protected:
@@ -20,7 +20,7 @@ protected:
 	int _bonusLifetimeMs{0};
 
 	std::string _name{};
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	virtual void SetPixel(size_t x, size_t y, int color) const;
 
@@ -31,8 +31,8 @@ protected:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
 
 public:
-	Bonus(const ObjRectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	      int durationMs, int lifeTimeMs, int color);
+	Bonus(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	      std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color);
 
 	~Bonus() override;
 

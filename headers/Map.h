@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "obstacles/FortressObstacle.h"
+#include "obstacles/FortressWall.h"
 
 #include <memory>
 #include <vector>
@@ -18,12 +18,14 @@ public:
 
 	template<typename T>
 	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect,
-	                      int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	                      std::shared_ptr<int[]> windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
 	                      int obstacleId) const;
 
-	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize, int* windowBuffer,
-	                 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
+	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize,
+	                 const std::shared_ptr<int[]>& windowBuffer, const UPoint& windowSize,
+	                 const std::shared_ptr<EventSystem>& events) const;
 
+	// TODO: load level from file
 	int fieldLevelOne[50][52] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	                             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -126,21 +128,5 @@ public:
 	                              4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 };
 
-template<typename T>
-void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect,
-                           int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-                           const int obstacleId) const
-{
-	allObjects->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events), obstacleId));
-}
-
-template<>
-inline void Map::ObstacleCreation<FortressObstacle>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                                    const ObjRectangle& rect, int* windowBuffer,
-                                                    UPoint windowSize, std::shared_ptr<EventSystem> events,
-                                                    const int obstacleId) const
-{
-	allObjects->emplace_back(
-			std::make_shared<FortressObstacle>(
-					rect, windowBuffer, windowSize, std::move(events), allObjects, obstacleId));
-}
+// Include the template implementation
+#include "Map.tpp"

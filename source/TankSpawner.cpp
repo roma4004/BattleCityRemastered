@@ -14,13 +14,14 @@
 #include <algorithm>
 #include <memory>
 
-TankSpawner::TankSpawner(const UPoint windowSize, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         const std::shared_ptr<EventSystem>& events, std::shared_ptr<BulletPool> bulletPool)
-	: _windowSize{windowSize},
-	  _windowBuffer{windowBuffer},
+TankSpawner::TankSpawner(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
+                         std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+                         std::shared_ptr<BulletPool> bulletPool)
+	: _windowSize{std::move(windowSize)},
+	  _windowBuffer{std::move(windowBuffer)},
 	  _currentMode{Demo},
 	  _allObjects{allObjects},
-	  _events{events},
+	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)}
 {
 	Subscribe();
@@ -289,7 +290,8 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 
 			_allObjects->emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
 			                                                      speed, _allObjects, _events, name, fraction,
-			                                                      inputProvider, _bulletPool, isNetworkControlled, 1));
+			                                                      std::move(inputProvider), _bulletPool,
+			                                                      isNetworkControlled, 1));
 		}
 		else
 		{
@@ -297,7 +299,8 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 					std::make_unique<InputProviderForPlayerOne>(name, _events);
 			_allObjects->emplace_back(std::make_shared<PlayerOne>(rect, yellow, health, _windowBuffer, _windowSize, UP,
 			                                                      speed, _allObjects, _events, name, fraction,
-			                                                      inputProvider, _bulletPool, isNetworkControlled, 1));
+			                                                      std::move(inputProvider), _bulletPool,
+			                                                      isNetworkControlled, 1));
 		}
 	}
 }
@@ -328,8 +331,8 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 					name, _events);
 			_allObjects->emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP,
 			                                                      speed, _allObjects, _events, name, fraction,
-			                                                      inputProvider, _bulletPool, isNetworkControlled,
-			                                                      isHost, 2));
+			                                                      std::move(inputProvider), _bulletPool,
+			                                                      isNetworkControlled, isHost, 2));
 		}
 		else
 		{
@@ -337,8 +340,8 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 					name, _events);
 			_allObjects->emplace_back(std::make_shared<PlayerTwo>(rect, green, health, _windowBuffer, _windowSize, UP,
 			                                                      speed, _allObjects, _events, name, fraction,
-			                                                      inputProvider, _bulletPool, isNetworkControlled,
-			                                                      isHost, 2));
+			                                                      std::move(inputProvider), _bulletPool,
+			                                                      isNetworkControlled, isHost, 2));
 		}
 	}
 }

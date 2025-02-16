@@ -170,7 +170,7 @@
     <ClCompile Include="..\source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="..\source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="..\source\bonuses\BonusStar.cpp" />
-    <ClCompile Include="..\source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusSpawner.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\BulletPool.cpp" />
@@ -187,9 +187,9 @@
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\Map.cpp" />
     <ClCompile Include="..\source\Menu.cpp" />
-    <ClCompile Include="..\source\obstacles\Brick.cpp" />
-    <ClCompile Include="..\source\obstacles\Iron.cpp" />
-    <ClCompile Include="..\source\obstacles\FortressObstacle.cpp" />
+    <ClCompile Include="..\source\obstacles\BrickWall.cpp" />
+    <ClCompile Include="..\source\obstacles\SteelWall.cpp" />
+    <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
     <ClCompile Include="..\source\obstacles\Water.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopAI.cpp" />
@@ -211,6 +211,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h" />
+    <ClInclude Include="Client.tpp" />
     <ClInclude Include="GameSuccess.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

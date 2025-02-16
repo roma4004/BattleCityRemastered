@@ -25,7 +25,8 @@ class Bullet final : public Pawn
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Bullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health, int* windowBuffer,
+	Bullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
+	       std::shared_ptr<int[]> windowBuffer,
 	       UPoint windowSize, Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	       const std::shared_ptr<EventSystem>& events, std::string author, std::string fraction, int bulletId,
 	       bool isNetworkControlled);

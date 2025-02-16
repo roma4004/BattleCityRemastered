@@ -12,11 +12,11 @@ class MoveLikeBulletBeh final : public IMoveBeh
 {
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
-	void CheckCircleAoE(FPoint blowCenter, std::list<std::weak_ptr<BaseObj>>& aoeList) const;
-	void DealDamage(const std::list<std::weak_ptr<BaseObj>>& objectList) const;
-	[[nodiscard]] std::list<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
+	void CheckCircleAoE(FPoint blowCenter, std::vector<std::weak_ptr<BaseObj>>& aoeList) const;
+	void DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const;
+	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 
 	void Move(float deltaTime) const override;
 	void MoveLeft(float deltaTime) const override;

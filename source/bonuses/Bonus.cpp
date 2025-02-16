@@ -1,11 +1,11 @@
 #include "../../headers/bonuses/Bonus.h"
 #include "../../headers/utils/TimeUtils.h"
 
-Bonus::Bonus(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
-             const int durationMs, const int lifeTimeMs, const int color)
+Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+             std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs, const int color)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1},
-	  _windowSize{windowSize},
-	  _windowBuffer{windowBuffer},
+	  _windowSize{std::move(windowSize)},
+	  _windowBuffer{std::move(windowBuffer)},
 	  _creationTime{std::chrono::system_clock::now()},
 	  _bonusDurationMs{durationMs},
 	  _bonusLifetimeMs{lifeTimeMs},
@@ -20,10 +20,15 @@ Bonus::~Bonus() = default;
 
 void Bonus::SetPixel(const size_t x, const size_t y, const int color) const
 {
+	if (_windowBuffer == nullptr)
+	{
+		return;
+	}
+
 	if (x < _windowSize.x && y < _windowSize.y)
 	{
 		const size_t rowSize = _windowSize.x;
-		_windowBuffer[y * rowSize + x] = color;
+		_windowBuffer.get()[y * rowSize + x] = color;
 	}
 }
 

@@ -12,22 +12,21 @@
 
 struct Server;
 
-GameSuccess::GameSuccess(const UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen,
-						 TTF_Font* fpsFont, SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
-                         std::unique_ptr<InputProviderForMenu>& menuInput,
-                         const std::shared_ptr<GameStatistics>& statistics)
-	: _windowSize{windowSize},
+GameSuccess::GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
+                         std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
+                         std::shared_ptr<GameStatistics> statistics, std::shared_ptr<Menu> menu)
+	: _windowSize{std::move(windowSize)},
 	  _selectedGameMode{Demo},
 	  _currentMode{Demo},
-	  _statistics{statistics},
-	  _menu{renderer, fpsFont, logoTexture, statistics, windowSize, windowBuffer, menuInput, events},
+	  _statistics{std::move(statistics)},
+	  _menu{std::move(menu)},
 	  _windowBuffer{windowBuffer},
-	  _renderer{renderer},
-	  _screen{screen},
-	  _fpsFont{fpsFont},
+	  _renderer{std::move(renderer)},
+	  _screen{std::move(screen)},
+	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer, &_currentMode)},
-	  _bonusSystem{events, &_allObjects, windowBuffer, windowSize}
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer)},
+	  _bonusSpawner{events, &_allObjects, windowBuffer, windowSize}
 {
 	_tankSpawner = std::make_shared<TankSpawner>(windowSize, windowBuffer, &_allObjects, events, _bulletPool);
 
@@ -83,8 +82,6 @@ void GameSuccess::ResetBattlefield()
 	_events->EmitEvent("InitialSpawn");
 
 	//Map creation
-	//Map::ObstacleCreation<Brick>(&env, 30,30);
-	//Map::ObstacleCreation<Iron>(&env, 310,310);
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
 	const Map field{};
 	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
@@ -117,7 +114,7 @@ void GameSuccess::NextGameMode()
 void GameSuccess::ClearBuffer() const
 {
 	const auto size = _windowSize.x * _windowSize.y * sizeof(int);
-	memset(_windowBuffer, 0, size);
+	memset(_windowBuffer.get(), 0, size);
 }
 
 void GameSuccess::MouseEvents(const SDL_Event& event)
@@ -272,23 +269,24 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 		{
 			fps = frameCount;
 
-			_fpsSurface = TTF_RenderText_Solid(_fpsFont, std::to_string(fps).c_str(), SDL_Color{140, 0, 255, 0});
-			if (_fpsTexture)
+			const std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> fpsSurface(
+				TTF_RenderText_Solid(_fpsFont.get(), std::to_string(fps).c_str(), SDL_Color{140, 0, 255, 0}),
+				SDL_FreeSurface);
+			if (fpsSurface)
 			{
-				SDL_DestroyTexture(_fpsTexture);
+				_fpsTexture = std::shared_ptr<SDL_Texture>(
+						SDL_CreateTextureFromSurface(_renderer.get(), fpsSurface.get()),
+						SDL_DestroyTexture);
 			}
-			_fpsTexture = SDL_CreateTextureFromSurface(_renderer, _fpsSurface);
-
-			SDL_FreeSurface(_fpsSurface);
 		}
+
 		fpsPrevUpdateTime = newTime;
 		frameCount = 0;
 	}
 }
 
-void GameSuccess::EventHandling()
+void GameSuccess::UserInputHandling()
 {
-	// event handling
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
@@ -330,6 +328,11 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::MainLoop()
 {
+	if (!_windowBuffer || !_renderer || !_screen || !_fpsFont || !_events)
+	{
+		return;
+	}
+
 	try
 	{
 		boost::asio::io_service io_service;
@@ -344,8 +347,7 @@ void GameSuccess::MainLoop()
 		float deltaTime{0.f};
 		Uint64 oldTime = SDL_GetTicks64();
 		auto fpsPrevUpdateTime = oldTime;
-		const SDL_Rect fpsRectangle{
-				/*x*/ static_cast<int>(_windowSize.x) - 80, /*y*/ 20, /*w*/ 40, /*h*/ 40};
+		const SDL_Rect fpsRectangle{.x = static_cast<int>(_windowSize.x) - 80, .y = 20, .w = 40, .h = 40};
 
 		while (!_isGameOver)
 		{
@@ -354,9 +356,12 @@ void GameSuccess::MainLoop()
 
 			ClearBuffer();
 
-			EventHandling();
+			UserInputHandling();
 
-			_menu.Update();
+			if (_menu)
+			{
+				_menu.get()->Update(); //TODO: replace with event
+			}
 
 			if (!_isPause && _currentMode != PlayAsClient)
 			{
@@ -379,22 +384,17 @@ void GameSuccess::MainLoop()
 			HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
 
 			// update screen with buffer
-			SDL_UpdateTexture(_screen, nullptr, _windowBuffer, static_cast<int>(_windowSize.x) << 2);
-			SDL_RenderCopy(_renderer, _screen, nullptr, nullptr);
+			SDL_UpdateTexture(_screen.get(), nullptr, _windowBuffer.get(), static_cast<int>(_windowSize.x) << 2);
+			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
 
 			_events->EmitEvent("DrawMenuText");
 
 			// Copy the texture with FPS to the renderer
-			SDL_RenderCopy(_renderer, _fpsTexture, nullptr, &fpsRectangle);
+			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);
 
-			SDL_RenderPresent(_renderer);
+			SDL_RenderPresent(_renderer.get());
 
 			oldTime = newTime;
-		}
-
-		if (_fpsTexture)
-		{
-			SDL_DestroyTexture(_fpsTexture);
 		}
 
 		// if (io_service_thread.joinable()) {

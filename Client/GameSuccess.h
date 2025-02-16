@@ -10,8 +10,7 @@
 #include "../headers/MouseButton.h"
 #include "../headers/Point.h"
 #include "../headers/TankSpawner.h"
-#include "../headers/bonuses/BonusSystem.h"
-#include "../headers/input/InputProviderForMenu.h"
+#include "../headers/bonuses/BonusSpawner.h"
 #include "../headers/interfaces/IGame.h"
 
 #include <SDL.h>
@@ -23,28 +22,28 @@ class GameSuccess final : public IGame
 	UPoint _windowSize{.x = 0, .y = 0};
 	GameMode _selectedGameMode;
 	GameMode _currentMode;
-	std::shared_ptr<GameStatistics> _statistics;
-	Menu _menu;
-	std::shared_ptr<TankSpawner> _tankSpawner;
+	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::shared_ptr<Menu> _menu{nullptr};
+	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::string _name = "Game";
 
-	int* _windowBuffer{nullptr};
-	SDL_Renderer* _renderer{nullptr};
-	SDL_Texture* _screen{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
+	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
 	//fps
-	TTF_Font* _fpsFont{nullptr};
-	SDL_Surface* _fpsSurface{nullptr};
-	SDL_Texture* _fpsTexture{nullptr};
+	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
+	std::shared_ptr<SDL_Texture> _fpsTexture{nullptr};
 
 	MouseButtons _mouseButtons{};
+
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::shared_ptr<BulletPool> _bulletPool;
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
-	BonusSystem _bonusSystem;
+	BonusSpawner _bonusSpawner;
 
 	std::random_device _rd;
 
@@ -67,7 +66,7 @@ class GameSuccess final : public IGame
 
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
 
-	void EventHandling();
+	void UserInputHandling();
 	void DisposeDeadObject();
 
 	void MainLoop() override;
@@ -75,10 +74,9 @@ class GameSuccess final : public IGame
 	[[nodiscard]] int Result() const override;
 
 public:
-	GameSuccess(UPoint windowSize, int* windowBuffer, SDL_Renderer* renderer, SDL_Texture* screen, TTF_Font* fpsFont,
-	            SDL_Texture* logoTexture, const std::shared_ptr<EventSystem>& events,
-	            std::unique_ptr<InputProviderForMenu>& menuInput,
-	            const std::shared_ptr<GameStatistics>& statistics);
+	GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
+	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
+	            std::shared_ptr<GameStatistics> statistics, std::shared_ptr<Menu> menu);
 
 	~GameSuccess() override;
 };

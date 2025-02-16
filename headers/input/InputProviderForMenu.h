@@ -17,7 +17,7 @@ struct MenuKeys final
 class InputProviderForMenu final
 {
 	std::string _name;
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	MenuKeys keys;
 

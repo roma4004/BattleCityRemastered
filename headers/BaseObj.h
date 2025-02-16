@@ -44,11 +44,11 @@ public:
 	[[nodiscard]] int GetColor() const;
 	void SetColor(int color);
 
-	[[nodiscard]] int GetHealth() const;
-	void SetHealth(int health);
+	[[nodiscard]] virtual int GetHealth() const;
+	virtual void SetHealth(int health);
 
-	[[nodiscard]] bool GetIsAlive() const;
-	void SetIsAlive(bool isAlive);
+	[[nodiscard]] virtual bool GetIsAlive() const;
+	virtual void SetIsAlive(bool isAlive);
 
 	virtual void TakeDamage(int damage);
 
@@ -61,6 +61,6 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
-	[[nodiscard]] const ObjRectangle& GetShape() const;
-	void SetShape(const ObjRectangle& shape);
+	[[nodiscard]] virtual ObjRectangle GetShape() const;
+	virtual void SetShape(ObjRectangle shape);
 };

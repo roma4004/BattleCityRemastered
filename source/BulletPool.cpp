@@ -4,13 +4,13 @@
 #include "../headers/pawns/Bullet.h"
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       const UPoint windowSize, int* windowBuffer, GameMode* currentGameMode)
+                       UPoint windowSize, std::shared_ptr<int[]> windowBuffer, const GameMode currentGameMode)
 	: _events{std::move(events)},
 	  _name{"BulletPool"},
 	  _currentMode{currentGameMode},
 	  _allObjects{allObjects},
-	  _windowSize{windowSize},
-	  _windowBuffer{windowBuffer}
+	  _windowSize{std::move(windowSize)},
+	  _windowBuffer{std::move(windowBuffer)}
 {
 	Subscribe();
 }
@@ -20,17 +20,17 @@ BulletPool::~BulletPool()
 	Unsubscribe();
 }
 
-void BulletPool::Subscribe() const
+void BulletPool::Subscribe()
 {
 	if (_events == nullptr)
 	{
 		return;
 	}
 
-	// _events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	// {
-	// 	this->_currentMode = newGameMode;
-	// });
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		_currentMode = newGameMode;
+	});
 }
 
 void BulletPool::Unsubscribe() const
@@ -40,7 +40,7 @@ void BulletPool::Unsubscribe() const
 		return;
 	}
 
-	// _events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 }
 
 std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color,
@@ -48,7 +48,7 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
                                                std::string fraction)
 
 {
-	const bool isNetworkControlled = *_currentMode == PlayAsClient;
+	const bool isNetworkControlled = _currentMode == PlayAsClient;
 	if (_bullets.empty())
 	{
 		auto bullet = std::make_shared<Bullet>(rect, damage, aoeRadius, color, health, _windowBuffer, _windowSize,
@@ -75,7 +75,7 @@ void BulletPool::ReturnBullet(std::shared_ptr<BaseObj> bullet)
 	{
 		bulletCast->Disable();
 		_bullets.emplace(std::move(bullet));
-		_events->EmitEvent<const int>("Bullet_Dispose", bulletCast->GetBulletId());
+		_events->EmitEvent<const int>("Net_Bullet_Dispose", bulletCast->GetBulletId());
 	}
 }
 

@@ -15,10 +15,10 @@ class PlayerOne final : public Tank
 	bool _isNetworkControlled;
 
 public:
-	PlayerOne(const ObjRectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
+	PlayerOne(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	          Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	          const std::shared_ptr<EventSystem>& events, const std::string& name, std::string fraction,
-	          std::unique_ptr<IInputProvider>& inputProvider, std::shared_ptr<BulletPool> bulletPool,
+	          std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
+	          std::unique_ptr<IInputProvider> inputProvider, std::shared_ptr<BulletPool> bulletPool,
 	          bool isNetworkControlled, int tankId);
 
 	~PlayerOne() override;

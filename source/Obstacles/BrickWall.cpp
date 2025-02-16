@@ -1,29 +1,29 @@
-#include "../../headers/obstacles/Brick.h"
+#include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/EventSystem.h"
 
 #include <string>
 
-Brick::Brick(const ObjRectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events,
-             const int obstacleId)
-	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 15},
-	  _windowSize{windowSize},
-	  _windowBuffer{windowBuffer},
+BrickWall::BrickWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+             std::shared_ptr<EventSystem> events, const int obstacleId)
+	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 1},
+	  _windowSize{std::move(windowSize)},
+	  _windowBuffer{std::move(windowBuffer)},
 	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "Brick" + std::to_string(obstacleId);
+	_name = "BrickWall" + std::to_string(obstacleId);//TODO: change name for statistics
 	Subscribe();
 }
 
-Brick::~Brick()
+BrickWall::~BrickWall()
 {
 	Unsubscribe();
 }
 
-void Brick::Subscribe()
+void BrickWall::Subscribe()
 {
 	if (_events == nullptr)
 	{
@@ -42,7 +42,7 @@ void Brick::Subscribe()
 	});
 }
 
-void Brick::Unsubscribe() const
+void BrickWall::Unsubscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -54,16 +54,21 @@ void Brick::Unsubscribe() const
 	_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
 }
 
-void Brick::SetPixel(const size_t x, const size_t y, const int color) const
+void BrickWall::SetPixel(const size_t x, const size_t y, const int color) const
 {
+	if (_windowBuffer == nullptr)
+	{
+		return;
+	}
+
 	if (x < _windowSize.x && y < _windowSize.y)
 	{
 		const size_t rowSize = _windowSize.x;
-		_windowBuffer[y * rowSize + x] = color;
+		_windowBuffer.get()[y * rowSize + x] = color;
 	}
 }
 
-void Brick::Draw() const
+void BrickWall::Draw() const
 {
 	if (!GetIsAlive())
 	{
@@ -81,15 +86,15 @@ void Brick::Draw() const
 	}
 }
 
-void Brick::SendDamageStatistics(const std::string& author, const std::string& fraction)
+void BrickWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	if (GetHealth() < 1)
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("BrickDied", author, fraction);
+		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);
 
 		_events->EmitEvent<const std::string, const std::string, const int>(
 				"SendHealth", GetName(), "_NewHealth", GetHealth());
 	}
 }
 
-std::string Brick::GetName() const { return _name; }
+std::string BrickWall::GetName() const { return _name; }
