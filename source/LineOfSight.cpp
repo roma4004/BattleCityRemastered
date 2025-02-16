@@ -1,20 +1,24 @@
 #include "../headers/LineOfSight.h"
+#include "../headers/BaseObj.h"
 #include "../headers/Direction.h"
+#include "../headers/ObjRectangle.h"
+#include "../headers/Point.h"
+#include "../headers/utils/ColliderUtils.h"
 
 #include <algorithm>
 
-LineOfSight::LineOfSight(const Rectangle shape, const UPoint windowSize, const FPoint bulletHalf,
+LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, const FPoint bulletHalf,
                          std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
 	: _allObjects{allObjects}
 {
-	const FPoint fWindowSize = {static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)};
-	const FPoint tankHalf = {shape.w / 2.f, shape.h / 2.f};
-	checkLOS = std::vector<Rectangle>{
+	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
+	const FPoint tankHalf = {.x = shape.w / 2.f, .y = shape.h / 2.f};
+	checkLOS = std::vector<ObjRectangle>{
 			/*up, left, down, right*/
-			{shape.x + tankHalf.x - bulletHalf.x, 0.f, bulletHalf.x, shape.y},
-			{0.f, shape.y + tankHalf.y - bulletHalf.y, shape.x, bulletHalf.y},
-			{shape.x + tankHalf.x - bulletHalf.x, shape.y + shape.h, bulletHalf.x, fWindowSize.y},
-			{shape.x + shape.w, shape.y + tankHalf.y - bulletHalf.y, fWindowSize.x, bulletHalf.y}
+			{.x = shape.x + tankHalf.x - bulletHalf.x, .y = 0.f, .w = bulletHalf.x, .h = shape.y},
+			{.x = 0.f, .y = shape.y + tankHalf.y - bulletHalf.y, .w = shape.x, .h = bulletHalf.y},
+			{.x = shape.x + tankHalf.x - bulletHalf.x, .y = shape.y + shape.h, .w = bulletHalf.x, .h = fWindowSize.y},
+			{.x = shape.x + shape.w, .y = shape.y + tankHalf.y - bulletHalf.y, .w = fWindowSize.x, .h = bulletHalf.y}
 	};
 
 	// parse all seen in LOS (line of sight) obj

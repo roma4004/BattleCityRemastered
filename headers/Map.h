@@ -1,14 +1,15 @@
 ﻿#pragma once
 
-#include "BaseObj.h"
-#include "EventSystem.h"
-#include "Point.h"
-#include "obstacles/ObstacleAroundFortress.h"
+#include "obstacles/FortressWall.h"
 
 #include <memory>
 #include <vector>
 
-class Map
+struct UPoint;
+class BaseObj;
+class EventSystem;
+
+class Map final
 {
 public:
 	Map();
@@ -16,11 +17,15 @@ public:
 	~Map();
 
 	template<typename T>
-	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
-	                      UPoint windowSize, std::shared_ptr<EventSystem> events) const;
-	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize, int* windowBuffer,
-	                 UPoint windowSize, const std::shared_ptr<EventSystem>& events) const;
+	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect,
+	                      std::shared_ptr<int[]> windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
+	                      int obstacleId) const;
 
+	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize,
+	                 const std::shared_ptr<int[]>& windowBuffer, const UPoint& windowSize,
+	                 const std::shared_ptr<EventSystem>& events) const;
+
+	// TODO: load level from file
 	int fieldLevelOne[50][52] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	                             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -123,18 +128,5 @@ public:
 	                              4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 };
 
-template<typename T>
-void Map::ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const Rectangle& rect, int* windowBuffer,
-                           UPoint windowSize, std::shared_ptr<EventSystem> events) const
-{
-	allObjects->emplace_back(std::make_shared<T>(rect, windowBuffer, windowSize, std::move(events)));
-}
-
-template<>
-inline void Map::ObstacleCreation<ObstacleAroundFortress>(std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                                          const Rectangle& rect, int* windowBuffer, UPoint windowSize,
-                                                          std::shared_ptr<EventSystem> events) const
-{
-	allObjects->emplace_back(
-			std::make_shared<ObstacleAroundFortress>(rect, windowBuffer, windowSize, std::move(events), allObjects));
-}
+// Include the template implementation
+#include "Map.tpp"

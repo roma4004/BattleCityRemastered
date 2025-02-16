@@ -1,18 +1,20 @@
 ﻿#include "../../headers/obstacles/Water.h"
+#include "../../headers/EventSystem.h"
 
 #include <string>
 
-Water::Water(const Rectangle& rect, int* windowBuffer, const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: BaseObj{rect, 0x1e90ff, 15},
-	  _windowSize{windowSize},
-	  _windowBuffer{windowBuffer},
+Water::Water(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+             std::shared_ptr<EventSystem> events, const int obstacleId)
+	: BaseObj{rect, 0x1e90ff, 1},
+	  _windowSize{std::move(windowSize)},
+	  _windowBuffer{std::move(windowBuffer)},
 	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
 
-	_name = "Water " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "Water " + std::to_string(obstacleId);
 	Subscribe();
 }
 
@@ -43,10 +45,15 @@ void Water::Unsubscribe() const
 
 void Water::SetPixel(const size_t x, const size_t y, const int color) const
 {
+	if (_windowBuffer == nullptr)
+	{
+		return;
+	}
+
 	if (x < _windowSize.x && y < _windowSize.y)
 	{
 		const size_t rowSize = _windowSize.x;
-		_windowBuffer[y * rowSize + x] = color;
+		_windowBuffer.get()[y * rowSize + x] = color;
 	}
 }
 
@@ -63,4 +70,4 @@ void Water::Draw() const
 	}
 }
 
-void Water::SendDamageStatistics(const std::string& author, const std::string& fraction) {}
+void Water::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}

@@ -5,7 +5,7 @@
 #include <chrono>
 #include <random>
 
-class CoopAI : public Tank
+class CoopAI final : public Tank
 {
 	std::mt19937 _gen;
 	std::uniform_int_distribution<> _distDirection;
@@ -25,9 +25,10 @@ class CoopAI : public Tank
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	CoopAI(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	CoopAI(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	       Direction direction,
 	       float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	       std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool);
+	       std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, int tankId);
 
 	~CoopAI() override;
 };

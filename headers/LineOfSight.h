@@ -1,14 +1,16 @@
 #pragma once
-#include "BaseObj.h"
-#include "Point.h"
-#include "utils/ColliderUtils.h"
 
 #include <memory>
 #include <vector>
 
-class LineOfSight
+struct ObjRectangle;
+struct UPoint;
+struct FPoint;
+class BaseObj;
+
+class LineOfSight final
 {
-	std::vector<Rectangle> checkLOS;
+	std::vector<ObjRectangle> checkLOS;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::vector<std::weak_ptr<BaseObj>> upSideObstacles{};
@@ -17,7 +19,7 @@ class LineOfSight
 	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
 
 public:
-	LineOfSight(Rectangle shape, UPoint windowSize, FPoint bulletHalf,
+	LineOfSight(ObjRectangle shape, const UPoint& windowSize, FPoint bulletHalf,
 	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf);
 	~LineOfSight();
 

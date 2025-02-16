@@ -1,8 +1,8 @@
 #include "../../headers/Bonuses/BonusTank.h"
 
-BonusTank::BonusTank(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
+BonusTank::BonusTank(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
                      std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs, const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
+	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color}
 {
 	_name = "BonusTank " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
@@ -11,7 +11,7 @@ BonusTank::BonusTank(const Rectangle& rect, int* windowBuffer, const UPoint wind
 BonusTank::~BonusTank()
 {
 	Unsubscribe();
-};
+}
 
 void BonusTank::Subscribe()
 {

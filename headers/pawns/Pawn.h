@@ -3,29 +3,29 @@
 #include "../BaseObj.h"
 #include "../Direction.h"
 #include "../Point.h"
-#include "../Rectangle.h"
 #include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <memory>
 #include <vector>
 
+struct ObjRectangle;
 class EventSystem;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
 protected:
-	std::shared_ptr<IMoveBeh> _moveBeh;
+	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 
-	int* _windowBuffer{nullptr};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
 
 	Direction _direction{UP};
 
 	float _speed{0.f};
 
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -37,9 +37,10 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
+	Pawn(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	     Direction direction,
 	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	     std::shared_ptr<IMoveBeh> moveBeh);
+	     std::unique_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;
 

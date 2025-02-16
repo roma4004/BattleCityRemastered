@@ -1,4 +1,5 @@
 #include "../headers/GameStatistics.h"
+#include "../headers/EventSystem.h"
 
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}
@@ -35,45 +36,45 @@ void GameStatistics::Subscribe()
 			[this](const std::string& author, const std::string& fraction) { EnemyDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"PlayerOneHit",
+			"Player1Hit",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerOneHit(author, fraction); });
 	_events->AddListener<const std::string&, const std::string&>(
-			"PlayerOneDied",
+			"Player1Died",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"CoopOneAIHit",
+			"CoopAI1Hit",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerOneHit(author, fraction); });
 	_events->AddListener<const std::string&, const std::string&>(
-			"CoopOneAIDied",
+			"CoopAI1Died",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"PlayerTwoHit",
+			"Player2Hit",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerTwoHit(author, fraction); });
 	_events->AddListener<const std::string&, const std::string&>(
-			"PlayerTwoDied",
+			"Player2Died",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"CoopTwoAIHit",
+			"CoopAI2Hit",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerTwoHit(author, fraction); });
 	_events->AddListener<const std::string&, const std::string&>(
-			"CoopTwoAIDied",
+			"CoopAI2Died",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BrickDied",
+			"BrickWallDied",
 			_name,
-			[this](const std::string& author, const std::string& fraction) { BrickDied(author, fraction); });
+			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
 }
 
 void GameStatistics::Unsubscribe() const
@@ -88,19 +89,19 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener<const std::string&, const std::string&>("EnemyHit", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("EnemyDied", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("PlayerOneHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("PlayerOneDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Player1Hit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Player1Died", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("CoopOneAIHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("CoopOneAIDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopAI1Hit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopAI1Died", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("PlayerTwoHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("PlayerTwoDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Player2Hit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Player2Died", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("CoopTwoAIHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("CoopTwoAIDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopAI2Hit", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("CoopAI2Died", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("BrickDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BrickWallDied", _name);
 }
 
 void GameStatistics::BulletHit(const std::string& author, const std::string& fraction)
@@ -111,11 +112,11 @@ void GameStatistics::BulletHit(const std::string& author, const std::string& fra
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI")
+		if (author == "Player1" || author == "CoopAI1")
 		{
 			++_bulletHitByPlayerOne;
 		}
-		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		else if (author == "Player2" || author == "CoopAI2")
 		{
 			++_bulletHitByPlayerTwo;
 		}
@@ -130,11 +131,11 @@ void GameStatistics::EnemyHit(const std::string& author, const std::string& frac
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI")
+		if (author == "Player1" || author == "CoopAI1")
 		{
 			++_enemyHitByPlayerOne;
 		}
-		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		else if (author == "Player2" || author == "CoopAI2")
 		{
 			++_enemyHitByPlayerTwo;
 		}
@@ -149,7 +150,7 @@ void GameStatistics::PlayerOneHit(const std::string& author, const std::string& 
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopTwoAI")
+		if (author == "Player1" || author == "CoopAI1" || author == "Player2" || author == "CoopAI2")
 		{
 			++_playerOneHitFriendlyFire;
 		}
@@ -164,7 +165,7 @@ void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& 
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopOneTwo")
+		if (author == "Player1" || author == "CoopAI1" || author == "Player2" || author == "CoopAI2")
 		{
 			++_playerTwoHitFriendlyFire;
 		}
@@ -179,11 +180,11 @@ void GameStatistics::EnemyDied(const std::string& author, const std::string& fra
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI")
+		if (author == "Player1" || author == "CoopAI1")
 		{
 			++_enemyDiedByPlayerOne;
 		}
-		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		else if (author == "Player2" || author == "CoopAI2")
 		{
 			++_enemyDiedByPlayerTwo;
 		}
@@ -198,7 +199,7 @@ void GameStatistics::PlayerOneDied(const std::string& author, const std::string&
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopTwoAI")
+		if (author == "Player1" || author == "CoopAI1" || author == "Player2" || author == "CoopAI2")
 		{
 			++_playerOneDiedByFriendlyFire;
 		}
@@ -213,28 +214,28 @@ void GameStatistics::PlayerTwoDied(const std::string& author, const std::string&
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI" || author == "PlayerTwo" || author == "CoopTwoAI")
+		if (author == "Player1" || author == "CoopAI1" || author == "Player2" || author == "CoopAI2")
 		{
 			++_playerTwoDiedByFriendlyFire;
 		}
 	}
 }
 
-void GameStatistics::BrickDied(const std::string& author, const std::string& fraction)
+void GameStatistics::BrickWallDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
-		++_brickDiedByEnemyTeam;
+		++_brickWallDiedByEnemyTeam;
 	}
 	else if (fraction == "PlayerTeam")
 	{
-		if (author == "PlayerOne" || author == "CoopOneAI")
+		if (author == "Player1" || author == "CoopAI1")
 		{
-			++_brickDiedByPlayerOne;
+			++_brickWallDiedByPlayerOne;
 		}
-		else if (author == "PlayerTwo" || author == "CoopTwoAI")
+		else if (author == "Player2" || author == "CoopAI2")
 		{
-			++_brickDiedByPlayerTwo;
+			++_brickWallDiedByPlayerTwo;
 		}
 	}
 }
@@ -263,7 +264,7 @@ void GameStatistics::Reset()
 	_playerTwoDiedByFriendlyFire = 0;
 	_playerDiedByEnemyTeam = 0;
 
-	_brickDiedByEnemyTeam = 0;
-	_brickDiedByPlayerOne = 0;
-	_brickDiedByPlayerTwo = 0;
+	_brickWallDiedByEnemyTeam = 0;
+	_brickWallDiedByPlayerOne = 0;
+	_brickWallDiedByPlayerTwo = 0;
 }

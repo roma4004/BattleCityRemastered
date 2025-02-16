@@ -1,6 +1,6 @@
 #pragma once
 
-enum Direction
+enum Direction : char8_t
 {
 	UP,
 	LEFT,

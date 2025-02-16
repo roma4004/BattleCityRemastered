@@ -1,25 +1,28 @@
 #pragma once
 
-#include "BaseObj.h"
-#include "BulletPool.h"
-#include "EventSystem.h"
 #include "Point.h"
-#include "bonuses/BonusSystem.h"
 
+#include <memory>
 #include <random>
+
+class BaseObj;
+class BulletPool;
+class EventSystem;
+
+enum GameMode : char8_t;
 
 class TankSpawner final
 {
-	UPoint _windowSize{0, 0};
+	UPoint _windowSize{.x = 0, .y = 0};
 	std::string _name = "TankSpawner";
-	int* _windowBuffer{nullptr};
-	GameMode _currentMode{Demo};
+	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	GameMode _currentMode;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::shared_ptr<BulletPool> _bulletPool;
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
 	std::random_device _rd;
 
@@ -40,11 +43,11 @@ class TankSpawner final
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
+	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size, bool isNetworkControlled);
 	void SpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 
-	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
-	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
+	void SpawnPlayer1(float gridOffset, float speed, int health, float size, bool isNetworkControlled);
+	void SpawnPlayer2(float gridOffset, float speed, int health, float size, bool isNetworkControlled);
 	void SpawnCoop1(float gridOffset, float speed, int health, float size);
 	void SpawnCoop2(float gridOffset, float speed, int health, float size);
 	void SpawnPlayerTanks(float gridOffset, float speed, int health, float size);
@@ -62,8 +65,9 @@ class TankSpawner final
 	void DecreasePlayerTwoRespawnResource();
 
 public:
-	TankSpawner(UPoint windowSize, int* windowBuffer, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<EventSystem>& events);
+	TankSpawner(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
+	            std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+	            std::shared_ptr<BulletPool> bulletPool);
 
 	~TankSpawner();
 
