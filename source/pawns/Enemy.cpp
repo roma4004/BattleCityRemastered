@@ -31,10 +31,10 @@ Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::s
 	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction),
+	       isNetworkControlled,
 	       tankId},
 	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
-	  _isNetworkControlled{isNetworkControlled},
 	  _lastTimeTurn{std::chrono::system_clock::now()}
 {
 	BaseObj::SetIsPassable(false);
@@ -47,7 +47,7 @@ Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::s
 
 	Subscribe();
 
-	_events->EmitEvent(_name + "_Spawn");
+	events->EmitEvent(_name + "_Spawn");
 }
 
 Enemy::~Enemy()
@@ -71,28 +71,32 @@ void Enemy::Subscribe()
 	if (_isNetworkControlled)
 	{
 		_events->AddListener<const FPoint, const Direction>(
-				"Net_" + _name + "_NewPos",
-				_name,
+				"ClientReceived_" + _name /*TODO: + std::to_string(GetId())*/ + "Pos", _name,
 				[this](const FPoint newPos, const Direction direction)
 				{
 					this->SetPos(newPos);
 					this->SetDirection(direction);
 				});
 
-		_events->AddListener<const Direction>("Net_" + _name + "_Shot", _name, [this](const Direction direction)
-		{
-			this->SetDirection(direction);
-			this->Shot();
-		});
+		_events->AddListener<const Direction>(
+				"ClientReceived_" + _name + "Shot", _name, [this](const Direction direction)
+				{
+					this->SetDirection(direction);
+					this->Shot();
+				});
 
-		_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
-		{
-			this->SetHealth(health);
-		});
-	}
+		_events->AddListener<const int>(
+				"ClientReceived_" + _name + "Health", _name, [this](const int health)
+				{
+					this->SetHealth(health);
+				});
 
-	if (_isNetworkControlled)
-	{
+		_events->AddListener<const std::string>(
+				"ClientReceived_" + _name + "TankDied", _name, [this](const std::string whoDied)
+				{
+					this->SetIsAlive(false);
+				});
+
 		return;
 	}
 
@@ -117,8 +121,7 @@ void Enemy::Subscribe()
 	});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTimer",
-			_name,
+			"BonusTimer", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction != _fraction)
@@ -130,8 +133,7 @@ void Enemy::Subscribe()
 			});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusHelmet",
-			_name,
+			"BonusHelmet", _name,
 			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction == _fraction && author == _name)
@@ -143,8 +145,7 @@ void Enemy::Subscribe()
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusGrenade",
-			_name,
+			"BonusGrenade", _name,
 			[this](const std::string& /*author*/, const std::string& fraction)
 			{
 				if (fraction != _fraction)
@@ -154,8 +155,7 @@ void Enemy::Subscribe()
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusStar",
-			_name,
+			"BonusStar", _name,
 			[this](const std::string& author, const std::string& fraction)
 			{
 				if (fraction == _fraction && author == _name)
@@ -191,15 +191,14 @@ void Enemy::Unsubscribe() const
 
 	if (_isNetworkControlled)
 	{
-		_events->RemoveListener<const FPoint, const Direction>("Net_" + _name + "_NewPos", _name);
+		_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
 
-		_events->RemoveListener<const Direction>("Net_" + _name + "_Shot", _name);
+		_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
 
-		_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
-	}
+		_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 
-	if (_isNetworkControlled)
-	{
+		_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
+
 		return;
 	}
 
@@ -249,11 +248,6 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			SetDirection(UP);
 			Shot();
 
-			if (!_isNetworkControlled)
-			{
-				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
-			}
-
 			return;
 		}
 		if (IsBonus(upSideObstacles.front()))
@@ -270,11 +264,6 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(LEFT);
 			Shot();
-
-			if (!_isNetworkControlled)
-			{
-				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
-			}
 
 			return;
 		}
@@ -293,11 +282,6 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			SetDirection(DOWN);
 			Shot();
 
-			if (!_isNetworkControlled)
-			{
-				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
-			}
-
 			return;
 		}
 		if (IsBonus(downSideObstacles.front()))
@@ -314,11 +298,6 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(RIGHT);
 			Shot();
-
-			if (!_isNetworkControlled)
-			{
-				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
-			}
 
 			return;
 		}
@@ -382,11 +361,6 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
 		{
 			Shot();
-
-			if (!_isNetworkControlled)
-			{
-				_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
-			}
 		}
 	}
 
@@ -416,8 +390,8 @@ void Enemy::TickUpdate(const float deltaTime)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
-				"_NewPos", "Enemy" + std::to_string(GetTankId()), "_NewPos", GetPos(), GetDirection());
+		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
+				"ServerSend_Pos", "Enemy" + std::to_string(GetId()), GetPos(), GetDirection());
 	}
 
 	// shot
@@ -444,7 +418,6 @@ void Enemy::TakeDamage(const int damage)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const std::string, const int>(
-				"SendHealth", GetName(), "_NewHealth", GetHealth());
+		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }

@@ -2,10 +2,11 @@
 #include "../headers/EventSystem.h"
 
 #include <fstream>
+#include <iostream>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-std::ofstream error_log("error_log.txt");
+// std::ofstream error_log("error_log.txt");
 
 Session::Session(tcp::socket sock, std::shared_ptr<EventSystem> events)
 	: _socket(std::move(sock)), _events(std::move(events)) {}
@@ -18,11 +19,11 @@ void Session::Start()
 	}
 	catch (const std::exception& e)
 	{
-		error_log << e.what() << '\n';
+		std::cerr << e.what() << '\n';
 	}
 	catch (...)
 	{
-		error_log << "error ..." << '\n';
+		std::cerr << "error ..." << '\n';
 	}
 }
 
@@ -36,7 +37,7 @@ void Session::DoRead()
 			if (ec)
 			{
 				_read_buffer.consume(length);
-				error_log << "DoRead error ..." << '\n';
+				std::cerr << "DoRead error ..." << '\n';
 			}
 			else
 			{
@@ -51,8 +52,8 @@ void Session::DoRead()
 				// std::cout << "Id: " << data.id << "\n";
 				// std::cout << "Name: " << data.name << "\n";
 
-				//TODO: check if key allowed to receive from client
-				events->EmitEvent("Net_" + data.eventName);
+				//TODO: check if key allowed to receive from client and strong validating net input
+				events->EmitEvent("ServerReceive_" + data.eventName);
 
 				// std::cout << "Names: ";
 				// for (auto& name: data.names)
@@ -71,11 +72,11 @@ void Session::DoRead()
 	}
 	catch (const std::exception& e)
 	{
-		error_log << "Exception in DoWrite: " << e.what() << '\n';
+		std::cerr << "Exception in DoWrite: " << e.what() << '\n';
 	}
 	catch (...)
 	{
-		error_log << "error ..." << '\n';
+		std::cerr << "error ..." << '\n';
 	}
 }
 
@@ -85,7 +86,7 @@ void Session::DoWrite(const std::string& message)
 	{
 		if (!_socket.is_open())
 		{
-			error_log << "Socket is not open. Cannot write.";
+			std::cerr << "Socket is not open. Cannot write.";
 			return;
 		}
 
@@ -102,7 +103,7 @@ void Session::DoWrite(const std::string& message)
 
 			if (ec)
 			{
-				error_log << "Write error: " << ec.message() << '\n';
+				std::cerr << "Write error: " << ec.message() << '\n';
 				self->_socket.close();
 				//TODO: need handle close connection and delete session
 			}
@@ -119,11 +120,11 @@ void Session::DoWrite(const std::string& message)
 	}
 	catch (const std::exception& e)
 	{
-		error_log << "Exception in DoWrite: " << e.what() << '\n';
+		std::cerr << "Exception in DoWrite: " << e.what() << '\n';
 	}
 	catch (...)
 	{
-		error_log << "error ..." << '\n';
+		std::cerr << "error ..." << '\n';
 	}
 }
 
@@ -141,79 +142,85 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 
 
 	//TODO: send player die (last time)
+	//TODO: send fortress brick destroy
 	//TODO: send bonus spawn/pickup
 
-	_events->AddListener<const std::string, const std::string, const FPoint, const Direction>(
-			"_NewPos",
-			_name,
-			[this](const std::string& objectName, const std::string& eventName, const FPoint newPos,
-			       const Direction direction)
+	//TODO: rename tankDied to last died
+	_events->AddListener<const std::string>("ServerSend_TankDied", _name, [this](const std::string whoDied)
+	{
+		this->SendDied(whoDied);
+	});
+
+	_events->AddListener<const std::string&, const FPoint, const Direction>(
+			"ServerSend_Pos", _name,
+			[this](const std::string& objectName, const FPoint newPos, const Direction direction)
 			{
-				this->SendNewPos(objectName, eventName, newPos, direction);
+				this->SendPos(objectName, newPos, direction);
 			});
 
-	_events->AddListener<const std::string, const std::string, const int>(
-			"SendHealth",
-			_name,
-			[this](const std::string& objectName, const std::string& eventName, const int health)
+	_events->AddListener<const std::string, const int>(
+			"ServerSend_Health", _name,
+			[this](const std::string& objectName, const int health)
 			{
-				this->SendHealth(objectName, eventName, health);
+				this->SendHealth(objectName, health);
 			});
 
 	_events->AddListener<const int>(
-			"Net_Bullet_Dispose",
-			_name,
+			"ServerSend_Dispose", _name,
 			[this](const int bulletId)
 			{
-				this->SendKeyState("Bullet" + std::to_string(bulletId) + "_Dispose");
+				this->SendDispose("Bullet" + std::to_string(bulletId));
 			});
 
 	//TODO: rename_Shot bulletSpawn
-	_events->AddListener<const Direction>("Enemy1_Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("Enemy1Shot", _name, [this](const Direction direction)
 	{
-		this->SendShot("Enemy1_Shot", direction);
+		this->SendShot("Enemy1", direction);
 	});
-	_events->AddListener<const Direction>("Enemy2_Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("Enemy2Shot", _name, [this](const Direction direction)
 	{
-		this->SendShot("Enemy2_Shot", direction);
+		this->SendShot("Enemy2", direction);
 	});
-	_events->AddListener<const Direction>("Enemy3_Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("Enemy3Shot", _name, [this](const Direction direction)
 	{
-		this->SendShot("Enemy3_Shot", direction);
+		this->SendShot("Enemy3", direction);
 	});
-	_events->AddListener<const Direction>("Enemy4_Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("Enemy4Shot", _name, [this](const Direction direction)
 	{
-		this->SendShot("Enemy4_Shot", direction);
+		this->SendShot("Enemy4", direction);
 	});
 
-	_events->AddListener<const Direction>("Player1_Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("Player1Shot", _name, [this](const Direction direction)
 	{
-		this->SendShot("Player1_Shot", direction);
+		this->SendShot("Player1", direction);
 	});
-	_events->AddListener<const Direction>("Player2_Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("Player2Shot", _name, [this](const Direction direction)
 	{
-		this->SendShot("Player2_Shot", direction);
+		this->SendShot("Player2", direction);
 	});
 }
 
 Server::~Server()
 {
-	error_log.close();
+	// error_log.close();
 
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
 
-	_events->RemoveListener<const std::string, const std::string, const FPoint, const Direction>("_NewPos", _name);
-	_events->RemoveListener<const std::string, const int>("SendHealth", _name);
-	_events->RemoveListener<const int>("Net_Bullet_Dispose", _name);
+	_events->RemoveListener<const std::string&, const FPoint, const Direction>(
+			"ServerSend_Pos", _name);
+	_events->RemoveListener<const std::string, const int>("ServerSend_Health", _name);
+	_events->RemoveListener<const int>("ServerSend_Dispose", _name);
 
-	_events->RemoveListener<const Direction>("Enemy1_Shot", _name);
-	_events->RemoveListener<const Direction>("Enemy2_Shot", _name);
-	_events->RemoveListener<const Direction>("Enemy3_Shot", _name);
-	_events->RemoveListener<const Direction>("Enemy4_Shot", _name);
+	_events->RemoveListener<const Direction>("Enemy1Shot", _name);
+	_events->RemoveListener<const Direction>("Enemy2Shot", _name);
+	_events->RemoveListener<const Direction>("Enemy3Shot", _name);
+	_events->RemoveListener<const Direction>("Enemy4Shot", _name);
 
-	_events->RemoveListener<const Direction>("Player1_Shot", _name);
-	_events->RemoveListener<const Direction>("Player2_Shot", _name);
+	_events->RemoveListener<const Direction>("Player1Shot", _name);
+	_events->RemoveListener<const Direction>("Player2Shot", _name);
+
+	_events->RemoveListener<const std::string>("ServerSend_TankDied", _name);
 }
 
 void Server::DoAccept()
@@ -222,7 +229,7 @@ void Server::DoAccept()
 	{
 		if (ec)
 		{
-			error_log << "Accept error: " << ec.message() << '\n';
+			std::cerr << "Accept error: " << ec.message() << '\n';
 		}
 		else
 		{
@@ -236,11 +243,11 @@ void Server::DoAccept()
 			}
 			catch (const std::exception& e)
 			{
-				error_log << "Exception on new session start: " << e.what() << '\n';
+				std::cerr << "Exception on new session start: " << e.what() << '\n';
 			}
 			catch (...)
 			{
-				error_log << "error ..." << '\n';
+				std::cerr << "error ..." << '\n';
 			}
 			DoAccept();
 		}
@@ -253,10 +260,11 @@ void Server::SendToAll(const std::string& message) const
 		session->DoWrite(message);
 }
 
-void Server::SendKeyState(const std::string& state) const
+void Server::SendDispose(const std::string& bulletName) const
 {
 	Data data;
-	data.eventName = state;
+	data.eventName = "Dispose";
+	data.objectName = bulletName;
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
@@ -265,6 +273,20 @@ void Server::SendKeyState(const std::string& state) const
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
+void Server::SendKeyState(const std::string& state) const
+{
+	Data data;
+	data.eventName = "KeyState";
+	data.objectName = state;
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+//deprecated
 void Server::SendKeyState(const std::string& state, const FPoint newPos) const
 {
 	Data data;
@@ -278,10 +300,11 @@ void Server::SendKeyState(const std::string& state, const FPoint newPos) const
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendShot(const std::string& state, const Direction direction) const
+void Server::SendShot(const std::string& objectName, const Direction direction) const
 {
 	Data data;
-	data.eventName = state;
+	data.eventName = "Shot";
+	data.objectName = objectName;
 	data.direction = direction;
 
 	std::ostringstream archiveStream;
@@ -305,12 +328,11 @@ void Server::SendKeyState(const std::string& state, const FPoint newPos, const D
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendNewPos(const std::string& objectName, const std::string& eventName, const FPoint newPos,
-                        const Direction direction) const
+void Server::SendPos(const std::string& objectName, const FPoint newPos, const Direction direction) const
 {
 	Data data;
 	data.objectName = objectName;
-	data.eventName = eventName;
+	data.eventName = "Pos";
 	data.newPos = newPos;
 	data.direction = direction;
 
@@ -321,12 +343,26 @@ void Server::SendNewPos(const std::string& objectName, const std::string& eventN
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendHealth(const std::string& objectName, const std::string& eventName, const int health) const
+void Server::SendHealth(const std::string& objectName, const int health) const
 {
 	Data data;
 	data.health = health;
+	// data.id = objectId;
 	data.objectName = objectName;
-	data.eventName = eventName;
+	data.eventName = "Health";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendDied(const std::string& objectName) const
+{
+	Data data;
+	data.objectName = objectName;
+	data.eventName = "TankDied";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

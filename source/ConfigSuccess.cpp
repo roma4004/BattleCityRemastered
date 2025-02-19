@@ -18,8 +18,8 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto events = std::make_shared<EventSystem>();
 	auto menuInput = std::make_unique<InputProviderForMenu>("MenuInput", events);
 	auto statistics = std::make_shared<GameStatistics>(events);
-	auto menu = std::make_shared<Menu>(
+	auto menu = std::make_unique<Menu>(
 			_renderer, _fpsFont, _logoTexture, statistics, _windowSize, _windowBuffer, std::move(menuInput), events);
 	return std::make_unique<GameSuccess>(
-			_windowSize, _windowBuffer, _renderer, _screen, _fpsFont, events, statistics, menu);
+			_windowSize, _windowBuffer, _renderer, _screen, _fpsFont, events, statistics, std::move(menu));
 }

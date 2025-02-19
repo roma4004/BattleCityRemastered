@@ -328,3 +328,33 @@ void FortressWall::SetIsAlive(const bool isAlive)
 		}
 	}, _obstacle);
 }
+
+std::string FortressWall::GetName() const
+{
+	std::string name;
+
+	std::visit([&name](auto&& uniqPtr)
+	{
+		if (uniqPtr)
+		{
+			name = uniqPtr.get()->GetIsAlive();
+		}
+	}, _obstacle);
+
+	return name;
+}
+
+int FortressWall::GetId() const
+{
+	int id;
+
+	std::visit([&id](auto&& uniqPtr)
+	{
+		if (uniqPtr)
+		{
+			id = uniqPtr.get()->GetIsAlive();
+		}
+	}, _obstacle);
+
+	return id;
+}

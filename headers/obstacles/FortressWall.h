@@ -38,6 +38,9 @@ class FortressWall final : public BaseObj, ITickUpdatable
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
+	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] int GetId() const;
+
 	void Hide();
 
 public:

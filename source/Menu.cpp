@@ -8,15 +8,15 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
            std::shared_ptr<int[]> windowBuffer, std::unique_ptr<InputProviderForMenu> input,
            std::shared_ptr<EventSystem> events)
 	: _windowSize{std::move(windowSize)},
-	  _windowBuffer{std::move(windowBuffer)},
 	  _yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
-	  _input{std::move(input)},
-	  _events{std::move(events)},
-	  _name{std::string("Menu")},
 	  _renderer{std::move(renderer)},
+	  _windowBuffer{std::move(windowBuffer)},
+	  _events{std::move(events)},
 	  _menuFont{std::move(menuFont)},
 	  _menuLogo{std::move(menuLogo)},
-	  _statistics{std::move(statistics)}
+	  _statistics{std::move(statistics)},
+	  _input{std::move(input)},
+	  _name{std::string("Menu")}
 {
 	Subscribe();
 }

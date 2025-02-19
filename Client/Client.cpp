@@ -1,10 +1,11 @@
 #include "Client.h"
 
 #include <fstream>
+#include <iostream>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-std::ofstream error_log("error_log_client.txt");
+// std::ofstream error_log("error_log_client.txt");
 
 Client::Client(boost::asio::io_service& ioService, const std::string& host, const std::string& port,
                std::shared_ptr<EventSystem> events)
@@ -64,7 +65,7 @@ void Client::ReadResponse()
 		{
 			_read_buffer.consume(length);// Now we can consume the written data
 			// Обработка ошибки
-			error_log << ec.message() << '\n';
+			std::cerr << ec.message() << '\n';
 		}
 		else
 		{
@@ -79,25 +80,29 @@ void Client::ReadResponse()
 
 			//TODO: replicate tank died and spawn, now only next move update them or new health update health
 			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game 
-			if (data.eventName == "_NewHealth")
+			if (data.eventName == "Pos")
 			{
-				events->EmitEvent<const int>("Net_" + data.objectName + data.eventName, data.health);
+				events->EmitEvent<const FPoint, const Direction>("ClientReceived_" + data.objectName + data.eventName, data.newPos, data.direction);
 			}
-			else if (data.eventName.ends_with("_Shot"))
+			else if (data.eventName == "Shot")
 			{
-				events->EmitEvent<const Direction>("Net_" + data.eventName, data.direction);
+				events->EmitEvent<const Direction>("ClientReceived_" + data.objectName + data.eventName, data.direction);
 			}
-			else if (data.eventName.starts_with("_Dispose"))
+			else if (data.eventName == "Health")
 			{
-				events->EmitEvent<const FPoint, const Direction>("Net_" + data.eventName, data.newPos, data.direction);
+				events->EmitEvent<const int>("ClientReceived_" + data.objectName + data.eventName, data.health);
 			}
-			else if (data.eventName == "_NewPos")
+			else if (data.eventName == "Dispose")
 			{
-				events->EmitEvent<const FPoint, const Direction>("Net_" + data.objectName + data.eventName, data.newPos, data.direction);
+				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
 			}
-			else
+			else if (data.eventName == "TankDied")
 			{
-				events->EmitEvent("Net_" + data.eventName);
+				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName, data.objectName);
+			}
+			else if (data.eventName == "KeyState") //key input
+			{
+				events->EmitEvent(data.objectName);
 			}
 
 			// Since we want to keep listening, initiate reading again

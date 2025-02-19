@@ -15,8 +15,6 @@ struct Event final
 
 	void AddListener(const std::string& listenerName, listenerCallback callback);
 
-	// TODO: template<typename... EmitArgs>
-	// void Emit(EmitArgs&&... args)
 	void Emit(Args&&... args);
 
 	void RemoveListener(const std::string& listenerName);
@@ -33,13 +31,13 @@ class EventSystem final
 		Event<const FPoint>,// bullets tank new pos,
 		Event<const FPoint, const int>,// bullets send new pos, bulletId
 		Event<const FPoint, const int, const Direction>,// bullets send new pos, bulletId, direction
-		Event<const FPoint, const Direction>,// send newPos and direction
+		Event<const FPoint, const Direction>,// received newPos and direction
+		Event<const std::string&, const FPoint, const Direction>,// send new pos and direction
 		Event<const Direction>,// send tank shot
 		Event<const int>,// respawn resource changed
-		Event<const int, const int>,// send health changed
-		Event<const std::string, const int>,// send health changed
-		Event<const std::string, const std::string, const int>,// send health changed
-		Event<const std::string, const std::string, const FPoint, const Direction>,// send new pos and direction
+		Event<const int, const int>,// received health changed
+		Event<const std::string>,// send tankDied
+		Event<const std::string, const int>,// serverSend health changed
 		Event<const std::string&, const std::string&>,// statistics, bonus
 		Event<const std::string&, const std::string&, int>,// bonus with duration
 		Event<const GameMode>,// gameMode switch

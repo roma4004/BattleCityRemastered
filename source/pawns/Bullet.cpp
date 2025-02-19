@@ -29,7 +29,7 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	BaseObj::SetIsPenetrable(false);
 
 	_name = "Bullet" + std::to_string(bulletId);
-	_bulletId = bulletId;
+	_id = bulletId;
 	Subscribe();
 }
 
@@ -50,20 +50,19 @@ void Bullet::Subscribe()
 	if (_isNetworkControlled)
 	{
 		_events->AddListener<const FPoint, const Direction>(
-				"Net_" + _name + "_NewPos",
-				_name,
+				"ClientReceived_" + _name + "Pos", _name,
 				[this](const FPoint newPos, const Direction direction)
 				{
 					this->SetDirection(direction);
 					this->SetPos(newPos);
 				});
 
-		_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
+		_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
 		{
 			this->SetHealth(health);
 		});
 
-		_events->AddListener("Net_" + _name + "_Dispose", _name, [this]()
+		_events->AddListener("ClientReceived_" + _name + "Dispose", _name, [this]()
 		{
 			this->SetIsAlive(false);
 		});
@@ -88,9 +87,9 @@ void Bullet::Unsubscribe() const
 
 	if (_isNetworkControlled)
 	{
-		_events->RemoveListener<const FPoint, const Direction>("Net_" + _name + "_NewPos", _name);
-		_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
-		_events->RemoveListener("Net_" + _name + "_Dispose", _name);
+		_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
+		_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
+		_events->RemoveListener("ClientReceived_" + _name + "Dispose", _name);
 
 		return;
 	}
@@ -135,8 +134,8 @@ void Bullet::TickUpdate(const float deltaTime)
 
 		// if (!_isNetworkControlled)
 		// {
-		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
-				"_NewPos", "Bullet" + std::to_string(GetBulletId()), "_NewPos", GetPos(), GetDirection());
+		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
+				"ServerSend_Pos", "Bullet" + std::to_string(GetId()), GetPos(), GetDirection());
 		// }
 	}
 }
@@ -174,8 +173,9 @@ void Bullet::TakeDamage(const int damage)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const int>("SendHealth", GetName() + "_NewHealth", GetHealth());
+		//TODO: move this to onHealthChange
+		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }
 
-int Bullet::GetBulletId() const { return _bulletId; }
+int Bullet::GetId() const { return _id; }

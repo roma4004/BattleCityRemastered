@@ -1,4 +1,5 @@
 #include "../../headers/pawns/Tank.h"
+#include "../../headers/EventSystem.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/utils/PixelUtils.h"
 
@@ -6,7 +7,7 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
            UPoint windowSize, const Direction direction, const float speed,
            std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
            std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh, std::string name,
-           std::string fraction, const int tankId)
+           std::string fraction, const bool isNetworkControlled, const int tankId)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -20,8 +21,11 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	  _shootingBeh{std::move(shootingBeh)},
 	  _tankId{tankId},
 	  _name{std::move(name) + std::to_string(tankId)},// TODO: maybe name should be without tankId
-	  _fraction{std::move(fraction)} {}
+	  _fraction{std::move(fraction)},
+	  _isNetworkControlled{isNetworkControlled} {}
 
+
+int Tank::GetId() const { return _tankId; }
 
 std::string Tank::GetName() const { return _name; }
 
@@ -37,7 +41,15 @@ void Tank::TakeDamage(const int damage)
 
 int Tank::GetTankTier() const { return _tier; }
 
-void Tank::Shot() const { _shootingBeh->Shot(); }
+void Tank::Shot() const
+{
+	_shootingBeh->Shot();
+
+	if (!_isNetworkControlled)
+	{
+		_events->EmitEvent<const Direction>(_name + "Shot", GetDirection());
+	}
+}
 
 float Tank::GetBulletWidth() const { return _bulletWidth; }
 
@@ -65,8 +77,6 @@ void Tank::SetBulletDamageAreaRadius(const double bulletDamageAreaRadius)
 int Tank::GetFireCooldownMs() const { return _fireCooldownMs; }
 
 void Tank::SetFireCooldownMs(const int fireCooldown) { _fireCooldownMs = fireCooldown; }
-
-int Tank::GetTankId() const { return _tankId; }
 
 void Tank::DrawHealthBar() const
 {

@@ -14,6 +14,7 @@ class BrickWall final : public BaseObj
 	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
+	int _id{0};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -25,6 +26,7 @@ class BrickWall final : public BaseObj
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] int GetId() const;
 
 public:
 	BrickWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,

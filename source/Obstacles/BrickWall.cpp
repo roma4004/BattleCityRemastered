@@ -4,16 +4,16 @@
 #include <string>
 
 BrickWall::BrickWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-             std::shared_ptr<EventSystem> events, const int obstacleId)
+                     std::shared_ptr<EventSystem> events, const int obstacleId)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 1},
 	  _windowSize{std::move(windowSize)},
 	  _windowBuffer{std::move(windowBuffer)},
-	  _events{std::move(events)}
+	  _events{std::move(events)},
+	  _id{obstacleId}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
-
 	_name = "BrickWall" + std::to_string(obstacleId);//TODO: change name for statistics
 	Subscribe();
 }
@@ -32,7 +32,8 @@ void BrickWall::Subscribe()
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
-	_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
+	//TODO: skip if in host mode
+	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
 	{
 		this->SetHealth(health);
 		if (GetHealth() < 1)
@@ -51,7 +52,7 @@ void BrickWall::Unsubscribe() const
 
 	_events->RemoveListener("Draw", _name);
 
-	_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
+	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 }
 
 void BrickWall::SetPixel(const size_t x, const size_t y, const int color) const
@@ -90,11 +91,14 @@ void BrickWall::SendDamageStatistics(const std::string& author, const std::strin
 {
 	if (GetHealth() < 1)
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);
+		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);//for statistic
 
-		_events->EmitEvent<const std::string, const std::string, const int>(
-				"SendHealth", GetName(), "_NewHealth", GetHealth());
+		//TODO: move this to onHealthChange
+		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
+		//for net replication
 	}
 }
 
 std::string BrickWall::GetName() const { return _name; }
+
+int BrickWall::GetId() const { return _id; }

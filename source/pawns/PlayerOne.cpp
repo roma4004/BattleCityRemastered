@@ -24,9 +24,9 @@ PlayerOne::PlayerOne(const ObjRectangle& rect, const int color, const int health
 	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction),
+	       isNetworkControlled,
 	       tankId},
-	  _inputProvider{std::move(inputProvider)},
-	  _isNetworkControlled{isNetworkControlled}
+	  _inputProvider{std::move(inputProvider)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -34,7 +34,7 @@ PlayerOne::PlayerOne(const ObjRectangle& rect, const int color, const int health
 
 	Subscribe();
 
-	_events->EmitEvent(_name + "_Spawn");
+	events->EmitEvent(_name + "_Spawn");
 }
 
 PlayerOne::~PlayerOne()
@@ -58,24 +58,30 @@ void PlayerOne::Subscribe()
 	if (_isNetworkControlled)
 	{
 		_events->AddListener<const FPoint, const Direction>(
-				"Net_" + _name + "_NewPos",
-				_name,
-				[this](const FPoint newPos, const Direction direction)
+				"ClientReceived_" + _name + "Pos", _name, [this](const FPoint newPos, const Direction direction)
 				{
 					this->SetPos(newPos);
 					this->SetDirection(direction);
 				});
 
-		_events->AddListener<const Direction>("Net_" + _name + "_Shot", _name, [this](const Direction direction)
-		{
-			this->SetDirection(direction);
-			this->Shot();
-		});
+		_events->AddListener<const Direction>(
+				"ClientReceived_" + _name + "Shot", _name, [this](const Direction direction)
+				{
+					this->SetDirection(direction);
+					this->Shot();
+				});
 
-		_events->AddListener<const int>("Net_" + _name + "_NewHealth", _name, [this](const int health)
-		{
-			this->SetHealth(health);
-		});
+		_events->AddListener<const int>(
+				"ClientReceived_" + _name + "Health", _name, [this](const int health)
+				{
+					this->SetHealth(health);
+				});
+
+		_events->AddListener<const std::string>(
+				"ClientReceived_" + _name + "TankDied", _name, [this](const std::string whoDied)
+				{
+					this->SetIsAlive(false);
+				});
 
 		return;
 	}
@@ -174,11 +180,13 @@ void PlayerOne::Unsubscribe() const
 
 	if (_isNetworkControlled)
 	{
-		_events->RemoveListener<const FPoint, const Direction>("Net_" + _name + "_NewPos", _name);
+		_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
 
-		_events->RemoveListener<const Direction>("Net_" + _name + "_Shot", _name);
+		_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
 
-		_events->RemoveListener<const int>("Net_" + _name + "_NewHealth", _name);
+		_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
+
+		_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 
 		return;
 	}
@@ -198,8 +206,8 @@ void PlayerOne::MoveTo(const float deltaTime, const Direction direction)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const std::string, const FPoint, const Direction>(
-				"_NewPos", "Player" + std::to_string(GetTankId()), "_NewPos", GetPos(), GetDirection());
+		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
+				"ServerSend_Pos", "Player" + std::to_string(GetId()), GetPos(), GetDirection());
 	}
 }
 
@@ -237,7 +245,7 @@ void PlayerOne::TickUpdate(const float deltaTime)
 
 		if (!_isNetworkControlled)
 		{
-			_events->EmitEvent<const Direction>(_name + "_Shot", GetDirection());
+			_events->EmitEvent<const Direction>(_name + "Shot", GetDirection());
 		}
 
 		_lastTimeFire = std::chrono::system_clock::now();
@@ -260,7 +268,6 @@ void PlayerOne::TakeDamage(const int damage)
 
 	if (!_isNetworkControlled)
 	{
-		_events->EmitEvent<const std::string, const std::string, const int>(
-				"SendHealth", GetName(), "_NewHealth", GetHealth());
+		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }

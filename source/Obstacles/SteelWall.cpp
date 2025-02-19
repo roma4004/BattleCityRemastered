@@ -8,7 +8,8 @@ SteelWall::SteelWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuff
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0xaaaaaa, 1},
 	  _windowSize{std::move(windowSize)},
 	  _windowBuffer{std::move(windowBuffer)},
-	  _events{std::move(events)}
+	  _events{std::move(events)},
+	 _id{obstacleId}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
@@ -82,3 +83,7 @@ void SteelWall::SendDamageStatistics(const std::string& author, const std::strin
 		_events->EmitEvent<const std::string&, const std::string&>("SteelWallDied", author, fraction);
 	}
 }
+
+std::string SteelWall::GetName() const { return _name; }
+
+int SteelWall::GetId() const { return _id; }

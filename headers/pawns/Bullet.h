@@ -16,7 +16,7 @@ class Bullet final : public Pawn
 	std::string _fraction;
 	double _bulletDamageAreaRadius{12.f};
 	int _damage{0};
-	int _bulletId{0};
+	int _id{0};
 	bool _isNetworkControlled{false};
 
 	void Subscribe();
@@ -52,5 +52,5 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void TakeDamage(int damage) override;
 
-	[[nodiscard]] int GetBulletId() const;
+	[[nodiscard]] int GetId() const;
 };

@@ -12,7 +12,8 @@
 using boost::asio::ip::tcp;
 
 class EventSystem;
-
+//TODO: sync statistic
+//TODO: start with pause in sync stage, then load level on client, then unpause(done sync stage)
 struct Data final
 {
 	friend class boost::serialization::access;
@@ -21,6 +22,7 @@ struct Data final
 	void serialize(Archive& ar, unsigned int /*version*/);
 
 	int health{-1};
+	int id{-1};
 	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;
@@ -59,14 +61,14 @@ struct Server final
 	void DoAccept();
 
 	void SendToAll(const std::string& message) const;
+	void SendDispose(const std::string& bulletName) const;
 	void SendKeyState(const std::string& state) const;
 	void SendKeyState(const std::string& state, FPoint newPos) const;
-	void SendShot(const std::string& state, Direction direction) const;
+	void SendShot(const std::string& objectName, Direction direction) const;
 	void SendKeyState(const std::string& state, FPoint newPos, Direction direction) const;
-	void SendNewPos(const std::string& objectName, const std::string& eventName, FPoint newPos,
-	                Direction direction) const;
-	void SendHealth(const std::string& objectName, const std::string& eventName, int health) const;
-
+	void SendPos(const std::string& objectName, FPoint newPos, Direction direction) const;
+	auto SendHealth(const std::string& objectName, int health) const -> void;
+	void SendDied(const std::string& objectName) const;
 	// void stop() {
 	// 	// Останавливаем принятие входящих подключений
 	// 	acceptor_.close();

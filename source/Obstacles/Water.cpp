@@ -71,3 +71,7 @@ void Water::Draw() const
 }
 
 void Water::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
+
+std::string Water::GetName() const { return _name; }
+
+int Water::GetId() const { return _id; }

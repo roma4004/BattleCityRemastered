@@ -14,10 +14,8 @@ struct Server;
 
 GameSuccess::GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
-                         std::shared_ptr<GameStatistics> statistics, std::shared_ptr<Menu> menu)
+                         std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu)
 	: _windowSize{std::move(windowSize)},
-	  _selectedGameMode{Demo},
-	  _currentMode{Demo},
 	  _statistics{std::move(statistics)},
 	  _menu{std::move(menu)},
 	  _windowBuffer{windowBuffer},
@@ -72,8 +70,7 @@ void GameSuccess::Unsubscribe() const
 void GameSuccess::ResetBattlefield()
 {
 	_bulletPool->Clear();
-	_currentMode = _selectedGameMode;
-	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
+	SetCurrentGameMode(_selectedGameMode);
 
 	_allObjects.clear();
 	_allObjects.reserve(1000);
@@ -288,7 +285,7 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 void GameSuccess::UserInputHandling()
 {
 	SDL_Event event;
-	while (SDL_PollEvent(&event))
+	while (SDL_PollEvent(&event)) //TODO: check SDL_WaitEvent()
 	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{
@@ -370,7 +367,7 @@ void GameSuccess::MainLoop()
 
 			DisposeDeadObject();
 
-			_events->EmitEvent("RespawnTanks");
+			// _events->EmitEvent("RespawnTanks");
 
 			_events->EmitEvent("Draw");
 
@@ -405,6 +402,18 @@ void GameSuccess::MainLoop()
 	{
 		std::cerr << e.what() << '\n';
 	}
+	catch (...)
+	{
+		std::cerr << "error ..." << '\n';
+	}
 }
 
 int GameSuccess::Result() const { return 0; }
+
+GameMode GameSuccess::GetCurrentGameMode() const { return _currentMode; }
+
+void GameSuccess::SetCurrentGameMode(const GameMode newGameMode)
+{
+	_currentMode = newGameMode;
+	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
+}

@@ -27,7 +27,7 @@ class GameSuccess final : public IGame
 	GameMode _selectedGameMode{Demo};
 	GameMode _currentMode{Demo};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	std::shared_ptr<Menu> _menu{nullptr};
+	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::string _name = "Game";
 
@@ -84,7 +84,7 @@ public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
 	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
 	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-	            std::shared_ptr<Menu> menu);
+	            std::unique_ptr<Menu> menu);
 
 	~GameSuccess() override;
 };

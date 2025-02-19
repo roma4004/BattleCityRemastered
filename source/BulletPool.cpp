@@ -75,7 +75,7 @@ void BulletPool::ReturnBullet(std::shared_ptr<BaseObj> bullet)
 	{
 		bulletCast->Disable();
 		_bullets.emplace(std::move(bullet));
-		_events->EmitEvent<const int>("Net_Bullet_Dispose", bulletCast->GetBulletId());
+		_events->EmitEvent<const int>("ServerSend_Dispose", bulletCast->GetId());
 	}
 }
 

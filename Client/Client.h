@@ -21,6 +21,7 @@ struct Data final
 	void serialize(Archive& ar, unsigned int version);
 
 	int health{-1};
+	int id{-1};
 	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;

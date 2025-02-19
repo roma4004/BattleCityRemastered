@@ -42,6 +42,7 @@ protected:
 	bool _isActiveHelmet{false};
 	std::chrono::system_clock::time_point _activateTimeHelmet;
 	int _cooldownHelmet{0};
+	bool _isNetworkControlled{false};
 
 	void Shot() const;
 
@@ -51,7 +52,8 @@ public:
 	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	     std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
-	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, int tankId);
+	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, bool isNetworkControlled,
+	     int tankId);
 
 	~Tank() override = default;
 
@@ -80,5 +82,5 @@ public:
 	[[nodiscard]] int GetFireCooldownMs() const;
 	void SetFireCooldownMs(int fireCooldown);
 
-	[[nodiscard]] int GetTankId() const;
+	[[nodiscard]] int GetId() const;
 };

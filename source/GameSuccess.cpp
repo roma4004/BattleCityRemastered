@@ -18,13 +18,12 @@
 #define ASIO_STANDALONE
 #include <boost/asio/io_service.hpp>
 
-std::ofstream error_log_server("error_log_Server.txt");
-
+// std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-                         std::shared_ptr<EventSystem> events,
-                         std::shared_ptr<GameStatistics> statistics, std::shared_ptr<Menu> menu)
-	: _windowSize{windowSize},
+                         std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
+                         std::unique_ptr<Menu> menu)
+	: _windowSize{std::move(windowSize)},
 	  _statistics{std::move(statistics)},
 	  _menu{std::move(menu)},
 	  _windowBuffer{windowBuffer},
@@ -292,9 +291,8 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 
 void GameSuccess::UserInputHandling()
 {
-	// event handling
 	SDL_Event event;
-	while (SDL_PollEvent(&event))
+	while (SDL_PollEvent(&event)) //TODO: check SDL_WaitEvent()
 	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{
@@ -360,11 +358,11 @@ void GameSuccess::MainLoop()
 			}
 			catch (std::exception& e)
 			{
-				error_log_server << "thread " << e.what() << '\n';
+				std::cerr << "thread " << e.what() << '\n';
 			}
 			catch (...)
 			{
-				error_log_server << "thread error ..." << '\n';
+				std::cerr << "thread error ..." << '\n';
 			}
 		});
 		netThread.detach();
@@ -378,6 +376,7 @@ void GameSuccess::MainLoop()
 
 			// TODO: current mode demo in game fix this
 			UserInputHandling();
+
 			if (_menu)
 			{
 				_menu.get()->Update();//TODO: should be event updateMenu
@@ -423,11 +422,11 @@ void GameSuccess::MainLoop()
 	}
 	catch (std::exception& e)
 	{
-		error_log_server << e.what() << '\n';
+		std::cerr << e.what() << '\n';
 	}
 	catch (...)
 	{
-		error_log_server << "error ..." << '\n';
+		std::cerr << "error ..." << '\n';
 	}
 }
 

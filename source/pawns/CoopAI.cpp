@@ -14,7 +14,8 @@
 CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
                UPoint windowSize, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, const int tankId)
+               std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool,
+               const bool isNetworkControlled, const int tankId)
 	: Tank{rect,
 	       color,
 	       health,
@@ -28,6 +29,7 @@ CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std:
 	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction),
+	       isNetworkControlled,
 	       tankId},
 	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)
 {
@@ -41,7 +43,7 @@ CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std:
 
 	Subscribe();
 
-	_events->EmitEvent(_name + "_Spawn");
+	events->EmitEvent(_name + "_Spawn");
 }
 
 CoopAI::~CoopAI()
@@ -83,8 +85,7 @@ void CoopAI::Subscribe()
 	});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTimer",
-			_name,
+			"BonusTimer", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction != _fraction)
@@ -96,8 +97,7 @@ void CoopAI::Subscribe()
 			});
 
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusHelmet",
-			_name,
+			"BonusHelmet", _name,
 			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction == _fraction && author == _name)
@@ -109,8 +109,7 @@ void CoopAI::Subscribe()
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusGrenade",
-			_name,
+			"BonusGrenade", _name,
 			[this](const std::string& /*author*/, const std::string& fraction)
 			{
 				if (fraction != _fraction)
@@ -120,8 +119,7 @@ void CoopAI::Subscribe()
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusStar",
-			_name,
+			"BonusStar", _name,
 			[this](const std::string& author, const std::string& fraction)
 			{
 				if (fraction == _fraction && author == _name)
@@ -196,11 +194,13 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(UP);
 			Shot();
+
 			return;
 		}
 		if (IsBonus(upSideObstacles.front()))
 		{
 			SetDirection(UP);
+
 			return;
 		}
 	}
@@ -212,11 +212,13 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(LEFT);
 			Shot();
+
 			return;
 		}
 		if (IsBonus(leftSideObstacles.front()))
 		{
 			SetDirection(LEFT);
+
 			return;
 		}
 	}
@@ -228,11 +230,13 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(DOWN);
 			Shot();
+
 			return;
 		}
 		if (IsBonus(downSideObstacles.front()))
 		{
 			SetDirection(DOWN);
+
 			return;
 		}
 	}
@@ -244,11 +248,13 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 		{
 			SetDirection(RIGHT);
 			Shot();
+
 			return;
 		}
 		if (IsBonus(rightSideObstacles.front()))
 		{
 			SetDirection(RIGHT);
+
 			return;
 		}
 	}

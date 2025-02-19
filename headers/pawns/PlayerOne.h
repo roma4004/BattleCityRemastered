@@ -12,8 +12,6 @@ class PlayerOne final : public Tank
 	void TickUpdate(float deltaTime) override;
 
 	std::unique_ptr<IInputProvider> _inputProvider;
-	bool _isNetworkControlled;
-
 public:
 	PlayerOne(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	          Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,

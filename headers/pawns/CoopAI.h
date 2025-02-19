@@ -26,9 +26,9 @@ class CoopAI final : public Tank
 
 public:
 	CoopAI(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	       Direction direction,
-	       float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	       std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, int tankId);
+	       Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	       const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+	       std::shared_ptr<BulletPool> bulletPool, bool isNetworkControlled, int tankId);
 
 	~CoopAI() override;
 };

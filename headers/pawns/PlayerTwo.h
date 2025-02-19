@@ -12,7 +12,6 @@ class PlayerTwo final : public Tank
 	void TickUpdate(float deltaTime) override;
 
 	std::unique_ptr<IInputProvider> _inputProvider;
-	bool _isNetworkControlled;
 	bool _isHost;
 
 public:
