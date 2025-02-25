@@ -103,18 +103,18 @@ void Enemy::Subscribe()
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
-		if (_isActiveTimer && TimeUtils::IsCooldownFinish(_activateTimeTimer, _cooldownTimer))
+		if (this->_isActiveTimer && TimeUtils::IsCooldownFinish(this->_activateTimeTimer, this->_cooldownTimer))
 		{
-			_isActiveTimer = false;
-			_cooldownTimer = 0;
+			this->_isActiveTimer = false;
+			this->_cooldownTimer = 0;
 		}
-		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(_activateTimeHelmet, _cooldownHelmet))
+		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
 		{
-			_isActiveHelmet = false;
-			_cooldownHelmet = 0;
+			this->_isActiveHelmet = false;
+			this->_cooldownHelmet = 0;
 		}
 
-		if (!_isActiveTimer)
+		if (!this->_isActiveTimer)
 		{
 			this->TickUpdate(deltaTime);
 		}
@@ -127,8 +127,8 @@ void Enemy::Subscribe()
 				if (fraction != _fraction)
 				{
 					this->_isActiveTimer = true;
-					_cooldownTimer += bonusDurationTimeMs;
-					_activateTimeTimer = std::chrono::system_clock::now();
+					this->_cooldownTimer += bonusDurationTimeMs;
+					this->_activateTimeTimer = std::chrono::system_clock::now();
 				}
 			});
 
@@ -136,32 +136,30 @@ void Enemy::Subscribe()
 			"BonusHelmet", _name,
 			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
 			{
-				if (fraction == _fraction && author == _name)
+				if (fraction == this->_fraction && author == this->_name)
 				{
 					this->_isActiveHelmet = true;
-					_cooldownHelmet += bonusDurationTimeMs;
-					_activateTimeHelmet = std::chrono::system_clock::now();
+					this->_cooldownHelmet += bonusDurationTimeMs;
+					this->_activateTimeHelmet = std::chrono::system_clock::now();
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusGrenade", _name,
-			[this](const std::string& /*author*/, const std::string& fraction)
+			"BonusGrenade", _name, [this](const std::string& /*author*/, const std::string& fraction)
 			{
-				if (fraction != _fraction)
+				if (fraction != this->_fraction)
 				{
 					this->TakeDamage(GetHealth());
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusStar", _name,
-			[this](const std::string& author, const std::string& fraction)
+			"BonusStar", _name, [this](const std::string& author, const std::string& fraction)
 			{
-				if (fraction == _fraction && author == _name)
+				if (fraction == this->_fraction && author == this->_name)
 				{
 					this->SetHealth(this->GetHealth() + 50);
-					if (_tier > 4)
+					if (this->_tier > 4)
 					{
 						return;
 					}
@@ -172,7 +170,7 @@ void Enemy::Subscribe()
 					this->SetBulletSpeed(this->GetBulletSpeed() * 1.10f);
 					this->SetBulletDamage(this->GetBulletDamage() + 15);
 					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
-					this->SetBulletDamageAreaRadius(this->GetBulletDamageAreaRadius() * 1.25f);
+					this->SetBulletDamageRadius(this->GetBulletDamageRadius() * 1.25f);
 				}
 			});
 	//TOOD: subscribe other bonuses
@@ -250,9 +248,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(upSideObstacles.front()))
 		{
 			SetDirection(UP);
+
 			return;
 		}
 	}
@@ -267,9 +267,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(leftSideObstacles.front()))
 		{
 			SetDirection(LEFT);
+
 			return;
 		}
 	}
@@ -284,9 +286,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(downSideObstacles.front()))
 		{
 			SetDirection(DOWN);
+
 			return;
 		}
 	}
@@ -301,9 +305,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(rightSideObstacles.front()))
 		{
 			SetDirection(RIGHT);
+
 			return;
 		}
 	}
@@ -327,6 +333,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			bulletOffset = GetBulletHeight();
 		}
 	}
+
 	if (dir == LEFT && !leftSideObstacles.empty())
 	{
 		nearestObstacle = leftSideObstacles.front().lock();
@@ -336,6 +343,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			bulletOffset = GetBulletWidth();
 		}
 	}
+
 	if (dir == DOWN && !downSideObstacles.empty())
 	{
 		nearestObstacle = downSideObstacles.front().lock();
@@ -345,6 +353,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			bulletOffset = GetBulletHeight();
 		}
 	}
+
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
 		nearestObstacle = rightSideObstacles.front().lock();
@@ -358,7 +367,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 	if (nearestObstacle && nearestObstacle.get() && nearestObstacle->GetIsDestructible()
 	    && !dynamic_cast<Enemy*>(nearestObstacle.get()))
 	{
-		if (shootDistance > _bulletDamageAreaRadius + bulletOffset)
+		if (shootDistance > _bulletDamageRadius + bulletOffset)
 		{
 			Shot();
 		}
@@ -388,6 +397,7 @@ void Enemy::TickUpdate(const float deltaTime)
 		SetDirection(static_cast<Direction>(randDir));
 	}
 
+	//NOTE: move synchronize to client
 	if (!_isNetworkControlled)
 	{
 		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
@@ -398,7 +408,6 @@ void Enemy::TickUpdate(const float deltaTime)
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
 	{
 		HandleLineOfSight(GetDirection());
-		_lastTimeFire = std::chrono::system_clock::now();
 	}
 }
 
@@ -408,6 +417,7 @@ void Enemy::SendDamageStatistics(const std::string& author, const std::string& f
 
 	if (GetHealth() < 1)
 	{
+		//TODO: move to event from statistic when last tank died
 		_events->EmitEvent<const std::string&, const std::string&>("EnemyDied", author, fraction);
 	}
 }

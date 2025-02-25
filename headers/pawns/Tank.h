@@ -20,12 +20,12 @@ class Tank : public Pawn, public IHealthBar
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
-	int _tankId;
+	int _id;
 
 protected:
-	double _bulletDamageAreaRadius{12.f};
+	double _bulletDamageRadius{12.f};
 
-	std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
+	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	int _tier{0};
 	int _fireCooldownMs{1000};//1 sec
@@ -57,6 +57,7 @@ public:
 
 	~Tank() override = default;
 
+	[[nodiscard]] int GetId() const;
 	[[nodiscard]] std::string GetName() const;
 	[[nodiscard]] std::string GetFraction() const;
 
@@ -76,11 +77,9 @@ public:
 	[[nodiscard]] int GetBulletDamage() const;
 	void SetBulletDamage(int bulletDamage);
 
-	[[nodiscard]] double GetBulletDamageAreaRadius() const;
-	void SetBulletDamageAreaRadius(double bulletDamageAreaRadius);
+	[[nodiscard]] double GetBulletDamageRadius() const;
+	void SetBulletDamageRadius(double bulletDamageAreaRadius);
 
 	[[nodiscard]] int GetFireCooldownMs() const;
 	void SetFireCooldownMs(int fireCooldown);
-
-	[[nodiscard]] int GetId() const;
 };

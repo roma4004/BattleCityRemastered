@@ -25,12 +25,12 @@ class BrickWall final : public BaseObj
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	[[nodiscard]] std::string GetName() const;
-	[[nodiscard]] int GetId() const;
-
 public:
 	BrickWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	      std::shared_ptr<EventSystem> events, int obstacleId);
 
 	~BrickWall() override;
+
+	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] int GetId() const;
 };

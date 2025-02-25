@@ -26,12 +26,12 @@ class SteelWall final : public BaseObj
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	[[nodiscard]] std::string GetName() const;
-	[[nodiscard]] int GetId() const;
-
 public:
 	SteelWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	     std::shared_ptr<EventSystem> events, int obstacleId);
 
 	~SteelWall() override;
+
+	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] int GetId() const;
 };

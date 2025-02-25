@@ -12,6 +12,7 @@
 #include "../headers/TankSpawner.h"
 #include "../headers/bonuses/BonusSpawner.h"
 #include "../headers/interfaces/IGame.h"
+#include "../headers/obstacles/ObstacleSpawner.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -25,7 +26,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::string _name = "Game";
+	std::string _name{"Game"};
 
 	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
@@ -44,6 +45,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
 	BonusSpawner _bonusSpawner;
+	ObstacleSpawner _obstacleSpawner;
 
 	std::random_device _rd;
 
@@ -78,8 +80,9 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
-	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
-	            std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu);
+	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
+	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
+	            std::unique_ptr<Menu> menu);
 
 	~GameSuccess() override;
 };

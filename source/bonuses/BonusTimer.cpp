@@ -1,18 +1,25 @@
 #include "../../headers/Bonuses/BonusTimer.h"
+#include "../../headers/bonuses/BonusTypeId.h"
 
 BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
                        std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
-                       const int color)
-	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color}
+                       const int color, const int id)
+	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color, id}
 {
 	//TODO: adjust name for net game, so remove the ptr name generator stuff
-	_name = "BonusTimer " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "BonusTimer";
+
 	Subscribe();
+
+	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, BonusTypeId::Timer, _id);
 }
 
 BonusTimer::~BonusTimer()
 {
 	Unsubscribe();
+
+	_events->EmitEvent<const int>("ServerSend_BonusDeSpawn", _id); //TODO: move to pick up moment in tank move beh
 }
 
 void BonusTimer::Subscribe()
@@ -22,12 +29,20 @@ void BonusTimer::Subscribe()
 		return;
 	}
 
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
 
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	_events->AddListener<const int>("ClientReceived_BonusDeSpawn", _name, [this](const int id)
+	{
+		if (id == this->_id)
+		{
+			this->SetIsAlive(false);
+		}
+	});
+
+	_events->AddListener("Draw", _name + std::to_string(_id), [this]() { this->Draw(); });
 }
 
 void BonusTimer::Unsubscribe() const
@@ -37,9 +52,11 @@ void BonusTimer::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
 
-	_events->RemoveListener("Draw", _name);
+	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);
+
+	_events->RemoveListener("Draw", _name + std::to_string(_id));
 }
 
 void BonusTimer::SendDamageStatistics(const std::string& author, const std::string& fraction)

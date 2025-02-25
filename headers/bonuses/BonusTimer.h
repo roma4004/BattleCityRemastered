@@ -16,7 +16,7 @@ class BonusTimer final : public Bonus
 
 public:
 	BonusTimer(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	           std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color);
+	           std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color, int id);
 
 	~BonusTimer() override;
 

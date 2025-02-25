@@ -1,9 +1,9 @@
-﻿#include "../../headers/obstacles/Water.h"
+﻿#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/EventSystem.h"
 
 #include <string>
 
-Water::Water(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+WaterTile::WaterTile(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
              std::shared_ptr<EventSystem> events, const int obstacleId)
 	: BaseObj{rect, 0x1e90ff, 1},
 	  _windowSize{std::move(windowSize)},
@@ -18,12 +18,12 @@ Water::Water(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoi
 	Subscribe();
 }
 
-Water::~Water()
+WaterTile::~WaterTile()
 {
 	Unsubscribe();
 }
 
-void Water::Subscribe() const
+void WaterTile::Subscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -33,7 +33,7 @@ void Water::Subscribe() const
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
-void Water::Unsubscribe() const
+void WaterTile::Unsubscribe() const
 {
 	if (_events == nullptr)
 	{
@@ -43,7 +43,7 @@ void Water::Unsubscribe() const
 	_events->RemoveListener("Draw", _name);
 }
 
-void Water::SetPixel(const size_t x, const size_t y, const int color) const
+void WaterTile::SetPixel(const size_t x, const size_t y, const int color) const
 {
 	if (_windowBuffer == nullptr)
 	{
@@ -57,7 +57,7 @@ void Water::SetPixel(const size_t x, const size_t y, const int color) const
 	}
 }
 
-void Water::Draw() const
+void WaterTile::Draw() const
 {
 	int y = static_cast<int>(GetY());
 	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
@@ -70,8 +70,8 @@ void Water::Draw() const
 	}
 }
 
-void Water::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
+void WaterTile::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
 
-std::string Water::GetName() const { return _name; }
+std::string WaterTile::GetName() const { return _name; }
 
-int Water::GetId() const { return _id; }
+int WaterTile::GetId() const { return _id; }

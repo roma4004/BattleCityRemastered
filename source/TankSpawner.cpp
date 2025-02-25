@@ -1,6 +1,5 @@
 #include "../headers/TankSpawner.h"
 #include "../headers/EventSystem.h"
-#include "../headers/GameMode.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerOneNet.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
@@ -19,7 +18,6 @@ TankSpawner::TankSpawner(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
                          std::shared_ptr<BulletPool> bulletPool)
 	: _windowSize{std::move(windowSize)},
 	  _windowBuffer{std::move(windowBuffer)},
-	  _currentMode{Demo},
 	  _allObjects{allObjects},
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)}
@@ -47,8 +45,7 @@ void TankSpawner::Subscribe()
 	});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusTank",
-			_name,
+			"BonusTank", _name,
 			[this](const std::string& author, const std::string& fraction)
 			{
 				if (fraction == "EnemyTeam")

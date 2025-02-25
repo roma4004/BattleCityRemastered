@@ -2,15 +2,15 @@
 #include "../../headers/EventSystem.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/SteelWall.h"
-#include "../../headers/obstacles/Water.h"
+#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <string>
 
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-                                   const std::shared_ptr<EventSystem>& events,
-                                   std::vector<std::shared_ptr<BaseObj>>* allObjects, const int obstacleId)
+                           const std::shared_ptr<EventSystem>& events,
+                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const int obstacleId)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 1},
 	  _rect{rect},
 	  _windowSize{windowSize},
@@ -29,81 +29,6 @@ FortressWall::~FortressWall()
 	Unsubscribe();
 }
 
-//TODO: should be private and friend bonusShovel to activate
-// NOTE: call when player team bonus pick up
-void FortressWall::BonusShovelSwitch()
-{
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
-	{
-		if (dynamic_cast<BrickWall*>(object.get())
-		    || dynamic_cast<SteelWall*>(object.get())
-		    || dynamic_cast<FortressWall*>(object.get())
-		    || dynamic_cast<Water*>(object.get())
-			// || dynamic_cast<Ice*>(object.get())  //TODO: implement Ice block
-			// || dynamic_cast<Tree*>(object.get()) //TODO: implement Tree block
-		)
-		{
-			continue;
-		}
-
-		if (ColliderUtils::IsCollide(_rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-			break;
-		}
-	}
-
-	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
-	{
-		if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
-		{
-			_obstacle = std::make_unique<SteelWall>(_rect, _windowBuffer, _windowSize, _events, _obstacleId);
-		}
-		else
-		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _windowBuffer, _windowSize, _events, _obstacleId);
-		}
-	}
-}
-
-//TODO: write more unit test for fortressWall bonus logic work
-void FortressWall::TakeDamage(const int damage)
-{
-	std::visit([&damage](auto&& uniqPtr)
-	{
-		if (uniqPtr)
-		{
-			auto* obstacle = uniqPtr.get();
-			obstacle->TakeDamage(damage);
-		}
-	}, _obstacle);
-}
-
-bool FortressWall::IsBrickWall() const
-{
-	return std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle);
-}
-
-bool FortressWall::IsSteelWall() const
-{
-	return std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle);
-}
-
-//TODO: cover this by tests
-// NOTE: call when enemy team bonus pick up
-void FortressWall::Hide()
-{
-	std::visit([](auto&& uniqPtr)
-	{
-		if (uniqPtr)
-		{
-			auto* obstacle = uniqPtr.get();
-			obstacle->TakeDamage(obstacle->GetHealth());
-		}
-	}, _obstacle);
-}
-
 void FortressWall::Subscribe()
 {
 	if (_events == nullptr)
@@ -118,30 +43,52 @@ void FortressWall::Subscribe()
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
+	//TODO: disable int host mode
+	// std::string name;
+	// std::visit([&name](auto&& uniqPtr)
+	// {
+	// 	if (uniqPtr)
+	// 	{
+	// 		auto* obstacle = uniqPtr.get();
+	// 		name = obstacle->GetName();
+	// 	}
+	// }, _obstacle);
+	// _events->AddListener<const int>("ClientReceived_BrickWall" + std::to_string(_obstacleId) + "Health", _name,
+	//                                 [this](const int /*health*/)
+	//                                 {
+	// 	                                _obstacle = std::unique_ptr<BrickWall>(nullptr);
+	//                                 });
+
+	// _events->AddListener<const int>("ClientReceived_SteelWall"  + std::to_string(_obstacleId) + "Health", _name, [this](const int /*health*/)
+	// {
+	// 	_obstacle = std::unique_ptr<BrickWall>(nullptr);
+	// });
+
+	//TODO: replicate switch, hide fortress wall
+
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusShovel",
-			_name,
+			"BonusShovel", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction == "PlayerTeam")
 				{
-					if (_isActiveShovel)
+					if (this->_isActiveShovel)
 					{
-						_cooldownShovelMs += bonusDurationTimeMs;
+						this->_cooldownShovelMs += bonusDurationTimeMs;
 						return;
 					}
 
-					_isActiveShovel = true;
+					this->_isActiveShovel = true;
 					this->BonusShovelSwitch();
-					_cooldownShovelMs = bonusDurationTimeMs;
+					this->_cooldownShovelMs = bonusDurationTimeMs;
 				}
 				else if (fraction == "EnemyTeam")
 				{
-					_isActiveShovel = false;
+					this->_isActiveShovel = false;
 					this->Hide();
 				}
 
-				_activateTimeShovel = std::chrono::system_clock::now();
+				this->_activateTimeShovel = std::chrono::system_clock::now();
 			});
 }
 
@@ -152,6 +99,8 @@ void FortressWall::Unsubscribe() const
 		return;
 	}
 
+	_events->RemoveListener<const float>("ClientReceived_BrickWall" + std::to_string(_obstacleId) + "Health", _name);
+	// _events->RemoveListener<const float>("ClientReceived_SteelWall"  + std::to_string(_obstacleId) + "Health", _name);
 	_events->RemoveListener<const float>("TickUpdate", _name);
 	_events->RemoveListener("Draw", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusShovel", _name);
@@ -173,9 +122,88 @@ void FortressWall::TickUpdate(const float /*deltaTime*/)
 //TODO: check maybe delete this method
 void FortressWall::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
 
+//TODO: should be private and friend bonusShovel to activate
+// NOTE: call when player team bonus pick up
+void FortressWall::BonusShovelSwitch()
+{
+	bool isFreeSpawnSpot = true;
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	{
+		if (dynamic_cast<BrickWall*>(object.get())
+		    || dynamic_cast<SteelWall*>(object.get())
+		    || dynamic_cast<FortressWall*>(object.get())
+		    || dynamic_cast<WaterTile*>(object.get())
+			// || dynamic_cast<Ice*>(object.get())  //TODO: implement Ice block
+			// || dynamic_cast<Tree*>(object.get()) //TODO: implement Tree block
+		)
+		{
+			continue;
+		}
+
+		if (ColliderUtils::IsCollide(_rect, object->GetShape()))
+		{
+			isFreeSpawnSpot = false;
+			break;
+		}
+	}
+
+	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
+	{
+		if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
+		{
+			_obstacle = std::make_unique<SteelWall>(_rect, _windowBuffer, _windowSize, _events, _obstacleId);
+			//TODO: send event for replication thar brick need to appear at client side
+		}
+		else
+		{
+			_obstacle = std::make_unique<BrickWall>(_rect, _windowBuffer, _windowSize, _events, _obstacleId);
+			//TODO: send event for replication thar steel need to appear at client side
+		}
+	}
+}
+
+//TODO: write more unit test for fortressWall bonus logic work
+void FortressWall::TakeDamage(const int damage)
+{
+	int health{-1};
+
+	std::visit([damage, &health](auto&& uniqPtr)
+	{
+		if (uniqPtr)
+		{
+			auto* obstacle = uniqPtr.get();
+			obstacle->TakeDamage(damage);
+			health = obstacle->GetHealth();
+		}
+	}, _obstacle);
+
+	if (health <= 0)
+	{
+		_obstacle = std::unique_ptr<BrickWall>(nullptr);
+		//TODO: send event for replication thar brick need to hide at client side
+	}
+}
+
+bool FortressWall::IsBrickWall() const
+{
+	return std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle);
+}
+
+bool FortressWall::IsSteelWall() const
+{
+	return std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle);
+}
+
+//TODO: cover this by tests
+// NOTE: call when enemy team bonus pick up
+void FortressWall::Hide()
+{
+	_obstacle = std::unique_ptr<BrickWall>(nullptr);
+}
+
 bool FortressWall::GetIsPassable() const
 {
-	bool result{false};
+	bool result{true};
 
 	std::visit([&result](auto&& uniqPtr)
 	{
@@ -201,7 +229,7 @@ void FortressWall::SetIsPassable(const bool value)
 
 bool FortressWall::GetIsDestructible() const
 {
-	bool result{false};
+	bool result{true};
 
 	std::visit([&result](auto&& uniqPtr)
 	{
@@ -227,7 +255,7 @@ void FortressWall::SetIsDestructible(const bool value)
 
 bool FortressWall::GetIsPenetrable() const
 {
-	bool result{false};
+	bool result{true};
 
 	std::visit([&result](auto&& uniqPtr)
 	{
@@ -253,7 +281,7 @@ void FortressWall::SetIsPenetrable(const bool value)
 
 int FortressWall::GetHealth() const
 {
-	int health{0};
+	int health{-1};
 
 	std::visit([&health](auto&& uniqPtr)
 	{
@@ -305,17 +333,18 @@ void FortressWall::SetShape(const ObjRectangle shape)
 
 bool FortressWall::GetIsAlive() const
 {
-	bool isAlive{false};
+	//TODO: remove _obstacle but fortress need to be alive
+	// bool isAlive{false};
 
-	std::visit([&isAlive](auto&& uniqPtr)
-	{
-		if (uniqPtr)
-		{
-			isAlive = uniqPtr.get()->GetIsAlive();
-		}
-	}, _obstacle);
+	// std::visit([&isAlive](auto&& uniqPtr)
+	// {
+	// 	if (uniqPtr)
+	// 	{
+	// 		isAlive = uniqPtr.get()->GetIsAlive();
+	// 	}
+	// }, _obstacle);
 
-	return isAlive;
+	return true;
 }
 
 void FortressWall::SetIsAlive(const bool isAlive)
@@ -346,7 +375,7 @@ std::string FortressWall::GetName() const
 
 int FortressWall::GetId() const
 {
-	int id;
+	int id{-1};
 
 	std::visit([&id](auto&& uniqPtr)
 	{

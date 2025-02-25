@@ -1,11 +1,11 @@
-#include "../headers/GameSuccess.h"
-#include "../headers/BulletPool.h"
-#include "../headers/EventSystem.h"
-#include "../headers/GameStatistics.h"
-#include "../headers/Map.h"
-#include "../headers/Server.h"
-#include "../headers/TankSpawner.h"
-#include "../headers/pawns/Bullet.h"
+#include "../../headers/application/GameSuccess.h"
+#include "../../headers/BulletPool.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameStatistics.h"
+#include "../../headers/Map.h"
+#include "../../headers/Server.h"
+#include "../../headers/TankSpawner.h"
+#include "../../headers/pawns/Bullet.h"
 
 #include <algorithm>
 #include <fstream>
@@ -32,7 +32,8 @@ GameSuccess::GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, windowBuffer)},
-	  _bonusSpawner{events, &_allObjects, windowBuffer, windowSize}
+	  _bonusSpawner{events, &_allObjects, windowBuffer, windowSize},
+	  _obstacleSpawner{events, &_allObjects, windowBuffer, windowSize}
 {
 	_tankSpawner = std::make_shared<TankSpawner>(windowSize, windowBuffer, &_allObjects, events, _bulletPool);
 
@@ -80,6 +81,8 @@ void GameSuccess::ResetBattlefield()
 	_bulletPool->Clear();//TODO: Replace with on event execute
 	SetCurrentGameMode(_selectedGameMode);
 
+	_events->EmitEvent("SpawnerReset");
+
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 
@@ -88,8 +91,8 @@ void GameSuccess::ResetBattlefield()
 
 	//Map creation
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	const Map field{};
-	field.MapCreation(&_allObjects, gridOffset, _windowBuffer, _windowSize, _events);
+	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
+	field.MapCreation(gridOffset);
 }
 
 void GameSuccess::PrevGameMode()
@@ -292,7 +295,7 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 void GameSuccess::UserInputHandling()
 {
 	SDL_Event event;
-	while (SDL_PollEvent(&event)) //TODO: check SDL_WaitEvent()
+	while (SDL_PollEvent(&event))//TODO: check SDL_WaitEvent()
 	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{

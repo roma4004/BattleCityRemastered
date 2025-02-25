@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../GameMode.h"
 #include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -8,6 +9,7 @@
 #include <random>
 #include <vector>
 
+enum BonusTypeId : char8_t;
 struct UPoint;
 struct ObjRectangle;
 class BaseObj;
@@ -15,10 +17,11 @@ class EventSystem;
 
 class BonusSpawner final : public ITickUpdatable
 {
-	std::string _name;
+	std::string _name{"BonusSpawner"};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	UPoint _windowSize;
-	int _bonusSize;
+	int _bonusSize{0};
+	int _lastSpawnId{0};
 	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::mt19937 _gen;
@@ -27,7 +30,7 @@ class BonusSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnType;
 	std::uniform_int_distribution<> _distRandColor;
 
-	int _cooldownBonusSpawn{60000};//60 sec
+	int _cooldownBonusSpawn{6000};//60 sec
 	std::chrono::system_clock::time_point _lastTimeBonusSpawn;
 
 	void Subscribe();
@@ -43,8 +46,8 @@ public:
 	~BonusSpawner() override;
 
 	void SpawnRandomBonus(ObjRectangle rect);
-	void SpawnBonus(ObjRectangle rect, int color, int bonusId);
+	void SpawnBonus(ObjRectangle rect, int color, BonusTypeId bonusType, int id = -1);
 
 	template<typename TBonusType>
-	void SpawnBonus(ObjRectangle rect, int color);
+	void SpawnBonus(ObjRectangle rect, int color, int id = -1);
 };

@@ -1,7 +1,7 @@
-#include "../headers/ConfigSuccess.h"
-#include "../headers/EventSystem.h"
-#include "../headers/GameStatistics.h"
-#include "../headers/GameSuccess.h"
+#include "../../headers/application/ConfigSuccess.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameStatistics.h"
+#include "../../headers/application/GameSuccess.h"
 
 ConfigSuccess::ConfigSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
                              std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,

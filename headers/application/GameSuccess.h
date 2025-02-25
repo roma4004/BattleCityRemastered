@@ -1,11 +1,12 @@
 #pragma once
 
-#include "GameMode.h"
-#include "Menu.h"
-#include "MouseButton.h"
-#include "Point.h"
-#include "bonuses/BonusSpawner.h"
-#include "interfaces/IGame.h"
+#include "../GameMode.h"
+#include "../Menu.h"
+#include "../MouseButton.h"
+#include "../Point.h"
+#include "../bonuses/BonusSpawner.h"
+#include "../interfaces/IGame.h"
+#include "../obstacles/ObstacleSpawner.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -29,7 +30,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::string _name = "Game";
+	std::string _name{"Game"};
 
 	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
@@ -37,10 +38,10 @@ class GameSuccess final : public IGame
 
 	//fps
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
-	std::shared_ptr<SDL_Surface> _fpsSurface{nullptr};
 	std::shared_ptr<SDL_Texture> _fpsTexture{nullptr};
 
 	MouseButtons _mouseButtons{};
+
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -48,6 +49,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
 	BonusSpawner _bonusSpawner;
+	ObstacleSpawner _obstacleSpawner;
 
 	std::random_device _rd;
 

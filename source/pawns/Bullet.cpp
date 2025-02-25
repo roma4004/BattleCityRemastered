@@ -50,8 +50,7 @@ void Bullet::Subscribe()
 	if (_isNetworkControlled)
 	{
 		_events->AddListener<const FPoint, const Direction>(
-				"ClientReceived_" + _name + "Pos", _name,
-				[this](const FPoint newPos, const Direction direction)
+				"ClientReceived_" + _name + "Pos", _name, [this](const FPoint newPos, const Direction direction)
 				{
 					this->SetDirection(direction);
 					this->SetPos(newPos);

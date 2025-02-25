@@ -1,3 +1,4 @@
+#include "../headers/bonuses/BonusTypeId.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/TankSpawner.h"
@@ -33,7 +34,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		GameMode currentMode = OnePlayer;
+		constexpr GameMode currentMode = OnePlayer;
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, currentMode);
 		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, _windowBuffer, &_allObjects, _events, _bulletPool);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -64,8 +65,7 @@ protected:
 TEST_F(BonusTest, BonusPickUp)
 {
 	const size_t size = _allObjects.size();
-	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-	// _bonusSpawner->SpawnBonus({0.f, _tankSize + 1, _tankSize, _tankSize}, 0xffffff, 2);
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 2.f, .w = _tankSize, .h = _tankSize});
 	_events->EmitEvent("S_Pressed");
 
 	if (const auto bonus = _allObjects.back().get())
@@ -90,7 +90,6 @@ TEST_F(BonusTest, BonusNotPickUp)
 	{
 		const size_t size = _allObjects.size();
 		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		// _bonusSpawner->SpawnBonus({0.f, _tankSize + 1, _tankSize, _tankSize}, 0xffffff, 2);
 		_events->EmitEvent("W_Pressed");
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
@@ -114,7 +113,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
 	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 0);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Timer);
 		_events->EmitEvent("S_Pressed");
 
 		const ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -140,7 +139,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 0);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Timer);
 		_events->EmitEvent("W_Pressed");
 
 		const ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -167,7 +166,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 	{
 		const int playerHealth = player->GetHealth();
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 1);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Helmet);
 		_events->EmitEvent("S_Pressed");
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
@@ -211,7 +210,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	{
 		const int playerHealth = player->GetHealth();
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 1);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Helmet);
 		_events->EmitEvent("W_Pressed");
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
@@ -246,7 +245,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 2);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Grenade);
 	_events->EmitEvent("S_Pressed");
 
 	const ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -272,7 +271,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 2);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Grenade);
 	_events->EmitEvent("W_Pressed");
 
 	const ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -298,7 +297,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 3);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Tank);
 	_events->EmitEvent("S_Pressed");
 
 	const int playerSpawnResource = _tankSpawner->GetPlayerOneRespawnResource();
@@ -315,7 +314,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 3);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Tank);
 	_events->EmitEvent("W_Pressed");
 
 	const int playerSpawnResource = _tankSpawner->GetPlayerOneRespawnResource();
@@ -338,7 +337,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 4);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Star);
 		_events->EmitEvent("S_Pressed");
 
 		EXPECT_EQ(player->GetTankTier(), 0);
@@ -366,7 +365,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 4);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Star);
 		_events->EmitEvent("W_Pressed");
 
 		EXPECT_EQ(player->GetTankTier(), 0);
@@ -392,7 +391,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 
 TEST_F(BonusTest, ShovelPickUpByPlayerThenfortressWallTurnIntoSteelWall)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 5);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Shovel);
 	_events->EmitEvent("S_Pressed");
 
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -409,7 +408,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenfortressWallTurnIntoSteelWall)
 
 TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 5);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Shovel);
 	_events->EmitEvent("W_Pressed");
 
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -446,7 +445,7 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenfortressWallBrickHide)
 					_windowSize, _events, &_allObjects, 0));
 	const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get());
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 5);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Shovel);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 	EXPECT_TRUE(fortressWall->GetIsAlive());
@@ -483,7 +482,7 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenfortressWallSteelWallHide)
 						_windowSize, DOWN, tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", bulletPool, false,
 						1));
 		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, 5);
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Shovel);
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_TRUE(fortressWall->GetIsAlive());

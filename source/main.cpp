@@ -1,4 +1,4 @@
-#include "../headers/SDLEnvironment.h"
+#include "../headers/application/SDLEnvironment.h"
 
 class IConfig;
 class IGame;

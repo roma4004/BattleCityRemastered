@@ -8,7 +8,7 @@
 struct ObjRectangle;
 class EventSystem;
 
-class Water final : public BaseObj
+class WaterTile final : public BaseObj
 {
 	UPoint _windowSize{.x = 0, .y = 0};
 	std::shared_ptr<int[]> _windowBuffer{nullptr};
@@ -25,12 +25,12 @@ class Water final : public BaseObj
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	[[nodiscard]] std::string GetName() const;
-	[[nodiscard]] int GetId() const;
-
 public:
-	Water(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+	WaterTile(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	      std::shared_ptr<EventSystem> events, int obstacleId);
 
-	~Water() override;
+	~WaterTile() override;
+
+	[[nodiscard]] std::string GetName() const;
+	[[nodiscard]] int GetId() const;
 };

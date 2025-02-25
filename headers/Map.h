@@ -1,9 +1,6 @@
 ﻿#pragma once
 
-#include "obstacles/FortressWall.h"
-
-#include <memory>
-#include <vector>
+#include "obstacles/ObstacleSpawner.h"
 
 struct UPoint;
 class BaseObj;
@@ -11,19 +8,14 @@ class EventSystem;
 
 class Map final
 {
+	ObstacleSpawner* _obstacleSpawner;
+
 public:
-	Map();
+	Map(ObstacleSpawner* obstacleSpawner);
 
 	~Map();
 
-	template<typename T>
-	void ObstacleCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const ObjRectangle& rect,
-	                      std::shared_ptr<int[]> windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	                      int obstacleId) const;
-
-	void MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, float gridSize,
-	                 const std::shared_ptr<int[]>& windowBuffer, const UPoint& windowSize,
-	                 const std::shared_ptr<EventSystem>& events) const;
+	void MapCreation(float gridSize) const;
 
 	// TODO: load level from file
 	int fieldLevelOne[50][52] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -127,6 +119,3 @@ public:
 	                             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4,
 	                              4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 };
-
-// Include the template implementation
-#include "Map.tpp"

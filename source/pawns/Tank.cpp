@@ -19,13 +19,13 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	       std::move(events),
 	       std::move(moveBeh)},
 	  _shootingBeh{std::move(shootingBeh)},
-	  _tankId{tankId},
+	  _id{tankId},
 	  _name{std::move(name) + std::to_string(tankId)},// TODO: maybe name should be without tankId
 	  _fraction{std::move(fraction)},
 	  _isNetworkControlled{isNetworkControlled} {}
 
 
-int Tank::GetId() const { return _tankId; }
+int Tank::GetId() const { return _id; }
 
 std::string Tank::GetName() const { return _name; }
 
@@ -44,6 +44,7 @@ int Tank::GetTankTier() const { return _tier; }
 void Tank::Shot() const
 {
 	_shootingBeh->Shot();
+	_lastTimeFire = std::chrono::system_clock::now();
 
 	if (!_isNetworkControlled)
 	{
@@ -67,12 +68,9 @@ int Tank::GetBulletDamage() const { return _bulletDamage; }
 
 void Tank::SetBulletDamage(const int bulletDamage) { _bulletDamage = bulletDamage; }
 
-double Tank::GetBulletDamageAreaRadius() const { return _bulletDamageAreaRadius; }
+double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
-void Tank::SetBulletDamageAreaRadius(const double bulletDamageAreaRadius)
-{
-	_bulletDamageAreaRadius = bulletDamageAreaRadius;
-}
+void Tank::SetBulletDamageRadius(const double bulletDamageAreaRadius) { _bulletDamageRadius = bulletDamageAreaRadius; }
 
 int Tank::GetFireCooldownMs() const { return _fireCooldownMs; }
 

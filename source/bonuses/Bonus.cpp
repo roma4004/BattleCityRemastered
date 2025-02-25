@@ -2,11 +2,12 @@
 #include "../../headers/utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-             std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs, const int color)
+             std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs, const int color, const int id)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1},
 	  _windowSize{std::move(windowSize)},
 	  _windowBuffer{std::move(windowBuffer)},
 	  _creationTime{std::chrono::system_clock::now()},
+	  _id{id},
 	  _bonusDurationMs{durationMs},
 	  _bonusLifetimeMs{lifeTimeMs},
 	  _events{std::move(events)}
@@ -52,3 +53,5 @@ void Bonus::TickUpdate(float /*deltaTime*/)
 		SetIsAlive(false);
 	}
 }
+
+int Bonus::GetId() const { return _id; }

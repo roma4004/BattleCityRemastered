@@ -4,7 +4,7 @@
 #include "../headers/obstacles/BrickWall.h"
 #include "../headers/obstacles/FortressWall.h"
 #include "../headers/obstacles/SteelWall.h"
-#include "../headers/obstacles/Water.h"
+#include "../headers/obstacles/WaterTile.h"
 #include "../headers/pawns/PlayerOne.h"
 #include "../headers/pawns/PlayerTwo.h"
 
@@ -553,9 +553,9 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	{
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		const ObjRectangle rect{.x = 0.f, .y = _tankSize + 1, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events, 0));
+		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _windowBuffer, _windowSize, _events, 0));
 
-		if (dynamic_cast<Water*>(_allObjects.back().get()))
+		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
 			//moveDown player should failure, because below we have SteelWall obstacle
 			const FPoint startPos = player->GetPos();

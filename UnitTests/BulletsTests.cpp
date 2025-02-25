@@ -4,7 +4,7 @@
 #include "../headers/obstacles/BrickWall.h"
 #include "../headers/obstacles/FortressWall.h"
 #include "../headers/obstacles/SteelWall.h"
-#include "../headers/obstacles/Water.h"
+#include "../headers/obstacles/WaterTile.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 
@@ -371,8 +371,8 @@ TEST_F(BulletTest, BulletCantDamageWater)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		const ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<Water>(rect, _windowBuffer, _windowSize, _events, 0));
-		if (const auto brick = dynamic_cast<Water*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _windowBuffer, _windowSize, _events, 0));
+		if (const auto brick = dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();

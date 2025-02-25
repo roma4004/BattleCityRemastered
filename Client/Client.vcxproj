@@ -160,6 +160,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\application\ConfigFailure.cpp" />
+    <ClCompile Include="..\source\application\ConfigSuccess.cpp" />
+    <ClCompile Include="..\source\application\GameFailure.cpp" />
+    <ClCompile Include="..\source\application\SDLEnvironment.cpp" />
     <ClCompile Include="..\source\BaseObj.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeAIBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
@@ -174,9 +178,6 @@
     <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\BulletPool.cpp" />
-    <ClCompile Include="..\source\ConfigFailure.cpp" />
-    <ClCompile Include="..\source\ConfigSuccess.cpp" />
-    <ClCompile Include="..\source\GameFailure.cpp" />
     <ClCompile Include="..\source\GameStatistics.cpp" />
     <ClCompile Include="..\source\input\InputProviderForMenu.cpp" />
     <ClCompile Include="..\source\input\InputProviderForPlayerOne.cpp" />
@@ -187,10 +188,11 @@
     <ClCompile Include="..\source\main.cpp" />
     <ClCompile Include="..\source\Map.cpp" />
     <ClCompile Include="..\source\Menu.cpp" />
+    <ClCompile Include="..\source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\obstacles\BrickWall.cpp" />
     <ClCompile Include="..\source\obstacles\SteelWall.cpp" />
     <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
-    <ClCompile Include="..\source\obstacles\Water.cpp" />
+    <ClCompile Include="..\source\obstacles\WaterTile.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopAI.cpp" />
     <ClCompile Include="..\source\pawns\Enemy.cpp" />
@@ -199,7 +201,6 @@
     <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
     <ClCompile Include="..\source\ObjRectangle.cpp" />
-    <ClCompile Include="..\source\SDLEnvironment.cpp" />
     <ClCompile Include="..\source\TankSpawner.cpp" />
     <ClCompile Include="..\source\utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\TimeUtils.cpp" />

@@ -4,6 +4,8 @@
 #include <string>
 #include <variant>
 
+enum ObstacleTypeId : char8_t;
+enum BonusTypeId : char8_t;
 enum Direction : char8_t;
 enum GameMode : char8_t;
 struct FPoint;
@@ -30,11 +32,14 @@ class EventSystem final
 		Event<const float>,// update(deltaTime)
 		Event<const FPoint>,// bullets tank new pos,
 		Event<const FPoint, const int>,// bullets send new pos, bulletId
+		Event<const FPoint, const BonusTypeId, const int>, // received bonusSpawn
+		Event<const FPoint, const ObstacleTypeId, const int>, // received bonusSpawn
 		Event<const FPoint, const int, const Direction>,// bullets send new pos, bulletId, direction
 		Event<const FPoint, const Direction>,// received newPos and direction
 		Event<const std::string&, const FPoint, const Direction>,// send new pos and direction
+		Event<const std::string&, const FPoint, const BonusTypeId, const int>,// send bonusSpawn
 		Event<const Direction>,// send tank shot
-		Event<const int>,// respawn resource changed
+		Event<const int>,// respawn resource changed // send bonusDeSpawn
 		Event<const int, const int>,// received health changed
 		Event<const std::string>,// send tankDied
 		Event<const std::string, const int>,// serverSend health changed

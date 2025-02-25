@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameMode.h"
 #include "Point.h"
 
 #include <memory>
@@ -14,9 +15,9 @@ enum GameMode : char8_t;
 class TankSpawner final
 {
 	UPoint _windowSize{.x = 0, .y = 0};
-	std::string _name = "TankSpawner";
+	std::string _name{"TankSpawner"};
 	std::shared_ptr<int[]> _windowBuffer{nullptr};
-	GameMode _currentMode;
+	GameMode _currentMode{Demo};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 

@@ -2,6 +2,7 @@
 
 #include "Direction.h"
 #include "Point.h"
+#include "bonuses/BonusTypeId.h"
 
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ struct Data final
 
 	int health{-1};
 	int id{-1};
+	BonusTypeId typeId{None};
 	std::string objectName;
 	std::string eventName;
 	std::vector<std::string> names;
@@ -67,6 +69,8 @@ struct Server final
 	void SendShot(const std::string& objectName, Direction direction) const;
 	void SendKeyState(const std::string& state, FPoint newPos, Direction direction) const;
 	void SendPos(const std::string& objectName, FPoint newPos, Direction direction) const;
+	void SendBonusSpawn(const std::string& objectName, FPoint spawnPos, BonusTypeId typeId, int id) const;
+	void SendBonusDeSpawn(int id) const;
 	auto SendHealth(const std::string& objectName, int health) const -> void;
 	void SendDied(const std::string& objectName) const;
 	// void stop() {

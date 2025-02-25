@@ -135,6 +135,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\application\ConfigFailure.cpp" />
+    <ClCompile Include="source\application\ConfigSuccess.cpp" />
+    <ClCompile Include="source\application\GameFailure.cpp" />
+    <ClCompile Include="source\application\GameSuccess.cpp" />
+    <ClCompile Include="source\application\SDLEnvironment.cpp" />
     <ClCompile Include="source\behavior\MoveLikeAIBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
@@ -148,11 +153,7 @@
     <ClCompile Include="source\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
-    <ClCompile Include="source\GameFailure.cpp" />
     <ClCompile Include="source\GameStatistics.cpp" />
-    <ClCompile Include="source\GameSuccess.cpp" />
-    <ClCompile Include="source\ConfigFailure.cpp" />
-    <ClCompile Include="source\ConfigSuccess.cpp" />
     <ClCompile Include="source\input\InputProviderForMenu.cpp" />
     <ClCompile Include="source\input\InputProviderForPlayerOne.cpp" />
     <ClCompile Include="source\input\InputProviderForPlayerOneNet.cpp" />
@@ -163,10 +164,11 @@
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\Menu.cpp" />
+    <ClCompile Include="source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="source\obstacles\BrickWall.cpp" />
     <ClCompile Include="source\obstacles\FortressWall.cpp" />
     <ClCompile Include="source\obstacles\SteelWall.cpp" />
-    <ClCompile Include="source\obstacles\Water.cpp" />
+    <ClCompile Include="source\obstacles\WaterTile.cpp" />
     <ClCompile Include="source\pawns\Bullet.cpp" />
     <ClCompile Include="source\pawns\CoopAI.cpp" />
     <ClCompile Include="source\pawns\Enemy.cpp" />
@@ -175,13 +177,17 @@
     <ClCompile Include="source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\ObjRectangle.cpp" />
-    <ClCompile Include="source\SDLEnvironment.cpp" />
     <ClCompile Include="source\Server.cpp" />
     <ClCompile Include="source\TankSpawner.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\application\ConfigFailure.h" />
+    <ClInclude Include="headers\application\ConfigSuccess.h" />
+    <ClInclude Include="headers\application\GameFailure.h" />
+    <ClInclude Include="headers\application\GameSuccess.h" />
+    <ClInclude Include="headers\application\SDLEnvironment.h" />
     <ClInclude Include="headers\behavior\MoveLikeAIBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
@@ -194,15 +200,13 @@
     <ClInclude Include="headers\bonuses\BonusSpawner.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
+    <ClInclude Include="headers\bonuses\BonusTypeId.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\Direction.h" />
     <ClInclude Include="headers\EventSystem.h" />
-    <ClInclude Include="headers\GameFailure.h" />
+    <ClInclude Include="headers\EventSystem.tpp" />
     <ClInclude Include="headers\GameStatistics.h" />
-    <ClInclude Include="headers\GameSuccess.h" />
-    <ClInclude Include="headers\ConfigFailure.h" />
-    <ClInclude Include="headers\ConfigSuccess.h" />
     <ClInclude Include="headers\input\InputProviderForMenu.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerOne.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerOneNet.h" />
@@ -214,10 +218,13 @@
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
+    <ClInclude Include="headers\obstacles\ObstacleSpawner.tpp" />
+    <ClInclude Include="headers\obstacles\ObstacleTypeId.h" />
+    <ClInclude Include="headers\obstacles\ObstacleSpawner.h" />
     <ClInclude Include="headers\obstacles\BrickWall.h" />
     <ClInclude Include="headers\obstacles\FortressWall.h" />
     <ClInclude Include="headers\obstacles\SteelWall.h" />
-    <ClInclude Include="headers\obstacles\Water.h" />
+    <ClInclude Include="headers\obstacles\WaterTile.h" />
     <ClInclude Include="headers\BulletPool.h" />
     <ClInclude Include="headers\GameMode.h" />
     <ClInclude Include="headers\interfaces\IConfig.h" />
@@ -238,9 +245,10 @@
     <ClInclude Include="headers\pawns\Tank.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\Point.h" />
+    <ClInclude Include="headers\Point.tpp" />
     <ClInclude Include="headers\ObjRectangle.h" />
-    <ClInclude Include="headers\SDLEnvironment.h" />
     <ClInclude Include="headers\Server.h" />
+    <ClInclude Include="headers\Server.tpp" />
     <ClInclude Include="headers\TankSpawner.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />

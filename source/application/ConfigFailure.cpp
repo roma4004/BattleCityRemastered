@@ -1,5 +1,5 @@
-#include "../headers/ConfigFailure.h"
-#include "../headers/GameFailure.h"
+#include "../../headers/application/ConfigFailure.h"
+#include "../../headers/application/GameFailure.h"
 
 #include <iostream>
 

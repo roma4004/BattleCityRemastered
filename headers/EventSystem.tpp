@@ -1,7 +1,5 @@
 #pragma once
 
-#include "EventSystem.h"
-
 template<typename ... Args>
 void Event<Args...>::AddListener(const std::string& listenerName, listenerCallback callback) {
 	_listeners[listenerName] = std::move(callback);

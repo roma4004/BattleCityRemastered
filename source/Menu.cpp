@@ -34,40 +34,41 @@ void Menu::Subscribe()
 	}
 
 	_events->AddListener("DrawMenuBackground", _name, [this]() { this->BlendBackgroundToWindowBuffer(); });
+
 	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_selectedGameMode = newGameMode;
 	});
+
 	_events->AddListener("DrawMenuText", _name, [this]()
 	{
-		if (const auto menuKeysStats = _input->GetKeysStats();
+		if (const auto menuKeysStats = this->_input->GetKeysStats();
 			menuKeysStats.menuShow)
 		{
 			this->HandleMenuText(_pos);
-			const SDL_Rect logoRectangle{.x = static_cast<int>(_pos.x - 420),
-			                             .y = static_cast<int>(_pos.y - 490),
+			const SDL_Rect logoRectangle{.x = static_cast<int>(this->_pos.x - 420),
+			                             .y = static_cast<int>(this->_pos.y - 490),
 			                             .w = 300,
 			                             .h = 75
 			};
-			SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &logoRectangle);
+			SDL_RenderCopy(this->_renderer.get(), this->_menuLogo.get(), nullptr, &logoRectangle);
 		}
 	});
 
-	_events->AddListener<const int>("EnemyRespawnResourceChangedTo", _name, [this](const int enemyRespawnResource)
-	{
-		this->_enemyRespawnResource = enemyRespawnResource;
-	});
 	_events->AddListener<const int>(
-			"Player1RespawnResourceChangedTo",
-			_name,
-			[this](const int playerOneRespawnResource)
+			"EnemyRespawnResourceChangedTo", _name, [this](const int enemyRespawnResource)
+			{
+				this->_enemyRespawnResource = enemyRespawnResource;
+			});
+
+	_events->AddListener<const int>(
+			"Player1RespawnResourceChangedTo", _name, [this](const int playerOneRespawnResource)
 			{
 				this->_playerOneRespawnResource = playerOneRespawnResource;
 			});
+
 	_events->AddListener<const int>(
-			"Player2RespawnResourceChangedTo",
-			_name,
-			[this](const int playerTwoRespawnResource)
+			"Player2RespawnResourceChangedTo", _name, [this](const int playerTwoRespawnResource)
 			{
 				this->_playerTwoRespawnResource = playerTwoRespawnResource;
 			});
@@ -221,7 +222,7 @@ void Menu::RenderStatistics(const Point pos) const
 	TextToRender({.x = pos.x + 180, .y = pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
 	TextToRender({.x = pos.x + 235, .y = pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 300}, color, "BrickWall KILLS");
+	TextToRender({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKWALL KILLS");
 	TextToRender({.x = pos.x + 130, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerOne());
 	TextToRender({.x = pos.x + 180, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerTwo());
 	TextToRender({.x = pos.x + 235, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByEnemyTeam());

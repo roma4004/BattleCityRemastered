@@ -158,6 +158,19 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 				this->SendPos(objectName, newPos, direction);
 			});
 
+	_events->AddListener<const std::string&, const FPoint, const BonusTypeId, const int>(
+			"ServerSend_BonusSpawn", _name,
+			[this](const std::string& objectName, const FPoint spawnPos, const BonusTypeId typeId, const int id)
+			{
+				this->SendBonusSpawn(objectName, spawnPos, typeId, id);
+			});
+
+	_events->AddListener<const int>(
+			"ServerSend_BonusDeSpawn", _name, [this](const int id)
+			{
+				this->SendBonusDeSpawn(id);
+			});
+
 	_events->AddListener<const std::string, const int>(
 			"ServerSend_Health", _name,
 			[this](const std::string& objectName, const int health)
@@ -208,7 +221,10 @@ Server::~Server()
 	_events->RemoveListener("Pause_Released", _name);
 
 	_events->RemoveListener<const std::string&, const FPoint, const Direction>(
-			"ServerSend_Pos", _name);
+		"ServerSend_Pos", _name);
+	_events->RemoveListener<const std::string&, const FPoint, const BonusTypeId, const int>(
+			"ServerSend_BonusSpawn", _name);
+	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);
 	_events->RemoveListener<const std::string, const int>("ServerSend_Health", _name);
 	_events->RemoveListener<const int>("ServerSend_Dispose", _name);
 
@@ -335,6 +351,38 @@ void Server::SendPos(const std::string& objectName, const FPoint newPos, const D
 	data.eventName = "Pos";
 	data.newPos = newPos;
 	data.direction = direction;
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendBonusSpawn(const std::string& objectName, const FPoint spawnPos, const BonusTypeId typeId,
+                            const int id) const
+{
+	Data data;
+
+	data.objectName = objectName;
+	data.eventName = "BonusSpawn";
+	data.newPos = spawnPos;
+	data.id = id;
+	data.typeId = typeId;
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendBonusDeSpawn(const int id) const
+{
+	Data data;
+
+	data.eventName = "BonusDeSpawn";
+	data.id = id;
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

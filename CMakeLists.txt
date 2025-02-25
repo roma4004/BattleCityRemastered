@@ -6,10 +6,11 @@
 # ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install
 # or run this for build all boost component:
 # ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serialization
-#TODO: use std::filesystem for resource loading in code
-cmake_minimum_required(VERSION 3.28.6)
-#cmake_minimum_required(VERSION 3.11...3.15)
+
+
+cmake_minimum_required(VERSION 3.11)
 project(BattleCity_remastered)
+#TODO: use std::filesystem for resource loading in code
 #TODO: create compiler switch msvc, mingw(gcc)
 #TODO: migrate to SDL2 to SDL2pp
 #TODO: migrate to MSYS2 to install all dependency
@@ -239,6 +240,11 @@ endif()
 include_directories(headers)
 
 add_executable(${PROJECT_NAME}
+        source/application/ConfigFailure.cpp
+        source/application/ConfigSuccess.cpp
+        source/application/GameFailure.cpp
+        source/application/GameSuccess.cpp
+        source/application/SDLEnvironment.cpp
         source/behavior/MoveLikeAIBeh.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
@@ -252,11 +258,7 @@ add_executable(${PROJECT_NAME}
         source/bonuses/BonusTank.cpp
         source/bonuses/BonusTimer.cpp
         source/BulletPool.cpp
-        source/GameFailure.cpp
         source/GameStatistics.cpp
-        source/GameSuccess.cpp
-        source/ConfigFailure.cpp
-        source/ConfigSuccess.cpp
         source/input/InputProviderForMenu.cpp
         source/input/InputProviderForPlayerOne.cpp
         source/input/InputProviderForPlayerOneNet.cpp
@@ -267,10 +269,11 @@ add_executable(${PROJECT_NAME}
         source/BaseObj.cpp
         source/Map.cpp
         source/Menu.cpp
+        source/obstacles/ObstacleSpawner.cpp
         source/obstacles/BrickWall.cpp
         source/obstacles/FortressWall.cpp
         source/obstacles/SteelWall.cpp
-        source/obstacles/Water.cpp
+        source/obstacles/WaterTile.cpp
         source/pawns/Bullet.cpp
         source/pawns/CoopAI.cpp
         source/pawns/Enemy.cpp
@@ -279,7 +282,6 @@ add_executable(${PROJECT_NAME}
         source/pawns/PlayerTwo.cpp
         source/pawns/Tank.cpp
         source/ObjRectangle.cpp
-        source/SDLEnvironment.cpp
         source/Server.cpp
         source/TankSpawner.cpp
         source/utils/ColliderUtils.cpp

@@ -96,6 +96,14 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
 			}
+			else if (data.eventName == "BonusSpawn")
+			{
+				events->EmitEvent<const FPoint, const BonusTypeId, const int>("ClientReceived_" + data.eventName, data.newPos, data.typeId, data.id);
+			}
+			else if (data.eventName == "BonusDeSpawn")
+			{
+				events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
+			}
 			else if (data.eventName == "TankDied")
 			{
 				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName, data.objectName);

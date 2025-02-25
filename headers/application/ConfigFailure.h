@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interfaces/IConfig.h"
+#include "../interfaces/IConfig.h"
 
 #include <string>
 

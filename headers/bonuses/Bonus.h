@@ -16,6 +16,7 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 	std::chrono::system_clock::time_point _creationTime;
 
 protected:
+	int _id;
 	int _bonusDurationMs{0};
 	int _bonusLifetimeMs{0};
 
@@ -32,9 +33,11 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	      std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color);
+	      std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color, int id);
 
 	~Bonus() override;
 
 	void PickUpBonus(const std::string& author, const std::string& fraction) override = 0;
+
+	int GetId() const;
 };

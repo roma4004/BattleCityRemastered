@@ -36,7 +36,7 @@ void BrickWall::Subscribe()
 	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
 	{
 		this->SetHealth(health);
-		if (GetHealth() < 1)
+		if (this->GetHealth() < 1)
 		{
 			this->SetIsAlive(false);
 		}

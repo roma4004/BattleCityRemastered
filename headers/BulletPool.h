@@ -30,6 +30,7 @@ public:
 	           UPoint windowSize, std::shared_ptr<int[]> windowBuffer, GameMode currentGameMode = GameMode::Demo);
 
 	~BulletPool();
+
 	void Subscribe();
 	void Unsubscribe() const;
 

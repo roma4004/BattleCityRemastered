@@ -120,7 +120,7 @@ void ShootingBeh::Shot() const
 
 	constexpr int color = 0xffffff;
 	const int damage = tank->GetBulletDamage();
-	const double aoeRadius = tank->GetBulletDamageAreaRadius();
+	const double aoeRadius = tank->GetBulletDamageRadius();
 	constexpr int health = 1;
 	const Direction direction = tank->GetDirection();
 	const float speed = tank->GetBulletSpeed();

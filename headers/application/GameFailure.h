@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interfaces/IGame.h"
+#include "../interfaces/IGame.h"
 
 class GameFailure final : public IGame
 {

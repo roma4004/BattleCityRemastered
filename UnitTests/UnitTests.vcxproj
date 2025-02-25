@@ -58,9 +58,10 @@
     <ClCompile Include="..\source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\LineOfSight.cpp" />
     <ClCompile Include="..\source\Obstacles\BrickWall.cpp" />
+    <ClCompile Include="..\source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\Obstacles\SteelWall.cpp" />
     <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
-    <ClCompile Include="..\source\Obstacles\Water.cpp" />
+    <ClCompile Include="..\source\Obstacles\WaterTile.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopAI.cpp" />
     <ClCompile Include="..\source\pawns\Enemy.cpp" />

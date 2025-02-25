@@ -1,41 +1,35 @@
 ﻿#include "../headers/Map.h"
-#include "../headers/obstacles/BrickWall.h"
-#include "../headers/obstacles/FortressWall.h"
-#include "../headers/obstacles/SteelWall.h"
-#include "../headers/obstacles/Water.h"
+#include "../headers/ObjRectangle.h"
+#include "../headers/obstacles/ObstacleTypeId.h"
 
-Map::Map() = default;
+Map::Map(ObstacleSpawner* obstacleSpawner) : _obstacleSpawner{obstacleSpawner} {}
 
-Map::~Map() = default;
+Map::~Map() {}
 
-void Map::MapCreation(std::vector<std::shared_ptr<BaseObj>>* allObjects, const float gridSize,
-                      const std::shared_ptr<int[]>& windowBuffer, const UPoint& windowSize,
-                      const std::shared_ptr<EventSystem>& events) const
+void Map::MapCreation(const float gridSize) const
 {
-	int obstacleId = 0;
 	for (int vertical = 0; vertical < 52; ++vertical)
 	{
 		for (int horizontal = 0; horizontal < 50; ++horizontal)
 		{
 			const float x = static_cast<float>(vertical) * gridSize;
 			const float y = static_cast<float>(horizontal) * gridSize;
-			ObjRectangle rect = {.x = x, .y = y, .w = gridSize, .h = gridSize};
+			const ObjRectangle rect = {.x = x, .y = y, .w = gridSize, .h = gridSize};
 			switch (fieldLevelOne[horizontal][vertical])
 			{
 				case 0:
 					break;
 				case 1:
-					ObstacleCreation<BrickWall>(allObjects, rect, windowBuffer, windowSize, events, obstacleId++);
+					_obstacleSpawner->SpawnObstacle(rect, Brick);
 					break;
 				case 2:
-					ObstacleCreation<SteelWall>(allObjects, rect, windowBuffer, windowSize, events, obstacleId++);
+					_obstacleSpawner->SpawnObstacle(rect, Steel);
 					break;
 				case 3:
-					ObstacleCreation<Water>(allObjects, rect, windowBuffer, windowSize, events, obstacleId++);
+					_obstacleSpawner->SpawnObstacle(rect, Water);
 					break;
 				case 4:
-					ObstacleCreation<
-						FortressWall>(allObjects, rect, windowBuffer, windowSize, events, obstacleId++);
+					_obstacleSpawner->SpawnObstacle(rect, Fortress);
 					break;
 				default:
 					break;

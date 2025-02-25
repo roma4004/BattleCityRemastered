@@ -1,17 +1,23 @@
 #include "../../headers/bonuses/BonusHelmet.h"
+#include "../../headers/bonuses/BonusTypeId.h"
 
 BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
                          std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
-                         const int color)
-	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color}
+                         const int color, const int id)
+	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color, id}
 {
-	_name = "BonusHelmet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
+	_name = "BonusHelmet";
 	Subscribe();
+
+	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, BonusTypeId::Helmet, _id);
 }
 
 BonusHelmet::~BonusHelmet()
 {
 	Unsubscribe();
+
+	_events->EmitEvent<const int>("ServerSend_BonusDeSpawn", _id);
 }
 
 void BonusHelmet::Subscribe()
@@ -21,12 +27,20 @@ void BonusHelmet::Subscribe()
 		return;
 	}
 
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
 
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	_events->AddListener<const int>("ClientReceived_BonusDeSpawn", _name, [this](const int id)
+	{
+		if (id == this->_id)
+		{
+			this->SetIsAlive(false);
+		}
+	});
+
+	_events->AddListener("Draw", _name + std::to_string(_id), [this]() { this->Draw(); });
 }
 
 void BonusHelmet::Unsubscribe() const
@@ -36,9 +50,11 @@ void BonusHelmet::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
 
-	_events->RemoveListener("Draw", _name);
+	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);
+
+	_events->RemoveListener("Draw", _name + std::to_string(_id));
 }
 
 void BonusHelmet::SendDamageStatistics(const std::string& author, const std::string& fraction)

@@ -13,7 +13,7 @@ class Menu final
 {
 	UPoint _pos;
 	UPoint _windowSize;
-	unsigned int _yOffsetStart;
+	unsigned int _yOffsetStart{0u};
 	GameMode _selectedGameMode{Demo};
 
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
