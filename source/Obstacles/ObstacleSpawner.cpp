@@ -24,8 +24,7 @@ ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vecto
 	  _allObjects{allObjects},
 	  _distSpawnPosY{0, static_cast<int>(_windowSize.y) - obstacleSize},
 	  _distSpawnPosX{0, static_cast<int>(_windowSize.x) - sideBarWidth - obstacleSize},
-	  _distSpawnType{None + 1, lastId - 1},
-	  _lastTimeSpawn{std::chrono::system_clock::now()}
+	  _distSpawnType{None + 1, lastId - 1}
 {
 	std::random_device rd;
 	_gen = std::mt19937(
@@ -48,7 +47,8 @@ void ObstacleSpawner::Subscribe()
 
 	//TODO: subscribe on game mode change, to update gameMode for spawning obstacle
 	_events->AddListener<const FPoint, const ObstacleTypeId, const int>(
-			"ClientReceived_ObstacleSpawn", _name, [this](const FPoint spawnPos, const ObstacleTypeId type, const int id)
+			"ClientReceived_ObstacleSpawn", _name,
+			[this](const FPoint spawnPos, const ObstacleTypeId type, const int id)
 			{
 				const auto size = static_cast<float>(_obstacleSize);
 				const ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
@@ -58,11 +58,6 @@ void ObstacleSpawner::Subscribe()
 	_events->AddListener("SpawnerReset", _name, [this]()
 	{
 		this->_lastSpawnId = -1;
-	});
-
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
-	{
-		this->TickUpdate(deltaTime);
 	});
 }
 
@@ -80,30 +75,7 @@ void ObstacleSpawner::Unsubscribe() const
 	_events->RemoveListener<const float>("TickUpdate", _name);
 }
 
-void ObstacleSpawner::TickUpdate(const float /*deltaTime*/)
-{
-	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))
-	{
-		bool isFreeSpawnSpot = true;
-		const auto size = static_cast<float>(_obstacleSize);
-		const auto x = static_cast<float>(_distSpawnPosX(_gen));
-		const auto y = static_cast<float>(_distSpawnPosY(_gen));
-		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
-		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
-		{
-			if (ColliderUtils::IsCollide(rect, object->GetShape()))
-			{
-				isFreeSpawnSpot = false;
-				break;
-			}//TODO: use std::any_of algorithm
-		}
-
-		if (isFreeSpawnSpot)
-		{
-			SpawnRandomObstacle(rect);
-		}
-	}
-}
+void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleTypeId bonusType, const int id)
 {
@@ -140,6 +112,4 @@ void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
 {
 	const auto obstacleType = static_cast<ObstacleTypeId>(_distSpawnType(_gen));
 	SpawnObstacle(rect, obstacleType);
-
-	_lastTimeSpawn = std::chrono::system_clock::now();
 }

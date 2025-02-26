@@ -26,9 +26,9 @@ protected:
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
-	int _yellow = 0xeaea00;
-	int _green = 0x408000;
-	int _gray = 0x808080;
+	int _yellow{0xeaea00};
+	int _green{0x408000};
+	int _gray{0x808080};
 
 	void SetUp() override
 	{

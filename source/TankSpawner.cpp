@@ -153,7 +153,8 @@ void TankSpawner::Unsubscribe() const
 
 void TankSpawner::InitialSpawnEnemyTanks(const float gridOffset, const float speed, const int health, const float size)
 {
-	const bool isNetworkControlled = _currentMode == PlayAsClient;
+	const bool isNetworkControlled{_currentMode == PlayAsClient};
+
 	SpawnEnemy(1, gridOffset, speed, health, size, isNetworkControlled);
 	SpawnEnemy(2, gridOffset, speed, health, size, isNetworkControlled);
 	SpawnEnemy(3, gridOffset, speed, health, size, isNetworkControlled);
@@ -181,10 +182,10 @@ void TankSpawner::InitialSpawn()
 {
 	ResetRespawnStat();
 
-	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	constexpr float speed = 142;
-	constexpr int health = 100;
-	const float size = gridOffset * 3;
+	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+	constexpr float speed{142};
+	constexpr int health{100};
+	const float size{gridOffset * 3};
 
 	InitialSpawnPlayerTanks(gridOffset, speed, health, size);
 
@@ -238,20 +239,17 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 	};
 	for (auto& rect: spawnPos)
 	{
-		bool isFreeSpawnSpot = true;
-		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			if (ColliderUtils::IsCollide(rect, object->GetShape()))
-			{
-				isFreeSpawnSpot = false;
-			}
-		}
+			return ColliderUtils::IsCollide(rect, object->GetShape());
+		});
 
 		if (isFreeSpawnSpot)
 		{
-			constexpr int gray = 0x808080;
-			std::string name = "Enemy";
-			std::string fraction = "EnemyTeam";
+			constexpr int gray{0x808080};
+			std::string name{"Enemy"};
+			std::string fraction{"EnemyTeam"};
+
 			_allObjects->emplace_back(
 					std::make_shared<Enemy>(
 							rect, gray, health, _windowBuffer, _windowSize, DOWN, speed, _allObjects, _events, name,
@@ -265,22 +263,19 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size,
                                const bool isNetworkControlled)
 {
-	const auto windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+
+	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (ColliderUtils::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
+		return ColliderUtils::IsCollide(rect, object->GetShape());
+	});
 
 	if (isFreeSpawnSpot)
 	{
-		constexpr int yellow = 0xeaea00;
-		const std::string name = "Player";
-		const std::string fraction = "PlayerTeam";
+		constexpr int yellow{0xeaea00};
+		const std::string name{"Player"};
+		const std::string fraction{"PlayerTeam"};
 
 		std::unique_ptr<IInputProvider> inputProvider;
 		if (isNetworkControlled)
@@ -291,6 +286,7 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 		{
 			inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		}
+
 		_allObjects->emplace_back(
 				std::make_shared<PlayerOne>(
 						rect, yellow, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
@@ -301,23 +297,20 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size,
                                const bool isNetworkControlled)
 {
-	const auto windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (ColliderUtils::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
+		return ColliderUtils::IsCollide(rect, object->GetShape());
+	});
 
 	if (isFreeSpawnSpot)
 	{
-		constexpr int green = 0x408000;
-		const std::string name = "Player";
-		const std::string fraction = "PlayerTeam";
-		const bool isHost = _currentMode == PlayAsHost;
+		constexpr int green{0x408000};
+		const std::string name{"Player"};
+		const std::string fraction{"PlayerTeam"};
+		const bool isHost{_currentMode == PlayAsHost};
+
 		std::unique_ptr<IInputProvider> inputProvider;
 		if (isNetworkControlled)
 		{
@@ -327,6 +320,7 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 		{
 			inputProvider = std::make_unique<InputProviderForPlayerTwo>(name, _events);
 		}
+
 		_allObjects->emplace_back(
 				std::make_shared<PlayerTwo>(
 						rect, green, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
@@ -337,22 +331,19 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size,
                              const bool isNetworkControlled)
 {
-	const auto windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (ColliderUtils::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
+		return ColliderUtils::IsCollide(rect, object->GetShape());
+	});
 
 	if (isFreeSpawnSpot)
 	{
-		constexpr int yellow = 0xeaea00;
-		std::string name = "CoopAI1";
-		std::string fraction = "PlayerTeam";
+		constexpr int yellow{0xeaea00};
+		std::string name{"CoopAI1"};
+		std::string fraction{"PlayerTeam"};
+
 		_allObjects->emplace_back(
 				std::make_shared<CoopAI>(
 						rect, yellow, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
@@ -363,22 +354,19 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size,
                              const bool isNetworkControlled)
 {
-	const auto windowSizeY = static_cast<float>(_windowSize.y);
+	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
-	bool isFreeSpawnSpot = true;
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (ColliderUtils::IsCollide(rect, object->GetShape()))
-		{
-			isFreeSpawnSpot = false;
-		}
-	}
+		return ColliderUtils::IsCollide(rect, object->GetShape());
+	});
 
 	if (isFreeSpawnSpot)
 	{
-		constexpr int green = 0x408000;
-		std::string name = "CoopAI2";
-		std::string fraction = "PlayerTeam";
+		constexpr int green{0x408000};
+		std::string name{"CoopAI2"};
+		std::string fraction{"PlayerTeam"};
+
 		_allObjects->emplace_back(std::make_shared<CoopAI>(
 				rect, green, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name, fraction,
 				_bulletPool, isNetworkControlled, 2));
@@ -389,11 +377,12 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 {
 	if (GetEnemyRespawnResource() > 0)
 	{
-		const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-		const float size = gridOffset * 3;
-		constexpr float speed = 142;
-		constexpr int health = 100;
-		const bool playAsClient = _currentMode == PlayAsClient;
+		const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+		const float size{gridOffset * 3};
+		constexpr float speed{142};
+		constexpr int health{100};
+		const bool playAsClient{_currentMode == PlayAsClient};
+
 		SpawnEnemy(index, gridOffset, speed, health, size, playAsClient);
 	}
 	else
@@ -405,11 +394,12 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 
 void TankSpawner::RespawnPlayerTanks(const int index)
 {
-	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	const float size = gridOffset * 3;
-	constexpr float speed = 142;
-	constexpr int health = 100;
-	const bool playAsClient = _currentMode == PlayAsClient;
+	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+	const float size{gridOffset * 3};
+	constexpr float speed{142};
+	constexpr int health{100};
+	const bool playAsClient{_currentMode == PlayAsClient};
+
 	if (index == 1)
 	{
 		if (GetPlayerOneRespawnResource() > 0)
@@ -438,10 +428,10 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 
 void TankSpawner::RespawnCoopTanks(const int index)
 {
-	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	const float size = gridOffset * 3;
-	constexpr float speed = 142;
-	constexpr int health = 100;
+	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+	const float size{gridOffset * 3};
+	constexpr float speed{142};
+	constexpr int health{100};
 
 	if (index == 1)
 	{

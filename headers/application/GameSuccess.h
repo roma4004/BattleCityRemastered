@@ -11,7 +11,6 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
-#include <boost/asio/ip/tcp.hpp>
 
 struct Server;
 class BaseObj;

@@ -28,7 +28,7 @@ class FortressWall final : public BaseObj, ITickUpdatable
 	bool _isActiveShovel{false};
 	std::chrono::system_clock::time_point _activateTimeShovel;
 	int _cooldownShovelMs{0};
-	int _obstacleId{0};
+	int _id{0};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -42,8 +42,7 @@ class FortressWall final : public BaseObj, ITickUpdatable
 
 public:
 	FortressWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	             const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	             int obstacleId);
+	             const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects, int id);
 	//TODO: remove allObjects, move spawn check to separated spawner logic
 
 	~FortressWall() override;

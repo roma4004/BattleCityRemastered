@@ -20,7 +20,7 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events)},
 	  _author{std::move(author)},
 	  _fraction{std::move(fraction)},
-	  _bulletDamageAreaRadius{aoeRadius},
+	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage},
 	  _isNetworkControlled{isNetworkControlled}
 {
@@ -118,7 +118,7 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 	_author = std::move(author);
 	_fraction = std::move(fraction);
 	_damage = damage;
-	_bulletDamageAreaRadius = aoeRadius;
+	_bulletDamageRadius = aoeRadius;
 	_speed = speed;
 	SetIsAlive(true);
 	_isNetworkControlled = isNetworkControlled;
@@ -144,9 +144,9 @@ int Bullet::GetDamage() const
 	return _damage;
 }
 
-double Bullet::GetBulletDamageAreaRadius() const
+double Bullet::GetBulletDamageRadius() const
 {
-	return _bulletDamageAreaRadius;
+	return _bulletDamageRadius;
 }
 
 std::string Bullet::GetName() const { return _name; }

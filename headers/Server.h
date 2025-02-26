@@ -72,7 +72,8 @@ struct Server final
 	void SendBonusSpawn(const std::string& objectName, FPoint spawnPos, BonusTypeId typeId, int id) const;
 	void SendBonusDeSpawn(int id) const;
 	auto SendHealth(const std::string& objectName, int health) const -> void;
-	void SendDied(const std::string& objectName) const;
+	void SendTankDied(const std::string& objectName) const;
+	void SendFortressDied(int id) const;
 	// void stop() {
 	// 	// Останавливаем принятие входящих подключений
 	// 	acceptor_.close();

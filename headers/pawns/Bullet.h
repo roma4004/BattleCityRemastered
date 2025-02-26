@@ -14,7 +14,7 @@ class Bullet final : public Pawn
 	std::string _name;
 	std::string _author;
 	std::string _fraction;
-	double _bulletDamageAreaRadius{12.f};
+	double _bulletDamageRadius{12.f};
 	int _damage{0};
 	int _id{0};
 	bool _isNetworkControlled{false};
@@ -41,7 +41,7 @@ public:
 
 	[[nodiscard]] int GetDamage() const;
 
-	[[nodiscard]] double GetBulletDamageAreaRadius() const;
+	[[nodiscard]] double GetBulletDamageRadius() const;
 
 	[[nodiscard]] std::string GetName() const;
 

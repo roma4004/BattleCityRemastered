@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../GameMode.h"
 #include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -30,8 +29,8 @@ class BonusSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnType;
 	std::uniform_int_distribution<> _distRandColor;
 
-	int _cooldownBonusSpawn{6000};//60 sec
-	std::chrono::system_clock::time_point _lastTimeBonusSpawn;
+	int _cooldownBonusSpawn{60000};//60 sec
+	std::chrono::system_clock::time_point _lastTimeSpawn;
 
 	void Subscribe();
 

@@ -33,13 +33,14 @@ protected:
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
+		constexpr double bulletDamageRadius = 12.0;
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		_allObjects.reserve(4);
-		_allObjects.emplace_back(std::make_shared<Bullet>(bulletRect, damage, bulletDamageAreaRadius, color, health,
-		                                                  _windowBuffer, _windowSize, DOWN, _bulletSpeed, &_allObjects,
-		                                                  _events, name, fraction, 0, false));
+		_allObjects.emplace_back(
+				std::make_shared<Bullet>(
+						bulletRect, damage, bulletDamageRadius, color, health, _windowBuffer, _windowSize, DOWN,
+						_bulletSpeed, &_allObjects, _events, name, fraction, 0, false));
 	}
 
 	void TearDown() override
@@ -313,12 +314,12 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		constexpr int color = 0xffffff;
 		constexpr int health = 1;
 		constexpr int damage = 1;
-		constexpr double bulletDamageAreaRadius = 12.0;
+		constexpr double bulletDamageRadius = 12.0;
 		const ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
-						rect, damage, bulletDamageAreaRadius, color, health, _windowBuffer, _windowSize, UP,
-						_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", 1, false));
+						rect, damage, bulletDamageRadius, color, health, _windowBuffer, _windowSize, UP, _bulletSpeed,
+						&_allObjects, _events, "Player2", "PlayerTeam", 1, false));
 
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -395,7 +396,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
-		const ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
+		constexpr ObjRectangle rect{.x = 0.f, .y = 6.f, .w = 36, .h = 36};
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0));
 		if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))

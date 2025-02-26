@@ -108,7 +108,7 @@ void Enemy::Subscribe()
 			this->_isActiveTimer = false;
 			this->_cooldownTimer = 0;
 		}
-		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
+		if (this->_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
 		{
 			this->_isActiveHelmet = false;
 			this->_cooldownHelmet = 0;
@@ -124,7 +124,7 @@ void Enemy::Subscribe()
 			"BonusTimer", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
-				if (fraction != _fraction)
+				if (fraction != this->_fraction)
 				{
 					this->_isActiveTimer = true;
 					this->_cooldownTimer += bonusDurationTimeMs;

@@ -104,6 +104,10 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
 			}
+			else if (data.eventName == "FortressDied")
+			{
+				events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
+			}
 			else if (data.eventName == "TankDied")
 			{
 				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName, data.objectName);

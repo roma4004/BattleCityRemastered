@@ -30,9 +30,6 @@ class ObstacleSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnPosX;
 	std::uniform_int_distribution<> _distSpawnType;
 
-	int _cooldownBonusSpawn{6000};//60 sec
-	std::chrono::system_clock::time_point _lastTimeSpawn;
-
 	void Subscribe();
 
 	void Unsubscribe() const;

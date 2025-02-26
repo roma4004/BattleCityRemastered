@@ -187,7 +187,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 		return;
 	}
 
-	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageAreaRadius()};
+	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageRadius()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (_selfParent == object.get())

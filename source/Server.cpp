@@ -148,7 +148,12 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 	//TODO: rename tankDied to last died
 	_events->AddListener<const std::string>("ServerSend_TankDied", _name, [this](const std::string whoDied)
 	{
-		this->SendDied(whoDied);
+		this->SendTankDied(whoDied);
+	});
+
+	_events->AddListener<const int>("ServerSend_FortressDied", _name, [this](const int id)
+	{
+		this->SendFortressDied(id);
 	});
 
 	_events->AddListener<const std::string&, const FPoint, const Direction>(
@@ -406,11 +411,24 @@ void Server::SendHealth(const std::string& objectName, const int health) const
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
-void Server::SendDied(const std::string& objectName) const
+void Server::SendTankDied(const std::string& objectName) const
 {
 	Data data;
 	data.objectName = objectName;
 	data.eventName = "TankDied";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendFortressDied(const int id) const
+{
+	Data data;
+	data.id = id;
+	data.eventName = "FortressDied";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

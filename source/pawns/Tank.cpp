@@ -70,7 +70,7 @@ void Tank::SetBulletDamage(const int bulletDamage) { _bulletDamage = bulletDamag
 
 double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
-void Tank::SetBulletDamageRadius(const double bulletDamageAreaRadius) { _bulletDamageRadius = bulletDamageAreaRadius; }
+void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
 
 int Tank::GetFireCooldownMs() const { return _fireCooldownMs; }
 

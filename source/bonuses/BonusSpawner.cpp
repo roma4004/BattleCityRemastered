@@ -1,11 +1,11 @@
 #include "../../headers/bonuses/BonusSpawner.h"
-#include "../../headers/bonuses/BonusTypeId.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
 #include "../../headers/bonuses/BonusShovel.h"
 #include "../../headers/bonuses/BonusStar.h"
 #include "../../headers/bonuses/BonusTank.h"
 #include "../../headers/bonuses/BonusTimer.h"
+#include "../../headers/bonuses/BonusTypeId.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
@@ -28,7 +28,7 @@ BonusSpawner::BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std:
 	  _distSpawnPosX{0, static_cast<int>(_windowSize.x) - sideBarWidth - bonusSize},
 	  _distSpawnType{None + 1, lastId - 1},
 	  _distRandColor{0, std::numeric_limits<int>::max()},
-	  _lastTimeBonusSpawn{std::chrono::system_clock::now()}
+	  _lastTimeSpawn{std::chrono::system_clock::now()}
 {
 	_lastSpawnId = -1;
 	std::random_device rd;
@@ -87,21 +87,16 @@ void BonusSpawner::Unsubscribe() const
 
 void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_lastTimeBonusSpawn, _cooldownBonusSpawn))
+	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))
 	{
-		bool isFreeSpawnSpot = true;
 		const auto size = static_cast<float>(_bonusSize);
 		const auto x = static_cast<float>(_distSpawnPosX(_gen));
 		const auto y = static_cast<float>(_distSpawnPosY(_gen));
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
-		for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			if (ColliderUtils::IsCollide(rect, object->GetShape()))
-			{
-				isFreeSpawnSpot = false;
-				break;
-			}//TODO: use std::any_of algorithm
-		}
+			return ColliderUtils::IsCollide(rect, object->GetShape());
+		});
 
 		if (isFreeSpawnSpot)
 		{
@@ -154,7 +149,7 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 	const auto bonusType = static_cast<BonusTypeId>(_distSpawnType(_gen));
 	SpawnBonus(rect, color, bonusType);
 
-	_lastTimeBonusSpawn = std::chrono::system_clock::now();
+	_lastTimeSpawn = std::chrono::system_clock::now();
 }
 
 template<typename TBonusType>

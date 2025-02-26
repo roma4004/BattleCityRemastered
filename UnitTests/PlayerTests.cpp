@@ -12,6 +12,7 @@
 
 #include <memory>
 
+//TODO: write replication tests, server to client events and client to server
 class PlayerTest : public testing::Test
 {
 protected:
@@ -25,12 +26,13 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
+	float _gridSize{0.f};
 
 	void SetUp() override
 	{
+		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_events = std::make_shared<EventSystem>();
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		_tankSize = gridSize * 3;// for better turns
+		_tankSize = _gridSize * 3;// for better turns
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		constexpr int yellow = 0xeaea00;
 		std::string name = "Player";
@@ -40,9 +42,9 @@ protected:
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, currentGameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-			std::make_shared<PlayerOne>(
-				rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events, name,
-				fraction, std::move(inputProvider), _bulletPool, false, 1));
+				std::make_shared<PlayerOne>(
+						rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events,
+						name, fraction, std::move(inputProvider), _bulletPool, false, 1));
 	}
 
 	void TearDown() override
@@ -505,9 +507,10 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const ObjRectangle rect{.x = 0.f, .y = _tankSize + 1, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _windowBuffer, _windowSize, _events, 0));
+		_allObjects.emplace_back(
+				std::make_shared<BrickWall>(
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
+						_windowSize, _events, 0));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -528,9 +531,10 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const ObjRectangle rect{.x = 0.f, .y = _tankSize + 1, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _windowBuffer, _windowSize, _events, 0));
+		_allObjects.emplace_back(
+				std::make_shared<SteelWall>(
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
+						_windowSize, _events, 0));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -551,9 +555,10 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const ObjRectangle rect{.x = 0.f, .y = _tankSize + 1, .w = gridSize, .h = gridSize};
-		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _windowBuffer, _windowSize, _events, 0));
+		_allObjects.emplace_back(
+				std::make_shared<WaterTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
+						_windowSize, _events, 0));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
@@ -577,10 +582,10 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		const ObjRectangle rect{.x = 0.f, .y = _tankSize + 1, .w = gridSize, .h = gridSize};
 		_allObjects.emplace_back(
-				std::make_shared<FortressWall>(rect, _windowBuffer, _windowSize, _events, &_allObjects, 0));
+				std::make_shared<FortressWall>(
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
+						_windowSize, _events, &_allObjects, 0));
 
 		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{

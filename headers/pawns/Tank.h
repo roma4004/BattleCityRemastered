@@ -78,7 +78,7 @@ public:
 	void SetBulletDamage(int bulletDamage);
 
 	[[nodiscard]] double GetBulletDamageRadius() const;
-	void SetBulletDamageRadius(double bulletDamageAreaRadius);
+	void SetBulletDamageRadius(double bulletDamageRadius);
 
 	[[nodiscard]] int GetFireCooldownMs() const;
 	void SetFireCooldownMs(int fireCooldown);
