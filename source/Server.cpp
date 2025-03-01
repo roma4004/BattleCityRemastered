@@ -191,28 +191,28 @@ Server::Server(boost::asio::io_service& ioService, const std::string& host, cons
 			});
 
 	//TODO: rename_Shot bulletSpawn
-	_events->AddListener<const Direction>("Enemy1Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("ServerSend_Enemy1Shot", _name, [this](const Direction direction)
 	{
 		this->SendShot("Enemy1", direction);
 	});
-	_events->AddListener<const Direction>("Enemy2Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("ServerSend_Enemy2Shot", _name, [this](const Direction direction)
 	{
 		this->SendShot("Enemy2", direction);
 	});
-	_events->AddListener<const Direction>("Enemy3Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("ServerSend_Enemy3Shot", _name, [this](const Direction direction)
 	{
 		this->SendShot("Enemy3", direction);
 	});
-	_events->AddListener<const Direction>("Enemy4Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("ServerSend_Enemy4Shot", _name, [this](const Direction direction)
 	{
 		this->SendShot("Enemy4", direction);
 	});
 
-	_events->AddListener<const Direction>("Player1Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("ServerSend_Player1Shot", _name, [this](const Direction direction)
 	{
 		this->SendShot("Player1", direction);
 	});
-	_events->AddListener<const Direction>("Player2Shot", _name, [this](const Direction direction)
+	_events->AddListener<const Direction>("ServerSend_Player2Shot", _name, [this](const Direction direction)
 	{
 		this->SendShot("Player2", direction);
 	});

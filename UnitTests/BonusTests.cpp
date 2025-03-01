@@ -57,7 +57,7 @@ protected:
 				std::make_shared<PlayerOne>(
 						ObjRectangle{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize}, _yellow, _tankHealth,
 						_windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events, name, fraction,
-						std::move(inputProvider), _bulletPool, false, 1));
+						std::move(inputProvider), _bulletPool, _gameMode, 1));
 	}
 
 	void TearDown() override
@@ -125,7 +125,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 		const auto enemy = std::make_unique<Enemy>(
 				ObjRectangle{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize}, _gray,
 				_tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy",
-				"EnemyTeam", _bulletPool, false, 1);
+				"EnemyTeam", _bulletPool, _gameMode, 1);
 
 		const FPoint enemyPos = enemy->GetPos();
 
@@ -151,7 +151,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 		const auto enemy = std::make_unique<Enemy>(
 				ObjRectangle{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize}, _gray,
 				_tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy",
-				"EnemyTeam", _bulletPool, false, 1);
+				"EnemyTeam", _bulletPool, _gameMode, 1);
 
 		const FPoint enemyPos = enemy->GetPos();
 
@@ -188,7 +188,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 				std::make_shared<Bullet>(
 						ObjRectangle{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f}, _bulletDamage,
 						_bulletDamageRadius, _bulletColor, _bulletHealth, _windowBuffer, _windowSize, LEFT,
-						_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
+						_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 1));
 
 		if (dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -228,7 +228,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 				std::make_shared<Bullet>(
 						ObjRectangle{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f}, _bulletDamage,
 						_bulletDamageRadius, _bulletColor, _bulletHealth, _windowBuffer, _windowSize, LEFT,
-						_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", 0, false));
+						_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 1));
 
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
@@ -248,7 +248,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	const auto enemy = std::make_unique<Enemy>(
 			ObjRectangle{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize}, _gray, _tankHealth,
 			_windowBuffer, _windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam", _bulletPool,
-			false, 1);
+			_gameMode, 1);
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -274,7 +274,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	const auto enemy = std::make_unique<Enemy>(
 			ObjRectangle{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize}, _gray, _tankHealth,
 			_windowBuffer, _windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam", _bulletPool,
-			false, 1);
+			_gameMode, 1);
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -386,7 +386,8 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	EXPECT_TRUE(false);
 }
 
-TEST_F(BonusTest, ShovelPickUpByPlayerThenfortressWallTurnIntoSteelWall)
+// NOTE: when player pick up shovel bonus fortressWalls become steelWalls for a while then return to regular brickWalls
+TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
 	_events->EmitEvent("S_Pressed");
@@ -401,6 +402,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenfortressWallTurnIntoSteelWall)
 
 	EXPECT_TRUE(fortressWall->IsSteelWall());
 }
+
 //TODO: check that player can pickup bonus and rebuild fortress and skip if space spawn not available
 TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
@@ -418,14 +420,16 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 }
 
-TEST_F(BonusTest, ShovelPickUpByEnemyThenfortressWallBrickHide)
+// NOTE: when enemy pick up shovel bonus fortressWalls hide (destroyed behaviour)
+TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallBrickHide)
 {
 	_allObjects.clear();
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, _gameMode);
 	_allObjects.emplace_back(
 			std::make_shared<Enemy>(
 					ObjRectangle{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize}, _gray, _tankHealth, _windowBuffer,
-					_windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam", bulletPool, false, 1));
+					_windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy", "EnemyTeam", bulletPool, _gameMode,
+					1));
 
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
@@ -446,14 +450,14 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenfortressWallBrickHide)
 
 // NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch)
 //       then enemy pick up shovel bonus fortressWalls should hide (destroy)
-TEST_F(BonusTest, ShovelPickUpByEnemyThenfortressWallSteelWallHide)
+TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 {
 	_allObjects.clear();
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, _gameMode);
 	_allObjects.emplace_back(
 			std::make_shared<Enemy>(
 					ObjRectangle{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize}, _gray, _tankHealth, _windowBuffer,
-					_windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", bulletPool, false,
+					_windowSize, DOWN, _tankSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", bulletPool, _gameMode,
 					1));
 
 	_allObjects.emplace_back(

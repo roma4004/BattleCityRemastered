@@ -46,14 +46,12 @@ void BulletPool::Unsubscribe() const
 std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color,
                                                int health, Direction direction, float speed, std::string author,
                                                std::string fraction)
-
 {
-	const bool isNetworkControlled = _currentMode == PlayAsClient;
 	if (_bullets.empty())
 	{
 		auto bullet = std::make_shared<Bullet>(rect, damage, aoeRadius, color, health, _windowBuffer, _windowSize,
 		                                       direction, speed, _allObjects, _events, std::move(author),
-		                                       std::move(fraction), lastId++, isNetworkControlled);
+		                                       std::move(fraction), _currentMode, lastId++);
 
 		return bullet;
 	}
@@ -62,8 +60,7 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
 	_bullets.pop();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
-		bullet->Reset(rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction),
-		              isNetworkControlled);
+		bullet->Reset(rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction));
 	}
 
 	return bulletAsBase;

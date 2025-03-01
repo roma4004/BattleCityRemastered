@@ -12,17 +12,15 @@ struct UPoint;
 class Tank : public Pawn, public IHealthBar
 {
 	int _bulletDamage{15};
-
+	int _id;
 	float _bulletWidth{6.f};
-
 	float _bulletHeight{6.f};
-
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
-	int _id;
 
 protected:
+	GameMode _gameMode{Demo};
 	double _bulletDamageRadius{12.f};
 
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
@@ -42,7 +40,6 @@ protected:
 	bool _isActiveHelmet{false};
 	std::chrono::system_clock::time_point _activateTimeHelmet;
 	int _cooldownHelmet{0};
-	bool _isNetworkControlled{false};
 
 	void Shot() const;
 
@@ -52,10 +49,13 @@ public:
 	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	     std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
-	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, bool isNetworkControlled,
-	     int tankId);
+	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, GameMode gameMode,
+	     int id);
 
-	~Tank() override = default;
+	~Tank() override;
+
+	virtual void Subscribe();
+	virtual void Unsubscribe() const;
 
 	[[nodiscard]] int GetId() const;
 	[[nodiscard]] std::string GetName() const;

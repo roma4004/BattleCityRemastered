@@ -153,12 +153,10 @@ void TankSpawner::Unsubscribe() const
 
 void TankSpawner::InitialSpawnEnemyTanks(const float gridOffset, const float speed, const int health, const float size)
 {
-	const bool isNetworkControlled{_currentMode == PlayAsClient};
-
-	SpawnEnemy(1, gridOffset, speed, health, size, isNetworkControlled);
-	SpawnEnemy(2, gridOffset, speed, health, size, isNetworkControlled);
-	SpawnEnemy(3, gridOffset, speed, health, size, isNetworkControlled);
-	SpawnEnemy(4, gridOffset, speed, health, size, isNetworkControlled);
+	SpawnEnemy(1, gridOffset, speed, health, size);
+	SpawnEnemy(2, gridOffset, speed, health, size);
+	SpawnEnemy(3, gridOffset, speed, health, size);
+	SpawnEnemy(4, gridOffset, speed, health, size);
 }
 
 void TankSpawner::ResetRespawnStat()
@@ -202,15 +200,8 @@ void TankSpawner::InitialSpawnPlayerTanks(const float gridOffset, const float sp
 		return;
 	}
 
-	if (_currentMode == OnePlayer
-	    || _currentMode == TwoPlayers
-	    || _currentMode == CoopWithAI
-	    || _currentMode == PlayAsHost
-	    || _currentMode == PlayAsClient)
-	{
-		const bool isNetworkControlled = _currentMode == PlayAsClient;
-		SpawnPlayer1(gridOffset, speed, health, size, isNetworkControlled);
-	}
+
+	SpawnPlayer1(gridOffset, speed, health, size);
 
 	if (_currentMode == CoopWithAI)
 	{
@@ -223,13 +214,12 @@ void TankSpawner::InitialSpawnPlayerTanks(const float gridOffset, const float sp
 	    || _currentMode == PlayAsHost
 	    || _currentMode == PlayAsClient)
 	{
-		const bool isSecondNetworkControlled = _currentMode == PlayAsHost || _currentMode == PlayAsClient;
-		SpawnPlayer2(gridOffset, speed, health, size, isSecondNetworkControlled);
+		SpawnPlayer2(gridOffset, speed, health, size);
 	}
 }
 
 void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const float speed, const int health,
-                             const float size, const bool isNetworkControlled)
+                             const float size)
 {
 	std::vector<ObjRectangle> spawnPos{
 			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
@@ -253,15 +243,14 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 			_allObjects->emplace_back(
 					std::make_shared<Enemy>(
 							rect, gray, health, _windowBuffer, _windowSize, DOWN, speed, _allObjects, _events, name,
-							fraction, _bulletPool, isNetworkControlled, index));
+							fraction, _bulletPool, _currentMode, index));
 
 			return;
 		}
 	}
 }
 
-void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size,
-                               const bool isNetworkControlled)
+void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
@@ -278,7 +267,7 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 		const std::string fraction{"PlayerTeam"};
 
 		std::unique_ptr<IInputProvider> inputProvider;
-		if (isNetworkControlled)
+		if (_currentMode == PlayAsClient)
 		{
 			inputProvider = std::make_unique<InputProviderForPlayerOneNet>(name, _events);
 		}
@@ -290,12 +279,11 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 		_allObjects->emplace_back(
 				std::make_shared<PlayerOne>(
 						rect, yellow, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
-						fraction, std::move(inputProvider), _bulletPool, isNetworkControlled, 1));
+						fraction, std::move(inputProvider), _bulletPool, _currentMode, 1));
 	}
 }
 
-void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size,
-                               const bool isNetworkControlled)
+void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
@@ -309,10 +297,9 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 		constexpr int green{0x408000};
 		const std::string name{"Player"};
 		const std::string fraction{"PlayerTeam"};
-		const bool isHost{_currentMode == PlayAsHost};
 
 		std::unique_ptr<IInputProvider> inputProvider;
-		if (isNetworkControlled)
+		if (_currentMode == PlayAsClient || _currentMode == PlayAsHost)
 		{
 			inputProvider = std::make_unique<InputProviderForPlayerTwoNet>(name, _events);
 		}
@@ -324,12 +311,11 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 		_allObjects->emplace_back(
 				std::make_shared<PlayerTwo>(
 						rect, green, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
-						fraction, std::move(inputProvider), _bulletPool, isNetworkControlled, isHost, 2));
+						fraction, std::move(inputProvider), _bulletPool, _currentMode, 2));
 	}
 }
 
-void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size,
-                             const bool isNetworkControlled)
+void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
@@ -347,12 +333,11 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 		_allObjects->emplace_back(
 				std::make_shared<CoopAI>(
 						rect, yellow, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
-						fraction, _bulletPool, isNetworkControlled, 1));
+						fraction, _bulletPool, _currentMode, 1));
 	}
 }
 
-void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size,
-                             const bool isNetworkControlled)
+void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY{static_cast<float>(_windowSize.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
@@ -369,7 +354,7 @@ void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const in
 
 		_allObjects->emplace_back(std::make_shared<CoopAI>(
 				rect, green, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name, fraction,
-				_bulletPool, isNetworkControlled, 2));
+				_bulletPool, _currentMode, 2));
 	}
 }
 
@@ -381,9 +366,8 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 		const float size{gridOffset * 3};
 		constexpr float speed{142};
 		constexpr int health{100};
-		const bool playAsClient{_currentMode == PlayAsClient};
 
-		SpawnEnemy(index, gridOffset, speed, health, size, playAsClient);
+		SpawnEnemy(index, gridOffset, speed, health, size);
 	}
 	else
 	{
@@ -398,13 +382,12 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 	const float size{gridOffset * 3};
 	constexpr float speed{142};
 	constexpr int health{100};
-	const bool playAsClient{_currentMode == PlayAsClient};
 
 	if (index == 1)
 	{
 		if (GetPlayerOneRespawnResource() > 0)
 		{
-			SpawnPlayer1(gridOffset, speed, health, size, playAsClient);
+			SpawnPlayer1(gridOffset, speed, health, size);
 		}
 		else
 		{
@@ -416,7 +399,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 	{
 		if (GetPlayerTwoRespawnResource() > 0)
 		{
-			SpawnPlayer2(gridOffset, speed, health, size, !playAsClient);
+			SpawnPlayer2(gridOffset, speed, health, size);
 		}
 		else
 		{

@@ -1,5 +1,6 @@
 #include "../../headers/obstacles/ObstacleSpawner.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/obstacles/ObstacleTypeId.h"
@@ -45,6 +46,24 @@ void ObstacleSpawner::Subscribe()
 		return;
 	}
 
+	_events->AddListener("SpawnerReset", _name, [this]() { this->_lastSpawnId = -1; });
+
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		_currentMode = newGameMode;
+		if (_currentMode == PlayAsClient)
+		{
+			SubscribeAsClient();
+		}
+		else
+		{
+			UnsubscribeAsClient();
+		}
+	});
+}
+
+void ObstacleSpawner::SubscribeAsClient()
+{
 	//TODO: subscribe on game mode change, to update gameMode for spawning obstacle
 	_events->AddListener<const FPoint, const ObstacleTypeId, const int>(
 			"ClientReceived_ObstacleSpawn", _name,
@@ -54,11 +73,6 @@ void ObstacleSpawner::Subscribe()
 				const ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
 				SpawnObstacle(rect, type, id);
 			});
-
-	_events->AddListener("SpawnerReset", _name, [this]()
-	{
-		this->_lastSpawnId = -1;
-	});
 }
 
 void ObstacleSpawner::Unsubscribe() const
@@ -68,11 +82,17 @@ void ObstacleSpawner::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_ObstacleSpawn", _name);
-
 	_events->RemoveListener("SpawnerReset", _name);
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	if (_currentMode == PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
+}
+
+void ObstacleSpawner::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_ObstacleSpawn", _name);
 }
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}

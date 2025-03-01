@@ -7,7 +7,7 @@
 Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
                std::shared_ptr<int[]> windowBuffer, UPoint windowSize, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string author, std::string fraction, int bulletId, const bool isNetworkControlled)
+               std::string author, std::string fraction, const GameMode gameMode, int id)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -18,25 +18,22 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	       allObjects,
 	       events,
 	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events)},
+	  _name{"Bullet" + std::to_string(id)},
 	  _author{std::move(author)},
 	  _fraction{std::move(fraction)},
 	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage},
-	  _isNetworkControlled{isNetworkControlled}
+	  _id{id},
+	  _gameMode{gameMode}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "Bullet" + std::to_string(bulletId);
-	_id = bulletId;
 	Subscribe();
 }
 
-Bullet::~Bullet()
-{
-	Unsubscribe();
-}
+Bullet::~Bullet() { Unsubscribe(); }
 
 void Bullet::Subscribe()
 {
@@ -47,31 +44,35 @@ void Bullet::Subscribe()
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
-	if (_isNetworkControlled)
-	{
-		_events->AddListener<const FPoint, const Direction>(
-				"ClientReceived_" + _name + "Pos", _name, [this](const FPoint newPos, const Direction direction)
-				{
-					this->SetDirection(direction);
-					this->SetPos(newPos);
-				});
+	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+}
 
-		_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
-		{
-			this->SetHealth(health);
-		});
-
-		_events->AddListener("ClientReceived_" + _name + "Dispose", _name, [this]()
-		{
-			this->SetIsAlive(false);
-		});
-
-		return;
-	}
-
+void Bullet::SubscribeAsHost()
+{
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
+	});
+}
+
+void Bullet::SubscribeAsClient()
+{
+	_events->AddListener<const FPoint, const Direction>(
+			"ClientReceived_" + _name + "Pos", _name,
+			[this](const FPoint newPos, const Direction direction)
+			{
+				this->SetDirection(direction);
+				this->SetPos(newPos);
+			});
+
+	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
+	{
+		this->SetHealth(health);
+	});
+
+	_events->AddListener("ClientReceived_" + _name + "Dispose", _name, [this]()
+	{
+		this->SetIsAlive(false);
 	});
 }
 
@@ -84,31 +85,29 @@ void Bullet::Unsubscribe() const
 
 	_events->RemoveListener("Draw", _name);
 
-	if (_isNetworkControlled)
-	{
-		_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
-		_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
-		_events->RemoveListener("ClientReceived_" + _name + "Dispose", _name);
+	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+}
 
-		return;
-	}
-
+void Bullet::UnsubscribeAsHost() const
+{
 	_events->RemoveListener<const float>("TickUpdate", _name);
 }
 
-void Bullet::Disable() const
+void Bullet::UnsubscribeAsClient() const
 {
-	Unsubscribe();
+	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
+	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _name);
 }
 
-void Bullet::Enable()
-{
-	Subscribe();
-}
+void Bullet::Disable() const { Unsubscribe(); }
 
+void Bullet::Enable() { Subscribe(); }
+
+//TODO: call this from event subscription
 void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
                    const float speed, const Direction direction, const int health, std::string author,
-                   std::string fraction, const bool isNetworkControlled)
+                   std::string fraction)
 {
 	SetShape(rect);
 	SetColor(color);
@@ -121,7 +120,6 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 	_bulletDamageRadius = aoeRadius;
 	_speed = speed;
 	SetIsAlive(true);
-	_isNetworkControlled = isNetworkControlled;
 	Enable();
 }
 
@@ -131,35 +129,23 @@ void Bullet::TickUpdate(const float deltaTime)
 	{
 		_moveBeh->Move(deltaTime);
 
-		// if (!_isNetworkControlled)
-		// {
-		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
-				"ServerSend_Pos", "Bullet" + std::to_string(GetId()), GetPos(), GetDirection());
-		// }
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const FPoint, const Direction>(
+					"ServerSend_Pos", "Bullet" + std::to_string(GetId()), GetPos(), GetDirection());
+		}
 	}
 }
 
-int Bullet::GetDamage() const
-{
-	return _damage;
-}
+int Bullet::GetDamage() const { return _damage; }
 
-double Bullet::GetBulletDamageRadius() const
-{
-	return _bulletDamageRadius;
-}
+double Bullet::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 std::string Bullet::GetName() const { return _name; }
 
-std::string Bullet::GetAuthor() const
-{
-	return _author;
-}
+std::string Bullet::GetAuthor() const { return _author; }
 
-std::string Bullet::GetFraction() const
-{
-	return _fraction;
-}
+std::string Bullet::GetFraction() const { return _fraction; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
@@ -170,7 +156,7 @@ void Bullet::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
 
-	if (!_isNetworkControlled)
+	if (_gameMode == PlayAsHost)
 	{
 		//TODO: move this to onHealthChange
 		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());

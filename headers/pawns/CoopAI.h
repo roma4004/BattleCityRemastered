@@ -13,8 +13,13 @@ class CoopAI final : public Tank
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn;
 	int _turnDurationMs{2000};//2 sec
 
-	void Subscribe();
-	void Unsubscribe() const;
+	void Subscribe() override;
+	void SubscribeAsHost();
+	void SubscribeBonus();
+
+	void Unsubscribe() const override;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeBonus() const;
 
 	[[nodiscard]] static bool IsEnemy(const std::weak_ptr<BaseObj>& obstacle);
 	[[nodiscard]] static bool IsBonus(const std::weak_ptr<BaseObj>& obstacle);
@@ -28,7 +33,7 @@ public:
 	CoopAI(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	       Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	       const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-	       std::shared_ptr<BulletPool> bulletPool, bool isNetworkControlled, int tankId);
+	       std::shared_ptr<BulletPool> bulletPool, GameMode gameMode, int id);
 
 	~CoopAI() override;
 };

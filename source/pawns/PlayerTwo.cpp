@@ -10,8 +10,7 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
                      UPoint windowSize, const Direction direction, const float speed,
                      std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
                      std::string name, std::string fraction, std::unique_ptr<IInputProvider> inputProvider,
-                     std::shared_ptr<BulletPool> bulletPool, const bool isNetworkControlled,
-                     const bool isHost, const int tankId)
+                     std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
 	: Tank{rect,
 	       color,
 	       health,
@@ -25,10 +24,9 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
 	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction),
-	       isNetworkControlled,
-	       tankId},
-	  _inputProvider{std::move(inputProvider)},
-	  _isHost{isHost}
+	       gameMode,
+	       id},
+	  _inputProvider{std::move(inputProvider)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -38,7 +36,6 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
 
 	events->EmitEvent(_name + "_Spawn");
 }
-
 
 PlayerTwo::~PlayerTwo()
 {
@@ -54,44 +51,15 @@ void PlayerTwo::Subscribe()
 		return;
 	}
 
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	Tank::Subscribe();
 
-	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
-	if (_isNetworkControlled)
-	{
-		_events->AddListener<const FPoint, const Direction>(
-				"ClientReceived_" + _name + "Pos", _name, [this](const FPoint newPos, const Direction direction)
-				{
-					this->SetPos(newPos);
-					this->SetDirection(direction);
-				});
+	SubscribeBonus();
+}
 
-		_events->AddListener<const Direction>(
-				"ClientReceived_" + _name + "Shot", _name, [this](const Direction direction)
-				{
-					this->SetDirection(direction);
-					this->Shot();
-				});
-
-		_events->AddListener<const int>(
-				"ClientReceived_" + _name + "Health", _name, [this](const int health)
-				{
-					this->SetHealth(health);
-				});
-
-		_events->AddListener<const std::string>(
-				"ClientReceived_" + _name + "TankDied", _name, [this](const std::string whoDied)
-				{
-					this->SetIsAlive(false);
-				});
-
-		if (!_isHost)
-		{
-			return;
-		}
-	}
-
+void PlayerTwo::SubscribeAsHost()
+{
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
@@ -100,6 +68,7 @@ void PlayerTwo::Subscribe()
 			this->_isActiveTimer = false;
 			this->_cooldownTimer = 0;
 		}
+
 		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
 		{
 			this->_isActiveHelmet = false;
@@ -111,10 +80,41 @@ void PlayerTwo::Subscribe()
 			this->TickUpdate(deltaTime);
 		}
 	});
+}
 
+void PlayerTwo::SubscribeAsClient()
+{
+	_events->AddListener<const FPoint, const Direction>(
+			"ClientReceived_" + _name + "Pos", _name, [this](const FPoint newPos, const Direction direction)
+			{
+				this->SetPos(newPos);
+				this->SetDirection(direction);
+			});
+
+	_events->AddListener<const Direction>(
+			"ClientReceived_" + _name + "Shot", _name, [this](const Direction direction)
+			{
+				this->SetDirection(direction);
+				this->Shot();
+			});
+
+	_events->AddListener<const int>(
+			"ClientReceived_" + _name + "Health", _name, [this](const int health)
+			{
+				this->SetHealth(health);
+			});
+
+	_events->AddListener<const std::string>(
+			"ClientReceived_" + _name + "TankDied", _name, [this](const std::string whoDied)
+			{
+				this->SetIsAlive(false);
+			});
+}
+
+void PlayerTwo::SubscribeBonus()
+{
 	_events->AddListener<const std::string&, const std::string&, int>(
-			"BonusTimer",
-			_name,
+			"BonusTimer", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
 			{
 				if (fraction != this->_fraction)
@@ -177,28 +177,28 @@ void PlayerTwo::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener("Draw", _name);
+	Tank::Unsubscribe();
 
-	_events->RemoveListener("DrawHealthBar", _name);
+	_gameMode == PlayAsClient || _gameMode == PlayAsHost ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
-	if (_isNetworkControlled)
-	{
-		_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
+	UnsubscribeBonus();
+}
 
-		_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
-
-		_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
-
-		_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
-
-		if (!_isHost)
-		{
-			return;
-		}
-	}
-
+void PlayerTwo::UnsubscribeAsHost() const
+{
 	_events->RemoveListener<const float>("TickUpdate", _name);
+}
 
+void PlayerTwo::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
+	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
+	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
+	_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
+}
+
+void PlayerTwo::UnsubscribeBonus() const
+{
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
@@ -210,7 +210,7 @@ void PlayerTwo::MoveTo(const float deltaTime, const Direction direction)
 	SetDirection(direction);
 	_moveBeh->Move(deltaTime);
 
-	if (/*!_isNetworkControlled ||*/ _isHost)
+	if (_gameMode == PlayAsHost)
 	{
 		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
 				"ServerSend_Pos", "Player" + std::to_string(GetId()), GetPos(), GetDirection());
@@ -265,7 +265,7 @@ void PlayerTwo::TakeDamage(const int damage)
 {
 	Tank::TakeDamage(damage);
 
-	if (/*!_isNetworkControlled ||*/ _isHost)
+	if (_gameMode == PlayAsHost)
 	{
 		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
 	}

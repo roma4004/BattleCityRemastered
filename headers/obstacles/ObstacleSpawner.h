@@ -1,10 +1,10 @@
 #pragma once
 
 #include "FortressWall.h"
+#include "../GameMode.h"
 #include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 
-#include <chrono>
 #include <memory>
 #include <random>
 #include <vector>
@@ -29,10 +29,13 @@ class ObstacleSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnPosY;
 	std::uniform_int_distribution<> _distSpawnPosX;
 	std::uniform_int_distribution<> _distSpawnType;
+	GameMode _currentMode{Demo};
 
 	void Subscribe();
+	void SubscribeAsClient();
 
 	void Unsubscribe() const;
+	void UnsubscribeAsClient() const;
 
 	void TickUpdate(float deltaTime) override;
 

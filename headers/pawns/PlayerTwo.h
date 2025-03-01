@@ -5,21 +5,28 @@
 
 class PlayerTwo final : public Tank
 {
-	void Subscribe();
-	void Unsubscribe() const;
+	void Subscribe() override;
+	void SubscribeAsHost();
+	void SubscribeAsClient();
+	void SubscribeBonus();
+
+	void Unsubscribe() const override;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
+	void UnsubscribeBonus() const;
+
 	void MoveTo(float deltaTime, Direction direction);
 
 	void TickUpdate(float deltaTime) override;
 
 	std::unique_ptr<IInputProvider> _inputProvider;
-	bool _isHost;
 
 public:
 	PlayerTwo(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
 	          Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	          std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
-	          std::unique_ptr<IInputProvider> inputProvider, std::shared_ptr<BulletPool> bulletPool,
-	          bool isNetworkControlled, bool isHost, int tankId);
+	          std::unique_ptr<IInputProvider> inputProvider, std::shared_ptr<BulletPool> bulletPool, GameMode gameMode,
+	          int id);
 
 	~PlayerTwo() override;
 

@@ -44,13 +44,13 @@ class TankSpawner final
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size, bool isNetworkControlled);
+	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
 	void InitialSpawnEnemyTanks(float gridOffset, float speed, int health, float size);
 
-	void SpawnPlayer1(float gridOffset, float speed, int health, float size, bool isNetworkControlled = false);
-	void SpawnPlayer2(float gridOffset, float speed, int health, float size, bool isNetworkControlled = false);
-	void SpawnCoop1(float gridOffset, float speed, int health, float size, bool isNetworkControlled = false);
-	void SpawnCoop2(float gridOffset, float speed, int health, float size, bool isNetworkControlled = false);
+	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
+	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
+	void SpawnCoop1(float gridOffset, float speed, int health, float size);
+	void SpawnCoop2(float gridOffset, float speed, int health, float size);
 	void RespawnEnemyTanks(int index);
 	void RespawnPlayerTanks(int index);
 	void RespawnCoopTanks(int index);

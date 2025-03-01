@@ -23,6 +23,7 @@ protected:
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
 	float _deltaTimeOneFrame{1.f / 60.f};
+	GameMode _gameMode{OnePlayer};
 
 	void SetUp() override
 	{
@@ -40,7 +41,7 @@ protected:
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
 						bulletRect, damage, bulletDamageRadius, color, health, _windowBuffer, _windowSize, DOWN,
-						_bulletSpeed, &_allObjects, _events, name, fraction, 0, false));
+						_bulletSpeed, &_allObjects, _events, name, fraction, _gameMode, false));
 	}
 
 	void TearDown() override
@@ -296,7 +297,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	_allObjects.emplace_back(
 			std::make_shared<Enemy>(
 					rect, gray, tankHealth, _windowBuffer, _windowSize, UP, tankSpeed, &_allObjects, _events, "Enemy",
-					"EnemyTeam", bulletPool, false, 1));
+					"EnemyTeam", bulletPool, _gameMode, 1));
 	const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get());
 
 	EXPECT_EQ(enemy->GetHealth(), 1);
@@ -319,7 +320,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
 						rect, damage, bulletDamageRadius, color, health, _windowBuffer, _windowSize, UP, _bulletSpeed,
-						&_allObjects, _events, "Player2", "PlayerTeam", 1, false));
+						&_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 1));
 
 		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Pawn.h"
+#include "../GameMode.h"
 
 #include <memory>
 #include <string>
@@ -17,24 +18,28 @@ class Bullet final : public Pawn
 	double _bulletDamageRadius{12.f};
 	int _damage{0};
 	int _id{0};
-	bool _isNetworkControlled{false};
+	GameMode _gameMode{Demo};
 
 	void Subscribe();
+	void SubscribeAsHost();
+	void SubscribeAsClient();
+
 	void Unsubscribe() const;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
 
 	void TickUpdate(float deltaTime) override;
 
 public:
 	Bullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
-	       std::shared_ptr<int[]> windowBuffer,
-	       UPoint windowSize, Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	       const std::shared_ptr<EventSystem>& events, std::string author, std::string fraction, int bulletId,
-	       bool isNetworkControlled);
+	       std::shared_ptr<int[]> windowBuffer, UPoint windowSize, Direction direction, float speed,
+	       std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
+	       std::string author, std::string fraction, GameMode gameMode, int id);
 
 	~Bullet() override;
 
 	void Reset(const ObjRectangle& rect, int damage, double aoeRadius, int color, float speed, Direction direction,
-	           int health, std::string author, std::string fraction, bool isNetworkControlled);
+	           int health, std::string author, std::string fraction);
 
 	void Disable() const;
 	void Enable();

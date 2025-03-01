@@ -27,6 +27,7 @@ protected:
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
 	float _gridSize{0.f};
+	GameMode _gameMode{OnePlayer};
 
 	void SetUp() override
 	{
@@ -38,13 +39,13 @@ protected:
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto currentGameMode = OnePlayer;
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, currentGameMode);
+
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, _gameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<PlayerOne>(
 						rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events,
-						name, fraction, std::move(inputProvider), _bulletPool, false, 1));
+						name, fraction, std::move(inputProvider), _bulletPool, _gameMode, 1));
 	}
 
 	void TearDown() override
@@ -480,7 +481,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		_allObjects.emplace_back(
 				std::make_shared<PlayerTwo>(
 						rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events,
-						name, fraction, std::move(inputProvider), _bulletPool, false, true, 2));
+						name, fraction, std::move(inputProvider), _bulletPool, _gameMode, 2));
 
 		if (const auto player2 = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
 		{

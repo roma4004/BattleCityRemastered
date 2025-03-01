@@ -7,7 +7,7 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
            UPoint windowSize, const Direction direction, const float speed,
            std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
            std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh, std::string name,
-           std::string fraction, const bool isNetworkControlled, const int tankId)
+           std::string fraction, const GameMode gameMode, const int id)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -18,12 +18,41 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	       allObjects,
 	       std::move(events),
 	       std::move(moveBeh)},
+	  _id{id},
 	  _shootingBeh{std::move(shootingBeh)},
-	  _id{tankId},
-	  _name{std::move(name) + std::to_string(tankId)},// TODO: maybe name should be without tankId
-	  _fraction{std::move(fraction)},
-	  _isNetworkControlled{isNetworkControlled} {}
+	  _gameMode{gameMode},
+	  _name{std::move(name) + std::to_string(id)},// TODO: maybe name should be without tankId
+	  _fraction{std::move(fraction)}
+{
+	Tank::Subscribe();
+}
 
+Tank::~Tank()
+{
+	Tank::Unsubscribe();
+}
+
+void Tank::Subscribe()
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+}
+
+void Tank::Unsubscribe() const
+{
+	if (_events == nullptr)
+	{
+		return;
+	}
+
+	_events->RemoveListener("Draw", _name);
+	_events->RemoveListener("DrawHealthBar", _name);
+}
 
 int Tank::GetId() const { return _id; }
 
@@ -46,9 +75,9 @@ void Tank::Shot() const
 	_shootingBeh->Shot();
 	_lastTimeFire = std::chrono::system_clock::now();
 
-	if (!_isNetworkControlled)
+	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const Direction>(_name + "Shot", GetDirection());
+		_events->EmitEvent<const Direction>("ServerSend_" + _name + "Shot", GetDirection());
 	}
 }
 
@@ -100,8 +129,8 @@ void Tank::DrawHealthBar() const
 			if (x < _windowSize.x && y < _windowSize.y)
 			{
 				int& targetColor = _windowBuffer.get()[y * width + x];
-				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColor,
-				                                                      PixelUtils::ChangeAlpha(tankColor, 127)));
+				targetColor = static_cast<int>(
+					PixelUtils::BlendPixel(targetColor, PixelUtils::ChangeAlpha(tankColor, 127)));
 				SetPixel(x, y, targetColor);
 			}
 		}

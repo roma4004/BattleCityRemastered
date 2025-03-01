@@ -80,12 +80,13 @@ void GameSuccess::ResetBattlefield()
 	_allObjects.reserve(1000);
 
 	_statistics->Reset();
-	_events->EmitEvent("InitialSpawn");
 
 	//Map creation
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
 	const Map field{&_obstacleSpawner};
 	field.MapCreation(gridOffset);
+
+	_events->EmitEvent("InitialSpawn");
 }
 
 void GameSuccess::PrevGameMode()

@@ -14,8 +14,8 @@
 CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
                UPoint windowSize, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool,
-               const bool isNetworkControlled, const int tankId)
+               std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode,
+               const int id)
 	: Tank{rect,
 	       color,
 	       health,
@@ -29,8 +29,8 @@ CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std:
 	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
 	       std::move(name),
 	       std::move(fraction),
-	       isNetworkControlled,
-	       tankId},
+	       gameMode,
+	       id},
 	  _distDirection(0, 3), _distTurnRate(1000/*ms*/, 5000/*ms*/)
 {
 	BaseObj::SetIsPassable(false);
@@ -60,10 +60,15 @@ void CoopAI::Subscribe()
 		return;
 	}
 
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	Tank::Subscribe();
 
-	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+	SubscribeAsHost();
 
+	SubscribeBonus();
+}
+
+void CoopAI::SubscribeAsHost()
+{
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
@@ -72,6 +77,7 @@ void CoopAI::Subscribe()
 			this->_isActiveTimer = false;
 			this->_cooldownTimer = 0;
 		}
+
 		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
 		{
 			this->_isActiveHelmet = false;
@@ -83,7 +89,10 @@ void CoopAI::Subscribe()
 			this->TickUpdate(deltaTime);
 		}
 	});
+}
 
+void CoopAI::SubscribeBonus()
+{
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusTimer", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
@@ -148,12 +157,20 @@ void CoopAI::Unsubscribe() const
 		return;
 	}
 
-	_events->RemoveListener("Draw", _name);
+	Tank::Unsubscribe();
 
-	_events->RemoveListener("DrawHealthBar", _name);
+	UnsubscribeAsHost();
 
+	UnsubscribeBonus();
+}
+
+void CoopAI::UnsubscribeAsHost() const
+{
 	_events->RemoveListener<const float>("TickUpdate", _name);
+}
 
+void CoopAI::UnsubscribeBonus() const
+{
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
