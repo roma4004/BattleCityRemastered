@@ -2,6 +2,7 @@
 
 #include "GameMode.h"
 #include "Point.h"
+#include "application/Window.h"
 #include "input/InputProviderForMenu.h"
 
 #include <SDL.h>
@@ -12,12 +13,11 @@ class GameStatistics;
 class Menu final
 {
 	UPoint _pos;
-	UPoint _windowSize;
 	unsigned int _yOffsetStart{0u};
 	GameMode _selectedGameMode{Demo};
 
+	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<TTF_Font> _menuFont{nullptr};
 	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
@@ -43,8 +43,8 @@ class Menu final
 
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
-	     std::shared_ptr<int[]> windowBuffer, std::unique_ptr<InputProviderForMenu> input,
+	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
+	     std::shared_ptr<Window> window, std::unique_ptr<InputProviderForMenu> input,
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();

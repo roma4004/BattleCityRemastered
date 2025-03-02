@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameMode.h"
-#include "Point.h"
+#include "application/Window.h"
 
 #include <memory>
 #include <random>
@@ -14,15 +14,13 @@ enum GameMode : char8_t;
 
 class TankSpawner final
 {
-	UPoint _windowSize{.x = 0, .y = 0};
 	std::string _name{"TankSpawner"};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	GameMode _currentMode{Demo};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
+	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
 	std::random_device _rd;
@@ -69,9 +67,8 @@ class TankSpawner final
 	void DecreasePlayerTwoRespawnResource();
 
 public:
-	TankSpawner(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
-	            std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	            std::shared_ptr<BulletPool> bulletPool);
+	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool);
 
 	~TankSpawner();
 

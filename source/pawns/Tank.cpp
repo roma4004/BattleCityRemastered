@@ -3,16 +3,15 @@
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/utils/PixelUtils.h"
 
-Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
-           UPoint windowSize, const Direction direction, const float speed,
-           std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-           std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh, std::string name,
-           std::string fraction, const GameMode gameMode, const int id)
+Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
+           const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+           std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
+           std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, const GameMode gameMode,
+           const int id)
 	: Pawn{rect,
 	       color,
 	       health,
-	       std::move(windowBuffer),
-	       std::move(windowSize),
+	       std::move(window),
 	       direction,
 	       speed,
 	       allObjects,
@@ -107,7 +106,7 @@ void Tank::SetFireCooldownMs(const int fireCooldown) { _fireCooldownMs = fireCoo
 
 void Tank::DrawHealthBar() const
 {
-	if (_windowBuffer == nullptr)
+	if (_window->buffer == nullptr)
 	{
 		return;
 	}
@@ -118,7 +117,7 @@ void Tank::DrawHealthBar() const
 		return;
 	}
 
-	const auto width = static_cast<unsigned int>(_windowSize.x);
+	const auto width = static_cast<unsigned int>(_window->size.x);
 	size_t y = static_cast<size_t>(GetY()) - 10;
 	for (const size_t maxY = y + 5; y < maxY; ++y)
 	{
@@ -126,9 +125,9 @@ void Tank::DrawHealthBar() const
 		for (const size_t maxX = x + GetHealth() / 3; x < maxX; ++x)
 		{
 			const unsigned int tankColor = GetColor();
-			if (x < _windowSize.x && y < _windowSize.y)
+			if (x < _window->size.x && y < _window->size.y)
 			{
-				int& targetColor = _windowBuffer.get()[y * width + x];
+				int& targetColor = _window->buffer.get()[y * width + x];
 				targetColor = static_cast<int>(
 					PixelUtils::BlendPixel(targetColor, PixelUtils::ChangeAlpha(tankColor, 127)));
 				SetPixel(x, y, targetColor);

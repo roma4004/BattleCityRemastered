@@ -6,8 +6,6 @@
 #include "../../headers/obstacles/ObstacleTypeId.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/obstacles/WaterTile.h"
-#include "../../headers/utils/ColliderUtils.h"
-#include "../../headers/utils/TimeUtils.h"
 
 #include <chrono>
 #include <memory>
@@ -16,15 +14,13 @@ class BaseObj;
 class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                 std::shared_ptr<int[]> windowBuffer, UPoint windowSize, const int sideBarWidth,
-                                 const int obstacleSize)
+                                 std::shared_ptr<Window> window, const int sideBarWidth, const int obstacleSize)
 	: _events{std::move(events)},
-	  _windowSize{std::move(windowSize)},
 	  _obstacleSize{obstacleSize},
-	  _windowBuffer{std::move(windowBuffer)},
+	  _window{std::move(window)},
 	  _allObjects{allObjects},
-	  _distSpawnPosY{0, static_cast<int>(_windowSize.y) - obstacleSize},
-	  _distSpawnPosX{0, static_cast<int>(_windowSize.x) - sideBarWidth - obstacleSize},
+	  _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
+	  _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
 	  _distSpawnType{None + 1, lastId - 1}
 {
 	std::random_device rd;

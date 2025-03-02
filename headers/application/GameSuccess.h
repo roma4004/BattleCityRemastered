@@ -3,7 +3,6 @@
 #include "../GameMode.h"
 #include "../Menu.h"
 #include "../MouseButton.h"
-#include "../Point.h"
 #include "../bonuses/BonusSpawner.h"
 #include "../interfaces/IGame.h"
 #include "../obstacles/ObstacleSpawner.h"
@@ -23,15 +22,15 @@ class GameStatistics;
 
 class GameSuccess final : public IGame
 {
-	UPoint _windowSize{.x = 0, .y = 0};
 	GameMode _selectedGameMode{Demo};
 	GameMode _currentMode{Demo};
-	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	std::unique_ptr<Menu> _menu{nullptr};
-	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::string _name{"Game"};
 
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::unique_ptr<Menu> _menu{nullptr};
+	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+
+	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
@@ -82,7 +81,7 @@ class GameSuccess final : public IGame
 	void SetCurrentGameMode(GameMode selectedGameMode);
 
 public:
-	GameSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
+	GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
 	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
 	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
 	            std::unique_ptr<Menu> menu);

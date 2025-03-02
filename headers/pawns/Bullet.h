@@ -32,7 +32,7 @@ class Bullet final : public Pawn
 
 public:
 	Bullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
-	       std::shared_ptr<int[]> windowBuffer, UPoint windowSize, Direction direction, float speed,
+	       std::shared_ptr<Window> window, Direction direction, float speed,
 	       std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
 	       std::string author, std::string fraction, GameMode gameMode, int id);
 

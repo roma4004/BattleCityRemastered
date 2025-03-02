@@ -4,13 +4,12 @@
 #include "../headers/utils/PixelUtils.h"
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-           std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
-           std::shared_ptr<int[]> windowBuffer, std::unique_ptr<InputProviderForMenu> input,
+           std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
+           std::shared_ptr<Window> window, std::unique_ptr<InputProviderForMenu> input,
            std::shared_ptr<EventSystem> events)
-	: _windowSize{std::move(windowSize)},
-	  _yOffsetStart{static_cast<unsigned int>(_windowSize.y)},
+	: _yOffsetStart{static_cast<unsigned int>(window->size.y)},
+	  _window{window},
 	  _renderer{std::move(renderer)},
-	  _windowBuffer{std::move(windowBuffer)},
 	  _events{std::move(events)},
 	  _menuFont{std::move(menuFont)},
 	  _menuLogo{std::move(menuLogo)},
@@ -115,7 +114,7 @@ void Menu::Update() const
 // blend menu panel and menu texture background
 void Menu::BlendBackgroundToWindowBuffer()
 {
-	if (_windowBuffer == nullptr)
+	if (_window->buffer == nullptr)
 	{
 		return;
 	}
@@ -125,17 +124,17 @@ void Menu::BlendBackgroundToWindowBuffer()
 		return;
 	}
 
-	const auto sizeX = static_cast<unsigned int>(_windowSize.x);
-	const unsigned menuHeight = static_cast<unsigned int>(_windowSize.y) - 50;
+	const auto sizeX = static_cast<unsigned int>(_window->size.x);
+	const unsigned menuHeight = static_cast<unsigned int>(_window->size.y) - 50;
 	const unsigned menuWidth = sizeX - 228;
 	for (_pos.y = 50 + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
 	{
 		for (_pos.x = 50; _pos.x < menuWidth; ++_pos.x)
 		{
-			if (_pos.y < _windowSize.y && _pos.x < _windowSize.x)
+			if (_pos.y < _window->size.y && _pos.x < _window->size.x)
 			{
 				constexpr unsigned int menuColor = 0xFF808080;
-				int& targetColor = _windowBuffer.get()[_pos.y * sizeX + _pos.x];
+				int& targetColor = _window->buffer.get()[_pos.y * sizeX + _pos.x];
 				const unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(
 						static_cast<unsigned int>(targetColor), 91);
 				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColorLessAlpha, menuColor));

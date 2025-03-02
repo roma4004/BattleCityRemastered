@@ -46,11 +46,10 @@ protected:
 	void DrawHealthBar() const override;
 
 public:
-	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	     std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
-	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, GameMode gameMode,
-	     int id);
+	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,
+	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
+	     std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh, std::string name,
+	     std::string fraction, GameMode gameMode, int id);
 
 	~Tank() override;
 

@@ -13,16 +13,14 @@
 #include <chrono>
 
 //TODO: if enemy see bullets they should tru or prioritize move aside
-Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
-             UPoint windowSize, const Direction direction, const float speed,
-             std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-             std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode,
-             const int tankId)
+Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
+             const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+             const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+             std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
 	: Tank{rect,
 	       color,
 	       health,
-	       std::move(windowBuffer),
-	       std::move(windowSize),
+	       std::move(window),
 	       direction,
 	       speed,
 	       allObjects,
@@ -32,7 +30,7 @@ Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::s
 	       std::move(name),
 	       std::move(fraction),
 	       gameMode,
-	       tankId},
+	       id},
 	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
 	  _lastTimeTurn{std::chrono::system_clock::now()}
@@ -246,7 +244,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 {
 	const FPoint bulletSize = {.x = GetBulletWidth(), .y = GetBulletHeight()};
 	const FPoint bulletHalf = {.x = bulletSize.x / 2.f, .y = bulletSize.y / 2.f};
-	LineOfSight lineOffSight(_shape, _windowSize, bulletHalf, _allObjects, this);
+	LineOfSight lineOffSight(_shape, _window->size, bulletHalf, _allObjects, this);
 
 	const auto upSideObstacles = lineOffSight.GetUpSideObstacles();
 	if (!upSideObstacles.empty())

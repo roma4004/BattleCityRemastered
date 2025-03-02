@@ -3,18 +3,17 @@
 
 #include <string>
 
-WaterTile::WaterTile(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-             std::shared_ptr<EventSystem> events, const int obstacleId)
+WaterTile::WaterTile(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                     const int id)
 	: BaseObj{rect, 0x1e90ff, 1},
-	  _windowSize{std::move(windowSize)},
-	  _windowBuffer{std::move(windowBuffer)},
-	  _events{std::move(events)}
+	  _window{std::move(window)},
+	  _events{std::move(events)},
+	  _name{"Water " + std::to_string(id)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
 
-	_name = "Water " + std::to_string(obstacleId);
 	Subscribe();
 }
 
@@ -45,15 +44,15 @@ void WaterTile::Unsubscribe() const
 
 void WaterTile::SetPixel(const size_t x, const size_t y, const int color) const
 {
-	if (_windowBuffer == nullptr)
+	if (_window->buffer == nullptr)//TODO: remove this kind of check from project, all checks covered on config create
 	{
 		return;
 	}
 
-	if (x < _windowSize.x && y < _windowSize.y)
+	if (x < _window->size.x && y < _window->size.y)
 	{
-		const size_t rowSize = _windowSize.x;
-		_windowBuffer.get()[y * rowSize + x] = color;
+		const size_t rowSize = _window->size.x;
+		_window->buffer.get()[y * rowSize + x] = color;
 	}
 }
 

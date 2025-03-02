@@ -6,16 +6,15 @@
 
 #include <chrono>
 
-PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
-                     UPoint windowSize, const Direction direction, const float speed,
-                     std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-                     std::string name, std::string fraction, std::unique_ptr<IInputProvider> inputProvider,
-                     std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
+PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
+                     const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+                     std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
+                     std::unique_ptr<IInputProvider> inputProvider, std::shared_ptr<BulletPool> bulletPool,
+                     const GameMode gameMode, const int id)
 	: Tank{rect,
 	       color,
 	       health,
-	       std::move(windowBuffer),
-	       std::move(windowSize),
+	       std::move(window),
 	       direction,
 	       speed,
 	       allObjects,

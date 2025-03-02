@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Point.h"
+#include "../application/Window.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <chrono>
@@ -17,12 +17,14 @@ class EventSystem;
 class BonusSpawner final : public ITickUpdatable
 {
 	std::string _name{"BonusSpawner"};
-	std::shared_ptr<EventSystem> _events{nullptr};
-	UPoint _windowSize;
 	int _bonusSize{0};
-	int _lastSpawnId{0};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	int _lastSpawnId{-1};
+
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
+
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+
 	std::mt19937 _gen;
 	std::uniform_int_distribution<> _distSpawnPosY;
 	std::uniform_int_distribution<> _distSpawnPosX;
@@ -40,7 +42,7 @@ class BonusSpawner final : public ITickUpdatable
 
 public:
 	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	             std::shared_ptr<int[]> windowBuffer, UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);
+	             std::shared_ptr<Window> window, int sideBarWidth = 175, int bonusSize = 36);
 
 	~BonusSpawner() override;
 

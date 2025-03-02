@@ -1,16 +1,16 @@
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusTypeId.h"
 
-BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
                            const int color, const int id)
-	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color, id}
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, id}
 {
 	_name = "BonusGrenade";
 	Subscribe();
 
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, BonusTypeId::Grenade, _id);
+			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Grenade, _id);
 }
 
 BonusGrenade::~BonusGrenade()

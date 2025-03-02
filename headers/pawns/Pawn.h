@@ -3,6 +3,7 @@
 #include "../BaseObj.h"
 #include "../Direction.h"
 #include "../Point.h"
+#include "../application/Window.h"
 #include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -15,18 +16,12 @@ class EventSystem;
 class Pawn : public BaseObj, public ITickUpdatable
 {
 protected:
-	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
-
-	UPoint _windowSize{.x = 0, .y = 0};
-
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
-
 	Direction _direction{UP};
-
 	float _speed{0.f};
 
+	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	void SetPixel(size_t x, size_t y, int color) const;
@@ -37,8 +32,7 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	Pawn(const ObjRectangle& rect, int color, int health, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	     Direction direction,
+	Pawn(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,
 	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
 	     std::unique_ptr<IMoveBeh> moveBeh);
 

@@ -17,10 +17,9 @@ class PlayerTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
 	float _tankSize{};
 	float _tankSpeed{142};
@@ -31,7 +30,8 @@ protected:
 
 	void SetUp() override
 	{
-		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
+		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_events = std::make_shared<EventSystem>();
 		_tankSize = _gridSize * 3;// for better turns
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
@@ -40,12 +40,12 @@ protected:
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _windowBuffer, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<PlayerOne>(
-						rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events,
-						name, fraction, std::move(inputProvider), _bulletPool, _gameMode, 1));
+						rect, yellow, _tankHealth, _window, UP, _tankSpeed, &_allObjects, _events, name, fraction,
+						std::move(inputProvider), _bulletPool, _gameMode, 1));
 	}
 
 	void TearDown() override
@@ -59,7 +59,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float windowHeight = static_cast<float>(_windowSize.y);
+		const float windowHeight = static_cast<float>(_window->size.y);
 		player->SetPos({.x = 0.f, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
@@ -83,7 +83,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_windowSize.x);
+		const float windowWidth = static_cast<float>(_window->size.x);
 		player->SetPos({.x = windowWidth - _tankSize, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
@@ -191,8 +191,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_windowSize.x);
-		const float windowHeight = static_cast<float>(_windowSize.y);
+		const float windowWidth = static_cast<float>(_window->size.x);
+		const float windowHeight = static_cast<float>(_window->size.y);
 		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
@@ -212,8 +212,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_windowSize.x);
-		const float windowHeight = static_cast<float>(_windowSize.y);
+		const float windowWidth = static_cast<float>(_window->size.x);
+		const float windowHeight = static_cast<float>(_window->size.y);
 		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
@@ -236,7 +236,7 @@ TEST_F(PlayerTest, TankSetPos)
 		player->SetPos({});
 		const FPoint startPos = player->GetPos();
 
-		player->SetPos({.x = static_cast<float>(_windowSize.x), .y = static_cast<float>(_windowSize.y)});
+		player->SetPos({.x = static_cast<float>(_window->size.x), .y = static_cast<float>(_window->size.y)});
 
 		EXPECT_LT(startPos, player->GetPos());
 
@@ -251,7 +251,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f, .y = static_cast<float>(_windowSize.y) / 2.f});
+		player->SetPos({.x = static_cast<float>(_window->size.x) / 2.f,
+		                .y = static_cast<float>(_window->size.y) / 2.f});
 		player->SetDirection(UP);
 		const FPoint startPos = player->GetPos();
 
@@ -271,7 +272,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f, .y = static_cast<float>(_windowSize.y) / 2.f});
+		player->SetPos({.x = static_cast<float>(_window->size.x) / 2.f,
+		                .y = static_cast<float>(_window->size.y) / 2.f});
 		player->SetDirection(LEFT);
 		const FPoint startPos = player->GetPos();
 
@@ -291,7 +293,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f, .y = static_cast<float>(_windowSize.y) / 2.f});
+		player->SetPos({.x = static_cast<float>(_window->size.x) / 2.f,
+		                .y = static_cast<float>(_window->size.y) / 2.f});
 		player->SetDirection(DOWN);
 		const FPoint startPos = player->GetPos();
 
@@ -311,7 +314,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f, .y = static_cast<float>(_windowSize.y) / 2.f});
+		player->SetPos({.x = static_cast<float>(_window->size.x) / 2.f,
+		                .y = static_cast<float>(_window->size.y) / 2.f});
 		player->SetDirection(RIGHT);
 		const FPoint startPos = player->GetPos();
 
@@ -373,8 +377,8 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-		                .y = static_cast<float>(_windowSize.y) - _tankSize});
+		player->SetPos({.x = static_cast<float>(_window->size.x) - _tankSize,
+		                .y = static_cast<float>(_window->size.y) - _tankSize});
 		//success shot up test, try to create inside screen bullet
 		const size_t size = _allObjects.size();
 
@@ -395,8 +399,8 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
 	if (const auto player = dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-		                .y = static_cast<float>(_windowSize.y) - _tankSize});
+		player->SetPos({.x = static_cast<float>(_window->size.x) - _tankSize,
+		                .y = static_cast<float>(_window->size.y) - _tankSize});
 		//success shot left test, try to create inside screen bullet
 		const size_t size = _allObjects.size();
 
@@ -439,8 +443,8 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 			EXPECT_EQ(size, _allObjects.size());
 		}
 
-		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-		                .y = static_cast<float>(_windowSize.y) - _tankSize});
+		player->SetPos({.x = static_cast<float>(_window->size.x) - _tankSize,
+		                .y = static_cast<float>(_window->size.y) - _tankSize});
 		{
 			//fail shot down test, try to create outside screen bullet
 			const size_t size = _allObjects.size();
@@ -480,8 +484,8 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 		_allObjects.emplace_back(
 				std::make_shared<PlayerTwo>(
-						rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed, &_allObjects, _events,
-						name, fraction, std::move(inputProvider), _bulletPool, _gameMode, 2));
+						rect, green, _tankHealth, _window, UP, _tankSpeed, &_allObjects, _events, name, fraction,
+						std::move(inputProvider), _bulletPool, _gameMode, 2));
 
 		if (const auto player2 = dynamic_cast<PlayerTwo*>(_allObjects.back().get()))
 		{
@@ -510,8 +514,8 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 	{
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
-						_windowSize, _events, 0));
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
+						0));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -534,8 +538,8 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 	{
 		_allObjects.emplace_back(
 				std::make_shared<SteelWall>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
-						_windowSize, _events, 0));
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
+						0));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -558,8 +562,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	{
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
-						_windowSize, _events, 0));
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
+						0));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
@@ -585,8 +589,8 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	{
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _windowBuffer,
-						_windowSize, _events, &_allObjects, 0));
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
+						&_allObjects, 0));
 
 		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{

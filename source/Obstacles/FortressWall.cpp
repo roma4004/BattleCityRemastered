@@ -9,17 +9,16 @@
 #include <algorithm>
 #include <string>
 
-FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
+FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 1},
 	  _rect{rect},
-	  _windowSize{windowSize},
-	  _windowBuffer{windowBuffer},
+	  _window{window},
 	  _events{events},
 	  _allObjects{allObjects},
 	  _name{"fortressWall" + std::to_string(id)},//TODO: change name for statistic
-	  _obstacle{std::make_unique<BrickWall>(rect, windowBuffer, windowSize, events, id)},
+	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id)},
 	  _id{id}
 {
 	Subscribe();
@@ -52,9 +51,9 @@ void FortressWall::Subscribe()
 		}
 
 		this->Hide();
-	});	//TODO: enable only in client mode
+	});//TODO: enable only in client mode
 	//TODO: replicate bonusShovel, to replace with steel
-
+//TODO: split subscription subBonus, subAsClient etc.
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusShovel", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
@@ -130,12 +129,12 @@ void FortressWall::BonusShovelSwitch()
 	{
 		if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<SteelWall>(_rect, _windowBuffer, _windowSize, _events, _id);
+			_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _id);
 			//TODO: send event for replication thar brick need to appear at client side
 		}
 		else
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _windowBuffer, _windowSize, _events, _id);
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _id);
 			//TODO: send event for replication thar steel need to appear at client side
 		}
 	}

@@ -11,10 +11,14 @@ class IConfig;
 
 SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
                                const char* introMusicName)
-	: windowSize{std::move(windowSize)},
-	  fpsFontPathName{fpsFontName},
+	: fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
-	  introMusicPathName{introMusicName} {}
+	  introMusicPathName{introMusicName}
+{
+	const auto size = windowSize.x * windowSize.y;
+	window = std::make_shared<Window>(std::move(windowSize),
+	                                  std::shared_ptr<int[]>(new int[size], std::default_delete<int[]>()));
+}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -31,26 +35,26 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_Init Error: ", SDL_GetError());
 	}
 
-	window = std::shared_ptr<SDL_Window>(
-			SDL_CreateWindow("Battle City remastered", 100, 100, static_cast<int>(windowSize.x),
-			                 static_cast<int>(windowSize.y), SDL_WINDOW_SHOWN),
+	sdlWindow = std::shared_ptr<SDL_Window>(
+			SDL_CreateWindow("Battle City remastered", 100, 100, static_cast<int>(window->size.x),
+			                 static_cast<int>(window->size.y), SDL_WINDOW_SHOWN),
 			SDL_DestroyWindow);
-	if (window == nullptr)
+	if (sdlWindow == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
 	renderer = std::shared_ptr<SDL_Renderer>(
-			SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC),
+			SDL_CreateRenderer(sdlWindow.get(), -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC),
 			SDL_DestroyRenderer);
 	if (renderer == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
-	std::shared_ptr<SDL_Texture> screen(
+	const std::shared_ptr<SDL_Texture> screen(
 			SDL_CreateTexture(renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-			                  static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)),
+			                  static_cast<int>(window->size.x), static_cast<int>(window->size.y)),
 			SDL_DestroyTexture);
 	if (screen == nullptr)
 	{
@@ -72,7 +76,7 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
 	}
 
-	std::shared_ptr<SDL_Surface> logoSurface(IMG_Load(logoPathName), SDL_FreeSurface);
+	const std::shared_ptr<SDL_Surface> logoSurface(IMG_Load(logoPathName), SDL_FreeSurface);
 	if (logoSurface == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG Logo Loading Error", IMG_GetError());
@@ -101,8 +105,5 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
-	const auto size = windowSize.x * windowSize.y;
-	auto windowBuffer = std::shared_ptr<int[]>(new int[size], std::default_delete<int[]>());
-
-	return std::make_unique<ConfigSuccess>(windowSize, windowBuffer, renderer, screen, fpsFont, logoTexture);
+	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture);
 }

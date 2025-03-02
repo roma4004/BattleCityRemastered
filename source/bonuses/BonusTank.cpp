@@ -1,15 +1,15 @@
 #include "../../headers/Bonuses/BonusTank.h"
 #include "../../headers/bonuses/BonusTypeId.h"
 
-BonusTank::BonusTank(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-                     std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs, const int color, const int id)
-	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color, id}
+BonusTank::BonusTank(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                     const int durationMs, const int lifeTimeMs, const int color, const int id)
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, id}
 {
 	_name = "BonusTank";
 	Subscribe();
 
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, BonusTypeId::Tank, _id);
+			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Tank, _id);
 }
 
 BonusTank::~BonusTank()

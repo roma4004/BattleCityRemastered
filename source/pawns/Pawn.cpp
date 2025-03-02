@@ -1,15 +1,13 @@
 #include "../../headers/pawns/Pawn.h"
 
-Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<int[]> windowBuffer,
-           UPoint windowSize, const Direction direction, const float speed,
-           std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-           std::unique_ptr<IMoveBeh> moveBeh)
+Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
+           const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+           std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh)
 	: BaseObj{rect, color, health},
-	  _moveBeh{std::move(moveBeh)},
-	  _windowSize{std::move(windowSize)},
-	  _windowBuffer{std::move(windowBuffer)},
 	  _direction{direction},
 	  _speed{speed},
+	  _moveBeh{std::move(moveBeh)},
+	  _window{std::move(window)},
 	  _events{std::move(events)},
 	  _allObjects{allObjects} {}
 
@@ -17,15 +15,15 @@ Pawn::~Pawn() = default;
 
 void Pawn::SetPixel(const size_t x, const size_t y, const int color) const
 {
-	if (_windowBuffer == nullptr)
+	if (_window->buffer == nullptr)
 	{
 		return;
 	}
 
-	if (x < _windowSize.x && y < _windowSize.y)
+	if (x < _window->size.x && y < _window->size.y)
 	{
-		const size_t rowSize = _windowSize.x;
-		_windowBuffer.get()[y * rowSize + x] = color;
+		const size_t rowSize = _window->size.x;
+		_window->buffer.get()[y * rowSize + x] = color;
 	}
 }
 
@@ -42,7 +40,7 @@ void Pawn::Draw() const
 	}
 }
 
-UPoint Pawn::GetWindowSize() const { return _windowSize; }
+UPoint Pawn::GetWindowSize() const { return _window->size; }
 
 Direction Pawn::GetDirection() const { return _direction; }
 

@@ -3,19 +3,18 @@
 
 #include <string>
 
-SteelWall::SteelWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-           std::shared_ptr<EventSystem> events, const int obstacleId)
+SteelWall::SteelWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                     const int id)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0xaaaaaa, 1},
-	  _windowSize{std::move(windowSize)},
-	  _windowBuffer{std::move(windowBuffer)},
+	  _window{std::move(window)},
 	  _events{std::move(events)},
-	 _id{obstacleId}
+	  _id{id}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "SteelWall " + std::to_string(obstacleId);//TODO: change name for statistics
+	_name = "SteelWall " + std::to_string(id);//TODO: change name for statistics
 	Subscribe();
 }
 
@@ -46,15 +45,15 @@ void SteelWall::Unsubscribe() const
 
 void SteelWall::SetPixel(const size_t x, const size_t y, const int color) const
 {
-	if (_windowBuffer == nullptr)
+	if (_window->buffer == nullptr)
 	{
 		return;
 	}
 
-	if (x < _windowSize.x && y < _windowSize.y)
+	if (x < _window->size.x && y < _window->size.y)
 	{
-		const size_t rowSize = _windowSize.x;
-		_windowBuffer.get()[y * rowSize + x] = color;
+		const size_t rowSize = _window->size.x;
+		_window->buffer.get()[y * rowSize + x] = color;
 	}
 }
 

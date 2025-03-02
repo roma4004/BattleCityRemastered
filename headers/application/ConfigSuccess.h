@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Window.h"
 #include "../Point.h"
 #include "../interfaces/IConfig.h"
 
@@ -8,8 +9,7 @@
 
 class ConfigSuccess final : public IConfig
 {
-	UPoint _windowSize{.x = 0, .y = 0};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
@@ -23,9 +23,8 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, std::shared_ptr<int[]> windowBuffer, std::shared_ptr<SDL_Renderer> renderer,
-	              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-	              std::shared_ptr<SDL_Texture> logoTexture);
+	ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
+	              std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<SDL_Texture> logoTexture);
 
 	~ConfigSuccess() override = default;
 

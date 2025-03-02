@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 #include "../obstacles/BrickWall.h"
 #include "../obstacles/SteelWall.h"
@@ -17,8 +16,7 @@ class EventSystem;
 class FortressWall final : public BaseObj, ITickUpdatable
 {
 	ObjRectangle _rect;
-	UPoint _windowSize{.x = 0, .y = 0};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::string _name;
@@ -41,8 +39,8 @@ class FortressWall final : public BaseObj, ITickUpdatable
 	void Hide();
 
 public:
-	FortressWall(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	             const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects, int id);
+	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, int id);
 	//TODO: remove allObjects, move spawn check to separated spawner logic
 
 	~FortressWall() override;

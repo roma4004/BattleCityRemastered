@@ -1,16 +1,15 @@
 #include "../../headers/bonuses/BonusHelmet.h"
 #include "../../headers/bonuses/BonusTypeId.h"
 
-BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-                         std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
-                         const int color, const int id)
-	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color, id}
+BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                         const int durationMs, const int lifeTimeMs, const int color, const int id)
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, id}
 {
 	_name = "BonusHelmet";
 	Subscribe();
 
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, BonusTypeId::Helmet, _id);
+			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Helmet, _id);
 }
 
 BonusHelmet::~BonusHelmet()

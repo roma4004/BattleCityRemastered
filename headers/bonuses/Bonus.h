@@ -2,7 +2,7 @@
 
 #include "../BaseObj.h"
 #include "../EventSystem.h"
-#include "../Point.h"
+#include "../application/Window.h"
 #include "../interfaces/IPickupableBonus.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -11,8 +11,8 @@
 
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
-	UPoint _windowSize{.x = 0, .y = 0};
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
+
 	std::chrono::system_clock::time_point _creationTime;
 
 protected:
@@ -32,8 +32,8 @@ protected:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
 
 public:
-	Bonus(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	      std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color, int id);
+	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, int durationMs,
+	      int lifeTimeMs, int color, int id);
 
 	~Bonus() override;
 

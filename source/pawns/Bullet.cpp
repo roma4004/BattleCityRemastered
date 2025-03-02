@@ -5,14 +5,13 @@
 #include <string>
 
 Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
-               std::shared_ptr<int[]> windowBuffer, UPoint windowSize, const Direction direction, const float speed,
+               std::shared_ptr<Window> window, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
                std::string author, std::string fraction, const GameMode gameMode, int id)
 	: Pawn{rect,
 	       color,
 	       health,
-	       std::move(windowBuffer),
-	       std::move(windowSize),
+	       std::move(window),
 	       direction,
 	       speed,
 	       allObjects,

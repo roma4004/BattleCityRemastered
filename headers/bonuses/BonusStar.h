@@ -14,8 +14,8 @@ class BonusStar final : public Bonus
 	void Unsubscribe() const;
 
 public:
-	BonusStar(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-	          std::shared_ptr<EventSystem> events, int durationMs, int lifeTimeMs, int color, int id);
+	BonusStar(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+	          int durationMs, int lifeTimeMs, int color, int id);
 
 	~BonusStar() override;
 

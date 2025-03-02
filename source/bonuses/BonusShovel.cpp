@@ -1,16 +1,15 @@
 #include "../../headers/Bonuses/BonusShovel.h"
 #include "../../headers/bonuses/BonusTypeId.h"
 
-BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<int[]> windowBuffer, UPoint windowSize,
-                         std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
-                         const int color, const int id)
-	: Bonus{rect, std::move(windowBuffer), std::move(windowSize), std::move(events), durationMs, lifeTimeMs, color, id}
+BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                         const int durationMs, const int lifeTimeMs, const int color, const int id)
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, id}
 {
 	_name = "BonusShovel";
 	Subscribe();
 
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, BonusTypeId::Shovel, _id);
+			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Shovel, _id);
 }
 
 BonusShovel::~BonusShovel()

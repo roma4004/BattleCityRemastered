@@ -4,13 +4,12 @@
 #include "../headers/pawns/Bullet.h"
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       UPoint windowSize, std::shared_ptr<int[]> windowBuffer, const GameMode currentGameMode)
+                       std::shared_ptr<Window> window, const GameMode gameMode)
 	: _events{std::move(events)},
 	  _name{"BulletPool"},
-	  _currentMode{currentGameMode},
+	  _gameMode{gameMode},
 	  _allObjects{allObjects},
-	  _windowSize{std::move(windowSize)},
-	  _windowBuffer{std::move(windowBuffer)}
+	  _window{std::move(window)}
 {
 	Subscribe();
 }
@@ -29,7 +28,7 @@ void BulletPool::Subscribe()
 
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		_currentMode = newGameMode;
+		_gameMode = newGameMode;
 	});
 }
 
@@ -49,9 +48,9 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
 {
 	if (_bullets.empty())
 	{
-		auto bullet = std::make_shared<Bullet>(rect, damage, aoeRadius, color, health, _windowBuffer, _windowSize,
-		                                       direction, speed, _allObjects, _events, std::move(author),
-		                                       std::move(fraction), _currentMode, lastId++);
+		auto bullet = std::make_shared<Bullet>(
+				rect, damage, aoeRadius, color, health, _window, direction, speed, _allObjects, _events,
+				std::move(author), std::move(fraction), _gameMode, _lastId++);
 
 		return bullet;
 	}
@@ -83,5 +82,5 @@ void BulletPool::Clear()
 		_bullets.pop();
 	}
 
-	lastId = 0;
+	_lastId = 0;
 }

@@ -13,12 +13,10 @@
 #include <algorithm>
 #include <memory>
 
-TankSpawner::TankSpawner(UPoint windowSize, std::shared_ptr<int[]> windowBuffer,
-                         std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-                         std::shared_ptr<BulletPool> bulletPool)
-	: _windowSize{std::move(windowSize)},
-	  _windowBuffer{std::move(windowBuffer)},
-	  _allObjects{allObjects},
+TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
+	: _allObjects{allObjects},
+	  _window{std::move(window)},
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)}
 {
@@ -180,7 +178,7 @@ void TankSpawner::InitialSpawn()
 {
 	ResetRespawnStat();
 
-	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 	constexpr float speed{142};
 	constexpr int health{100};
 	const float size{gridOffset * 3};
@@ -242,8 +240,8 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 
 			_allObjects->emplace_back(
 					std::make_shared<Enemy>(
-							rect, gray, health, _windowBuffer, _windowSize, DOWN, speed, _allObjects, _events, name,
-							fraction, _bulletPool, _currentMode, index));
+							rect, gray, health, _window, DOWN, speed, _allObjects, _events, name, fraction, _bulletPool,
+							_currentMode, index));
 
 			return;
 		}
@@ -252,7 +250,7 @@ void TankSpawner::SpawnEnemy(const int index, const float gridOffset, const floa
 
 void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const int health, const float size)
 {
-	const auto windowSizeY{static_cast<float>(_windowSize.y)};
+	const auto windowSizeY{static_cast<float>(_window->size.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
 
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
@@ -278,14 +276,14 @@ void TankSpawner::SpawnPlayer1(const float gridOffset, const float speed, const 
 
 		_allObjects->emplace_back(
 				std::make_shared<PlayerOne>(
-						rect, yellow, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
-						fraction, std::move(inputProvider), _bulletPool, _currentMode, 1));
+						rect, yellow, health, _window, UP, speed, _allObjects, _events, name, fraction,
+						std::move(inputProvider), _bulletPool, _currentMode, 1));
 	}
 }
 
 void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const int health, const float size)
 {
-	const auto windowSizeY{static_cast<float>(_windowSize.y)};
+	const auto windowSizeY{static_cast<float>(_window->size.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -310,14 +308,14 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 
 		_allObjects->emplace_back(
 				std::make_shared<PlayerTwo>(
-						rect, green, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
-						fraction, std::move(inputProvider), _bulletPool, _currentMode, 2));
+						rect, green, health, _window, UP, speed, _allObjects, _events, name, fraction,
+						std::move(inputProvider), _bulletPool, _currentMode, 2));
 	}
 }
 
 void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
 {
-	const auto windowSizeY{static_cast<float>(_windowSize.y)};
+	const auto windowSizeY{static_cast<float>(_window->size.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -332,14 +330,14 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 
 		_allObjects->emplace_back(
 				std::make_shared<CoopAI>(
-						rect, yellow, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name,
-						fraction, _bulletPool, _currentMode, 1));
+						rect, yellow, health, _window, UP, speed, _allObjects, _events, name, fraction, _bulletPool,
+						_currentMode, 1));
 	}
 }
 
 void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
 {
-	const auto windowSizeY{static_cast<float>(_windowSize.y)};
+	const auto windowSizeY{static_cast<float>(_window->size.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -353,8 +351,8 @@ void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const in
 		std::string fraction{"PlayerTeam"};
 
 		_allObjects->emplace_back(std::make_shared<CoopAI>(
-				rect, green, health, _windowBuffer, _windowSize, UP, speed, _allObjects, _events, name, fraction,
-				_bulletPool, _currentMode, 2));
+				rect, green, health, _window, UP, speed, _allObjects, _events, name, fraction, _bulletPool,
+				_currentMode, 2));
 	}
 }
 
@@ -362,7 +360,7 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 {
 	if (GetEnemyRespawnResource() > 0)
 	{
-		const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+		const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 		const float size{gridOffset * 3};
 		constexpr float speed{142};
 		constexpr int health{100};
@@ -378,7 +376,7 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 
 void TankSpawner::RespawnPlayerTanks(const int index)
 {
-	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 	const float size{gridOffset * 3};
 	constexpr float speed{142};
 	constexpr int health{100};
@@ -411,7 +409,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 
 void TankSpawner::RespawnCoopTanks(const int index)
 {
-	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
+	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 	const float size{gridOffset * 3};
 	constexpr float speed{142};
 	constexpr int health{100};

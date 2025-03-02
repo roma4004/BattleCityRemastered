@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameMode.h"
-#include "Point.h"
+#include "application/Window.h"
 
 #include <memory>
 #include <queue>
@@ -9,7 +9,9 @@
 
 enum GameMode : char8_t;
 enum Direction : char8_t;
+
 struct ObjRectangle;
+
 class Bullet;
 class BaseObj;
 class EventSystem;
@@ -17,17 +19,16 @@ class EventSystem;
 class BulletPool final
 {
 	std::queue<std::shared_ptr<BaseObj>> _bullets;
-	int lastId{0};
+	int _lastId{0};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
-	GameMode _currentMode;
+	GameMode _gameMode;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
-	UPoint _windowSize;
-	std::shared_ptr<int[]> _windowBuffer{nullptr};
+	std::shared_ptr<Window> _window;
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	           UPoint windowSize, std::shared_ptr<int[]> windowBuffer, GameMode currentGameMode = GameMode::Demo);
+	           std::shared_ptr<Window> window, GameMode gameMode = Demo);
 
 	~BulletPool();
 
