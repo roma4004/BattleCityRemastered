@@ -24,8 +24,6 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	void SetPixel(size_t x, size_t y, int color) const;
-
 	void Draw() const override;
 
 	//TODO: implement collision detection through quadtree

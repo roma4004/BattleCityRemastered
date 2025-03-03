@@ -25,11 +25,6 @@ BrickWall::~BrickWall()
 
 void BrickWall::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
 	//TODO: skip if in host mode
@@ -45,44 +40,33 @@ void BrickWall::Subscribe()
 
 void BrickWall::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("Draw", _name);
 
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 }
 
-void BrickWall::SetPixel(const size_t x, const size_t y, const int color) const
-{
-	if (_window->buffer == nullptr)
-	{
-		return;
-	}
-
-	if (x < _window->size.x && y < _window->size.y)
-	{
-		const size_t rowSize = _window->size.x;
-		_window->buffer.get()[y * rowSize + x] = color;
-	}
-}
-
-void BrickWall::Draw() const
+void BrickWall::Draw() const //TODO: extract to new parent class obstacle
 {
 	if (!GetIsAlive())
 	{
 		return;
 	}
 
-	int y = static_cast<int>(GetY());
-	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
+	int startY = static_cast<int>(GetY());
+	const int startX = static_cast<int>(GetX());
+	const size_t windowWidth = _window->size.x;
+	const int height = static_cast<int>(GetHeight());
+	const int width = static_cast<int>(GetWidth());
+	const int color = GetColor();
+
+	for (const int maxY = startY + height; startY < maxY; ++startY)
 	{
-		int x = static_cast<int>(GetX());
-		for (const int maxX = x + static_cast<int>(GetWidth()); x < maxX; ++x)
+		int x = startX;
+		for (const int maxX = x + width; x < maxX; ++x)
 		{
-			SetPixel(x, y, GetColor());
+			const size_t offset = startY * windowWidth + startX;
+			const int rowWidth = maxX - startX;
+			std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
 		}
 	}
 }

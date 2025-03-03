@@ -43,11 +43,6 @@ BonusSpawner::~BonusSpawner()
 
 void BonusSpawner::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	//TODO: subscribe on game mode change, to update gameMode for spawning bonus
 	_events->AddListener<const FPoint, const BonusTypeId, const int>(
 			"ClientReceived_BonusSpawn", _name, [this](const FPoint spawnPos, const BonusTypeId type, const int id)
@@ -71,11 +66,6 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_BonusSpawn", _name);
 
 	_events->RemoveListener("SpawnerReset", _name);

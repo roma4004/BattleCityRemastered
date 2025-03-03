@@ -33,22 +33,12 @@ Tank::~Tank()
 
 void Tank::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 }
 
 void Tank::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("Draw", _name);
 	_events->RemoveListener("DrawHealthBar", _name);
 }
@@ -104,13 +94,17 @@ int Tank::GetFireCooldownMs() const { return _fireCooldownMs; }
 
 void Tank::SetFireCooldownMs(const int fireCooldown) { _fireCooldownMs = fireCooldown; }
 
+inline void Tank::SetPixel(const size_t x, const size_t y, const int color) const
+{
+	if (x < _window->size.x && y < _window->size.y)
+	{
+		const size_t rowSize = _window->size.x;
+		_window->buffer.get()[y * rowSize + x] = color;
+	}
+}
+
 void Tank::DrawHealthBar() const
 {
-	if (_window->buffer == nullptr)
-	{
-		return;
-	}
-
 	//TODO: fix recenter health bar when pickup star bonus
 	if (_isActiveHelmet)
 	{

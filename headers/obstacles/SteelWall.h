@@ -20,8 +20,6 @@ class SteelWall final : public BaseObj
 	void Subscribe() const;
 	void Unsubscribe() const;
 
-	void SetPixel(size_t x, size_t y, int color) const;
-
 	void Draw() const override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;

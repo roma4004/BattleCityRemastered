@@ -11,14 +11,10 @@ class IConfig;
 
 SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
                                const char* introMusicName)
-	: fpsFontPathName{fpsFontName},
+	: window{std::make_shared<Window>(windowSize)},
+	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
-	  introMusicPathName{introMusicName}
-{
-	const auto size = windowSize.x * windowSize.y;
-	window = std::make_shared<Window>(std::move(windowSize),
-	                                  std::shared_ptr<int[]>(new int[size], std::default_delete<int[]>()));
-}
+	  introMusicPathName{introMusicName} {}
 
 SDLEnvironment::~SDLEnvironment()
 {

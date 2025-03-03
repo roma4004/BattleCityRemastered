@@ -39,7 +39,7 @@ class Menu final
 	void RenderStatistics(Point pos) const;
 
 	void BlendBackgroundToWindowBuffer();
-	void HandleMenuText(UPoint menuBackgroundPos) const;
+	void DrawMenuText(UPoint menuBackgroundPos) const;
 
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,

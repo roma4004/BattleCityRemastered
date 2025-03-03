@@ -7,9 +7,9 @@
 
 // std::ofstream error_log("error_log_client.txt");
 
-Client::Client(boost::asio::io_service& ioService, const std::string& host, const std::string& port,
+Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
                std::shared_ptr<EventSystem> events)
-	: _socket(ioService),
+	: _socket(ioContext),
 	  _events{std::move(events)},
 	  _name{"Client"}
 {
@@ -25,8 +25,8 @@ Client::Client(boost::asio::io_service& ioService, const std::string& host, cons
 	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
 	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
 
-	tcp::resolver resolver(ioService);
-	const auto endpointIterator = resolver.resolve({host, port});
+	tcp::resolver resolver(ioContext);
+	const auto endpointIterator = resolver.resolve(host, port);
 	boost::asio::async_connect(
 			_socket,
 			endpointIterator,
@@ -69,8 +69,8 @@ void Client::ReadResponse()
 		}
 		else
 		{
-			const std::string archiveData(boost::asio::buffer_cast<const char*>(this->_read_buffer.data()),
-			                              length);
+			const std::string archiveData(buffers_begin(_read_buffer.data()),
+			                              buffers_begin(_read_buffer.data()) + length);
 			std::istringstream archiveStream(archiveData);
 			boost::archive::text_iarchive ia(archiveStream);
 			Data data;
@@ -79,14 +79,16 @@ void Client::ReadResponse()
 			_read_buffer.consume(length);// Now we can consume the written data
 
 			//TODO: replicate tank died and spawn, now only next move update them or new health update health
-			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game 
+			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game
 			if (data.eventName == "Pos")
 			{
-				events->EmitEvent<const FPoint, const Direction>("ClientReceived_" + data.objectName + data.eventName, data.newPos, data.direction);
+				events->EmitEvent<const FPoint, const Direction>("ClientReceived_" + data.objectName + data.eventName,
+				                                                 data.newPos, data.direction);
 			}
 			else if (data.eventName == "Shot")
 			{
-				events->EmitEvent<const Direction>("ClientReceived_" + data.objectName + data.eventName, data.direction);
+				events->EmitEvent<const Direction>("ClientReceived_" + data.objectName + data.eventName,
+				                                   data.direction);
 			}
 			else if (data.eventName == "Health")
 			{
@@ -98,7 +100,8 @@ void Client::ReadResponse()
 			}
 			else if (data.eventName == "BonusSpawn")
 			{
-				events->EmitEvent<const FPoint, const BonusTypeId, const int>("ClientReceived_" + data.eventName, data.newPos, data.typeId, data.id);
+				events->EmitEvent<const FPoint, const BonusTypeId, const int>(
+						"ClientReceived_" + data.eventName, data.newPos, data.typeId, data.id);
 			}
 			else if (data.eventName == "BonusDeSpawn")
 			{
@@ -110,9 +113,10 @@ void Client::ReadResponse()
 			}
 			else if (data.eventName == "TankDied")
 			{
-				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName, data.objectName);
+				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName,
+				                                     data.objectName);
 			}
-			else if (data.eventName == "KeyState") //key input
+			else if (data.eventName == "KeyState")//key input
 			{
 				events->EmitEvent(data.objectName);
 			}

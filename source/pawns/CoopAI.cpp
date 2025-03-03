@@ -53,11 +53,6 @@ CoopAI::~CoopAI()
 
 void CoopAI::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	Tank::Subscribe();
 
 	SubscribeAsHost();
@@ -150,11 +145,6 @@ void CoopAI::SubscribeBonus()
 
 void CoopAI::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	Tank::Unsubscribe();
 
 	UnsubscribeAsHost();

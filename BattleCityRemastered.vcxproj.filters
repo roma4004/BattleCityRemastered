@@ -20,15 +20,6 @@
     <ClCompile Include="source\Map.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\ConfigFailure.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ConfigSuccess.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\SDLEnvironment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\bonuses\Bonus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,9 +35,6 @@
     <ClCompile Include="source\bonuses\BonusStar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\bonuses\BonusSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\bonuses\BonusTank.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,28 +44,13 @@
     <ClCompile Include="source\BulletPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\GameFailure.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\GameStatistics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\GameSuccess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\LineOfSight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\Menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\obstacles\Brick.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\obstacles\Iron.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\obstacles\Water.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\pawns\Bullet.cpp">
@@ -137,13 +110,46 @@
     <ClCompile Include="source\input\InputProviderForPlayerTwoNet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\obstacles\FortressObstacle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\ObjRectangle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\Server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\ConfigFailure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\ConfigSuccess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\GameFailure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\GameSuccess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\SDLEnvironment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bonuses\BonusSpawner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\obstacles\ObstacleSpawner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\obstacles\BrickWall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\obstacles\FortressWall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\obstacles\SteelWall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\obstacles\WaterTile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -172,15 +178,6 @@
     <ClInclude Include="headers\EventSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\ConfigFailure.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\ConfigSuccess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\SDLEnvironment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\bonuses\Bonus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -196,22 +193,13 @@
     <ClInclude Include="headers\bonuses\BonusStar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\bonuses\BonusSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\bonuses\BonusTank.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\bonuses\BonusTimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\GameFailure.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\GameStatistics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\GameSuccess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\interfaces\IPickupableBonus.h">
@@ -224,15 +212,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\Menu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\obstacles\Brick.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\obstacles\Iron.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\obstacles\Water.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\BulletPool.h">
@@ -328,9 +307,6 @@
     <ClInclude Include="headers\input\InputProviderForPlayerTwoNet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\obstacles\FortressObstacle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\ObjRectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -340,6 +316,52 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\application\ConfigFailure.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\ConfigSuccess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\GameFailure.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\GameSuccess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\SDLEnvironment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\bonuses\BonusSpawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\bonuses\BonusTypeId.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\EventSystem.tpp" />
+    <ClInclude Include="headers\obstacles\ObstacleSpawner.tpp" />
+    <ClInclude Include="headers\obstacles\ObstacleTypeId.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\obstacles\ObstacleSpawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\obstacles\BrickWall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\obstacles\FortressWall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\obstacles\SteelWall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\obstacles\WaterTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Point.tpp" />
+    <ClInclude Include="headers\Server.tpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BattleCityRemastered.rc" />
@@ -352,5 +374,8 @@
   </ItemGroup>
   <ItemGroup>
     <Media Include="Resources\Sounds\levelStarted.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

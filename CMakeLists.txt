@@ -8,7 +8,7 @@
 # ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serialization
 
 
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.15) #NOTE: cmake v3.15+ required by boost from 1.87
 project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
 #TODO: create compiler switch msvc, mingw(gcc)
@@ -32,7 +32,7 @@ set(SDL2_IMG_TAG "release-2.8.2")
 set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(SDL2_MXR_TAG "release-2.8.0")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
-set(BOOST_VERSION "1.85.0")
+set(BOOST_VERSION "1.87.0")
 string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE "${BOOST_VERSION}")
 set(BOOST_TAG "boost-${BOOST_VERSION}")
 set(SDL2_MIXER_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_mixer.git")
@@ -175,7 +175,7 @@ set(BOOST_SUBMODULES
     libs/system
     libs/winapi
     libs/date_time
-    libs/numeric")
+    libs/numeric")#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     ExternalProject_Add(Boost
@@ -231,9 +231,10 @@ if(Boost_FOUND)
     message(STATUS "------------------------------------------------------------")
 else ()
     message(STATUS "------------------------------------------------------------")
-    message(STATUS "Could not find Boost, for the first time ignore it, will be downloaded as dependency during build run.")
-    message(STATUS "If you see ninja: error: loading 'build.ninja': The system cannot find the file specified,")
-    message(STATUS "just reload cmake project to fix it, then run the build")
+    message(STATUS "If you see error 'Could not find Boost', ignore it once,")
+    message(STATUS "it will be autodownload during first build, so run build.")
+    message(STATUS "first build will finish with compile error like missing boost includes,")
+    message(STATUS "reload cmake project to fix it, then run build again, and all will work fine")
     message(STATUS "------------------------------------------------------------")
 endif()
 

@@ -30,11 +30,6 @@ TankSpawner::~TankSpawner()
 
 void TankSpawner::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("InitialSpawn", _name, [this]() { InitialSpawn(); });
 	_events->AddListener("RespawnTanks", _name, [this]() { RespawnTanks(); });
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -118,11 +113,6 @@ void TankSpawner::Subscribe()
 
 void TankSpawner::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("InitialSpawn", _name);
 	_events->RemoveListener("RespawnTanks", _name);
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);

@@ -43,6 +43,7 @@ protected:
 
 	void Shot() const;
 
+	inline void SetPixel(size_t x, size_t y, int color) const;
 	void DrawHealthBar() const override;
 
 public:

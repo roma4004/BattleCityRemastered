@@ -46,11 +46,6 @@ PlayerOne::~PlayerOne()
 
 void PlayerOne::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	Tank::Subscribe();
 
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
@@ -173,11 +168,6 @@ void PlayerOne::SubscribeBonus()
 
 void PlayerOne::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	Tank::Unsubscribe();
 
 	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();

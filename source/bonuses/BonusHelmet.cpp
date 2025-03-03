@@ -3,9 +3,8 @@
 
 BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                          const int durationMs, const int lifeTimeMs, const int color, const int id)
-	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, id}
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, "BonusHelmet", id}
 {
-	_name = "BonusHelmet";
 	Subscribe();
 
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
@@ -21,11 +20,6 @@ BonusHelmet::~BonusHelmet()
 
 void BonusHelmet::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
@@ -44,11 +38,6 @@ void BonusHelmet::Subscribe()
 
 void BonusHelmet::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
 
 	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);

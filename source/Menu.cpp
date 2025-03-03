@@ -27,11 +27,6 @@ Menu::~Menu()
 
 void Menu::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("DrawMenuBackground", _name, [this]() { this->BlendBackgroundToWindowBuffer(); });
 
 	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -44,7 +39,7 @@ void Menu::Subscribe()
 		if (const auto menuKeysStats = this->_input->GetKeysStats();
 			menuKeysStats.menuShow)
 		{
-			this->HandleMenuText(_pos);
+			this->DrawMenuText(_pos);
 			const SDL_Rect logoRectangle{.x = static_cast<int>(this->_pos.x - 420),
 			                             .y = static_cast<int>(this->_pos.y - 490),
 			                             .w = 300,
@@ -75,11 +70,6 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("DrawMenuBackground", _name);
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener("DrawMenuText", _name);
@@ -114,27 +104,23 @@ void Menu::Update() const
 // blend menu panel and menu texture background
 void Menu::BlendBackgroundToWindowBuffer()
 {
-	if (_window->buffer == nullptr)
-	{
-		return;
-	}
-
 	if (const auto menuKeysStats = GetKeysStats(); !menuKeysStats.menuShow)
 	{
 		return;
 	}
 
-	const auto sizeX = static_cast<unsigned int>(_window->size.x);
+	const auto winSizeX = static_cast<unsigned int>(_window->size.x);
 	const unsigned menuHeight = static_cast<unsigned int>(_window->size.y) - 50;
-	const unsigned menuWidth = sizeX - 228;
+	const unsigned menuWidth = winSizeX - 228;
+	const auto buffer = _window->buffer.get();
 	for (_pos.y = 50 + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
 	{
 		for (_pos.x = 50; _pos.x < menuWidth; ++_pos.x)
 		{
-			if (_pos.y < _window->size.y && _pos.x < _window->size.x)
+			if (_pos.y < _window->size.y)
 			{
 				constexpr unsigned int menuColor = 0xFF808080;
-				int& targetColor = _window->buffer.get()[_pos.y * sizeX + _pos.x];
+				int& targetColor = buffer[_pos.y * winSizeX + _pos.x];
 				const unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(
 						static_cast<unsigned int>(targetColor), 91);
 				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColorLessAlpha, menuColor));
@@ -143,7 +129,7 @@ void Menu::BlendBackgroundToWindowBuffer()
 	}
 
 	// animation
-	if (constexpr unsigned int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
+	if (constexpr unsigned int yOffsetEnd = 0u; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;
 	}
@@ -221,16 +207,16 @@ void Menu::RenderStatistics(const Point pos) const
 	TextToRender({.x = pos.x + 180, .y = pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
 	TextToRender({.x = pos.x + 235, .y = pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKWALL KILLS");
+	TextToRender({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKS KILLS");
 	TextToRender({.x = pos.x + 130, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerOne());
 	TextToRender({.x = pos.x + 180, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerTwo());
 	TextToRender({.x = pos.x + 235, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByEnemyTeam());
 }
 
-void Menu::HandleMenuText(const UPoint menuBackgroundPos) const
+void Menu::DrawMenuText(const UPoint menuBackgroundPos) const
 {
-	const Point pos = {.x = static_cast<int>(menuBackgroundPos.x - 350),
-	                   .y = static_cast<int>(menuBackgroundPos.y - 350)};
+	const Point pos = {.x = static_cast<int>(menuBackgroundPos.x) - 350,
+	                   .y = static_cast<int>(menuBackgroundPos.y) - 350};
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender({.x = pos.x, .y = pos.y - 50}, color,

@@ -13,29 +13,28 @@ Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, std::sha
 
 Pawn::~Pawn() = default;
 
-void Pawn::SetPixel(const size_t x, const size_t y, const int color) const
+void Pawn::Draw() const
 {
-	if (_window->buffer == nullptr)
+	if (!GetIsAlive())
 	{
 		return;
 	}
 
-	if (x < _window->size.x && y < _window->size.y)
-	{
-		const size_t rowSize = _window->size.x;
-		_window->buffer.get()[y * rowSize + x] = color;
-	}
-}
+	int startY = static_cast<int>(GetY());
+	const int startX = static_cast<int>(GetX());
+	const size_t windowWidth = _window->size.x;
+	const int height = static_cast<int>(GetHeight());
+	const int width = static_cast<int>(GetWidth());
+	const int color = GetColor();
 
-void Pawn::Draw() const
-{
-	int y = static_cast<int>(GetY());
-	for (const int maxY = y + static_cast<int>(GetHeight()); y < maxY; ++y)
+	for (const int maxY = startY + height; startY < maxY; ++startY)
 	{
-		int x = static_cast<int>(GetX());
-		for (const int maxX = x + static_cast<int>(GetWidth()); x < maxX; ++x)
+		int x = startX;
+		for (const int maxX = x + width; x < maxX; ++x)
 		{
-			SetPixel(x, y, GetColor());
+			const size_t offset = startY * windowWidth + startX;
+			const int rowWidth = maxX - startX;
+			std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
 		}
 	}
 }

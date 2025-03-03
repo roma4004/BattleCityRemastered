@@ -15,11 +15,6 @@ GameStatistics::~GameStatistics()
 
 void GameStatistics::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	//TODO: replace <std::string> with <Enum::statisticsType>
 	_events->AddListener<const std::string&, const std::string&>(
 			"BulletHit",
@@ -79,11 +74,6 @@ void GameStatistics::Subscribe()
 
 void GameStatistics::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener<const std::string&, const std::string&>("BulletHit", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&>("EnemyHit", _name);

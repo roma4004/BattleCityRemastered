@@ -21,11 +21,6 @@ BulletPool::~BulletPool()
 
 void BulletPool::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
@@ -34,11 +29,6 @@ void BulletPool::Subscribe()
 
 void BulletPool::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("GameModeChangedTo", _name);
 }
 

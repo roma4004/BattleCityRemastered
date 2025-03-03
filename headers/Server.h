@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <boost/asio.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <boost/serialization/vector.hpp>
 
 using boost::asio::ip::tcp;
@@ -55,7 +56,7 @@ struct Server final
 	std::vector<std::shared_ptr<Session>> sessions;
 	std::string _name;
 
-	Server(boost::asio::io_service& ioService, const std::string& host, const std::string& port,
+	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
 	       std::shared_ptr<EventSystem> events);
 
 	~Server();

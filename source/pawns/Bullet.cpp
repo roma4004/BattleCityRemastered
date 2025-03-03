@@ -36,11 +36,6 @@ Bullet::~Bullet() { Unsubscribe(); }
 
 void Bullet::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
@@ -77,11 +72,6 @@ void Bullet::SubscribeAsClient()
 
 void Bullet::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("Draw", _name);
 
 	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();

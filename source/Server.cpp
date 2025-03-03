@@ -41,7 +41,8 @@ void Session::DoRead()
 			}
 			else
 			{
-				const std::string archiveData(boost::asio::buffer_cast<const char*>(_read_buffer.data()), length);
+				const std::string archiveData(buffers_begin(_read_buffer.data()),
+				                              buffers_begin(_read_buffer.data()) + length);
 				std::istringstream archiveStream(archiveData);
 				boost::archive::text_iarchive ia(archiveStream);
 
@@ -128,9 +129,9 @@ void Session::DoWrite(const std::string& message)
 	}
 }
 
-Server::Server(boost::asio::io_service& ioService, const std::string& host, const std::string& port,
+Server::Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
                std::shared_ptr<EventSystem> events)
-	: _acceptor(ioService, tcp::endpoint(boost::asio::ip::address::from_string(host).to_v4(),
+	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
 	                                     static_cast<unsigned short>(std::stoul(port)))),
 	  _events{std::move(events)},
 	  _name{"Server"}
@@ -226,7 +227,7 @@ Server::~Server()
 	_events->RemoveListener("Pause_Released", _name);
 
 	_events->RemoveListener<const std::string&, const FPoint, const Direction>(
-		"ServerSend_Pos", _name);
+			"ServerSend_Pos", _name);
 	_events->RemoveListener<const std::string&, const FPoint, const BonusTypeId, const int>(
 			"ServerSend_BonusSpawn", _name);
 	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);

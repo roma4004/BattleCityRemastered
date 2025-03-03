@@ -3,11 +3,8 @@
 
 BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                        const int durationMs, const int lifeTimeMs, const int color, const int id)
-	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, id}
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, "BonusTimer", id}
 {
-	//TODO: adjust name for net game, so remove the ptr name generator stuff
-	_name = "BonusTimer";//TODO: move to initialization list for all bonuses
-
 	Subscribe();
 
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
@@ -23,11 +20,6 @@ BonusTimer::~BonusTimer()
 
 void BonusTimer::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
@@ -46,11 +38,6 @@ void BonusTimer::Subscribe()
 
 void BonusTimer::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
 
 	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);

@@ -8,7 +8,7 @@
 #include "../../headers/pawns/Bullet.h"
 
 #include <algorithm>
-#include <fstream>
+//#include <fstream>
 #include <iostream>
 #include <memory>
 
@@ -16,7 +16,7 @@
 //#define _WIN32_WINNT 0x0A00
 //#endif
 #define ASIO_STANDALONE
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
@@ -48,11 +48,6 @@ GameSuccess::~GameSuccess()
 
 void GameSuccess::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
@@ -64,11 +59,6 @@ void GameSuccess::Subscribe()
 
 void GameSuccess::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("PreviousGameMode", _name);
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
@@ -335,11 +325,6 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::MainLoop()
 {
-	if (!_window->buffer || !_renderer || !_screen || !_fpsFont || !_events)
-	{
-		return;
-	}
-
 	try
 	{
 		Uint32 frameCount{0};
@@ -349,14 +334,14 @@ void GameSuccess::MainLoop()
 		auto fpsPrevUpdateTime = oldTime;
 		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
 
-		boost::asio::io_service io_service;
-		Server server(io_service, "127.0.0.1", "1234", _events);
+		boost::asio::io_context ioContext;
+		Server server(ioContext, "127.0.0.1", "1234", _events);
 		//TODO: encapsulate separated thread into server for storing and running io_service
 		std::thread netThread([&]()
 		{
 			try
 			{
-				io_service.run();
+				ioContext.run();
 				// io_service.stop();
 			}
 			catch (std::exception& e)
@@ -372,9 +357,6 @@ void GameSuccess::MainLoop()
 
 		while (!_isGameOver)
 		{
-			// Cap to 60 FPS
-			// SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
-
 			ClearBuffer();
 
 			// TODO: current mode demo in game fix this
@@ -382,7 +364,7 @@ void GameSuccess::MainLoop()
 
 			if (_menu)
 			{
-				_menu.get()->Update();//TODO: should be event updateMenu
+				_menu->Update();//TODO: should be event updateMenu
 			}
 
 			if (!_isPause)

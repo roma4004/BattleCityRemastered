@@ -23,8 +23,6 @@ protected:
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
-	virtual void SetPixel(size_t x, size_t y, int color) const;
-
 	void TickUpdate(float deltaTime) override;
 
 	void Draw() const override;
@@ -33,7 +31,7 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, int durationMs,
-	      int lifeTimeMs, int color, int id);
+	      int lifeTimeMs, int color, std::string name, int id);
 
 	~Bonus() override;
 

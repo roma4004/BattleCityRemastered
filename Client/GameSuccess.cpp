@@ -41,11 +41,6 @@ GameSuccess::~GameSuccess()
 
 void GameSuccess::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
@@ -57,11 +52,6 @@ void GameSuccess::Subscribe()
 
 void GameSuccess::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("PreviousGameMode", _name);
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
@@ -329,18 +319,13 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::MainLoop()
 {
-	if (!_window->buffer || !_renderer || !_screen || !_fpsFont || !_events)
-	{
-		return;
-	}
-
 	try
 	{
-		boost::asio::io_service io_service;
-		boost::asio::ip::tcp::socket socket(io_service);
+		boost::asio::io_context ioContext;
+		boost::asio::ip::tcp::socket socket(ioContext);
 		// socket.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 1234));
-		Client client(io_service, "127.0.0.1", "1234", _events);
-		std::thread io_service_thread([&io_service]() { io_service.run(); });
+		Client client(ioContext, "127.0.0.1", "1234", _events);
+		std::thread io_service_thread([&ioContext]() { ioContext.run(); });
 		io_service_thread.detach();
 
 		Uint32 frameCount{0};
@@ -361,7 +346,7 @@ void GameSuccess::MainLoop()
 
 			if (_menu)
 			{
-				_menu.get()->Update();//TODO: replace with event
+				_menu->Update();//TODO: replace with event
 			}
 
 			if (!_isPause && _currentMode != PlayAsClient)
