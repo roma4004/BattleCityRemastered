@@ -271,6 +271,7 @@ add_executable(${PROJECT_NAME}
         source/BaseObj.cpp
         source/Map.cpp
         source/Menu.cpp
+        source/obstacles/Obstacle.cpp
         source/obstacles/ObstacleSpawner.cpp
         source/obstacles/BrickWall.cpp
         source/obstacles/FortressWall.cpp

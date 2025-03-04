@@ -37,11 +37,6 @@ ObstacleSpawner::~ObstacleSpawner()
 
 void ObstacleSpawner::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener("SpawnerReset", _name, [this]() { this->_lastSpawnId = -1; });
 
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -73,11 +68,6 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->RemoveListener("SpawnerReset", _name);
 
 	if (_currentMode == PlayAsClient)

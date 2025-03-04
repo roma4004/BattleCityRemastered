@@ -12,7 +12,6 @@ struct UPoint;
 class Tank : public Pawn, public IHealthBar
 {
 	int _bulletDamage{15};
-	int _id;
 	float _bulletWidth{6.f};
 	float _bulletHeight{6.f};
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
@@ -28,7 +27,6 @@ protected:
 	int _tier{0};
 	int _fireCooldownMs{1000};//1 sec
 
-	std::string _name;
 	std::string _fraction;
 
 	// bonuses

@@ -13,7 +13,7 @@
 
 CoopAI::CoopAI(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
                const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-               const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+               std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
                std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
 	: Tank{rect,
 	       color,
@@ -53,8 +53,6 @@ CoopAI::~CoopAI()
 
 void CoopAI::Subscribe()
 {
-	Tank::Subscribe();
-
 	SubscribeAsHost();
 
 	SubscribeBonus();
@@ -145,8 +143,6 @@ void CoopAI::SubscribeBonus()
 
 void CoopAI::Unsubscribe() const
 {
-	Tank::Unsubscribe();
-
 	UnsubscribeAsHost();
 
 	UnsubscribeBonus();
@@ -202,6 +198,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(upSideObstacles.front()))
 		{
 			SetDirection(UP);
@@ -220,6 +217,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(leftSideObstacles.front()))
 		{
 			SetDirection(LEFT);
@@ -238,6 +236,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(downSideObstacles.front()))
 		{
 			SetDirection(DOWN);
@@ -256,6 +255,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 
 			return;
 		}
+
 		if (IsBonus(rightSideObstacles.front()))
 		{
 			SetDirection(RIGHT);
@@ -277,6 +277,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 			bulletOffset = bulletSize.y;
 		}
 	}
+	
 	if (dir == LEFT && !leftSideObstacles.empty())
 	{
 		nearestObstacle = leftSideObstacles.front().lock();
@@ -286,6 +287,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 			bulletOffset = bulletSize.x;
 		}
 	}
+	
 	if (dir == DOWN && !downSideObstacles.empty())
 	{
 		nearestObstacle = downSideObstacles.front().lock();
@@ -295,6 +297,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 			bulletOffset = bulletSize.y;
 		}
 	}
+	
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
 		nearestObstacle = rightSideObstacles.front().lock();

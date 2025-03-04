@@ -293,24 +293,6 @@ void GameSuccess::UserInputHandling()
 
 void GameSuccess::DisposeDeadObject()
 {
-	// TODO: separate bullets or somehow delete and recycle in one iterating through _allObjects (because now its two)
-	// TODO: create wrapper for bullet and RAII to dispose it to bullet pool
-	// Destroy all "dead" objects except bullet they will be recycled
-	for (auto it = _allObjects.begin(); it < _allObjects.end();)
-	{
-		if ((*it)->GetIsAlive() == false)
-		{
-			if (const auto* bullet = dynamic_cast<Bullet*>(it->get());
-				bullet != nullptr)
-			{
-				_bulletPool->ReturnBullet(*it);
-				it = _allObjects.erase(it);
-				continue;
-			}
-		}
-		++it;
-	}
-
 	const auto it = std::ranges::remove_if(_allObjects, [&](const auto& obj) { return !obj->GetIsAlive(); }).
 			begin();
 	_allObjects.erase(it, _allObjects.end());

@@ -59,6 +59,7 @@
     <ClCompile Include="..\source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\LineOfSight.cpp" />
     <ClCompile Include="..\source\Obstacles\BrickWall.cpp" />
+    <ClCompile Include="..\source\obstacles\Obstacle.cpp" />
     <ClCompile Include="..\source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\Obstacles\SteelWall.cpp" />
     <ClCompile Include="..\source\obstacles\FortressWall.cpp" />

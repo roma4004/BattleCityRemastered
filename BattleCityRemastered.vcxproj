@@ -165,6 +165,7 @@
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\Menu.cpp" />
+    <ClCompile Include="source\obstacles\Obstacle.cpp" />
     <ClCompile Include="source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="source\obstacles\BrickWall.cpp" />
     <ClCompile Include="source\obstacles\FortressWall.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
+    <ClInclude Include="headers\obstacles\Obstacle.h" />
     <ClInclude Include="headers\obstacles\ObstacleSpawner.tpp" />
     <ClInclude Include="headers\obstacles\ObstacleTypeId.h" />
     <ClInclude Include="headers\obstacles\ObstacleSpawner.h" />

@@ -57,8 +57,6 @@ Enemy::~Enemy()
 
 void Enemy::Subscribe()
 {
-	Tank::Subscribe();
-
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
 	SubscribeBonus();
@@ -178,8 +176,6 @@ void Enemy::SubscribeBonus()
 
 void Enemy::Unsubscribe() const
 {
-	Tank::Unsubscribe();
-
 	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
 	UnsubscribeBonus();

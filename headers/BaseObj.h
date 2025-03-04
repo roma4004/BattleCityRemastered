@@ -14,10 +14,12 @@ class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatis
 	bool _isAlive{true};
 
 protected:
+	int _id{0};
+	std::string _name;
 	ObjRectangle _shape{};
 
 public:
-	BaseObj(const ObjRectangle& rect, int color, int health);
+	BaseObj(const ObjRectangle& rect, int color, int health, int id, std::string name);
 
 	~BaseObj() override;
 

@@ -32,15 +32,19 @@ void BulletPool::Unsubscribe() const
 	_events->RemoveListener("GameModeChangedTo", _name);
 }
 
-std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color,
-                                               int health, Direction direction, float speed, std::string author,
-                                               std::string fraction)
+std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const int damage, const double aoeRadius,
+                                               const int color, const int health, const Direction direction,
+                                               const float speed, std::string author, std::string fraction)
 {
 	if (_bullets.empty())
 	{
-		auto bullet = std::make_shared<Bullet>(
-				rect, damage, aoeRadius, color, health, _window, direction, speed, _allObjects, _events,
-				std::move(author), std::move(fraction), _gameMode, _lastId++);
+		auto bullet = std::shared_ptr<Bullet>(
+				new Bullet{rect, damage, aoeRadius, color, health, _window, direction, speed, _allObjects, _events,
+				           std::move(author), std::move(fraction), _gameMode, _lastId++},
+				[this](Bullet* b)
+				{
+					ReturnBullet(b);
+				});
 
 		return bullet;
 	}
@@ -55,12 +59,16 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, int dam
 	return bulletAsBase;
 }
 
-void BulletPool::ReturnBullet(std::shared_ptr<BaseObj> bullet)
+void BulletPool::ReturnBullet(BaseObj* bullet)
 {
-	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet.get()); bulletCast != nullptr)
+	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
 		bulletCast->Disable();
-		_bullets.emplace(std::move(bullet));
+		_bullets.emplace(std::shared_ptr<BaseObj>(bullet, [this](BaseObj* b)
+		{
+			ReturnBullet(b);
+		}));
+
 		_events->EmitEvent<const int>("ServerSend_Dispose", bulletCast->GetId());
 	}
 }

@@ -16,13 +16,14 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	       speed,
 	       allObjects,
 	       events,
-	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events)},
-	  _name{"Bullet" + std::to_string(id)},
+	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events),
+	       id,
+	       "Bullet" + std::to_string(id)
+	  },
 	  _author{std::move(author)},
 	  _fraction{std::move(fraction)},
 	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage},
-	  _id{id},
 	  _gameMode{gameMode}
 {
 	BaseObj::SetIsPassable(true);

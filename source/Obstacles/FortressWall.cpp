@@ -2,7 +2,6 @@
 #include "../../headers/EventSystem.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/SteelWall.h"
-#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
@@ -12,14 +11,18 @@
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id)
-	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, 0x924b00, 1},
+	: Obstacle{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1},
+	           0x924b00,
+	           1,
+	           window,
+	           "fortressWall" + std::to_string(id),
+	           events,
+	           id},
 	  _rect{rect},
 	  _window{window},
-	  _events{events},
+	  _events{events},//TODO: change name for statistic
 	  _allObjects{allObjects},
-	  _name{"fortressWall" + std::to_string(id)},//TODO: change name for statistic
-	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id)},
-	  _id{id}
+	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id)}
 {
 	Subscribe();
 }
@@ -31,11 +34,6 @@ FortressWall::~FortressWall()
 
 void FortressWall::Subscribe()
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
@@ -43,6 +41,13 @@ void FortressWall::Subscribe()
 
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
+	SubscribeAsClient();//TODO: enable only in client mode
+
+	SubscribeBonus();//TODO: replicate bonusShovel, to replace with steel
+}
+
+void FortressWall::SubscribeAsClient()
+{
 	_events->AddListener<const int>("ClientReceived_FortressDied", _name, [this](const int id)
 	{
 		if (id != _id)
@@ -51,9 +56,11 @@ void FortressWall::Subscribe()
 		}
 
 		this->Hide();
-	});//TODO: enable only in client mode
-	//TODO: replicate bonusShovel, to replace with steel
-//TODO: split subscription subBonus, subAsClient etc.
+	});
+}
+
+void FortressWall::SubscribeBonus()
+{
 	_events->AddListener<const std::string&, const std::string&, int>(
 			"BonusShovel", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
@@ -83,15 +90,16 @@ void FortressWall::Subscribe()
 
 void FortressWall::Unsubscribe() const
 {
-	if (_events == nullptr)
-	{
-		return;
-	}
-
 	// _events->RemoveListener<const float>("ClientReceived_BrickWall" + std::to_string(_id) + "Health", _name);
 	// _events->RemoveListener<const float>("ClientReceived_SteelWall"  + std::to_string(_obstacleId) + "Health", _name);
 	_events->RemoveListener<const float>("TickUpdate", _name);
 	_events->RemoveListener("Draw", _name);
+
+	UnsubscribeBonus();
+}
+
+void FortressWall::UnsubscribeBonus() const
+{
 	_events->RemoveListener<const std::string&, const std::string&, int>("BonusShovel", _name);
 }
 
@@ -140,7 +148,6 @@ void FortressWall::BonusShovelSwitch()
 	}
 }
 
-//TODO: write more unit test for fortressWall bonus logic work
 void FortressWall::TakeDamage(const int damage)
 {
 	int health{0};

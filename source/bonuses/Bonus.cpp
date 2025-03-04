@@ -3,13 +3,11 @@
 
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
              const int durationMs, const int lifeTimeMs, const int color, std::string name, const int id)
-	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1},
+	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1, id, std::move(name)},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
-	  _id{id},
 	  _bonusDurationMs{durationMs},
 	  _bonusLifetimeMs{lifeTimeMs},
-	  _name{std::move(name)},
 	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);

@@ -12,12 +12,10 @@ class EventSystem;
 
 class Bullet final : public Pawn
 {
-	std::string _name;
 	std::string _author;
 	std::string _fraction;
 	double _bulletDamageRadius{12.f};
 	int _damage{0};
-	int _id{0};
 	GameMode _gameMode{Demo};
 
 	void Subscribe();

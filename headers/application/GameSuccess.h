@@ -34,7 +34,6 @@ class GameSuccess final : public IGame
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
-	//fps
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 	std::shared_ptr<SDL_Texture> _fpsTexture{nullptr};
 

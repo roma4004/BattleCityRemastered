@@ -444,7 +444,7 @@ void TankSpawner::RespawnTanks()
 
 	if (IsCoopOneAINeedRespawn()) { RespawnCoopTanks(1); }
 
-	if (IsCoopTwoAINeedRespawn()) { RespawnCoopTanks(2); }
+	if (IsCoopTwoAINeedRespawn()) { RespawnCoopTanks(2); }//TODO: fix respawn coop player
 }
 
 void TankSpawner::IncreaseEnemyRespawnResource()

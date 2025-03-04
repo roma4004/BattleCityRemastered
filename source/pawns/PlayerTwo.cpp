@@ -45,8 +45,6 @@ PlayerTwo::~PlayerTwo()
 
 void PlayerTwo::Subscribe()
 {
-	Tank::Subscribe();
-
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
 	SubscribeBonus();
@@ -166,8 +164,6 @@ void PlayerTwo::SubscribeBonus()
 
 void PlayerTwo::Unsubscribe() const
 {
-	Tank::Unsubscribe();
-
 	_gameMode == PlayAsClient || _gameMode == PlayAsHost ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
 	UnsubscribeBonus();
@@ -208,11 +204,6 @@ void PlayerTwo::MoveTo(const float deltaTime, const Direction direction)
 
 void PlayerTwo::TickUpdate(const float deltaTime)
 {
-	if (_inputProvider == nullptr)
-	{
-		return;
-	}
-
 	const auto playerKeys = _inputProvider->GetKeysStats();
 
 	// move

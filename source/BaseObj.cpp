@@ -1,8 +1,8 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
-BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health)
-	: _color(color), _health(health), _shape{rect} {}
+BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health, const int id, std::string name)
+	: _color(color), _health(health), _id {id}, _name{std::move(name)}, _shape{rect}{}
 
 BaseObj::~BaseObj() = default;
 

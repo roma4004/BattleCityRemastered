@@ -38,7 +38,7 @@ public:
 	std::shared_ptr<BaseObj> GetBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
 	                                   Direction direction, float speed, std::string author, std::string fraction);
 
-	void ReturnBullet(std::shared_ptr<BaseObj> bullet);
+	void ReturnBullet(BaseObj* bullet);
 
 	void Clear();
 };

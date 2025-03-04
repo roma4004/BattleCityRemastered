@@ -16,11 +16,12 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	       speed,
 	       allObjects,
 	       std::move(events),
-	       std::move(moveBeh)},
-	  _id{id},
+	       std::move(moveBeh),
+	       id,
+	       std::move(name) + std::to_string(id),// TODO: maybe name should be without tankId
+	  },
 	  _shootingBeh{std::move(shootingBeh)},
 	  _gameMode{gameMode},
-	  _name{std::move(name) + std::to_string(id)},// TODO: maybe name should be without tankId
 	  _fraction{std::move(fraction)}
 {
 	Tank::Subscribe();
