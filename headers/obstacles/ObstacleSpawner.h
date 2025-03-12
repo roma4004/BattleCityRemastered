@@ -19,6 +19,7 @@ class EventSystem;
 class ObstacleSpawner final : public ITickUpdatable
 {
 	std::string _name{"ObstacleSpawner"};
+	GameMode _gameMode{Demo};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	int _obstacleSize{0};
 	int _lastSpawnId{-1};
@@ -28,7 +29,6 @@ class ObstacleSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnPosY;
 	std::uniform_int_distribution<> _distSpawnPosX;
 	std::uniform_int_distribution<> _distSpawnType;
-	GameMode _currentMode{Demo};
 
 	void Subscribe();
 	void SubscribeAsClient();

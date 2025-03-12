@@ -366,7 +366,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
 	                                 .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, 0));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, 0, _gameMode));
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(
 					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
@@ -384,7 +384,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
 	                                 .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, 0));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, 0, _gameMode));
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(
 					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
@@ -401,7 +401,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
 	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	const ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _window, _events, 0));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _window, _events, 0, _gameMode));
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(
 					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,

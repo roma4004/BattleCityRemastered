@@ -3,9 +3,10 @@
 #include "../../headers/application/Window.h"
 
 Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, const std::shared_ptr<Window> window,
-                   const std::string& name, const std::shared_ptr<EventSystem> events, const int id)
+                   const std::string& name, const std::shared_ptr<EventSystem> events, const int id, GameMode gameMode)
 	: BaseObj{rect, color, health, id, std::move(name)},
 	  _window(std::move(window)),
+	  _gameMode{gameMode},
 	  _events(std::move(events))
 {
 	Obstacle::Subscribe();
@@ -20,7 +21,14 @@ void Obstacle::Subscribe()
 {
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 
-	//TODO: skip if in host mode
+	if (_gameMode == PlayAsClient)
+	{
+		Obstacle::SubscribeAsClient();
+	}
+}
+
+void Obstacle::SubscribeAsClient()
+{
 	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
 	{
 		this->SetHealth(health);
@@ -35,6 +43,14 @@ void Obstacle::Unsubscribe() const
 {
 	_events->RemoveListener("Draw", _name);
 
+	if (_gameMode == PlayAsClient)
+	{
+		Obstacle::UnsubscribeAsClient();
+	}
+}
+
+void Obstacle::UnsubscribeAsClient() const
+{
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 }
 

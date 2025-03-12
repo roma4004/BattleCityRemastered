@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../GameMode.h"
 #include "../application/Window.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -17,6 +18,7 @@ class EventSystem;
 class BonusSpawner final : public ITickUpdatable
 {
 	std::string _name{"BonusSpawner"};
+	GameMode _gameMode{Demo};
 	int _bonusSize{0};
 	int _lastSpawnId{-1};
 
@@ -35,8 +37,12 @@ class BonusSpawner final : public ITickUpdatable
 	std::chrono::system_clock::time_point _lastTimeSpawn;
 
 	void Subscribe();
+	void SubscribeAsHost();
+	void SubscribeAsClient();
 
 	void Unsubscribe() const;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
 
 	void TickUpdate(float deltaTime) override;
 

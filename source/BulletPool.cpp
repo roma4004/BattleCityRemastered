@@ -21,6 +21,8 @@ BulletPool::~BulletPool()
 
 void BulletPool::Subscribe()
 {
+	_events->AddListener("Reset", _name, [this]() { Clear(); });
+
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
@@ -29,7 +31,9 @@ void BulletPool::Subscribe()
 
 void BulletPool::Unsubscribe() const
 {
-	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("Reset", _name);
+
+	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
 std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const int damage, const double aoeRadius,
@@ -61,6 +65,11 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const i
 
 void BulletPool::ReturnBullet(BaseObj* bullet)
 {
+	if (_isClearing)
+	{
+		return;
+	}
+
 	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
 		bulletCast->Disable();
@@ -75,10 +84,13 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 
 void BulletPool::Clear()
 {
+	_isClearing = true;
+
 	while (!_bullets.empty())
 	{
 		_bullets.pop();
 	}
 
+	_isClearing = false;
 	_lastId = 0;
 }

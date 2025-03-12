@@ -22,7 +22,7 @@ class GameStatistics;
 
 class GameSuccess final : public IGame
 {
-	GameMode _selectedGameMode{Demo};
+	GameMode _selectedGameMode{OnePlayer};
 	GameMode _currentMode{Demo};
 	std::string _name{"Game"};
 
@@ -56,7 +56,7 @@ class GameSuccess final : public IGame
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void ResetBattlefield();
+	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
 

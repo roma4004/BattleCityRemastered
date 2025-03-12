@@ -10,19 +10,20 @@
 
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id)
+                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id, const GameMode gameMode)
 	: Obstacle{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1},
 	           0x924b00,
 	           1,
 	           window,
 	           "fortressWall" + std::to_string(id),
 	           events,
-	           id},
+	           id,
+	           gameMode},
 	  _rect{rect},
 	  _window{window},
 	  _events{events},//TODO: change name for statistic
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id)}
+	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id, gameMode)}
 {
 	Subscribe();
 }
@@ -34,16 +35,17 @@ FortressWall::~FortressWall()
 
 void FortressWall::Subscribe()
 {
+	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+
+	SubscribeBonus();//TODO: replicate bonusShovel, to replace with steel
+}
+
+void FortressWall::SubscribeAsHost()
+{
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
-
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-
-	SubscribeAsClient();//TODO: enable only in client mode
-
-	SubscribeBonus();//TODO: replicate bonusShovel, to replace with steel
 }
 
 void FortressWall::SubscribeAsClient()
@@ -90,12 +92,19 @@ void FortressWall::SubscribeBonus()
 
 void FortressWall::Unsubscribe() const
 {
-	// _events->RemoveListener<const float>("ClientReceived_BrickWall" + std::to_string(_id) + "Health", _name);
-	// _events->RemoveListener<const float>("ClientReceived_SteelWall"  + std::to_string(_obstacleId) + "Health", _name);
-	_events->RemoveListener<const float>("TickUpdate", _name);
-	_events->RemoveListener("Draw", _name);
+	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
 	UnsubscribeBonus();
+}
+
+void FortressWall::UnsubscribeAsHost() const
+{
+	_events->RemoveListener<const float>("TickUpdate", _name);
+}
+
+void FortressWall::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const int>("ClientReceived_FortressDied", _name);
 }
 
 void FortressWall::UnsubscribeBonus() const
@@ -137,12 +146,12 @@ void FortressWall::BonusShovelSwitch()
 	{
 		if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _id);
+			_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _id, _gameMode);
 			//TODO: send event for replication thar brick need to appear at client side
 		}
 		else
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _id);
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _id, _gameMode);
 			//TODO: send event for replication thar steel need to appear at client side
 		}
 	}
@@ -165,7 +174,11 @@ void FortressWall::TakeDamage(const int damage)
 	if (health <= 0)
 	{
 		_obstacle = std::unique_ptr<BrickWall>(nullptr);
-		_events->EmitEvent<const int>("ServerSend_FortressDied", _id);//TODO: disable in client mode
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const int>("ServerSend_FortressDied", _id);
+		}
 	}
 }
 
@@ -185,12 +198,15 @@ void FortressWall::Hide()
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
 		_obstacle = std::unique_ptr<BrickWall>(nullptr);
-		_events->EmitEvent<const int>("ServerSend_FortressDied", _id);//TODO: disable in client mode
 	}
 	else
 	{
 		_obstacle = std::unique_ptr<SteelWall>(nullptr);
-		_events->EmitEvent<const int>("ServerSend_FortressDied", _id);//TODO: disable in client mode
+	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const int>("ServerSend_FortressDied", _id);
 	}
 }
 

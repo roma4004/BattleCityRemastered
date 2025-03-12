@@ -2,6 +2,7 @@
 
 #include "../BaseObj.h"
 #include "../EventSystem.h"
+#include "../GameMode.h"
 #include "../application/Window.h"
 #include "../interfaces/IPickupableBonus.h"
 #include "../interfaces/ITickUpdatable.h"
@@ -17,6 +18,7 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 
 protected:
 	int _id;
+	GameMode _gameMode{Demo};
 	int _bonusDurationMs{0};
 	int _bonusLifetimeMs{0};
 
@@ -31,9 +33,17 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, int durationMs,
-	      int lifeTimeMs, int color, std::string name, int id);
+	      int lifeTimeMs, int color, std::string name, int id, GameMode gameMode);
 
 	~Bonus() override;
+
+	void Subscribe();
+	void SubscribeAsHost();
+	void SubscribeAsClient();
+
+	void Unsubscribe() const;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
 
 	void PickUpBonus(const std::string& author, const std::string& fraction) override = 0;
 

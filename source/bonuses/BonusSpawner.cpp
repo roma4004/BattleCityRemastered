@@ -9,10 +9,10 @@
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
+#include <algorithm>
 #include <chrono>
 #include <limits>
 #include <memory>
-#include <algorithm>
 
 class BaseObj;
 class EventSystem;
@@ -43,7 +43,29 @@ BonusSpawner::~BonusSpawner()
 
 void BonusSpawner::Subscribe()
 {
-	//TODO: subscribe on game mode change, to update gameMode for spawning bonus
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
+	});
+
+	_events->AddListener("Reset", _name, [this]()
+	{
+		this->_lastSpawnId = -1;
+	});
+
+	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+}
+
+void BonusSpawner::SubscribeAsHost()
+{
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
+}
+
+void BonusSpawner::SubscribeAsClient()
+{
 	_events->AddListener<const FPoint, const BonusTypeId, const int>(
 			"ClientReceived_BonusSpawn", _name, [this](const FPoint spawnPos, const BonusTypeId type, const int id)
 			{
@@ -52,25 +74,25 @@ void BonusSpawner::Subscribe()
 				const int color = _distRandColor(_gen);
 				SpawnBonus(rect, color, type, id);
 			});
-
-	_events->AddListener("SpawnerReset", _name, [this]()
-	{
-		this->_lastSpawnId = -1;
-	});
-
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
 }
 
 void BonusSpawner::Unsubscribe() const
 {
-	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_BonusSpawn", _name);
+	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
-	_events->RemoveListener("SpawnerReset", _name);
+	_events->RemoveListener("Reset", _name);
 
+	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+}
+
+void BonusSpawner::UnsubscribeAsHost() const
+{
 	_events->RemoveListener<const float>("TickUpdate", _name);
+}
+
+void BonusSpawner::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_BonusSpawn", _name);
 }
 
 void BonusSpawner::TickUpdate(const float /*deltaTime*/)
@@ -148,5 +170,5 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const in
 
 	_allObjects->emplace_back(
 			std::make_shared<TBonusType>(
-					rect, _window, _events, bonusDurationTimeMs, bonusLifetimeMs, color, id));
+					rect, _window, _events, bonusDurationTimeMs, bonusLifetimeMs, color, id, _gameMode));
 }

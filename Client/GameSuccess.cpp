@@ -2,7 +2,6 @@
 #include "../headers/BulletPool.h"
 #include "../headers/Map.h"
 #include "../headers/Menu.h"
-#include "../headers/pawns/Bullet.h"
 
 #include <algorithm>
 #include <iostream>
@@ -29,9 +28,9 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 {
 	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
 
-	ResetBattlefield();
-	NextGameMode();
 	Subscribe();
+
+	ResetBattlefield(Demo);
 }
 
 GameSuccess::~GameSuccess()
@@ -43,7 +42,7 @@ void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
-	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
+	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
 	_events->AddListener<const bool>("Pause_Status", _name, [this](const bool newPauseStatus)
 	{
 		this->_isPause = newPauseStatus;
@@ -58,24 +57,18 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener<const bool>("Pause_Status", _name);
 }
 
-void GameSuccess::ResetBattlefield()
+void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
-	_bulletPool->Clear();
-	SetCurrentGameMode(_selectedGameMode);
-
-	_events->EmitEvent("SpawnerReset");
-
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 
-	_statistics->Reset();
+	SetCurrentGameMode(gameMode);
+	_events->EmitEvent("Reset");
 
 	//Map creation
 	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
 	const Map field{&_obstacleSpawner};
 	field.MapCreation(gridOffset);
-
-	_events->EmitEvent("InitialSpawn");
 }
 
 void GameSuccess::PrevGameMode()
@@ -279,7 +272,7 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 void GameSuccess::UserInputHandling()
 {
 	SDL_Event event;
-	while (SDL_PollEvent(&event))//TODO: check SDL_WaitEvent()
+	while (SDL_PollEvent(&event))
 	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{
@@ -297,7 +290,6 @@ void GameSuccess::DisposeDeadObject()
 			begin();
 	_allObjects.erase(it, _allObjects.end());
 }
-
 
 void GameSuccess::MainLoop()
 {
@@ -319,9 +311,6 @@ void GameSuccess::MainLoop()
 
 		while (!_isGameOver)
 		{
-			// Cap to 60 FPS
-			// SDL_Delay(static_cast<Uint32>(std::floor(16.666f - deltaTime)));
-
 			ClearBuffer();
 
 			UserInputHandling();
@@ -383,8 +372,8 @@ int GameSuccess::Result() const { return 0; }
 
 GameMode GameSuccess::GetCurrentGameMode() const { return _currentMode; }
 
-void GameSuccess::SetCurrentGameMode(const GameMode newGameMode)
+void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 {
-	_currentMode = newGameMode;
+	_currentMode = selectedGameMode;
 	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 }

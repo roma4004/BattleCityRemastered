@@ -5,7 +5,6 @@
 #include "../../headers/Map.h"
 #include "../../headers/Server.h"
 #include "../../headers/TankSpawner.h"
-#include "../../headers/pawns/Bullet.h"
 
 #include <algorithm>
 //#include <fstream>
@@ -34,11 +33,11 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _bonusSpawner{events, &_allObjects, window},
 	  _obstacleSpawner{events, &_allObjects, window}
 {
-	_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, events, _bulletPool);
+	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
 
-	ResetBattlefield();
-	NextGameMode();
 	Subscribe();
+
+	ResetBattlefield(Demo);
 }
 
 GameSuccess::~GameSuccess()
@@ -50,7 +49,7 @@ void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
-	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(); });
+	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
 	_events->AddListener<const bool>("Pause_Status", _name, [this](const bool newPauseStatus)
 	{
 		this->_isPause = newPauseStatus;
@@ -65,24 +64,18 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener<const bool>("Pause_Status", _name);
 }
 
-void GameSuccess::ResetBattlefield()
+void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
-	_bulletPool->Clear();//TODO: Replace with on event execute
-	SetCurrentGameMode(_selectedGameMode);
-
-	_events->EmitEvent("SpawnerReset");
-
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 
-	_statistics->Reset();
+	SetCurrentGameMode(gameMode);
+	_events->EmitEvent("Reset");
 
 	//Map creation
 	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
 	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
 	field.MapCreation(gridOffset);
-
-	_events->EmitEvent("InitialSpawn");
 }
 
 void GameSuccess::PrevGameMode()
@@ -342,7 +335,6 @@ void GameSuccess::MainLoop()
 		{
 			ClearBuffer();
 
-			// TODO: current mode demo in game fix this
 			UserInputHandling();
 
 			if (_menu)
@@ -355,9 +347,9 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 
-			DisposeDeadObject();// TODO: replace with event
+			DisposeDeadObject();
 
-			_events->EmitEvent("RespawnTanks");
+			_events->EmitEvent("RespawnTanks");//TODO: combine with initial spawn
 
 			_events->EmitEvent("Draw");
 
@@ -402,8 +394,8 @@ int GameSuccess::Result() const { return 0; }
 
 GameMode GameSuccess::GetCurrentGameMode() const { return _currentMode; }
 
-void GameSuccess::SetCurrentGameMode(const GameMode newGameMode)
+void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 {
-	_currentMode = newGameMode;
+	_currentMode = selectedGameMode;
 	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 }

@@ -10,12 +10,9 @@ class EventSystem;
 
 class BonusStar final : public Bonus
 {
-	void Subscribe();
-	void Unsubscribe() const;
-
 public:
 	BonusStar(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	          int durationMs, int lifeTimeMs, int color, int id);
+	          int durationMs, int lifeTimeMs, int color, int id, GameMode gameMode);
 
 	~BonusStar() override;
 

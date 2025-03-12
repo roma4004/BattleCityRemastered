@@ -40,10 +40,13 @@ class TankSpawner final
 	bool _coopTwoAINeedRespawn{false};
 
 	void Subscribe();
+	void SubscribeBonus();
+
 	void Unsubscribe() const;
+	void UnsubscribeBonus() const;
 
 	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
-	void InitialSpawnEnemyTanks(float gridOffset, float speed, int health, float size);
+	void SetEnemyNeedRespawn();
 
 	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
 	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
@@ -52,11 +55,11 @@ class TankSpawner final
 	void RespawnEnemyTanks(int index);
 	void RespawnPlayerTanks(int index);
 	void RespawnCoopTanks(int index);
-	void InitialSpawnPlayerTanks(float gridOffset, float speed, int health, float size);
+	void SetPlayerNeedRespawn();
 
 	void ResetRespawnStat();
 	void RespawnTanks();
-	void InitialSpawn();
+	void ResetSpawn();
 
 	void IncreaseEnemyRespawnResource();
 	void IncreasePlayerOneRespawnResource();

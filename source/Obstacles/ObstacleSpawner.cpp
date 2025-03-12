@@ -37,12 +37,12 @@ ObstacleSpawner::~ObstacleSpawner()
 
 void ObstacleSpawner::Subscribe()
 {
-	_events->AddListener("SpawnerReset", _name, [this]() { this->_lastSpawnId = -1; });
+	_events->AddListener("Reset", _name, [this]() { this->_lastSpawnId = -1; });
 
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		_currentMode = newGameMode;
-		if (_currentMode == PlayAsClient)
+		_gameMode = newGameMode;
+		if (_gameMode == PlayAsClient)
 		{
 			SubscribeAsClient();
 		}
@@ -55,7 +55,6 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	//TODO: subscribe on game mode change, to update gameMode for spawning obstacle
 	_events->AddListener<const FPoint, const ObstacleTypeId, const int>(
 			"ClientReceived_ObstacleSpawn", _name,
 			[this](const FPoint spawnPos, const ObstacleTypeId type, const int id)
@@ -68,9 +67,11 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::Unsubscribe() const
 {
-	_events->RemoveListener("SpawnerReset", _name);
+	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
-	if (_currentMode == PlayAsClient)
+	_events->RemoveListener("Reset", _name);
+
+	if (_gameMode == PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}

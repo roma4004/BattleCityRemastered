@@ -11,12 +11,9 @@ class EventSystem;
 
 class BonusTank final : public Bonus
 {
-	void Subscribe();
-	void Unsubscribe() const;
-
 public:
 	BonusTank(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	          int durationMs, int lifeTimeMs, int color, int id);
+	          int durationMs, int lifeTimeMs, int color, int id, GameMode gameMode);
 
 	~BonusTank() override;
 

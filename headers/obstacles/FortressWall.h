@@ -28,10 +28,13 @@ class FortressWall final : public Obstacle, ITickUpdatable
 
 
 	void Subscribe() override;
+	void SubscribeAsHost();
 	void SubscribeAsClient();
 	void SubscribeBonus();
 
 	void Unsubscribe() const override;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
 	void UnsubscribeBonus() const;
 
 	void Draw() const override;
@@ -43,7 +46,7 @@ class FortressWall final : public Obstacle, ITickUpdatable
 
 public:
 	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, int id);
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, int id, GameMode gameMode);
 
 	~FortressWall() override;
 

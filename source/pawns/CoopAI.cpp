@@ -4,6 +4,7 @@
 #include "../../headers/behavior/MoveLikeAIBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
+#include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/pawns/PlayerOne.h"
 #include "../../headers/utils/TimeUtils.h"
@@ -277,7 +278,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 			bulletOffset = bulletSize.y;
 		}
 	}
-	
+
 	if (dir == LEFT && !leftSideObstacles.empty())
 	{
 		nearestObstacle = leftSideObstacles.front().lock();
@@ -287,7 +288,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 			bulletOffset = bulletSize.x;
 		}
 	}
-	
+
 	if (dir == DOWN && !downSideObstacles.empty())
 	{
 		nearestObstacle = downSideObstacles.front().lock();
@@ -297,7 +298,7 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 			bulletOffset = bulletSize.y;
 		}
 	}
-	
+
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
 		nearestObstacle = rightSideObstacles.front().lock();
@@ -312,7 +313,8 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 	    && nearestObstacle.get()
 	    && nearestObstacle->GetIsDestructible()
 	    && !dynamic_cast<PlayerOne*>(nearestObstacle.get())
-	    && !dynamic_cast<CoopAI*>(nearestObstacle.get()))
+	    && !dynamic_cast<CoopAI*>(nearestObstacle.get())
+	    && !dynamic_cast<FortressWall*>(nearestObstacle.get()))
 	{
 		if (shootDistance > _bulletDamageRadius + bulletOffset)
 		{

@@ -141,12 +141,6 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	_events->AddListener("Pause_Pressed", _name, [this]() { this->SendKeyState("Pause_Pressed"); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->SendKeyState("Pause_Released"); });
 
-
-	//TODO: send player die (last time)
-	//TODO: send fortress brick destroy
-	//TODO: send bonus spawn/pickup
-
-	//TODO: rename tankDied to last died
 	_events->AddListener<const std::string>("ServerSend_TankDied", _name, [this](const std::string whoDied)
 	{
 		this->SendTankDied(whoDied);

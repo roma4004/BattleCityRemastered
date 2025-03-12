@@ -2,10 +2,12 @@
 #include "../../headers/utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-             const int durationMs, const int lifeTimeMs, const int color, std::string name, const int id)
+             const int durationMs, const int lifeTimeMs, const int color, std::string name, const int id,
+             const GameMode gameMode)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1, id, std::move(name)},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
+	  _gameMode{gameMode},
 	  _bonusDurationMs{durationMs},
 	  _bonusLifetimeMs{lifeTimeMs},
 	  _events{std::move(events)}
@@ -13,9 +15,62 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shar
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
+
+	Subscribe();
 }
 
-Bonus::~Bonus() = default;
+Bonus::~Bonus()
+{
+	Unsubscribe();
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const int>("ServerSend_BonusDeSpawn", _id);//TODO: move to pick up moment in tank move beh
+	}
+}
+
+void Bonus::Subscribe()
+{
+	_events->AddListener("Draw", _name + std::to_string(_id), [this]() { this->Draw(); });
+
+	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+}
+
+void Bonus::SubscribeAsHost()
+{
+	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
+}
+
+void Bonus::SubscribeAsClient()
+{
+	_events->AddListener<const int>("ClientReceived_BonusDeSpawn", _name, [this](const int id)
+	{
+		if (id == this->_id)
+		{
+			this->SetIsAlive(false);
+		}
+	});
+}
+
+void Bonus::Unsubscribe() const
+{
+	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+
+	_events->RemoveListener("Draw", _name + std::to_string(_id));
+}
+
+void Bonus::UnsubscribeAsHost() const
+{
+	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
+}
+
+void Bonus::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);
+}
 
 void Bonus::Draw() const
 {

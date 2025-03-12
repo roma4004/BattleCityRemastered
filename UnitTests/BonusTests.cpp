@@ -50,7 +50,6 @@ protected:
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		//TODO: initialize with btn names
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
 		_allObjects.reserve(4);
@@ -393,7 +392,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, 0);
+			                               _window, _events, &_allObjects, 0, _gameMode);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
@@ -410,7 +409,7 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, 0);
+			                               _window, _events, &_allObjects, 0, _gameMode);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
@@ -432,7 +431,7 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _window, _events,
-					&_allObjects, 0));
+					&_allObjects, 0, _gameMode));
 	const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get());
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
@@ -460,7 +459,7 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _window, _events,
-					&_allObjects, 0));
+					&_allObjects, 0, _gameMode));
 	if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(fortressWall->IsBrickWall());

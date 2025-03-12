@@ -2,48 +2,15 @@
 #include "../../headers/bonuses/BonusTypeId.h"
 
 BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                         const int durationMs, const int lifeTimeMs, const int color, const int id)
-	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, "BonusShovel", id}
+                         const int durationMs, const int lifeTimeMs, const int color, const int id,
+                         const GameMode gameMode)
+	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, "BonusShovel", id, gameMode}
 {
-	Subscribe();
-
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
 			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Shovel, _id);
 }
 
-BonusShovel::~BonusShovel()
-{
-	Unsubscribe();
-
-	_events->EmitEvent<const int>("ServerSend_BonusDeSpawn", _id);
-}
-
-void BonusShovel::Subscribe()
-{
-	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
-
-	_events->AddListener<const int>("ClientReceived_BonusDeSpawn", _name, [this](const int id)
-	{
-		if (id == this->_id)
-		{
-			this->SetIsAlive(false);
-		}
-	});
-
-	_events->AddListener("Draw", _name + std::to_string(_id), [this]() { this->Draw(); });
-}
-
-void BonusShovel::Unsubscribe() const
-{
-	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
-
-	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);
-
-	_events->RemoveListener("Draw", _name + std::to_string(_id));
-}
+BonusShovel::~BonusShovel() = default;
 
 void BonusShovel::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {

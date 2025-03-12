@@ -515,7 +515,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						0));
+						0, _gameMode));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -539,7 +539,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 		_allObjects.emplace_back(
 				std::make_shared<SteelWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						0));
+						0, _gameMode));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -563,7 +563,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						0));
+						0, _gameMode));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
@@ -590,7 +590,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						&_allObjects, 0));
+						&_allObjects, 0, _gameMode));
 
 		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{
