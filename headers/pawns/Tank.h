@@ -2,6 +2,7 @@
 
 #include "Pawn.h"
 #include "../BulletPool.h"
+#include "../bonuses/BonusStatus.h"
 #include "../interfaces/IHealthBar.h"
 #include "../interfaces/IShootable.h"
 
@@ -22,22 +23,15 @@ protected:
 	GameMode _gameMode{Demo};
 	double _bulletDamageRadius{12.f};
 
-	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
-
 	int _tier{0};
-	int _fireCooldownMs{1000};//1 sec
+	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
+	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	std::string _fraction;
 
 	// bonuses
-	bool _isActiveTimer{false};
-	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
-	std::chrono::system_clock::time_point _activateTimeTimer;
-	int _cooldownTimer{0};
-
-	bool _isActiveHelmet{false};
-	std::chrono::system_clock::time_point _activateTimeHelmet;
-	int _cooldownHelmet{0};
+	BonusStatus _timer{}; //TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
+	BonusStatus _helmet{};
 
 	void Shot() const;
 
@@ -55,8 +49,6 @@ public:
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;
 
-	[[nodiscard]] int GetId() const;
-	[[nodiscard]] std::string GetName() const;
 	[[nodiscard]] std::string GetFraction() const;
 
 	void TakeDamage(int damage) override;
@@ -78,6 +70,6 @@ public:
 	[[nodiscard]] double GetBulletDamageRadius() const;
 	void SetBulletDamageRadius(double bulletDamageRadius);
 
-	[[nodiscard]] int GetFireCooldownMs() const;
-	void SetFireCooldownMs(int fireCooldown);
+	[[nodiscard]] std::chrono::milliseconds GetFireCooldown() const;
+	void SetFireCooldown(std::chrono::milliseconds fireCooldown);
 };

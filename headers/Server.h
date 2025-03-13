@@ -75,6 +75,8 @@ struct Server final
 	auto SendHealth(const std::string& objectName, int health) const -> void;
 	void SendTankDied(const std::string& objectName) const;
 	void SendFortressDied(int id) const;
+	void SendFortressToBrick(int id) const;
+	void SendFortressToSteel(int id) const;
 	// void stop() {
 	// 	// Останавливаем принятие входящих подключений
 	// 	acceptor_.close();

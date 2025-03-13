@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <functional>
 #include <string>
 #include <variant>
@@ -44,7 +45,7 @@ class EventSystem final
 		Event<const std::string>,// send tankDied
 		Event<const std::string, const int>,// serverSend health changed
 		Event<const std::string&, const std::string&>,// statistics, bonus
-		Event<const std::string&, const std::string&, int>,// bonus with duration
+		Event<const std::string&, const std::string&, std::chrono::milliseconds>,// bonus with duration
 		Event<const GameMode>,// gameMode switch
 		Event<const bool>// pause status
 	>;

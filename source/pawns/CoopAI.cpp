@@ -64,19 +64,10 @@ void CoopAI::SubscribeAsHost()
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
-		if (this->_isActiveTimer && TimeUtils::IsCooldownFinish(this->_activateTimeTimer, this->_cooldownTimer))
-		{
-			this->_isActiveTimer = false;
-			this->_cooldownTimer = 0;
-		}
+		_timer.UpdateBonus();
+		_helmet.UpdateBonus();
 
-		if (_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
-		{
-			this->_isActiveHelmet = false;
-			this->_cooldownHelmet = 0;
-		}
-
-		if (!this->_isActiveTimer)
+		if (!this->_timer.isActive)
 		{
 			this->TickUpdate(deltaTime);
 		}
@@ -85,27 +76,27 @@ void CoopAI::SubscribeAsHost()
 
 void CoopAI::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, int>(
+	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
 			"BonusTimer", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
+			[this](const std::string& /*author*/, const std::string& fraction,
+			       const std::chrono::milliseconds bonusDurationTime)
 			{
 				if (fraction != this->_fraction)
 				{
-					this->_isActiveTimer = true;
-					this->_cooldownTimer += bonusDurationTimeMs;
-					this->_activateTimeTimer = std::chrono::system_clock::now();
+					const auto cooldown = this->_timer.cooldown += bonusDurationTime;
+					this->_timer = {true, cooldown, std::chrono::system_clock::now()};
 				}
 			});
 
-	_events->AddListener<const std::string&, const std::string&, int>(
+	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
 			"BonusHelmet", _name,
-			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
+			[this](const std::string& author, const std::string& fraction,
+			       const std::chrono::milliseconds bonusDurationTime)
 			{
 				if (fraction == this->_fraction && author == this->_name)
 				{
-					this->_isActiveHelmet = true;
-					this->_cooldownHelmet += bonusDurationTimeMs;
-					this->_activateTimeHelmet = std::chrono::system_clock::now();
+					const auto cooldown = this->_helmet.cooldown += bonusDurationTime;
+					this->_helmet = {true, cooldown, std::chrono::system_clock::now()};
 				}
 			});
 
@@ -136,7 +127,7 @@ void CoopAI::SubscribeBonus()
 					this->SetSpeed(this->GetSpeed() * 1.10f);
 					this->SetBulletSpeed(this->GetBulletSpeed() * 1.10f);
 					this->SetBulletDamage(this->GetBulletDamage() + 15);
-					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
+					this->SetFireCooldown(this->GetFireCooldown() - std::chrono::milliseconds{150});
 					this->SetBulletDamageRadius(this->GetBulletDamageRadius() * 1.25f);
 				}
 			});
@@ -156,8 +147,8 @@ void CoopAI::UnsubscribeAsHost() const
 
 void CoopAI::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
+	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
@@ -326,9 +317,9 @@ void CoopAI::HandleLineOfSight(const Direction dir)
 void CoopAI::TickUpdate(const float deltaTime)
 {
 	// change dir when random time span left
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDurationMs))
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{
-		_turnDurationMs = _distTurnRate(_gen);
+		_turnDuration = std::chrono::milliseconds(_distTurnRate(_gen));
 		const int randDir = _distDirection(_gen);
 		SetDirection(static_cast<Direction>(randDir));
 		_lastTimeTurn = std::chrono::system_clock::now();
@@ -346,7 +337,7 @@ void CoopAI::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
+	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
 		HandleLineOfSight(GetDirection());
 	}

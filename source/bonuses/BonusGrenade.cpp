@@ -2,9 +2,10 @@
 #include "../../headers/bonuses/BonusTypeId.h"
 
 BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> window,
-                           std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
-                           const int color, const int id, const GameMode gameMode)
-	: Bonus{rect, std::move(window), std::move(events), durationMs, lifeTimeMs, color, "BonusGrenade", id, gameMode}
+                           std::shared_ptr<EventSystem> events, const std::chrono::milliseconds duration,
+                           const std::chrono::milliseconds lifeTime, const int color, const int id,
+                           const GameMode gameMode)
+	: Bonus{rect, std::move(window), std::move(events), duration, lifeTime, color, "BonusGrenade", id, gameMode}
 {
 	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
 			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Grenade, _id);

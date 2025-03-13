@@ -257,6 +257,7 @@ add_executable(${PROJECT_NAME}
         source/bonuses/BonusShovel.cpp
         source/bonuses/BonusStar.cpp
         source/bonuses/BonusSpawner.cpp
+        source/bonuses/BonusStatus.cpp
         source/bonuses/BonusTank.cpp
         source/bonuses/BonusTimer.cpp
         source/BulletPool.cpp

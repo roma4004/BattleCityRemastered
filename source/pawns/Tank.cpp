@@ -44,15 +44,11 @@ void Tank::Unsubscribe() const
 	_events->RemoveListener("DrawHealthBar", _name);
 }
 
-int Tank::GetId() const { return _id; }
-
-std::string Tank::GetName() const { return _name; }
-
 std::string Tank::GetFraction() const { return _fraction; }
 
 void Tank::TakeDamage(const int damage)
 {
-	if (!_isActiveHelmet)
+	if (!_helmet.isActive)
 	{
 		Pawn::TakeDamage(damage);
 	}
@@ -91,9 +87,9 @@ double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
 
-int Tank::GetFireCooldownMs() const { return _fireCooldownMs; }
+std::chrono::milliseconds Tank::GetFireCooldown() const { return _fireCooldown; }
 
-void Tank::SetFireCooldownMs(const int fireCooldown) { _fireCooldownMs = fireCooldown; }
+void Tank::SetFireCooldown(const std::chrono::milliseconds fireCooldown) { _fireCooldown = fireCooldown; }
 
 inline void Tank::SetPixel(const size_t x, const size_t y, const int color) const
 {
@@ -107,7 +103,7 @@ inline void Tank::SetPixel(const size_t x, const size_t y, const int color) cons
 void Tank::DrawHealthBar() const
 {
 	//TODO: fix recenter health bar when pickup star bonus
-	if (_isActiveHelmet)
+	if (_helmet.isActive)
 	{
 		return;
 	}

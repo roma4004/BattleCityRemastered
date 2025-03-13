@@ -53,6 +53,11 @@ Enemy::~Enemy()
 	Unsubscribe();
 
 	_events->EmitEvent(_name + "_Died");
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_" + _name + "_Died");
+	}
 }
 
 void Enemy::Subscribe()
@@ -67,19 +72,10 @@ void Enemy::SubscribeAsHost()
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
 		// bonuses
-		if (this->_isActiveTimer && TimeUtils::IsCooldownFinish(this->_activateTimeTimer, this->_cooldownTimer))
-		{
-			this->_isActiveTimer = false;
-			this->_cooldownTimer = 0;
-		}
+		_timer.UpdateBonus();
+		_helmet.UpdateBonus();
 
-		if (this->_isActiveHelmet && TimeUtils::IsCooldownFinish(this->_activateTimeHelmet, this->_cooldownHelmet))
-		{
-			this->_isActiveHelmet = false;
-			this->_cooldownHelmet = 0;
-		}
-
-		if (!this->_isActiveTimer)
+		if (!this->_timer.isActive)
 		{
 			this->TickUpdate(deltaTime);
 		}
@@ -118,27 +114,26 @@ void Enemy::SubscribeAsClient()
 
 void Enemy::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, int>(
+	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
 			"BonusTimer", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
+			[this](const std::string& /*author*/, const std::string& fraction,
+			       const std::chrono::milliseconds bonusDurationTime)
 			{
 				if (fraction != this->_fraction)
 				{
-					this->_isActiveTimer = true;
-					this->_cooldownTimer += bonusDurationTimeMs;
-					this->_activateTimeTimer = std::chrono::system_clock::now();
+					const auto cooldown = this->_timer.cooldown += bonusDurationTime;
+					this->_timer = {true, cooldown, std::chrono::system_clock::now()};
 				}
 			});
 
-	_events->AddListener<const std::string&, const std::string&, int>(
+	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
 			"BonusHelmet", _name,
-			[this](const std::string& author, const std::string& fraction, const int bonusDurationTimeMs)
+			[this](const std::string& author, const std::string& fraction, const std::chrono::milliseconds bonusDurationTime)
 			{
 				if (fraction == this->_fraction && author == this->_name)
 				{
-					this->_isActiveHelmet = true;
-					this->_cooldownHelmet += bonusDurationTimeMs;
-					this->_activateTimeHelmet = std::chrono::system_clock::now();
+					const auto cooldown = this->_helmet.cooldown += bonusDurationTime;
+					this->_helmet = {true, cooldown, std::chrono::system_clock::now()};
 				}
 			});
 
@@ -167,7 +162,7 @@ void Enemy::SubscribeBonus()
 					this->SetSpeed(this->GetSpeed() * 1.10f);
 					this->SetBulletSpeed(this->GetBulletSpeed() * 1.10f);
 					this->SetBulletDamage(this->GetBulletDamage() + 15);
-					this->SetFireCooldownMs(this->GetFireCooldownMs() - 150);
+					this->SetFireCooldown(this->GetFireCooldown() - std::chrono::milliseconds{150});
 					this->SetBulletDamageRadius(this->GetBulletDamageRadius() * 1.25f);
 				}
 			});
@@ -196,8 +191,8 @@ void Enemy::UnsubscribeAsClient() const
 
 void Enemy::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusTimer", _name);
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusHelmet", _name);
+	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
@@ -232,10 +227,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 	const FPoint bulletHalf = {.x = bulletSize.x / 2.f, .y = bulletSize.y / 2.f};
 	LineOfSight lineOffSight(_shape, _window->size, bulletHalf, _allObjects, this);
 
-	const auto upSideObstacles = lineOffSight.GetUpSideObstacles();
+	const auto& upSideObstacles = lineOffSight.GetUpSideObstacles();
 	if (!upSideObstacles.empty())
 	{
-		if (IsPlayer(upSideObstacles.front()))
+		const auto nearestObstacle = upSideObstacles.front();
+		if (IsPlayer(nearestObstacle))
 		{
 			SetDirection(UP);
 			Shot();
@@ -243,7 +239,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			return;
 		}
 
-		if (IsBonus(upSideObstacles.front()))
+		if (IsBonus(nearestObstacle))
 		{
 			SetDirection(UP);
 
@@ -251,10 +247,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		}
 	}
 
-	const auto leftSideObstacles = lineOffSight.GetLeftSideObstacles();
+	const auto& leftSideObstacles = lineOffSight.GetLeftSideObstacles();
 	if (!leftSideObstacles.empty())
 	{
-		if (IsPlayer(leftSideObstacles.front()))
+		const auto nearestObstacle = leftSideObstacles.front();
+		if (IsPlayer(nearestObstacle))
 		{
 			SetDirection(LEFT);
 			Shot();
@@ -262,7 +259,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			return;
 		}
 
-		if (IsBonus(leftSideObstacles.front()))
+		if (IsBonus(nearestObstacle))
 		{
 			SetDirection(LEFT);
 
@@ -270,10 +267,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		}
 	}
 
-	const auto downSideObstacles = lineOffSight.GetDownSideObstacles();
+	const auto& downSideObstacles = lineOffSight.GetDownSideObstacles();
 	if (!downSideObstacles.empty())
 	{
-		if (IsPlayer(downSideObstacles.front()))
+		const auto nearestObstacle = downSideObstacles.front();
+		if (IsPlayer(nearestObstacle))
 		{
 			SetDirection(DOWN);
 			Shot();
@@ -281,7 +279,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			return;
 		}
 
-		if (IsBonus(downSideObstacles.front()))
+		if (IsBonus(nearestObstacle))
 		{
 			SetDirection(DOWN);
 
@@ -289,10 +287,11 @@ void Enemy::HandleLineOfSight(const Direction dir)
 		}
 	}
 
-	const auto rightSideObstacles = lineOffSight.GetRightSideObstacles();
+	const auto& rightSideObstacles = lineOffSight.GetRightSideObstacles();
 	if (!rightSideObstacles.empty())
 	{
-		if (IsPlayer(rightSideObstacles.front()))
+		const auto nearestObstacle = rightSideObstacles.front();
+		if (IsPlayer(nearestObstacle))
 		{
 			SetDirection(RIGHT);
 			Shot();
@@ -300,7 +299,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 			return;
 		}
 
-		if (IsBonus(rightSideObstacles.front()))
+		if (IsBonus(nearestObstacle))
 		{
 			SetDirection(RIGHT);
 
@@ -372,9 +371,9 @@ void Enemy::HandleLineOfSight(const Direction dir)
 void Enemy::TickUpdate(const float deltaTime)
 {
 	// change dir when random time span left
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDurationMs))
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{
-		_turnDurationMs = _distTurnRate(_gen);
+		_turnDuration = std::chrono::milliseconds(_distTurnRate(_gen));
 		const int randDir = _distDirection(_gen);
 		SetDirection(static_cast<Direction>(randDir));
 		_lastTimeTurn = std::chrono::system_clock::now();
@@ -399,7 +398,7 @@ void Enemy::TickUpdate(const float deltaTime)
 	}
 
 	// shot
-	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldownMs))
+	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
 		HandleLineOfSight(GetDirection());
 	}

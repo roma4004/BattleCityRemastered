@@ -151,6 +151,16 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 		this->SendFortressDied(id);
 	});
 
+	_events->AddListener<const int>("ServerSend_FortressToBrick", _name, [this](const int id)
+	{
+		this->SendFortressToBrick(id);
+	});
+
+	_events->AddListener<const int>("ServerSend_FortressToSteel", _name, [this](const int id)
+	{
+		this->SendFortressToSteel(id);
+	});
+
 	_events->AddListener<const std::string&, const FPoint, const Direction>(
 			"ServerSend_Pos", _name,
 			[this](const std::string& objectName, const FPoint newPos, const Direction direction)
@@ -165,11 +175,10 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 				this->SendBonusSpawn(objectName, spawnPos, typeId, id);
 			});
 
-	_events->AddListener<const int>(
-			"ServerSend_BonusDeSpawn", _name, [this](const int id)
-			{
-				this->SendBonusDeSpawn(id);
-			});
+	_events->AddListener<const int>("ServerSend_BonusDeSpawn", _name, [this](const int id)
+	{
+		this->SendBonusDeSpawn(id);
+	});
 
 	_events->AddListener<const std::string, const int>(
 			"ServerSend_Health", _name,
@@ -178,12 +187,18 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 				this->SendHealth(objectName, health);
 			});
 
-	_events->AddListener<const int>(
-			"ServerSend_Dispose", _name,
-			[this](const int bulletId)
-			{
-				this->SendDispose("Bullet" + std::to_string(bulletId));
-			});
+	_events->AddListener<const int>("ServerSend_Dispose", _name, [this](const int bulletId)
+	{
+		this->SendDispose("Bullet" + std::to_string(bulletId));
+	});
+
+	_events->AddListener("ServerSend_Enemy1_Died", _name, [this]() { this->SendTankDied("Enemy1"); });
+	_events->AddListener("ServerSend_Enemy2_Died", _name, [this]() { this->SendTankDied("Enemy2"); });
+	_events->AddListener("ServerSend_Enemy3_Died", _name, [this]() { this->SendTankDied("Enemy3"); });
+	_events->AddListener("ServerSend_Enemy4_Died", _name, [this]() { this->SendTankDied("Enemy4"); });
+
+	_events->AddListener("ServerSend_Player1_Died", _name, [this]() { this->SendTankDied("Player1"); });
+	_events->AddListener("ServerSend_Player2_Died", _name, [this]() { this->SendTankDied("Player2"); });
 
 	//TODO: rename_Shot bulletSpawn
 	_events->AddListener<const Direction>("ServerSend_Enemy1Shot", _name, [this](const Direction direction)
@@ -220,13 +235,20 @@ Server::~Server()
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
 
-	_events->RemoveListener<const std::string&, const FPoint, const Direction>(
-			"ServerSend_Pos", _name);
+	_events->RemoveListener<const std::string&, const FPoint, const Direction>("ServerSend_Pos", _name);
 	_events->RemoveListener<const std::string&, const FPoint, const BonusTypeId, const int>(
 			"ServerSend_BonusSpawn", _name);
 	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);
 	_events->RemoveListener<const std::string, const int>("ServerSend_Health", _name);
 	_events->RemoveListener<const int>("ServerSend_Dispose", _name);
+
+	_events->RemoveListener("Enemy1_Died", _name);
+	_events->RemoveListener("Enemy2_Died", _name);
+	_events->RemoveListener("Enemy3_Died", _name);
+	_events->RemoveListener("Enemy4_Died", _name);
+
+	_events->RemoveListener("Player1_Died", _name);
+	_events->RemoveListener("Player2_Died", _name);
 
 	_events->RemoveListener<const Direction>("Enemy1Shot", _name);
 	_events->RemoveListener<const Direction>("Enemy2Shot", _name);
@@ -424,6 +446,32 @@ void Server::SendFortressDied(const int id) const
 	Data data;
 	data.id = id;
 	data.eventName = "FortressDied";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendFortressToBrick(const int id) const
+{
+	Data data;
+	data.id = id;
+	data.eventName = "FortressToBrick";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendFortressToSteel(const int id) const
+{
+	Data data;
+	data.id = id;
+	data.eventName = "FortressToSteel";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

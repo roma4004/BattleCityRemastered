@@ -151,6 +151,7 @@
     <ClCompile Include="source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="source\bonuses\BonusStar.cpp" />
     <ClCompile Include="source\bonuses\BonusSpawner.cpp" />
+    <ClCompile Include="source\bonuses\BonusStatus.cpp" />
     <ClCompile Include="source\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="headers\bonuses\BonusShovel.h" />
     <ClInclude Include="headers\bonuses\BonusStar.h" />
     <ClInclude Include="headers\bonuses\BonusSpawner.h" />
+    <ClInclude Include="headers\bonuses\BonusStatus.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
     <ClInclude Include="headers\bonuses\BonusTypeId.h" />

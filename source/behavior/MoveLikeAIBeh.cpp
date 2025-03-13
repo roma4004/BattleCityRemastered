@@ -13,7 +13,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTi
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	std::vector<std::weak_ptr<BaseObj>> obstacles{};
-	constexpr int defaultCollisionReserve = 5;
+	constexpr int defaultCollisionReserve{5};
 	obstacles.reserve(defaultCollisionReserve);
 	if (tank == nullptr)
 	{

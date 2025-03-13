@@ -48,6 +48,7 @@
     <ClCompile Include="..\source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="..\source\bonuses\BonusStar.cpp" />
     <ClCompile Include="..\source\bonuses\BonusSpawner.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusStatus.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\BulletPool.cpp" />

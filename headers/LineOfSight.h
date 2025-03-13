@@ -24,8 +24,8 @@ public:
 
 	~LineOfSight();
 
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>> GetUpSideObstacles();
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>> GetLeftSideObstacles();
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>> GetDownSideObstacles();
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>> GetRightSideObstacles();
+	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetUpSideObstacles();
+	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetLeftSideObstacles();
+	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetDownSideObstacles();
+	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetRightSideObstacles();
 };

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Obstacle.h"
 #include "../BaseObj.h"
+#include "../GameMode.h"
+#include "../bonuses/BonusStatus.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <chrono>
@@ -13,26 +14,25 @@ class EventSystem;
 class SteelWall;
 class BrickWall;
 
-class FortressWall final : public Obstacle, ITickUpdatable
+class FortressWall final : public BaseObj, public ITickUpdatable
 {
 	ObjRectangle _rect;
+	GameMode _gameMode{Demo};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
 	std::variant<std::unique_ptr<BrickWall>,
 	             std::unique_ptr<SteelWall>> _obstacle;
-	bool _isActiveShovel{false};
-	std::chrono::system_clock::time_point _activateTimeShovel;
-	int _cooldownShovelMs{0};
 
+	BonusStatus _shovel{};
 
-	void Subscribe() override;
+	void Subscribe();
 	void SubscribeAsHost();
 	void SubscribeAsClient();
 	void SubscribeBonus();
 
-	void Unsubscribe() const override;
+	void Unsubscribe() const;
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 	void UnsubscribeBonus() const;
@@ -41,8 +41,9 @@ class FortressWall final : public Obstacle, ITickUpdatable
 	void TickUpdate(float deltaTime) override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void OnPlayerShovelCooldownEnd();
 
-	void Hide();
+	void OnEnemyPickupShovel();
 
 public:
 	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
@@ -53,14 +54,14 @@ public:
 	[[nodiscard]] std::string GetName() const override;
 	[[nodiscard]] int GetId() const override;
 
-	void BonusShovelSwitch();
+	void OnPlayerPickupShovel();
 
 	void TakeDamage(int damage) override;
 
 	[[nodiscard]] bool IsBrickWall() const;
 	[[nodiscard]] bool IsSteelWall() const;
 
-	int GetHealth() const override;
+	[[nodiscard]] int GetHealth() const override;
 
 	void SetHealth(int health) override;
 

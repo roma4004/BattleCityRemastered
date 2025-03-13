@@ -2,14 +2,14 @@
 #include "../../headers/utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-             const int durationMs, const int lifeTimeMs, const int color, std::string name, const int id,
-             const GameMode gameMode)
+             const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime, const int color,
+             std::string name, const int id, const GameMode gameMode)
 	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1, id, std::move(name)},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
 	  _gameMode{gameMode},
-	  _bonusDurationMs{durationMs},
-	  _bonusLifetimeMs{lifeTimeMs},
+	  _bonusDuration{duration},
+	  _lifetime{lifeTime},
 	  _events{std::move(events)}
 {
 	BaseObj::SetIsPassable(false);
@@ -100,7 +100,7 @@ void Bonus::Draw() const
 
 void Bonus::TickUpdate(float /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_creationTime, _bonusLifetimeMs))
+	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
 	{
 		SetIsAlive(false);
 	}

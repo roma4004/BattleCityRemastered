@@ -437,12 +437,12 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
-	EXPECT_TRUE(fortressWall->GetIsAlive());
+	EXPECT_NE(fortressWall->GetHealth(), 0);
 
 	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
-	EXPECT_FALSE(fortressWall->GetIsAlive());
+	EXPECT_EQ(fortressWall->GetHealth(), 0);
 }
 
 // NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch)
@@ -463,19 +463,19 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 	if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(fortressWall->IsBrickWall());
-		fortressWall->BonusShovelSwitch();
+		fortressWall->OnPlayerPickupShovel();
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Shovel);
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
-		EXPECT_TRUE(fortressWall->GetIsAlive());
+		EXPECT_NE(fortressWall->GetHealth(), 0);
 
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
-		EXPECT_TRUE(fortressWall->IsSteelWall());
-		EXPECT_FALSE(fortressWall->GetIsAlive());
+		EXPECT_TRUE(fortressWall->IsBrickWall());
+		EXPECT_EQ(fortressWall->GetHealth(), 0);
 
 		return;
 	}

@@ -10,6 +10,10 @@ ObjRectangle BaseObj::GetShape() const { return _shape; }
 
 void BaseObj::SetShape(const ObjRectangle shape) { _shape = shape; }
 
+std::string BaseObj::GetName() const { return _name; }
+
+int BaseObj::GetId() const { return _id; }
+
 FPoint BaseObj::GetPos() const { return FPoint{.x = _shape.x, .y = _shape.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)

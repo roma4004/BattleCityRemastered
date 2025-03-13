@@ -16,7 +16,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float del
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
 	std::vector<std::weak_ptr<BaseObj>> aoeCollisions{};
-	constexpr int defaultCollisionReserve = 5;
+	constexpr int defaultCollisionReserve{5};
 	aoeCollisions.reserve(defaultCollisionReserve);
 	if (bullet == nullptr)
 	{

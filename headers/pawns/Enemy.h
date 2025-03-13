@@ -11,7 +11,7 @@ class Enemy final : public Tank
 	std::uniform_int_distribution<> _distDirection;
 	std::uniform_int_distribution<> _distTurnRate;
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn;
-	int _turnDurationMs{2000};//2 sec
+	std::chrono::milliseconds _turnDuration{std::chrono::seconds(2)};
 
 	void Subscribe() override;
 	void SubscribeAsHost();

@@ -46,14 +46,10 @@ public:
 
 	[[nodiscard]] double GetBulletDamageRadius() const;
 
-	[[nodiscard]] std::string GetName() const;
-
 	[[nodiscard]] std::string GetAuthor() const;
 
 	[[nodiscard]] std::string GetFraction() const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void TakeDamage(int damage) override;
-
-	[[nodiscard]] int GetId() const;
 };

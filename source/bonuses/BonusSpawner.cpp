@@ -165,10 +165,10 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 template<typename TBonusType>
 void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const int id)
 {
-	constexpr int bonusLifetimeMs = 10 * 1000;// 10 sec
-	constexpr int bonusDurationTimeMs = 10 * 1000;// 10 sec
+	constexpr std::chrono::milliseconds bonusLifetime{std::chrono::seconds{10}};
+	constexpr std::chrono::milliseconds bonusDurationTime{std::chrono::seconds{10}};
 
 	_allObjects->emplace_back(
 			std::make_shared<TBonusType>(
-					rect, _window, _events, bonusDurationTimeMs, bonusLifetimeMs, color, id, _gameMode));
+					rect, _window, _events, bonusDurationTime, bonusLifetime, color, id, _gameMode));
 }

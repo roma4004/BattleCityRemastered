@@ -29,7 +29,4 @@ public:
 	virtual void UnsubscribeAsClient() const;
 
 	void Draw() const override;
-
-	[[nodiscard]] virtual std::string GetName() const;
-	[[nodiscard]] virtual int GetId() const;
 };

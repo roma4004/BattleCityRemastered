@@ -19,8 +19,8 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 protected:
 	int _id;
 	GameMode _gameMode{Demo};
-	int _bonusDurationMs{0};
-	int _bonusLifetimeMs{0};
+	std::chrono::milliseconds _bonusDuration{0};
+	std::chrono::milliseconds _lifetime{0};
 
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -32,8 +32,9 @@ protected:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
 
 public:
-	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, int durationMs,
-	      int lifeTimeMs, int color, std::string name, int id, GameMode gameMode);
+	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name, int id,
+	      GameMode gameMode);
 
 	~Bonus() override;
 

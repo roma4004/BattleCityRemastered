@@ -33,7 +33,7 @@ class BonusSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnType;
 	std::uniform_int_distribution<> _distRandColor;
 
-	int _cooldownBonusSpawn{60000};//60 sec
+	std::chrono::milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};
 	std::chrono::system_clock::time_point _lastTimeSpawn;
 
 	void Subscribe();

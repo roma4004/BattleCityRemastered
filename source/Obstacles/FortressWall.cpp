@@ -1,5 +1,6 @@
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/Pawns/Pawn.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/utils/ColliderUtils.h"
@@ -11,17 +12,11 @@
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id, const GameMode gameMode)
-	: Obstacle{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1},
-	           0x924b00,
-	           1,
-	           window,
-	           "fortressWall" + std::to_string(id),
-	           events,
-	           id,
-	           gameMode},
+	: BaseObj{rect, 0x924b00, 1, id, "fortressWall" + std::to_string(id)},
 	  _rect{rect},
-	  _window{window},
-	  _events{events},//TODO: change name for statistic
+	  _gameMode{gameMode},
+	  _window{window},//TODO: change name for statistic
+	  _events{events},
 	  _allObjects{allObjects},
 	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id, gameMode)}
 {
@@ -37,7 +32,7 @@ void FortressWall::Subscribe()
 {
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
-	SubscribeBonus();//TODO: replicate bonusShovel, to replace with steel
+	SubscribeBonus();
 }
 
 void FortressWall::SubscribeAsHost()
@@ -57,36 +52,53 @@ void FortressWall::SubscribeAsClient()
 			return;
 		}
 
-		this->Hide();
+		this->OnEnemyPickupShovel();
+	});
+
+	_events->AddListener<const int>("ClientReceived_FortressToSteel", _name, [this](const int id)
+	{
+		if (id == _id)
+		{
+			this->OnPlayerPickupShovel();
+		}
+	});
+
+	_events->AddListener<const int>("ClientReceived_FortressToBrick", _name, [this](const int id)
+	{
+		if (id == _id)
+		{
+			this->OnPlayerShovelCooldownEnd();
+		}
 	});
 }
 
 void FortressWall::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, int>(
+	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
 			"BonusShovel", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const int bonusDurationTimeMs)
+			[this](const std::string& /*author*/, const std::string& fraction,
+			       const std::chrono::milliseconds bonusDurationTime)
 			{
 				if (fraction == "PlayerTeam")
 				{
-					if (this->_isActiveShovel)
+					if (this->_shovel.isActive)
 					{
-						this->_cooldownShovelMs += bonusDurationTimeMs;
+						this->_shovel.cooldown += bonusDurationTime;
 
 						return;
 					}
 
-					this->_isActiveShovel = true;
-					this->BonusShovelSwitch();
-					this->_cooldownShovelMs = bonusDurationTimeMs;
+					this->_shovel.isActive = true;
+					this->OnPlayerPickupShovel();
+					this->_shovel.cooldown = bonusDurationTime;
 				}
 				else if (fraction == "EnemyTeam")
 				{
-					this->_isActiveShovel = false;
-					this->Hide();
+					this->_shovel.isActive = false;
+					this->OnEnemyPickupShovel();
 				}
 
-				this->_activateTimeShovel = std::chrono::system_clock::now();
+				this->_shovel.activateTime = std::chrono::system_clock::now();
 			});
 }
 
@@ -105,11 +117,13 @@ void FortressWall::UnsubscribeAsHost() const
 void FortressWall::UnsubscribeAsClient() const
 {
 	_events->RemoveListener<const int>("ClientReceived_FortressDied", _name);
+	_events->RemoveListener<const int>("ClientReceived_FortressToSteel", _name);
+	_events->RemoveListener<const int>("ClientReceived_FortressToBrick", _name);
 }
 
 void FortressWall::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, int>("BonusShovel", _name);
+	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusShovel", _name);
 }
 
 void FortressWall::Draw() const {}
@@ -117,42 +131,53 @@ void FortressWall::Draw() const {}
 void FortressWall::TickUpdate(const float /*deltaTime*/)
 {
 	// bonus disable timer
-	if (_isActiveShovel && TimeUtils::IsCooldownFinish(_activateTimeShovel, _cooldownShovelMs))
+	if (_shovel.isActive && TimeUtils::IsCooldownFinish(_shovel.activateTime, _shovel.cooldown))
 	{
-		_isActiveShovel = false;
-		_cooldownShovelMs = 0;
-		BonusShovelSwitch();
+		_shovel.isActive = false;
+		OnPlayerShovelCooldownEnd();
 	}
 }
 
 //TODO: check maybe delete this method
 void FortressWall::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
 
+void FortressWall::OnPlayerShovelCooldownEnd()
+{
+	if (GetHealth() > 0)
+	{
+		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
+		{
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _id, _gameMode);
+		}
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const int>("ServerSend_FortressToBrick", _id);
+		}
+	}
+}
+
 //TODO: should be private and friend bonusShovel to activate
 // NOTE: call when player team bonus pick up
-void FortressWall::BonusShovelSwitch()
+void FortressWall::OnPlayerPickupShovel()
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [this](const std::shared_ptr<BaseObj>& object)
 	{
-		if (dynamic_cast<FortressWall*>(object.get()))
+		if (dynamic_cast<Pawn*>(object.get()))
 		{
-			return false;
+			return ColliderUtils::IsCollide(_rect, object->GetShape());
 		}
 
-		return ColliderUtils::IsCollide(_rect, object->GetShape());
+		return false;
 	});
 
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
-		if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
+		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _id, _gameMode);
+
+		if (_gameMode == PlayAsHost)
 		{
-			_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _id, _gameMode);
-			//TODO: send event for replication thar brick need to appear at client side
-		}
-		else
-		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _id, _gameMode);
-			//TODO: send event for replication thar steel need to appear at client side
+			_events->EmitEvent<const int>("ServerSend_FortressToSteel", _id);
 		}
 	}
 }
@@ -193,16 +218,9 @@ bool FortressWall::IsSteelWall() const
 }
 
 // NOTE: call when enemy team bonus pick up
-void FortressWall::Hide()
+void FortressWall::OnEnemyPickupShovel()
 {
-	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
-	{
-		_obstacle = std::unique_ptr<BrickWall>(nullptr);
-	}
-	else
-	{
-		_obstacle = std::unique_ptr<SteelWall>(nullptr);
-	}
+	_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
 	if (_gameMode == PlayAsHost)
 	{
@@ -342,17 +360,7 @@ void FortressWall::SetShape(const ObjRectangle shape)
 
 bool FortressWall::GetIsAlive() const
 {
-	bool isAlive{false};
-
-	std::visit([&isAlive](auto&& uniqPtr)
-	{
-		if (uniqPtr)
-		{
-			isAlive = uniqPtr.get()->GetIsAlive();
-		}
-	}, _obstacle);
-
-	return isAlive;
+	return true;//NOTE: always true to preventing disposing broken FortressWalls
 }
 
 void FortressWall::SetIsAlive(const bool isAlive)

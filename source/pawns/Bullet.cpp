@@ -131,8 +131,6 @@ int Bullet::GetDamage() const { return _damage; }
 
 double Bullet::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
-std::string Bullet::GetName() const { return _name; }
-
 std::string Bullet::GetAuthor() const { return _author; }
 
 std::string Bullet::GetFraction() const { return _fraction; }
@@ -152,5 +150,3 @@ void Bullet::TakeDamage(const int damage)
 		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }
-
-int Bullet::GetId() const { return _id; }

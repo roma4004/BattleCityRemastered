@@ -327,7 +327,7 @@ void GameSuccess::MainLoop()
 
 			DisposeDeadObject();
 
-			// _events->EmitEvent("RespawnTanks");
+			_events->EmitEvent("RespawnTanks");
 
 			_events->EmitEvent("Draw");
 

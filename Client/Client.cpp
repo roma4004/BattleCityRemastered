@@ -63,8 +63,7 @@ void Client::ReadResponse()
 	{
 		if (ec)
 		{
-			_read_buffer.consume(length);// Now we can consume the written data
-			// Обработка ошибки
+			_read_buffer.consume(length);
 			std::cerr << ec.message() << '\n';
 		}
 		else
@@ -76,9 +75,8 @@ void Client::ReadResponse()
 			Data data;
 			ia >> data;
 
-			_read_buffer.consume(length);// Now we can consume the written data
+			_read_buffer.consume(length);
 
-			//TODO: replicate tank died and spawn, now only next move update them or new health update health
 			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game
 			if (data.eventName == "Pos")
 			{
@@ -110,6 +108,14 @@ void Client::ReadResponse()
 			else if (data.eventName == "FortressDied")
 			{
 				events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
+			}
+			else if (data.eventName == "FortressToSteel")
+			{
+				events->EmitEvent<const int>("ClientReceived_FortressToSteel", data.id);
+			}
+			else if (data.eventName == "FortressToBrick")
+			{
+				events->EmitEvent<const int>("ClientReceived_FortressToBrick", data.id);
 			}
 			else if (data.eventName == "TankDied")
 			{

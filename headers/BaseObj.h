@@ -65,4 +65,7 @@ public:
 
 	[[nodiscard]] virtual ObjRectangle GetShape() const;
 	virtual void SetShape(ObjRectangle shape);
+
+	[[nodiscard]] virtual std::string GetName() const;
+	[[nodiscard]] virtual int GetId() const;
 };

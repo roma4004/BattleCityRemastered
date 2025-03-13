@@ -80,7 +80,3 @@ void Obstacle::Draw() const
 		}
 	}
 }
-
-std::string Obstacle::GetName() const { return _name; }
-
-int Obstacle::GetId() const { return _id; }
