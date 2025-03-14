@@ -196,8 +196,9 @@
     <ClCompile Include="..\source\obstacles\SteelWall.cpp" />
     <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
     <ClCompile Include="..\source\obstacles\WaterTile.cpp" />
+    <ClCompile Include="..\source\pawns\Bot.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
-    <ClCompile Include="..\source\pawns\CoopAI.cpp" />
+    <ClCompile Include="..\source\pawns\CoopBot.cpp" />
     <ClCompile Include="..\source\pawns\Enemy.cpp" />
     <ClCompile Include="..\source\pawns\Pawn.cpp" />
     <ClCompile Include="..\source\pawns\PlayerOne.cpp" />

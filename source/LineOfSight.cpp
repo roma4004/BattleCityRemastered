@@ -7,21 +7,52 @@
 
 #include <algorithm>
 
-LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, const FPoint bulletHalf,
+LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize, const FPoint bulletSize,
                          std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const FPoint tankHalf = {.x = shape.w / 2.f, .y = shape.h / 2.f};
-	checkLOS = std::vector<ObjRectangle>{
-			/*up, left, down, right*/
-			{.x = shape.x + tankHalf.x - bulletHalf.x, .y = 0.f, .w = bulletHalf.x, .h = shape.y},
-			{.x = 0.f, .y = shape.y + tankHalf.y - bulletHalf.y, .w = shape.x, .h = bulletHalf.y},
-			{.x = shape.x + tankHalf.x - bulletHalf.x, .y = shape.y + shape.h, .w = bulletHalf.x, .h = fWindowSize.y},
-			{.x = shape.x + shape.w, .y = shape.y + tankHalf.y - bulletHalf.y, .w = fWindowSize.x, .h = bulletHalf.y}
+	const FPoint tankHalf = {.x = tankShape.w / 2.f, .y = tankShape.h / 2.f};
+	const FPoint tankCenter = {.x = tankShape.x + tankHalf.x, .y = tankShape.y + tankHalf.y};
+	const float tankDownY = {tankShape.y + tankShape.h};
+	const float tankRightX = {tankShape.x + tankShape.w};
+	const FPoint bulletSpawnPos = {tankCenter.x - bulletSize.x, tankCenter.y - bulletSize.y};
+	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
+
+	_checkLos = std::vector<ObjRectangle>{
+			/*up, left, down, right*///TODO: align to not needed exclude self
+			{.x = bulletSpawnPos.x, .y = 0.f, .w = bulletSize.x, .h = tankShape.y},
+			{.x = 0.f, .y = bulletSpawnPos.y, .w = tankShape.x, .h = bulletSize.y},
+			{.x = bulletSpawnPos.x, .y = tankDownY, .w = bulletSize.x, .h = sightSize.y},
+			{.x = tankRightX, .y = bulletSpawnPos.y, .w = sightSize.x, .h = bulletSize.y}
 	};
 
-	// parse all seen in LOS (line of sight) obj
+	CheckLOS(excludeSelf);
+}
+
+LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
+                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
+	: _allObjects{allObjects}
+{
+	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
+	const float tankDownY = {tankShape.y + tankShape.h};
+	const float tankRightX = {tankShape.x + tankShape.w};
+	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
+
+	_checkLos = std::vector<ObjRectangle>{
+			/*up, left, down, right*/
+			{.x = tankShape.x, .y = 0.f, .w = tankShape.w, .h = tankShape.y},
+			{.x = 0.f, .y = tankShape.y, .w = tankShape.x, .h = tankShape.h},
+			{.x = tankShape.x, .y = tankDownY, .w = tankShape.w, .h = sightSize.y},
+			{.x = tankRightX, .y = tankShape.y, .w = sightSize.x, .h = tankShape.h}
+	};
+
+	CheckLOS(excludeSelf);
+}
+
+void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
+{
+	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (excludeSelf == object.get())
@@ -31,30 +62,34 @@ LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, con
 
 		if (!object->GetIsPassable() && !object->GetIsPenetrable())
 		{
-			if (ColliderUtils::IsCollide(checkLOS[UP], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[UP], object->GetShape()))
 			{
-				upSideObstacles.emplace_back(std::weak_ptr(object));
+				_upSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 
-			if (ColliderUtils::IsCollide(checkLOS[LEFT], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[LEFT], object->GetShape()))
 			{
-				leftSideObstacles.emplace_back(std::weak_ptr(object));
+				_leftSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 
-			if (ColliderUtils::IsCollide(checkLOS[DOWN], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[DOWN], object->GetShape()))
 			{
-				downSideObstacles.emplace_back(std::weak_ptr(object));
+				_downSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 
-			if (ColliderUtils::IsCollide(checkLOS[RIGHT], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[RIGHT], object->GetShape()))
 			{
-				rightSideObstacles.emplace_back(std::weak_ptr(object));
+				_rightSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 		}
 	}
 
-	// sorting to nearest
-	std::ranges::sort(upSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	SortToNearest();
+}
+
+void LineOfSight::SortToNearest()
+{
+	std::ranges::sort(_upSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
 	{
 		const auto aLck = a.lock();
 		if (!aLck)
@@ -71,7 +106,7 @@ LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, con
 		return aLck->GetPos().y > bLck->GetPos().y;
 	});
 
-	std::ranges::sort(leftSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_leftSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
 	{
 		const auto aLck = a.lock();
 		if (!aLck)
@@ -88,7 +123,7 @@ LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, con
 		return aLck->GetPos().x > bLck->GetPos().x;
 	});
 
-	std::ranges::sort(downSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_downSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
 	{
 		const auto aLck = a.lock();
 		if (!aLck)
@@ -105,7 +140,7 @@ LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, con
 		return aLck->GetPos().y < bLck->GetPos().y;
 	});
 
-	std::ranges::sort(rightSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_rightSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
 	{
 		const auto aLck = a.lock();
 		if (!aLck)
@@ -125,7 +160,7 @@ LineOfSight::LineOfSight(const ObjRectangle shape, const UPoint& windowSize, con
 
 LineOfSight::~LineOfSight() = default;
 
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetUpSideObstacles() { return upSideObstacles; }
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetLeftSideObstacles() { return leftSideObstacles; }
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetDownSideObstacles() { return downSideObstacles; }
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetRightSideObstacles() { return rightSideObstacles; }
+std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetUpSideObstacles() { return _upSideObstacles; }
+std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetLeftSideObstacles() { return _leftSideObstacles; }
+std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetDownSideObstacles() { return _downSideObstacles; }
+std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetRightSideObstacles() { return _rightSideObstacles; }

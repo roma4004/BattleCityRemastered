@@ -5,18 +5,6 @@
 
 class PlayerOne final : public Tank
 {
-	GameMode _gameMode{Demo};
-
-	void Subscribe() override;
-	void SubscribeAsHost();
-	void SubscribeAsClient();
-	void SubscribeBonus();
-
-	void UnsubscribeAsClient() const;
-	void UnsubscribeBonus() const;
-	void Unsubscribe() const override;
-	void UnsubscribeAsHost() const;
-
 	void MoveTo(float deltaTime, Direction direction);
 
 	void TickUpdate(float deltaTime) override;

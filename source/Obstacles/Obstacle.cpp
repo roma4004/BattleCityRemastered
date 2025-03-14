@@ -3,8 +3,9 @@
 #include "../../headers/application/Window.h"
 
 Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, const std::shared_ptr<Window> window,
-                   const std::string& name, const std::shared_ptr<EventSystem> events, const int id, GameMode gameMode)
-	: BaseObj{rect, color, health, id, std::move(name)},
+                   const std::string& name, const std::shared_ptr<EventSystem> events, const int id,
+                   const GameMode gameMode)
+	: BaseObj{rect, color, health, id, std::move(name), "Neutral"},
 	  _window(std::move(window)),
 	  _gameMode{gameMode},
 	  _events(std::move(events))

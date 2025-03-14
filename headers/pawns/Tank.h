@@ -27,16 +27,20 @@ protected:
 	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
-	std::string _fraction;
-
 	// bonuses
-	BonusStatus _timer{}; //TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
+	BonusStatus _timer{};
+	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
 	BonusStatus _helmet{};
 
 	void Shot() const;
 
 	inline void SetPixel(size_t x, size_t y, int color) const;
 	void DrawHealthBar() const override;
+
+	void OnBonusTimer(const std::string& fraction, std::chrono::milliseconds duration);
+	void OnBonusHelmet(const std::string& author, const std::string& fraction, std::chrono::milliseconds duration);
+	void OnBonusGrenade(const std::string& fraction);
+	void OnBonusStar(const std::string& author, const std::string& fraction);
 
 public:
 	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,
@@ -47,9 +51,14 @@ public:
 	~Tank() override;
 
 	virtual void Subscribe();
-	virtual void Unsubscribe() const;
+	void SubscribeAsHost();
+	void SubscribeAsClient();
+	void SubscribeBonus();
 
-	[[nodiscard]] std::string GetFraction() const;
+	virtual void Unsubscribe() const;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
+	void UnsubscribeBonus() const;
 
 	void TakeDamage(int damage) override;
 

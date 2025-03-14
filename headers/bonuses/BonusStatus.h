@@ -13,5 +13,5 @@ struct BonusStatus
 
 	~BonusStatus();
 
-	void UpdateBonus();
+	void TickUpdateBonus();
 };

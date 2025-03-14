@@ -5,15 +5,6 @@
 
 class PlayerTwo final : public Tank
 {
-	void Subscribe() override;
-	void SubscribeAsHost();
-	void SubscribeAsClient();
-	void SubscribeBonus();
-
-	void Unsubscribe() const override;
-	void UnsubscribeAsHost() const;
-	void UnsubscribeAsClient() const;
-	void UnsubscribeBonus() const;
 
 	void MoveTo(float deltaTime, Direction direction);
 

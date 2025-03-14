@@ -12,7 +12,7 @@
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id, const GameMode gameMode)
-	: BaseObj{rect, 0x924b00, 1, id, "fortressWall" + std::to_string(id)},
+	: BaseObj{rect, 0x924b00, 1, id, "fortressWall" + std::to_string(id), "Neutral"},
 	  _rect{rect},
 	  _gameMode{gameMode},
 	  _window{window},//TODO: change name for statistic
@@ -256,7 +256,7 @@ void FortressWall::SetIsPassable(const bool value)
 
 bool FortressWall::GetIsDestructible() const
 {
-	bool result{true};
+	bool result{false};
 
 	std::visit([&result](auto&& uniqPtr)
 	{

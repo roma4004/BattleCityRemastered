@@ -38,7 +38,6 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 					this->ReadResponse();
 				}
 			});
-
 }
 
 Client::~Client()

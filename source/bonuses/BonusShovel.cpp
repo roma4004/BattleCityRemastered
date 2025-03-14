@@ -6,8 +6,11 @@ BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<Window> windo
                          const int color, const int id, const GameMode gameMode)
 	: Bonus{rect, std::move(window), std::move(events), duration, lifeTime, color, "BonusShovel", id, gameMode}
 {
-	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Shovel, _id);
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Shovel, _id);
+	}
 }
 
 BonusShovel::~BonusShovel() = default;
@@ -20,5 +23,5 @@ void BonusShovel::SendDamageStatistics(const std::string& author, const std::str
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent<const std::string&, const std::string&, std::chrono::milliseconds>(
-			"BonusShovel", author, fraction, _bonusDuration);
+			"BonusShovel", author, fraction, _duration);
 }

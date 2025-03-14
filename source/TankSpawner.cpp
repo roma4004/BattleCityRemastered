@@ -4,7 +4,7 @@
 #include "../headers/input/InputProviderForPlayerOneNet.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/input/InputProviderForPlayerTwoNet.h"
-#include "../headers/pawns/CoopAI.h"
+#include "../headers/pawns/CoopBot.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
 #include "../headers/pawns/PlayerTwo.h"
@@ -46,8 +46,8 @@ void TankSpawner::Subscribe()
 
 	_events->AddListener("Player1_Died", _name, [this]() { _playerOneNeedRespawn = true; });
 	_events->AddListener("Player2_Died", _name, [this]() { _playerTwoNeedRespawn = true; });
-	_events->AddListener("CoopAI1_Died", _name, [this]() { _coopOneAINeedRespawn = true; });
-	_events->AddListener("CoopAI2_Died", _name, [this]() { _coopTwoAINeedRespawn = true; });
+	_events->AddListener("CoopBot1_Died", _name, [this]() { _coopBotOneNeedRespawn = true; });
+	_events->AddListener("CoopBot2_Died", _name, [this]() { _coopBotTwoNeedRespawn = true; });
 
 	_events->AddListener("Player1_Spawn", _name, [this]()
 	{
@@ -59,14 +59,14 @@ void TankSpawner::Subscribe()
 		_playerTwoNeedRespawn = false;
 		DecreasePlayerTwoRespawnResource();
 	});
-	_events->AddListener("CoopAI1_Spawn", _name, [this]()
+	_events->AddListener("CoopBot1_Spawn", _name, [this]()
 	{
-		_coopOneAINeedRespawn = false;
+		_coopBotOneNeedRespawn = false;
 		DecreasePlayerOneRespawnResource();
 	});
-	_events->AddListener("CoopAI2_Spawn", _name, [this]()
+	_events->AddListener("CoopBot2_Spawn", _name, [this]()
 	{
-		_coopTwoAINeedRespawn = false;
+		_coopBotTwoNeedRespawn = false;
 		DecreasePlayerTwoRespawnResource();
 	});
 
@@ -103,11 +103,11 @@ void TankSpawner::SubscribeBonus()
 				}
 				else if (fraction == "PlayerTeam")
 				{
-					if (author == "Player1" || author == "CoopAI1")
+					if (author == "Player1" || author == "CoopBot1")
 					{
 						IncreasePlayerOneRespawnResource();
 					}
-					if (author == "Player2" || author == "CoopAI2")
+					if (author == "Player2" || author == "CoopBot2")
 					{
 						IncreasePlayerTwoRespawnResource();
 					}
@@ -130,13 +130,13 @@ void TankSpawner::Unsubscribe() const
 
 	_events->RemoveListener("Player1_Died", _name);
 	_events->RemoveListener("Player2_Died", _name);
-	_events->RemoveListener("CoopAI1_Died", _name);
-	_events->RemoveListener("CoopAI2_Died", _name);
+	_events->RemoveListener("CoopBot1_Died", _name);
+	_events->RemoveListener("CoopBot2_Died", _name);
 
 	_events->RemoveListener("Player1_Spawn", _name);
 	_events->RemoveListener("Player2_Spawn", _name);
-	_events->RemoveListener("CoopAI1_Spawn", _name);
-	_events->RemoveListener("CoopAI2_Spawn", _name);
+	_events->RemoveListener("CoopBot1_Spawn", _name);
+	_events->RemoveListener("CoopBot2_Spawn", _name);
 
 	_events->RemoveListener("Enemy1_Spawn", _name);
 	_events->RemoveListener("Enemy2_Spawn", _name);
@@ -170,8 +170,8 @@ void TankSpawner::ResetRespawnStat()
 
 	_playerOneNeedRespawn = false;
 	_playerTwoNeedRespawn = false;
-	_coopOneAINeedRespawn = false;
-	_coopTwoAINeedRespawn = false;
+	_coopBotOneNeedRespawn = false;
+	_coopBotTwoNeedRespawn = false;
 }
 
 void TankSpawner::ResetSpawn()
@@ -187,17 +187,17 @@ void TankSpawner::SetPlayerNeedRespawn()
 {
 	if (_currentMode == Demo)
 	{
-		_coopOneAINeedRespawn = true;
-		_coopTwoAINeedRespawn = true;
+		_coopBotOneNeedRespawn = true;
+		_coopBotTwoNeedRespawn = true;
 
 		return;
 	}
 
 	_playerOneNeedRespawn = true;
 
-	if (_currentMode == CoopWithAI)
+	if (_currentMode == CoopWithBot)
 	{
-		_coopTwoAINeedRespawn = true;
+		_coopBotTwoNeedRespawn = true;
 
 		return;
 	}
@@ -307,7 +307,7 @@ void TankSpawner::SpawnPlayer2(const float gridOffset, const float speed, const 
 	}
 }
 
-void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const int health, const float size)
+void TankSpawner::SpawnCoopBot1(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY{static_cast<float>(_window->size.y)};
 	const ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
@@ -319,17 +319,17 @@ void TankSpawner::SpawnCoop1(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int yellow{0xeaea00};
-		std::string name{"CoopAI"};
+		std::string name{"CoopBot"};
 		std::string fraction{"PlayerTeam"};
 
 		_allObjects->emplace_back(
-				std::make_shared<CoopAI>(
+				std::make_shared<CoopBot>(
 						rect, yellow, health, _window, UP, speed, _allObjects, _events, name, fraction, _bulletPool,
 						_currentMode, 1));
 	}
 }
 
-void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const int health, const float size)
+void TankSpawner::SpawnCoopBot2(const float gridOffset, const float speed, const int health, const float size)
 {
 	const auto windowSizeY{static_cast<float>(_window->size.y)};
 	const ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
@@ -341,10 +341,10 @@ void TankSpawner::SpawnCoop2(const float gridOffset, const float speed, const in
 	if (isFreeSpawnSpot)
 	{
 		constexpr int green{0x408000};
-		std::string name{"CoopAI"};
+		std::string name{"CoopBot"};
 		std::string fraction{"PlayerTeam"};
 
-		_allObjects->emplace_back(std::make_shared<CoopAI>(
+		_allObjects->emplace_back(std::make_shared<CoopBot>(
 				rect, green, health, _window, UP, speed, _allObjects, _events, name, fraction, _bulletPool,
 				_currentMode, 2));
 	}
@@ -412,22 +412,22 @@ void TankSpawner::RespawnCoopTanks(const int index)
 	{
 		if (GetPlayerOneRespawnResource() > 0)
 		{
-			SpawnCoop1(gridOffset, speed, health, size);
+			SpawnCoopBot1(gridOffset, speed, health, size);
 		}
 		else
 		{
-			_coopOneAINeedRespawn = false;
+			_coopBotOneNeedRespawn = false;
 		}
 	}
 	else if (index == 2)
 	{
 		if (GetPlayerTwoRespawnResource() > 0)
 		{
-			SpawnCoop2(gridOffset, speed, health, size);
+			SpawnCoopBot2(gridOffset, speed, health, size);
 		}
 		else
 		{
-			_coopTwoAINeedRespawn = false;
+			_coopBotTwoNeedRespawn = false;
 		}
 	}
 }
@@ -446,9 +446,9 @@ void TankSpawner::RespawnTanks()
 
 	if (IsPlayerTwoNeedRespawn()) { RespawnPlayerTanks(2); }
 
-	if (IsCoopOneAINeedRespawn()) { RespawnCoopTanks(1); }
+	if (IsCoopBotOneNeedRespawn()) { RespawnCoopTanks(1); }
 
-	if (IsCoopTwoAINeedRespawn()) { RespawnCoopTanks(2); }
+	if (IsCoopBotTwoNeedRespawn()) { RespawnCoopTanks(2); }
 }
 
 void TankSpawner::IncreaseEnemyRespawnResource()

@@ -224,7 +224,7 @@ void Menu::DrawMenuText(const UPoint menuBackgroundPos) const
 	TextToRender({.x = pos.x, .y = pos.y - 25}, color,
 	             _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
 	TextToRender({.x = pos.x, .y = pos.y}, color,
-	             _selectedGameMode == CoopWithAI ? ">COOP AI" : "COOP AI");
+	             _selectedGameMode == CoopWithBot ? ">COOP WITH BOT" : "COOP WITH BOT");
 	TextToRender({.x = pos.x, .y = pos.y + 25}, color,
 	             _selectedGameMode == PlayAsHost ? ">PLAY AS HOST" : "PLAY AS HOST");
 	TextToRender({.x = pos.x, .y = pos.y + 50}, color,

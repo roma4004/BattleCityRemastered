@@ -6,7 +6,7 @@ enum GameMode : char8_t
 
 	OnePlayer,
 	TwoPlayers,
-	CoopWithAI,
+	CoopWithBot,
 	PlayAsHost,
 	PlayAsClient,
 

@@ -18,10 +18,10 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	       events,
 	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events),
 	       id,
-	       "Bullet" + std::to_string(id)
+	       "Bullet" + std::to_string(id),
+	       std::move(fraction)
 	  },
 	  _author{std::move(author)},
-	  _fraction{std::move(fraction)},
 	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage},
 	  _gameMode{gameMode}
@@ -132,8 +132,6 @@ int Bullet::GetDamage() const { return _damage; }
 double Bullet::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 std::string Bullet::GetAuthor() const { return _author; }
-
-std::string Bullet::GetFraction() const { return _fraction; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {

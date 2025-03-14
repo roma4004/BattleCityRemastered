@@ -10,19 +10,24 @@ class BaseObj;
 
 class LineOfSight final
 {
-	std::vector<ObjRectangle> checkLOS;
+	std::vector<ObjRectangle> _checkLos;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	std::vector<std::weak_ptr<BaseObj>> upSideObstacles{};
-	std::vector<std::weak_ptr<BaseObj>> leftSideObstacles{};
-	std::vector<std::weak_ptr<BaseObj>> downSideObstacles{};
-	std::vector<std::weak_ptr<BaseObj>> rightSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> _upSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> _leftSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> _downSideObstacles{};
+	std::vector<std::weak_ptr<BaseObj>> _rightSideObstacles{};
 
 public:
-	LineOfSight(ObjRectangle shape, const UPoint& windowSize, FPoint bulletHalf,
+	LineOfSight(ObjRectangle tankShape, const UPoint& windowSize, FPoint bulletSize,
 	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf);
+	LineOfSight(ObjRectangle tankShape, const UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	            const BaseObj* excludeSelf);
 
 	~LineOfSight();
+
+	void CheckLOS(const BaseObj* excludeSelf);
+	void SortToNearest();
 
 	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetUpSideObstacles();
 	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetLeftSideObstacles();

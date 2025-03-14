@@ -2,12 +2,13 @@
 
 #include "ObjRectangle.h"
 #include "interfaces/IDrawable.h"
+#include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
 
 struct FPoint;
 
-class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics
+class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics, public IHaveFraction
 {
 	int _color{0};
 	int _health{0};
@@ -16,10 +17,11 @@ class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatis
 protected:
 	int _id{0};
 	std::string _name;
+	std::string _fraction;
 	ObjRectangle _shape{};
 
 public:
-	BaseObj(const ObjRectangle& rect, int color, int health, int id, std::string name);
+	BaseObj(const ObjRectangle& rect, int color, int health, int id, std::string name, std::string fraction);
 
 	~BaseObj() override;
 
@@ -68,4 +70,5 @@ public:
 
 	[[nodiscard]] virtual std::string GetName() const;
 	[[nodiscard]] virtual int GetId() const;
+	[[nodiscard]] std::string GetFraction() const override;
 };

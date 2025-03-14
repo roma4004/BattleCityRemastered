@@ -32,7 +32,7 @@ protected:
 public:
 	Pawn(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,
 	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	     std::unique_ptr<IMoveBeh> moveBeh, int id, std::string name);
+	     std::unique_ptr<IMoveBeh> moveBeh, int id, std::string name, std::string fraction);
 
 	~Pawn() override;
 

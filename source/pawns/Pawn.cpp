@@ -2,8 +2,9 @@
 
 Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-           std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh, const int id, std::string name)
-	: BaseObj{rect, color, health, id, std::move(name)},
+           std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh, const int id, std::string name,
+           std::string fraction)
+	: BaseObj{rect, color, health, id, std::move(name), std::move(fraction)},
 	  _direction{direction},
 	  _speed{speed},
 	  _moveBeh{std::move(moveBeh)},

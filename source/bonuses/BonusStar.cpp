@@ -6,8 +6,11 @@ BonusStar::BonusStar(const ObjRectangle& rect, std::shared_ptr<Window> window, s
                      const int color, const int id, const GameMode gameMode)
 	: Bonus{rect, std::move(window), std::move(events), duration, lifeTime, color, "BonusStar", id, gameMode}
 {
-	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Star, _id);
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Star, _id);
+	}
 }
 
 BonusStar::~BonusStar() = default;

@@ -6,8 +6,11 @@ BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<Window> window,
                        const int color, const int id, const GameMode gameMode)
 	: Bonus{rect, std::move(window), std::move(events), duration, lifeTime, color, "BonusTimer", id, gameMode}
 {
-	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Timer, _id);
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Timer, _id);
+	}
 }
 
 BonusTimer::~BonusTimer() = default;
@@ -20,5 +23,5 @@ void BonusTimer::SendDamageStatistics(const std::string& author, const std::stri
 void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent<const std::string&, const std::string&, std::chrono::milliseconds>(
-			"BonusTimer", author, fraction, _bonusDuration);
+			"BonusTimer", author, fraction, _duration);
 }

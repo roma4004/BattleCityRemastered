@@ -36,8 +36,8 @@ class TankSpawner final
 	bool _enemyFourNeedRespawn{false};
 	bool _playerOneNeedRespawn{false};
 	bool _playerTwoNeedRespawn{false};
-	bool _coopOneAINeedRespawn{false};
-	bool _coopTwoAINeedRespawn{false};
+	bool _coopBotOneNeedRespawn{false};
+	bool _coopBotTwoNeedRespawn{false};
 
 	void Subscribe();
 	void SubscribeBonus();
@@ -50,8 +50,8 @@ class TankSpawner final
 
 	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
 	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
-	void SpawnCoop1(float gridOffset, float speed, int health, float size);
-	void SpawnCoop2(float gridOffset, float speed, int health, float size);
+	void SpawnCoopBot1(float gridOffset, float speed, int health, float size);
+	void SpawnCoopBot2(float gridOffset, float speed, int health, float size);
 	void RespawnEnemyTanks(int index);
 	void RespawnPlayerTanks(int index);
 	void RespawnCoopTanks(int index);
@@ -86,6 +86,6 @@ public:
 
 	[[nodiscard]] bool IsPlayerOneNeedRespawn() const { return _playerOneNeedRespawn; }
 	[[nodiscard]] bool IsPlayerTwoNeedRespawn() const { return _playerTwoNeedRespawn; }
-	[[nodiscard]] bool IsCoopOneAINeedRespawn() const { return _coopOneAINeedRespawn; }
-	[[nodiscard]] bool IsCoopTwoAINeedRespawn() const { return _coopTwoAINeedRespawn; }
+	[[nodiscard]] bool IsCoopBotOneNeedRespawn() const { return _coopBotOneNeedRespawn; }
+	[[nodiscard]] bool IsCoopBotTwoNeedRespawn() const { return _coopBotTwoNeedRespawn; }
 };

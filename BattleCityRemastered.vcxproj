@@ -172,8 +172,9 @@
     <ClCompile Include="source\obstacles\FortressWall.cpp" />
     <ClCompile Include="source\obstacles\SteelWall.cpp" />
     <ClCompile Include="source\obstacles\WaterTile.cpp" />
+    <ClCompile Include="source\pawns\Bot.cpp" />
     <ClCompile Include="source\pawns\Bullet.cpp" />
-    <ClCompile Include="source\pawns\CoopAI.cpp" />
+    <ClCompile Include="source\pawns\CoopBot.cpp" />
     <ClCompile Include="source\pawns\Enemy.cpp" />
     <ClCompile Include="source\pawns\Pawn.cpp" />
     <ClCompile Include="source\pawns\PlayerOne.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="headers\input\InputProviderForPlayerOneNet.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerTwo.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerTwoNet.h" />
+    <ClInclude Include="headers\interfaces\IHaveFraction.h" />
     <ClInclude Include="headers\interfaces\IPickupableBonus.h" />
     <ClInclude Include="headers\interfaces\IShootable.h" />
     <ClInclude Include="headers\LineOfSight.h" />
@@ -242,8 +244,9 @@
     <ClInclude Include="headers\interfaces\IObstacle.h" />
     <ClInclude Include="headers\interfaces\ISendableDamageStatistics.h" />
     <ClInclude Include="headers\interfaces\ITickUpdatable.h" />
+    <ClInclude Include="headers\pawns\Bot.h" />
     <ClInclude Include="headers\pawns\Bullet.h" />
-    <ClInclude Include="headers\pawns\CoopAI.h" />
+    <ClInclude Include="headers\pawns\CoopBot.h" />
     <ClInclude Include="headers\pawns\Enemy.h" />
     <ClInclude Include="headers\pawns\Pawn.h" />
     <ClInclude Include="headers\pawns\PlayerOne.h" />

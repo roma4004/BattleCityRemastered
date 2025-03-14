@@ -5,6 +5,6 @@
 class TimeUtils final
 {
 public:
-	static bool IsCooldownFinish(std::chrono::system_clock::time_point activateTime,
-	                             std::chrono::milliseconds cooldown);
+	static bool IsCooldownFinish(const std::chrono::system_clock::time_point& activateTime,
+	                             const std::chrono::milliseconds& cooldown);
 };

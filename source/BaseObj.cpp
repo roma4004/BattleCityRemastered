@@ -1,8 +1,9 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
-BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health, const int id, std::string name)
-	: _color(color), _health(health), _id {id}, _name{std::move(name)}, _shape{rect}{}
+BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health, const int id, std::string name,
+                 std::string fraction)
+	: _color(color), _health(health), _id{id}, _name{std::move(name)}, _fraction{std::move(fraction)}, _shape{rect} {}
 
 BaseObj::~BaseObj() = default;
 
@@ -13,6 +14,8 @@ void BaseObj::SetShape(const ObjRectangle shape) { _shape = shape; }
 std::string BaseObj::GetName() const { return _name; }
 
 int BaseObj::GetId() const { return _id; }
+
+std::string BaseObj::GetFraction() const { return _fraction; }
 
 FPoint BaseObj::GetPos() const { return FPoint{.x = _shape.x, .y = _shape.y}; }
 

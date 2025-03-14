@@ -158,17 +158,16 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 	const int color = _distRandColor(_gen);
 	const auto bonusType = static_cast<BonusTypeId>(_distSpawnType(_gen));
 	SpawnBonus(rect, color, bonusType);
-
-	_lastTimeSpawn = std::chrono::system_clock::now();
 }
 
 template<typename TBonusType>
 void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const int id)
 {
-	constexpr std::chrono::milliseconds bonusLifetime{std::chrono::seconds{10}};
-	constexpr std::chrono::milliseconds bonusDurationTime{std::chrono::seconds{10}};
+	constexpr std::chrono::milliseconds lifetime{std::chrono::seconds{15}};
+	constexpr std::chrono::milliseconds duration{std::chrono::seconds{15}};
 
 	_allObjects->emplace_back(
-			std::make_shared<TBonusType>(
-					rect, _window, _events, bonusDurationTime, bonusLifetime, color, id, _gameMode));
+			std::make_shared<TBonusType>(rect, _window, _events, duration, lifetime, color, id, _gameMode));
+
+	_lastTimeSpawn = std::chrono::system_clock::now();
 }

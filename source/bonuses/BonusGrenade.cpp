@@ -7,8 +7,11 @@ BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> win
                            const GameMode gameMode)
 	: Bonus{rect, std::move(window), std::move(events), duration, lifeTime, color, "BonusGrenade", id, gameMode}
 {
-	_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
-			"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Grenade, _id);
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Grenade, _id);
+	}
 }
 
 BonusGrenade::~BonusGrenade() = default;

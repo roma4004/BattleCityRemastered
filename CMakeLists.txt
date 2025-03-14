@@ -278,8 +278,9 @@ add_executable(${PROJECT_NAME}
         source/obstacles/FortressWall.cpp
         source/obstacles/SteelWall.cpp
         source/obstacles/WaterTile.cpp
+        source/pawns/Bot.cpp
         source/pawns/Bullet.cpp
-        source/pawns/CoopAI.cpp
+        source/pawns/CoopBot.cpp
         source/pawns/Enemy.cpp
         source/pawns/Pawn.cpp
         source/pawns/PlayerOne.cpp

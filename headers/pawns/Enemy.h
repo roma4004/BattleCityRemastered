@@ -1,30 +1,11 @@
 #pragma once
 
-#include "Tank.h"
+#include "Bot.h"
 
-#include <chrono>
 #include <random>
 
-class Enemy final : public Tank
+class Enemy final : public Bot
 {
-	std::mt19937 _gen;
-	std::uniform_int_distribution<> _distDirection;
-	std::uniform_int_distribution<> _distTurnRate;
-	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn;
-	std::chrono::milliseconds _turnDuration{std::chrono::seconds(2)};
-
-	void Subscribe() override;
-	void SubscribeAsHost();
-	void SubscribeAsClient();
-	void SubscribeBonus();
-
-	void Unsubscribe() const override;
-	void UnsubscribeAsHost() const;
-	void UnsubscribeAsClient() const;
-	void UnsubscribeBonus() const;
-
-	[[nodiscard]] static bool IsPlayer(const std::weak_ptr<BaseObj>& obstacle);
-	[[nodiscard]] static bool IsBonus(const std::weak_ptr<BaseObj>& obstacle);
 	void HandleLineOfSight(Direction dir);
 
 	void TickUpdate(float deltaTime) override;
