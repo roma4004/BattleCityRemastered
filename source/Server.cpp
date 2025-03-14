@@ -200,6 +200,22 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	_events->AddListener("ServerSend_Player1_Died", _name, [this]() { this->SendTankDied("Player1"); });
 	_events->AddListener("ServerSend_Player2_Died", _name, [this]() { this->SendTankDied("Player2"); });
 
+	_events->AddListener("ServerSend_Enemy1_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy1"); });
+	_events->AddListener("ServerSend_Enemy2_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy2"); });
+	_events->AddListener("ServerSend_Enemy3_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy3"); });
+	_events->AddListener("ServerSend_Enemy4_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy4"); });
+
+	_events->AddListener("ServerSend_Player1_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Player1"); });
+	_events->AddListener("ServerSend_Player2_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Player2"); });
+
+	_events->AddListener("ServerSend_Enemy1_OnHelmetDeactivate", _name, [this]() { this->OnHelmetDeactivate("Enemy1"); });
+	_events->AddListener("ServerSend_Enemy2_OnHelmetDeactivate", _name, [this]() { this->OnHelmetDeactivate("Enemy2"); });
+	_events->AddListener("ServerSend_Enemy3_OnHelmetDeactivate", _name, [this]() { this->OnHelmetDeactivate("Enemy3"); });
+	_events->AddListener("ServerSend_Enemy4_OnHelmetDeactivate", _name, [this]() { this->OnHelmetDeactivate("Enemy4"); });
+
+	_events->AddListener("ServerSend_Player1_OnHelmetDeactivate", _name, [this]() { this->OnHelmetDeactivate("Player1"); });
+	_events->AddListener("ServerSend_Player2_OnHelmetDeactivate", _name, [this]() { this->OnHelmetDeactivate("Player2"); });
+
 	//TODO: rename_Shot bulletSpawn
 	_events->AddListener<const Direction>("ServerSend_Enemy1Shot", _name, [this](const Direction direction)
 	{
@@ -386,7 +402,7 @@ void Server::SendBonusSpawn(const std::string& objectName, const FPoint spawnPos
 {
 	Data data;
 
-	data.objectName = objectName;
+	data.objectName = objectName;//TODO: remove unused param
 	data.eventName = "BonusSpawn";
 	data.newPos = spawnPos;
 	data.id = id;
@@ -433,6 +449,32 @@ void Server::SendTankDied(const std::string& objectName) const
 	Data data;
 	data.objectName = objectName;
 	data.eventName = "TankDied";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::OnHelmetActivate(const std::string& objectName) const
+{
+	Data data;
+	data.objectName = objectName;
+	data.eventName = "OnHelmetActivate";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::OnHelmetDeactivate(const std::string& objectName) const
+{
+	Data data;
+	data.objectName = objectName;
+	data.eventName = "OnHelmetDeactivate";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

@@ -2,6 +2,7 @@
 #include "../../headers/EventSystem.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/utils/PixelUtils.h"
+#include "../../headers/utils/TimeUtils.h"
 
 Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -59,8 +60,20 @@ void Tank::SubscribeAsHost()
 {
 	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
 	{
-		_timer.TickUpdateBonus();
-		_helmet.TickUpdateBonus();
+		if (_timer.isActive && TimeUtils::IsCooldownFinish(_timer.activateTime, _timer.cooldown))
+		{
+			_timer.isActive = false;
+		}
+
+		if (_helmet.isActive && TimeUtils::IsCooldownFinish(_helmet.activateTime, _helmet.cooldown))
+		{
+			_helmet.isActive = false;
+
+			if (_gameMode == PlayAsHost)
+			{
+				_events->EmitEvent("ServerSend_" + _name + "_OnHelmetDeactivate");
+			}
+		}
 
 		if (!this->_timer.isActive)
 		{
@@ -97,6 +110,16 @@ void Tank::SubscribeAsClient()
 			{
 				this->SetIsAlive(false);
 			});
+
+	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _name, [this]()
+	{
+		this->_helmet.isActive = true;
+	});
+
+	_events->AddListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name, [this]()
+	{
+		this->_helmet.isActive = false;
+	});
 }
 
 void Tank::SubscribeBonus()
@@ -150,6 +173,8 @@ void Tank::UnsubscribeAsClient() const
 	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 	_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
 }
 
 void Tank::UnsubscribeBonus() const
@@ -257,6 +282,11 @@ void Tank::OnBonusHelmet(const std::string& author, const std::string& fraction,
 	{
 		const auto cooldown = _helmet.cooldown += duration;
 		_helmet = {true, cooldown, std::chrono::system_clock::now()};
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_" + _name + "_OnHelmetActivate");
+		}
 	}
 }
 

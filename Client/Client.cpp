@@ -119,7 +119,15 @@ void Client::ReadResponse()
 			else if (data.eventName == "TankDied")
 			{
 				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName,
-				                                     data.objectName);
+				                                     data.objectName);//TODO: remove whoDied argument not needed
+			}
+			else if (data.eventName == "OnHelmetActivate")
+			{
+				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
+			}
+			else if (data.eventName == "OnHelmetDeactivate")
+			{
+				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
 			}
 			else if (data.eventName == "KeyState")//key input
 			{

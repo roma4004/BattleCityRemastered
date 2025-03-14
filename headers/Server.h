@@ -74,6 +74,8 @@ struct Server final
 	void SendBonusDeSpawn(int id) const;
 	auto SendHealth(const std::string& objectName, int health) const -> void;
 	void SendTankDied(const std::string& objectName) const;
+	void OnHelmetActivate(const std::string& objectName) const;
+	void OnHelmetDeactivate(const std::string& objectName) const;
 	void SendFortressDied(int id) const;
 	void SendFortressToBrick(int id) const;
 	void SendFortressToSteel(int id) const;

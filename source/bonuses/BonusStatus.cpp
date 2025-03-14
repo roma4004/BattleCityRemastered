@@ -11,11 +11,3 @@ BonusStatus::BonusStatus(const bool isActive, const std::chrono::milliseconds co
 	  activateTime{activateTime} {}
 
 BonusStatus::~BonusStatus() {}
-
-void BonusStatus::TickUpdateBonus()
-{
-	if (isActive && TimeUtils::IsCooldownFinish(activateTime, cooldown))
-	{
-		isActive = false;
-	}
-}

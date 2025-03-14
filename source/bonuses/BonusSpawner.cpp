@@ -46,6 +46,17 @@ void BonusSpawner::Subscribe()
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
+
+		if (_gameMode == PlayAsClient)
+		{
+			UnsubscribeAsHost();
+			SubscribeAsClient();
+		}
+		else
+		{
+			SubscribeAsHost();
+			UnsubscribeAsClient();
+		}
 	});
 
 	_events->AddListener("Reset", _name, [this]()
