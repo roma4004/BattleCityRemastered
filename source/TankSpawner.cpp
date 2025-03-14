@@ -35,7 +35,25 @@ void TankSpawner::Subscribe()
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_currentMode = newGameMode;
+
+		if (_currentMode == PlayAsClient)
+		{
+			SubscribeAsClient();
+		}
+		else
+		{
+			UnsubscribeAsClient();
+		}
 	});
+
+	if (_currentMode == PlayAsClient)
+	{
+		SubscribeAsClient();
+	}
+	else
+	{
+		UnsubscribeAsClient();
+	}
 
 	SubscribeBonus();
 
@@ -92,27 +110,46 @@ void TankSpawner::Subscribe()
 	});
 }
 
+void TankSpawner::SubscribeAsClient()
+{
+	_events->AddListener<const std::string&, const std::string&>(
+			"ClientReceived_OnTank", _name, [this](const std::string& author, const std::string& fraction)
+			{
+				this->OnBonusTank(author, fraction);
+			});
+}
+
 void TankSpawner::SubscribeBonus()
 {
 	_events->AddListener<const std::string&, const std::string&>(
 			"BonusTank", _name, [this](const std::string& author, const std::string& fraction)
 			{
-				if (fraction == "EnemyTeam")
-				{
-					IncreaseEnemyRespawnResource();
-				}
-				else if (fraction == "PlayerTeam")
-				{
-					if (author == "Player1" || author == "CoopBot1")
-					{
-						IncreasePlayerOneRespawnResource();
-					}
-					if (author == "Player2" || author == "CoopBot2")
-					{
-						IncreasePlayerTwoRespawnResource();
-					}
-				}
+				this->OnBonusTank(author, fraction);
 			});
+}
+
+void TankSpawner::OnBonusTank(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "EnemyTeam")
+	{
+		IncreaseEnemyRespawnResource();
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1" || author == "CoopBot1")
+		{
+			IncreasePlayerOneRespawnResource();
+		}
+		if (author == "Player2" || author == "CoopBot2")
+		{
+			IncreasePlayerTwoRespawnResource();
+		}
+	}
+
+	if (_currentMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnTank", author, fraction);
+	}
 }
 
 void TankSpawner::Unsubscribe() const
@@ -120,6 +157,11 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("RespawnTanks", _name);
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+
+	if (_currentMode == PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
 
 	UnsubscribeBonus();
 
@@ -142,6 +184,11 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener("Enemy2_Spawn", _name);
 	_events->RemoveListener("Enemy3_Spawn", _name);
 	_events->RemoveListener("Enemy4_Spawn", _name);
+}
+
+void TankSpawner::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_" + _name + "OnTank", _name);
 }
 
 void TankSpawner::UnsubscribeBonus() const

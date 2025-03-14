@@ -120,6 +120,11 @@ void Tank::SubscribeAsClient()
 	{
 		this->_helmet.isActive = false;
 	});
+
+	_events->AddListener("ClientReceived_" + _name + "OnStar", _name, [this]()
+	{
+		this->OnBonusStar(_name, _fraction);
+	});
 }
 
 void Tank::SubscribeBonus()
@@ -175,6 +180,7 @@ void Tank::UnsubscribeAsClient() const
 	_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _name);
 }
 
 void Tank::UnsubscribeBonus() const
@@ -315,5 +321,10 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 		SetBulletDamage(GetBulletDamage() + 15);
 		SetFireCooldown(GetFireCooldown() - std::chrono::milliseconds{150});
 		SetBulletDamageRadius(GetBulletDamageRadius() * 1.25f);
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_" + _name + "_OnStar");
+		}
 	}
 }

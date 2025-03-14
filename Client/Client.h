@@ -26,6 +26,7 @@ struct Data final
 	BonusTypeId typeId{None};
 	std::string objectName;
 	std::string eventName;
+	std::string fraction;
 	std::vector<std::string> names;
 	FPoint newPos{.x = 0.f, .y = 0.f};
 	Direction direction{NONE};

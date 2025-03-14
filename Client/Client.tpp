@@ -8,6 +8,7 @@ void Data::serialize(Archive& ar, const unsigned int version)
 	ar & typeId;
 	ar & objectName;
 	ar & eventName;
+	ar & fraction;
 	ar & names;
 	ar & newPos;
 	ar & direction;

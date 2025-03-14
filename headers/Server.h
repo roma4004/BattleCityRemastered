@@ -28,6 +28,7 @@ struct Data final
 	BonusTypeId typeId{None};
 	std::string objectName;
 	std::string eventName;
+	std::string fraction;
 	std::vector<std::string> names;
 	FPoint newPos{.x = 0.f, .y = 0.f};
 	Direction direction{NONE};
@@ -76,6 +77,8 @@ struct Server final
 	void SendTankDied(const std::string& objectName) const;
 	void OnHelmetActivate(const std::string& objectName) const;
 	void OnHelmetDeactivate(const std::string& objectName) const;
+	void OnStar(const std::string& objectName) const;
+	void OnTank(const std::string& objectName, const std::string& fraction) const;
 	void SendFortressDied(int id) const;
 	void SendFortressToBrick(int id) const;
 	void SendFortressToSteel(int id) const;

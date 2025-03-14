@@ -129,6 +129,15 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
 			}
+			else if (data.eventName == "OnStar")
+			{
+				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
+			}
+			else if (data.eventName == "OnTank")
+			{
+				events->EmitEvent<const std::string&, const std::string&>(
+						"ClientReceived_" + data.eventName, data.objectName, data.fraction);
+			}
 			else if (data.eventName == "KeyState")//key input
 			{
 				events->EmitEvent(data.objectName);
