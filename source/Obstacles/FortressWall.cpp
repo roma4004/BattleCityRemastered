@@ -75,7 +75,7 @@ void FortressWall::SubscribeAsClient()
 void FortressWall::SubscribeBonus()
 {
 	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
-			"BonusShovel", _name,
+			"BonusShovel", _name,//TODO: remove author when dont needed in all event
 			[this](const std::string& /*author*/, const std::string& fraction,
 			       const std::chrono::milliseconds bonusDurationTime)
 			{

@@ -71,7 +71,7 @@ void Tank::SubscribeAsHost()
 
 			if (_gameMode == PlayAsHost)
 			{
-				_events->EmitEvent("ServerSend_" + _name + "_OnHelmetDeactivate");
+				_events->EmitEvent<const std::string&>("ServerSend_OnHelmetDeactivate", _name);
 			}
 		}
 
@@ -105,8 +105,8 @@ void Tank::SubscribeAsClient()
 				this->SetHealth(health);
 			});
 
-	_events->AddListener<const std::string>(
-			"ClientReceived_" + _name + "TankDied", _name, [this](const std::string/* whoDied*/)
+	_events->AddListener<const std::string&>(
+			"ClientReceived_" + _name + "TankDied", _name, [this](const std::string&/* whoDied*/)
 			{
 				this->SetIsAlive(false);
 			});
@@ -144,9 +144,9 @@ void Tank::SubscribeBonus()
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusGrenade", _name, [this](const std::string& /*author*/, const std::string& fraction)
+			"BonusGrenade", _name, [this](const std::string& author, const std::string& fraction)
 			{
-				this->OnBonusGrenade(fraction);
+				this->OnBonusGrenade(author, fraction);
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
@@ -177,7 +177,7 @@ void Tank::UnsubscribeAsClient() const
 	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
 	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
-	_events->RemoveListener<const std::string>("ClientReceived_" + _name + "TankDied", _name);
+	_events->RemoveListener<const std::string&>("ClientReceived_" + _name + "TankDied", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _name);
@@ -208,7 +208,7 @@ void Tank::Shot() const
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const Direction>("ServerSend_" + _name + "Shot", GetDirection());
+		_events->EmitEvent<const std::string&, const Direction>("ServerSend_Shot", _name, GetDirection());
 	}
 }
 
@@ -291,16 +291,21 @@ void Tank::OnBonusHelmet(const std::string& author, const std::string& fraction,
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_" + _name + "_OnHelmetActivate");
+			_events->EmitEvent<const std::string&>("ServerSend_OnHelmetActivate", _name);
 		}
 	}
 }
 
-void Tank::OnBonusGrenade(const std::string& fraction)
+void Tank::OnBonusGrenade(const std::string& author, const std::string& fraction)
 {
 	if (fraction != _fraction)
 	{
 		TakeDamage(GetHealth());
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnGrenade", _name, _fraction);
+		}
 	}
 }
 
@@ -324,7 +329,7 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_" + _name + "_OnStar");
+			_events->EmitEvent<const std::string&>("ServerSend_OnStar", _name);
 		}
 	}
 }

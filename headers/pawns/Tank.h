@@ -39,7 +39,7 @@ protected:
 
 	void OnBonusTimer(const std::string& fraction, std::chrono::milliseconds duration);
 	void OnBonusHelmet(const std::string& author, const std::string& fraction, std::chrono::milliseconds duration);
-	void OnBonusGrenade(const std::string& fraction);
+	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusStar(const std::string& author, const std::string& fraction);
 
 public:

@@ -39,11 +39,13 @@ class TankSpawner final
 	bool _coopBotOneNeedRespawn{false};
 	bool _coopBotTwoNeedRespawn{false};
 
+	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusTank(const std::string& author, const std::string& fraction);
 
 	void Subscribe();
 	void SubscribeAsClient();
 	void SubscribeBonus();
+
 
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;

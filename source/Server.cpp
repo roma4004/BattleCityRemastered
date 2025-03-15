@@ -141,7 +141,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	_events->AddListener("Pause_Pressed", _name, [this]() { this->SendKeyState("Pause_Pressed"); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->SendKeyState("Pause_Released"); });
 
-	_events->AddListener<const std::string>("ServerSend_TankDied", _name, [this](const std::string whoDied)
+	_events->AddListener<const std::string&>("ServerSend_TankDied", _name, [this](const std::string& whoDied)
 	{
 		this->SendTankDied(whoDied);
 	});
@@ -181,8 +181,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	});
 
 	_events->AddListener<const std::string, const int>(
-			"ServerSend_Health", _name,
-			[this](const std::string& objectName, const int health)
+			"ServerSend_Health", _name, [this](const std::string& objectName, const int health)
 			{
 				this->SendHealth(objectName, health);
 			});
@@ -192,88 +191,37 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 		this->SendDispose("Bullet" + std::to_string(bulletId));
 	});
 
-	_events->AddListener("ServerSend_Enemy1_Died", _name, [this]() { this->SendTankDied("Enemy1"); });
-	_events->AddListener("ServerSend_Enemy2_Died", _name, [this]() { this->SendTankDied("Enemy2"); });
-	_events->AddListener("ServerSend_Enemy3_Died", _name, [this]() { this->SendTankDied("Enemy3"); });
-	_events->AddListener("ServerSend_Enemy4_Died", _name, [this]() { this->SendTankDied("Enemy4"); });
-
-	_events->AddListener("ServerSend_Player1_Died", _name, [this]() { this->SendTankDied("Player1"); });
-	_events->AddListener("ServerSend_Player2_Died", _name, [this]() { this->SendTankDied("Player2"); });
-
-	_events->AddListener("ServerSend_Enemy1_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy1"); });
-	_events->AddListener("ServerSend_Enemy2_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy2"); });
-	_events->AddListener("ServerSend_Enemy3_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy3"); });
-	_events->AddListener("ServerSend_Enemy4_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Enemy4"); });
-
-	_events->AddListener("ServerSend_Player1_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Player1"); });
-	_events->AddListener("ServerSend_Player2_OnHelmetActivate", _name, [this]() { this->OnHelmetActivate("Player2"); });
-
-	_events->AddListener("ServerSend_Enemy1_OnHelmetDeactivate", _name, [this]()
+	_events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& objectName)
 	{
-		this->OnHelmetDeactivate("Enemy1");
+		this->OnHelmetActivate(objectName);
 	});
-	_events->AddListener("ServerSend_Enemy2_OnHelmetDeactivate", _name, [this]()
+	_events->AddListener<const std::string&>(
+			"ServerSend_OnHelmetDeactivate", _name, [this](const std::string& objectName)
+			{
+				this->OnHelmetDeactivate(objectName);
+			});
+	_events->AddListener<const std::string&>("ServerSend_OnStar", _name, [this](const std::string& objectName)
 	{
-		this->OnHelmetDeactivate("Enemy2");
+		this->OnStar(objectName);
 	});
-	_events->AddListener("ServerSend_Enemy3_OnHelmetDeactivate", _name, [this]()
-	{
-		this->OnHelmetDeactivate("Enemy3");
-	});
-	_events->AddListener("ServerSend_Enemy4_OnHelmetDeactivate", _name, [this]()
-	{
-		this->OnHelmetDeactivate("Enemy4");
-	});
-
-	_events->AddListener("ServerSend_Player1_OnHelmetDeactivate", _name, [this]()
-	{
-		this->OnHelmetDeactivate("Player1");
-	});
-	_events->AddListener("ServerSend_Player2_OnHelmetDeactivate", _name, [this]()
-	{
-		this->OnHelmetDeactivate("Player2");
-	});
-
-	_events->AddListener("ServerSend_Enemy1_OnStar", _name, [this]() { this->OnStar("Enemy1"); });
-	_events->AddListener("ServerSend_Enemy2_OnStar", _name, [this]() { this->OnStar("Enemy2"); });
-	_events->AddListener("ServerSend_Enemy3_OnStar", _name, [this]() { this->OnStar("Enemy3"); });
-	_events->AddListener("ServerSend_Enemy4_OnStar", _name, [this]() { this->OnStar("Enemy4"); });
-
-	_events->AddListener("ServerSend_Player1_OnStar", _name, [this]() { this->OnStar("Player1"); });
-	_events->AddListener("ServerSend_Player2_OnStar", _name, [this]() { this->OnStar("Player2"); });
-
 	_events->AddListener<const std::string&, const std::string&>(
 			"ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
 			{
 				this->OnTank(author, fraction);
 			});
 
-	//TODO: rename_Shot bulletSpawn
-	_events->AddListener<const Direction>("ServerSend_Enemy1Shot", _name, [this](const Direction direction)
-	{
-		this->SendShot("Enemy1", direction);
-	});
-	_events->AddListener<const Direction>("ServerSend_Enemy2Shot", _name, [this](const Direction direction)
-	{
-		this->SendShot("Enemy2", direction);
-	});
-	_events->AddListener<const Direction>("ServerSend_Enemy3Shot", _name, [this](const Direction direction)
-	{
-		this->SendShot("Enemy3", direction);
-	});
-	_events->AddListener<const Direction>("ServerSend_Enemy4Shot", _name, [this](const Direction direction)
-	{
-		this->SendShot("Enemy4", direction);
-	});
+	_events->AddListener<const std::string&, const std::string&>(
+			"ServerSend_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
+			{
+				this->OnGrenade(author, fraction);
+			});
 
-	_events->AddListener<const Direction>("ServerSend_Player1Shot", _name, [this](const Direction direction)
-	{
-		this->SendShot("Player1", direction);
-	});
-	_events->AddListener<const Direction>("ServerSend_Player2Shot", _name, [this](const Direction direction)
-	{
-		this->SendShot("Player2", direction);
-	});
+	//TODO: rename_Shot bulletSpawn
+	_events->AddListener<const std::string&, const Direction>(
+			"ServerSend_Shot", _name, [this](const std::string& objectName, const Direction direction)
+			{
+				this->SendShot(objectName, direction);
+			});
 }
 
 Server::~Server()
@@ -283,6 +231,8 @@ Server::~Server()
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
 
+	_events->RemoveListener<const std::string&, const std::string&>("ServerSend_TankDied", _name);
+
 	_events->RemoveListener<const std::string&, const FPoint, const Direction>("ServerSend_Pos", _name);
 	_events->RemoveListener<const std::string&, const FPoint, const BonusTypeId, const int>(
 			"ServerSend_BonusSpawn", _name);
@@ -290,49 +240,13 @@ Server::~Server()
 	_events->RemoveListener<const std::string, const int>("ServerSend_Health", _name);
 	_events->RemoveListener<const int>("ServerSend_Dispose", _name);
 
-	_events->RemoveListener("Enemy1_Died", _name);
-	_events->RemoveListener("Enemy2_Died", _name);
-	_events->RemoveListener("Enemy3_Died", _name);
-	_events->RemoveListener("Enemy4_Died", _name);
-
-	_events->RemoveListener("Player1_Died", _name);
-	_events->RemoveListener("Player2_Died", _name);
-
-	_events->RemoveListener("ServerSend_Enemy1_OnHelmetActivate", _name);
-	_events->RemoveListener("ServerSend_Enemy2_OnHelmetActivate", _name);
-	_events->RemoveListener("ServerSend_Enemy3_OnHelmetActivate", _name);
-	_events->RemoveListener("ServerSend_Enemy4_OnHelmetActivate", _name);
-
-	_events->RemoveListener("ServerSend_Player1_OnHelmetActivate", _name);
-	_events->RemoveListener("ServerSend_Player2_OnHelmetActivate", _name);
-
-	_events->RemoveListener("ServerSend_Enemy1_OnHelmetDeactivate", _name);
-	_events->RemoveListener("ServerSend_Enemy2_OnHelmetDeactivate", _name);
-	_events->RemoveListener("ServerSend_Enemy3_OnHelmetDeactivate", _name);
-	_events->RemoveListener("ServerSend_Enemy4_OnHelmetDeactivate", _name);
-
-	_events->RemoveListener("ServerSend_Player1_OnHelmetDeactivate", _name);
-	_events->RemoveListener("ServerSend_Player2_OnHelmetDeactivate", _name);
-
-	_events->RemoveListener("ServerSend_Enemy1_OnStar", _name);
-	_events->RemoveListener("ServerSend_Enemy2_OnStar", _name);
-	_events->RemoveListener("ServerSend_Enemy3_OnStar", _name);
-	_events->RemoveListener("ServerSend_Enemy4_OnStar", _name);
-
-	_events->RemoveListener("ServerSend_Player1_OnStar", _name);
-	_events->RemoveListener("ServerSend_Player2_OnStar", _name);
-
+	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);
+	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);
+	_events->RemoveListener<const std::string&>("ServerSend_OnStar", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("ServerSend_OnTank", _name);
+	_events->RemoveListener<const std::string&>("ServerSend_OnGrenade", _name);
 
-	_events->RemoveListener<const Direction>("Enemy1Shot", _name);
-	_events->RemoveListener<const Direction>("Enemy2Shot", _name);
-	_events->RemoveListener<const Direction>("Enemy3Shot", _name);
-	_events->RemoveListener<const Direction>("Enemy4Shot", _name);
-
-	_events->RemoveListener<const Direction>("Player1Shot", _name);
-	_events->RemoveListener<const Direction>("Player2Shot", _name);
-
-	_events->RemoveListener<const std::string>("ServerSend_TankDied", _name);
+	_events->RemoveListener<const std::string&, const Direction>("ServerSend_Shot", _name);
 }
 
 void Server::DoAccept()
@@ -559,6 +473,20 @@ void Server::OnTank(const std::string& objectName, const std::string& fraction) 
 	Data data;
 	data.objectName = objectName;
 	data.eventName = "OnTank";
+	data.fraction = fraction;
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::OnGrenade(const std::string& objectName, const std::string& fraction) const
+{
+	Data data;
+	data.objectName = objectName;
+	data.eventName = "OnGrenade";
 	data.fraction = fraction;
 
 	std::ostringstream archiveStream;

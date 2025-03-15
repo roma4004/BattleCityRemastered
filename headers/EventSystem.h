@@ -39,10 +39,11 @@ class EventSystem final
 		Event<const FPoint, const Direction>,// received newPos and direction
 		Event<const std::string&, const FPoint, const Direction>,// send new pos and direction
 		Event<const std::string&, const FPoint, const BonusTypeId, const int>,// send bonusSpawn
-		Event<const Direction>,// send tank shot
+		Event<const Direction>,// received tank shot
+		Event<const std::string&, const Direction>,// send tank shot
 		Event<const int>,// respawn resource changed // send bonusDeSpawn
 		Event<const int, const int>,// received health changed
-		Event<const std::string>,// send tankDied
+		Event<const std::string&>,// send tankDied, send/receive onGrenade
 		Event<const std::string, const int>,// serverSend health changed
 		Event<const std::string&, const std::string&>,// statistics, bonus
 		Event<const std::string&, const std::string&, std::chrono::milliseconds>,// bonus with duration

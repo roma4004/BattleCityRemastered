@@ -79,22 +79,19 @@ struct Server final
 	void OnHelmetDeactivate(const std::string& objectName) const;
 	void OnStar(const std::string& objectName) const;
 	void OnTank(const std::string& objectName, const std::string& fraction) const;
+	void OnGrenade(const std::string& objectName, const std::string& fraction) const;
 	void SendFortressDied(int id) const;
 	void SendFortressToBrick(int id) const;
 	void SendFortressToSteel(int id) const;
 	// void stop() {
-	// 	// Останавливаем принятие входящих подключений
 	// 	acceptor_.close();
 	//
-	// 	// Закрываем все открытые сессии
 	// 	for (auto& session : sessions) {
 	// 		session->socket.close();
 	// 	}
 	//
-	// 	// Очищаем список сессий
 	// 	sessions.clear();
 	//
-	// 	// Останавливаем исполнитель io_service
 	// 	_io_service.stop();
 	// }
 };

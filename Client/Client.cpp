@@ -118,8 +118,8 @@ void Client::ReadResponse()
 			}
 			else if (data.eventName == "TankDied")
 			{
-				events->EmitEvent<const std::string>("ClientReceived_" + data.objectName + data.eventName,
-				                                     data.objectName);//TODO: remove whoDied argument not needed
+				events->EmitEvent<const std::string&>("ClientReceived_" + data.objectName + data.eventName,
+				                                      data.objectName);//TODO: remove whoDied argument not needed
 			}
 			else if (data.eventName == "OnHelmetActivate")
 			{
@@ -134,6 +134,11 @@ void Client::ReadResponse()
 				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
 			}
 			else if (data.eventName == "OnTank")
+			{
+				events->EmitEvent<const std::string&, const std::string&>(
+						"ClientReceived_" + data.eventName, data.objectName, data.fraction);
+			}
+			else if (data.eventName == "OnGrenade")
 			{
 				events->EmitEvent<const std::string&, const std::string&>(
 						"ClientReceived_" + data.eventName, data.objectName, data.fraction);

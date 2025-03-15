@@ -117,6 +117,12 @@ void TankSpawner::SubscribeAsClient()
 			{
 				this->OnBonusTank(author, fraction);
 			});
+
+	_events->AddListener<const std::string&, const std::string&>(
+			"ClientReceived_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
+			{
+				this->OnBonusGrenade(author, fraction);
+			});
 }
 
 void TankSpawner::SubscribeBonus()
@@ -126,6 +132,25 @@ void TankSpawner::SubscribeBonus()
 			{
 				this->OnBonusTank(author, fraction);
 			});
+}
+
+void TankSpawner::OnBonusGrenade(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1")
+		{
+			DecreasePlayerOneRespawnResource();
+		}
+		else if (author == "Player2")
+		{
+			DecreasePlayerTwoRespawnResource();
+		}
+	}
+	else if (fraction == "EnemyTeam")
+	{
+		DecreaseEnemyRespawnResource();
+	}
 }
 
 void TankSpawner::OnBonusTank(const std::string& author, const std::string& fraction)
@@ -189,6 +214,7 @@ void TankSpawner::Unsubscribe() const
 void TankSpawner::UnsubscribeAsClient() const
 {
 	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_" + _name + "OnTank", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnGrenade", _name);
 }
 
 void TankSpawner::UnsubscribeBonus() const
@@ -411,7 +437,8 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 	else
 	{
 		_enemyOneNeedRespawn = false;
-		_events->EmitEvent<const std::string>("ServerSend_TankDied", "Enemy" + std::to_string(index));
+		const auto name = "Enemy" + std::to_string(index);
+		_events->EmitEvent<const std::string&>("ServerSend_TankDied", name);
 	}
 }
 
@@ -422,6 +449,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 	constexpr float speed{142};
 	constexpr int health{100};
 
+	const auto name = "Player" + std::to_string(index);
 	if (index == 1)
 	{
 		if (GetPlayerOneRespawnResource() > 0)
@@ -431,7 +459,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 		else
 		{
 			_playerOneNeedRespawn = false;
-			_events->EmitEvent<const std::string>("ServerSend_TankDied", "Player" + std::to_string(index));
+			_events->EmitEvent<const std::string&>("ServerSend_TankDied", name);
 		}
 	}
 	else if (index == 2)
@@ -443,7 +471,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 		else
 		{
 			_playerTwoNeedRespawn = false;
-			_events->EmitEvent<const std::string>("ServerSend_TankDied", "Player" + std::to_string(index));
+			_events->EmitEvent<const std::string&>("ServerSend_TankDied", name);
 		}
 	}
 }
