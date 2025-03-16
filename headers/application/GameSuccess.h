@@ -2,30 +2,31 @@
 
 #include "UserInput.h"
 #include "../GameMode.h"
-#include "../Menu.h"
-#include "../bonuses/BonusSpawner.h"
+#include "../../headers/Menu.h"
+#include "../../headers/bonuses/BonusSpawner.h"
+#include "../../headers/obstacles/ObstacleSpawner.h"
 #include "../interfaces/IGame.h"
-#include "../obstacles/ObstacleSpawner.h"
+#include "../interfaces/INetworkNode.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
 
-struct Server;
 class BaseObj;
 class BulletPool;
-class InputProviderForMenu;
+class Client;
 class EventSystem;
-class TankSpawner;
 class GameStatistics;
-//class Client;
+class TankSpawner;
+class Server;
 
 class GameSuccess final : public IGame
 {
 	GameMode _selectedGameMode{OnePlayer};
-	GameMode _currentMode{Demo};
+	GameMode _gameMode{Demo};
 	std::string _name{"Game"};
 
+	std::unique_ptr<INetworkNode> _networkNode;
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};

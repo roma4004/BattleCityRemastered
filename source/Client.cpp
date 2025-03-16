@@ -1,4 +1,4 @@
-#include "Client.h"
+#include "../headers/Client.h"
 
 #include <fstream>
 #include <iostream>
@@ -71,7 +71,7 @@ void Client::ReadResponse()
 			                              buffers_begin(_read_buffer.data()) + length);
 			std::istringstream archiveStream(archiveData);
 			boost::archive::text_iarchive ia(archiveStream);
-			Data data;
+			ClientData data;
 			ia >> data;
 
 			_read_buffer.consume(length);
@@ -159,7 +159,7 @@ void Client::ReadResponse()
 void Client::SendKeyState(const std::string& state)
 {
 	// auto self(shared_from_this());
-	Data data;
+	ClientData data;
 	data.health = 1;
 	data.eventName = state;
 	data.names = {"Name1", "Name2"};

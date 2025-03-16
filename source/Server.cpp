@@ -46,7 +46,7 @@ void Session::DoRead()
 				std::istringstream archiveStream(archiveData);
 				boost::archive::text_iarchive ia(archiveStream);
 
-				Data data;
+				ServerData data;
 				ia >> data;
 
 				// std::cout << "Received data:\n";
@@ -261,8 +261,8 @@ void Server::DoAccept()
 		{
 			try
 			{
-				sessions.emplace_back(std::make_shared<Session>(std::move(socket), _events));
-				if (const auto& lastSession = sessions.back(); lastSession)
+				_sessions.emplace_back(std::make_shared<Session>(std::move(socket), _events));
+				if (const auto& lastSession = _sessions.back(); lastSession)
 				{
 					lastSession->Start();
 				}
@@ -282,13 +282,13 @@ void Server::DoAccept()
 
 void Server::SendToAll(const std::string& message) const
 {
-	for (const auto& session: sessions)
+	for (const auto& session: _sessions)
 		session->DoWrite(message);
 }
 
 void Server::SendDispose(const std::string& bulletName) const
 {
-	Data data;
+	ServerData data;
 	data.eventName = "Dispose";
 	data.objectName = bulletName;
 
@@ -301,7 +301,7 @@ void Server::SendDispose(const std::string& bulletName) const
 
 void Server::SendKeyState(const std::string& state) const
 {
-	Data data;
+	ServerData data;
 	data.eventName = "KeyState";
 	data.objectName = state;
 
@@ -315,7 +315,7 @@ void Server::SendKeyState(const std::string& state) const
 //deprecated
 void Server::SendKeyState(const std::string& state, const FPoint newPos) const
 {
-	Data data;
+	ServerData data;
 	data.eventName = state;
 	data.newPos = newPos;
 
@@ -328,7 +328,7 @@ void Server::SendKeyState(const std::string& state, const FPoint newPos) const
 
 void Server::SendShot(const std::string& objectName, const Direction direction) const
 {
-	Data data;
+	ServerData data;
 	data.eventName = "Shot";
 	data.objectName = objectName;
 	data.direction = direction;
@@ -342,7 +342,7 @@ void Server::SendShot(const std::string& objectName, const Direction direction) 
 
 void Server::SendKeyState(const std::string& state, const FPoint newPos, const Direction direction) const
 {
-	Data data;
+	ServerData data;
 	data.eventName = state;
 	data.newPos = newPos;
 	data.direction = direction;
@@ -356,7 +356,7 @@ void Server::SendKeyState(const std::string& state, const FPoint newPos, const D
 
 void Server::SendPos(const std::string& objectName, const FPoint newPos, const Direction direction) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "Pos";
 	data.newPos = newPos;
@@ -372,7 +372,7 @@ void Server::SendPos(const std::string& objectName, const FPoint newPos, const D
 void Server::SendBonusSpawn(const std::string& objectName, const FPoint spawnPos, const BonusTypeId typeId,
                             const int id) const
 {
-	Data data;
+	ServerData data;
 
 	data.objectName = objectName;//TODO: remove unused param
 	data.eventName = "BonusSpawn";
@@ -389,7 +389,7 @@ void Server::SendBonusSpawn(const std::string& objectName, const FPoint spawnPos
 
 void Server::SendBonusDeSpawn(const int id) const
 {
-	Data data;
+	ServerData data;
 
 	data.eventName = "BonusDeSpawn";
 	data.id = id;
@@ -403,7 +403,7 @@ void Server::SendBonusDeSpawn(const int id) const
 
 void Server::SendHealth(const std::string& objectName, const int health) const
 {
-	Data data;
+	ServerData data;
 	data.health = health;
 	// data.id = objectId;
 	data.objectName = objectName;
@@ -418,7 +418,7 @@ void Server::SendHealth(const std::string& objectName, const int health) const
 
 void Server::SendTankDied(const std::string& objectName) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "TankDied";
 
@@ -431,7 +431,7 @@ void Server::SendTankDied(const std::string& objectName) const
 
 void Server::OnHelmetActivate(const std::string& objectName) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "OnHelmetActivate";
 
@@ -444,7 +444,7 @@ void Server::OnHelmetActivate(const std::string& objectName) const
 
 void Server::OnHelmetDeactivate(const std::string& objectName) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "OnHelmetDeactivate";
 
@@ -457,7 +457,7 @@ void Server::OnHelmetDeactivate(const std::string& objectName) const
 
 void Server::OnStar(const std::string& objectName) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "OnStar";
 
@@ -470,7 +470,7 @@ void Server::OnStar(const std::string& objectName) const
 
 void Server::OnTank(const std::string& objectName, const std::string& fraction) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "OnTank";
 	data.fraction = fraction;
@@ -484,7 +484,7 @@ void Server::OnTank(const std::string& objectName, const std::string& fraction) 
 
 void Server::OnGrenade(const std::string& objectName, const std::string& fraction) const
 {
-	Data data;
+	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "OnGrenade";
 	data.fraction = fraction;
@@ -498,7 +498,7 @@ void Server::OnGrenade(const std::string& objectName, const std::string& fractio
 
 void Server::SendFortressDied(const int id) const
 {
-	Data data;
+	ServerData data;
 	data.id = id;
 	data.eventName = "FortressDied";
 
@@ -511,7 +511,7 @@ void Server::SendFortressDied(const int id) const
 
 void Server::SendFortressToBrick(const int id) const
 {
-	Data data;
+	ServerData data;
 	data.id = id;
 	data.eventName = "FortressToBrick";
 
@@ -524,7 +524,7 @@ void Server::SendFortressToBrick(const int id) const
 
 void Server::SendFortressToSteel(const int id) const
 {
-	Data data;
+	ServerData data;
 	data.id = id;
 	data.eventName = "FortressToSteel";
 

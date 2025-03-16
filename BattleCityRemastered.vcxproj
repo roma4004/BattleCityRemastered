@@ -137,6 +137,8 @@
   <ItemGroup>
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
+    <ClCompile Include="source\Client.cpp" />
+    <ClCompile Include="source\ClientHandler.cpp" />
     <ClCompile Include="source\GameStatistics.cpp" />
     <ClCompile Include="source\LineOfSight.cpp" />
     <ClCompile Include="source\Map.cpp" />
@@ -184,6 +186,7 @@
     <ClCompile Include="source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\pawns\TankSpawner.cpp" />
+    <ClCompile Include="source\ServerHandler.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
@@ -191,11 +194,15 @@
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\BulletPool.h" />
     <ClInclude Include="headers\Circle.h" />
+    <ClInclude Include="headers\Client.h" />
+    <ClInclude Include="headers\Client.tpp" />
+    <ClInclude Include="headers\ClientHandler.h" />
     <ClInclude Include="headers\Direction.h" />
     <ClInclude Include="headers\EventSystem.h" />
     <ClInclude Include="headers\EventSystem.tpp" />
     <ClInclude Include="headers\GameMode.h" />
     <ClInclude Include="headers\GameStatistics.h" />
+    <ClInclude Include="headers\interfaces\INetworkNode.h" />
     <ClInclude Include="headers\LineOfSight.h" />
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
@@ -261,6 +268,7 @@
     <ClInclude Include="headers\pawns\PlayerTwo.h" />
     <ClInclude Include="headers\pawns\Tank.h" />
     <ClInclude Include="headers\pawns\TankSpawner.h" />
+    <ClInclude Include="headers\ServerHandler.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />

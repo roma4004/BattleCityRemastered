@@ -243,12 +243,15 @@ include_directories(headers)
 add_executable(${PROJECT_NAME}
         source/BaseObj.cpp
         source/BulletPool.cpp
+        source/Client.cpp
+        source/ClientHandler.cpp
         source/GameStatistics.cpp
         source/LineOfSight.cpp
         source/Map.cpp
         source/Menu.cpp
         source/ObjRectangle.cpp
         source/Server.cpp
+        source/ServerHandler.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
         source/application/GameFailure.cpp

@@ -16,7 +16,7 @@ using boost::asio::ip::tcp;
 class EventSystem;
 //TODO: sync statistic
 //TODO: start with pause in sync stage, then load level on client, then unpause(done sync stage)
-struct Data final
+struct ServerData final
 {
 	friend class boost::serialization::access;
 
@@ -51,17 +51,12 @@ public:
 	void DoWrite(const std::string& message);
 };
 
-struct Server final
+class Server final
 {
 	tcp::acceptor _acceptor;
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<std::shared_ptr<Session>> sessions;
+	std::vector<std::shared_ptr<Session>> _sessions;
 	std::string _name;
-
-	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       std::shared_ptr<EventSystem> events);
-
-	~Server();
 
 	void DoAccept();
 
@@ -84,6 +79,13 @@ struct Server final
 	void SendFortressDied(int id) const;
 	void SendFortressToBrick(int id) const;
 	void SendFortressToSteel(int id) const;
+
+public:
+	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
+	       std::shared_ptr<EventSystem> events);
+
+	~Server();
+
 	// void stop() {
 	// 	acceptor_.close();
 	//

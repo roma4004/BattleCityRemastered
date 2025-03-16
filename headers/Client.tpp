@@ -1,7 +1,7 @@
 #pragma once
 
 template<class Archive>
-void Data::serialize(Archive& ar, const unsigned int version)
+void ClientData::serialize(Archive& ar, const unsigned int /*version*/)
 {
 	ar & health;
 	ar & id;

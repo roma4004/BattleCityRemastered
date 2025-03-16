@@ -14,7 +14,7 @@
 class BaseObj;
 using boost::asio::ip::tcp;
 
-struct Data final
+struct ClientData final
 {
 	friend class boost::serialization::access;
 
