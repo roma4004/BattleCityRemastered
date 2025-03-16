@@ -154,7 +154,6 @@ void Tank::SubscribeBonus()
 			{
 				this->OnBonusStar(author, fraction);
 			});
-	//TOOD: subscribe other bonuses
 }
 
 void Tank::Unsubscribe() const
@@ -304,7 +303,7 @@ void Tank::OnBonusGrenade(const std::string& author, const std::string& fraction
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnGrenade", _name, _fraction);
+			_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnGrenade", author, fraction);
 		}
 	}
 }

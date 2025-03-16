@@ -10,9 +10,9 @@
 #include <chrono>
 
 Bot::Bot(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-             const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-             const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-             std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
+         const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+         const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
+         std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
 	: Tank{rect,
 	       color,
 	       health,
@@ -109,8 +109,7 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& near
 	{
 		LineOfSight bonusLOS(_shape, _window->size, _allObjects, this);
 		const std::vector<std::weak_ptr<BaseObj>>& dirSideObstacles =
-				[&bonusLOS, dir]() mutable
-			-> std::vector<std::weak_ptr<BaseObj>>& {
+				[&bonusLOS, dir]() mutable -> std::vector<std::weak_ptr<BaseObj>>& {
 					if (dir == UP)
 					{
 						return bonusLOS.GetUpSideObstacles();

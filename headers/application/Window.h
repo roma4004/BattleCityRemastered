@@ -11,4 +11,6 @@ struct Window final
 
 	explicit Window(UPoint windowSize);
 	Window(UPoint windowSize, std::shared_ptr<int[]> buffer);
+
+	void ClearBuffer() const;
 };

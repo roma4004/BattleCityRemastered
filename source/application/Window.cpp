@@ -8,3 +8,9 @@ Window::Window(const UPoint windowSize)
 Window::Window(UPoint windowSize, std::shared_ptr<int[]> buffer)
 	: size{std::move(windowSize)},
 	  buffer{std::move(buffer)} {}
+
+void Window::ClearBuffer() const
+{
+	const auto bufferSize = size.x * size.y;
+	std::fill_n(buffer.get(), bufferSize, 0);
+}

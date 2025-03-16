@@ -34,13 +34,14 @@ struct Data final
 	Direction direction{NONE};
 };
 
-struct Session final : public std::enable_shared_from_this<Session>
+class Session final : public std::enable_shared_from_this<Session>
 {
 	tcp::socket _socket;
-	boost::asio::streambuf _read_buffer;
-	boost::asio::streambuf _write_buffer;
+	boost::asio::streambuf _readBuffer;
+	boost::asio::streambuf _writeBuffer;
 	std::shared_ptr<EventSystem> _events{nullptr};
 
+public:
 	Session(tcp::socket sock, std::shared_ptr<EventSystem> events);
 
 	void Start();

@@ -164,6 +164,7 @@
     <ClCompile Include="..\source\application\ConfigSuccess.cpp" />
     <ClCompile Include="..\source\application\GameFailure.cpp" />
     <ClCompile Include="..\source\application\SDLEnvironment.cpp" />
+    <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\application\Window.cpp" />
     <ClCompile Include="..\source\BaseObj.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeAIBeh.cpp" />

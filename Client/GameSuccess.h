@@ -7,8 +7,8 @@
 #include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
 #include "../headers/Menu.h"
-#include "../headers/MouseButton.h"
 #include "../headers/TankSpawner.h"
+#include "../headers/application/UserInput.h"
 #include "../headers/bonuses/BonusSpawner.h"
 #include "../headers/interfaces/IGame.h"
 #include "../headers/obstacles/ObstacleSpawner.h"
@@ -37,17 +37,13 @@ class GameSuccess final : public IGame
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 	std::shared_ptr<SDL_Texture> _fpsTexture{nullptr};
 
-	MouseButtons _mouseButtons{};
-
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 
+	UserInput _userInput;
 	BonusSpawner _bonusSpawner;
 	ObstacleSpawner _obstacleSpawner;
 
 	std::random_device _rd;
-
-	bool _isGameOver{false};
-	bool _isPause{false};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -56,16 +52,8 @@ class GameSuccess final : public IGame
 	void PrevGameMode();
 	void NextGameMode();
 
-	void ClearBuffer() const;
-
-	void MouseEvents(const SDL_Event& event);
-	void KeyPressed(const SDL_Event& event) const;
-	void KeyReleased(const SDL_Event& event) const;
-	void KeyboardEvents(const SDL_Event& event) const;
-
 	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
 
-	void UserInputHandling();
 	void DisposeDeadObject();
 
 	void MainLoop() override;

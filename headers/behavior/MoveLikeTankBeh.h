@@ -6,10 +6,14 @@
 #include <functional>
 #include <memory>
 
+class Tank;
+
 class MoveLikeTankBeh final : public IMoveBeh
 {
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+
+	static void HandleBonusPickUp(const std::weak_ptr<BaseObj>& object, const Tank* tank);
 
 public:
 	MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects);

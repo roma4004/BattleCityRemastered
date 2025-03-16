@@ -246,6 +246,7 @@ add_executable(${PROJECT_NAME}
         source/application/GameFailure.cpp
         source/application/GameSuccess.cpp
         source/application/SDLEnvironment.cpp
+        source/application/UserInput.cpp
         source/application/Window.cpp
         source/behavior/MoveLikeAIBeh.cpp
         source/behavior/MoveLikeBulletBeh.cpp

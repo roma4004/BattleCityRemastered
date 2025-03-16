@@ -36,13 +36,13 @@ void Session::DoRead()
 		{
 			if (ec)
 			{
-				_read_buffer.consume(length);
+				_readBuffer.consume(length);
 				std::cerr << "DoRead error ..." << '\n';
 			}
 			else
 			{
-				const std::string archiveData(buffers_begin(_read_buffer.data()),
-				                              buffers_begin(_read_buffer.data()) + length);
+				const std::string archiveData(buffers_begin(_readBuffer.data()),
+				                              buffers_begin(_readBuffer.data()) + length);
 				std::istringstream archiveStream(archiveData);
 				boost::archive::text_iarchive ia(archiveStream);
 
@@ -64,12 +64,12 @@ void Session::DoRead()
 				// // Respond back to client
 				// self->DoWrite({123, "Test", {"Name1", "Name2"}});
 
-				_read_buffer.consume(length);
+				_readBuffer.consume(length);
 				DoRead();
 			}
 		};
 
-		boost::asio::async_read_until(_socket, _read_buffer, "\n\n", lambda);
+		boost::asio::async_read_until(_socket, _readBuffer, "\n\n", lambda);
 	}
 	catch (const std::exception& e)
 	{
@@ -93,14 +93,14 @@ void Session::DoWrite(const std::string& message)
 
 		// Безопасно добавляем сообщение в буфер для записи.
 		{
-			std::ostream os(&_write_buffer);
+			std::ostream os(&_writeBuffer);
 			os << message;
 		}
 
 		auto self(shared_from_this());
 		auto lambda = [self](const boost::system::error_code& ec, const std::size_t length)
 		{
-			self->_write_buffer.consume(length);// Now we can consume the written data
+			self->_writeBuffer.consume(length);// Now we can consume the written data
 
 			if (ec)
 			{
@@ -117,7 +117,7 @@ void Session::DoWrite(const std::string& message)
 		};
 
 		// Start async write operation
-		boost::asio::async_write(_socket, _write_buffer.data(), std::move(lambda));
+		boost::asio::async_write(_socket, _writeBuffer.data(), std::move(lambda));
 	}
 	catch (const std::exception& e)
 	{

@@ -97,7 +97,7 @@ void Menu::Update() const
 	if (menuKeysStats.reset)
 	{
 		_events->EmitEvent("ResetBattlefield");
-		_input->ToggleMenu();
+		_input->ToggleMenuInputSubscription();
 	}
 }
 
@@ -109,13 +109,14 @@ void Menu::BlendBackgroundToWindowBuffer()
 		return;
 	}
 
+	constexpr int padding = 50;
 	const auto winSizeX = static_cast<unsigned int>(_window->size.x);
-	const unsigned menuHeight = static_cast<unsigned int>(_window->size.y) - 50;
+	const unsigned menuHeight = static_cast<unsigned int>(_window->size.y) - padding;
 	const unsigned menuWidth = winSizeX - 228;
 	const auto buffer = _window->buffer.get();
-	for (_pos.y = 50 + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
+	for (_pos.y = padding + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
 	{
-		for (_pos.x = 50; _pos.x < menuWidth; ++_pos.x)
+		for (_pos.x = padding; _pos.x < menuWidth; ++_pos.x)
 		{
 			if (_pos.y < _window->size.y)
 			{

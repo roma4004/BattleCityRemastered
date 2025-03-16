@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../GameMode.h"
+
 #include <memory>
 #include <string>
 
@@ -18,18 +20,25 @@ class InputProviderForMenu final
 {
 	std::string _name;
 	std::shared_ptr<EventSystem> _events{nullptr};
-
-	MenuKeys keys;
+	GameMode _gameMode{Demo};
+	MenuKeys _keys;
 
 public:
 	InputProviderForMenu(std::string name, std::shared_ptr<EventSystem> events);
 
 	~InputProviderForMenu();
 
-	void ToggleMenu();
+	void Subscribe();
+	void SubscribeAsClient();
+
+	void Unsubscribe() const;
+	void UnsubscribeAsClient() const;
+	void TogglePause();
+
+	void ToggleMenuInputSubscription();
 
 	void ToggleUp();
 	void ToggleDown();
 
-	[[nodiscard]] MenuKeys GetKeysStats() const { return keys; }
+	[[nodiscard]] MenuKeys GetKeysStats() const { return _keys; }
 };

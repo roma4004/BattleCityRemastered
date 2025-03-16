@@ -23,6 +23,7 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _renderer{std::move(renderer)},
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
+	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
 	  _obstacleSpawner{events, &_allObjects, window}
 {
@@ -43,10 +44,6 @@ void GameSuccess::Subscribe()
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
-	_events->AddListener<const bool>("Pause_Status", _name, [this](const bool newPauseStatus)
-	{
-		this->_isPause = newPauseStatus;
-	});
 }
 
 void GameSuccess::Unsubscribe() const
@@ -54,7 +51,6 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("PreviousGameMode", _name);
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
-	_events->RemoveListener<const bool>("Pause_Status", _name);
 }
 
 void GameSuccess::ResetBattlefield(const GameMode gameMode)
@@ -63,6 +59,11 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 	_allObjects.reserve(1000);
 
 	SetCurrentGameMode(gameMode);
+	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
+	{
+		_events->EmitEvent("Pause_Released");
+	}
+
 	_events->EmitEvent("Reset");
 
 	//Map creation
@@ -80,6 +81,7 @@ void GameSuccess::PrevGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
+
 	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
@@ -92,156 +94,8 @@ void GameSuccess::NextGameMode()
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
+
 	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
-}
-
-void GameSuccess::ClearBuffer() const
-{
-	const auto size = _window->size.x * _window->size.y * sizeof(int);
-	memset(_window->buffer.get(), 0, size);
-}
-
-void GameSuccess::MouseEvents(const SDL_Event& event)
-{
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
-	{
-		_mouseButtons.MouseLeftButton = true;
-		std::cout << "MouseLeftButton: "
-				<< "Down" << '\n';
-
-		return;
-	}
-
-	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
-	{
-		_mouseButtons.MouseLeftButton = false;
-		std::cout << "MouseLeftButton: "
-				<< "Up" << '\n';
-
-		return;
-	}
-
-	if (event.type == SDL_MOUSEMOTION && _mouseButtons.MouseLeftButton)
-	{
-		const Sint32 x = event.motion.x;
-		const Sint32 y = event.motion.y;
-		std::cout << "x: " << x << " \t y: " << y << '\n';
-		// const int rowSize = env.windowWidth; ???
-
-		if (x < 1 || y < 1 ||
-		    x >= static_cast<Sint32>(_window->size.x) - 1 && y >= static_cast<Sint32>(_window->size.y) - 1)
-		{
-			return;
-		}
-	}
-}
-
-void GameSuccess::KeyPressed(const SDL_Event& event) const
-{
-	switch (event.key.keysym.sym)
-	{
-		case SDLK_w:
-			_events->EmitEvent("W_Pressed");
-			break;
-		case SDLK_a:
-			_events->EmitEvent("A_Pressed");
-			break;
-		case SDLK_s:
-			_events->EmitEvent("S_Pressed");
-			break;
-		case SDLK_d:
-			_events->EmitEvent("D_Pressed");
-			break;
-		case SDLK_SPACE:
-			_events->EmitEvent("Space_Pressed");
-			break;
-		case SDLK_UP:
-			_events->EmitEvent("ArrowUp_Pressed");
-			break;
-		case SDLK_LEFT:
-			_events->EmitEvent("ArrowLeft_Pressed");
-			break;
-		case SDLK_DOWN:
-			_events->EmitEvent("ArrowDown_Pressed");
-			break;
-		case SDLK_RIGHT:
-			_events->EmitEvent("ArrowRight_Pressed");
-			break;
-		case SDLK_RCTRL:
-			_events->EmitEvent("RCTRL_Pressed");
-			break;
-		case SDLK_RETURN:
-			_events->EmitEvent("Enter_Pressed");
-			break;
-		case SDLK_m:
-			_events->EmitEvent("Menu_Pressed");
-			break;
-		case SDLK_p:
-			_events->EmitEvent("Pause_Pressed");
-			break;
-		default:
-			break;
-	}
-}
-
-void GameSuccess::KeyReleased(const SDL_Event& event) const
-{
-	switch (event.key.keysym.sym)
-	{
-		case SDLK_w:
-			_events->EmitEvent("W_Released");
-			break;
-		case SDLK_a:
-			_events->EmitEvent("A_Released");
-			break;
-		case SDLK_s:
-			_events->EmitEvent("S_Released");
-			break;
-		case SDLK_d:
-			_events->EmitEvent("D_Released");
-			break;
-		case SDLK_SPACE:
-			_events->EmitEvent("Space_Released");
-			break;
-		case SDLK_UP:
-			_events->EmitEvent("ArrowUp_Released");
-			break;
-		case SDLK_LEFT:
-			_events->EmitEvent("ArrowLeft_Released");
-			break;
-		case SDLK_DOWN:
-			_events->EmitEvent("ArrowDown_Released");
-			break;
-		case SDLK_RIGHT:
-			_events->EmitEvent("ArrowRight_Released");
-			break;
-		case SDLK_RCTRL:
-			_events->EmitEvent("RCTRL_Released");
-			break;
-		case SDLK_RETURN:
-			_events->EmitEvent("Enter_Released");
-			break;
-		case SDLK_m:
-			_events->EmitEvent("Menu_Released");
-			break;
-		case SDLK_p:
-			_events->EmitEvent("Pause_Released");
-			break;
-		default:
-			break;
-	}
-}
-
-void GameSuccess::KeyboardEvents(const SDL_Event& event) const
-{
-	if (event.type == SDL_KEYDOWN)
-	{
-		KeyPressed(event);
-	}
-	else if (event.type == SDL_KEYUP)
-	{
-		KeyReleased(event);
-	}
 }
 
 void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, const Uint64 newTime)
@@ -266,21 +120,6 @@ void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint3
 
 		fpsPrevUpdateTime = newTime;
 		frameCount = 0;
-	}
-}
-
-void GameSuccess::UserInputHandling()
-{
-	SDL_Event event;
-	while (SDL_PollEvent(&event))
-	{
-		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
-		{
-			_isGameOver = true;
-		}
-
-		MouseEvents(event);
-		KeyboardEvents(event);
 	}
 }
 
@@ -309,18 +148,18 @@ void GameSuccess::MainLoop()
 		auto fpsPrevUpdateTime = oldTime;
 		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
 
-		while (!_isGameOver)
+		while (!_userInput.IsGameOver())
 		{
-			ClearBuffer();
+			_window->ClearBuffer();
 
-			UserInputHandling();
+			_userInput.Update();
 
 			if (_menu)
 			{
 				_menu->Update();//TODO: replace with event
 			}
 
-			if (!_isPause && _currentMode != PlayAsClient)
+			if (!_userInput.IsPause() && _currentMode != PlayAsClient)
 			{
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
@@ -331,8 +170,7 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("Draw");
 
-			_events->EmitEvent("DrawHealthBar");
-			// TODO: create and blend separate buff layers(objects, effect, interface)
+			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
 			_events->EmitEvent("DrawMenuBackground");
 

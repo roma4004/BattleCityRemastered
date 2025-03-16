@@ -20,7 +20,7 @@ void Event<Args...>::Emit(Args&&... args)
 {
 	for (auto& [_, callback]: _listeners)
 	{
-		//TODO: check proper using forward types should be diferent event and event args
+		//TODO: check proper using forward types should be different event and event args
 		//callback(std::forward<EmitArgs>(args)...);
 		callback(std::forward<Args>(args)...);
 	}

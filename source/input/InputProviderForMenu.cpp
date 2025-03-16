@@ -4,38 +4,82 @@
 InputProviderForMenu::InputProviderForMenu(std::string name, std::shared_ptr<EventSystem> events)
 	: _name{std::move(name)}, _events{std::move(events)}
 {
-	this->ToggleMenu();
-	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenu(); });
-	_events->AddListener("Pause_Released", _name, [this]()
-	{
-		keys.pause = !keys.pause;
-
-		_events->EmitEvent<const bool>("Pause_Status", keys.pause);
-	});
-	_events->AddListener("Net_Pause_Released", _name, [this]()
-	{
-		keys.pause = !keys.pause;
-
-		_events->EmitEvent<const bool>("Pause_Status", keys.pause);
-	});
+	Subscribe();
 }
 
 InputProviderForMenu::~InputProviderForMenu()
 {
-	_events->RemoveListener("Menu_Released", _name);
-	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener("Net_Pause_Released", _name);
+	Unsubscribe();
 }
 
-void InputProviderForMenu::ToggleMenu()
+void InputProviderForMenu::Subscribe()
 {
-	keys.menuShow = !keys.menuShow;
-	if (keys.menuShow)
+	this->ToggleMenuInputSubscription();
+
+	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
+	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		_events->AddListener("ArrowUp_Released", _name, [&btn = keys]() { btn.up = true; });
-		_events->AddListener("ArrowDown_Released", _name, [&btn = keys]() { btn.down = true; });
-		_events->AddListener("Enter_Pressed", _name, [&btn = keys]() { btn.reset = true; });
-		_events->AddListener("Enter_Released", _name, [&btn = keys]() { btn.reset = false; });
+		this->_gameMode = newGameMode;
+
+		if (_gameMode == PlayAsClient)
+		{
+			SubscribeAsClient();
+		}
+		else
+		{
+			UnsubscribeAsClient();
+		}
+	});
+
+	if (_gameMode == PlayAsClient)
+	{
+		SubscribeAsClient();
+	}
+	else
+	{
+		UnsubscribeAsClient();
+	}
+}
+
+void InputProviderForMenu::SubscribeAsClient()
+{
+	_events->AddListener("ClientReceive_Pause_Released", _name, [this]()//TODO: subscribe only in client
+	{
+		_keys.pause = !_keys.pause;
+
+		_events->EmitEvent<const bool>("Pause_Status", _keys.pause);
+	});
+}
+
+void InputProviderForMenu::Unsubscribe() const
+{
+	_events->RemoveListener("Menu_Released", _name);
+	_events->RemoveListener("Pause_Released", _name);\
+	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+}
+
+void InputProviderForMenu::UnsubscribeAsClient() const
+{
+	_events->RemoveListener("ClientReceive_Pause_Released", _name);
+}
+
+void InputProviderForMenu::TogglePause()
+{
+	_keys.pause = !_keys.pause;
+
+	_events->EmitEvent<const bool>("Pause_Status", _keys.pause);
+}
+
+void InputProviderForMenu::ToggleMenuInputSubscription()
+{
+	_keys.menuShow = !_keys.menuShow;
+	if (_keys.menuShow)
+	{
+		_events->AddListener("ArrowUp_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("ArrowDown_Released", _name, [&btn = _keys]() { btn.down = true; });
+		_events->AddListener("Enter_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
+		_events->AddListener("Enter_Released", _name, [&btn = _keys]() { btn.reset = false; });
 	}
 	else
 	{
@@ -45,15 +89,15 @@ void InputProviderForMenu::ToggleMenu()
 		_events->RemoveListener("Enter_Released", _name);
 	}
 
-	keys.reset = false;
+	_keys.reset = false;
 }
 
 void InputProviderForMenu::ToggleUp()
 {
-	keys.up = false;
+	_keys.up = false;
 }
 
 void InputProviderForMenu::ToggleDown()
 {
-	keys.down = false;
+	_keys.down = false;
 }

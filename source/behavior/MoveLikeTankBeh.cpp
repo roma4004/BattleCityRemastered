@@ -165,15 +165,7 @@ void MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 				tank->MoveX(-std::floor(distance));
 			}
 
-			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 }
@@ -208,16 +200,7 @@ void MoveLikeTankBeh::MoveRight(const float deltaTime) const
 				tank->MoveX(std::floor(distance));
 			}
 
-			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					//TODO: destroy bonus on emit in PickUpBonus by subscription
-					objLck->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 }
@@ -250,15 +233,7 @@ void MoveLikeTankBeh::MoveUp(const float deltaTime) const
 				tank->MoveY(-std::floor(distance));
 			}
 
-			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 }
@@ -293,15 +268,20 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 				tank->MoveY(std::floor(distance));
 			}
 
-			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
+		}
+	}
+}
+
+void MoveLikeTankBeh::HandleBonusPickUp(const std::weak_ptr<BaseObj>& object, const Tank* tank)
+{
+	if (const auto objLck = object.lock())
+	{
+		if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
+		{
+			bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+			//TODO: destroy bonus on emit in PickUpBonus by subscription
+			objLck->TakeDamage(1);
 		}
 	}
 }
