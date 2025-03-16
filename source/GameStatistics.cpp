@@ -4,7 +4,6 @@
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}
 {
-	Reset();
 	Subscribe();
 }
 
@@ -16,7 +15,27 @@ GameStatistics::~GameStatistics()
 void GameStatistics::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
 
+		if (_gameMode == PlayAsClient)
+		{
+			UnsubscribeAsHost();
+			SubscribeAsClient();
+		}
+		else
+		{
+			UnsubscribeAsClient();
+			SubscribeHost();
+		}
+	});
+
+	SubscribeHost();
+}
+
+void GameStatistics::SubscribeHost()
+{
 	//TODO: replace <std::string> with <Enum::statisticsType>
 	_events->AddListener<const std::string&, const std::string&>(
 			"BulletHit",
@@ -72,12 +91,29 @@ void GameStatistics::Subscribe()
 			"BrickWallDied",
 			_name,
 			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
+
+	_events->AddListener<const std::string&, const std::string&>(
+			"SteelWallDied",
+			_name,
+			[this](const std::string& author, const std::string& fraction) { SteelWallDied(author, fraction); });
+}
+
+void GameStatistics::SubscribeAsClient()
+{
+	_events->AddListener<const std::string&, const std::string&>(
+			"ClientReceived_Statistics_BrickWallDied", _name,
+			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
 }
 
 void GameStatistics::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
 
+	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+}
+
+void GameStatistics::UnsubscribeAsHost() const
+{
 	_events->RemoveListener<const std::string&, const std::string&>("BulletHit", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&>("EnemyHit", _name);
@@ -96,6 +132,12 @@ void GameStatistics::Unsubscribe() const
 	_events->RemoveListener<const std::string&, const std::string&>("CoopBot2Died", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&>("BrickWallDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("SteelWallDied", _name);
+}
+
+void GameStatistics::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_Statistics_BrickWallDied", _name);
 }
 
 void GameStatistics::BulletHit(const std::string& author, const std::string& fraction)
@@ -230,6 +272,37 @@ void GameStatistics::BrickWallDied(const std::string& author, const std::string&
 		else if (author == "Player2" || author == "CoopBot2")
 		{
 			++_brickWallDiedByPlayerTwo;
+		}
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const std::string&>(
+					"ServerSend_Statistics_BrickWallDied", author, fraction);
+		}
+	}
+}
+
+void GameStatistics::SteelWallDied(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "EnemyTeam")
+	{
+		++_steelWallDiedByEnemyTeam;
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1" || author == "CoopBot1")
+		{
+			++_steelWallDiedByPlayerOne;
+		}
+		else if (author == "Player2" || author == "CoopBot2")
+		{
+			++_steelWallDiedByPlayerTwo;
+		}
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const std::string&>(
+					"ServerSend_Statistics_SteelWallDied", author, fraction);
 		}
 	}
 }

@@ -146,36 +146,36 @@ endif()
 #set(boost_build_command ./b2.exe --toolset=gcc link=static --build-type=complete runtime-link=shared variant=release --prefix=<INSTALL_DIR> --with-serialization -j8 stage install)
 set(BOOST_SUBMODULES
     "tools/build
-    tools/boost_install
-    libs/headers
+    libs/align
+    libs/array
     libs/asio
     libs/assert
+    libs/bind
     libs/config
     libs/core
-    libs/mpl
-    libs/array
-    libs/smart_ptr
-    libs/bind
-    libs/move
+    libs/date_time
     libs/detail
+    libs/function
+    libs/headers
+    libs/integer
     libs/io
     libs/iterator
+    libs/move
+    libs/mpl
+    libs/numeric"
+    libs/optional
+    libs/predef
     libs/preprocessor
+    libs/serialization
+    libs/smart_ptr
+    libs/spirit
     libs/static_assert
+    libs/system
     libs/throw_exception
     libs/type_traits
-    libs/serialization
-    libs/spirit
-    libs/integer
-    libs/predef
-    libs/optional
-    libs/function
     libs/utility
-    libs/align
-    libs/system
     libs/winapi
-    libs/date_time
-    libs/numeric")#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
+    tools/boost_install)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     ExternalProject_Add(Boost
@@ -241,6 +241,14 @@ endif()
 include_directories(headers)
 
 add_executable(${PROJECT_NAME}
+        source/BaseObj.cpp
+        source/BulletPool.cpp
+        source/GameStatistics.cpp
+        source/LineOfSight.cpp
+        source/Map.cpp
+        source/Menu.cpp
+        source/ObjRectangle.cpp
+        source/Server.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
         source/application/GameFailure.cpp
@@ -256,27 +264,21 @@ add_executable(${PROJECT_NAME}
         source/bonuses/BonusGrenade.cpp
         source/bonuses/BonusHelmet.cpp
         source/bonuses/BonusShovel.cpp
-        source/bonuses/BonusStar.cpp
         source/bonuses/BonusSpawner.cpp
+        source/bonuses/BonusStar.cpp
         source/bonuses/BonusStatus.cpp
         source/bonuses/BonusTank.cpp
         source/bonuses/BonusTimer.cpp
-        source/BulletPool.cpp
-        source/GameStatistics.cpp
         source/input/InputProviderForMenu.cpp
         source/input/InputProviderForPlayerOne.cpp
         source/input/InputProviderForPlayerOneNet.cpp
         source/input/InputProviderForPlayerTwo.cpp
         source/input/InputProviderForPlayerTwoNet.cpp
-        source/LineOfSight.cpp
         source/main.cpp
-        source/BaseObj.cpp
-        source/Map.cpp
-        source/Menu.cpp
-        source/obstacles/Obstacle.cpp
-        source/obstacles/ObstacleSpawner.cpp
         source/obstacles/BrickWall.cpp
         source/obstacles/FortressWall.cpp
+        source/obstacles/Obstacle.cpp
+        source/obstacles/ObstacleSpawner.cpp
         source/obstacles/SteelWall.cpp
         source/obstacles/WaterTile.cpp
         source/pawns/Bot.cpp
@@ -287,9 +289,7 @@ add_executable(${PROJECT_NAME}
         source/pawns/PlayerOne.cpp
         source/pawns/PlayerTwo.cpp
         source/pawns/Tank.cpp
-        source/ObjRectangle.cpp
-        source/Server.cpp
-        source/TankSpawner.cpp
+        source/pawns/TankSpawner.cpp
         source/utils/ColliderUtils.cpp
         source/utils/TimeUtils.cpp
 )

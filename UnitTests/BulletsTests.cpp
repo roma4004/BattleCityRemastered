@@ -414,3 +414,5 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 	EXPECT_TRUE(false);
 }
+
+//TODO: write test that Bullet with _tier > 2 can destroyed SteelWall

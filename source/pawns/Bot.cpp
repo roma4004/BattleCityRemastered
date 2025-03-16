@@ -12,7 +12,7 @@
 Bot::Bot(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
          const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
          const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-         std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
+         std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id, const int tier)
 	: Tank{rect,
 	       color,
 	       health,
@@ -26,7 +26,8 @@ Bot::Bot(const ObjRectangle& rect, const int color, const int health, std::share
 	       std::move(name),
 	       std::move(fraction),
 	       gameMode,
-	       id},
+	       id,
+	       tier},
 	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
 	  _lastTimeTurn{std::chrono::system_clock::now()}

@@ -38,13 +38,13 @@ void BulletPool::Unsubscribe() const
 
 std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const int damage, const double aoeRadius,
                                                const int color, const int health, const Direction direction,
-                                               const float speed, std::string author, std::string fraction)
+                                               const float speed, std::string author, std::string fraction, const int tier)
 {
 	if (_bullets.empty())
 	{
 		auto bullet = std::shared_ptr<Bullet>(
 				new Bullet{rect, damage, aoeRadius, color, health, _window, direction, speed, _allObjects, _events,
-				           std::move(author), std::move(fraction), _gameMode, _lastId++},
+				           std::move(author), std::move(fraction), _gameMode, _lastId++, tier},
 				[this](Bullet* b)
 				{
 					ReturnBullet(b);
@@ -57,7 +57,7 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const i
 	_bullets.pop();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
-		bullet->Reset(rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction));
+		bullet->Reset(rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction), tier);
 	}
 
 	return bulletAsBase;

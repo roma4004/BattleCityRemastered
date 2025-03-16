@@ -213,5 +213,6 @@ GameMode GameSuccess::GetCurrentGameMode() const { return _currentMode; }
 void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 {
 	_currentMode = selectedGameMode;
+
 	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 }

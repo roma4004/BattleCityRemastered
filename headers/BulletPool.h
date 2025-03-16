@@ -37,7 +37,8 @@ public:
 	void Unsubscribe() const;
 
 	std::shared_ptr<BaseObj> GetBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
-	                                   Direction direction, float speed, std::string author, std::string fraction);
+	                                   Direction direction, float speed, std::string author, std::string fraction,
+	                                   int tier);
 
 	void ReturnBullet(BaseObj* bullet);
 

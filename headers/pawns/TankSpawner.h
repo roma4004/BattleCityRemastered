@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GameMode.h"
-#include "application/Window.h"
+#include "../GameMode.h"
+#include "../application/Window.h"
 
 #include <memory>
 #include <random>
@@ -15,7 +15,7 @@ enum GameMode : char8_t;
 class TankSpawner final
 {
 	std::string _name{"TankSpawner"};
-	GameMode _currentMode{Demo};
+	GameMode _gameMode{Demo};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
@@ -45,11 +45,14 @@ class TankSpawner final
 	void Subscribe();
 	void SubscribeAsClient();
 	void SubscribeBonus();
-
+	void SubscribeTankSpawn();
+	void SubscribeTankDied();
 
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 	void UnsubscribeBonus() const;
+	void UnsubscribeTankSpawn() const;
+	void UnsubscribeTankDied() const;
 
 	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
 	void SetEnemyNeedRespawn();

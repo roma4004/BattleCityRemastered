@@ -10,7 +10,7 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
                      const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                      std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
                      std::unique_ptr<IInputProvider> inputProvider, std::shared_ptr<BulletPool> bulletPool,
-                     const GameMode gameMode, const int id)
+                     const GameMode gameMode, const int id, const int tier)
 	: Tank{rect,
 	       color,
 	       health,
@@ -24,7 +24,8 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
 	       std::move(name),
 	       std::move(fraction),
 	       gameMode,
-	       id},
+	       id,
+	       tier},
 	  _inputProvider{std::move(inputProvider)} {}
 
 PlayerTwo::~PlayerTwo() = default;

@@ -7,7 +7,6 @@
 struct ObjRectangle;
 class EventSystem;
 
-//TODO: implement that steel wall can be destroyer when player have 3 bonus stars
 class SteelWall final : public Obstacle
 {
 public:

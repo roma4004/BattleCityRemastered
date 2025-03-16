@@ -1,6 +1,5 @@
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
-#include "../headers/TankSpawner.h"
 #include "../headers/bonuses/BonusShovel.h"
 #include "../headers/bonuses/BonusSpawner.h"
 #include "../headers/bonuses/BonusTypeId.h"
@@ -9,6 +8,7 @@
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
+#include "../headers/pawns/TankSpawner.h"
 
 #include "gtest/gtest.h"
 
@@ -335,7 +335,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Star);
 		_events->EmitEvent("S_Pressed");
 
-		EXPECT_EQ(player->GetTankTier(), 0);
+		EXPECT_EQ(player->GetTier(), 1);
 
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
@@ -348,7 +348,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 			EXPECT_TRUE(false);
 		}
 
-		EXPECT_EQ(player->GetTankTier(), 1);
+		EXPECT_EQ(player->GetTier(), 2);
 
 		return;
 	}
@@ -363,7 +363,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Star);
 		_events->EmitEvent("W_Pressed");
 
-		EXPECT_EQ(player->GetTankTier(), 0);
+		EXPECT_EQ(player->GetTier(), 1);
 
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
@@ -376,7 +376,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 			EXPECT_TRUE(false);
 		}
 
-		EXPECT_EQ(player->GetTankTier(), 0);
+		EXPECT_EQ(player->GetTier(), 1);
 
 		return;
 	}

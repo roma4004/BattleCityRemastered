@@ -8,7 +8,7 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
            std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
            std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, const GameMode gameMode,
-           const int id)
+           const int id, const int tier)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -20,7 +20,8 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	       std::move(moveBeh),
 	       id,
 	       std::move(name) + std::to_string(id),// TODO: maybe name should be without tankId
-	       std::move(fraction)
+	       std::move(fraction),
+	       tier
 	  },
 	  _shootingBeh{std::move(shootingBeh)},
 	  _gameMode{gameMode}
@@ -177,6 +178,7 @@ void Tank::UnsubscribeAsClient() const
 	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 	_events->RemoveListener<const std::string&>("ClientReceived_" + _name + "TankDied", _name);
+
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _name);
@@ -198,7 +200,7 @@ void Tank::TakeDamage(const int damage)
 	}
 }
 
-int Tank::GetTankTier() const { return _tier; }
+int Tank::GetTier() const { return _tier; }
 
 void Tank::Shot() const
 {

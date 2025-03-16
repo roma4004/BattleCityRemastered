@@ -21,9 +21,8 @@ class Tank : public Pawn, public IHealthBar
 
 protected:
 	GameMode _gameMode{Demo};
-	double _bulletDamageRadius{12.f};
 
-	int _tier{0};
+	double _bulletDamageRadius{12.f};
 	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
@@ -46,7 +45,7 @@ public:
 	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,
 	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
 	     std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh, std::string name,
-	     std::string fraction, GameMode gameMode, int id);
+	     std::string fraction, GameMode gameMode, int id, int tier);
 
 	~Tank() override;
 
@@ -62,7 +61,7 @@ public:
 
 	void TakeDamage(int damage) override;
 
-	[[nodiscard]] int GetTankTier() const;
+	[[nodiscard]] int GetTier() const;
 
 	[[nodiscard]] float GetBulletWidth() const;
 	void SetBulletWidth(float bulletWidth);

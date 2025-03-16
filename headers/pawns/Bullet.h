@@ -31,12 +31,12 @@ public:
 	Bullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
 	       std::shared_ptr<Window> window, Direction direction, float speed,
 	       std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	       std::string author, std::string fraction, GameMode gameMode, int id);
+	       std::string author, std::string fraction, GameMode gameMode, int id, int tier = 1);
 
 	~Bullet() override;
 
 	void Reset(const ObjRectangle& rect, int damage, double aoeRadius, int color, float speed, Direction direction,
-	           int health, std::string author, std::string fraction);
+	           int health, std::string author, std::string fraction, int tier);
 
 	void Disable() const;
 	void Enable();
@@ -49,4 +49,6 @@ public:
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void TakeDamage(int damage) override;
+
+	[[nodiscard]] int GetTier() const;
 };

@@ -7,7 +7,7 @@
 Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
                std::shared_ptr<Window> window, const Direction direction, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string author, std::string fraction, const GameMode gameMode, int id)
+               std::string author, std::string fraction, const GameMode gameMode, int id, int tier)
 	: Pawn{rect,
 	       color,
 	       health,
@@ -19,7 +19,8 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events),
 	       id,
 	       "Bullet" + std::to_string(id),
-	       std::move(fraction)
+	       std::move(fraction),
+	       tier
 	  },
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
@@ -97,7 +98,7 @@ void Bullet::Enable() { Subscribe(); }
 //TODO: call this from event subscription
 void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
                    const float speed, const Direction direction, const int health, std::string author,
-                   std::string fraction)
+                   std::string fraction, const int tier)
 {
 	SetShape(rect);
 	SetColor(color);
@@ -111,6 +112,7 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 	_speed = speed;
 	SetIsAlive(true);
 	Enable();
+	_tier = tier;
 }
 
 void Bullet::TickUpdate(const float deltaTime)
@@ -148,3 +150,5 @@ void Bullet::TakeDamage(const int damage)
 		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }
+
+int Bullet::GetTier() const { return _tier; }

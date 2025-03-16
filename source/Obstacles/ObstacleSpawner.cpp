@@ -42,14 +42,7 @@ void ObstacleSpawner::Subscribe()
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
-		if (_gameMode == PlayAsClient)
-		{
-			SubscribeAsClient();
-		}
-		else
-		{
-			UnsubscribeAsClient();
-		}
+		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 }
 
@@ -67,9 +60,9 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::Unsubscribe() const
 {
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
-
 	_events->RemoveListener("Reset", _name);
+
+	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
 	if (_gameMode == PlayAsClient)
 	{

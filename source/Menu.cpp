@@ -212,6 +212,11 @@ void Menu::RenderStatistics(const Point pos) const
 	TextToRender({.x = pos.x + 130, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerOne());
 	TextToRender({.x = pos.x + 180, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerTwo());
 	TextToRender({.x = pos.x + 235, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByEnemyTeam());
+
+	TextToRender({.x = pos.x - 130, .y = pos.y + 320}, color, "STEEL KILLS");
+	TextToRender({.x = pos.x + 130, .y = pos.y + 320}, color, _statistics->GetSteelWallDiedByPlayerOne());
+	TextToRender({.x = pos.x + 180, .y = pos.y + 320}, color, _statistics->GetSteelWallDiedByPlayerTwo());
+	TextToRender({.x = pos.x + 235, .y = pos.y + 320}, color, _statistics->GetSteelWallDiedByEnemyTeam());
 }
 
 void Menu::DrawMenuText(const UPoint menuBackgroundPos) const

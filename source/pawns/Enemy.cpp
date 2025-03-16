@@ -9,7 +9,7 @@
 Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
              const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
              const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-             std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
+             std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id, const int tier)
 	: Bot{rect,
 	      color,
 	      health,
@@ -22,7 +22,8 @@ Enemy::Enemy(const ObjRectangle& rect, const int color, const int health, std::s
 	      std::move(fraction),
 	      std::move(bulletPool),
 	      gameMode,
-	      id} {}
+	      id,
+	      tier} {}
 
 Enemy::~Enemy() = default;
 
@@ -106,7 +107,7 @@ void Enemy::HandleLineOfSight(const Direction dir)
 	}
 
 	if (nearestObstacle && nearestObstacle->GetIsDestructible()
-		&& !IsAlly(nearestObstacle))
+	    && !IsAlly(nearestObstacle))
 	{
 		if (shootDistance > _bulletDamageRadius + bulletOffset)//TODO: cover this by test
 		{

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "GameMode.h"
+
 #include <memory>
 #include <string>
 
@@ -8,6 +10,7 @@ class EventSystem;
 class GameStatistics final
 {
 	std::string _name;
+	GameMode _gameMode{Demo};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
@@ -37,13 +40,22 @@ class GameStatistics final
 	int _brickWallDiedByPlayerOne{0};
 	int _brickWallDiedByPlayerTwo{0};
 
+	int _steelWallDiedByEnemyTeam{0};
+	int _steelWallDiedByPlayerOne{0};
+	int _steelWallDiedByPlayerTwo{0};
+
 public:
 	explicit GameStatistics(std::shared_ptr<EventSystem> events);
 
 	~GameStatistics();
 
 	void Subscribe();
+	void SubscribeHost();
+	void SubscribeAsClient();
+
 	void Unsubscribe() const;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
 
 	void BulletHit(const std::string& author, const std::string& fraction);
 	void EnemyHit(const std::string& author, const std::string& fraction);
@@ -53,6 +65,7 @@ public:
 	void PlayerOneDied(const std::string& author, const std::string& fraction);
 	void PlayerTwoDied(const std::string& author, const std::string& fraction);
 	void BrickWallDied(const std::string& author, const std::string& fraction);
+	void SteelWallDied(const std::string& author, const std::string& fraction);
 
 	void Reset();
 
@@ -81,4 +94,8 @@ public:
 	[[nodiscard]] int GetBrickWallDiedByEnemyTeam() const { return _brickWallDiedByEnemyTeam; }
 	[[nodiscard]] int GetBrickWallDiedByPlayerOne() const { return _brickWallDiedByPlayerOne; }
 	[[nodiscard]] int GetBrickWallDiedByPlayerTwo() const { return _brickWallDiedByPlayerTwo; }
+
+	[[nodiscard]] int GetSteelWallDiedByEnemyTeam() const { return _steelWallDiedByEnemyTeam; }
+	[[nodiscard]] int GetSteelWallDiedByPlayerOne() const { return _steelWallDiedByPlayerOne; }
+	[[nodiscard]] int GetSteelWallDiedByPlayerTwo() const { return _steelWallDiedByPlayerTwo; }
 };

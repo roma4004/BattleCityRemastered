@@ -4,7 +4,7 @@
 #include "../../headers/GameStatistics.h"
 #include "../../headers/Map.h"
 #include "../../headers/Server.h"
-#include "../../headers/TankSpawner.h"
+#include "../../headers/pawns/TankSpawner.h"
 
 #include <algorithm>
 //#include <fstream>
@@ -235,5 +235,6 @@ GameMode GameSuccess::GetCurrentGameMode() const { return _currentMode; }
 void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 {
 	_currentMode = selectedGameMode;
+
 	_events->EmitEvent<const GameMode>("GameModeChangedTo", _currentMode);
 }

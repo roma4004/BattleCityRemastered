@@ -503,3 +503,5 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
 }
+
+//TODO: write test that check count destroyed SteelWall by Bullet with _tier > 2

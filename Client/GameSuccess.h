@@ -7,11 +7,11 @@
 #include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
 #include "../headers/Menu.h"
-#include "../headers/TankSpawner.h"
 #include "../headers/application/UserInput.h"
 #include "../headers/bonuses/BonusSpawner.h"
 #include "../headers/interfaces/IGame.h"
 #include "../headers/obstacles/ObstacleSpawner.h"
+#include "../headers/pawns/TankSpawner.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>

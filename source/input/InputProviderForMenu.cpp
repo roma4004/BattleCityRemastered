@@ -22,29 +22,13 @@ void InputProviderForMenu::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 
-		if (_gameMode == PlayAsClient)
-		{
-			SubscribeAsClient();
-		}
-		else
-		{
-			UnsubscribeAsClient();
-		}
+		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
-
-	if (_gameMode == PlayAsClient)
-	{
-		SubscribeAsClient();
-	}
-	else
-	{
-		UnsubscribeAsClient();
-	}
 }
 
 void InputProviderForMenu::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceive_Pause_Released", _name, [this]()//TODO: subscribe only in client
+	_events->AddListener("ClientReceive_Pause_Released", _name, [this]()
 	{
 		_keys.pause = !_keys.pause;
 
@@ -55,8 +39,13 @@ void InputProviderForMenu::SubscribeAsClient()
 void InputProviderForMenu::Unsubscribe() const
 {
 	_events->RemoveListener("Menu_Released", _name);
-	_events->RemoveListener("Pause_Released", _name);\
+	_events->RemoveListener("Pause_Released", _name);
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+
+	if (_gameMode == PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
 }
 
 void InputProviderForMenu::UnsubscribeAsClient() const
@@ -92,12 +81,5 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 	_keys.reset = false;
 }
 
-void InputProviderForMenu::ToggleUp()
-{
-	_keys.up = false;
-}
-
-void InputProviderForMenu::ToggleDown()
-{
-	_keys.down = false;
-}
+void InputProviderForMenu::ToggleUp() { _keys.up = false; }
+void InputProviderForMenu::ToggleDown() { _keys.down = false; }

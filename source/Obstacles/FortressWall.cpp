@@ -138,8 +138,17 @@ void FortressWall::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-//TODO: check maybe delete this method
-void FortressWall::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
+void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);//for statistic
+	}
+	else
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("SteelWallDied", author, fraction);//for statistic
+	}
+}
 
 void FortressWall::OnPlayerShovelCooldownEnd()
 {

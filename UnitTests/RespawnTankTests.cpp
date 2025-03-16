@@ -1,12 +1,12 @@
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
-#include "../headers/TankSpawner.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
 #include "../headers/pawns/PlayerTwo.h"
+#include "../headers/pawns/TankSpawner.h"
 
 #include "gtest/gtest.h"
 

@@ -2,6 +2,7 @@
 #include "../../headers/EventSystem.h"
 #include "../../headers/LineOfSight.h"
 #include "../../headers/obstacles/FortressWall.h"
+#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>
@@ -9,7 +10,7 @@
 CoopBot::CoopBot(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
                  const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                  std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
-                 std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id)
+                 std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id, const int tier)
 	: Bot{rect,
 	      color,
 	      health,
@@ -22,7 +23,8 @@ CoopBot::CoopBot(const ObjRectangle& rect, const int color, const int health, st
 	      std::move(fraction),
 	      std::move(bulletPool),
 	      gameMode,
-	      id} {}
+	      id,
+	      tier} {}
 
 CoopBot::~CoopBot() = default;
 
@@ -100,9 +102,12 @@ void CoopBot::HandleLineOfSight(const Direction dir)
 	}
 
 	if (nearestObstacle
-		&& nearestObstacle->GetIsDestructible()
-		&& !dynamic_cast<FortressWall*>(nearestObstacle.get())
-		&& !IsAlly(nearestObstacle))
+	    && (nearestObstacle->GetIsDestructible() || _tier > 2)
+	    && !dynamic_cast<WaterTile*>(nearestObstacle.get())
+	    // && !dynamic_cast<BushesTile*>(nearestObstacle.get())
+	    // && !dynamic_cast<IceTile*>(nearestObstacle.get())
+	    && !dynamic_cast<FortressWall*>(nearestObstacle.get())
+	    && !IsAlly(nearestObstacle))
 	{
 		if (shootDistance > _bulletDamageRadius + bulletOffset)
 		{

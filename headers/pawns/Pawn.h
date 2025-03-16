@@ -18,6 +18,7 @@ class Pawn : public BaseObj, public ITickUpdatable
 protected:
 	Direction _direction{UP};
 	float _speed{0.f};
+	int _tier{1};
 
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 	std::shared_ptr<Window> _window{nullptr};
@@ -32,7 +33,7 @@ protected:
 public:
 	Pawn(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,
 	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	     std::unique_ptr<IMoveBeh> moveBeh, int id, std::string name, std::string fraction);
+	     std::unique_ptr<IMoveBeh> moveBeh, int id, std::string name, std::string fraction, int tier);
 
 	~Pawn() override;
 
