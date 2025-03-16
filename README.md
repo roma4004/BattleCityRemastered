@@ -38,7 +38,7 @@ Used design patterns:
 * Object Pool
 
 TODO roadmap: 
-* network multiplayer (in progress, ~90%)
+* network multiplayer (in progress, ~95%)
 * use SDL_Image for texture (in progress, one logo in menu),
 * SDL_Mixer for sound (in progress, one start music),
 * Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
