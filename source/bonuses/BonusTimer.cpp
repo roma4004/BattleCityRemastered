@@ -22,6 +22,6 @@ void BonusTimer::SendDamageStatistics(const std::string& author, const std::stri
 
 void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, std::chrono::milliseconds>(
+	_events->EmitEvent<const std::string&, const std::string&, const std::chrono::milliseconds>(
 			"BonusTimer", author, fraction, _duration);
 }

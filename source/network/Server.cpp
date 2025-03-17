@@ -1,5 +1,5 @@
-#include "../headers/Server.h"
-#include "../headers/EventSystem.h"
+#include "../../headers/network/Server.h"
+#include "../../headers/EventSystem.h"
 
 #include <fstream>
 #include <iostream>
@@ -141,6 +141,11 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	_events->AddListener("Pause_Pressed", _name, [this]() { this->SendKeyState("Pause_Pressed"); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->SendKeyState("Pause_Released"); });
 
+	_events->AddListener<const std::string&>("ServerSend_TankSpawn", _name, [this](const std::string& whoSpawn)
+	{
+		this->SendTankSpawn(whoSpawn);
+	});
+
 	_events->AddListener<const std::string&>("ServerSend_TankDied", _name, [this](const std::string& whoDied)
 	{
 		this->SendTankDied(whoDied);
@@ -180,7 +185,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 		this->SendBonusDeSpawn(id);
 	});
 
-	_events->AddListener<const std::string, const int>(
+	_events->AddListener<const std::string&, const int>(
 			"ServerSend_Health", _name, [this](const std::string& objectName, const int health)
 			{
 				this->SendHealth(objectName, health);
@@ -222,6 +227,20 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 			{
 				this->SendShot(objectName, direction);
 			});
+
+	_events->AddListener<const std::string&, const std::string&, const int>(
+			"ServerSend_RespawnResourceChanged", _name,
+			[this](const std::string& author, const std::string& fraction, const int respawnResource)
+			{
+				this->OnRespawnResourceChanged(author, fraction, respawnResource);
+			});
+
+	_events->AddListener<const std::string&, const std::string&, const std::string&>(
+			"ServerSend_Statistics", _name, [this](const std::string& eventName, const std::string& author,
+			                                       const std::string& fraction)
+			{
+				this->OnStatisticsChange(eventName, author, fraction);
+			});
 }
 
 Server::~Server()
@@ -237,7 +256,7 @@ Server::~Server()
 	_events->RemoveListener<const std::string&, const FPoint, const BonusTypeId, const int>(
 			"ServerSend_BonusSpawn", _name);
 	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);
-	_events->RemoveListener<const std::string, const int>("ServerSend_Health", _name);
+	_events->RemoveListener<const std::string&, const int>("ServerSend_Health", _name);
 	_events->RemoveListener<const int>("ServerSend_Dispose", _name);
 
 	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);
@@ -247,6 +266,9 @@ Server::~Server()
 	_events->RemoveListener<const std::string&>("ServerSend_OnGrenade", _name);
 
 	_events->RemoveListener<const std::string&, const Direction>("ServerSend_Shot", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const int>(
+			"ServerSend_RespawnResourceChanged", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("ServerSend_Statistics", _name);
 }
 
 void Server::DoAccept()
@@ -416,11 +438,40 @@ void Server::SendHealth(const std::string& objectName, const int health) const
 	SendToAll(archiveStream.str() + "\n\n");
 }
 
+void Server::OnRespawnResourceChanged(const std::string& author, const std::string& fraction,
+                                      const int respawnResource) const
+{
+	ServerData data;
+	data.respawnResource = respawnResource;
+	data.objectName = author;
+	data.fraction = fraction;
+	data.eventName = "RespawnResourceChanged";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
 void Server::SendTankDied(const std::string& objectName) const
 {
 	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "TankDied";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::SendTankSpawn(const std::string& objectName) const
+{
+	ServerData data;
+	data.objectName = objectName;
+	data.eventName = "TankSpawn";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
@@ -487,6 +538,22 @@ void Server::OnGrenade(const std::string& objectName, const std::string& fractio
 	ServerData data;
 	data.objectName = objectName;
 	data.eventName = "OnGrenade";
+	data.fraction = fraction;
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::OnStatisticsChange(const std::string& eventName, const std::string& author,
+                                const std::string& fraction) const
+{
+	ServerData data;
+	data.eventType = "Statistics";
+	data.eventName = eventName;
+	data.objectName = author;
 	data.fraction = fraction;
 
 	std::ostringstream archiveStream;

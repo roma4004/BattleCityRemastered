@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Direction.h"
-#include "Point.h"
-#include "bonuses/BonusTypeId.h"
+#include "../Direction.h"
+#include "../Point.h"
+#include "../bonuses/BonusTypeId.h"
 
 #include <string>
 #include <vector>
@@ -24,9 +24,11 @@ struct ServerData final
 	void serialize(Archive& ar, unsigned int /*version*/);
 
 	int health{-1};
+	int respawnResource{-1};
 	int id{-1};
 	BonusTypeId typeId{None};
 	std::string objectName;
+	std::string eventType;
 	std::string eventName;
 	std::string fraction;
 	std::vector<std::string> names;
@@ -70,12 +72,15 @@ class Server final
 	void SendBonusSpawn(const std::string& objectName, FPoint spawnPos, BonusTypeId typeId, int id) const;
 	void SendBonusDeSpawn(int id) const;
 	auto SendHealth(const std::string& objectName, int health) const -> void;
+	void OnRespawnResourceChanged(const std::string& author, const std::string& fraction, int respawnResource) const;
 	void SendTankDied(const std::string& objectName) const;
+	void SendTankSpawn(const std::string& objectName) const;
 	void OnHelmetActivate(const std::string& objectName) const;
 	void OnHelmetDeactivate(const std::string& objectName) const;
 	void OnStar(const std::string& objectName) const;
 	void OnTank(const std::string& objectName, const std::string& fraction) const;
 	void OnGrenade(const std::string& objectName, const std::string& fraction) const;
+	void OnStatisticsChange(const std::string& eventName, const std::string& author, const std::string& fraction) const;
 	void SendFortressDied(int id) const;
 	void SendFortressToBrick(int id) const;
 	void SendFortressToSteel(int id) const;

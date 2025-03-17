@@ -74,7 +74,7 @@ void FortressWall::SubscribeAsClient()
 
 void FortressWall::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
+	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
 			"BonusShovel", _name,//TODO: remove author when dont needed in all event
 			[this](const std::string& /*author*/, const std::string& fraction,
 			       const std::chrono::milliseconds bonusDurationTime)
@@ -123,7 +123,7 @@ void FortressWall::UnsubscribeAsClient() const
 
 void FortressWall::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusShovel", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>("BonusShovel", _name);
 }
 
 void FortressWall::Draw() const {}

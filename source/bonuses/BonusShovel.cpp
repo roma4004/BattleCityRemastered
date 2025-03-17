@@ -22,6 +22,6 @@ void BonusShovel::SendDamageStatistics(const std::string& author, const std::str
 
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, std::chrono::milliseconds>(
+	_events->EmitEvent<const std::string&, const std::string&, const std::chrono::milliseconds>(
 			"BonusShovel", author, fraction, _duration);
 }

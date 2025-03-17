@@ -33,6 +33,11 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	Tank::Subscribe();
 
 	_events->EmitEvent(_name + "_Spawn");
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&>("ServerSend_TankSpawn", _name);//TODO: write this replicate
+	}
 }
 
 Tank::~Tank()
@@ -43,7 +48,7 @@ Tank::~Tank()
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_" + _name + "_Died");
+		_events->EmitEvent<const std::string&>("ServerSend_TankDied", _name);
 	}
 }
 
@@ -100,11 +105,10 @@ void Tank::SubscribeAsClient()
 				this->Shot();
 			});
 
-	_events->AddListener<const int>(
-			"ClientReceived_" + _name + "Health", _name, [this](const int health)
-			{
-				this->SetHealth(health);
-			});
+	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
+	{
+		this->SetHealth(health);
+	});
 
 	_events->AddListener<const std::string&>(
 			"ClientReceived_" + _name + "TankDied", _name, [this](const std::string&/* whoDied*/)
@@ -130,14 +134,14 @@ void Tank::SubscribeAsClient()
 
 void Tank::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
+	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
 			"BonusTimer", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const std::chrono::milliseconds duration)
 			{
 				this->OnBonusTimer(fraction, duration);
 			});
 
-	_events->AddListener<const std::string&, const std::string&, std::chrono::milliseconds>(
+	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
 			"BonusHelmet", _name,
 			[this](const std::string& author, const std::string& fraction, const std::chrono::milliseconds duration)
 			{
@@ -186,8 +190,8 @@ void Tank::UnsubscribeAsClient() const
 
 void Tank::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusTimer", _name);
-	_events->RemoveListener<const std::string&, const std::string&, std::chrono::milliseconds>("BonusHelmet", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>("BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
@@ -292,7 +296,7 @@ void Tank::OnBonusHelmet(const std::string& author, const std::string& fraction,
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&>("ServerSend_OnHelmetActivate", _name);
+			_events->EmitEvent<const std::string&>("ServerSend_OnHelmetActivate", author);
 		}
 	}
 }
@@ -302,11 +306,6 @@ void Tank::OnBonusGrenade(const std::string& author, const std::string& fraction
 	if (fraction != _fraction)
 	{
 		TakeDamage(GetHealth());
-
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnGrenade", author, fraction);
-		}
 	}
 }
 
@@ -330,7 +329,7 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&>("ServerSend_OnStar", _name);
+			_events->EmitEvent<const std::string&>("ServerSend_OnStar", author);
 		}
 	}
 }

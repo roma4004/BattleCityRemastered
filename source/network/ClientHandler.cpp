@@ -1,5 +1,5 @@
-#include "../headers/ClientHandler.h"
-#include "../headers/Client.h"
+#include "../../headers/network/ClientHandler.h"
+#include "../../headers/network/Client.h"
 
 #include <boost/asio/io_context.hpp>
 

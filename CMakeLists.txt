@@ -243,15 +243,11 @@ include_directories(headers)
 add_executable(${PROJECT_NAME}
         source/BaseObj.cpp
         source/BulletPool.cpp
-        source/Client.cpp
-        source/ClientHandler.cpp
         source/GameStatistics.cpp
         source/LineOfSight.cpp
         source/Map.cpp
         source/Menu.cpp
         source/ObjRectangle.cpp
-        source/Server.cpp
-        source/ServerHandler.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
         source/application/GameFailure.cpp
@@ -278,6 +274,10 @@ add_executable(${PROJECT_NAME}
         source/input/InputProviderForPlayerTwo.cpp
         source/input/InputProviderForPlayerTwoNet.cpp
         source/main.cpp
+        source/network/Client.cpp
+        source/network/ClientHandler.cpp
+        source/network/Server.cpp
+        source/network/ServerHandler.cpp
         source/obstacles/BrickWall.cpp
         source/obstacles/FortressWall.cpp
         source/obstacles/Obstacle.cpp
@@ -314,7 +314,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 set(FONT_PATH                   Resources/Fonts)
-set(FONT_PATH_NAME              ${FONT_PATH}/bc7x7.ttf)
+set(FONT_PATH_NAME              ${FONT_PATH}/PressStart2P-vaV7.ttf)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
         "../${FONT_PATH_NAME}"                                  # <--this is in-file

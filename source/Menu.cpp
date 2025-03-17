@@ -66,6 +66,13 @@ void Menu::Subscribe()
 			{
 				this->_playerTwoRespawnResource = playerTwoRespawnResource;
 			});
+
+	_events->AddListener<const std::string&, const std::string&, const int>(
+			"ClientReceived_RespawnResourceChanged", _name,
+			[this](const std::string& author, const std::string& fraction, const int respawnResource)
+			{
+				this->OnRespawnResourceChanged(author, fraction, respawnResource);
+			});
 }
 
 void Menu::Unsubscribe() const
@@ -77,6 +84,8 @@ void Menu::Unsubscribe() const
 	_events->RemoveListener<const int>("EnemyRespawnResourceChangedTo", _name);
 	_events->RemoveListener<const int>("Player1RespawnResourceChangedTo", _name);
 	_events->RemoveListener<const int>("Player2RespawnResourceChangedTo", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const int>(
+			"ClientReceived_RespawnResourceChanged", _name);
 }
 
 void Menu::Update() const
@@ -125,6 +134,7 @@ void Menu::BlendBackgroundToWindowBuffer()
 				const unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(
 						static_cast<unsigned int>(targetColor), 91);
 				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColorLessAlpha, menuColor));
+				//TODO:blend using thread pool
 			}
 		}
 	}
@@ -173,68 +183,125 @@ void Menu::RenderStatistics(const Point pos) const
 	constexpr SDL_Color color = {0x00, 0xff, 0xff, 0xff};
 
 	TextToRender({.x = pos.x - 60, .y = pos.y + 100}, color, "GAME STATISTICS");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 140}, color, "P1     P2     ENEMY");
-	TextToRender({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 160}, color, _playerOneRespawnResource);
-	TextToRender({.x = pos.x + 180, .y = pos.y + 160}, color, _playerTwoRespawnResource);
-	TextToRender({.x = pos.x + 235, .y = pos.y + 160}, color, _enemyRespawnResource);
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 180}, color, _statistics->GetBulletHitByPlayerOne());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 180}, color, _statistics->GetBulletHitByPlayerTwo());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 180}, color, _statistics->GetBulletHitByEnemy());
+	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 200}, color, "PLAYER HIT BY ENEMY");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 200}, color, _statistics->GetPlayerOneHitByEnemyTeam());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 200}, color, _statistics->GetPlayerTwoHitByEnemyTeam());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
+	                        _playerOneRespawnResource,
+	                        _playerTwoRespawnResource,
+	                        _enemyRespawnResource);
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 220}, color, "TANK KILLS");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerOne());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 220}, color, _statistics->GetEnemyDiedByPlayerTwo());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 220}, color, _statistics->GetPlayerDiedByEnemyTeam());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
+	                        _playerOneRespawnResource,
+	                        _playerTwoRespawnResource,
+	                        _enemyRespawnResource);
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 240}, color, "ENEMY HIT BY");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 240}, color, _statistics->GetEnemyHitByPlayerOne());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 240}, color, _statistics->GetEnemyHitByPlayerTwo());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 240}, color, _statistics->GetEnemyHitByFriendlyFire());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET",
+	                        _statistics->GetBulletHitByPlayerOne(),
+	                        _statistics->GetBulletHitByPlayerTwo(),
+	                        _statistics->GetBulletHitByEnemy());
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 260}, color, "FRIEND HIT FRIEND");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 260}, color, _statistics->GetPlayerOneHitFriendlyFire());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 260}, color, _statistics->GetPlayerTwoHitFriendlyFire());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 260}, color, _statistics->GetEnemyHitByFriendlyFire());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 200}, color, "PLAYER HIT BY ENEMY",
+	                        _statistics->GetPlayerOneHitByEnemyTeam(),
+	                        _statistics->GetPlayerTwoHitByEnemyTeam());
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 280}, color, "FRIEND KILLS FRIEND");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 280}, color, _statistics->GetPlayerOneDiedByFriendlyFire());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 280}, color, _statistics->GetPlayerTwoDiedByFriendlyFire());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 280}, color, _statistics->GetEnemyDiedByFriendlyFire());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 220}, color, "TANK KILLS",
+	                        _statistics->GetEnemyDiedByPlayerOne(),
+	                        _statistics->GetEnemyDiedByPlayerTwo(),
+	                        _statistics->GetPlayerDiedByEnemyTeam());
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKS KILLS");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerOne());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByPlayerTwo());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 300}, color, _statistics->GetBrickWallDiedByEnemyTeam());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 240}, color, "ENEMY HIT BY",
+	                        _statistics->GetEnemyHitByPlayerOne(),
+	                        _statistics->GetEnemyHitByPlayerTwo(),
+	                        _statistics->GetEnemyHitByFriendlyFire());
 
-	TextToRender({.x = pos.x - 130, .y = pos.y + 320}, color, "STEEL KILLS");
-	TextToRender({.x = pos.x + 130, .y = pos.y + 320}, color, _statistics->GetSteelWallDiedByPlayerOne());
-	TextToRender({.x = pos.x + 180, .y = pos.y + 320}, color, _statistics->GetSteelWallDiedByPlayerTwo());
-	TextToRender({.x = pos.x + 235, .y = pos.y + 320}, color, _statistics->GetSteelWallDiedByEnemyTeam());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 260}, color, "FRIEND HIT FRIEND",
+	                        _statistics->GetPlayerOneHitFriendlyFire(),
+	                        _statistics->GetPlayerTwoHitFriendlyFire(),
+	                        _statistics->GetEnemyHitByFriendlyFire());
+
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 280}, color, "FRIEND KILLS FRIEND",
+	                        _statistics->GetPlayerOneDiedByFriendlyFire(),
+	                        _statistics->GetPlayerTwoDiedByFriendlyFire(),
+	                        _statistics->GetEnemyDiedByFriendlyFire());
+
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKS KILLS",
+	                        _statistics->GetBrickWallDiedByPlayerOne(),
+	                        _statistics->GetBrickWallDiedByPlayerTwo(),
+	                        _statistics->GetBrickWallDiedByEnemyTeam());
+
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 320}, color, "STEEL KILLS",
+	                        _statistics->GetSteelWallDiedByPlayerOne(),
+	                        _statistics->GetSteelWallDiedByPlayerTwo(),
+	                        _statistics->GetSteelWallDiedByEnemyTeam());
+}
+
+void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text, const int player1,
+                                   const int player2, const int enemy) const
+{
+	std::ostringstream textStream;
+	textStream << std::left
+			<< std::setw(22) << text
+			<< std::setw(4) << player1
+			<< std::setw(4) << player2;
+
+	if (enemy != -1)
+	{
+		textStream << std::setw(4) << enemy;
+	}
+
+	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+}
+
+void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text,
+                                   const std::string& text2, const std::string& text3) const
+{
+	std::ostringstream textStream;
+
+	textStream << std::left
+			<< std::setw(22)
+			<< std::setw(4) << text
+			<< std::setw(4) << text2
+			<< std::setw(4) << text3;
+
+	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
 }
 
 void Menu::DrawMenuText(const UPoint menuBackgroundPos) const
 {
-	const Point pos = {.x = static_cast<int>(menuBackgroundPos.x) - 350,
+	const Point pos = {.x = static_cast<int>(menuBackgroundPos.x) - 375,
 	                   .y = static_cast<int>(menuBackgroundPos.y) - 350};
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender({.x = pos.x, .y = pos.y - 50}, color,
-	             _selectedGameMode == OnePlayer ? ">ONE PLAYER" : "ONE PLAYER");
+	             _selectedGameMode == OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
 	TextToRender({.x = pos.x, .y = pos.y - 25}, color,
-	             _selectedGameMode == TwoPlayers ? ">TWO PLAYER" : "TWO PLAYER");
+	             _selectedGameMode == TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
 	TextToRender({.x = pos.x, .y = pos.y}, color,
-	             _selectedGameMode == CoopWithBot ? ">COOP WITH BOT" : "COOP WITH BOT");
+	             _selectedGameMode == CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
 	TextToRender({.x = pos.x, .y = pos.y + 25}, color,
-	             _selectedGameMode == PlayAsHost ? ">PLAY AS HOST" : "PLAY AS HOST");
+	             _selectedGameMode == PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
 	TextToRender({.x = pos.x, .y = pos.y + 50}, color,
-	             _selectedGameMode == PlayAsClient ? ">PLAY AS CLIENT" : "PLAY AS CLIENT");
+	             _selectedGameMode == PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(pos);
+}
+
+void Menu::OnRespawnResourceChanged(const std::string& author, const std::string& fraction, const int respawnResource)
+{
+	if (fraction == "EnemyTeam")
+	{
+		_enemyRespawnResource = respawnResource;
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1")
+		{
+			_playerOneRespawnResource = respawnResource;
+		}
+		else if (author == "Player2")
+		{
+			_playerTwoRespawnResource = respawnResource;
+		}
+	}
 }

@@ -44,9 +44,11 @@ class EventSystem final
 		Event<const int>,// respawn resource changed // send bonusDeSpawn
 		Event<const int, const int>,// received health changed
 		Event<const std::string&>,// send tankDied, send/receive onGrenade
-		Event<const std::string, const int>,// serverSend health changed
+		Event<const std::string&, const int>,// serverSend health changed
 		Event<const std::string&, const std::string&>,// statistics, bonus
-		Event<const std::string&, const std::string&, std::chrono::milliseconds>,// bonus with duration
+		Event<const std::string&, const std::string&, const int>,// serverSend_RespawnResourceChanged
+		Event<const std::string&, const std::string&, const std::string&>,// send statistics
+		Event<const std::string&, const std::string&, const std::chrono::milliseconds>,// bonus with duration
 		Event<const GameMode>,// gameMode switch
 		Event<const bool>// pause status
 	>;

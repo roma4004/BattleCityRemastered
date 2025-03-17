@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../headers/Direction.h"
-#include "../headers/EventSystem.h"
-#include "../headers/Point.h"
-#include "../headers/bonuses/BonusTypeId.h" //TODO: move enum files to enum folders
+#include "../../headers/Direction.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/Point.h"
+#include "../../headers/bonuses/BonusTypeId.h" //TODO: move enum files to enum folders
 
 #include <memory>
 #include <string>
@@ -22,9 +22,11 @@ struct ClientData final
 	void serialize(Archive& ar, unsigned int version);
 
 	int health{-1};
+	int respawnResource{-1};
 	int id{-1};
 	BonusTypeId typeId{None};
 	std::string objectName;
+	std::string eventType;
 	std::string eventName;
 	std::string fraction;
 	std::vector<std::string> names;

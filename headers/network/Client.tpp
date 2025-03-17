@@ -1,12 +1,14 @@
 #pragma once
 
 template<class Archive>
-void ServerData::serialize(Archive& ar, const unsigned int /*version*/)
+void ClientData::serialize(Archive& ar, const unsigned int /*version*/)
 {
 	ar & health;
+	ar & respawnResource;
 	ar & id;
 	ar & typeId;
 	ar & objectName;
+	ar & eventType;
 	ar & eventName;
 	ar & fraction;
 	ar & names;

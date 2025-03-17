@@ -25,6 +25,11 @@ TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared
 
 TankSpawner::~TankSpawner()
 {
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&>("ServerSend_TankDied", _name);
+	}
+
 	Unsubscribe();
 }
 
@@ -104,6 +109,11 @@ void TankSpawner::SubscribeTankDied()
 
 void TankSpawner::SubscribeAsClient()
 {
+	_events->AddListener<const std::string&>("ClientReceived_TankSpawn", _name, [this](const std::string& whoSpawn)
+	{
+		this->OnTankSpawn(whoSpawn);
+	});
+
 	_events->AddListener<const std::string&, const std::string&>(
 			"ClientReceived_OnTank", _name, [this](const std::string& author, const std::string& fraction)
 			{
@@ -114,6 +124,13 @@ void TankSpawner::SubscribeAsClient()
 			"ClientReceived_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
 			{
 				this->OnBonusGrenade(author, fraction);
+			});
+
+	_events->AddListener<const std::string&, const std::string&, const int>(
+			"ClientReceived_RespawnResourceChanged", _name,
+			[this](const std::string& author, const std::string& fraction, const int respawnResource)
+			{
+				this->OnRespawnResourceChanged(author, fraction, respawnResource);
 			});
 }
 
@@ -142,6 +159,26 @@ void TankSpawner::OnBonusGrenade(const std::string& author, const std::string& f
 	else if (fraction == "EnemyTeam")
 	{
 		DecreaseEnemyRespawnResource();
+	}
+}
+
+void TankSpawner::OnRespawnResourceChanged(const std::string& author, const std::string& fraction,
+                                           const int respawnResource)
+{
+	if (fraction == "EnemyTeam")
+	{
+		_enemyRespawnResource = respawnResource;
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1")
+		{
+			_playerOneRespawnResource = respawnResource;
+		}
+		else if (author == "Player2")
+		{
+			_playerTwoRespawnResource = respawnResource;
+		}
 	}
 }
 
@@ -215,6 +252,8 @@ void TankSpawner::UnsubscribeAsClient() const
 {
 	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_" + _name + "OnTank", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnGrenade", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const int>(
+			"ClientReceived_RespawnResourceChanged", _name);
 }
 
 void TankSpawner::UnsubscribeBonus() const
@@ -438,7 +477,6 @@ void TankSpawner::RespawnEnemyTanks(const int index)
 	{
 		_enemyOneNeedRespawn = false;
 		const auto name = "Enemy" + std::to_string(index);
-		_events->EmitEvent<const std::string&>("ServerSend_TankDied", name);
 	}
 }
 
@@ -459,7 +497,6 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 		else
 		{
 			_playerOneNeedRespawn = false;
-			_events->EmitEvent<const std::string&>("ServerSend_TankDied", name);
 		}
 	}
 	else if (index == 2)
@@ -471,7 +508,6 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 		else
 		{
 			_playerTwoNeedRespawn = false;
-			_events->EmitEvent<const std::string&>("ServerSend_TankDied", name);
 		}
 	}
 }
@@ -548,16 +584,62 @@ void TankSpawner::DecreaseEnemyRespawnResource()
 {
 	--_enemyRespawnResource;
 	_events->EmitEvent<const int>("EnemyRespawnResourceChangedTo", _enemyRespawnResource);
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const int>(
+				"ServerSend_RespawnResourceChanged", "Enemy", "EnemyTeam", _enemyRespawnResource);
+	}
 }
 
 void TankSpawner::DecreasePlayerOneRespawnResource()
 {
 	--_playerOneRespawnResource;
 	_events->EmitEvent<const int>("Player1RespawnResourceChangedTo", _playerOneRespawnResource);
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const int>(
+				"ServerSend_RespawnResourceChanged", "Player1", "PlayerTeam", _playerOneRespawnResource);
+	}
 }
 
 void TankSpawner::DecreasePlayerTwoRespawnResource()
 {
 	--_playerTwoRespawnResource;
 	_events->EmitEvent<const int>("Player2RespawnResourceChangedTo", _playerTwoRespawnResource);
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const int>(
+				"ServerSend_RespawnResourceChanged", "Player2", "PlayerTeam", _playerTwoRespawnResource);
+	}
+}
+
+void TankSpawner::OnTankSpawn(const std::string& whoSpawn)
+{
+	if (whoSpawn == "Enemy1")
+	{
+		this->_enemyOneNeedRespawn = true;
+	}
+	else if (whoSpawn == "Enemy2")
+	{
+		this->_enemyTwoNeedRespawn = true;
+	}
+	else if (whoSpawn == "Enemy3")
+	{
+		this->_enemyThreeNeedRespawn = true;
+	}
+	else if (whoSpawn == "Enemy4")
+	{
+		this->_enemyFourNeedRespawn = true;
+	}
+	else if (whoSpawn == "Player1")
+	{
+		this->_playerOneNeedRespawn = true;
+	}
+	else if (whoSpawn == "Player2")
+	{
+		this->_playerTwoNeedRespawn = true;
+	}
 }

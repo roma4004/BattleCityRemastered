@@ -58,7 +58,7 @@ void GameStatistics::SubscribeHost()
 	_events->AddListener<const std::string&, const std::string&>(
 			"Player1Died",
 			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); });
+			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); }); //TODO:fix replication bug
 
 	_events->AddListener<const std::string&, const std::string&>(
 			"CoopBot1Hit",
@@ -100,9 +100,11 @@ void GameStatistics::SubscribeHost()
 
 void GameStatistics::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&, const std::string&>(
-			"ClientReceived_Statistics_BrickWallDied", _name,
-			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&, const std::string&>("ClientReceived_Statistics", _name,
+		[this](const std::string& type, const std::string& author, const std::string& fraction)
+		{
+			ClientGateway(type, author, fraction);
+		});
 }
 
 void GameStatistics::Unsubscribe() const
@@ -137,7 +139,48 @@ void GameStatistics::UnsubscribeAsHost() const
 
 void GameStatistics::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_Statistics_BrickWallDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::string&>(
+			"ClientReceived_Statistics", _name);
+}
+
+void GameStatistics::ClientGateway(const std::string& type, const std::string& author, const std::string& fraction)
+{
+	if (type == "BulletHit")
+	{
+		BulletHit(author, fraction);
+	}
+	else if (type == "EnemyHit")
+	{
+		EnemyHit(author, fraction);
+	}
+	else if (type == "PlayerOneHit")
+	{
+		PlayerOneHit(author, fraction);
+	}
+	else if (type == "PlayerTwoHit")
+	{
+		PlayerTwoHit(author, fraction);
+	}
+	else if (type == "EnemyDied")
+	{
+		EnemyDied(author, fraction);
+	}
+	else if (type == "PlayerOneDied")
+	{
+		PlayerOneDied(author, fraction);
+	}
+	else if (type == "PlayerTwoDied")
+	{
+		PlayerTwoDied(author, fraction);
+	}
+	else if (type == "BrickWallDied")
+	{
+		BrickWallDied(author, fraction);
+	}
+	else if (type == "SteelWallDied")
+	{
+		SteelWallDied(author, fraction);
+	}
 }
 
 void GameStatistics::BulletHit(const std::string& author, const std::string& fraction)
@@ -156,6 +199,12 @@ void GameStatistics::BulletHit(const std::string& author, const std::string& fra
 		{
 			++_bulletHitByPlayerTwo;
 		}
+	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "BulletHit", author, fraction);
 	}
 }
 
@@ -176,6 +225,12 @@ void GameStatistics::EnemyHit(const std::string& author, const std::string& frac
 			++_enemyHitByPlayerTwo;
 		}
 	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "EnemyHit", author, fraction);
+	}
 }
 
 void GameStatistics::PlayerOneHit(const std::string& author, const std::string& fraction)
@@ -191,6 +246,12 @@ void GameStatistics::PlayerOneHit(const std::string& author, const std::string& 
 			++_playerOneHitFriendlyFire;
 		}
 	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "PlayerOneHit", author, fraction);
+	}
 }
 
 void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& fraction)
@@ -205,6 +266,12 @@ void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& 
 		{
 			++_playerTwoHitFriendlyFire;
 		}
+	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "PlayerTwoHit", author, fraction);
 	}
 }
 
@@ -225,6 +292,12 @@ void GameStatistics::EnemyDied(const std::string& author, const std::string& fra
 			++_enemyDiedByPlayerTwo;
 		}
 	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "EnemyDied", author, fraction);
+	}
 }
 
 void GameStatistics::PlayerOneDied(const std::string& author, const std::string& fraction)
@@ -240,6 +313,12 @@ void GameStatistics::PlayerOneDied(const std::string& author, const std::string&
 			++_playerOneDiedByFriendlyFire;
 		}
 	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "PlayerOneDied", author, fraction);
+	}
 }
 
 void GameStatistics::PlayerTwoDied(const std::string& author, const std::string& fraction)
@@ -254,6 +333,12 @@ void GameStatistics::PlayerTwoDied(const std::string& author, const std::string&
 		{
 			++_playerTwoDiedByFriendlyFire;
 		}
+	}
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "PlayerTwoDied", author, fraction);
 	}
 }
 
@@ -273,12 +358,12 @@ void GameStatistics::BrickWallDied(const std::string& author, const std::string&
 		{
 			++_brickWallDiedByPlayerTwo;
 		}
+	}
 
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const std::string&>(
-					"ServerSend_Statistics_BrickWallDied", author, fraction);
-		}
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "BrickWallDied", author, fraction);
 	}
 }
 
@@ -298,12 +383,12 @@ void GameStatistics::SteelWallDied(const std::string& author, const std::string&
 		{
 			++_steelWallDiedByPlayerTwo;
 		}
+	}
 
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const std::string&>(
-					"ServerSend_Statistics_SteelWallDied", author, fraction);
-		}
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ServerSend_Statistics", "SteelWallDied", author, fraction);
 	}
 }
 

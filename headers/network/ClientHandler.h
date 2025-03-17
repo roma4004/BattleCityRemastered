@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Client.h"
-#include "EventSystem.h"
-#include "interfaces/INetworkNode.h"
+#include "../EventSystem.h"
+#include "../interfaces/INetworkNode.h"
 
 #include <thread>
 

@@ -4,6 +4,7 @@
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/obstacles/BrickWall.h"
+#include "../headers/obstacles/SteelWall.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
@@ -414,6 +415,59 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 1);
 }
 
+TEST_F(StatisticsTest, SteelWallDiedByEnemy)
+{
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
+	                                 .h = _bulletHeight};
+	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _window, _events, 0, _gameMode));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
+					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0, 3));
+
+	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0);
+
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 1);
+}
+
+TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
+{
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
+	                                 .h = _bulletHeight};
+	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _window, _events, 0, _gameMode));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
+					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0, 3));
+
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0);
+
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 1);
+}
+
+TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
+{
+	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	const ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	_allObjects.emplace_back(std::make_shared<SteelWall>(brickRect, _window, _events, 0, _gameMode));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(
+					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
+					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0, 3));
+
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0);
+
+	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 1);
+}
+
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
 	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
@@ -503,5 +557,3 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
 }
-
-//TODO: write test that check count destroyed SteelWall by Bullet with _tier > 2

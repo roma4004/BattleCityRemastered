@@ -137,14 +137,11 @@
   <ItemGroup>
     <ClCompile Include="source\BaseObj.cpp" />
     <ClCompile Include="source\BulletPool.cpp" />
-    <ClCompile Include="source\Client.cpp" />
-    <ClCompile Include="source\ClientHandler.cpp" />
     <ClCompile Include="source\GameStatistics.cpp" />
     <ClCompile Include="source\LineOfSight.cpp" />
     <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\Menu.cpp" />
     <ClCompile Include="source\ObjRectangle.cpp" />
-    <ClCompile Include="source\Server.cpp" />
     <ClCompile Include="source\application\ConfigFailure.cpp" />
     <ClCompile Include="source\application\ConfigSuccess.cpp" />
     <ClCompile Include="source\application\GameFailure.cpp" />
@@ -171,6 +168,10 @@
     <ClCompile Include="source\input\InputProviderForPlayerTwo.cpp" />
     <ClCompile Include="source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\network\Client.cpp" />
+    <ClCompile Include="source\network\ClientHandler.cpp" />
+    <ClCompile Include="source\network\Server.cpp" />
+    <ClCompile Include="source\network\ServerHandler.cpp" />
     <ClCompile Include="source\obstacles\BrickWall.cpp" />
     <ClCompile Include="source\obstacles\FortressWall.cpp" />
     <ClCompile Include="source\obstacles\Obstacle.cpp" />
@@ -186,7 +187,6 @@
     <ClCompile Include="source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\pawns\TankSpawner.cpp" />
-    <ClCompile Include="source\ServerHandler.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
@@ -194,15 +194,11 @@
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\BulletPool.h" />
     <ClInclude Include="headers\Circle.h" />
-    <ClInclude Include="headers\Client.h" />
-    <ClInclude Include="headers\Client.tpp" />
-    <ClInclude Include="headers\ClientHandler.h" />
     <ClInclude Include="headers\Direction.h" />
     <ClInclude Include="headers\EventSystem.h" />
     <ClInclude Include="headers\EventSystem.tpp" />
     <ClInclude Include="headers\GameMode.h" />
     <ClInclude Include="headers\GameStatistics.h" />
-    <ClInclude Include="headers\interfaces\INetworkNode.h" />
     <ClInclude Include="headers\LineOfSight.h" />
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\Menu.h" />
@@ -211,8 +207,6 @@
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Point.tpp" />
-    <ClInclude Include="headers\Server.h" />
-    <ClInclude Include="headers\Server.tpp" />
     <ClInclude Include="headers\application\ConfigFailure.h" />
     <ClInclude Include="headers\application\ConfigSuccess.h" />
     <ClInclude Include="headers\application\GameFailure.h" />
@@ -246,11 +240,18 @@
     <ClInclude Include="headers\interfaces\IHealthBar.h" />
     <ClInclude Include="headers\interfaces\IInputProvider.h" />
     <ClInclude Include="headers\interfaces\IMoveBeh.h" />
+    <ClInclude Include="headers\interfaces\INetworkNode.h" />
     <ClInclude Include="headers\interfaces\IObstacle.h" />
     <ClInclude Include="headers\interfaces\IPickupableBonus.h" />
     <ClInclude Include="headers\interfaces\ISendableDamageStatistics.h" />
     <ClInclude Include="headers\interfaces\IShootable.h" />
     <ClInclude Include="headers\interfaces\ITickUpdatable.h" />
+    <ClInclude Include="headers\network\Client.h" />
+    <ClInclude Include="headers\network\Client.tpp" />
+    <ClInclude Include="headers\network\ClientHandler.h" />
+    <ClInclude Include="headers\network\Server.h" />
+    <ClInclude Include="headers\network\Server.tpp" />
+    <ClInclude Include="headers\network\ServerHandler.h" />
     <ClInclude Include="headers\obstacles\BrickWall.h" />
     <ClInclude Include="headers\obstacles\FortressWall.h" />
     <ClInclude Include="headers\obstacles\Obstacle.h" />
@@ -268,14 +269,20 @@
     <ClInclude Include="headers\pawns\PlayerTwo.h" />
     <ClInclude Include="headers\pawns\Tank.h" />
     <ClInclude Include="headers\pawns\TankSpawner.h" />
-    <ClInclude Include="headers\ServerHandler.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\Fonts\bc7x7.ttf" />
+    <Content Include="Resources\Fonts\backup\bc7x7.ttf" />
+    <Content Include="Resources\Fonts\backup\M10 battle cities.ttf" />
+    <Content Include="Resources\Fonts\info.txt" />
+    <Content Include="Resources\Fonts\misc\FONTLOG-e017.txt" />
+    <Content Include="Resources\Fonts\misc\LICENSE-65f9.txt" />
+    <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
+    <Content Include="Resources\Fonts\info.txt" />
+    <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BattleCityRemastered.rc" />
@@ -284,7 +291,7 @@
     <Image Include="Resources\Images\Title.png" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="Resources\Fonts\bc7x7.ttf" />
+    <Font Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="Resources\Sounds\levelStarted.wav" />

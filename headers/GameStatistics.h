@@ -52,6 +52,7 @@ public:
 	void Subscribe();
 	void SubscribeHost();
 	void SubscribeAsClient();
+	void ClientGateway(const std::string& type, const std::string& author, const std::string& fraction);
 
 	void Unsubscribe() const;
 	void UnsubscribeAsHost() const;

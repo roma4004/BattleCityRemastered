@@ -150,6 +150,6 @@ void Enemy::TakeDamage(const int damage)
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string, const int>("ServerSend_Health", GetName(), GetHealth());
+		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }

@@ -1,4 +1,4 @@
-#include "../headers/Client.h"
+#include "../../headers/network/Client.h"
 
 #include <fstream>
 #include <iostream>
@@ -91,6 +91,11 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent<const int>("ClientReceived_" + data.objectName + data.eventName, data.health);
 			}
+			else if (data.eventName == "RespawnResourceChanged")
+			{
+				events->EmitEvent<const std::string&, const std::string&, const int>(
+					"ClientReceived_" + data.eventName, data.objectName, data.fraction, data.respawnResource);
+			}
 			else if (data.eventName == "Dispose")
 			{
 				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
@@ -118,8 +123,14 @@ void Client::ReadResponse()
 			}
 			else if (data.eventName == "TankDied")
 			{
-				events->EmitEvent<const std::string&>("ClientReceived_" + data.objectName + data.eventName,
-				                                      data.objectName);//TODO: remove whoDied argument not needed
+				events->EmitEvent<const std::string&>(
+						"ClientReceived_" + data.objectName + data.eventName, data.objectName);
+				//TODO: remove whoDied argument not needed
+			}
+			else if (data.eventName == "TankSpawn")
+			{
+				events->EmitEvent<const std::string&>(
+						"ClientReceived_" + data.objectName + data.eventName, data.objectName);
 			}
 			else if (data.eventName == "OnHelmetActivate")
 			{
@@ -137,6 +148,11 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent<const std::string&, const std::string&>(
 						"ClientReceived_" + data.eventName, data.objectName, data.fraction);
+			}
+			else if (data.eventType == "Statistics")
+			{
+				events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+						"ClientReceived_" + data.eventType, data.eventName, data.objectName, data.fraction);
 			}
 			else if (data.eventName == "OnGrenade")
 			{

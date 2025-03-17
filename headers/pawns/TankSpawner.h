@@ -45,6 +45,7 @@ class TankSpawner final
 	void Subscribe();
 	void SubscribeAsClient();
 	void SubscribeBonus();
+	void OnRespawnResourceChanged(const std::string& author, const std::string& fraction, int respawnResource);
 	void SubscribeTankSpawn();
 	void SubscribeTankDied();
 
@@ -77,6 +78,7 @@ class TankSpawner final
 	void DecreaseEnemyRespawnResource();
 	void DecreasePlayerOneRespawnResource();
 	void DecreasePlayerTwoRespawnResource();
+	void OnTankSpawn(const std::string& whoSpawn);
 
 public:
 	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,

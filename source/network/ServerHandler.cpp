@@ -1,5 +1,5 @@
-#include "../headers/ServerHandler.h"
-#include "../headers/Server.h"
+#include "../../headers/network/ServerHandler.h"
+#include "../../headers/network/Server.h"
 
 #include <iostream>
 #include <boost/asio/io_context.hpp>

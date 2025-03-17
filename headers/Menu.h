@@ -37,9 +37,14 @@ class Menu final
 	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
 	void RenderStatistics(Point pos) const;
+	void RenderTextWithAlignment(Point pos, SDL_Color color, const std::string& text, int player1, int player2,
+	                             int enemy = -1) const;
+	void RenderTextWithAlignment(Point pos, SDL_Color color, const std::string& text, const std::string& text2,
+	                             const std::string& text3) const;
 
 	void BlendBackgroundToWindowBuffer();
 	void DrawMenuText(UPoint menuBackgroundPos) const;
+	void OnRespawnResourceChanged(const std::string& author, const std::string& fraction, int respawnResource);
 
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
