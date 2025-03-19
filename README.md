@@ -17,11 +17,17 @@ Already done:
 * pickupable bonuses (spawn every 60sec in random location) from the original game like so:
   * Grenade(destroy enemy team tank),
   * Helmet(temporary invincibility),
-  * Shovel(temporarily turns brick walls around the fortress to stone and repair broken),
-  * Star(increases tank power),
+  * Shovel(temporarily turns brick walls around the fortress to steel and repair destroyed parts),
+  * Star(increases tank power, when pick up more than 2 can destroy steel walls),
   * Tank(extra life),
   * Timer(freeze enemy team),
 * all bonuses also can be pickupable for an enemy team with the opposite effect.
+
+* Multiplayer prototype (still in PR) with replication all events, separated process, 
+  * just chose play as host in one game and play as client in other game
+  * auto pause on network game synchronize start, just unpause host to start
+* Replicate all visual events (move, shot, died, spawn, statistics)
+* All logic compute in host and miroring to client
 
 Used technologies:
 * C++20,
@@ -35,10 +41,10 @@ Used design patterns:
 * observer, 
 * strategy, 
 * IoC,
-* Object Pool
+* щbject Pool
 
 TODO roadmap: 
-* network multiplayer (in progress, ~95%)
+* network multiplayer (in progress, ~99%)
 * use SDL_Image for texture (in progress, one logo in menu),
 * SDL_Mixer for sound (in progress, one start music),
 * Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
