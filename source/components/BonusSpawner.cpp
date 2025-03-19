@@ -1,6 +1,4 @@
-#include "../../headers/bonuses/BonusSpawner.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
+#include "../../headers/components/BonusSpawner.h"
 #include "../../headers/application/Window.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
@@ -8,7 +6,9 @@
 #include "../../headers/bonuses/BonusStar.h"
 #include "../../headers/bonuses/BonusTank.h"
 #include "../../headers/bonuses/BonusTimer.h"
-#include "../../headers/bonuses/BonusType.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/BonusType.h"
+#include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 

@@ -1,9 +1,9 @@
-#include "../headers/Menu.h"
-#include "../headers/EventSystem.h"
-#include "../headers/GameMode.h"
-#include "../headers/GameStatistics.h"
-#include "../headers/application/Window.h"
-#include "../headers/utils/PixelUtils.h"
+#include "../../headers/components/Menu.h"
+#include "../../headers/application/Window.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/components/GameStatistics.h"
+#include "../../headers/enums/GameMode.h"
+#include "../../headers/utils/PixelUtils.h"
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
            std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,

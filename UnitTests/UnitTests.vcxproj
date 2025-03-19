@@ -37,9 +37,12 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
-    <ClCompile Include="..\source\BulletPool.cpp" />
-    <ClCompile Include="..\source\GameStatistics.cpp" />
-    <ClCompile Include="..\source\LineOfSight.cpp" />
+    <ClCompile Include="..\source\components\BonusSpawner.cpp" />
+    <ClCompile Include="..\source\components\BulletPool.cpp" />
+    <ClCompile Include="..\source\components\GameStatistics.cpp" />
+    <ClCompile Include="..\source\components\LineOfSight.cpp" />
+    <ClCompile Include="..\source\components\ObstacleSpawner.cpp" />
+    <ClCompile Include="..\source\components\TankSpawner.cpp" />
     <ClCompile Include="..\source\ObjRectangle.cpp" />
     <ClCompile Include="..\source\Obstacles\BrickWall.cpp" />
     <ClCompile Include="..\source\Obstacles\SteelWall.cpp" />
@@ -55,7 +58,6 @@
     <ClCompile Include="..\source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="..\source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="..\source\bonuses\BonusShovel.cpp" />
-    <ClCompile Include="..\source\bonuses\BonusSpawner.cpp" />
     <ClCompile Include="..\source\bonuses\BonusStar.cpp" />
     <ClCompile Include="..\source\bonuses\BonusStatus.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
@@ -67,7 +69,6 @@
     <ClCompile Include="..\source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
     <ClCompile Include="..\source\obstacles\Obstacle.cpp" />
-    <ClCompile Include="..\source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\pawns\Bot.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
     <ClCompile Include="..\source\pawns\CoopBot.cpp" />
@@ -76,7 +77,6 @@
     <ClCompile Include="..\source\pawns\PlayerOne.cpp" />
     <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
-    <ClCompile Include="..\source\pawns\TankSpawner.cpp" />
     <ClCompile Include="BonusTests.cpp" />
     <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />

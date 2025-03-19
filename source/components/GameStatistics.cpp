@@ -1,6 +1,6 @@
-#include "../headers/GameStatistics.h"
-#include "../headers/EventSystem.h"
-#include "../headers/GameMode.h"
+#include "../../headers/components/GameStatistics.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
 
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}

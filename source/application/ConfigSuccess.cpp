@@ -1,8 +1,8 @@
 #include "../../headers/application/ConfigSuccess.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameStatistics.h"
-#include "../../headers/Menu.h"
 #include "../../headers/application/GameSuccess.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/components/GameStatistics.h"
+#include "../../headers/components/Menu.h"
 
 ConfigSuccess::ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,

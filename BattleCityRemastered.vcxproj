@@ -136,11 +136,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\BaseObj.cpp" />
-    <ClCompile Include="source\BulletPool.cpp" />
-    <ClCompile Include="source\GameStatistics.cpp" />
-    <ClCompile Include="source\LineOfSight.cpp" />
+    <ClCompile Include="source\components\BonusSpawner.cpp" />
+    <ClCompile Include="source\components\BulletPool.cpp" />
+    <ClCompile Include="source\components\GameStatistics.cpp" />
+    <ClCompile Include="source\components\LineOfSight.cpp" />
+    <ClCompile Include="source\components\Menu.cpp" />
+    <ClCompile Include="source\components\ObstacleSpawner.cpp" />
+    <ClCompile Include="source\components\TankSpawner.cpp" />
     <ClCompile Include="source\Map.cpp" />
-    <ClCompile Include="source\Menu.cpp" />
     <ClCompile Include="source\ObjRectangle.cpp" />
     <ClCompile Include="source\application\ConfigFailure.cpp" />
     <ClCompile Include="source\application\ConfigSuccess.cpp" />
@@ -157,7 +160,6 @@
     <ClCompile Include="source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="source\bonuses\BonusShovel.cpp" />
-    <ClCompile Include="source\bonuses\BonusSpawner.cpp" />
     <ClCompile Include="source\bonuses\BonusStar.cpp" />
     <ClCompile Include="source\bonuses\BonusStatus.cpp" />
     <ClCompile Include="source\bonuses\BonusTank.cpp" />
@@ -175,7 +177,6 @@
     <ClCompile Include="source\obstacles\BrickWall.cpp" />
     <ClCompile Include="source\obstacles\FortressWall.cpp" />
     <ClCompile Include="source\obstacles\Obstacle.cpp" />
-    <ClCompile Include="source\obstacles\ObstacleSpawner.cpp" />
     <ClCompile Include="source\obstacles\SteelWall.cpp" />
     <ClCompile Include="source\obstacles\WaterTile.cpp" />
     <ClCompile Include="source\pawns\Bot.cpp" />
@@ -186,22 +187,27 @@
     <ClCompile Include="source\pawns\PlayerOne.cpp" />
     <ClCompile Include="source\pawns\PlayerTwo.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
-    <ClCompile Include="source\pawns\TankSpawner.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\BaseObj.h" />
-    <ClInclude Include="headers\BulletPool.h" />
     <ClInclude Include="headers\Circle.h" />
-    <ClInclude Include="headers\Direction.h" />
-    <ClInclude Include="headers\EventSystem.h" />
-    <ClInclude Include="headers\EventSystem.tpp" />
-    <ClInclude Include="headers\GameMode.h" />
-    <ClInclude Include="headers\GameStatistics.h" />
-    <ClInclude Include="headers\LineOfSight.h" />
+    <ClInclude Include="headers\components\BonusSpawner.h" />
+    <ClInclude Include="headers\components\BulletPool.h" />
+    <ClInclude Include="headers\components\EventSystem.h" />
+    <ClInclude Include="headers\components\EventSystem.tpp" />
+    <ClInclude Include="headers\components\GameStatistics.h" />
+    <ClInclude Include="headers\components\LineOfSight.h" />
+    <ClInclude Include="headers\components\Menu.h" />
+    <ClInclude Include="headers\components\ObstacleSpawner.h" />
+    <ClInclude Include="headers\components\ObstacleSpawner.tpp" />
+    <ClInclude Include="headers\components\TankSpawner.h" />
+    <ClInclude Include="headers\enums\BonusType.h" />
+    <ClInclude Include="headers\enums\Direction.h" />
+    <ClInclude Include="headers\enums\GameMode.h" />
+    <ClInclude Include="headers\enums\ObstacleType.h" />
     <ClInclude Include="headers\Map.h" />
-    <ClInclude Include="headers\Menu.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\ObjRectangle.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
@@ -222,12 +228,10 @@
     <ClInclude Include="headers\bonuses\BonusGrenade.h" />
     <ClInclude Include="headers\bonuses\BonusHelmet.h" />
     <ClInclude Include="headers\bonuses\BonusShovel.h" />
-    <ClInclude Include="headers\bonuses\BonusSpawner.h" />
     <ClInclude Include="headers\bonuses\BonusStar.h" />
     <ClInclude Include="headers\bonuses\BonusStatus.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
-    <ClInclude Include="headers\bonuses\BonusType.h" />
     <ClInclude Include="headers\input\InputProviderForMenu.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerOne.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerOneNet.h" />
@@ -255,9 +259,6 @@
     <ClInclude Include="headers\obstacles\BrickWall.h" />
     <ClInclude Include="headers\obstacles\FortressWall.h" />
     <ClInclude Include="headers\obstacles\Obstacle.h" />
-    <ClInclude Include="headers\obstacles\ObstacleSpawner.h" />
-    <ClInclude Include="headers\obstacles\ObstacleSpawner.tpp" />
-    <ClInclude Include="headers\obstacles\ObstacleTypeId.h" />
     <ClInclude Include="headers\obstacles\SteelWall.h" />
     <ClInclude Include="headers\obstacles\WaterTile.h" />
     <ClInclude Include="headers\pawns\Bot.h" />
@@ -268,7 +269,6 @@
     <ClInclude Include="headers\pawns\PlayerOne.h" />
     <ClInclude Include="headers\pawns\PlayerTwo.h" />
     <ClInclude Include="headers\pawns\Tank.h" />
-    <ClInclude Include="headers\pawns\TankSpawner.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />

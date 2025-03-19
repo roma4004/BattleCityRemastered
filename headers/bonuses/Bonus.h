@@ -8,6 +8,7 @@
 #include <memory>
 
 enum GameMode : char8_t;
+enum BonusType : char8_t;
 class EventSystem;
 struct Window;
 
@@ -19,6 +20,7 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 
 protected:
 	GameMode _gameMode{};
+	BonusType _bonusType{};
 	std::chrono::milliseconds _duration{0};
 	std::chrono::milliseconds _lifetime{0};
 
@@ -28,12 +30,13 @@ protected:
 
 	void Draw() const override;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
 	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name, int id,
-	      GameMode gameMode);
+	      GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 
@@ -45,5 +48,4 @@ public:
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 
-	void PickUpBonus(const std::string& author, const std::string& fraction) override = 0;
 };

@@ -1,7 +1,7 @@
 #include "../../headers/obstacles/Obstacle.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
 #include "../../headers/application/Window.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
 
 Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, const std::shared_ptr<Window> window,
                    const std::string& name, const std::shared_ptr<EventSystem> events, const int id,

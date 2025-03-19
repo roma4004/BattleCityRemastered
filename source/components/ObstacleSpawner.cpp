@@ -1,10 +1,10 @@
-#include "../../headers/obstacles/ObstacleSpawner.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
+#include "../../headers/components/ObstacleSpawner.h"
 #include "../../headers/application/Window.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
+#include "../../headers/enums/ObstacleType.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/FortressWall.h"
-#include "../../headers/obstacles/ObstacleTypeId.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/obstacles/WaterTile.h"
 
@@ -49,9 +49,9 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const ObstacleTypeId, const int>(
+	_events->AddListener<const FPoint, const ObstacleType, const int>(
 			"ClientReceived_ObstacleSpawn", _name,
-			[this](const FPoint spawnPos, const ObstacleTypeId type, const int id)
+			[this](const FPoint spawnPos, const ObstacleType type, const int id)
 			{
 				const auto size = static_cast<float>(_obstacleSize);
 				const ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
@@ -78,7 +78,7 @@ void ObstacleSpawner::UnsubscribeAsClient() const
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
-void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleTypeId bonusType, const int id)
+void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType bonusType, const int id)
 {
 	if (id != -1)
 	{
@@ -111,6 +111,6 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleTypeI
 
 void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
 {
-	const auto obstacleType = static_cast<ObstacleTypeId>(_distSpawnType(_gen));
+	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
 	SpawnObstacle(rect, obstacleType);
 }

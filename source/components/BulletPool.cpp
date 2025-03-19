@@ -1,6 +1,6 @@
-#include "../headers/BulletPool.h"
-#include "../headers/EventSystem.h"
-#include "../headers/pawns/Bullet.h"
+#include "../../headers/components/BulletPool.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/pawns/Bullet.h"
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        std::shared_ptr<Window> window, const GameMode gameMode)
@@ -36,20 +36,21 @@ void BulletPool::Unsubscribe() const
 }
 
 void BulletPool::SpawnBullet(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
-                             const int health, const Direction direction, const float speed, std::string author,
+                             const int health, const Direction dir, const float speed, std::string author,
                              std::string fraction, const int tier)
 {
 	std::lock_guard<std::mutex> lock(_bulletsMutex);
 
 	if (_bullets.empty())
 	{
-		std::shared_ptr<BaseObj> bullet = std::shared_ptr<Bullet>(
-				new Bullet{rect, damage, aoeRadius, color, health, _window, direction, speed, _allObjects, _events,
-				           std::move(author), std::move(fraction), _gameMode, _lastId++, tier},
-				[this](Bullet* b)
-				{
-					ReturnBullet(b);
-				});
+		std::shared_ptr<BaseObj> bullet =
+				std::shared_ptr<Bullet>(
+						new Bullet{rect, damage, aoeRadius, color, health, _window, dir, speed, _allObjects, _events,
+						           std::move(author), std::move(fraction), _gameMode, _lastId++, tier},
+						[this](Bullet* b)
+						{
+							ReturnBullet(b);
+						});
 
 		_allObjects->emplace_back(bullet);
 
@@ -61,7 +62,7 @@ void BulletPool::SpawnBullet(const ObjRectangle& rect, const int damage, const d
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
 		bullet->Reset(
-				rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction), tier);
+				rect, damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction), tier);
 	}
 
 	_allObjects->emplace_back(bulletAsBase);

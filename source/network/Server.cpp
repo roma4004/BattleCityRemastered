@@ -1,5 +1,5 @@
 #include "../../headers/network/Server.h"
-#include "../../headers/EventSystem.h"
+#include "../../headers/components/EventSystem.h"
 
 #include <fstream>
 #include <iostream>

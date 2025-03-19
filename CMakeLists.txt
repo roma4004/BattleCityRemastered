@@ -242,11 +242,14 @@ include_directories(headers)
 
 add_executable(${PROJECT_NAME}
         source/BaseObj.cpp
-        source/BulletPool.cpp
-        source/GameStatistics.cpp
-        source/LineOfSight.cpp
+        source/components/BonusSpawner.cpp
+        source/components/BulletPool.cpp
+        source/components/GameStatistics.cpp
+        source/components/LineOfSight.cpp
+        source/components/Menu.cpp
+        source/components/ObstacleSpawner.cpp
+        source/components/TankSpawner.cpp
         source/Map.cpp
-        source/Menu.cpp
         source/ObjRectangle.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
@@ -263,7 +266,6 @@ add_executable(${PROJECT_NAME}
         source/bonuses/BonusGrenade.cpp
         source/bonuses/BonusHelmet.cpp
         source/bonuses/BonusShovel.cpp
-        source/bonuses/BonusSpawner.cpp
         source/bonuses/BonusStar.cpp
         source/bonuses/BonusStatus.cpp
         source/bonuses/BonusTank.cpp
@@ -281,7 +283,6 @@ add_executable(${PROJECT_NAME}
         source/obstacles/BrickWall.cpp
         source/obstacles/FortressWall.cpp
         source/obstacles/Obstacle.cpp
-        source/obstacles/ObstacleSpawner.cpp
         source/obstacles/SteelWall.cpp
         source/obstacles/WaterTile.cpp
         source/pawns/Bot.cpp
@@ -292,7 +293,6 @@ add_executable(${PROJECT_NAME}
         source/pawns/PlayerOne.cpp
         source/pawns/PlayerTwo.cpp
         source/pawns/Tank.cpp
-        source/pawns/TankSpawner.cpp
         source/utils/ColliderUtils.cpp
         source/utils/TimeUtils.cpp
 )

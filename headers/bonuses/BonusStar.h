@@ -16,8 +16,4 @@ public:
 	          GameMode gameMode);
 
 	~BonusStar() override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-
-	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 };

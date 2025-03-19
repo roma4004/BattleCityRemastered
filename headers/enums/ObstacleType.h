@@ -1,6 +1,6 @@
 #pragma once
 
-enum ObstacleTypeId : char8_t
+enum ObstacleType : char8_t
 {
 	None,
 

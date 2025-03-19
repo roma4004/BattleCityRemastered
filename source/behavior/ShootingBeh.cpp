@@ -1,7 +1,7 @@
 #include "../../headers/behavior/ShootingBeh.h"
-#include "../../headers/BulletPool.h"
-#include "../../headers/Direction.h"
 #include "../../headers/Point.h"
+#include "../../headers/components/BulletPool.h"
+#include "../../headers/enums/Direction.h"
 #include "../../headers/pawns/Tank.h"
 
 #include <functional>
@@ -76,27 +76,23 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	const FPoint bulletHalf = {.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
 	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
-	if (const Direction direction = tank->GetDirection();
-		direction == UP
-		&& tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
+	if (const Direction dir = tank->GetDirection();
+		dir == UP && tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHalf.y;
 	}
-	else if (direction == DOWN
-	         && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
+	else if (dir == DOWN && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY - bulletHalf.y;
 	}
-	else if (direction == LEFT
-	         && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+	else if (dir == LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankPos.x - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (direction == RIGHT
-	         && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
+	else if (dir == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
 		bulletRect.x = tankRightX - bulletHalf.x;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -124,11 +120,11 @@ void ShootingBeh::Shot() const
 	const int damage = tank->GetBulletDamage();
 	const double aoeRadius = tank->GetBulletDamageRadius();
 	constexpr int health = 1;
-	const Direction direction = tank->GetDirection();
+	const Direction dir = tank->GetDirection();
 	const float speed = tank->GetBulletSpeed();
 	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
 	_bulletPool->SpawnBullet(
-			rect, damage, aoeRadius, color, health, direction, speed, std::move(author), std::move(fraction), tier);
+			rect, damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction), tier);
 }

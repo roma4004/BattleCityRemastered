@@ -1,20 +1,20 @@
 ﻿#include "../../headers/pawns/Bullet.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
 #include "../../headers/Point.h"
 #include "../../headers/behavior/MoveLikeBulletBeh.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
 
 #include <string>
 
 Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
-               std::shared_ptr<Window> window, const Direction direction, const float speed,
+               std::shared_ptr<Window> window, const Direction dir, const float speed,
                std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
                std::string author, std::string fraction, const GameMode gameMode, int id, int tier)
 	: Pawn{rect,
 	       color,
 	       health,
 	       std::move(window),
-	       direction,
+	       dir,
 	       speed,
 	       allObjects,
 	       events,
@@ -22,12 +22,12 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	       id,
 	       "Bullet" + std::to_string(id),
 	       std::move(fraction),
-	       tier
+	       tier,
+		gameMode
 	  },
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
-	  _damage{damage},
-	  _gameMode{gameMode}
+	  _damage{damage}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
@@ -36,38 +36,21 @@ Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int
 	Subscribe();
 }
 
-Bullet::~Bullet() { Unsubscribe(); }
+Bullet::~Bullet()
+{
+	Unsubscribe();
+}
 
 void Bullet::Subscribe()
 {
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-
-	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
-}
-
-void Bullet::SubscribeAsHost()
-{
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	if (_gameMode == PlayAsClient)
 	{
-		this->TickUpdate(deltaTime);
-	});
+		SubscribeAsClient();
+	}
 }
 
 void Bullet::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const Direction>(
-			"ClientReceived_" + _name + "Pos", _name,
-			[this](const FPoint newPos, const Direction direction)
-			{
-				this->SetDirection(direction);
-				this->SetPos(newPos);
-			});
-
-	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
-	{
-		this->SetHealth(health);
-	});
-
 	_events->AddListener("ClientReceived_" + _name + "Dispose", _name, [this]()
 	{
 		this->SetIsAlive(false);
@@ -76,37 +59,39 @@ void Bullet::SubscribeAsClient()
 
 void Bullet::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _name);
-
-	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
-}
-
-void Bullet::UnsubscribeAsHost() const
-{
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	if (_gameMode == PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
 }
 
 void Bullet::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
-	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _name);
 }
 
-void Bullet::Disable() const { Unsubscribe(); }
+void Bullet::Disable() const
+{
+	Pawn::Unsubscribe();
+	Unsubscribe();
+}
 
-void Bullet::Enable() { Subscribe(); }
+void Bullet::Enable()
+{
+	Pawn::Subscribe();
+	Subscribe();
+}
 
 //TODO: call this from event subscription
 void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
-                   const float speed, const Direction direction, const int health, std::string author,
+                   const float speed, const Direction dir, const int health, std::string author,
                    std::string fraction, const int tier)
 {
 	SetShape(rect);
 	SetColor(color);
 	SetHealth(health);
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
-	SetDirection(direction);
+	SetDirection(dir);
 	_author = std::move(author);
 	_fraction = std::move(fraction);
 	_damage = damage;

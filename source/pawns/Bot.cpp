@@ -1,8 +1,8 @@
-#include "../../headers/Direction.h"
-#include "../../headers/LineOfSight.h"
 #include "../../headers/application/Window.h"
 #include "../../headers/behavior/MoveLikeAIBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/components/LineOfSight.h"
+#include "../../headers/enums/Direction.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/utils/TimeUtils.h"
@@ -11,14 +11,14 @@
 #include <chrono>
 
 Bot::Bot(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-         const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+         const Direction dir, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
          const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
          std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id, const int tier)
 	: Tank{rect,
 	       color,
 	       health,
 	       std::move(window),
-	       direction,
+	       dir,
 	       speed,
 	       allObjects,
 	       events,
@@ -160,8 +160,86 @@ bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::weak_p
 	return false;
 }
 
+void Bot::HandleLineOfSight(const Direction dir)
+{
+	LineOfSight lineOfSight(_shape, _window->size, _bulletSize, _allObjects, this);
+
+	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
+	if (HandleSideObstacles(UP, upSideObstacles))
+	{
+		return;
+	}
+
+	const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
+	if (HandleSideObstacles(LEFT, leftSideObstacles))
+	{
+		return;
+	}
+
+	const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
+	if (HandleSideObstacles(DOWN, downSideObstacles))
+	{
+		return;
+	}
+
+	const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
+	if (HandleSideObstacles(RIGHT, rightSideObstacles))
+	{
+		return;
+	}
+
+	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
+	// if (isBullet && isOpposite(bullet->GetDirection))
+	// {
+	// 	Shot();
+	// }
+
+	// fire on obstacle if player not found
+	if (dir == UP && !upSideObstacles.empty())
+	{
+		if (_nearestSeenObstacle = upSideObstacles.front().lock();
+			_nearestSeenObstacle)
+		{
+			_shootDistance = _shape.y - _nearestSeenObstacle->GetY();
+			_bulletOffset = _bulletSize.y;
+		}
+	}
+
+	if (dir == LEFT && !leftSideObstacles.empty())
+	{
+		if (_nearestSeenObstacle = leftSideObstacles.front().lock();
+			_nearestSeenObstacle)
+		{
+			_shootDistance = _shape.x - _nearestSeenObstacle->GetX();
+			_bulletOffset = _bulletSize.x;
+		}
+	}
+
+	if (dir == DOWN && !downSideObstacles.empty())
+	{
+		if (_nearestSeenObstacle = downSideObstacles.front().lock();
+			_nearestSeenObstacle)
+		{
+			_shootDistance = _nearestSeenObstacle->GetY() - _shape.y;
+			_bulletOffset = _bulletSize.y;
+		}
+	}
+
+	if (dir == RIGHT && !rightSideObstacles.empty())
+	{
+		if (_nearestSeenObstacle = rightSideObstacles.front().lock();
+			_nearestSeenObstacle)
+		{
+			_shootDistance = _nearestSeenObstacle->GetX() - _shape.x;
+			_bulletOffset = _bulletSize.x;
+		}
+	}
+}
+
 void Bot::TickUpdate(const float deltaTime)
 {
+	Tank::TickUpdate(deltaTime);
+
 	// change dir when random time span left
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{

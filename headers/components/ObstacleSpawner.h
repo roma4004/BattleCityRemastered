@@ -1,13 +1,13 @@
 #pragma once
 
-#include "FortressWall.h"
 #include "../interfaces/ITickUpdatable.h"
+#include "../obstacles/FortressWall.h"
 
 #include <memory>
 #include <random>
 #include <vector>
 
-enum ObstacleTypeId : char8_t;
+enum ObstacleType : char8_t;
 enum BonusType : char8_t;
 struct UPoint;
 struct ObjRectangle;
@@ -37,14 +37,15 @@ class ObstacleSpawner final : public ITickUpdatable
 
 	void TickUpdate(float deltaTime) override;
 
+	void SpawnRandomObstacle(ObjRectangle rect);
+
 public:
 	ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	                std::shared_ptr<Window> window, int sideBarWidth = 175, int obstacleSize = 36);
 
 	~ObstacleSpawner() override;
 
-	void SpawnRandomObstacle(ObjRectangle rect);
-	void SpawnObstacle(ObjRectangle rect, ObstacleTypeId bonusType, int id = -1);
+	void SpawnObstacle(ObjRectangle rect, ObstacleType bonusType, int id = -1);
 
 	template<typename TObstaclesType>
 	void SpawnObstacles(const ObjRectangle& rect, int id);

@@ -12,6 +12,14 @@ class Obstacle : public BaseObj
 {
 	std::shared_ptr<Window> _window{nullptr};
 
+	virtual void Subscribe();
+	virtual void SubscribeAsClient();
+
+	virtual void Unsubscribe() const;
+	virtual void UnsubscribeAsClient() const;
+
+	void Draw() const override;
+
 protected:
 	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -21,12 +29,4 @@ public:
 	         std::shared_ptr<EventSystem> events, int id, GameMode gameMode);
 
 	~Obstacle() override;
-
-	virtual void Subscribe();
-	virtual void SubscribeAsClient();
-
-	virtual void Unsubscribe() const;
-	virtual void UnsubscribeAsClient() const;
-
-	void Draw() const override;
 };

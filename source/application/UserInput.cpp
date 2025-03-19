@@ -1,6 +1,6 @@
 #include "../../headers/application/UserInput.h"
-#include "../../headers/EventSystem.h"
 #include "../../headers/application/Window.h"
+#include "../../headers/components/EventSystem.h"
 
 #include <iostream>
 
@@ -26,6 +26,34 @@ void UserInput::Subscribe()
 void UserInput::Unsubscribe() const
 {
 	_events->RemoveListener<const bool>("Pause_Status", _name);
+}
+
+void UserInput::WindowsMoveEvents(const SDL_Event& event)
+{
+	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_MOVED)
+	{
+		if (!_isMoving)
+		{
+			_isMoving = true;
+
+			_events->EmitEvent("Pause_Released");
+		}
+
+		_lastMoveEventTime = std::chrono::system_clock::now();
+	}
+}
+
+void UserInput::OnWindowMoveStop()
+{
+	if (_isMoving)
+	{
+		if (std::chrono::system_clock::now() - _lastMoveEventTime > _moveEndDelay)
+		{
+			_isMoving = false;
+
+			_events->EmitEvent("Pause_Released");
+		}
+	}
 }
 
 void UserInput::MouseEvents(const SDL_Event& event)
@@ -181,9 +209,12 @@ void UserInput::Update()
 			_isGameOver = true;
 		}
 
+		WindowsMoveEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);
 	}
+
+	OnWindowMoveStop();
 }
 
 bool UserInput::IsGameOver() const { return _isGameOver; }

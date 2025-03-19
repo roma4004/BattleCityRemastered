@@ -1,16 +1,16 @@
-#include "../headers/BulletPool.h"
-#include "../headers/Direction.h"
-#include "../headers/EventSystem.h"
-#include "../headers/GameMode.h"
 #include "../headers/application/Window.h"
-#include "../headers/bonuses/BonusSpawner.h"
-#include "../headers/bonuses/BonusType.h"
+#include "../headers/components/BonusSpawner.h"
+#include "../headers/components/BulletPool.h"
+#include "../headers/components/EventSystem.h"
+#include "../headers/components/TankSpawner.h"
+#include "../headers/enums/BonusType.h"
+#include "../headers/enums/Direction.h"
+#include "../headers/enums/GameMode.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/FortressWall.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PlayerOne.h"
-#include "../headers/pawns/TankSpawner.h"
 
 #include "gtest/gtest.h"
 
@@ -114,13 +114,14 @@ TEST_F(BonusTest, BonusNotPickUp)
 	EXPECT_TRUE(false);
 }
 
+//TODO: check if enemy pick up timer player team should freeze
 // Check that tank can pick up random bonus
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
 	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-		                          Timer);
+		_bonusSpawner->SpawnBonus(
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Timer);
 		_events->EmitEvent("S_Pressed");
 
 		const auto enemy = std::make_unique<Enemy>(
@@ -145,8 +146,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	if (dynamic_cast<PlayerOne*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-		                          Timer);
+		_bonusSpawner->SpawnBonus(
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Timer);
 		_events->EmitEvent("W_Pressed");
 
 		const auto enemy = std::make_unique<Enemy>(
@@ -172,8 +173,8 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 	{
 		const int playerHealth = player->GetHealth();
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-		                          Helmet);
+		_bonusSpawner->SpawnBonus(
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Helmet);
 		_events->EmitEvent("S_Pressed");
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
@@ -212,8 +213,8 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	{
 		const int playerHealth = player->GetHealth();
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-		                          Helmet);
+		_bonusSpawner->SpawnBonus(
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Helmet);
 		_events->EmitEvent("W_Pressed");
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
@@ -465,10 +466,10 @@ TEST_F(BonusTest, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 	{
 		EXPECT_TRUE(fortressWall->IsBrickWall());
 		fortressWall->OnPlayerPickupShovel();
+		//TODO: rewrite scenario P1 firstly pick up bonus shovel, then create enemy that pick up bonus shovel
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 
-		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, 0xffffff, Shovel);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_NE(fortressWall->GetHealth(), 0);

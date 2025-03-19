@@ -1,14 +1,14 @@
 #include "../../headers/pawns/Tank.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
 #include "../../headers/application/Window.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
 #include "../../headers/interfaces/IMoveBeh.h"
 #include "../../headers/interfaces/IShootable.h"
 #include "../../headers/utils/PixelUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
 Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-           const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+           const Direction dir, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
            std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
            std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, const GameMode gameMode,
            const int id, const int tier)
@@ -16,7 +16,7 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	       color,
 	       health,
 	       std::move(window),
-	       direction,
+	       dir,
 	       speed,
 	       allObjects,
 	       std::move(events),
@@ -24,10 +24,10 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 	       id,
 	       std::move(name) + std::to_string(id),// TODO: maybe name should be without tankId
 	       std::move(fraction),
-	       tier
+	       tier,
+	       gameMode
 	  },
-	  _shootingBeh{std::move(shootingBeh)},
-	  _gameMode{gameMode}
+	  _shootingBeh{std::move(shootingBeh)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -47,60 +47,22 @@ Tank::~Tank()
 
 void Tank::Subscribe()
 {
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
 
-	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
-
-	Tank::SubscribeBonus();
-}
-
-void Tank::SubscribeAsHost()
-{
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	if (_gameMode == PlayAsClient)
 	{
-		if (_timer.isActive && TimeUtils::IsCooldownFinish(_timer.activateTime, _timer.cooldown))
-		{
-			_timer.isActive = false;
-		}
+		SubscribeAsClient();
+	}
 
-		if (_helmet.isActive && TimeUtils::IsCooldownFinish(_helmet.activateTime, _helmet.cooldown))
-		{
-			_helmet.isActive = false;
-
-			if (_gameMode == PlayAsHost)
-			{
-				_events->EmitEvent<const std::string&>("ServerSend_OnHelmetDeactivate", _name);
-			}
-		}
-
-		if (!this->_timer.isActive)
-		{
-			this->TickUpdate(deltaTime);
-		}
-	});
+	SubscribeBonus();
 }
 
 void Tank::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const Direction>(
-			"ClientReceived_" + _name /*TODO: + std::to_string(GetId())*/ + "Pos", _name,
-			[this](const FPoint newPos, const Direction direction)
-			{
-				this->SetPos(newPos);
-				this->SetDirection(direction);
-			});
-
-	_events->AddListener<const Direction>(
-			"ClientReceived_" + _name + "Shot", _name, [this](const Direction direction)
-			{
-				this->SetDirection(direction);
-				this->Shot();
-			});
-
-	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
+	_events->AddListener<const Direction>("ClientReceived_" + _name + "Shot", _name, [this](const Direction dir)
 	{
-		this->SetHealth(health);
+		this->SetDirection(dir);
+		this->Shot();
 	});
 
 	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _name, [this]()
@@ -150,24 +112,19 @@ void Tank::SubscribeBonus()
 
 void Tank::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _name);
 	_events->RemoveListener("DrawHealthBar", _name);
 
-	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	if (_gameMode == PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
 
-	Tank::UnsubscribeBonus();
-}
-
-void Tank::UnsubscribeAsHost() const
-{
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	UnsubscribeBonus();
 }
 
 void Tank::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
 	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
-	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
 
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
@@ -182,6 +139,24 @@ void Tank::UnsubscribeBonus() const
 			"BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
+}
+
+void Tank::TickUpdate(const float deltaTime)
+{
+	if (_timer.isActive && TimeUtils::IsCooldownFinish(_timer.activateTime, _timer.cooldown))
+	{
+		_timer.isActive = false;
+	}
+
+	if (_helmet.isActive && TimeUtils::IsCooldownFinish(_helmet.activateTime, _helmet.cooldown))
+	{
+		_helmet.isActive = false;
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&>("ServerSend_OnHelmetDeactivate", _name);
+		}
+	}
 }
 
 void Tank::TakeDamage(const int damage)
@@ -210,13 +185,13 @@ void Tank::Shot() const
 	}
 }
 
-float Tank::GetBulletWidth() const { return _bulletWidth; }
+float Tank::GetBulletWidth() const { return _bulletSize.x; }
 
-void Tank::SetBulletWidth(const float bulletWidth) { _bulletWidth = bulletWidth; }
+void Tank::SetBulletWidth(const float bulletWidth) { _bulletSize.x = bulletWidth; }
 
-float Tank::GetBulletHeight() const { return _bulletHeight; }
+float Tank::GetBulletHeight() const { return _bulletSize.y; }
 
-void Tank::SetBulletHeight(const float bulletHeight) { _bulletHeight = bulletHeight; }
+void Tank::SetBulletHeight(const float bulletHeight) { _bulletSize.y = bulletHeight; }
 
 float Tank::GetBulletSpeed() const { return _bulletSpeed; }
 
@@ -230,9 +205,6 @@ double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
 
-std::chrono::milliseconds Tank::GetFireCooldown() const { return _fireCooldown; }
-
-void Tank::SetFireCooldown(const std::chrono::milliseconds fireCooldown) { _fireCooldown = fireCooldown; }
 
 inline void Tank::SetPixel(const size_t x, const size_t y, const int color) const
 {
@@ -314,11 +286,11 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 
 		++_tier;
 
-		SetSpeed(GetSpeed() * 1.10f);
-		SetBulletSpeed(GetBulletSpeed() * 1.10f);
-		SetBulletDamage(GetBulletDamage() + 15);
-		SetFireCooldown(GetFireCooldown() - std::chrono::milliseconds{150});
-		SetBulletDamageRadius(GetBulletDamageRadius() * 1.25f);
+		_speed *= 1.10f;
+		_bulletSpeed *= 1.10f;
+		_bulletDamage += 15;
+		_fireCooldown -= std::chrono::milliseconds{150};
+		_bulletDamageRadius *= 1.25f;
 
 		if (_gameMode == PlayAsHost)
 		{
@@ -329,7 +301,8 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 
 void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, const std::string&>("Statistics_TankHit", _name, author, fraction);
+	_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+			"Statistics_TankHit", _name, author, fraction);
 
 	if (GetHealth() < 1)
 	{

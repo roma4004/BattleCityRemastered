@@ -9,8 +9,8 @@
 #include <boost/serialization/vector.hpp>
 
 enum BonusType : char8_t;
-class EventSystem;
 enum Direction : char8_t;
+class EventSystem;
 class BaseObj;
 using boost::asio::ip::tcp;
 

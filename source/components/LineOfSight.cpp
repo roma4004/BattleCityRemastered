@@ -1,8 +1,8 @@
-#include "../headers/LineOfSight.h"
-#include "../headers/BaseObj.h"
-#include "../headers/Direction.h"
-#include "../headers/Point.h"
-#include "../headers/utils/ColliderUtils.h"
+#include "../../headers/components/LineOfSight.h"
+#include "../../headers/BaseObj.h"
+#include "../../headers/Point.h"
+#include "../../headers/enums/Direction.h"
+#include "../../headers/utils/ColliderUtils.h"
 
 #include <algorithm>
 

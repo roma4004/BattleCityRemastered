@@ -1,8 +1,8 @@
 #pragma once
 
 #include "UserInput.h"
-#include "../../headers/bonuses/BonusSpawner.h"
-#include "../../headers/obstacles/ObstacleSpawner.h"
+#include "../../headers/components/BonusSpawner.h"
+#include "../../headers/components/ObstacleSpawner.h"
 #include "../interfaces/IGame.h"
 
 #include <SDL.h>

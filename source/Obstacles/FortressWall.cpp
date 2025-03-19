@@ -1,7 +1,7 @@
 #include "../../headers/obstacles/FortressWall.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
 #include "../../headers/Pawns/Pawn.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/utils/ColliderUtils.h"
@@ -76,7 +76,7 @@ void FortressWall::SubscribeAsClient()
 void FortressWall::SubscribeBonus()
 {
 	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
-			"BonusShovel", _name,//TODO: remove author when dont needed in all event
+			"BonusShovel", _name,
 			[this](const std::string& /*author*/, const std::string& fraction,
 			       const std::chrono::milliseconds bonusDurationTime)
 			{

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Point.h"
-#include "input/InputProviderForMenu.h"
+#include "../Point.h"
+#include "../input/InputProviderForMenu.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>

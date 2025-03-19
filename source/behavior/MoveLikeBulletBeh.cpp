@@ -1,6 +1,6 @@
 #include "../../headers/behavior/MoveLikeBulletBeh.h"
 #include "../../headers/Circle.h"
-#include "../../headers/Direction.h"
+#include "../../headers/enums/Direction.h"
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/Bullet.h"
 #include "../../headers/utils/ColliderUtils.h"
@@ -29,24 +29,24 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float del
 	float speedY = speed * deltaTime;
 
 	// For some reason I can't make rect1 in if's Rider say I make unused object. So I made more crutches
-	if (const Direction direction = bullet->GetDirection();
-		direction == UP)
+	if (const Direction dir = bullet->GetDirection();
+		dir == UP)
 	{
 		//36 37 initialize in if
 		speedY *= -1;
 		speedX *= 0;
 	}
-	else if (direction == DOWN)
+	else if (dir == DOWN)
 	{
 		speedY *= 1;
 		speedX *= 0;
 	}
-	else if (direction == LEFT)
+	else if (dir == LEFT)
 	{
 		speedX *= -1;
 		speedY *= 0;
 	}
-	else if (direction == RIGHT)
+	else if (dir == RIGHT)
 	{
 		speedX *= 1;
 		speedY *= 0;

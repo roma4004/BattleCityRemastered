@@ -1,6 +1,6 @@
 ﻿#include "../headers/Map.h"
-#include "../headers/obstacles/ObstacleSpawner.h"
-#include "../headers/obstacles/ObstacleTypeId.h"
+#include "../headers/components/ObstacleSpawner.h"
+#include "../headers/enums/ObstacleType.h"
 
 Map::Map(ObstacleSpawner* obstacleSpawner) : _obstacleSpawner{obstacleSpawner} {}
 

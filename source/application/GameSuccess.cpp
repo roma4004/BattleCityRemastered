@@ -1,13 +1,13 @@
 #include "../../headers/application/GameSuccess.h"
-#include "../../headers/BulletPool.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
 #include "../../headers/Map.h"
-#include "../../headers/Menu.h"
 #include "../../headers/application/Window.h"
+#include "../../headers/components/BulletPool.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/components/Menu.h"
+#include "../../headers/components/TankSpawner.h"
+#include "../../headers/enums/GameMode.h"
 #include "../../headers/network/ClientHandler.h"
 #include "../../headers/network/ServerHandler.h"
-#include "../../headers/pawns/TankSpawner.h"
 
 #include <algorithm>
 //#include <fstream>
@@ -24,7 +24,8 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
                          std::unique_ptr<Menu> menu)
-	: _menu{std::move(menu)},
+	: _selectedGameMode{OnePlayer},
+	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
 	  _window{window},
 	  _renderer{std::move(renderer)},
@@ -34,8 +35,7 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
 	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window},
-	  _selectedGameMode{OnePlayer}
+	  _obstacleSpawner{events, &_allObjects, window}
 {
 	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
 

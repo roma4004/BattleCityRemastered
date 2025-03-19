@@ -1,6 +1,6 @@
 #include "../../headers/behavior/MoveLikeAIBeh.h"
-#include "../../headers/Direction.h"
 #include "../../headers/Point.h"
+#include "../../headers/enums/Direction.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Tank.h"
 #include "../../headers/utils/ColliderUtils.h"
@@ -26,24 +26,24 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTi
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
 
-	if (const Direction direction = tank->GetDirection();
-		direction == UP)
+	if (const Direction dir = tank->GetDirection();
+		dir == UP)
 	{
 		//36 37 initialize in if
 		speedY *= -1;
 		speedX *= 0;
 	}
-	else if (direction == DOWN)
+	else if (dir == DOWN)
 	{
 		speedY *= 1;
 		speedX *= 0;
 	}
-	else if (direction == LEFT)
+	else if (dir == LEFT)
 	{
 		speedX *= -1;
 		speedY *= 0;
 	}
-	else if (direction == RIGHT)
+	else if (dir == RIGHT)
 	{
 		speedX *= 1;
 		speedY *= 0;

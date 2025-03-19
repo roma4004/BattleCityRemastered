@@ -5,7 +5,7 @@
 #include <string>
 #include <variant>
 
-enum ObstacleTypeId : char8_t;
+enum ObstacleType : char8_t;
 enum BonusType : char8_t;
 enum Direction : char8_t;
 enum GameMode : char8_t;
@@ -34,7 +34,7 @@ class EventSystem final
 		Event<const FPoint>,// bullets tank new pos,
 		Event<const FPoint, const int>,// bullets send new pos, bulletId
 		Event<const FPoint, const BonusType, const int>,// received bonusSpawn
-		Event<const FPoint, const ObstacleTypeId, const int>,// received bonusSpawn
+		Event<const FPoint, const ObstacleType, const int>,// received bonusSpawn
 		Event<const FPoint, const int, const Direction>,// bullets send new pos, bulletId, direction
 		Event<const FPoint, const Direction>,// received newPos and direction
 		Event<const std::string&, const FPoint, const Direction>,// send new pos and direction

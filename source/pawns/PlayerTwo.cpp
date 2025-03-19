@@ -1,17 +1,17 @@
 #include "../../headers/pawns/PlayerTwo.h"
-#include "../../headers/Direction.h"
-#include "../../headers/EventSystem.h"
-#include "../../headers/GameMode.h"
 #include "../../headers/Point.h"
 #include "../../headers/behavior/MoveLikeTankBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/Direction.h"
+#include "../../headers/enums/GameMode.h"
 #include "../../headers/interfaces/IInputProvider.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <chrono>
 
 PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-                     const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+                     const Direction dir, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                      std::shared_ptr<EventSystem> events, std::string name, std::string fraction,
                      std::unique_ptr<IInputProvider> inputProvider, std::shared_ptr<BulletPool> bulletPool,
                      const GameMode gameMode, const int id, const int tier)
@@ -19,7 +19,7 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
 	       color,
 	       health,
 	       std::move(window),
-	       direction,
+	       dir,
 	       speed,
 	       allObjects,
 	       events,
@@ -34,9 +34,9 @@ PlayerTwo::PlayerTwo(const ObjRectangle& rect, const int color, const int health
 
 PlayerTwo::~PlayerTwo() = default;
 
-void PlayerTwo::MoveTo(const float deltaTime, const Direction direction)
+void PlayerTwo::MoveTo(const float deltaTime, const Direction dir)
 {
-	SetDirection(direction);
+	SetDirection(dir);
 	_moveBeh->Move(deltaTime);
 
 	if (_gameMode == PlayAsHost)
@@ -48,6 +48,8 @@ void PlayerTwo::MoveTo(const float deltaTime, const Direction direction)
 
 void PlayerTwo::TickUpdate(const float deltaTime)
 {
+	Tank::TickUpdate(deltaTime);
+
 	const auto playerKeys = _inputProvider->GetKeysStats();
 
 	// move

@@ -1,5 +1,5 @@
 #include "../../headers/obstacles/BrickWall.h"
-#include "../../headers/EventSystem.h"
+#include "../../headers/components/EventSystem.h"
 
 #include <string>
 

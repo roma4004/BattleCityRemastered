@@ -1,5 +1,5 @@
 #include "../../headers/input/InputProviderForPlayerOne.h"
-#include "../../headers/EventSystem.h"
+#include "../../headers/components/EventSystem.h"
 
 InputProviderForPlayerOne::InputProviderForPlayerOne(std::string name, std::shared_ptr<EventSystem> events)
 	: _name{std::move(name)}, _events{std::move(events)}
