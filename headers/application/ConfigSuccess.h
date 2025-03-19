@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Window.h"
-#include "../Point.h"
 #include "../interfaces/IConfig.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
+
+struct Window;
 
 class ConfigSuccess final : public IConfig
 {
@@ -23,8 +23,9 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
-	              std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<SDL_Texture> logoTexture);
+	ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
+	              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
+	              std::shared_ptr<SDL_Texture> logoTexture);
 
 	~ConfigSuccess() override = default;
 

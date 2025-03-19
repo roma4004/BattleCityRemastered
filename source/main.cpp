@@ -1,7 +1,7 @@
+#include "../headers/Point.h"
 #include "../headers/application/SDLEnvironment.h"
-
-class IConfig;
-class IGame;
+#include "../headers/interfaces/IConfig.h"
+#include "../headers/interfaces/IGame.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {

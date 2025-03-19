@@ -1,5 +1,8 @@
+#include "../headers/BulletPool.h"
+#include "../headers/Direction.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
+#include "../headers/application/Window.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/BrickWall.h"
 #include "../headers/obstacles/FortressWall.h"
@@ -27,24 +30,24 @@ protected:
 	float _deltaTimeOneFrame{1.f / 60.f};
 	float _gridSize{0.f};
 	GameMode _gameMode{OnePlayer};
+	std::string _name = "Player";
+	std::string _fraction = "PlayerTeam";
 
 	void SetUp() override
 	{
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_events = std::make_shared<EventSystem>();
+		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_name, _events);
+		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		constexpr int yellow = 0xeaea00;
-		std::string name = "Player";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
 
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<PlayerOne>(
-						rect, yellow, _tankHealth, _window, UP, _tankSpeed, &_allObjects, _events, name, fraction,
+						rect, yellow, _tankHealth, _window, UP, _tankSpeed, &_allObjects, _events, _name, _fraction,
 						std::move(inputProvider), _bulletPool, _gameMode, 1));
 	}
 

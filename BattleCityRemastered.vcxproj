@@ -227,7 +227,7 @@
     <ClInclude Include="headers\bonuses\BonusStatus.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
-    <ClInclude Include="headers\bonuses\BonusTypeId.h" />
+    <ClInclude Include="headers\bonuses\BonusType.h" />
     <ClInclude Include="headers\input\InputProviderForMenu.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerOne.h" />
     <ClInclude Include="headers\input\InputProviderForPlayerOneNet.h" />

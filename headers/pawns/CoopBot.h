@@ -1,15 +1,16 @@
 #pragma once
 
 #include "Bot.h"
+
 #include <random>
+
+class BulletPool;
 
 class CoopBot final : public Bot
 {
 	void HandleLineOfSight(Direction dir);
 
 	void TickUpdate(float deltaTime) override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
 	CoopBot(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,

@@ -1,22 +1,22 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../Direction.h"
-#include "../Point.h"
-#include "../application/Window.h"
-#include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <memory>
 #include <vector>
 
+enum Direction : char8_t;
 struct ObjRectangle;
+struct Window;
+struct UPoint;
+class IMoveBeh;
 class EventSystem;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
 protected:
-	Direction _direction{UP};
+	Direction _direction{};
 	float _speed{0.f};
 	int _tier{1};
 

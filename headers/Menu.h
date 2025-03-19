@@ -1,20 +1,21 @@
 #pragma once
 
-#include "GameMode.h"
 #include "Point.h"
-#include "application/Window.h"
 #include "input/InputProviderForMenu.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 
 class GameStatistics;
+class InputProviderForMenu;
+class EventSystem;
+struct Window;
 
 class Menu final
 {
 	UPoint _pos;
 	unsigned int _yOffsetStart{0u};
-	GameMode _selectedGameMode{OnePlayer};
+	GameMode _selectedGameMode;
 
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
@@ -44,7 +45,7 @@ class Menu final
 
 	void BlendBackgroundToWindowBuffer();
 	void DrawMenuText(UPoint menuBackgroundPos) const;
-	void OnRespawnResourceChanged(const std::string& author, const std::string& fraction, int respawnResource);
+	void OnRespawnResourceChanged(const std::string& objectName, int respawnResource);
 
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,

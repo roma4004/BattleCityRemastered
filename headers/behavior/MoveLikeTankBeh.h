@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../BaseObj.h"
 #include "../interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>
 
+class BaseObj;
 class Tank;
 
 class MoveLikeTankBeh final : public IMoveBeh

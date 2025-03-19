@@ -1,11 +1,14 @@
 #include "../../headers/bonuses/BonusSpawner.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
 #include "../../headers/bonuses/BonusShovel.h"
 #include "../../headers/bonuses/BonusStar.h"
 #include "../../headers/bonuses/BonusTank.h"
 #include "../../headers/bonuses/BonusTimer.h"
-#include "../../headers/bonuses/BonusTypeId.h"
+#include "../../headers/bonuses/BonusType.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
@@ -77,11 +80,11 @@ void BonusSpawner::SubscribeAsHost()
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const BonusTypeId, const int>(
-			"ClientReceived_BonusSpawn", _name, [this](const FPoint spawnPos, const BonusTypeId type, const int id)
+	_events->AddListener<const FPoint, const BonusType, const int>(
+			"ClientReceived_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const int id)
 			{
 				const auto size = static_cast<float>(_bonusSize);
-				const ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
+				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
 				const int color = _distRandColor(_gen);
 				SpawnBonus(rect, color, type, id);
 			});
@@ -103,7 +106,7 @@ void BonusSpawner::UnsubscribeAsHost() const
 
 void BonusSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_BonusSpawn", _name);
+	_events->RemoveListener<const FPoint, const BonusType, const int>("ClientReceived_BonusSpawn", _name);
 }
 
 void BonusSpawner::TickUpdate(const float /*deltaTime*/)
@@ -126,7 +129,7 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const BonusTypeId bonusType, const int id)
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const BonusType bonusType, const int id)
 {
 	if (id != -1)
 	{
@@ -167,7 +170,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
 	const int color = _distRandColor(_gen);
-	const auto bonusType = static_cast<BonusTypeId>(_distSpawnType(_gen));
+	const auto bonusType = static_cast<BonusType>(_distSpawnType(_gen));
 	SpawnBonus(rect, color, bonusType);
 }
 

@@ -1,4 +1,7 @@
 #include "../../headers/bonuses/Bonus.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,

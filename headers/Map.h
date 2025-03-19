@@ -1,10 +1,9 @@
 ﻿#pragma once
 
-#include "obstacles/ObstacleSpawner.h"
-
 struct UPoint;
 class BaseObj;
 class EventSystem;
+class ObstacleSpawner;
 
 class Map final
 {

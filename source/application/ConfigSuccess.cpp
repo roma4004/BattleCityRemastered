@@ -1,6 +1,7 @@
 #include "../../headers/application/ConfigSuccess.h"
 #include "../../headers/EventSystem.h"
 #include "../../headers/GameStatistics.h"
+#include "../../headers/Menu.h"
 #include "../../headers/application/GameSuccess.h"
 
 ConfigSuccess::ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,

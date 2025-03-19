@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Server.h"
-#include "../EventSystem.h"
 #include "../interfaces/INetworkNode.h"
 
 #include <thread>

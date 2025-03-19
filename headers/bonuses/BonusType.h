@@ -1,6 +1,7 @@
 #pragma once
 
-enum BonusTypeId : char8_t
+//TODO: move enum files to enum folders
+enum BonusType : char8_t
 {
 	None,
 

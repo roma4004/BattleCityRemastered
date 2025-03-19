@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../BaseObj.h"
 #include "../interfaces/IMoveBeh.h"
 
 #include <functional>

@@ -1,9 +1,6 @@
 #pragma once
 
-#include "../../headers/Direction.h"
-#include "../../headers/EventSystem.h"
 #include "../../headers/Point.h"
-#include "../../headers/bonuses/BonusTypeId.h" //TODO: move enum files to enum folders
 
 #include <memory>
 #include <string>
@@ -11,6 +8,9 @@
 #include <boost/asio.hpp>
 #include <boost/serialization/vector.hpp>
 
+enum BonusType : char8_t;
+class EventSystem;
+enum Direction : char8_t;
 class BaseObj;
 using boost::asio::ip::tcp;
 
@@ -24,14 +24,14 @@ struct ClientData final
 	int health{-1};
 	int respawnResource{-1};
 	int id{-1};
-	BonusTypeId typeId{None};
-	std::string objectName;
+	BonusType type{};
+	std::string who;
 	std::string eventType;
 	std::string eventName;
 	std::string fraction;
 	std::vector<std::string> names;
-	FPoint newPos{.x = 0.f, .y = 0.f};
-	Direction direction{NONE};
+	FPoint pos{};
+	Direction dir{};
 };
 
 class Client final//: public std::enable_shared_from_this<Client>
@@ -41,6 +41,9 @@ public:
 	       std::shared_ptr<EventSystem> events);
 
 	~Client();
+
+	void Subscribe();
+	void Unsubscribe() const;
 
 	void ReadResponse();
 

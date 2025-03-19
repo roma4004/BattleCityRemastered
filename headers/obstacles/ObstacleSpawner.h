@@ -1,8 +1,6 @@
 #pragma once
 
 #include "FortressWall.h"
-#include "../GameMode.h"
-#include "../application/Window.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <memory>
@@ -10,16 +8,17 @@
 #include <vector>
 
 enum ObstacleTypeId : char8_t;
-enum BonusTypeId : char8_t;
+enum BonusType : char8_t;
 struct UPoint;
 struct ObjRectangle;
+struct Window;
 class BaseObj;
 class EventSystem;
 
 class ObstacleSpawner final : public ITickUpdatable
 {
 	std::string _name{"ObstacleSpawner"};
-	GameMode _gameMode{Demo};
+	GameMode _gameMode;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	int _obstacleSize{0};
 	int _lastSpawnId{-1};

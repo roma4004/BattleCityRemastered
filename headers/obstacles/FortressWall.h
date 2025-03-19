@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../GameMode.h"
 #include "../bonuses/BonusStatus.h"
 #include "../interfaces/ITickUpdatable.h"
 
@@ -9,6 +8,7 @@
 #include <memory>
 #include <variant>
 
+enum GameMode : char8_t;
 struct Window;
 class EventSystem;
 class SteelWall;
@@ -17,7 +17,7 @@ class BrickWall;
 class FortressWall final : public BaseObj, public ITickUpdatable
 {
 	ObjRectangle _rect;
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;

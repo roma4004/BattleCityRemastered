@@ -1,6 +1,7 @@
 #include "../../headers/obstacles/ObstacleSpawner.h"
 #include "../../headers/EventSystem.h"
 #include "../../headers/GameMode.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/obstacles/ObstacleTypeId.h"
@@ -72,7 +73,7 @@ void ObstacleSpawner::Unsubscribe() const
 
 void ObstacleSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const BonusTypeId, const int>("ClientReceived_ObstacleSpawn", _name);
+	_events->RemoveListener<const FPoint, const BonusType, const int>("ClientReceived_ObstacleSpawn", _name);
 }
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}

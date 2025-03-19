@@ -1,13 +1,11 @@
 ﻿#pragma once
 
 #include "Obstacle.h"
-#include "../BaseObj.h"
-#include "../Point.h"
-#include "../application/Window.h"
 
 #include <memory>
 
 struct ObjRectangle;
+struct Window;
 class EventSystem;
 
 class WaterTile final : public Obstacle

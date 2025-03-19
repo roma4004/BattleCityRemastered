@@ -1,5 +1,8 @@
 #include "../../headers/pawns/TankSpawner.h"
+#include "../../headers/Direction.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/input/InputProviderForPlayerOne.h"
 #include "../../headers/input/InputProviderForPlayerOneNet.h"
 #include "../../headers/input/InputProviderForPlayerTwo.h"
@@ -25,95 +28,40 @@ TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared
 
 TankSpawner::~TankSpawner()
 {
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&>("ServerSend_TankDied", _name);
-	}
-
 	Unsubscribe();
 }
 
 void TankSpawner::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { ResetSpawn(); });
-	_events->AddListener("RespawnTanks", _name, [this]() { RespawnTanks(); });
+	_events->AddListener("RespawnTanks", _name, [this]()
+	{
+		RespawnTanks();
+	});
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
 		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
-
-	SubscribeBonus();
-	SubscribeTankSpawn();
-	SubscribeTankDied();
-}
-
-void TankSpawner::SubscribeTankSpawn()
-{
-	_events->AddListener("Player1_Spawn", _name, [this]()
+	_events->AddListener<const std::string&>("TankSpawn", _name, [this](const std::string& whoSpawn)
 	{
-		_playerOneNeedRespawn = false;
-		DecreasePlayerOneRespawnResource();
+		OnTankSpawn(whoSpawn);
 	});
-	_events->AddListener("Player2_Spawn", _name, [this]()
+	_events->AddListener<const std::string&>("TankDied", _name, [this](const std::string& whoDied)
 	{
-		_playerTwoNeedRespawn = false;
-		DecreasePlayerTwoRespawnResource();
-	});
-	_events->AddListener("CoopBot1_Spawn", _name, [this]()
-	{
-		_coopBotOneNeedRespawn = false;
-		DecreasePlayerOneRespawnResource();
-	});
-	_events->AddListener("CoopBot2_Spawn", _name, [this]()
-	{
-		_coopBotTwoNeedRespawn = false;
-		DecreasePlayerTwoRespawnResource();
+		OnTankDied(whoDied);
 	});
 
-	_events->AddListener("Enemy1_Spawn", _name, [this]()
-	{
-		_enemyOneNeedRespawn = false;
-		DecreaseEnemyRespawnResource();
-	});
-	_events->AddListener("Enemy2_Spawn", _name, [this]()
-	{
-		_enemyTwoNeedRespawn = false;
-		DecreaseEnemyRespawnResource();
-	});
-	_events->AddListener("Enemy3_Spawn", _name, [this]()
-	{
-		_enemyThreeNeedRespawn = false;
-		DecreaseEnemyRespawnResource();
-	});
-	_events->AddListener("Enemy4_Spawn", _name, [this]()
-	{
-		_enemyFourNeedRespawn = false;
-		DecreaseEnemyRespawnResource();
-	});
-}
-
-void TankSpawner::SubscribeTankDied()
-{
-	_events->AddListener("Player1_Died", _name, [this]() { _playerOneNeedRespawn = true; });
-	_events->AddListener("Player2_Died", _name, [this]() { _playerTwoNeedRespawn = true; });
-	_events->AddListener("CoopBot1_Died", _name, [this]() { _coopBotOneNeedRespawn = true; });
-	_events->AddListener("CoopBot2_Died", _name, [this]() { _coopBotTwoNeedRespawn = true; });
-
-	_events->AddListener("Enemy1_Died", _name, [this]() { _enemyOneNeedRespawn = true; });
-	_events->AddListener("Enemy2_Died", _name, [this]() { _enemyTwoNeedRespawn = true; });
-	_events->AddListener("Enemy3_Died", _name, [this]() { _enemyThreeNeedRespawn = true; });
-	_events->AddListener("Enemy4_Died", _name, [this]() { _enemyFourNeedRespawn = true; });
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusTank", _name, [this](const std::string& author, const std::string& fraction)
+			{
+				this->OnBonusTank(author, fraction);
+			});
 }
 
 void TankSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&>("ClientReceived_TankSpawn", _name, [this](const std::string& whoSpawn)
-	{
-		this->OnTankSpawn(whoSpawn);
-	});
-
 	_events->AddListener<const std::string&, const std::string&>(
 			"ClientReceived_OnTank", _name, [this](const std::string& author, const std::string& fraction)
 			{
@@ -125,85 +73,6 @@ void TankSpawner::SubscribeAsClient()
 			{
 				this->OnBonusGrenade(author, fraction);
 			});
-
-	_events->AddListener<const std::string&, const std::string&, const int>(
-			"ClientReceived_RespawnResourceChanged", _name,
-			[this](const std::string& author, const std::string& fraction, const int respawnResource)
-			{
-				this->OnRespawnResourceChanged(author, fraction, respawnResource);
-			});
-}
-
-void TankSpawner::SubscribeBonus()
-{
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusTank", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusTank(author, fraction);
-			});
-}
-
-void TankSpawner::OnBonusGrenade(const std::string& author, const std::string& fraction)
-{
-	if (fraction == "PlayerTeam")
-	{
-		if (author == "Player1")
-		{
-			DecreasePlayerOneRespawnResource();
-		}
-		else if (author == "Player2")
-		{
-			DecreasePlayerTwoRespawnResource();
-		}
-	}
-	else if (fraction == "EnemyTeam")
-	{
-		DecreaseEnemyRespawnResource();
-	}
-}
-
-void TankSpawner::OnRespawnResourceChanged(const std::string& author, const std::string& fraction,
-                                           const int respawnResource)
-{
-	if (fraction == "EnemyTeam")
-	{
-		_enemyRespawnResource = respawnResource;
-	}
-	else if (fraction == "PlayerTeam")
-	{
-		if (author == "Player1")
-		{
-			_playerOneRespawnResource = respawnResource;
-		}
-		else if (author == "Player2")
-		{
-			_playerTwoRespawnResource = respawnResource;
-		}
-	}
-}
-
-void TankSpawner::OnBonusTank(const std::string& author, const std::string& fraction)
-{
-	if (fraction == "EnemyTeam")
-	{
-		IncreaseEnemyRespawnResource();
-	}
-	else if (fraction == "PlayerTeam")
-	{
-		if (author == "Player1" || author == "CoopBot1")
-		{
-			IncreasePlayerOneRespawnResource();
-		}
-		if (author == "Player2" || author == "CoopBot2")
-		{
-			IncreasePlayerTwoRespawnResource();
-		}
-	}
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnTank", author, fraction);
-	}
 }
 
 void TankSpawner::Unsubscribe() const
@@ -211,54 +80,21 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("RespawnTanks", _name);
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener<const std::string&>("TankSpawn", _name);
+	_events->RemoveListener<const std::string&>("TankDied", _name);
 
 	if (_gameMode == PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
 
-	UnsubscribeBonus();
-	UnsubscribeTankSpawn();
-	UnsubscribeTankDied();
-}
-
-void TankSpawner::UnsubscribeTankSpawn() const
-{
-	_events->RemoveListener("Player1_Spawn", _name);
-	_events->RemoveListener("Player2_Spawn", _name);
-	_events->RemoveListener("CoopBot1_Spawn", _name);
-	_events->RemoveListener("CoopBot2_Spawn", _name);
-
-	_events->RemoveListener("Enemy1_Spawn", _name);
-	_events->RemoveListener("Enemy2_Spawn", _name);
-	_events->RemoveListener("Enemy3_Spawn", _name);
-	_events->RemoveListener("Enemy4_Spawn", _name);
-}
-
-void TankSpawner::UnsubscribeTankDied() const
-{
-	_events->RemoveListener("Enemy1_Died", _name);
-	_events->RemoveListener("Enemy2_Died", _name);
-	_events->RemoveListener("Enemy3_Died", _name);
-	_events->RemoveListener("Enemy4_Died", _name);
-
-	_events->RemoveListener("Player1_Died", _name);
-	_events->RemoveListener("Player2_Died", _name);
-	_events->RemoveListener("CoopBot1_Died", _name);
-	_events->RemoveListener("CoopBot2_Died", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusTank", _name);
 }
 
 void TankSpawner::UnsubscribeAsClient() const
 {
 	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_" + _name + "OnTank", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnGrenade", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const int>(
-			"ClientReceived_RespawnResourceChanged", _name);
-}
-
-void TankSpawner::UnsubscribeBonus() const
-{
-	_events->RemoveListener<const std::string&, const std::string&>("BonusTank", _name);
 }
 
 void TankSpawner::SetEnemyNeedRespawn()
@@ -464,7 +300,7 @@ void TankSpawner::SpawnCoopBot2(const float gridOffset, const float speed, const
 
 void TankSpawner::RespawnEnemyTanks(const int index)
 {
-	if (GetEnemyRespawnResource() > 0)
+	if (_enemyRespawnResource > 0)
 	{
 		const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 		const float size{gridOffset * 3};
@@ -490,7 +326,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 	const auto name = "Player" + std::to_string(index);
 	if (index == 1)
 	{
-		if (GetPlayerOneRespawnResource() > 0)
+		if (_playerOneRespawnResource > 0)
 		{
 			SpawnPlayer1(gridOffset, speed, health, size);
 		}
@@ -501,7 +337,7 @@ void TankSpawner::RespawnPlayerTanks(const int index)
 	}
 	else if (index == 2)
 	{
-		if (GetPlayerTwoRespawnResource() > 0)
+		if (_playerTwoRespawnResource > 0)
 		{
 			SpawnPlayer2(gridOffset, speed, health, size);
 		}
@@ -521,7 +357,7 @@ void TankSpawner::RespawnCoopTanks(const int index)
 
 	if (index == 1)
 	{
-		if (GetPlayerOneRespawnResource() > 0)
+		if (_playerOneRespawnResource > 0)
 		{
 			SpawnCoopBot1(gridOffset, speed, health, size);
 		}
@@ -532,7 +368,7 @@ void TankSpawner::RespawnCoopTanks(const int index)
 	}
 	else if (index == 2)
 	{
-		if (GetPlayerTwoRespawnResource() > 0)
+		if (_playerTwoRespawnResource > 0)
 		{
 			SpawnCoopBot2(gridOffset, speed, health, size);
 		}
@@ -565,54 +401,79 @@ void TankSpawner::RespawnTanks()
 void TankSpawner::IncreaseEnemyRespawnResource()
 {
 	++_enemyRespawnResource;
-	_events->EmitEvent<const int>("EnemyRespawnResourceChangedTo", _enemyRespawnResource);
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy", _enemyRespawnResource);
 }
 
 void TankSpawner::IncreasePlayerOneRespawnResource()
 {
 	++_playerOneRespawnResource;
-	_events->EmitEvent<const int>("Player1RespawnResourceChangedTo", _playerOneRespawnResource);
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1", _playerOneRespawnResource);
 }
 
 void TankSpawner::IncreasePlayerTwoRespawnResource()
 {
 	++_playerTwoRespawnResource;
-	_events->EmitEvent<const int>("Player2RespawnResourceChangedTo", _playerTwoRespawnResource);
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2", _playerTwoRespawnResource);
 }
 
 void TankSpawner::DecreaseEnemyRespawnResource()
 {
 	--_enemyRespawnResource;
-	_events->EmitEvent<const int>("EnemyRespawnResourceChangedTo", _enemyRespawnResource);
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const std::string&, const int>(
-				"ServerSend_RespawnResourceChanged", "Enemy", "EnemyTeam", _enemyRespawnResource);
-	}
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy", _enemyRespawnResource);
 }
 
 void TankSpawner::DecreasePlayerOneRespawnResource()
 {
 	--_playerOneRespawnResource;
-	_events->EmitEvent<const int>("Player1RespawnResourceChangedTo", _playerOneRespawnResource);
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const std::string&, const int>(
-				"ServerSend_RespawnResourceChanged", "Player1", "PlayerTeam", _playerOneRespawnResource);
-	}
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1", _playerOneRespawnResource);
 }
 
 void TankSpawner::DecreasePlayerTwoRespawnResource()
 {
 	--_playerTwoRespawnResource;
-	_events->EmitEvent<const int>("Player2RespawnResourceChangedTo", _playerTwoRespawnResource);
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2", _playerTwoRespawnResource);
+}
+
+void TankSpawner::OnBonusGrenade(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1")
+		{
+			DecreasePlayerOneRespawnResource();
+		}
+		else if (author == "Player2")
+		{
+			DecreasePlayerTwoRespawnResource();
+		}
+	}
+	else if (fraction == "EnemyTeam")
+	{
+		DecreaseEnemyRespawnResource();
+	}
+}
+
+void TankSpawner::OnBonusTank(const std::string& author, const std::string& fraction)
+{
+	if (fraction == "EnemyTeam")
+	{
+		IncreaseEnemyRespawnResource();
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		if (author == "Player1" || author == "CoopBot1")
+		{
+			IncreasePlayerOneRespawnResource();
+		}
+		if (author == "Player2" || author == "CoopBot2")
+		{
+			IncreasePlayerTwoRespawnResource();
+		}
+	}
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const int>(
-				"ServerSend_RespawnResourceChanged", "Player2", "PlayerTeam", _playerTwoRespawnResource);
+		_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnTank", author, fraction);
 	}
 }
 
@@ -620,26 +481,78 @@ void TankSpawner::OnTankSpawn(const std::string& whoSpawn)
 {
 	if (whoSpawn == "Enemy1")
 	{
-		this->_enemyOneNeedRespawn = true;
+		_enemyOneNeedRespawn = false;
+		DecreaseEnemyRespawnResource();
 	}
 	else if (whoSpawn == "Enemy2")
 	{
-		this->_enemyTwoNeedRespawn = true;
+		_enemyTwoNeedRespawn = false;
+		DecreaseEnemyRespawnResource();
 	}
 	else if (whoSpawn == "Enemy3")
 	{
-		this->_enemyThreeNeedRespawn = true;
+		_enemyThreeNeedRespawn = false;
+		DecreaseEnemyRespawnResource();
 	}
 	else if (whoSpawn == "Enemy4")
 	{
-		this->_enemyFourNeedRespawn = true;
+		_enemyFourNeedRespawn = false;
+		DecreaseEnemyRespawnResource();
 	}
 	else if (whoSpawn == "Player1")
 	{
-		this->_playerOneNeedRespawn = true;
+		_playerOneNeedRespawn = false;
+		DecreasePlayerOneRespawnResource();
 	}
 	else if (whoSpawn == "Player2")
 	{
+		_playerTwoNeedRespawn = false;
+		DecreasePlayerTwoRespawnResource();
+	}
+	else if (whoSpawn == "CoopBot1")
+	{
+		_coopBotOneNeedRespawn = false;
+		DecreasePlayerOneRespawnResource();
+	}
+	else if (whoSpawn == "CoopBot2")
+	{
+		_coopBotTwoNeedRespawn = false;
+		DecreasePlayerTwoRespawnResource();
+	}
+}
+
+void TankSpawner::OnTankDied(const std::string& whoDied)
+{
+	if (whoDied == "Enemy1")
+	{
+		this->_enemyOneNeedRespawn = true;
+	}
+	else if (whoDied == "Enemy2")
+	{
+		this->_enemyTwoNeedRespawn = true;
+	}
+	else if (whoDied == "Enemy3")
+	{
+		this->_enemyThreeNeedRespawn = true;
+	}
+	else if (whoDied == "Enemy4")
+	{
+		this->_enemyFourNeedRespawn = true;
+	}
+	else if (whoDied == "Player1")
+	{
+		this->_playerOneNeedRespawn = true;
+	}
+	else if (whoDied == "Player2")
+	{
 		this->_playerTwoNeedRespawn = true;
+	}
+	else if (whoDied == "CoopBot1")
+	{
+		this->_coopBotOneNeedRespawn = true;
+	}
+	else if (whoDied == "CoopBot2")
+	{
+		this->_coopBotTwoNeedRespawn = true;
 	}
 }

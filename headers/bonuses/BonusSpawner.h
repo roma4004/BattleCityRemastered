@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../GameMode.h"
-#include "../application/Window.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <chrono>
@@ -9,8 +7,10 @@
 #include <random>
 #include <vector>
 
-enum BonusTypeId : char8_t;
+enum GameMode : char8_t;
+enum BonusType : char8_t;
 struct UPoint;
+struct Window;
 struct ObjRectangle;
 class BaseObj;
 class EventSystem;
@@ -18,7 +18,7 @@ class EventSystem;
 class BonusSpawner final : public ITickUpdatable
 {
 	std::string _name{"BonusSpawner"};
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 	int _bonusSize{0};
 	int _lastSpawnId{-1};
 
@@ -53,7 +53,7 @@ public:
 	~BonusSpawner() override;
 
 	void SpawnRandomBonus(ObjRectangle rect);
-	void SpawnBonus(ObjRectangle rect, int color, BonusTypeId bonusType, int id = -1);
+	void SpawnBonus(ObjRectangle rect, int color, BonusType bonusType, int id = -1);
 
 	template<typename TBonusType>
 	void SpawnBonus(ObjRectangle rect, int color, int id = -1);

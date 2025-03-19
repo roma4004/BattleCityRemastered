@@ -1,5 +1,6 @@
-#include "../../headers/EventSystem.h"
+#include "../../headers/Direction.h"
 #include "../../headers/LineOfSight.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/behavior/MoveLikeAIBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/interfaces/IPickupableBonus.h"

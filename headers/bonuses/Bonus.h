@@ -1,14 +1,15 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../EventSystem.h"
-#include "../GameMode.h"
-#include "../application/Window.h"
 #include "../interfaces/IPickupableBonus.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <chrono>
 #include <memory>
+
+enum GameMode : char8_t;
+class EventSystem;
+struct Window;
 
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
@@ -17,7 +18,7 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 	std::chrono::system_clock::time_point _creationTime;
 
 protected:
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 	std::chrono::milliseconds _duration{0};
 	std::chrono::milliseconds _lifetime{0};
 

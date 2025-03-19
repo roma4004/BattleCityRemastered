@@ -1,8 +1,10 @@
+#include "../headers/BulletPool.h"
+#include "../headers/Direction.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
-#include "../headers/bonuses/BonusShovel.h"
+#include "../headers/application/Window.h"
 #include "../headers/bonuses/BonusSpawner.h"
-#include "../headers/bonuses/BonusTypeId.h"
+#include "../headers/bonuses/BonusType.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/FortressWall.h"
 #include "../headers/pawns/Bullet.h"
@@ -40,18 +42,17 @@ protected:
 
 	void SetUp() override
 	{
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_events = std::make_shared<EventSystem>();
+		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
 		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
-
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
+
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<PlayerOne>(

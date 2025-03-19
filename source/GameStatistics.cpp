@@ -1,5 +1,6 @@
 #include "../headers/GameStatistics.h"
 #include "../headers/EventSystem.h"
+#include "../headers/GameMode.h"
 
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}
@@ -38,63 +39,51 @@ void GameStatistics::SubscribeHost()
 {
 	//TODO: replace <std::string> with <Enum::statisticsType>
 	_events->AddListener<const std::string&, const std::string&>(
-			"BulletHit",
-			_name,
+			"Statistics_BulletHit", _name,
 			[this](const std::string& author, const std::string& fraction) { BulletHit(author, fraction); });
 
-	_events->AddListener<const std::string&, const std::string&>(
-			"EnemyHit",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { EnemyHit(author, fraction); });
-	_events->AddListener<const std::string&, const std::string&>(
-			"EnemyDied",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { EnemyDied(author, fraction); });
+	_events->AddListener<const std::string&, const std::string&, const std::string&>(
+			"Statistics_TankHit", _name,
+			[this](const std::string& whoHit, const std::string& author, const std::string& fraction)
+			{
+				if (whoHit == "Enemy1" || whoHit == "Enemy2" || whoHit == "Enemy3" || whoHit == "Enemy4")
+				{
+					EnemyHit(author, fraction);
+				}
+				else if (whoHit == "Player1" || whoHit == "CoopBot1")
+				{
+					PlayerOneHit(author, fraction);
+				}
+				else if (whoHit == "Player2" || whoHit == "CoopBot2")
+				{
+					PlayerTwoHit(author, fraction);
+				}
+			});
+
+	_events->AddListener<const std::string&, const std::string&, const std::string&>(
+			"Statistics_TankDied", _name,
+			[this](const std::string& whoDied, const std::string& author, const std::string& fraction)
+			{
+				if (whoDied == "Enemy1" || whoDied == "Enemy2" || whoDied == "Enemy3" || whoDied == "Enemy4")
+				{
+					EnemyDied(author, fraction);
+				}
+				else if (whoDied == "Player1" || whoDied == "CoopBot1")
+				{
+					PlayerOneDied(author, fraction);
+				}
+				else if (whoDied == "Player2" || whoDied == "CoopBot2")
+				{
+					PlayerTwoDied(author, fraction);
+				}
+			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"Player1Hit",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerOneHit(author, fraction); });
-	_events->AddListener<const std::string&, const std::string&>(
-			"Player1Died",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); }); //TODO:fix replication bug
-
-	_events->AddListener<const std::string&, const std::string&>(
-			"CoopBot1Hit",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerOneHit(author, fraction); });
-	_events->AddListener<const std::string&, const std::string&>(
-			"CoopBot1Died",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerOneDied(author, fraction); });
-
-	_events->AddListener<const std::string&, const std::string&>(
-			"Player2Hit",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerTwoHit(author, fraction); });
-	_events->AddListener<const std::string&, const std::string&>(
-			"Player2Died",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
-
-	_events->AddListener<const std::string&, const std::string&>(
-			"CoopBot2Hit",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerTwoHit(author, fraction); });
-	_events->AddListener<const std::string&, const std::string&>(
-			"CoopBot2Died",
-			_name,
-			[this](const std::string& author, const std::string& fraction) { PlayerTwoDied(author, fraction); });
-
-	_events->AddListener<const std::string&, const std::string&>(
-			"BrickWallDied",
-			_name,
+			"BrickWallDied", _name,
 			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"SteelWallDied",
-			_name,
+			"SteelWallDied", _name,
 			[this](const std::string& author, const std::string& fraction) { SteelWallDied(author, fraction); });
 }
 
@@ -116,22 +105,9 @@ void GameStatistics::Unsubscribe() const
 
 void GameStatistics::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const std::string&, const std::string&>("BulletHit", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&>("EnemyHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("EnemyDied", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&>("Player1Hit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("Player1Died", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&>("CoopBot1Hit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("CoopBot1Died", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&>("Player2Hit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("Player2Died", _name);
-
-	_events->RemoveListener<const std::string&, const std::string&>("CoopBot2Hit", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("CoopBot2Died", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Statistics_BulletHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("Statistics_TankHit", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("Statistics_TankDied", _name);
 
 	_events->RemoveListener<const std::string&, const std::string&>("BrickWallDied", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("SteelWallDied", _name);

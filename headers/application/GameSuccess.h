@@ -1,17 +1,17 @@
 #pragma once
 
 #include "UserInput.h"
-#include "../GameMode.h"
-#include "../../headers/Menu.h"
 #include "../../headers/bonuses/BonusSpawner.h"
 #include "../../headers/obstacles/ObstacleSpawner.h"
 #include "../interfaces/IGame.h"
-#include "../interfaces/INetworkNode.h"
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
 
+enum GameMode : char8_t;
+class INetworkNode;
+class Menu;
 class BaseObj;
 class BulletPool;
 class Client;
@@ -22,8 +22,8 @@ class Server;
 
 class GameSuccess final : public IGame
 {
-	GameMode _selectedGameMode{OnePlayer};
-	GameMode _gameMode{Demo};
+	GameMode _selectedGameMode;
+	GameMode _gameMode;
 	std::string _name{"Game"};
 
 	std::unique_ptr<INetworkNode> _networkNode;

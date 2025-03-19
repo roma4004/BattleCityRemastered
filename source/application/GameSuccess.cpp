@@ -1,11 +1,11 @@
 #include "../../headers/application/GameSuccess.h"
 #include "../../headers/BulletPool.h"
 #include "../../headers/EventSystem.h"
-#include "../../headers/GameStatistics.h"
+#include "../../headers/GameMode.h"
 #include "../../headers/Map.h"
-#include "../../headers/network/Client.h"
+#include "../../headers/Menu.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/network/ClientHandler.h"
-#include "../../headers/network/Server.h"
 #include "../../headers/network/ServerHandler.h"
 #include "../../headers/pawns/TankSpawner.h"
 
@@ -31,10 +31,11 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
 	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window}
+	  _obstacleSpawner{events, &_allObjects, window},
+	  _selectedGameMode{OnePlayer}
 {
 	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
 
@@ -178,8 +179,9 @@ void GameSuccess::MainLoop()
 				_menu->Update();//TODO: should be event updateMenu
 			}
 
-			if (!_userInput.IsPause() && _gameMode != PlayAsClient)//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
+			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
 			{
+				//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 

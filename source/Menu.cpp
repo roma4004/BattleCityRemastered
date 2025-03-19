@@ -1,6 +1,8 @@
 #include "../headers/Menu.h"
 #include "../headers/EventSystem.h"
+#include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
+#include "../headers/application/Window.h"
 #include "../headers/utils/PixelUtils.h"
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
@@ -8,6 +10,7 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
            std::shared_ptr<Window> window, std::unique_ptr<InputProviderForMenu> input,
            std::shared_ptr<EventSystem> events)
 	: _yOffsetStart{static_cast<unsigned int>(window->size.y)},
+	  _selectedGameMode{OnePlayer},
 	  _window{window},
 	  _renderer{std::move(renderer)},
 	  _events{std::move(events)},
@@ -49,29 +52,10 @@ void Menu::Subscribe()
 		}
 	});
 
-	_events->AddListener<const int>(
-			"EnemyRespawnResourceChangedTo", _name, [this](const int enemyRespawnResource)
+	_events->AddListener<const std::string&, const int>(
+			"RespawnResourceChangedTo", _name, [this](const std::string& objectName, const int respawnResource)
 			{
-				this->_enemyRespawnResource = enemyRespawnResource;
-			});
-
-	_events->AddListener<const int>(
-			"Player1RespawnResourceChangedTo", _name, [this](const int playerOneRespawnResource)
-			{
-				this->_playerOneRespawnResource = playerOneRespawnResource;
-			});
-
-	_events->AddListener<const int>(
-			"Player2RespawnResourceChangedTo", _name, [this](const int playerTwoRespawnResource)
-			{
-				this->_playerTwoRespawnResource = playerTwoRespawnResource;
-			});
-
-	_events->AddListener<const std::string&, const std::string&, const int>(
-			"ClientReceived_RespawnResourceChanged", _name,
-			[this](const std::string& author, const std::string& fraction, const int respawnResource)
-			{
-				this->OnRespawnResourceChanged(author, fraction, respawnResource);
+				this->OnRespawnResourceChanged(objectName, respawnResource);
 			});
 }
 
@@ -80,12 +64,7 @@ void Menu::Unsubscribe() const
 	_events->RemoveListener("DrawMenuBackground", _name);
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener("DrawMenuText", _name);
-
-	_events->RemoveListener<const int>("EnemyRespawnResourceChangedTo", _name);
-	_events->RemoveListener<const int>("Player1RespawnResourceChangedTo", _name);
-	_events->RemoveListener<const int>("Player2RespawnResourceChangedTo", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const int>(
-			"ClientReceived_RespawnResourceChanged", _name);
+	_events->RemoveListener<const std::string&, const int>("RespawnResourceChangedTo", _name);
 }
 
 void Menu::Update() const
@@ -234,6 +213,12 @@ void Menu::RenderStatistics(const Point pos) const
 	                        _statistics->GetSteelWallDiedByPlayerOne(),
 	                        _statistics->GetSteelWallDiedByPlayerTwo(),
 	                        _statistics->GetSteelWallDiedByEnemyTeam());
+
+	//TODO: display statistics for pickuped bonuses
+	// RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 340}, color, "BONUS PICKUPS",
+	//                         _statistics->GetBonusPickupByPlayerOne(),
+	//                         _statistics->GetBonusPickupByPlayerTwo(),
+	//                         _statistics->GetBonusPickupByEnemyTeam());
 }
 
 void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text, const int player1,
@@ -287,21 +272,18 @@ void Menu::DrawMenuText(const UPoint menuBackgroundPos) const
 	RenderStatistics(pos);
 }
 
-void Menu::OnRespawnResourceChanged(const std::string& author, const std::string& fraction, const int respawnResource)
+void Menu::OnRespawnResourceChanged(const std::string& objectName, const int respawnResource)
 {
-	if (fraction == "EnemyTeam")
+	if (objectName == "Enemy")
 	{
 		_enemyRespawnResource = respawnResource;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (objectName == "Player1")
 	{
-		if (author == "Player1")
-		{
-			_playerOneRespawnResource = respawnResource;
-		}
-		else if (author == "Player2")
-		{
-			_playerTwoRespawnResource = respawnResource;
-		}
+		_playerOneRespawnResource = respawnResource;
+	}
+	else if (objectName == "Player2")
+	{
+		_playerTwoRespawnResource = respawnResource;
 	}
 }

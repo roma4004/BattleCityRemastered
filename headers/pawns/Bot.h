@@ -5,6 +5,9 @@
 #include <chrono>
 #include <random>
 
+class EventSystem;
+class BulletPool;
+
 class Bot : public Tank
 {
 protected:

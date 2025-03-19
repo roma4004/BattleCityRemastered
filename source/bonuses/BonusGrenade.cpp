@@ -1,5 +1,8 @@
 #include "../../headers/bonuses/BonusGrenade.h"
-#include "../../headers/bonuses/BonusTypeId.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/Point.h"
+#include "../../headers/bonuses/BonusType.h"
 
 BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            std::shared_ptr<EventSystem> events, const std::chrono::milliseconds duration,
@@ -9,7 +12,7 @@ BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> win
 {
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+		_events->EmitEvent<const std::string&, const FPoint, const BonusType, const int>(
 				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Grenade, _id);
 	}
 }

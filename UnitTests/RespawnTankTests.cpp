@@ -1,6 +1,9 @@
+#include "../headers/BulletPool.h"
+#include "../headers/Direction.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/GameStatistics.h"
+#include "../headers/application/Window.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/pawns/Enemy.h"
@@ -32,10 +35,10 @@ protected:
 
 	void SetUp() override
 	{
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_events = std::make_shared<EventSystem>();
-		_statistics = std::make_shared<GameStatistics>(_events);
+		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+		_statistics = std::make_shared<GameStatistics>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
 		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
@@ -44,8 +47,7 @@ protected:
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto currentGameMode = OnePlayer;
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, currentGameMode);
+
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<PlayerOne>(

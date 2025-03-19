@@ -1,13 +1,13 @@
 #pragma once
 
 #include "Pawn.h"
-#include "../BulletPool.h"
 #include "../bonuses/BonusStatus.h"
 #include "../interfaces/IHealthBar.h"
-#include "../interfaces/IShootable.h"
 
 #include <chrono>
 
+class IShootable;
+enum GameMode : char8_t;
 struct UPoint;
 
 class Tank : public Pawn, public IHealthBar
@@ -20,7 +20,7 @@ class Tank : public Pawn, public IHealthBar
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
 protected:
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 
 	double _bulletDamageRadius{12.f};
 	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
@@ -40,6 +40,7 @@ protected:
 	void OnBonusHelmet(const std::string& author, const std::string& fraction, std::chrono::milliseconds duration);
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusStar(const std::string& author, const std::string& fraction);
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
 	Tank(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,

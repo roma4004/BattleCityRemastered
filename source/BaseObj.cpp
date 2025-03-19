@@ -55,7 +55,11 @@ void BaseObj::SetColor(const int color) { _color = color; }
 
 int BaseObj::GetHealth() const { return _health; }
 
-void BaseObj::SetHealth(const int health) { _health = health; }
+void BaseObj::SetHealth(const int health)
+{
+	_health = health;
+	_isAlive = _health >= 1;
+}
 
 void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
@@ -64,10 +68,7 @@ bool BaseObj::GetIsAlive() const { return _isAlive; }
 void BaseObj::TakeDamage(const int damage)
 {
 	_health -= damage;
-	if (_health < 1)
-	{
-		_isAlive = false;
-	}
+	_isAlive = _health >= 1;
 }
 
 bool BaseObj::GetIsPassable() const { return _isPassable; }

@@ -1,5 +1,7 @@
 ﻿#include "../../headers/pawns/Bullet.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/Point.h"
 #include "../../headers/behavior/MoveLikeBulletBeh.h"
 
 #include <string>
@@ -137,7 +139,7 @@ std::string Bullet::GetAuthor() const { return _author; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>("BulletHit", author, fraction);
+	_events->EmitEvent<const std::string&, const std::string&>("Statistics_BulletHit", author, fraction);
 }
 
 void Bullet::TakeDamage(const int damage)

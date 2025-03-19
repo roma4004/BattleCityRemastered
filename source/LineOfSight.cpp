@@ -1,7 +1,6 @@
 #include "../headers/LineOfSight.h"
 #include "../headers/BaseObj.h"
 #include "../headers/Direction.h"
-#include "../headers/ObjRectangle.h"
 #include "../headers/Point.h"
 #include "../headers/utils/ColliderUtils.h"
 

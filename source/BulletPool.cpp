@@ -1,6 +1,5 @@
 #include "../headers/BulletPool.h"
 #include "../headers/EventSystem.h"
-#include "../headers/GameMode.h"
 #include "../headers/pawns/Bullet.h"
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -36,13 +35,15 @@ void BulletPool::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
-std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const int damage, const double aoeRadius,
-                                               const int color, const int health, const Direction direction,
-                                               const float speed, std::string author, std::string fraction, const int tier)
+void BulletPool::SpawnBullet(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
+                             const int health, const Direction direction, const float speed, std::string author,
+                             std::string fraction, const int tier)
 {
+	std::lock_guard<std::mutex> lock(_bulletsMutex);
+
 	if (_bullets.empty())
 	{
-		auto bullet = std::shared_ptr<Bullet>(
+		std::shared_ptr<BaseObj> bullet = std::shared_ptr<Bullet>(
 				new Bullet{rect, damage, aoeRadius, color, health, _window, direction, speed, _allObjects, _events,
 				           std::move(author), std::move(fraction), _gameMode, _lastId++, tier},
 				[this](Bullet* b)
@@ -50,17 +51,20 @@ std::shared_ptr<BaseObj> BulletPool::GetBullet(const ObjRectangle& rect, const i
 					ReturnBullet(b);
 				});
 
-		return bullet;
+		_allObjects->emplace_back(bullet);
+
+		return;
 	}
 
 	std::shared_ptr<BaseObj> bulletAsBase = _bullets.front();
 	_bullets.pop();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
-		bullet->Reset(rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction), tier);
+		bullet->Reset(
+				rect, damage, aoeRadius, color, speed, direction, health, std::move(author), std::move(fraction), tier);
 	}
 
-	return bulletAsBase;
+	_allObjects->emplace_back(bulletAsBase);
 }
 
 void BulletPool::ReturnBullet(BaseObj* bullet)
@@ -72,6 +76,8 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 
 	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
+		std::lock_guard<std::mutex> lock(_bulletsMutex);
+
 		bulletCast->Disable();
 		_bullets.emplace(std::shared_ptr<BaseObj>(bullet, [this](BaseObj* b)
 		{
@@ -94,3 +100,5 @@ void BulletPool::Clear()
 	_isClearing = false;
 	_lastId = 0;
 }
+
+//TODO: write statistics for pickuped bonuses

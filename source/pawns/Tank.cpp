@@ -1,6 +1,9 @@
 #include "../../headers/pawns/Tank.h"
 #include "../../headers/EventSystem.h"
-#include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/application/Window.h"
+#include "../../headers/interfaces/IMoveBeh.h"
+#include "../../headers/interfaces/IShootable.h"
 #include "../../headers/utils/PixelUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
@@ -32,24 +35,14 @@ Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::sha
 
 	Tank::Subscribe();
 
-	_events->EmitEvent(_name + "_Spawn");
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&>("ServerSend_TankSpawn", _name);//TODO: write this replicate
-	}
+	_events->EmitEvent<const std::string&>("TankSpawn", _name);
 }
 
 Tank::~Tank()
 {
 	Tank::Unsubscribe();
 
-	_events->EmitEvent(_name + "_Died");
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&>("ServerSend_TankDied", _name);
-	}
+	_events->EmitEvent<const std::string&>("TankDied", _name);
 }
 
 void Tank::Subscribe()
@@ -109,12 +102,6 @@ void Tank::SubscribeAsClient()
 	{
 		this->SetHealth(health);
 	});
-
-	_events->AddListener<const std::string&>(
-			"ClientReceived_" + _name + "TankDied", _name, [this](const std::string&/* whoDied*/)
-			{
-				this->SetIsAlive(false);
-			});
 
 	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _name, [this]()
 	{
@@ -181,7 +168,6 @@ void Tank::UnsubscribeAsClient() const
 	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
 	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
-	_events->RemoveListener<const std::string&>("ClientReceived_" + _name + "TankDied", _name);
 
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
@@ -190,8 +176,10 @@ void Tank::UnsubscribeAsClient() const
 
 void Tank::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>("BonusTimer", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>("BonusHelmet", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+			"BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+			"BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
@@ -201,6 +189,11 @@ void Tank::TakeDamage(const int damage)
 	if (!_helmet.isActive)
 	{
 		Pawn::TakeDamage(damage);
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const int>("ServerSend_Health", _name, GetHealth());
+		}
 	}
 }
 
@@ -301,7 +294,7 @@ void Tank::OnBonusHelmet(const std::string& author, const std::string& fraction,
 	}
 }
 
-void Tank::OnBonusGrenade(const std::string& author, const std::string& fraction)
+void Tank::OnBonusGrenade(const std::string& /*author*/, const std::string& fraction)
 {
 	if (fraction != _fraction)
 	{
@@ -331,5 +324,17 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 		{
 			_events->EmitEvent<const std::string&>("ServerSend_OnStar", author);
 		}
+	}
+}
+
+void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent<const std::string&, const std::string&, const std::string&>("Statistics_TankHit", _name, author, fraction);
+
+	if (GetHealth() < 1)
+	{
+		//TODO: move to event from statistic when last tank died
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"Statistics_TankDied", _name, author, fraction);
 	}
 }

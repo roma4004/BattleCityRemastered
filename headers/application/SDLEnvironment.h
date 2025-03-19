@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Window.h"
-#include "../Point.h"
-#include "../interfaces/IConfig.h"
-
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <memory>
+
+struct UPoint;
+struct Window;
+class IConfig;
 
 struct SDLEnvironment final
 {

@@ -4,14 +4,13 @@
 
 #include <random>
 
+class BulletPool;
+
 class Enemy final : public Bot
 {
 	void HandleLineOfSight(Direction dir);
 
 	void TickUpdate(float deltaTime) override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void TakeDamage(int damage) override;
 
 public:
 	Enemy(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction direction,

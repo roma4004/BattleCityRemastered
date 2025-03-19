@@ -1,21 +1,18 @@
 #pragma once
 
-#include "../GameMode.h"
-#include "../application/Window.h"
-
 #include <memory>
 #include <random>
 
+enum GameMode : char8_t;
+struct Window;
 class BaseObj;
 class BulletPool;
 class EventSystem;
 
-enum GameMode : char8_t;
-
 class TankSpawner final
 {
 	std::string _name{"TankSpawner"};
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
@@ -44,16 +41,9 @@ class TankSpawner final
 
 	void Subscribe();
 	void SubscribeAsClient();
-	void SubscribeBonus();
-	void OnRespawnResourceChanged(const std::string& author, const std::string& fraction, int respawnResource);
-	void SubscribeTankSpawn();
-	void SubscribeTankDied();
 
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
-	void UnsubscribeBonus() const;
-	void UnsubscribeTankSpawn() const;
-	void UnsubscribeTankDied() const;
 
 	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
 	void SetEnemyNeedRespawn();
@@ -79,6 +69,7 @@ class TankSpawner final
 	void DecreasePlayerOneRespawnResource();
 	void DecreasePlayerTwoRespawnResource();
 	void OnTankSpawn(const std::string& whoSpawn);
+	void OnTankDied(const std::string& whoDied);
 
 public:
 	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,

@@ -1,6 +1,8 @@
 #include "../../headers/pawns/CoopBot.h"
-#include "../../headers/EventSystem.h"
+#include "../../headers/Direction.h"
+#include "../../headers/GameMode.h"
 #include "../../headers/LineOfSight.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/utils/TimeUtils.h"
@@ -124,15 +126,5 @@ void CoopBot::TickUpdate(const float deltaTime)
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
 		HandleLineOfSight(GetDirection());
-	}
-}
-
-void CoopBot::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	_events->EmitEvent<const std::string&, const std::string&>("CoopBotHit", author, fraction);
-
-	if (GetHealth() < 1)
-	{
-		_events->EmitEvent<const std::string&, const std::string&>("CoopBotDied", author, fraction);
 	}
 }

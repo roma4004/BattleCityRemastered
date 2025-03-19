@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Tank.h"
-#include "../interfaces/IInputProvider.h"
+
+class IInputProvider;
+class BulletPool;
 
 class PlayerOne final : public Tank
 {
@@ -18,7 +20,4 @@ public:
 	          std::shared_ptr<BulletPool> bulletPool, GameMode gameMode, int id, int tier = 1);
 
 	~PlayerOne() override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void TakeDamage(int damage) override;
 };

@@ -1,5 +1,6 @@
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
 #include "../../headers/Pawns/Pawn.h"
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/SteelWall.h"
@@ -123,7 +124,8 @@ void FortressWall::UnsubscribeAsClient() const
 
 void FortressWall::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>("BonusShovel", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+			"BonusShovel", _name);
 }
 
 void FortressWall::Draw() const {}

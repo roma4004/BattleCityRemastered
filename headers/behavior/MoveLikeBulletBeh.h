@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../BaseObj.h"
 #include "../interfaces/IMoveBeh.h"
 
 #include <functional>
 #include <memory>
 
+struct FPoint;
 class EventSystem;
 
 class MoveLikeBulletBeh final : public IMoveBeh

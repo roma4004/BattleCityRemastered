@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../GameMode.h"
-
 #include <memory>
 #include <string>
 
+enum GameMode : char8_t;
 class EventSystem;
 
 struct MenuKeys final
@@ -20,7 +19,7 @@ class InputProviderForMenu final
 {
 	std::string _name;
 	std::shared_ptr<EventSystem> _events{nullptr};
-	GameMode _gameMode{Demo};
+	GameMode _gameMode;
 	MenuKeys _keys;
 
 public:

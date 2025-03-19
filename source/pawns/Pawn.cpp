@@ -1,4 +1,6 @@
 #include "../../headers/pawns/Pawn.h"
+#include "../../headers/application/Window.h"
+#include "../../headers/interfaces/IMoveBeh.h"
 
 Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
            const Direction direction, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,

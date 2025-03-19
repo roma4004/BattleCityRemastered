@@ -1,6 +1,9 @@
 #include "../../headers/pawns/Enemy.h"
+#include "../../headers/Direction.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
 #include "../../headers/LineOfSight.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>
@@ -130,26 +133,5 @@ void Enemy::TickUpdate(const float deltaTime)
 	{
 		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
 				"ServerSend_Pos", "Enemy" + std::to_string(GetId()), GetPos(), GetDirection());
-	}
-}
-
-void Enemy::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	_events->EmitEvent<const std::string&, const std::string&>("EnemyHit", author, fraction);
-
-	if (GetHealth() < 1)
-	{
-		//TODO: move to event from statistic when last tank died
-		_events->EmitEvent<const std::string&, const std::string&>("EnemyDied", author, fraction);
-	}
-}
-
-void Enemy::TakeDamage(const int damage)
-{
-	Tank::TakeDamage(damage);
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }

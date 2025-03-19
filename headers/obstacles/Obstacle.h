@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../GameMode.h"
 
 #include <memory>
 
+enum GameMode : char8_t;
 class EventSystem;
 struct Window;
 
@@ -13,7 +13,7 @@ class Obstacle : public BaseObj
 	std::shared_ptr<Window> _window{nullptr};
 
 protected:
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:

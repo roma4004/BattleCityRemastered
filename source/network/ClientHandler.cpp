@@ -1,5 +1,4 @@
 #include "../../headers/network/ClientHandler.h"
-#include "../../headers/network/Client.h"
 
 #include <boost/asio/io_context.hpp>
 
@@ -17,5 +16,6 @@ ClientHandler::ClientHandler(std::shared_ptr<EventSystem> events)
 
 ClientHandler::~ClientHandler()
 {
+	_ioContext.stop();
 	_clientThread.join();
 };

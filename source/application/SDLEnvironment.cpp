@@ -1,6 +1,7 @@
 #include "../../headers/application/SDLEnvironment.h"
 #include "../../headers/application/ConfigFailure.h"
 #include "../../headers/application/ConfigSuccess.h"
+#include "../../headers/application/Window.h"
 
 #include <SDL.h>
 #include <SDL_image.h>

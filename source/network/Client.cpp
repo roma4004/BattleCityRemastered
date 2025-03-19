@@ -1,4 +1,5 @@
 #include "../../headers/network/Client.h"
+#include "../../headers/EventSystem.h"
 
 #include <fstream>
 #include <iostream>
@@ -13,23 +14,12 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 	  _events{std::move(events)},
 	  _name{"Client"}
 {
-	_events->AddListener("ArrowUp_Pressed", _name, [this]() { this->SendKeyState("ArrowUp_Pressed"); });
-	_events->AddListener("ArrowLeft_Pressed", _name, [this]() { this->SendKeyState("ArrowLeft_Pressed"); });
-	_events->AddListener("ArrowDown_Pressed", _name, [this]() { this->SendKeyState("ArrowDown_Pressed"); });
-	_events->AddListener("ArrowRight_Pressed", _name, [this]() { this->SendKeyState("ArrowRight_Pressed"); });
-	_events->AddListener("RCTRL_Pressed", _name, [this]() { this->SendKeyState("RCTRL_Pressed"); });
-
-	_events->AddListener("ArrowUp_Released", _name, [this]() { this->SendKeyState("ArrowUp_Released"); });
-	_events->AddListener("ArrowLeft_Released", _name, [this]() { this->SendKeyState("ArrowLeft_Released"); });
-	_events->AddListener("ArrowDown_Released", _name, [this]() { this->SendKeyState("ArrowDown_Released"); });
-	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
-	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
+	Subscribe();
 
 	tcp::resolver resolver(ioContext);
 	const auto endpointIterator = resolver.resolve(host, port);
 	boost::asio::async_connect(
-			_socket,
-			endpointIterator,
+			_socket, endpointIterator,
 			[this](const boost::system::error_code& ec, tcp::endpoint /*endpoint_iterator*/)
 			{
 				if (!ec)
@@ -41,6 +31,53 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 }
 
 Client::~Client()
+{
+	Unsubscribe();
+
+	try
+	{
+		if (_socket.is_open())
+		{
+			boost::system::error_code ec;
+			_socket.shutdown(tcp::socket::shutdown_both, ec);
+			if (ec)
+			{
+				std::cerr << "Error during socket shutdown: " << ec.message() << std::endl;
+			}
+
+			_socket.close(ec);
+			if (ec)
+			{
+				std::cerr << "Error during socket close: " << ec.message() << std::endl;
+			}
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Exception in ~Client: " << e.what() << '\n';
+	}
+	catch (...)
+	{
+		std::cerr << "Unknown error in ~Client" << '\n';
+	}
+}
+
+void Client::Subscribe()
+{
+	_events->AddListener("ArrowUp_Pressed", _name, [this]() { this->SendKeyState("ArrowUp_Pressed"); });
+	_events->AddListener("ArrowLeft_Pressed", _name, [this]() { this->SendKeyState("ArrowLeft_Pressed"); });
+	_events->AddListener("ArrowDown_Pressed", _name, [this]() { this->SendKeyState("ArrowDown_Pressed"); });
+	_events->AddListener("ArrowRight_Pressed", _name, [this]() { this->SendKeyState("ArrowRight_Pressed"); });
+	_events->AddListener("RCTRL_Pressed", _name, [this]() { this->SendKeyState("RCTRL_Pressed"); });
+
+	_events->AddListener("ArrowUp_Released", _name, [this]() { this->SendKeyState("ArrowUp_Released"); });
+	_events->AddListener("ArrowLeft_Released", _name, [this]() { this->SendKeyState("ArrowLeft_Released"); });
+	_events->AddListener("ArrowDown_Released", _name, [this]() { this->SendKeyState("ArrowDown_Released"); });
+	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
+	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
+}
+
+void Client::Unsubscribe() const
 {
 	_events->RemoveListener("ArrowUp_Pressed", _name);
 	_events->RemoveListener("ArrowLeft_Pressed", _name);
@@ -79,31 +116,25 @@ void Client::ReadResponse()
 			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game
 			if (data.eventName == "Pos")
 			{
-				events->EmitEvent<const FPoint, const Direction>("ClientReceived_" + data.objectName + data.eventName,
-				                                                 data.newPos, data.direction);
+				events->EmitEvent<const FPoint, const Direction>(
+						"ClientReceived_" + data.who + data.eventName, data.pos, data.dir);
 			}
 			else if (data.eventName == "Shot")
 			{
-				events->EmitEvent<const Direction>("ClientReceived_" + data.objectName + data.eventName,
-				                                   data.direction);
+				events->EmitEvent<const Direction>("ClientReceived_" + data.who + data.eventName, data.dir);
 			}
 			else if (data.eventName == "Health")
 			{
-				events->EmitEvent<const int>("ClientReceived_" + data.objectName + data.eventName, data.health);
-			}
-			else if (data.eventName == "RespawnResourceChanged")
-			{
-				events->EmitEvent<const std::string&, const std::string&, const int>(
-					"ClientReceived_" + data.eventName, data.objectName, data.fraction, data.respawnResource);
+				events->EmitEvent<const int>("ClientReceived_" + data.who + data.eventName, data.health);
 			}
 			else if (data.eventName == "Dispose")
 			{
-				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
+				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			}
 			else if (data.eventName == "BonusSpawn")
 			{
-				events->EmitEvent<const FPoint, const BonusTypeId, const int>(
-						"ClientReceived_" + data.eventName, data.newPos, data.typeId, data.id);
+				events->EmitEvent<const FPoint, const BonusType, const int>(
+						"ClientReceived_BonusSpawn", data.pos, data.type, data.id);
 			}
 			else if (data.eventName == "BonusDeSpawn")
 			{
@@ -121,47 +152,36 @@ void Client::ReadResponse()
 			{
 				events->EmitEvent<const int>("ClientReceived_FortressToBrick", data.id);
 			}
-			else if (data.eventName == "TankDied")
-			{
-				events->EmitEvent<const std::string&>(
-						"ClientReceived_" + data.objectName + data.eventName, data.objectName);
-				//TODO: remove whoDied argument not needed
-			}
-			else if (data.eventName == "TankSpawn")
-			{
-				events->EmitEvent<const std::string&>(
-						"ClientReceived_" + data.objectName + data.eventName, data.objectName);
-			}
 			else if (data.eventName == "OnHelmetActivate")
 			{
-				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
+				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			}
 			else if (data.eventName == "OnHelmetDeactivate")
 			{
-				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
+				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			}
 			else if (data.eventName == "OnStar")
 			{
-				events->EmitEvent("ClientReceived_" + data.objectName + data.eventName);
+				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			}
 			else if (data.eventName == "OnTank")
 			{
 				events->EmitEvent<const std::string&, const std::string&>(
-						"ClientReceived_" + data.eventName, data.objectName, data.fraction);
+						"ClientReceived_" + data.eventName, data.who, data.fraction);
 			}
 			else if (data.eventType == "Statistics")
 			{
 				events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-						"ClientReceived_" + data.eventType, data.eventName, data.objectName, data.fraction);
+						"ClientReceived_" + data.eventType, data.eventName, data.who, data.fraction);
 			}
 			else if (data.eventName == "OnGrenade")
 			{
 				events->EmitEvent<const std::string&, const std::string&>(
-						"ClientReceived_" + data.eventName, data.objectName, data.fraction);
+						"ClientReceived_" + data.eventName, data.who, data.fraction);
 			}
 			else if (data.eventName == "KeyState")//key input
 			{
-				events->EmitEvent(data.objectName);
+				events->EmitEvent(data.who);
 			}
 
 			// Since we want to keep listening, initiate reading again

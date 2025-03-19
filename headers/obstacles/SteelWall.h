@@ -1,10 +1,9 @@
 ﻿#pragma once
 
 #include "Obstacle.h"
-#include "../BaseObj.h"
-#include "../application/Window.h"
 
 struct ObjRectangle;
+struct Window;
 class EventSystem;
 
 class SteelWall final : public Obstacle

@@ -1,13 +1,12 @@
 ﻿#pragma once
 
 #include "Pawn.h"
-#include "../GameMode.h"
 
 #include <memory>
 #include <string>
 
+enum GameMode : char8_t;
 struct UPoint;
-class BaseObj;
 class EventSystem;
 
 class Bullet final : public Pawn
@@ -15,7 +14,7 @@ class Bullet final : public Pawn
 	std::string _author;
 	double _bulletDamageRadius{12.f};
 	int _damage{0};
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeAsHost();

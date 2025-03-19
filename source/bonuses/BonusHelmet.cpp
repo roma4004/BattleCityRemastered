@@ -1,5 +1,8 @@
 #include "../../headers/bonuses/BonusHelmet.h"
-#include "../../headers/bonuses/BonusTypeId.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/Point.h"
+#include "../../headers/bonuses/BonusType.h"
 
 BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                          const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime,
@@ -8,7 +11,7 @@ BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<Window> windo
 {
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+		_events->EmitEvent<const std::string&, const FPoint, const BonusType, const int>(
 				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Helmet, _id);
 	}
 }

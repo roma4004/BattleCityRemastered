@@ -1,6 +1,9 @@
+#include "../headers/BulletPool.h"
+#include "../headers/Direction.h"
 #include "../headers/EventSystem.h"
 #include "../headers/GameMode.h"
 #include "../headers/Point.h"
+#include "../headers/application/Window.h"
 #include "../headers/obstacles/BrickWall.h"
 #include "../headers/obstacles/FortressWall.h"
 #include "../headers/obstacles/SteelWall.h"
@@ -26,9 +29,9 @@ protected:
 
 	void SetUp() override
 	{
+		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
-		_events = std::make_shared<EventSystem>();
 		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
 		ObjRectangle bulletRect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 		constexpr int color = 0xffffff;
@@ -37,6 +40,7 @@ protected:
 		constexpr double bulletDamageRadius = 12.0;
 		std::string name = "Player";
 		std::string fraction = "PlayerTeam";
+
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

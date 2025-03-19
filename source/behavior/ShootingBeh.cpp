@@ -1,8 +1,10 @@
 #include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/BulletPool.h"
+#include "../../headers/Direction.h"
+#include "../../headers/Point.h"
 #include "../../headers/pawns/Tank.h"
 
 #include <functional>
-
 #include <memory>
 
 ShootingBeh::ShootingBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -111,8 +113,8 @@ void ShootingBeh::Shot() const
 		return;
 	}
 
-	const ObjRectangle bulletRect = GetBulletStartRect();
-	if (bulletRect.x < 0.f || bulletRect.y < 0.f)
+	const ObjRectangle rect = GetBulletStartRect();
+	if (rect.x < 0.f || rect.y < 0.f)
 	{
 		//Try shooting outside screen
 		return;
@@ -127,6 +129,6 @@ void ShootingBeh::Shot() const
 	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
-	_allObjects->emplace_back(_bulletPool->GetBullet(bulletRect, damage, aoeRadius, color, health, direction, speed,
-	                                                 std::move(author), std::move(fraction), tier));
+	_bulletPool->SpawnBullet(
+			rect, damage, aoeRadius, color, health, direction, speed, std::move(author), std::move(fraction), tier);
 }

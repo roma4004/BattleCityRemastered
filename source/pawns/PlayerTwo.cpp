@@ -1,7 +1,11 @@
 #include "../../headers/pawns/PlayerTwo.h"
+#include "../../headers/Direction.h"
 #include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/Point.h"
 #include "../../headers/behavior/MoveLikeTankBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
+#include "../../headers/interfaces/IInputProvider.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <chrono>
@@ -68,25 +72,5 @@ void PlayerTwo::TickUpdate(const float deltaTime)
 	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
 		Shot();
-	}
-}
-
-void PlayerTwo::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	_events->EmitEvent<const std::string&, const std::string&>(_name + "Hit", author, fraction);
-
-	if (GetHealth() < 1)
-	{
-		_events->EmitEvent<const std::string&, const std::string&>(_name + "Died", author, fraction);
-	}
-}
-
-void PlayerTwo::TakeDamage(const int damage)
-{
-	Tank::TakeDamage(damage);
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", GetName(), GetHealth());
 	}
 }

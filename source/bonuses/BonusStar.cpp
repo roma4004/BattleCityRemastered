@@ -1,5 +1,8 @@
 #include "../../headers/Bonuses/BonusStar.h"
-#include "../../headers/bonuses/BonusTypeId.h"
+#include "../../headers/EventSystem.h"
+#include "../../headers/GameMode.h"
+#include "../../headers/Point.h"
+#include "../../headers/bonuses/BonusType.h"
 
 BonusStar::BonusStar(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                      const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime,
@@ -8,7 +11,7 @@ BonusStar::BonusStar(const ObjRectangle& rect, std::shared_ptr<Window> window, s
 {
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const FPoint, const BonusTypeId, const int>(
+		_events->EmitEvent<const std::string&, const FPoint, const BonusType, const int>(
 				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, Star, _id);
 	}
 }

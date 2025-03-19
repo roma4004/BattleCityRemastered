@@ -1,5 +1,5 @@
 ﻿#include "../headers/Map.h"
-#include "../headers/ObjRectangle.h"
+#include "../headers/obstacles/ObstacleSpawner.h"
 #include "../headers/obstacles/ObstacleTypeId.h"
 
 Map::Map(ObstacleSpawner* obstacleSpawner) : _obstacleSpawner{obstacleSpawner} {}

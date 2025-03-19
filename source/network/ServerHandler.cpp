@@ -1,5 +1,4 @@
 #include "../../headers/network/ServerHandler.h"
-#include "../../headers/network/Server.h"
 
 #include <iostream>
 #include <boost/asio/io_context.hpp>
@@ -28,5 +27,6 @@ ServerHandler::ServerHandler(std::shared_ptr<EventSystem> events)
 
 ServerHandler::~ServerHandler()
 {
+	_ioContext.stop();
 	_serverThread.join();
 };

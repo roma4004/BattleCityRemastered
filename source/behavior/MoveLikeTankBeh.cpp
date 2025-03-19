@@ -1,4 +1,6 @@
 #include "../../headers/behavior/MoveLikeTankBeh.h"
+#include "../../headers/Direction.h"
+#include "../../headers/Point.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Tank.h"
 #include "../../headers/utils/ColliderUtils.h"

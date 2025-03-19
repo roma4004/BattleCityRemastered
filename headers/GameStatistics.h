@@ -1,16 +1,15 @@
 #pragma once
 
-#include "GameMode.h"
-
 #include <memory>
 #include <string>
 
+enum GameMode : char8_t;
 class EventSystem;
 
 class GameStatistics final
 {
 	std::string _name;
-	GameMode _gameMode{Demo};
+	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
