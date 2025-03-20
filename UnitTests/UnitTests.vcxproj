@@ -37,46 +37,50 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
+    <ClCompile Include="..\source\components\BonusSpawner.cpp" />
+    <ClCompile Include="..\source\components\BulletPool.cpp" />
+    <ClCompile Include="..\source\components\GameStatistics.cpp" />
+    <ClCompile Include="..\source\components\LineOfSight.cpp" />
+    <ClCompile Include="..\source\components\ObstacleSpawner.cpp" />
+    <ClCompile Include="..\source\components\TankSpawner.cpp" />
+    <ClCompile Include="..\source\ObjRectangle.cpp" />
+    <ClCompile Include="..\source\Obstacles\BrickWall.cpp" />
+    <ClCompile Include="..\source\Obstacles\SteelWall.cpp" />
+    <ClCompile Include="..\source\Obstacles\WaterTile.cpp" />
+    <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
+    <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
+    <ClCompile Include="..\source\application\Window.cpp" />
+    <ClCompile Include="..\source\behavior\MoveLikeAIBeh.cpp" />
+    <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
+    <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
+    <ClCompile Include="..\source\behavior\ShootingBeh.cpp" />
     <ClCompile Include="..\source\bonuses\Bonus.cpp" />
     <ClCompile Include="..\source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="..\source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="..\source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="..\source\bonuses\BonusStar.cpp" />
-    <ClCompile Include="..\source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusStatus.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTank.cpp" />
     <ClCompile Include="..\source\bonuses\BonusTimer.cpp" />
-    <ClCompile Include="..\source\BulletPool.cpp" />
-    <ClCompile Include="..\source\GameStatistics.cpp" />
-    <ClCompile Include="..\source\InputProviderForPlayerOne.cpp" />
-    <ClCompile Include="..\source\InputProviderForPlayerTwo.cpp" />
-    <ClCompile Include="..\source\LineOfSight.cpp" />
-    <ClCompile Include="..\source\MoveLikeAIBeh.cpp" />
-    <ClCompile Include="..\source\MoveLikeBulletBeh.cpp" />
-    <ClCompile Include="..\source\MoveLikeTankBeh.cpp" />
-    <ClCompile Include="..\source\Obstacles\Brick.cpp" />
-    <ClCompile Include="..\source\Obstacles\Iron.cpp" />
-    <ClCompile Include="..\source\obstacles\ObstacleAroundFortress.cpp" />
-    <ClCompile Include="..\source\Obstacles\Water.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForMenu.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerOne.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerOneNet.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerTwo.cpp" />
+    <ClCompile Include="..\source\input\InputProviderForPlayerTwoNet.cpp" />
+    <ClCompile Include="..\source\obstacles\FortressWall.cpp" />
+    <ClCompile Include="..\source\obstacles\Obstacle.cpp" />
+    <ClCompile Include="..\source\pawns\Bot.cpp" />
     <ClCompile Include="..\source\pawns\Bullet.cpp" />
-    <ClCompile Include="..\source\pawns\CoopAI.cpp" />
+    <ClCompile Include="..\source\pawns\CoopBot.cpp" />
     <ClCompile Include="..\source\pawns\Enemy.cpp" />
     <ClCompile Include="..\source\pawns\Pawn.cpp" />
-    <ClCompile Include="..\source\pawns\PlayerOne.cpp" />
-    <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
+    <ClCompile Include="..\source\pawns\Player.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
-    <ClCompile Include="..\source\Rectangle.cpp" />
-    <ClCompile Include="..\source\ShootingBeh.cpp" />
-    <ClCompile Include="..\source\TankSpawner.cpp" />
-    <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
-    <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="BonusTests.cpp" />
     <ClCompile Include="BulletsTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
     <ClCompile Include="RespawnTankTests.cpp" />
     <ClCompile Include="StatisticsTests.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="MockPlayerOne.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -86,7 +90,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\packages\googlemock.v140.windesktop.static.rt-dyn.1.7.0.1\build\native\googlemock.v140.windesktop.static.rt-dyn.targets" Condition="Exists('..\packages\googlemock.v140.windesktop.static.rt-dyn.1.7.0.1\build\native\googlemock.v140.windesktop.static.rt-dyn.targets')" />
-    <Import Project="..\packages\google-testmock.1.14.0\build\native\google-testmock.targets" Condition="Exists('..\packages\google-testmock.1.14.0\build\native\google-testmock.targets')" />
+    <Import Project="..\packages\google-testmock.1.15.2\build\native\google-testmock.targets" Condition="Exists('..\packages\google-testmock.1.15.2\build\native\google-testmock.targets')" />
   </ImportGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -160,6 +164,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
     <Error Condition="!Exists('..\packages\googlemock.v140.windesktop.static.rt-dyn.1.7.0.1\build\native\googlemock.v140.windesktop.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\googlemock.v140.windesktop.static.rt-dyn.1.7.0.1\build\native\googlemock.v140.windesktop.static.rt-dyn.targets'))" />
-    <Error Condition="!Exists('..\packages\google-testmock.1.14.0\build\native\google-testmock.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\google-testmock.1.14.0\build\native\google-testmock.targets'))" />
+    <Error Condition="!Exists('..\packages\google-testmock.1.15.2\build\native\google-testmock.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\google-testmock.1.15.2\build\native\google-testmock.targets'))" />
   </Target>
 </Project>

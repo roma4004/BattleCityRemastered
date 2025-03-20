@@ -1,52 +1,25 @@
 #include "../../headers/Bonuses/BonusTimer.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/BonusType.h"
 
-BonusTimer::BonusTimer(const Rectangle& rect, int* windowBuffer, const UPoint windowSize,
-                       std::shared_ptr<EventSystem> events, const int durationMs, const int lifeTimeMs,
-                       const int color)
-	: Bonus{rect, windowBuffer, windowSize, std::move(events), durationMs, lifeTimeMs, color}
-{
-	_name = "BonusTimer " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
-	Subscribe();
-}
+BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                       const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime,
+                       const int color, const int id, const GameMode gameMode)
+	: Bonus{rect,
+	        std::move(window),
+	        std::move(events),
+	        duration,
+	        lifeTime,
+	        color,
+	        "BonusTimer",
+	        id,
+	        gameMode,
+	        Timer} {}
 
-BonusTimer::~BonusTimer()
-{
-	Unsubscribe();
-};
-
-void BonusTimer::Subscribe()
-{
-	if (_events == nullptr)
-	{
-		return;
-	}
-
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
-
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-}
-
-void BonusTimer::Unsubscribe() const
-{
-	if (_events == nullptr)
-	{
-		return;
-	}
-
-	_events->RemoveListener<const float>("TickUpdate", _name);
-
-	_events->RemoveListener("Draw", _name);
-}
-
-void BonusTimer::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	_events->EmitEvent<const std::string&, const std::string&>("BonusTimer", author, fraction);
-}
+BonusTimer::~BonusTimer() = default;
 
 void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, int>("BonusTimer", author, fraction, _bonusDurationMs);
+	_events->EmitEvent<const std::string&, const std::string&, const std::chrono::milliseconds>(
+			_name, author, fraction, _duration);
 }

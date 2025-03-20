@@ -1,31 +1,24 @@
 ﻿#include "../../headers/pawns/Bullet.h"
-#include "../../headers/EventSystem.h"
+#include "../../headers/Point.h"
+#include "../../headers/behavior/MoveLikeBulletBeh.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/GameMode.h"
+#include "../../headers/pawns/PawnProperty.h"
 
 #include <string>
 
-Bullet::Bullet(const Rectangle& rect, int damage, double aoeRadius, const int color, const int health,
-               int* windowBuffer, const UPoint windowSize, const Direction direction, const float speed,
-               std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string author, std::string fraction)
-	: Pawn{rect,
-	       color,
-	       health,
-	       windowBuffer,
-	       windowSize,
-	       direction,
-	       speed,
-	       allObjects,
-	       events,
-	       std::make_shared<MoveLikeBulletBeh>(this, allObjects, events)},
-	  _author{std::move(author)}, _fraction{std::move(fraction)},
-	  _bulletDamageAreaRadius{aoeRadius},
+Bullet::Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author)
+	: Pawn{std::move(pawnProperty),
+	       std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)
+	  },
+	  _author{std::move(author)},
+	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_name = "bullet " + std::to_string(reinterpret_cast<unsigned long long>(reinterpret_cast<void**>(this)));
 	Subscribe();
 }
 
@@ -36,56 +29,63 @@ Bullet::~Bullet()
 
 void Bullet::Subscribe()
 {
-	if (_events == nullptr)
+	if (_gameMode == PlayAsClient)
 	{
-		return;
+		SubscribeAsClient();
 	}
+}
 
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+void Bullet::SubscribeAsClient()
+{
+	_events->AddListener("ClientReceived_" + _name + "Dispose", _name, [this]()
 	{
-		this->TickUpdate(deltaTime);
+		this->SetIsAlive(false);
 	});
-
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
 void Bullet::Unsubscribe() const
 {
-	if (_events == nullptr)
+	if (_gameMode == PlayAsClient)
 	{
-		return;
+		UnsubscribeAsClient();
 	}
+}
 
-	_events->RemoveListener<const float>("TickUpdate", _name);
-
-	_events->RemoveListener("Draw", _name);
+void Bullet::UnsubscribeAsClient() const
+{
+	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _name);
 }
 
 void Bullet::Disable() const
 {
+	Pawn::Unsubscribe();
 	Unsubscribe();
 }
 
 void Bullet::Enable()
 {
+	Pawn::Subscribe();
 	Subscribe();
 }
 
-void Bullet::Reset(const Rectangle& rect, const int damage, const double aoeRadius, const int color, const float speed,
-                   const Direction direction, const int health, std::string author, std::string fraction)
+//TODO: call this from event subscription
+void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
+                   const float speed, const Direction dir, const int health, std::string author,
+                   std::string fraction, const int tier)
 {
 	SetShape(rect);
 	SetColor(color);
 	SetHealth(health);
-	_moveBeh = std::make_shared<MoveLikeBulletBeh>(this, _allObjects, _events);
-	SetDirection(direction);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
+	SetDirection(dir);
 	_author = std::move(author);
 	_fraction = std::move(fraction);
 	_damage = damage;
-	_bulletDamageAreaRadius = aoeRadius;
+	_bulletDamageRadius = aoeRadius;
 	_speed = speed;
 	SetIsAlive(true);
 	Enable();
+	_tier = tier;
 }
 
 void Bullet::TickUpdate(const float deltaTime)
@@ -93,30 +93,35 @@ void Bullet::TickUpdate(const float deltaTime)
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
 		_moveBeh->Move(deltaTime);
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const FPoint, const Direction>(
+					"ServerSend_Pos", _name, GetPos(), GetDirection());
+		}
 	}
 }
 
-int Bullet::GetDamage() const
-{
-	return _damage;
-}
+int Bullet::GetDamage() const { return _damage; }
 
-double Bullet::GetBulletDamageAreaRadius() const
-{
-	return _bulletDamageAreaRadius;
-}
+double Bullet::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
-std::string Bullet::GetAuthor() const
-{
-	return _author;
-}
-
-std::string Bullet::GetFraction() const
-{
-	return _fraction;
-}
+std::string Bullet::GetAuthor() const { return _author; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>("BulletHit", author, fraction);
+	_events->EmitEvent<const std::string&, const std::string&>("Statistics_BulletHit", author, fraction);
 }
+
+void Bullet::TakeDamage(const int damage)
+{
+	BaseObj::TakeDamage(damage);
+
+	if (_gameMode == PlayAsHost)
+	{
+		//TODO: move this to onHealthChange
+		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", GetName(), GetHealth());
+	}
+}
+
+int Bullet::GetTier() const { return _tier; }

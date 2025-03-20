@@ -1,16 +1,36 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
-BaseObj::BaseObj(const Rectangle& rect, const int color, const int health)
-	: _color(color), _health(health), _shape{rect} {}
+BaseObj::BaseObj(BaseObjProperty baseObjProperty)
+	: _color(baseObjProperty.color),
+	  _health(baseObjProperty.health),
+	  _id{baseObjProperty.id},
+	  _name{std::move(baseObjProperty.name)},
+	  _fraction{std::move(baseObjProperty.fraction)},
+	  _shape{std::move(baseObjProperty.rect)} {}
+
+BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const int id, std::string name,
+                 std::string fraction)
+	: _color(color),
+	  _health(health),
+	  _id{id},
+	  _name{std::move(name)},
+	  _fraction{std::move(fraction)},
+	  _shape{std::move(rect)} {}
 
 BaseObj::~BaseObj() = default;
 
-const Rectangle& BaseObj::GetShape() const { return _shape; }
+ObjRectangle BaseObj::GetShape() const { return _shape; }
 
-void BaseObj::SetShape(const Rectangle& shape) { _shape = shape; }
+void BaseObj::SetShape(const ObjRectangle shape) { _shape = shape; }
 
-FPoint BaseObj::GetPos() const { return FPoint{_shape.x, _shape.y}; }
+std::string BaseObj::GetName() const { return _name; }
+
+int BaseObj::GetId() const { return _id; }
+
+std::string BaseObj::GetFraction() const { return _fraction; }
+
+FPoint BaseObj::GetPos() const { return FPoint{.x = _shape.x, .y = _shape.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)
 {
@@ -48,7 +68,11 @@ void BaseObj::SetColor(const int color) { _color = color; }
 
 int BaseObj::GetHealth() const { return _health; }
 
-void BaseObj::SetHealth(const int health) { _health = health; }
+void BaseObj::SetHealth(const int health)
+{
+	_health = health;
+	_isAlive = _health >= 1;
+}
 
 void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
@@ -57,10 +81,7 @@ bool BaseObj::GetIsAlive() const { return _isAlive; }
 void BaseObj::TakeDamage(const int damage)
 {
 	_health -= damage;
-	if (_health < 1)
-	{
-		_isAlive = false;
-	}
+	_isAlive = _health >= 1;
 }
 
 bool BaseObj::GetIsPassable() const { return _isPassable; }

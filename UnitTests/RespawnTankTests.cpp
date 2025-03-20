@@ -1,11 +1,15 @@
-#include "../headers/EventSystem.h"
-#include "../headers/GameStatistics.h"
-#include "../headers/InputProviderForPlayerOne.h"
-#include "../headers/InputProviderForPlayerTwo.h"
-#include "../headers/TankSpawner.h"
+#include "../headers/application/Window.h"
+#include "../headers/components/BulletPool.h"
+#include "../headers/components/EventSystem.h"
+#include "../headers/components/GameStatistics.h"
+#include "../headers/components/TankSpawner.h"
+#include "../headers/enums/Direction.h"
+#include "../headers/enums/GameMode.h"
+#include "../headers/input/InputProviderForPlayerOne.h"
+#include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/pawns/Enemy.h"
-#include "../headers/pawns/PlayerOne.h"
-#include "../headers/pawns/PlayerTwo.h"
+#include "../headers/pawns/PawnProperty.h"
+#include "../headers/pawns/Player.h"
 
 #include "gtest/gtest.h"
 
@@ -14,44 +18,53 @@
 class TankSpawnerTest : public testing::Test
 {
 protected:
-	std::shared_ptr<EventSystem> _events;
-	std::shared_ptr<GameStatistics> _statistics;
-	std::shared_ptr<TankSpawner> _tankSpawner;
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{800, 600};
+	int _tankHealth{100};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
-	int* _windowBuffer{nullptr};
-	int _tankHealth = 100;
-	std::shared_ptr<BulletPool> _bulletPool;
+	int _yellow{0xeaea00};
+	int _green{0x408000};
+	int _gray{0x808080};
+	std::string _name = "Player1";
+	std::string _fraction = "PlayerTeam";
+	std::string _name2 = "Player2";
+	std::string _fraction2 = "PlayerTeam";
+	GameMode _gameMode{OnePlayer};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, _windowBuffer, &_allObjects, _events);
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
+		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
-		const Rectangle playerRect{0, 0, _tankSize, _tankSize};
-		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		_bulletPool = std::make_shared<BulletPool>();
-		_allObjects.reserve(4);
-		_allObjects.emplace_back(std::make_shared<PlayerOne>(playerRect, yellow, _tankHealth, _windowBuffer,
-		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,
-		                                                     name, fraction, inputProvider, _bulletPool));
 
-		const Rectangle player2Rect{_tankSize, 0, _tankSize, _tankSize};
-		constexpr int green = 0x408000;
-		std::string name2 = "PlayerTwo";
-		std::string fraction2 = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(name2, _events);
-		_allObjects.emplace_back(std::make_shared<PlayerTwo>(player2Rect, green, _tankHealth, _windowBuffer,
-		                                                     _windowSize, UP, _tankSpeed, &_allObjects, _events,
-		                                                     name2, fraction2, inputProvider2, _bulletPool));
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
+
+		const ObjRectangle rect1{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, 1, _name, _fraction};
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		const ObjRectangle rect2{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty2{std::move(rect2), _green, _tankHealth, true, 2, _name2, _fraction2};
+		PawnProperty pawnProperty2{
+				std::move(baseObjProperty2), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		_allObjects.reserve(4);
+		_allObjects.emplace_back(
+				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+		_allObjects.emplace_back(
+				std::make_shared<Player>(std::move(pawnProperty2), _bulletPool, std::move(inputProvider2)));
 	}
 
 	void TearDown() override
@@ -64,10 +77,12 @@ TEST_F(TankSpawnerTest, EnemyOneRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), false);
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy1", "EnemyTeam", _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 	}
 	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), true);
 }
@@ -76,10 +91,12 @@ TEST_F(TankSpawnerTest, EnemyTwoRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), false);
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy2", "EnemyTeam", _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 2, "Enemy2", "EnemyTeam"};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 	}
 	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), true);
 }
@@ -88,10 +105,12 @@ TEST_F(TankSpawnerTest, EnemyThreeRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), false);
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy3", "EnemyTeam", _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 3, "Enemy3", "EnemyTeam"};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 	}
 	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), true);
 }
@@ -100,10 +119,12 @@ TEST_F(TankSpawnerTest, EnemyFourRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), false);
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy4", "EnemyTeam", _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 4, "Enemy4", "EnemyTeam"};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 	}
 	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), true);
 }
@@ -112,13 +133,13 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), false);
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, 1, _name, _fraction};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
 	}
 	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), true);
 }
@@ -127,13 +148,13 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), false);
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, 2, _name2, _fraction2};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
+		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2));
 	}
 	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), true);
 }
@@ -142,10 +163,12 @@ TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetEnemyRespawnResource();
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int gray = 0x808080;
-		auto enemy = std::make_unique<Enemy>(rect, gray, _tankHealth, _windowBuffer, _windowSize, DOWN, _tankSpeed,
-		                                     &_allObjects, _events, "Enemy1", "EnemyTeam", _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 	}
 	EXPECT_GT(respawnResource, _tankSpawner->GetEnemyRespawnResource());
 }
@@ -154,13 +177,13 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetPlayerOneRespawnResource();
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int yellow = 0xeaea00;
-		std::string name = "PlayerOne";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerOne>(rect, yellow, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, 1, _name, _fraction};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
 	}
 	EXPECT_GT(respawnResource, _tankSpawner->GetPlayerOneRespawnResource());
 }
@@ -169,13 +192,13 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetPlayerTwoRespawnResource();
 	{
-		const Rectangle rect{_tankSize * 2, 0, _tankSize, _tankSize};
-		constexpr int green = 0x408000;
-		std::string name = "PlayerTwo";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(name, _events);
-		auto enemy = std::make_shared<PlayerTwo>(rect, green, _tankHealth, _windowBuffer, _windowSize, UP, _tankSpeed,
-		                                         &_allObjects, _events, name, fraction, inputProvider, _bulletPool);
+		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, 2, _name2, _fraction2};
+		PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
+		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2));
 	}
 	EXPECT_GT(respawnResource, _tankSpawner->GetPlayerTwoRespawnResource());
 }

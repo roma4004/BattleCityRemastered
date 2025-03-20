@@ -77,6 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -92,6 +93,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -123,6 +125,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,116 +135,169 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\BaseObj.cpp" />
+    <ClCompile Include="source\components\BonusSpawner.cpp" />
+    <ClCompile Include="source\components\BulletPool.cpp" />
+    <ClCompile Include="source\components\GameStatistics.cpp" />
+    <ClCompile Include="source\components\LineOfSight.cpp" />
+    <ClCompile Include="source\components\Menu.cpp" />
+    <ClCompile Include="source\components\ObstacleSpawner.cpp" />
+    <ClCompile Include="source\components\TankSpawner.cpp" />
+    <ClCompile Include="source\Map.cpp" />
+    <ClCompile Include="source\ObjRectangle.cpp" />
+    <ClCompile Include="source\application\ConfigFailure.cpp" />
+    <ClCompile Include="source\application\ConfigSuccess.cpp" />
+    <ClCompile Include="source\application\GameFailure.cpp" />
+    <ClCompile Include="source\application\GameSuccess.cpp" />
+    <ClCompile Include="source\application\SDLEnvironment.cpp" />
+    <ClCompile Include="source\application\UserInput.cpp" />
+    <ClCompile Include="source\application\Window.cpp" />
+    <ClCompile Include="source\behavior\MoveLikeAIBeh.cpp" />
+    <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
+    <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
+    <ClCompile Include="source\behavior\ShootingBeh.cpp" />
     <ClCompile Include="source\bonuses\Bonus.cpp" />
     <ClCompile Include="source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="source\bonuses\BonusShovel.cpp" />
     <ClCompile Include="source\bonuses\BonusStar.cpp" />
-    <ClCompile Include="source\bonuses\BonusSystem.cpp" />
+    <ClCompile Include="source\bonuses\BonusStatus.cpp" />
     <ClCompile Include="source\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\bonuses\BonusTimer.cpp" />
-    <ClCompile Include="source\BulletPool.cpp" />
-    <ClCompile Include="source\GameFailure.cpp" />
-    <ClCompile Include="source\GameStatistics.cpp" />
-    <ClCompile Include="source\GameSuccess.cpp" />
-    <ClCompile Include="source\ConfigFailure.cpp" />
-    <ClCompile Include="source\ConfigSuccess.cpp" />
-    <ClCompile Include="source\InputProviderForMenu.cpp" />
-    <ClCompile Include="source\InputProviderForPlayerOne.cpp" />
-    <ClCompile Include="source\InputProviderForPlayerTwo.cpp" />
-    <ClCompile Include="source\LineOfSight.cpp" />
+    <ClCompile Include="source\input\InputProviderForMenu.cpp" />
+    <ClCompile Include="source\input\InputProviderForPlayerOne.cpp" />
+    <ClCompile Include="source\input\InputProviderForPlayerOneNet.cpp" />
+    <ClCompile Include="source\input\InputProviderForPlayerTwo.cpp" />
+    <ClCompile Include="source\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="source\main.cpp" />
-    <ClCompile Include="source\BaseObj.cpp" />
-    <ClCompile Include="source\Map.cpp" />
-    <ClCompile Include="source\Menu.cpp" />
-    <ClCompile Include="source\MoveLikeAIBeh.cpp" />
-    <ClCompile Include="source\MoveLikeBulletBeh.cpp" />
-    <ClCompile Include="source\MoveLikeTankBeh.cpp" />
-    <ClCompile Include="source\obstacles\Brick.cpp" />
-    <ClCompile Include="source\obstacles\ObstacleAroundFortress.cpp" />
-    <ClCompile Include="source\obstacles\Iron.cpp" />
-    <ClCompile Include="source\obstacles\Water.cpp" />
+    <ClCompile Include="source\network\Client.cpp" />
+    <ClCompile Include="source\network\ClientHandler.cpp" />
+    <ClCompile Include="source\network\Server.cpp" />
+    <ClCompile Include="source\network\ServerHandler.cpp" />
+    <ClCompile Include="source\obstacles\BrickWall.cpp" />
+    <ClCompile Include="source\obstacles\FortressWall.cpp" />
+    <ClCompile Include="source\obstacles\Obstacle.cpp" />
+    <ClCompile Include="source\obstacles\SteelWall.cpp" />
+    <ClCompile Include="source\obstacles\WaterTile.cpp" />
+    <ClCompile Include="source\pawns\Bot.cpp" />
     <ClCompile Include="source\pawns\Bullet.cpp" />
-    <ClCompile Include="source\pawns\CoopAI.cpp" />
+    <ClCompile Include="source\pawns\CoopBot.cpp" />
     <ClCompile Include="source\pawns\Enemy.cpp" />
     <ClCompile Include="source\pawns\Pawn.cpp" />
-    <ClCompile Include="source\pawns\PlayerOne.cpp" />
-    <ClCompile Include="source\pawns\PlayerTwo.cpp" />
+    <ClCompile Include="source\pawns\Player.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
-    <ClCompile Include="source\Rectangle.cpp" />
-    <ClCompile Include="source\SDLEnvironment.cpp" />
-    <ClCompile Include="source\ShootingBeh.cpp" />
-    <ClCompile Include="source\TankSpawner.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\BaseObj.h" />
+    <ClInclude Include="headers\BaseObjProperty.h" />
+    <ClInclude Include="headers\Circle.h" />
+    <ClInclude Include="headers\components\BonusSpawner.h" />
+    <ClInclude Include="headers\components\BulletPool.h" />
+    <ClInclude Include="headers\components\EventSystem.h" />
+    <ClInclude Include="headers\components\EventSystem.tpp" />
+    <ClInclude Include="headers\components\GameStatistics.h" />
+    <ClInclude Include="headers\components\LineOfSight.h" />
+    <ClInclude Include="headers\components\Menu.h" />
+    <ClInclude Include="headers\components\ObstacleSpawner.h" />
+    <ClInclude Include="headers\components\ObstacleSpawner.tpp" />
+    <ClInclude Include="headers\components\TankSpawner.h" />
+    <ClInclude Include="headers\enums\BonusType.h" />
+    <ClInclude Include="headers\enums\Direction.h" />
+    <ClInclude Include="headers\enums\GameMode.h" />
+    <ClInclude Include="headers\enums\ObstacleType.h" />
+    <ClInclude Include="headers\Map.h" />
+    <ClInclude Include="headers\MouseButton.h" />
+    <ClInclude Include="headers\ObjRectangle.h" />
+    <ClInclude Include="headers\pawns\PawnProperty.h" />
+    <ClInclude Include="headers\PlayerKeys.h" />
+    <ClInclude Include="headers\Point.h" />
+    <ClInclude Include="headers\Point.tpp" />
+    <ClInclude Include="headers\application\ConfigFailure.h" />
+    <ClInclude Include="headers\application\ConfigSuccess.h" />
+    <ClInclude Include="headers\application\GameFailure.h" />
+    <ClInclude Include="headers\application\GameSuccess.h" />
+    <ClInclude Include="headers\application\SDLEnvironment.h" />
+    <ClInclude Include="headers\application\UserInput.h" />
+    <ClInclude Include="headers\application\Window.h" />
+    <ClInclude Include="headers\behavior\MoveLikeAIBeh.h" />
+    <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
+    <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
+    <ClInclude Include="headers\behavior\ShootingBeh.h" />
     <ClInclude Include="headers\bonuses\Bonus.h" />
     <ClInclude Include="headers\bonuses\BonusGrenade.h" />
     <ClInclude Include="headers\bonuses\BonusHelmet.h" />
     <ClInclude Include="headers\bonuses\BonusShovel.h" />
     <ClInclude Include="headers\bonuses\BonusStar.h" />
-    <ClInclude Include="headers\bonuses\BonusSystem.h" />
+    <ClInclude Include="headers\bonuses\BonusStatus.h" />
     <ClInclude Include="headers\bonuses\BonusTank.h" />
     <ClInclude Include="headers\bonuses\BonusTimer.h" />
-    <ClInclude Include="headers\Circle.h" />
-    <ClInclude Include="headers\BaseObj.h" />
-    <ClInclude Include="headers\Direction.h" />
-    <ClInclude Include="headers\EventSystem.h" />
-    <ClInclude Include="headers\GameFailure.h" />
-    <ClInclude Include="headers\GameStatistics.h" />
-    <ClInclude Include="headers\GameSuccess.h" />
-    <ClInclude Include="headers\ConfigFailure.h" />
-    <ClInclude Include="headers\ConfigSuccess.h" />
-    <ClInclude Include="headers\interfaces\IPickupableBonus.h" />
-    <ClInclude Include="headers\interfaces\IShootable.h" />
-    <ClInclude Include="headers\LineOfSight.h" />
-    <ClInclude Include="headers\Map.h" />
-    <ClInclude Include="headers\Menu.h" />
-    <ClInclude Include="headers\MouseButton.h" />
-    <ClInclude Include="headers\MoveLikeAIBeh.h" />
-    <ClInclude Include="headers\MoveLikeBulletBeh.h" />
-    <ClInclude Include="headers\MoveLikeTankBeh.h" />
-    <ClInclude Include="headers\obstacles\Brick.h" />
-    <ClInclude Include="headers\obstacles\ObstacleAroundFortress.h" />
-    <ClInclude Include="headers\obstacles\Iron.h" />
-    <ClInclude Include="headers\obstacles\Water.h" />
-    <ClInclude Include="headers\BulletPool.h" />
-    <ClInclude Include="headers\GameMode.h" />
-    <ClInclude Include="headers\InputProviderForMenu.h" />
-    <ClInclude Include="headers\InputProviderForPlayerOne.h" />
-    <ClInclude Include="headers\InputProviderForPlayerTwo.h" />
+    <ClInclude Include="headers\input\InputProviderForMenu.h" />
+    <ClInclude Include="headers\input\InputProviderForPlayerOne.h" />
+    <ClInclude Include="headers\input\InputProviderForPlayerOneNet.h" />
+    <ClInclude Include="headers\input\InputProviderForPlayerTwo.h" />
+    <ClInclude Include="headers\input\InputProviderForPlayerTwoNet.h" />
     <ClInclude Include="headers\interfaces\IConfig.h" />
     <ClInclude Include="headers\interfaces\IDrawable.h" />
     <ClInclude Include="headers\interfaces\IGame.h" />
+    <ClInclude Include="headers\interfaces\IHaveFraction.h" />
     <ClInclude Include="headers\interfaces\IHealthBar.h" />
     <ClInclude Include="headers\interfaces\IInputProvider.h" />
     <ClInclude Include="headers\interfaces\IMoveBeh.h" />
+    <ClInclude Include="headers\interfaces\INetworkNode.h" />
     <ClInclude Include="headers\interfaces\IObstacle.h" />
+    <ClInclude Include="headers\interfaces\IPickupableBonus.h" />
     <ClInclude Include="headers\interfaces\ISendableDamageStatistics.h" />
+    <ClInclude Include="headers\interfaces\IShootable.h" />
     <ClInclude Include="headers\interfaces\ITickUpdatable.h" />
+    <ClInclude Include="headers\network\Client.h" />
+    <ClInclude Include="headers\network\Client.tpp" />
+    <ClInclude Include="headers\network\ClientHandler.h" />
+    <ClInclude Include="headers\network\Server.h" />
+    <ClInclude Include="headers\network\Server.tpp" />
+    <ClInclude Include="headers\network\ServerHandler.h" />
+    <ClInclude Include="headers\obstacles\BrickWall.h" />
+    <ClInclude Include="headers\obstacles\FortressWall.h" />
+    <ClInclude Include="headers\obstacles\Obstacle.h" />
+    <ClInclude Include="headers\obstacles\SteelWall.h" />
+    <ClInclude Include="headers\obstacles\WaterTile.h" />
+    <ClInclude Include="headers\pawns\Bot.h" />
     <ClInclude Include="headers\pawns\Bullet.h" />
-    <ClInclude Include="headers\pawns\CoopAI.h" />
+    <ClInclude Include="headers\pawns\CoopBot.h" />
     <ClInclude Include="headers\pawns\Enemy.h" />
     <ClInclude Include="headers\pawns\Pawn.h" />
-    <ClInclude Include="headers\pawns\PlayerOne.h" />
-    <ClInclude Include="headers\pawns\PlayerTwo.h" />
+    <ClInclude Include="headers\pawns\Player.h" />
     <ClInclude Include="headers\pawns\Tank.h" />
-    <ClInclude Include="headers\PlayerKeys.h" />
-    <ClInclude Include="headers\Point.h" />
-    <ClInclude Include="headers\Rectangle.h" />
-    <ClInclude Include="headers\SDLEnvironment.h" />
-    <ClInclude Include="headers\ShootingBeh.h" />
-    <ClInclude Include="headers\TankSpawner.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Fonts\backup\bc7x7.ttf" />
+    <Content Include="Resources\Fonts\backup\M10 battle cities.ttf" />
+    <Content Include="Resources\Fonts\info.txt" />
+    <Content Include="Resources\Fonts\misc\FONTLOG-e017.txt" />
+    <Content Include="Resources\Fonts\misc\LICENSE-65f9.txt" />
+    <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
+    <Content Include="Resources\Fonts\info.txt" />
+    <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BattleCityRemastered.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\Images\Title.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Resources\Sounds\levelStarted.wav" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Fonts\bc7x7.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -251,8 +307,10 @@
     <Import Project="packages\sdl2_image.nuget.2.8.2\build\native\sdl2_image.nuget.targets" Condition="Exists('packages\sdl2_image.nuget.2.8.2\build\native\sdl2_image.nuget.targets')" />
     <Import Project="packages\sdl2_mixer.nuget.redist.2.8.0\build\native\sdl2_mixer.nuget.redist.targets" Condition="Exists('packages\sdl2_mixer.nuget.redist.2.8.0\build\native\sdl2_mixer.nuget.redist.targets')" />
     <Import Project="packages\sdl2_mixer.nuget.2.8.0\build\native\sdl2_mixer.nuget.targets" Condition="Exists('packages\sdl2_mixer.nuget.2.8.0\build\native\sdl2_mixer.nuget.targets')" />
-    <Import Project="packages\sdl2.nuget.redist.2.30.2\build\native\sdl2.nuget.redist.targets" Condition="Exists('packages\sdl2.nuget.redist.2.30.2\build\native\sdl2.nuget.redist.targets')" />
-    <Import Project="packages\sdl2.nuget.2.30.2\build\native\sdl2.nuget.targets" Condition="Exists('packages\sdl2.nuget.2.30.2\build\native\sdl2.nuget.targets')" />
+    <Import Project="packages\boost.1.87.0\build\boost.targets" Condition="Exists('packages\boost.1.87.0\build\boost.targets')" />
+    <Import Project="packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets" Condition="Exists('packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" />
+    <Import Project="packages\sdl2.nuget.redist.2.30.9\build\native\sdl2.nuget.redist.targets" Condition="Exists('packages\sdl2.nuget.redist.2.30.9\build\native\sdl2.nuget.redist.targets')" />
+    <Import Project="packages\sdl2.nuget.2.30.9\build\native\sdl2.nuget.targets" Condition="Exists('packages\sdl2.nuget.2.30.9\build\native\sdl2.nuget.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -264,7 +322,9 @@
     <Error Condition="!Exists('packages\sdl2_image.nuget.2.8.2\build\native\sdl2_image.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_image.nuget.2.8.2\build\native\sdl2_image.nuget.targets'))" />
     <Error Condition="!Exists('packages\sdl2_mixer.nuget.redist.2.8.0\build\native\sdl2_mixer.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.redist.2.8.0\build\native\sdl2_mixer.nuget.redist.targets'))" />
     <Error Condition="!Exists('packages\sdl2_mixer.nuget.2.8.0\build\native\sdl2_mixer.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.2.8.0\build\native\sdl2_mixer.nuget.targets'))" />
-    <Error Condition="!Exists('packages\sdl2.nuget.redist.2.30.2\build\native\sdl2.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.redist.2.30.2\build\native\sdl2.nuget.redist.targets'))" />
-    <Error Condition="!Exists('packages\sdl2.nuget.2.30.2\build\native\sdl2.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.2.30.2\build\native\sdl2.nuget.targets'))" />
+    <Error Condition="!Exists('packages\boost.1.87.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.87.0\build\boost.targets'))" />
+    <Error Condition="!Exists('packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets'))" />
+    <Error Condition="!Exists('packages\sdl2.nuget.redist.2.30.9\build\native\sdl2.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.redist.2.30.9\build\native\sdl2.nuget.redist.targets'))" />
+    <Error Condition="!Exists('packages\sdl2.nuget.2.30.9\build\native\sdl2.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.2.30.9\build\native\sdl2.nuget.targets'))" />
   </Target>
 </Project>

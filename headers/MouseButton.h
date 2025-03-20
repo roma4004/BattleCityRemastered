@@ -1,8 +1,8 @@
 #pragma once
 
-struct MouseButtons
+struct MouseButtons final
 {
-	bool MouseLeftButton = false;
-	bool MouseMiddleButton = false;
-	bool MouseRightButton = false;
+	bool MouseLeftButton{false};
+	bool MouseMiddleButton{false};
+	bool MouseRightButton{false};
 };

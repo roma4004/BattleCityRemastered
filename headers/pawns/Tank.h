@@ -1,65 +1,64 @@
 #pragma once
 
 #include "Pawn.h"
-#include "../BulletPool.h"
+#include "../Point.h"
+#include "../bonuses/BonusStatus.h"
 #include "../interfaces/IHealthBar.h"
-#include "../interfaces/IShootable.h"
 
 #include <chrono>
 
 struct UPoint;
+class IShootable;
 
 class Tank : public Pawn, public IHealthBar
 {
 	int _bulletDamage{15};
-
-	float _bulletWidth{6.f};
-
-	float _bulletHeight{6.f};
-
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
-	std::shared_ptr<IShootable> _shootingBeh;
+	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
-protected:
-	double _bulletDamageAreaRadius{12.f};
+	void Subscribe() override;
+	void SubscribeAsClient() override;
+	void SubscribeBonus();
 
-	std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
-
-	int _tier{0};
-	int _fireCooldownMs{1000};//1 sec
-
-	std::string _name;
-	std::string _fraction;
-
-	// bonuses
-	bool _isActiveTimer{false};
-	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
-	std::chrono::system_clock::time_point _activateTimeTimer;
-	int _cooldownTimer{0};
-
-	bool _isActiveHelmet{false};
-	std::chrono::system_clock::time_point _activateTimeHelmet;
-	int _cooldownHelmet{0};
-
-	void Shot() const;
+	void Unsubscribe() const override;
+	void UnsubscribeAsClient() const override;
+	void UnsubscribeBonus() const;
 
 	void DrawHealthBar() const override;
 
-public:
-	Tank(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize,
-	     Direction direction, float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	     const std::shared_ptr<EventSystem>& events, std::shared_ptr<IMoveBeh> moveBeh,
-	     std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction);
+	inline void SetPixel(size_t x, size_t y, int color) const;
 
-	~Tank() override = default;
+	void OnBonusTimer(const std::string& fraction, std::chrono::milliseconds duration);
+	void OnBonusHelmet(const std::string& author, const std::string& fraction, std::chrono::milliseconds duration);
+	void OnBonusGrenade(const std::string& author, const std::string& fraction);
+	void OnBonusStar(const std::string& author, const std::string& fraction);
 
-	[[nodiscard]] std::string GetName() const;
-	[[nodiscard]] std::string GetFraction() const;
+protected:
+	FPoint _bulletSize{6.f, 6.f};
+	double _bulletDamageRadius{12.f};
+	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
+	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
+
+	// bonuses
+	BonusStatus _timer{};
+	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
+	BonusStatus _helmet{};
+
+	void Shot() const;
+
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+
+	void TickUpdate(float deltaTime) override;
 
 	void TakeDamage(int damage) override;
 
-	[[nodiscard]] int GetTankTier() const;
+public:
+	Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh);
+
+	~Tank() override;
+
+	[[nodiscard]] int GetTier() const;
 
 	[[nodiscard]] float GetBulletWidth() const;
 	void SetBulletWidth(float bulletWidth);
@@ -73,9 +72,6 @@ public:
 	[[nodiscard]] int GetBulletDamage() const;
 	void SetBulletDamage(int bulletDamage);
 
-	[[nodiscard]] double GetBulletDamageAreaRadius() const;
-	void SetBulletDamageAreaRadius(double bulletDamageAreaRadius);
-
-	[[nodiscard]] int GetFireCooldownMs() const;
-	void SetFireCooldownMs(int fireCooldown);
+	[[nodiscard]] double GetBulletDamageRadius() const;
+	void SetBulletDamageRadius(double bulletDamageRadius);
 };
