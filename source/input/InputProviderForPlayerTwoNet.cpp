@@ -1,8 +1,8 @@
 #include "../../headers/input/InputProviderForPlayerTwoNet.h"
 #include "../../headers/components/EventSystem.h"
 
-InputProviderForPlayerTwoNet::InputProviderForPlayerTwoNet(std::string name, std::shared_ptr<EventSystem> events)
-	: _name{std::move(name)}, _events{std::move(events)}
+InputProviderForPlayerTwoNet::InputProviderForPlayerTwoNet(std::shared_ptr<EventSystem> events)
+	: _events{std::move(events)}
 {
 	_events->AddListener("ServerReceive_ArrowUp_Pressed", _name, [&btn = playerKeys]() { btn.up = true; });
 	_events->AddListener("ServerReceive_ArrowUp_Released", _name, [&btn = playerKeys]() { btn.up = false; });

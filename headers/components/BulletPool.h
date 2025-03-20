@@ -37,8 +37,8 @@ public:
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void SpawnBullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health, Direction dir,
-	                 float speed, std::string author, std::string fraction, int tier);
+	void SpawnBullet(ObjRectangle rect, int damage, double aoeRadius, int color, int health, Direction dir, float speed,
+	                 std::string author, std::string fraction, int tier);
 
 	void ReturnBullet(BaseObj* bullet);
 

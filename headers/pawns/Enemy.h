@@ -11,10 +11,7 @@ class Enemy final : public Bot
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Enemy(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction dir, float speed,
-	      std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	      std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, GameMode gameMode, int id,
-	      int tier = 1);
+	Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool);
 
 	~Enemy() override;
 };

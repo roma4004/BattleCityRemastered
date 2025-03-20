@@ -2,7 +2,6 @@
 
 #include "Pawn.h"
 
-#include <memory>
 #include <string>
 
 struct UPoint;
@@ -23,10 +22,7 @@ class Bullet final : public Pawn
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Bullet(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health,
-	       std::shared_ptr<Window> window, Direction dir, float speed,
-	       std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	       std::string author, std::string fraction, GameMode gameMode, int id, int tier = 1);
+	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author);
 
 	~Bullet() override;
 

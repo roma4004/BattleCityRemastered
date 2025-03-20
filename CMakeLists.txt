@@ -290,8 +290,7 @@ add_executable(${PROJECT_NAME}
         source/pawns/CoopBot.cpp
         source/pawns/Enemy.cpp
         source/pawns/Pawn.cpp
-        source/pawns/PlayerOne.cpp
-        source/pawns/PlayerTwo.cpp
+        source/pawns/Player.cpp
         source/pawns/Tank.cpp
         source/utils/ColliderUtils.cpp
         source/utils/TimeUtils.cpp

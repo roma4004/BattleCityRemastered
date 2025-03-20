@@ -1,9 +1,22 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
-BaseObj::BaseObj(const ObjRectangle& rect, const int color, const int health, const int id, std::string name,
+BaseObj::BaseObj(BaseObjProperty baseObjProperty)
+	: _color(baseObjProperty.color),
+	  _health(baseObjProperty.health),
+	  _id{baseObjProperty.id},
+	  _name{std::move(baseObjProperty.name)},
+	  _fraction{std::move(baseObjProperty.fraction)},
+	  _shape{std::move(baseObjProperty.rect)} {}
+
+BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const int id, std::string name,
                  std::string fraction)
-	: _color(color), _health(health), _id{id}, _name{std::move(name)}, _fraction{std::move(fraction)}, _shape{rect} {}
+	: _color(color),
+	  _health(health),
+	  _id{id},
+	  _name{std::move(name)},
+	  _fraction{std::move(fraction)},
+	  _shape{std::move(rect)} {}
 
 BaseObj::~BaseObj() = default;
 

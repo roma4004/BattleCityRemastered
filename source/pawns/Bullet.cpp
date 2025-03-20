@@ -3,27 +3,13 @@
 #include "../../headers/behavior/MoveLikeBulletBeh.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
+#include "../../headers/pawns/PawnProperty.h"
 
 #include <string>
 
-Bullet::Bullet(const ObjRectangle& rect, int damage, double aoeRadius, const int color, const int health,
-               std::shared_ptr<Window> window, const Direction dir, const float speed,
-               std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-               std::string author, std::string fraction, const GameMode gameMode, int id, int tier)
-	: Pawn{rect,
-	       color,
-	       health,
-	       std::move(window),
-	       dir,
-	       speed,
-	       allObjects,
-	       events,
-	       std::make_unique<MoveLikeBulletBeh>(this, allObjects, events),
-	       id,
-	       "Bullet" + std::to_string(id),
-	       std::move(fraction),
-	       tier,
-		gameMode
+Bullet::Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author)
+	: Pawn{std::move(pawnProperty),
+	       std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)
 	  },
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},

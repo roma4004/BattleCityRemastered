@@ -9,8 +9,9 @@
 
 enum GameMode : char8_t;
 enum BonusType : char8_t;
-class EventSystem;
 struct Window;
+struct BaseObjProperty;
+class EventSystem;
 
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {

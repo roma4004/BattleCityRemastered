@@ -16,9 +16,8 @@ ConfigSuccess::ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
-	auto menuInput = std::make_unique<InputProviderForMenu>("MenuInput", events);
 	auto statistics = std::make_shared<GameStatistics>(events);
-	auto menu = std::make_unique<Menu>(
-			_renderer, _fpsFont, _logoTexture, statistics, _window, std::move(menuInput), events);
+	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _window, events);
+
 	return std::make_unique<GameSuccess>(_window, _renderer, _screen, _fpsFont, events, statistics, std::move(menu));
 }

@@ -1,8 +1,8 @@
 #include "../../headers/input/InputProviderForPlayerOneNet.h"
 #include "../../headers/components/EventSystem.h"
 
-InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(std::string name, std::shared_ptr<EventSystem> events)
-	: _name{std::move(name)}, _events{std::move(events)}
+InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(std::shared_ptr<EventSystem> events)
+	: _events{std::move(events)}
 {
 	_events->AddListener("ServerReceive_W_Pressed", _name, [&btn = playerKeys]() { btn.up = true; });
 	_events->AddListener("ServerReceive_W_Released", _name, [&btn = playerKeys]() { btn.up = false; });

@@ -5,30 +5,17 @@
 #include "../../headers/enums/Direction.h"
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Enemy.h"
+#include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/TimeUtils.h"
 
 #include <algorithm>
 #include <chrono>
 
-Bot::Bot(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-         const Direction dir, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-         const std::shared_ptr<EventSystem>& events, std::string name, std::string fraction,
-         std::shared_ptr<BulletPool> bulletPool, const GameMode gameMode, const int id, const int tier)
-	: Tank{rect,
-	       color,
-	       health,
-	       std::move(window),
-	       dir,
-	       speed,
-	       allObjects,
-	       events,
-	       std::make_unique<MoveLikeAIBeh>(this, allObjects),
-	       std::make_shared<ShootingBeh>(this, allObjects, events, std::move(bulletPool)),
-	       std::move(name),
-	       std::move(fraction),
-	       gameMode,
-	       id,
-	       tier},
+Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
+	: Tank{std::move(pawnProperty),
+	       std::make_unique<MoveLikeAIBeh>(this, pawnProperty.allObjects),
+	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool))
+	  },
 	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
 	  _lastTimeTurn{std::chrono::system_clock::now()}

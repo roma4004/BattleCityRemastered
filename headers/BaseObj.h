@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BaseObjProperty.h"
 #include "ObjRectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IHaveFraction.h"
@@ -21,7 +22,9 @@ protected:
 	ObjRectangle _shape{};
 
 public:
-	BaseObj(const ObjRectangle& rect, int color, int health, int id, std::string name, std::string fraction);
+	explicit BaseObj(BaseObjProperty baseObjProperty);
+
+	BaseObj(ObjRectangle rect, int color, int health, int id, std::string name, std::string fraction);
 
 	~BaseObj() override;
 

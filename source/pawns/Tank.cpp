@@ -4,29 +4,12 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/interfaces/IMoveBeh.h"
 #include "../../headers/interfaces/IShootable.h"
+#include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/PixelUtils.h"
 #include "../../headers/utils/TimeUtils.h"
 
-Tank::Tank(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-           const Direction dir, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-           std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh,
-           std::shared_ptr<IShootable> shootingBeh, std::string name, std::string fraction, const GameMode gameMode,
-           const int id, const int tier)
-	: Pawn{rect,
-	       color,
-	       health,
-	       std::move(window),
-	       dir,
-	       speed,
-	       allObjects,
-	       std::move(events),
-	       std::move(moveBeh),
-	       id,
-	       std::move(name) + std::to_string(id),// TODO: maybe name should be without tankId
-	       std::move(fraction),
-	       tier,
-	       gameMode
-	  },
+Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh)
+	: Pawn{std::move(pawnProperty), std::move(moveBeh)},
 	  _shootingBeh{std::move(shootingBeh)}
 {
 	BaseObj::SetIsPassable(false);
@@ -141,7 +124,7 @@ void Tank::UnsubscribeBonus() const
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
 
-void Tank::TickUpdate(const float deltaTime)
+void Tank::TickUpdate(const float /*deltaTime*/)
 {
 	if (_timer.isActive && TimeUtils::IsCooldownFinish(_timer.activateTime, _timer.cooldown))
 	{

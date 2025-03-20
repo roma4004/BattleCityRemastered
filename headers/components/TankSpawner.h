@@ -3,6 +3,7 @@
 #include <memory>
 #include <random>
 
+struct ObjRectangle;
 enum GameMode : char8_t;
 struct Window;
 class BaseObj;
@@ -45,16 +46,14 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(int index, float gridOffset, float speed, int health, float size);
+	void SpawnEnemy(int id, float speed, int health);
 	void SetEnemyNeedRespawn();
 
-	void SpawnPlayer1(float gridOffset, float speed, int health, float size);
-	void SpawnPlayer2(float gridOffset, float speed, int health, float size);
-	void SpawnCoopBot1(float gridOffset, float speed, int health, float size);
-	void SpawnCoopBot2(float gridOffset, float speed, int health, float size);
-	void RespawnEnemyTanks(int index);
-	void RespawnPlayerTanks(int index);
-	void RespawnCoopTanks(int index);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, int id);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, int id);
+	void RespawnEnemyTanks(int id);
+	void RespawnPlayerTanks(int id);
+	void RespawnCoopTanks(int id);
 	void SetPlayerNeedRespawn();
 
 	void ResetRespawnStat();

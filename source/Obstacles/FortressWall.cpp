@@ -13,7 +13,7 @@
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id, const GameMode gameMode)
-	: BaseObj{rect, 0x924b00, 1, id, "fortressWall" + std::to_string(id), "Neutral"},
+	: BaseObj{rect, 0x924b00, 1, id, "FortressWall" + std::to_string(id), "Neutral"},
 	  _rect{rect},
 	  _gameMode{gameMode},
 	  _window{window},//TODO: change name for statistic
@@ -48,12 +48,10 @@ void FortressWall::SubscribeAsClient()
 {
 	_events->AddListener<const int>("ClientReceived_FortressDied", _name, [this](const int id)
 	{
-		if (id != _id)
+		if (id == _id)
 		{
-			return;
+			this->OnEnemyPickupShovel();
 		}
-
-		this->OnEnemyPickupShovel();
 	});
 
 	_events->AddListener<const int>("ClientReceived_FortressToSteel", _name, [this](const int id)
@@ -76,30 +74,11 @@ void FortressWall::SubscribeAsClient()
 void FortressWall::SubscribeBonus()
 {
 	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+			//TODO: remove duration for bonuses
 			"BonusShovel", _name,
-			[this](const std::string& /*author*/, const std::string& fraction,
-			       const std::chrono::milliseconds bonusDurationTime)
+			[this](const std::string& /*author*/, const std::string& fraction, const std::chrono::milliseconds duration)
 			{
-				if (fraction == "PlayerTeam")
-				{
-					if (this->_shovel.isActive)
-					{
-						this->_shovel.cooldown += bonusDurationTime;
-
-						return;
-					}
-
-					this->_shovel.isActive = true;
-					this->OnPlayerPickupShovel();
-					this->_shovel.cooldown = bonusDurationTime;
-				}
-				else if (fraction == "EnemyTeam")
-				{
-					this->_shovel.isActive = false;
-					this->OnEnemyPickupShovel();
-				}
-
-				this->_shovel.activateTime = std::chrono::system_clock::now();
+				this->OnBonusShovelPickup(fraction, duration);
 			});
 }
 
@@ -226,6 +205,30 @@ bool FortressWall::IsBrickWall() const
 bool FortressWall::IsSteelWall() const
 {
 	return std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle);
+}
+
+void FortressWall::OnBonusShovelPickup(const std::string& fraction, const std::chrono::milliseconds duration)
+{
+	if (fraction == "PlayerTeam")
+	{
+		if (this->_shovel.isActive)
+		{
+			this->_shovel.cooldown += duration;
+
+			return;
+		}
+
+		this->_shovel.isActive = true;
+		this->_shovel.cooldown = duration;
+		this->OnPlayerPickupShovel();
+	}
+	else if (fraction == "EnemyTeam")
+	{
+		this->_shovel.isActive = false;
+		this->OnEnemyPickupShovel();
+	}
+
+	this->_shovel.activateTime = std::chrono::system_clock::now();
 }
 
 // NOTE: call when enemy team bonus pick up

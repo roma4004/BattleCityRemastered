@@ -84,9 +84,9 @@ void BonusSpawner::SubscribeAsClient()
 			"ClientReceived_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const int id)
 			{
 				const auto size = static_cast<float>(_bonusSize);
-				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
 				const int color = _distRandColor(_gen);
-				SpawnBonus(rect, color, type, id);
+				ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
+				SpawnBonus(std::move(rect), color, type, id);
 			});
 }
 
@@ -124,12 +124,12 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 
 		if (isFreeSpawnSpot)
 		{
-			SpawnRandomBonus(rect);
+			SpawnRandomBonus(std::move(rect));
 		}
 	}
 }
 
-void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const BonusType bonusType, const int id)
+void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusType bonusType, const int id)
 {
 	if (id != -1)
 	{
@@ -145,43 +145,43 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 		case None:
 			break;
 		case Timer:
-			SpawnBonus<BonusTimer>(rect, color, _lastSpawnId);
+			SpawnBonus<BonusTimer>(std::move(rect), color, _lastSpawnId);
 			break;
 		case Helmet:
-			SpawnBonus<BonusHelmet>(rect, color, _lastSpawnId);
+			SpawnBonus<BonusHelmet>(std::move(rect), color, _lastSpawnId);
 			break;
 		case Grenade:
-			SpawnBonus<BonusGrenade>(rect, color, _lastSpawnId);
+			SpawnBonus<BonusGrenade>(std::move(rect), color, _lastSpawnId);
 			break;
 		case Tank:
-			SpawnBonus<BonusTank>(rect, color, _lastSpawnId);
+			SpawnBonus<BonusTank>(std::move(rect), color, _lastSpawnId);
 			break;
 		case Star:
-			SpawnBonus<BonusStar>(rect, color, _lastSpawnId);
+			SpawnBonus<BonusStar>(std::move(rect), color, _lastSpawnId);
 			break;
 		case Shovel:
-			SpawnBonus<BonusShovel>(rect, color, _lastSpawnId);
+			SpawnBonus<BonusShovel>(std::move(rect), color, _lastSpawnId);
 			break;
 		default:
 			break;
 	}
 }
 
-void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
+void BonusSpawner::SpawnRandomBonus(ObjRectangle rect)
 {
 	const int color = _distRandColor(_gen);
 	const auto bonusType = static_cast<BonusType>(_distSpawnType(_gen));
-	SpawnBonus(rect, color, bonusType);
+	SpawnBonus(std::move(rect), color, bonusType);
 }
 
 template<typename TBonusType>
-void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const int id)
+void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const int id)
 {
 	constexpr std::chrono::milliseconds lifetime{std::chrono::seconds{15}};
 	constexpr std::chrono::milliseconds duration{std::chrono::seconds{15}};
 
 	_allObjects->emplace_back(
-			std::make_shared<TBonusType>(rect, _window, _events, duration, lifetime, color, id, _gameMode));
+			std::make_shared<TBonusType>(std::move(rect), _window, _events, duration, lifetime, color, id, _gameMode));
 
 	_lastTimeSpawn = std::chrono::system_clock::now();
 }

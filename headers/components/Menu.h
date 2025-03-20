@@ -50,7 +50,7 @@ class Menu final
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
 	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
-	     std::shared_ptr<Window> window, std::unique_ptr<InputProviderForMenu> input,
+	     std::shared_ptr<Window> window,
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();

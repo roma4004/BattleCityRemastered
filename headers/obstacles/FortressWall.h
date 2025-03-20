@@ -44,6 +44,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	void OnPlayerShovelCooldownEnd();
 
 	void OnEnemyPickupShovel();
+	void OnBonusShovelPickup(const std::string& fraction, std::chrono::milliseconds duration);
 
 public:
 	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,

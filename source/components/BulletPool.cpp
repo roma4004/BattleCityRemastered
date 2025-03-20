@@ -1,6 +1,7 @@
 #include "../../headers/components/BulletPool.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/pawns/Bullet.h"
+#include "../../headers/pawns/PawnProperty.h"
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        std::shared_ptr<Window> window, const GameMode gameMode)
@@ -35,7 +36,7 @@ void BulletPool::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
-void BulletPool::SpawnBullet(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
+void BulletPool::SpawnBullet(ObjRectangle rect, const int damage, const double aoeRadius, const int color,
                              const int health, const Direction dir, const float speed, std::string author,
                              std::string fraction, const int tier)
 {
@@ -43,16 +44,19 @@ void BulletPool::SpawnBullet(const ObjRectangle& rect, const int damage, const d
 
 	if (_bullets.empty())
 	{
-		std::shared_ptr<BaseObj> bullet =
-				std::shared_ptr<Bullet>(
-						new Bullet{rect, damage, aoeRadius, color, health, _window, dir, speed, _allObjects, _events,
-						           std::move(author), std::move(fraction), _gameMode, _lastId++, tier},
-						[this](Bullet* b)
-						{
-							ReturnBullet(b);
-						});
+		std::string name{"Bullet" + std::to_string(_lastId.load())};
+		BaseObjProperty baseObjProperty{
+				std::move(rect), color, health, true, _lastId.load(), std::move(name), std::move(fraction)};
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), _window, dir, speed, _allObjects, _events, tier, _gameMode};
+		auto bullet = std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty), damage, aoeRadius, std::move(author)},
+		                                      [this](Bullet* b)
+		                                      {
+			                                      ReturnBullet(b);
+		                                      });
 
 		_allObjects->emplace_back(bullet);
+		++_lastId;
 
 		return;
 	}
@@ -62,7 +66,8 @@ void BulletPool::SpawnBullet(const ObjRectangle& rect, const int damage, const d
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
 		bullet->Reset(
-				rect, damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction), tier);
+				std::move(rect), damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction),
+				tier);
 	}
 
 	_allObjects->emplace_back(bulletAsBase);

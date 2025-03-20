@@ -74,8 +74,7 @@
     <ClCompile Include="..\source\pawns\CoopBot.cpp" />
     <ClCompile Include="..\source\pawns\Enemy.cpp" />
     <ClCompile Include="..\source\pawns\Pawn.cpp" />
-    <ClCompile Include="..\source\pawns\PlayerOne.cpp" />
-    <ClCompile Include="..\source\pawns\PlayerTwo.cpp" />
+    <ClCompile Include="..\source\pawns\Player.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
     <ClCompile Include="BonusTests.cpp" />
     <ClCompile Include="BulletsTests.cpp" />

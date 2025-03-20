@@ -34,10 +34,7 @@ protected:
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Bot(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction dir,
-	    float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<EventSystem>& events,
-	    std::string name, std::string fraction, std::shared_ptr<BulletPool> bulletPool, GameMode gameMode, int id,
-	    int tier);
+	Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool);
 
 	~Bot() override;
 };

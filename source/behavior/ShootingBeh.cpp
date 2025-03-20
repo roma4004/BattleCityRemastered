@@ -109,7 +109,7 @@ void ShootingBeh::Shot() const
 		return;
 	}
 
-	const ObjRectangle rect = GetBulletStartRect();
+	ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.f || rect.y < 0.f)
 	{
 		//Try shooting outside screen
@@ -126,5 +126,6 @@ void ShootingBeh::Shot() const
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
 	_bulletPool->SpawnBullet(
-			rect, damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction), tier);
+			std::move(rect), damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction),
+			tier);
 }

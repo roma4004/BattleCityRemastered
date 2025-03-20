@@ -7,17 +7,16 @@
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
            std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
-           std::shared_ptr<Window> window, std::unique_ptr<InputProviderForMenu> input,
-           std::shared_ptr<EventSystem> events)
+           std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events)
 	: _yOffsetStart{static_cast<unsigned int>(window->size.y)},
 	  _selectedGameMode{OnePlayer},
-	  _window{window},
+	  _window{std::move(window)},
 	  _renderer{std::move(renderer)},
-	  _events{std::move(events)},
+	  _events{events},
 	  _menuFont{std::move(menuFont)},
 	  _menuLogo{std::move(menuLogo)},
 	  _statistics{std::move(statistics)},
-	  _input{std::move(input)},
+	  _input{std::make_unique<InputProviderForMenu>(events)},
 	  _name{std::string("Menu")}
 {
 	Subscribe();

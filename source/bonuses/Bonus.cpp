@@ -7,7 +7,7 @@
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
              const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime, const int color,
              std::string name, const int id, const GameMode gameMode, const BonusType bonusType)
-	: BaseObj{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1}, color, 1, id, std::move(name), "Neutral"},
+	: BaseObj{rect, color, 1, id, std::move(name), "Neutral"},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
 	  _gameMode{gameMode},

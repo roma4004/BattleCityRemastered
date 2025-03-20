@@ -3,20 +3,18 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/interfaces/IMoveBeh.h"
+#include "../../headers/pawns/PawnProperty.h"
 
-Pawn::Pawn(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
-           const Direction dir, const float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-           std::shared_ptr<EventSystem> events, std::unique_ptr<IMoveBeh> moveBeh, const int id, std::string name,
-           std::string fraction, const int tier, const GameMode gameMode)
-	: BaseObj{rect, color, health, id, std::move(name), std::move(fraction)},
-	  _direction{dir},
-	  _gameMode{gameMode},
-	  _speed{speed},
-	  _tier{tier},
-	  _moveBeh{std::move(moveBeh)},
-	  _window{std::move(window)},
-	  _events{std::move(events)},
-	  _allObjects{allObjects}
+Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
+	: BaseObj{std::move(pawnProperty.baseObjProperty)},
+	  _dir{pawnProperty.dir},
+	  _gameMode{pawnProperty.gameMode},
+	  _speed{pawnProperty.speed},
+	  _tier{pawnProperty.tier},
+	  _allObjects{pawnProperty.allObjects},
+	  _window{std::move(pawnProperty.window)},
+	  _events{std::move(pawnProperty.events)},
+	  _moveBeh{std::move(moveBeh)}
 {
 	Pawn::Subscribe();
 }
@@ -102,9 +100,9 @@ void Pawn::Draw() const
 
 UPoint Pawn::GetWindowSize() const { return _window->size; }
 
-Direction Pawn::GetDirection() const { return _direction; }
+Direction Pawn::GetDirection() const { return _dir; }
 
-void Pawn::SetDirection(const Direction dir) { _direction = dir; }
+void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 
 float Pawn::GetSpeed() const { return _speed; }
 

@@ -10,8 +10,8 @@
 #include "../headers/obstacles/SteelWall.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
-#include "../headers/pawns/PlayerOne.h"
-#include "../headers/pawns/PlayerTwo.h"
+#include "../headers/pawns/PawnProperty.h"
+#include "../headers/pawns/Player.h"
 
 #include "gtest/gtest.h"
 
@@ -26,11 +26,11 @@ protected:
 	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	int _tankHealth{1};
-	int _bulletHealth{1};
-	int _bulletColor{0xffffff};
 	int _yellow{0xffffff};
 	int _green{0x408000};
 	int _gray{0x808080};
+	int _bulletHealth{1};
+	int _bulletColor{0xffffff};
 	int _bulletDamage{1};
 	float _tankSize{0.f};
 	float _tankSpeed{142.f};
@@ -39,10 +39,12 @@ protected:
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
-	std::string _name{"Player"};
+	std::string _name{"Player1"};
 	std::string _fraction{"PlayerTeam"};
-	std::string _name2{"Player"};
+	std::string _name2{"Player2"};
 	std::string _fraction2{"PlayerTeam"};
+	std::string _name3{"Enemy1"};
+	std::string _fraction3{"EnemyTeam"};
 	GameMode _gameMode{OnePlayer};
 
 	void SetUp() override
@@ -51,27 +53,33 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_name, _events);
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_name2, _events);
 		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
-		const ObjRectangle playerRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		const ObjRectangle player2Rect{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		const ObjRectangle enemy1Rect{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
+
+		ObjRectangle rect1{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, 1, _name, _fraction};
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		ObjRectangle rect2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty2{std::move(rect2), _green, _tankHealth, true, 2, _name2, _fraction};
+		PawnProperty pawnProperty2{
+				std::move(baseObjProperty2), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+
+		ObjRectangle rect3{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty3{std::move(rect3), _gray, _tankHealth, true, 1, _name3, _fraction3};
+		PawnProperty pawnProperty3{
+				std::move(baseObjProperty3), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		_allObjects.reserve(5);
 		_allObjects.emplace_back(
-				std::make_shared<PlayerOne>(
-						playerRect, _yellow, _tankHealth, _window, UP, _tankSpeed, &_allObjects, _events, _name,
-						_fraction, std::move(inputProvider), _bulletPool, _gameMode, 1));
+				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
 		_allObjects.emplace_back(
-				std::make_shared<PlayerTwo>(
-						player2Rect, _green, _tankHealth, _window, UP, _tankSpeed, &_allObjects, _events, _name2,
-						_fraction2, std::move(inputProvider2), _bulletPool, _gameMode, 2));
-		_allObjects.emplace_back(
-				std::make_shared<Enemy>(
-						enemy1Rect, _gray, _tankHealth, _window, DOWN, _tankSpeed, &_allObjects, _events, "Enemy",
-						"EnemyTeam", _bulletPool, _gameMode, 1));
+				std::make_shared<Player>(std::move(pawnProperty2), _bulletPool, std::move(inputProvider2)));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool));
 	}
 
 	void TearDown() override
@@ -82,11 +90,17 @@ protected:
 
 TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 {
-	ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
 
@@ -97,11 +111,18 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneHitByFriend)
 {
-	const ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
 	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
 
 	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
@@ -111,12 +132,17 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
-	const ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                              .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
 
@@ -127,11 +153,17 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
-	ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
 
@@ -142,11 +174,17 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
-	ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
 
@@ -157,11 +195,17 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
-	ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
@@ -172,11 +216,17 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
-	ObjRectangle bulletRect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
@@ -187,11 +237,17 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 {
-	ObjRectangle bulletRect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
 
@@ -202,12 +258,18 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
-	ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                        .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy2"};
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                  .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy2", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
 
@@ -218,12 +280,18 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
-	ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                        .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                  .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
 
@@ -234,12 +302,18 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
-	ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                        .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                  .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
 
@@ -250,12 +324,18 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
-	const ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                              .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy2"};
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                  .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy2", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
 
@@ -266,12 +346,18 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
-	const ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                              .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                  .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
 
@@ -282,12 +368,18 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
-	const ObjRectangle bulletRect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
-	                              .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	                  .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
 
@@ -298,17 +390,31 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, BulletHitByEnemyBullet)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
-	constexpr int health = 1;
+	_allObjects.clear();
+
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, health, _window, DOWN, _bulletSpeed,
-					&_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"EnemyTeam"};
+	std::string author2{"Enemy1"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 1, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, health, _window, UP, _bulletSpeed,
-					&_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
@@ -322,17 +428,30 @@ TEST_F(StatisticsTest, BulletHitByEnemyBullet)
 TEST_F(StatisticsTest, BulletHitByPlayerOne)
 {
 	_allObjects.clear();
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
-	                               .h = _bulletHeight};
+
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"PlayerTeam"};
+	std::string author2{"Player1"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 2, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -345,16 +464,29 @@ TEST_F(StatisticsTest, BulletHitByPlayerOne)
 
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"PlayerTeam"};
+	std::string author2{"Player2"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 2, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -367,14 +499,21 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
-	                                 .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, 0, _gameMode));
+	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, 0, _gameMode));
+
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0);
 
@@ -385,14 +524,21 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
-	                                 .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, 0, _gameMode));
+	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, 0, _gameMode));
+
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0);
 
@@ -403,13 +549,21 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _window, _events, 0, _gameMode));
+	ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+
+	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickRect), _window, _events, 0, _gameMode));
+
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0);
 
@@ -420,14 +574,21 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
-	                                 .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _window, _events, 0, _gameMode));
+	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+
+	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, 0, _gameMode));
+
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0, 3));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0);
 
@@ -438,14 +599,21 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth,
-	                                 .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _window, _events, 0, _gameMode));
+	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+
+	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, 0, _gameMode));
+
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0, 3));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0);
 
@@ -456,13 +624,21 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
-	_allObjects.emplace_back(std::make_shared<SteelWall>(brickRect, _window, _events, 0, _gameMode));
+	ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
+
+	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickRect), _window, _events, 0, _gameMode));
+
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0, 3));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0);
 
@@ -473,17 +649,29 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
-	                               .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"EnemyTeam"};
+	std::string author{"Enemy1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"EnemyTeam"};
+	std::string author2{"Enemy2"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 2, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy2", "EnemyTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
@@ -494,17 +682,29 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 
 TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
-	                               .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"PlayerTeam"};
+	std::string author2{"Player2"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 2, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -517,17 +717,29 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
-	                               .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player1"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player1", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"EnemyTeam"};
+	std::string author2{"Enemy1"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 2, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
@@ -540,17 +752,29 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
-	const ObjRectangle bulletRect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth,
-	                               .h = _bulletHeight};
+	std::string name{"Bullet1"};
+	std::string fraction{"PlayerTeam"};
+	std::string author{"Player2"};
+	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty{
+			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, DOWN,
-					_bulletSpeed, &_allObjects, _events, "Player2", "PlayerTeam", _gameMode, 0));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+
+	std::string name2{"Bullet2"};
+	std::string fraction2{"EnemyTeam"};
+	std::string author2{"Enemy1"};
+	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
+	BaseObjProperty baseObjProperty2{
+			std::move(rect2), _bulletColor, _bulletHealth, true, 2, std::move(name2), std::move(fraction2)};
+	PawnProperty pawnProperty2{
+			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(
-					bulletRect2, _bulletDamage, _bulletDamageRadius, _bulletColor, _bulletHealth, _window, UP,
-					_bulletSpeed, &_allObjects, _events, "Enemy1", "EnemyTeam", _gameMode, 1));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);

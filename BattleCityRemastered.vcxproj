@@ -184,14 +184,14 @@
     <ClCompile Include="source\pawns\CoopBot.cpp" />
     <ClCompile Include="source\pawns\Enemy.cpp" />
     <ClCompile Include="source\pawns\Pawn.cpp" />
-    <ClCompile Include="source\pawns\PlayerOne.cpp" />
-    <ClCompile Include="source\pawns\PlayerTwo.cpp" />
+    <ClCompile Include="source\pawns\Player.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\BaseObj.h" />
+    <ClInclude Include="headers\BaseObjProperty.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\components\BonusSpawner.h" />
     <ClInclude Include="headers\components\BulletPool.h" />
@@ -210,6 +210,7 @@
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\MouseButton.h" />
     <ClInclude Include="headers\ObjRectangle.h" />
+    <ClInclude Include="headers\pawns\PawnProperty.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Point.tpp" />
@@ -266,8 +267,7 @@
     <ClInclude Include="headers\pawns\CoopBot.h" />
     <ClInclude Include="headers\pawns\Enemy.h" />
     <ClInclude Include="headers\pawns\Pawn.h" />
-    <ClInclude Include="headers\pawns\PlayerOne.h" />
-    <ClInclude Include="headers\pawns\PlayerTwo.h" />
+    <ClInclude Include="headers\pawns\Player.h" />
     <ClInclude Include="headers\pawns\Tank.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />

@@ -54,8 +54,8 @@ void ObstacleSpawner::SubscribeAsClient()
 			[this](const FPoint spawnPos, const ObstacleType type, const int id)
 			{
 				const auto size = static_cast<float>(_obstacleSize);
-				const ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
-				SpawnObstacle(rect, type, id);
+				ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
+				SpawnObstacle(std::move(rect), type, id);
 			});
 }
 
@@ -78,7 +78,7 @@ void ObstacleSpawner::UnsubscribeAsClient() const
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
-void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType bonusType, const int id)
+void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType bonusType, const int id)
 {
 	if (id != -1)
 	{
@@ -94,23 +94,23 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 		case None:
 			break;
 		case Brick:
-			SpawnObstacles<BrickWall>(rect, _lastSpawnId);
+			SpawnObstacles<BrickWall>(std::move(rect), _lastSpawnId);
 			break;
 		case Steel:
-			SpawnObstacles<SteelWall>(rect, _lastSpawnId);
+			SpawnObstacles<SteelWall>(std::move(rect), _lastSpawnId);
 			break;
 		case Water:
-			SpawnObstacles<WaterTile>(rect, _lastSpawnId);
+			SpawnObstacles<WaterTile>(std::move(rect), _lastSpawnId);
 			break;
 		case Fortress:
-			SpawnObstacles<FortressWall>(rect, _lastSpawnId);
+			SpawnObstacles<FortressWall>(std::move(rect), _lastSpawnId);
 		default:
 			break;
 	}
 }
 
-void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
+void ObstacleSpawner::SpawnRandomObstacle(ObjRectangle rect)
 {
 	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
-	SpawnObstacle(rect, obstacleType);
+	SpawnObstacle(std::move(rect), obstacleType);
 }

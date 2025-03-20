@@ -17,13 +17,13 @@ struct MenuKeys final
 
 class InputProviderForMenu final
 {
-	std::string _name;
+	std::string _name{"InputProviderForMenu"};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameMode _gameMode;
 	MenuKeys _keys;
 
 public:
-	InputProviderForMenu(std::string name, std::shared_ptr<EventSystem> events);
+	InputProviderForMenu(std::shared_ptr<EventSystem> events);
 
 	~InputProviderForMenu();
 

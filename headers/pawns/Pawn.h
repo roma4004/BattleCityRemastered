@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+struct PawnProperty;
 enum Direction : char8_t;
 enum GameMode : char8_t;
 struct ObjRectangle;
@@ -25,15 +26,15 @@ class Pawn : public BaseObj, public ITickUpdatable
 	void Draw() const override;
 
 protected:
-	Direction _direction{};
+	Direction _dir{};
 	GameMode _gameMode{};
 	float _speed{0.f};
 	int _tier{1};
 
-	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;
@@ -42,10 +43,7 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	Pawn(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, Direction dir, float speed,
-	     std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	     std::unique_ptr<IMoveBeh> moveBeh, int id, std::string name, std::string fraction, int tier,
-	     GameMode gameMode);
+	Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;
 
