@@ -52,7 +52,8 @@ public:
 
 	~FortressWall() override;
 
-	void OnPlayerPickupShovel(); //TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
+	void OnPlayerPickupShovel();
+	//TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
 
 	[[nodiscard]] std::string GetName() const override;
 	[[nodiscard]] int GetId() const override;

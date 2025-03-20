@@ -97,7 +97,7 @@ void Bullet::TickUpdate(const float deltaTime)
 		if (_gameMode == PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const FPoint, const Direction>(
-					"ServerSend_Pos", "Bullet" + std::to_string(GetId()), GetPos(), GetDirection());
+					"ServerSend_Pos", _name, GetPos(), GetDirection());
 		}
 	}
 }

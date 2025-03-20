@@ -24,5 +24,5 @@ struct SDLEnvironment final
 
 	~SDLEnvironment();
 
-	std::unique_ptr<IConfig> Init();
+	[[nodiscard]] std::unique_ptr<IConfig> Init();
 };

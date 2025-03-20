@@ -3,7 +3,7 @@
 class PixelUtils final
 {
 public:
-	static unsigned int ChangeAlpha(unsigned int color, const unsigned char alpha)
+	[[nodiscard]] static unsigned int ChangeAlpha(unsigned int color, const unsigned char alpha)
 	{
 		// Clear the old alpha channel
 		color &= 0x00FFFFFF;
@@ -14,7 +14,7 @@ public:
 		return color;
 	}
 
-	static unsigned int BlendPixel(const unsigned int src, const unsigned int dst)
+	[[nodiscard]] static unsigned int BlendPixel(const unsigned int src, const unsigned int dst)
 	{
 		// Extract source pixel color parts
 		const unsigned int srcA = (src & 0xFF000000) >> 24;

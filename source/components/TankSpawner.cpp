@@ -163,12 +163,12 @@ void TankSpawner::SpawnEnemy(const int id, const float speed, const int health)
 {
 	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 	const float size{gridOffset * 3};
-	const static std::vector<ObjRectangle> spawnPos{
+	const static std::vector<ObjRectangle> spawnPos{{
 			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
 			{.x = gridOffset * 32.f - size * 2.f, .y = 0, .w = size, .h = size},
 			{.x = gridOffset * 16.f + size * 2.f, .y = 0, .w = size, .h = size},
 			{.x = gridOffset * 32.f + size * 2.f, .y = 0, .w = size, .h = size}
-	};
+	}};
 
 	for (const auto& rect: spawnPos)
 	{
@@ -184,7 +184,8 @@ void TankSpawner::SpawnEnemy(const int id, const float speed, const int health)
 			std::string fraction{"EnemyTeam"};
 
 			BaseObjProperty baseObjProperty{rect, gray, health, true, id, std::move(name), std::move(fraction)};
-			PawnProperty pawnProperty{std::move(baseObjProperty), _window, DOWN, speed, _allObjects, _events, 1, _gameMode};
+			PawnProperty pawnProperty{
+					std::move(baseObjProperty), _window, DOWN, speed, _allObjects, _events, 1, _gameMode};
 			_allObjects->emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool));
 
 			return;
@@ -233,7 +234,8 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 
 		BaseObjProperty baseObjProperty{std::move(rect), color, health, true, id, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode};
-		_allObjects->emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+		_allObjects->emplace_back(
+				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
 	}
 }
 

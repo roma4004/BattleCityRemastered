@@ -293,8 +293,8 @@ void Server::Unsubscribe() const
 void Server::UnsubscribeBonus() const
 {
 	_events->RemoveListener<const std::string&, const FPoint, const BonusType, const int>(
- 			"ServerSend_BonusSpawn", _name);
- 	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);
+			"ServerSend_BonusSpawn", _name);
+	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);
 
 	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);
 	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);

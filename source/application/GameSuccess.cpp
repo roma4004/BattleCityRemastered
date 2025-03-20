@@ -193,7 +193,7 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
-			_events->EmitEvent("DrawMenuBackground");
+			_events->EmitEvent("DrawMenuBackground");//TODO: create transparent texture and then blit surface faster
 
 			const Uint64 newTime = SDL_GetTicks64();
 			deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;

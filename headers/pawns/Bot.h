@@ -22,7 +22,6 @@ protected:
 	float _shootDistance{0.f};
 	float _bulletOffset{0.f};
 
-	//TODO: recheck all solution [[nodiscard]]
 	[[nodiscard]] bool IsOpponent(const std::weak_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] bool IsAlly(const std::weak_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] static bool IsBonus(const std::weak_ptr<BaseObj>& obstacle);

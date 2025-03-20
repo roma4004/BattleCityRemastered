@@ -113,7 +113,7 @@ void Client::ReadResponse()
 
 			_read_buffer.consume(length);
 
-			// TODO: fix starting host on pause, connect and start client, release pause to sync starting game, need to sync game on client start, mean connect into continuous game
+			// TODO: add unpause when clint connect to ready server game
 			if (data.eventName == "Pos")
 			{
 				events->EmitEvent<const FPoint, const Direction>(
@@ -204,7 +204,6 @@ void Client::SendKeyState(const std::string& state)
 	boost::archive::text_oarchive oa(archiveStream);
 	oa << data;
 
-	// Безопасно добавляем сообщение в буфер для записи.
 	{
 		std::ostream os(&_write_buffer);
 		os << archiveStream.str() + "\n\n";

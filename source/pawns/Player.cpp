@@ -21,7 +21,7 @@ Player::Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool
 
 Player::~Player() = default;
 
-void Player::MoveTo(const float deltaTime, const Direction dir)
+void Player::Move(const Direction dir, const float deltaTime)
 {
 	SetDirection(dir);
 	_moveBeh->Move(deltaTime);
@@ -37,28 +37,28 @@ void Player::TickUpdate(const float deltaTime)
 {
 	Tank::TickUpdate(deltaTime);
 
-	const auto playerKeys = _inputProvider->GetKeysStats();
+	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
 	// move
-	if (playerKeys.up)
+	if (up)
 	{
-		MoveTo(deltaTime, UP);
+		Move(UP, deltaTime);
 	}
-	else if (playerKeys.left)
+	else if (left)
 	{
-		MoveTo(deltaTime, LEFT);
+		Move(LEFT, deltaTime);
 	}
-	else if (playerKeys.down)
+	else if (down)
 	{
-		MoveTo(deltaTime, DOWN);
+		Move(DOWN, deltaTime);
 	}
-	else if (playerKeys.right)
+	else if (right)
 	{
-		MoveTo(deltaTime, RIGHT);
+		Move(RIGHT, deltaTime);
 	}
 
 	// shot
-	if (playerKeys.shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
+	if (shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
 		Shot();
 	}

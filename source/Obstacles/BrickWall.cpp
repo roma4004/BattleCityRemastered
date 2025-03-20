@@ -29,6 +29,6 @@ void BrickWall::SendDamageStatistics(const std::string& author, const std::strin
 		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);//for statistic
 
 		//TODO: move this to onHealthChange
-		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", GetName(), GetHealth());//for replication
+		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", _name, GetHealth());//for replication
 	}
 }
