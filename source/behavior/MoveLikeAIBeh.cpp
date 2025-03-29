@@ -89,13 +89,16 @@ float MoveLikeAIBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& 
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		const std::shared_ptr<BaseObj> objectLck = object.lock();
-		// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
-		const float distance = std::abs(sideDiff(objectLck));
-		// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
-		if (distance < minDist)//TODO: need minimal abs distance
+		if (const std::shared_ptr<BaseObj> objectLck = object.lock();
+			objectLck)
 		{
-			minDist = distance;
+			// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
+			const float distance = std::abs(sideDiff(objectLck));
+			// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
+			if (distance < minDist)//TODO: need minimal abs distance
+			{
+				minDist = distance;
+			}
 		}
 	}
 
