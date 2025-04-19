@@ -5,7 +5,7 @@
 #include "../../headers/interfaces/IMoveBeh.h"
 #include "../../headers/interfaces/IShootable.h"
 #include "../../headers/pawns/PawnProperty.h"
-#include "../../headers/utils/PixelUtils.h"
+#include "../../headers/utils/PixelUtils.h" //TODO: pregenerate health bar texture
 #include "../../headers/utils/TimeUtils.h"
 
 Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh)

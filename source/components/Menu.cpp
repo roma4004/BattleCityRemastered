@@ -3,7 +3,6 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/GameStatistics.h"
 #include "../../headers/enums/GameMode.h"
-#include "../../headers/utils/PixelUtils.h"
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
            std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
@@ -20,6 +19,23 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
 	  _name{std::string("Menu")}
 {
 	Subscribe();
+
+	_padding = 25;
+	const auto winSizeX = static_cast<unsigned int>(_window->size.x);
+	_height = static_cast<int>(_window->size.y) - _padding * 3;
+	_width = winSizeX - 228 - _padding;
+
+	PregenerateMenuBackground();
+
+	// SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
+	_backgroundTexture = std::shared_ptr<SDL_Texture>(
+			SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
+			                  _width, _height),
+			SDL_DestroyTexture);
+	SDL_SetTextureBlendMode(_backgroundTexture.get(), SDL_BLENDMODE_BLEND);
+
+	const SDL_Rect rect{_padding, _padding, _width, _height};
+	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
 }
 
 Menu::~Menu()
@@ -29,26 +45,11 @@ Menu::~Menu()
 
 void Menu::Subscribe()
 {
-	_events->AddListener("DrawMenuBackground", _name, [this]() { this->BlendBackgroundToWindowBuffer(); });
+	_events->AddListener("DrawMenu", _name, [this]() { this->DrawMenu(); });
 
 	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_selectedGameMode = newGameMode;
-	});
-
-	_events->AddListener("DrawMenuText", _name, [this]()
-	{
-		if (const auto menuKeysStats = this->_input->GetKeysStats();
-			menuKeysStats.menuShow)
-		{
-			this->DrawMenuText(_pos);
-			const SDL_Rect logoRectangle{.x = static_cast<int>(this->_pos.x - 420),
-			                             .y = static_cast<int>(this->_pos.y - 490),
-			                             .w = 300,
-			                             .h = 75
-			};
-			SDL_RenderCopy(this->_renderer.get(), this->_menuLogo.get(), nullptr, &logoRectangle);
-		}
 	});
 
 	_events->AddListener<const std::string&, const int>(
@@ -60,9 +61,8 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const
 {
-	_events->RemoveListener("DrawMenuBackground", _name);
+	_events->RemoveListener("DrawMenu", _name);
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
-	_events->RemoveListener("DrawMenuText", _name);
 	_events->RemoveListener<const std::string&, const int>("RespawnResourceChangedTo", _name);
 }
 
@@ -88,33 +88,24 @@ void Menu::Update() const
 	}
 }
 
-// blend menu panel and menu texture background
-void Menu::BlendBackgroundToWindowBuffer()
+void Menu::PregenerateMenuBackground()
 {
-	if (const auto menuKeysStats = GetKeysStats(); !menuKeysStats.menuShow)
+	_menuBackground = std::make_shared<int[]>(_height * _width);
+	for (unsigned y = 0; y < _height; ++y)
+	{
+		for (unsigned x = 0; x < _width; ++x)
+		{
+			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency
+			_menuBackground[y * _width + x] = menuColor;
+		}
+	}
+}
+
+void Menu::DrawMenu()
+{
+	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)
 	{
 		return;
-	}
-
-	constexpr int padding = 50;
-	const auto winSizeX = static_cast<unsigned int>(_window->size.x);
-	const unsigned menuHeight = static_cast<unsigned int>(_window->size.y) - padding;
-	const unsigned menuWidth = winSizeX - 228;
-	const auto buffer = _window->buffer.get();
-	for (_pos.y = padding + _yOffsetStart; _pos.y < menuHeight + _yOffsetStart; ++_pos.y)
-	{
-		for (_pos.x = padding; _pos.x < menuWidth; ++_pos.x)
-		{
-			if (_pos.y < _window->size.y)
-			{
-				constexpr unsigned int menuColor = 0xFF808080;
-				int& targetColor = buffer[_pos.y * winSizeX + _pos.x];
-				const unsigned int targetColorLessAlpha = PixelUtils::ChangeAlpha(
-						static_cast<unsigned int>(targetColor), 91);
-				targetColor = static_cast<int>(PixelUtils::BlendPixel(targetColorLessAlpha, menuColor));
-				//TODO:blend using thread pool
-			}
-		}
 	}
 
 	// animation
@@ -122,6 +113,29 @@ void Menu::BlendBackgroundToWindowBuffer()
 	{
 		_yOffsetStart -= 3;
 	}
+
+	_pos.x = _padding;
+	_pos.y = _padding + _yOffsetStart;
+
+	DrawBackground();//TODO: sync animation speed background and text with logo
+	DrawMenuLogo();
+	DrawText();
+}
+
+// blend menu panel and menu texture background
+void Menu::DrawBackground() const
+{
+	const SDL_Rect rect{_pos.x, _pos.y, _width, _height};
+
+	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
+	SDL_RenderCopy(_renderer.get(), _backgroundTexture.get(), nullptr, &rect);
+}
+
+void Menu::DrawMenuLogo() const
+{
+	const SDL_Rect rect{.x = _pos.x + 135, .y = _pos.y + 42, .w = 300, .h = 75};
+
+	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
 }
 
 void Menu::TextToRender(const Point& pos, const SDL_Color& color, const int value) const
@@ -251,10 +265,10 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
 }
 
-void Menu::DrawMenuText(const UPoint menuBackgroundPos) const
+void Menu::DrawText() const
 {
-	const Point pos = {.x = static_cast<int>(menuBackgroundPos.x) - 375,
-	                   .y = static_cast<int>(menuBackgroundPos.y) - 350};
+	//TODO: add skip if outside screen
+	const Point pos = {.x = _pos.x + 180, .y = _pos.y + 180};
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender({.x = pos.x, .y = pos.y - 50}, color,

@@ -39,6 +39,8 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 {
 	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
 
+	GenerateFpsTextures();
+
 	Subscribe();
 
 	ResetBattlefield(Demo);
@@ -124,27 +126,68 @@ void GameSuccess::NextGameMode()
 	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
-void GameSuccess::HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, const Uint64 newTime)
+void GameSuccess::GenerateFpsTextures()
 {
-	++frameCount;
-	if (newTime - fpsPrevUpdateTime >= 1000)
-	{
-		if (fps != frameCount)
-		{
-			fps = frameCount;
+	_fpsTextures.clear();
 
-			const std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> fpsSurface(
-					TTF_RenderText_Solid(_fpsFont.get(), std::to_string(fps).c_str(), SDL_Color{140, 0, 255, 0}),
-					SDL_FreeSurface);
-			if (fpsSurface)
-			{
-				_fpsTexture = std::shared_ptr<SDL_Texture>(
-						SDL_CreateTextureFromSurface(_renderer.get(), fpsSurface.get()),
-						SDL_DestroyTexture);
-			}
+	for (int i = 0; i <= 1000; ++i)
+	{
+		std::string text = std::to_string(i);
+		constexpr SDL_Color textColor = {140, 0, 255, 255};
+
+		SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont.get(), text.c_str(), textColor);
+		if (!surface)
+		{
+			SDL_Log("Failed to create surface for FPS %d: %s", i, SDL_GetError());
+			continue;
 		}
-		fpsPrevUpdateTime = newTime;
-		frameCount = 0;
+
+		SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer.get(), surface);
+		SDL_FreeSurface(surface);
+
+		if (!texture)
+		{
+			SDL_Log("Failed to create texture for FPS %d: %s", i, SDL_GetError());
+			continue;
+		}
+
+		_fpsTextures[i] = std::shared_ptr<SDL_Texture>(texture, SDL_DestroyTexture);
+	}
+}
+
+void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime)
+{
+	static Uint64 lastUpdate{0};
+	static Uint32 lastDisplayedFps{0};
+	static const Uint64 frequency{SDL_GetPerformanceFrequency()};
+
+	const Uint64 frameDelta = endFrameTime - startFrameTime;
+	deltaTime = frameDelta / static_cast<float>(frequency);
+
+	if (const Uint64 timeSinceLastUpdate = endFrameTime - lastUpdate;
+		timeSinceLastUpdate >= frequency)
+	{
+		const int fps = static_cast<int>(std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
+		SDL_Log("FPS %i", fps);
+
+		if (fps != lastDisplayedFps
+		    && _fpsTextures.contains(fps))
+		{
+			lastDisplayedFps = fps;
+			_fpsTexture = _fpsTextures[fps];
+		}
+
+		lastUpdate = endFrameTime;
+	}
+
+	startFrameTime = endFrameTime;
+
+	//Cap to 60 FPS
+	constexpr double targetFrameTime = 1.f / 60.f;
+	if (deltaTime < targetFrameTime)
+	{
+		SDL_Delay(static_cast<Uint32>((targetFrameTime - deltaTime) * 1000));
+		deltaTime = targetFrameTime;
 	}
 }
 
@@ -161,11 +204,8 @@ void GameSuccess::MainLoop()
 {
 	try
 	{
-		Uint32 frameCount{0};
-		Uint32 fps{0};
+		Uint64 startFrameTime = SDL_GetPerformanceCounter();
 		float deltaTime{0.f};
-		Uint64 oldTime = SDL_GetTicks64();
-		auto fpsPrevUpdateTime = oldTime;
 		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
 
 		while (!_userInput.IsGameOver())
@@ -193,24 +233,19 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
-			_events->EmitEvent("DrawMenuBackground");//TODO: create transparent texture and then blit surface faster
-
-			const Uint64 newTime = SDL_GetTicks64();
-			deltaTime = static_cast<float>(newTime - oldTime) / 1000.0f;
-			HandleFPS(frameCount, fpsPrevUpdateTime, fps, newTime);
+			Uint64 endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
+			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
 
 			// update screen with buffer
 			SDL_UpdateTexture(_screen.get(), nullptr, _window->buffer.get(), static_cast<int>(_window->size.x) << 2);
 			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
 
-			_events->EmitEvent("DrawMenuText");
+			_events->EmitEvent("DrawMenu");
 
 			// Copy the texture with FPS to the renderer
 			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);
 
 			SDL_RenderPresent(_renderer.get());
-
-			oldTime = newTime;
 		}
 	}
 	catch (std::exception& e)

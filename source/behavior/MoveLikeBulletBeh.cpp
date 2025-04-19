@@ -203,7 +203,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 	}
 }
 
-void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const
+void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const //TODO: change to shared_ptr
 {
 	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
 	if (thisBullet == nullptr)

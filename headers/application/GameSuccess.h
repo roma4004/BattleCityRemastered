@@ -8,6 +8,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <random>
+#include <unordered_map>
 
 enum GameMode : char8_t;
 class INetworkNode;
@@ -44,6 +45,8 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
+	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures; // pregenerated fps texture
+
 	UserInput _userInput;
 	BonusSpawner _bonusSpawner;
 	ObstacleSpawner _obstacleSpawner;
@@ -56,8 +59,9 @@ class GameSuccess final : public IGame
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
+	void GenerateFpsTextures();
 
-	void HandleFPS(Uint32& frameCount, Uint64& fpsPrevUpdateTime, Uint32& fps, Uint64 newTime);
+	void CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime);
 
 	void DisposeDeadObject();
 

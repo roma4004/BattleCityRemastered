@@ -41,22 +41,7 @@
     <ClCompile Include="source\bonuses\BonusTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\BulletPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\GameStatistics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LineOfSight.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\pawns\Bullet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\pawns\CoopAI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\pawns\Enemy.cpp">
@@ -65,16 +50,7 @@
     <ClCompile Include="source\pawns\Pawn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\pawns\PlayerOne.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\pawns\PlayerTwo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\pawns\Tank.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\TankSpawner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\ColliderUtils.cpp">
@@ -113,9 +89,6 @@
     <ClCompile Include="source\ObjRectangle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\Server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\application\ConfigFailure.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -134,12 +107,6 @@
     <ClCompile Include="source\application\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\bonuses\BonusSpawner.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\obstacles\ObstacleSpawner.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\obstacles\BrickWall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -150,6 +117,57 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\obstacles\WaterTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\BonusSpawner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\BulletPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\GameStatistics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\LineOfSight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\Menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\ObstacleSpawner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\TankSpawner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\UserInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bonuses\BonusStatus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\Client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\ClientHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\Server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\ServerHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\obstacles\Obstacle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\pawns\Bot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\pawns\CoopBot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\pawns\Player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -170,12 +188,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\Circle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\Direction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\EventSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\bonuses\Bonus.h">
@@ -199,25 +211,10 @@
     <ClInclude Include="headers\bonuses\BonusTimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\GameStatistics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\interfaces\IPickupableBonus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\interfaces\IShootable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\LineOfSight.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\Menu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\BulletPool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\GameMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\interfaces\IConfig.h">
@@ -250,25 +247,13 @@
     <ClInclude Include="headers\pawns\Bullet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\pawns\CoopAI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\pawns\Enemy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\pawns\Pawn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\pawns\PlayerOne.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\pawns\PlayerTwo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\pawns\Tank.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\TankSpawner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\utils\ColliderUtils.h">
@@ -310,9 +295,6 @@
     <ClInclude Include="headers\ObjRectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -334,20 +316,6 @@
     <ClInclude Include="headers\application\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\bonuses\BonusSpawner.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\bonuses\BonusTypeId.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\EventSystem.tpp" />
-    <ClInclude Include="headers\obstacles\ObstacleSpawner.tpp" />
-    <ClInclude Include="headers\obstacles\ObstacleTypeId.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\obstacles\ObstacleSpawner.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\obstacles\BrickWall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -361,7 +329,88 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\Point.tpp" />
-    <ClInclude Include="headers\Server.tpp" />
+    <ClInclude Include="headers\BaseObjProperty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\BonusSpawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\BulletPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\EventSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\EventSystem.tpp" />
+    <ClInclude Include="headers\components\GameStatistics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\LineOfSight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\Menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\ObstacleSpawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\ObstacleSpawner.tpp" />
+    <ClInclude Include="headers\components\TankSpawner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\BonusType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\Direction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\GameMode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\ObstacleType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\pawns\PawnProperty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\UserInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\bonuses\BonusStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\interfaces\IHaveFraction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\interfaces\INetworkNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\Client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\Client.tpp" />
+    <ClInclude Include="headers\network\ClientHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\Server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\Server.tpp" />
+    <ClInclude Include="headers\network\ServerHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\obstacles\Obstacle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\pawns\Bot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\pawns\CoopBot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\pawns\Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BattleCityRemastered.rc" />
@@ -370,7 +419,7 @@
     <Image Include="Resources\Images\Title.png" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="Resources\Fonts\bc7x7.ttf" />
+    <Font Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="Resources\Sounds\levelStarted.wav" />

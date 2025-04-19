@@ -77,7 +77,6 @@ FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MX
 
 FetchContent_MakeAvailable(SDL2)
 FetchContent_GetProperties(SDL2)
-
 set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/include")
 set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/libfreetype.a")
 FetchContent_MakeAvailable(SDL2_ttf)
@@ -238,6 +237,21 @@ else ()
     message(STATUS "------------------------------------------------------------")
 endif()
 
+# Додаємо Google Test
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.11.0
+    GIT_PROGRESS 1
+    GIT_SHALLOW TRUE
+)
+# Вимикаємо створення тестових прикладів самого Google Test
+set(BUILD_GMOCK OFF CACHE BOOL "Build gmock" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
+FetchContent_MakeAvailable(googletest)
+enable_testing()
+
 include_directories(headers)
 
 add_executable(${PROJECT_NAME}
@@ -299,6 +313,35 @@ add_executable(${PROJECT_NAME}
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     add_dependencies(${PROJECT_NAME} Boost)
 endif()
+
+# Додаємо тестовий виконуваний файл
+add_executable(unit_tests
+    # Підключаємо файли з тестами
+    UnitTests/BonusTests.cpp
+    UnitTests/PlayerTests.cpp
+    UnitTests/BulletsTests.cpp
+    UnitTests/StatisticsTests.cpp
+    UnitTests/RespawnTankTests.cpp
+)
+
+# Підключаємо необхідні бібліотеки до тестів
+target_link_libraries(unit_tests
+    gtest
+    gtest_main
+    # Додаємо ті ж бібліотеки, що й у основному проекті
+    SDL2-static
+    SDL2main
+    SDL2_ttf
+    SDL2_image
+    SDL2_mixer
+    ${Boost_LIBRARIES}
+    wsock32
+    ws2_32
+)
+
+# Додаємо інтеграцію тестів з CTest
+include(GoogleTest)
+gtest_discover_tests(unit_tests)
 
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(${PROJECT_NAME}
