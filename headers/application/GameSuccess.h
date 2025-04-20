@@ -53,6 +53,8 @@ class GameSuccess final : public IGame
 
 	std::random_device _rd;
 
+	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
+
 	void Subscribe();
 	void Unsubscribe() const;
 

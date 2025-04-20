@@ -164,6 +164,14 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 	const Uint64 frameDelta = endFrameTime - startFrameTime;
 	deltaTime = frameDelta / static_cast<float>(frequency);
 
+	//Cap to 60 FPS
+	constexpr double targetFrameTime = 1.f / 60.f;
+	if (!_isVsyncOn && deltaTime < targetFrameTime)
+	{
+		SDL_Delay(static_cast<Uint32>((targetFrameTime - deltaTime) * 1000));
+		deltaTime = targetFrameTime;
+	}
+
 	if (const Uint64 timeSinceLastUpdate = endFrameTime - lastUpdate;
 		timeSinceLastUpdate >= frequency)
 	{
@@ -181,14 +189,6 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 	}
 
 	startFrameTime = endFrameTime;
-
-	//Cap to 60 FPS
-	constexpr double targetFrameTime = 1.f / 60.f;
-	if (deltaTime < targetFrameTime)
-	{
-		SDL_Delay(static_cast<Uint32>((targetFrameTime - deltaTime) * 1000));
-		deltaTime = targetFrameTime;
-	}
 }
 
 void GameSuccess::DisposeDeadObject()
@@ -207,17 +207,14 @@ void GameSuccess::MainLoop()
 		Uint64 startFrameTime = SDL_GetPerformanceCounter();
 		float deltaTime{0.f};
 		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
-
+		Uint64 endFrameTime{0u};
 		while (!_userInput.IsGameOver())
 		{
+			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
+
 			_window->ClearBuffer();
 
 			_userInput.Update();
-
-			if (_menu)
-			{
-				_menu->Update();//TODO: should be event updateMenu
-			}
 
 			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
 			{
@@ -233,9 +230,6 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
-			Uint64 endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
-			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
-
 			// update screen with buffer
 			SDL_UpdateTexture(_screen.get(), nullptr, _window->buffer.get(), static_cast<int>(_window->size.x) << 2);
 			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
@@ -246,6 +240,8 @@ void GameSuccess::MainLoop()
 			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);
 
 			SDL_RenderPresent(_renderer.get());
+
+			endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
 		}
 	}
 	catch (std::exception& e)

@@ -20,6 +20,8 @@ struct SDLEnvironment final
 	const char* logoPathName{nullptr};
 	const char* introMusicPathName{nullptr};
 
+	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
+
 	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName, const char* introMusicName);
 
 	~SDLEnvironment();

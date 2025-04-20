@@ -41,8 +41,10 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
+	const int flags = isVsyncOn ? SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC : SDL_RENDERER_ACCELERATED;
+	constexpr int monitorIndex = -1;//NOTE: -1 is use default monithor
 	renderer = std::shared_ptr<SDL_Renderer>(
-			SDL_CreateRenderer(sdlWindow.get(), -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC),
+			SDL_CreateRenderer(sdlWindow.get(), monitorIndex, flags),
 			SDL_DestroyRenderer);
 	if (renderer == nullptr)
 	{

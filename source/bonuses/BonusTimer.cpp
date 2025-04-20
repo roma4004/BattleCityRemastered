@@ -2,6 +2,9 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/BonusType.h"
 
+//TODO: replicate timer bonus effect end
+//TODO: on timer bonus effect enemy team should not shoot
+
 BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                        const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime,
                        const int color, const int id, const GameMode gameMode)

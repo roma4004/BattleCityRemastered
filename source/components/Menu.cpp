@@ -45,6 +45,11 @@ Menu::~Menu()
 
 void Menu::Subscribe()
 {
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float /*deltaTime*/)
+	{
+		this->TickUpdate();
+	});
+
 	_events->AddListener("DrawMenu", _name, [this]() { this->DrawMenu(); });
 
 	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -61,12 +66,13 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const
 {
+	_events->RemoveListener<const float>("TickUpdate", _name);
 	_events->RemoveListener("DrawMenu", _name);
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener<const std::string&, const int>("RespawnResourceChangedTo", _name);
 }
 
-void Menu::Update() const
+void Menu::TickUpdate() const
 {
 	const auto menuKeysStats = _input->GetKeysStats();
 
