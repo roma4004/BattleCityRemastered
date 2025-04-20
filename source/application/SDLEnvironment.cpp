@@ -41,8 +41,11 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
-	const int flags = isVsyncOn ? SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC : SDL_RENDERER_ACCELERATED;
-	constexpr int monitorIndex = -1;//NOTE: -1 is use default monithor
+	Uint32 flags = SDL_RENDERER_ACCELERATED;
+	if (isVsyncOn) {
+		flags |= SDL_RENDERER_PRESENTVSYNC;
+	}
+	constexpr int monitorIndex = -1;//NOTE: -1 mean use the default monitor
 	renderer = std::shared_ptr<SDL_Renderer>(
 			SDL_CreateRenderer(sdlWindow.get(), monitorIndex, flags),
 			SDL_DestroyRenderer);
@@ -104,5 +107,5 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
-	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture);
+	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, isVsyncOn);
 }

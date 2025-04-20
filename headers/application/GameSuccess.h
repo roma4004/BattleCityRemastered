@@ -78,7 +78,7 @@ public:
 	GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
 	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
 	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-	            std::unique_ptr<Menu> menu);
+	            std::unique_ptr<Menu> menu, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

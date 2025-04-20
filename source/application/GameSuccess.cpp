@@ -23,7 +23,7 @@
 GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-                         std::unique_ptr<Menu> menu)
+                         std::unique_ptr<Menu> menu, const bool isVsyncOn)
 	: _selectedGameMode{OnePlayer},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
@@ -35,7 +35,8 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
 	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window}
+	  _obstacleSpawner{events, &_allObjects, window},
+	  _isVsyncOn{isVsyncOn}
 {
 	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
 
@@ -165,8 +166,8 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 	deltaTime = frameDelta / static_cast<float>(frequency);
 
 	//Cap to 60 FPS
-	constexpr double targetFrameTime = 1.f / 60.f;
-	if (!_isVsyncOn && deltaTime < targetFrameTime)
+	if (constexpr double targetFrameTime = 1.f / 60.f;
+		!_isVsyncOn && deltaTime < targetFrameTime)
 	{
 		SDL_Delay(static_cast<Uint32>((targetFrameTime - deltaTime) * 1000));
 		deltaTime = targetFrameTime;
@@ -176,7 +177,7 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 		timeSinceLastUpdate >= frequency)
 	{
 		const int fps = static_cast<int>(std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
-		SDL_Log("FPS %i", fps);
+		// SDL_Log("FPS %i", fps);
 
 		if (fps != lastDisplayedFps
 		    && _fpsTextures.contains(fps))
