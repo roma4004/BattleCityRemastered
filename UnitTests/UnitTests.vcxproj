@@ -37,6 +37,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
+    <ClCompile Include="..\source\BonusTestsEnemy.cpp" />
     <ClCompile Include="..\source\components\BonusSpawner.cpp" />
     <ClCompile Include="..\source\components\BulletPool.cpp" />
     <ClCompile Include="..\source\components\GameStatistics.cpp" />
@@ -76,11 +77,13 @@
     <ClCompile Include="..\source\pawns\Pawn.cpp" />
     <ClCompile Include="..\source\pawns\Player.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
-    <ClCompile Include="BonusTests.cpp" />
-    <ClCompile Include="BulletsTests.cpp" />
+    <ClCompile Include="BonusTestsBasic.cpp" />
+    <ClCompile Include="BulletsTestsAdvanced.cpp" />
+    <ClCompile Include="BulletsTestsBasic.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
     <ClCompile Include="RespawnTankTests.cpp" />
     <ClCompile Include="StatisticsTests.cpp" />
+    <ClCompile Include="StatisticTestsAdvanced.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
