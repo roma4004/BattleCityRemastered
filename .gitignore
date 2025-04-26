@@ -1,9 +1,21 @@
+# Source trail files
+*.aps
+*.srctrlbm
+*.srctrldb
+*.srctrlprj
+
+# Project dependencies 
+libraries
+
 # JetBrains IDE files
 .idea
+cmake-build-release-mingw
+*.sln.DotSettings.user
 
 # Visual Studio files
 .vs
 cmake-build-debug
+*.vcxproj.user
 
 # Compiled files
 x64/

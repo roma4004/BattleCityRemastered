@@ -1,52 +1,56 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../Direction.h"
-#include "../Point.h"
-#include "../Rectangle.h"
-#include "../interfaces/IMoveBeh.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <memory>
 #include <vector>
 
+struct PawnProperty;
+enum Direction : char8_t;
+enum GameMode : char8_t;
+struct ObjRectangle;
+struct Window;
+struct UPoint;
+class IMoveBeh;
 class EventSystem;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
-protected:
-	std::shared_ptr<IMoveBeh> _moveBeh;
+	virtual void UnsubscribeAsHost() const;
+	virtual void UnsubscribeAsClient() const;
 
-	UPoint _windowSize{0, 0};
-
-	int* _windowBuffer{nullptr};
-
-	Direction _direction{UP};
-
-	float _speed{0.f};
-
-	std::shared_ptr<EventSystem> _events;
-
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-
-	void SetPixel(size_t x, size_t y, int color) const;
+	virtual void SubscribeAsHost();
+	virtual void SubscribeAsClient();
 
 	void Draw() const override;
+
+protected:
+	Direction _dir{};
+	GameMode _gameMode{};
+	float _speed{0.f};
+	int _tier{1};
+
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
+
+	virtual void Subscribe();
+	virtual void Unsubscribe() const;
 
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	Pawn(const Rectangle& rect, int color, int health, int* windowBuffer, UPoint windowSize, Direction direction,
-	     float speed, std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-	     std::shared_ptr<IMoveBeh> moveBeh);
+	Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;
 
 	[[nodiscard]] UPoint GetWindowSize() const;
 
 	[[nodiscard]] Direction GetDirection() const;
-	void SetDirection(Direction direction);
+	void SetDirection(Direction dir);
 
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);

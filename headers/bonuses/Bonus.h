@@ -1,40 +1,52 @@
 #pragma once
 
 #include "../BaseObj.h"
-#include "../EventSystem.h"
-#include "../Point.h"
 #include "../interfaces/IPickupableBonus.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <chrono>
 #include <memory>
 
+enum GameMode : char8_t;
+enum BonusType : char8_t;
+struct Window;
+struct BaseObjProperty;
+class EventSystem;
+
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
-	UPoint _windowSize{0, 0};
-	int* _windowBuffer{nullptr};
+	std::shared_ptr<Window> _window{nullptr};
+
 	std::chrono::system_clock::time_point _creationTime;
 
 protected:
-	int _bonusDurationMs{0};
-	int _bonusLifetimeMs{0};
+	GameMode _gameMode{};
+	BonusType _bonusType{};
+	std::chrono::milliseconds _duration{0};
+	std::chrono::milliseconds _lifetime{0};
 
-	std::string _name{};
-	std::shared_ptr<EventSystem> _events;
-
-	virtual void SetPixel(size_t x, size_t y, int color) const;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	void TickUpdate(float deltaTime) override;
 
 	void Draw() const override;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override = 0;
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 
 public:
-	Bonus(const Rectangle& rect, int* windowBuffer, UPoint windowSize, std::shared_ptr<EventSystem> events,
-	      int durationMs, int lifeTimeMs, int color);
+	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name, int id,
+	      GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 
-	void PickUpBonus(const std::string& author, const std::string& fraction) override = 0;
+	void Subscribe();
+	void SubscribeAsHost();
+	void SubscribeAsClient();
+
+	void Unsubscribe() const;
+	void UnsubscribeAsHost() const;
+	void UnsubscribeAsClient() const;
+
 };

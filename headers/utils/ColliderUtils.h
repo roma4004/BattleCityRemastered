@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../Circle.h"
-#include "../Rectangle.h"
+struct ObjRectangle;
+struct Circle;
 
-class ColliderUtils
+class ColliderUtils final
 {
 public:
-	[[nodiscard]] static bool IsCollide(const Rectangle& r1, const Rectangle& r2);
-	[[nodiscard]] static bool IsCollide(const Circle& circle, const Rectangle& rect);
+	[[nodiscard]] static bool IsCollide(const ObjRectangle& r1, const ObjRectangle& r2);
+	[[nodiscard]] static bool IsCollide(const Circle& circle, const ObjRectangle& rect);
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-struct PlayerKeys
+struct PlayerKeys final
 {
 	bool up{false};
 	bool left{false};
