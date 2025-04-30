@@ -71,7 +71,6 @@ protected:
 
 TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
-
 	std::string name{"Bullet2"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
@@ -88,7 +87,6 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 
 TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
-
 	std::string name{"Bullet2"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};

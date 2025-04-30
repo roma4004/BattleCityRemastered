@@ -72,7 +72,6 @@ protected:
 
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 {
-
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _window, _events,
@@ -94,7 +93,6 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 //       then enemy pick up shovel bonus fortressWalls should hide (destroy)
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 {
-
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _window, _events,

@@ -60,7 +60,6 @@ protected:
 
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
-
 	if (auto&& bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
@@ -74,7 +73,8 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(steelWall->GetHealth(), 0);
-
-
+		}
+	}
+}
 			
 		
