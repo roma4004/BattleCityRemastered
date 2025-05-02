@@ -41,7 +41,7 @@ Used design patterns:
 * observer, 
 * strategy, 
 * IoC,
-* щbject Pool
+* object Pool
 
 TODO roadmap: 
 * network multiplayer (in progress, ~99%)
