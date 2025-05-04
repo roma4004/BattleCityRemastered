@@ -76,5 +76,3 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 		}
 	}
 }
-			
-		

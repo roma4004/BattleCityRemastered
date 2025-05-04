@@ -44,9 +44,9 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 
-		std::string name{"Bullet1"};
-		std::string fraction{"PlayerTeam"};
-		std::string author{"Player1"};
+		const std::string name{"Bullet1"};
+		const std::string fraction{"PlayerTeam"};
+		const std::string author{"Player1"};
 		ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
 		CreateBullet(name, fraction, author,  0.f, _bulletHeight, DOWN);
 	}
@@ -71,9 +71,9 @@ protected:
 
 TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
-	std::string name{"Bullet2"};
-	std::string fraction{"EnemyTeam"};
-	std::string author{"Enemy1"};
+	const std::string name{"Bullet2"};
+	const std::string fraction{"EnemyTeam"};
+	const std::string author{"Enemy1"};
 	CreateBullet(name, fraction, author,  0.f, _bulletHeight + 1, UP);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
@@ -87,9 +87,9 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 
 TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
-	std::string name{"Bullet2"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player2"};
+	const std::string name{"Bullet2"};
+	const std::string fraction{"PlayerTeam"};
+	const std::string author{"Player2"};
 	CreateBullet(name, fraction, author,  0.f, _bulletHeight + 1, UP);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);

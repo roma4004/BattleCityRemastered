@@ -430,4 +430,3 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 	EXPECT_TRUE(false);
 }
-

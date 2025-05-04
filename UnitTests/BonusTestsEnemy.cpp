@@ -119,4 +119,3 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 
 	EXPECT_TRUE(false);
 }
-

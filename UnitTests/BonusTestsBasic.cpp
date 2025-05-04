@@ -443,7 +443,3 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 }
-
-
-
-
