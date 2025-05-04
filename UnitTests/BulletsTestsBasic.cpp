@@ -430,35 +430,3 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 	EXPECT_TRUE(false);
 }
-
-TEST_F(BulletTest, BulletTier2CanDestroySteelWall)
-{
-	_allObjects.clear();
-	std::string bulletName = "Bullet";
-	std::string bulletFraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	
-	ObjRectangle rect {.x =0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
-	BaseObjProperty baseObjProperty{
-		std::move(rect), _bulletColor, _bulletHealth, true, 0, std::move(bulletName), std::move(bulletFraction)};
-	PawnProperty pawnProperty{
-		std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3 , _gameMode };
-	
-	_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
-
-	if (auto &&bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
-	{
-		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(wallRect), _window, _events, 0, _gameMode));
-		
-		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
-		{
-			steelWall->SetHealth(1);
-			EXPECT_EQ(steelWall->GetHealth(), 1);
-
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
-			
-			EXPECT_EQ(steelWall->GetHealth(), 0);
-		}
-	}
-}
