@@ -14,7 +14,9 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _allObjects{pawnProperty.allObjects},
 	  _window{std::move(pawnProperty.window)},
 	  _events{std::move(pawnProperty.events)},
-	  _moveBeh{std::move(moveBeh)}
+	  _moveBeh{std::move(moveBeh)},
+	  _texture{std::move(pawnProperty.texture)},
+	  _renderer{std::move(pawnProperty.renderer)}
 {
 	Pawn::Subscribe();
 }
@@ -27,6 +29,7 @@ Pawn::~Pawn()
 void Pawn::Subscribe()
 {
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	_events->AddListener("DrawTexture", _name, [this]() { this->DrawTexture(); });
 
 	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
@@ -57,6 +60,7 @@ void Pawn::SubscribeAsClient()
 void Pawn::Unsubscribe() const
 {
 	_events->RemoveListener("Draw", _name);
+	_events->RemoveListener("DrawTexture", _name);
 
 	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
 }
@@ -79,23 +83,41 @@ void Pawn::Draw() const
 		return;
 	}
 
-	int startY = static_cast<int>(GetY());
-	const int startX = static_cast<int>(GetX());
-	const size_t windowWidth = _window->size.x;
-	const int height = static_cast<int>(GetHeight());
-	const int width = static_cast<int>(GetWidth());
-	const int color = GetColor();
-
-	for (const int maxY = startY + height; startY < maxY; ++startY)
+	if (!_texture)
 	{
-		int x = startX;
-		for (const int maxX = x + width; x < maxX; ++x)
+		int startY = static_cast<int>(GetY());
+		const int startX = static_cast<int>(GetX());
+		const size_t windowWidth = _window->size.x;
+		const int height = static_cast<int>(GetHeight());
+		const int width = static_cast<int>(GetWidth());
+		const int color = GetColor();
+
+		for (const int maxY = startY + height; startY < maxY; ++startY)
 		{
-			const size_t offset = startY * windowWidth + startX;
-			const int rowWidth = maxX - startX;
-			std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
+			int x = startX;
+			for (const int maxX = x + width; x < maxX; ++x)
+			{
+				const size_t offset = startY * windowWidth + startX;
+				const int rowWidth = maxX - startX;
+				std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
+			}
 		}
 	}
+}
+
+void Pawn::DrawTexture() const
+{
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
+	const SDL_Rect rect{.x = static_cast<int>(_shape.x),
+						.y = static_cast<int>(_shape.y),
+						.w = static_cast<int>(_shape.w),
+						.h = static_cast<int>(_shape.h)};
+
+	SDL_RenderCopy(_renderer.get(), _texture.get(), nullptr, &rect);
 }
 
 UPoint Pawn::GetWindowSize() const { return _window->size; }

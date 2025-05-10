@@ -18,11 +18,16 @@
 #include <memory>
 
 TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
+						 std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
+						 std::shared_ptr<SDL_Texture> pOneTankTexture, std::shared_ptr<SDL_Texture> enemyTankTexture,
+						 std::shared_ptr<SDL_Renderer> _renderer)
 	: _allObjects{allObjects},
 	  _window{std::move(window)},
 	  _events{std::move(events)},
-	  _bulletPool{std::move(bulletPool)}
+	  _bulletPool{std::move(bulletPool)},
+	  _pOneTankTexture{std::move(pOneTankTexture)},
+	  _enemyTankTexture{std::move(enemyTankTexture)},
+	  _renderer(std::move(_renderer))
 {
 	Subscribe();
 }
@@ -185,7 +190,7 @@ void TankSpawner::SpawnEnemy(const int id, const float speed, const int health)
 
 			BaseObjProperty baseObjProperty{rect, gray, health, true, id, std::move(name), std::move(fraction)};
 			PawnProperty pawnProperty{
-					std::move(baseObjProperty), _window, DOWN, speed, _allObjects, _events, 1, _gameMode};
+					std::move(baseObjProperty), _window, DOWN, speed, _allObjects, _events, 1, _gameMode, _enemyTankTexture, _renderer};
 			_allObjects->emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool));
 
 			return;

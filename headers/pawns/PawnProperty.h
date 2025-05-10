@@ -24,4 +24,6 @@ struct PawnProperty
 	std::shared_ptr<EventSystem> events{nullptr};
 	int tier{1};
 	GameMode gameMode;
+	std::shared_ptr<SDL_Texture> texture;
+	std::shared_ptr<SDL_Renderer> renderer;
 };

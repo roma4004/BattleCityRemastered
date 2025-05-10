@@ -18,6 +18,10 @@ class ConfigSuccess final : public IConfig
 
 	std::shared_ptr<SDL_Texture> _logoTexture{nullptr};
 
+	std::shared_ptr<SDL_Texture> _pOneTankTexture{nullptr};
+
+	std::shared_ptr<SDL_Texture> _enemyTankTexture{nullptr};
+
 	//user settings //TODO: should be load from config file or default value
 	bool _isVsyncOn{false};
 
@@ -28,7 +32,10 @@ public:
 
 	ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
 	              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-	              std::shared_ptr<SDL_Texture> logoTexture, bool isVsyncOn);
+				  std::shared_ptr<SDL_Texture> logoTexture,
+				  std::shared_ptr<SDL_Texture> pOneTankTexture,
+				  std::shared_ptr<SDL_Texture> enemyTankTexture,
+				  bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

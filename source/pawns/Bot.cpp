@@ -12,7 +12,7 @@
 #include <chrono>
 
 Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
-	: Tank{std::move(pawnProperty),
+	: Tank{pawnProperty,
 	       std::make_unique<MoveLikeAIBeh>(this, pawnProperty.allObjects),
 	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool))
 	  },

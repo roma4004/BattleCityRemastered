@@ -3,6 +3,8 @@
 #include <memory>
 #include <random>
 
+#include "SDL.h"
+
 struct ObjRectangle;
 enum GameMode : char8_t;
 struct Window;
@@ -20,6 +22,9 @@ class TankSpawner final
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<SDL_Texture> _pOneTankTexture{nullptr};
+	std::shared_ptr<SDL_Texture> _enemyTankTexture{nullptr};
+	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 
 	std::random_device _rd;
 
@@ -72,7 +77,9 @@ class TankSpawner final
 
 public:
 	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool);
+				std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
+				std::shared_ptr<SDL_Texture> pOneTankTexture, std::shared_ptr<SDL_Texture> enemyTankTexture,
+				std::shared_ptr<SDL_Renderer> _renderer);
 
 	~TankSpawner();
 

@@ -2,6 +2,7 @@
 
 #include "../BaseObj.h"
 #include "../interfaces/ITickUpdatable.h"
+#include "SDL.h"
 
 #include <memory>
 #include <vector>
@@ -24,6 +25,8 @@ class Pawn : public BaseObj, public ITickUpdatable
 	virtual void SubscribeAsClient();
 
 	void Draw() const override;
+	void DrawTexture() const;
+
 
 protected:
 	Direction _dir{};
@@ -35,6 +38,8 @@ protected:
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
+	std::shared_ptr<SDL_Texture> _texture{nullptr};
+	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;

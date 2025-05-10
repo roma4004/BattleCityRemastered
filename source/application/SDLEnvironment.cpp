@@ -11,10 +11,12 @@
 class IConfig;
 
 SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
-                               const char* introMusicName)
+							   const char* introMusicName, const char* tankOne, const char* tankEnemy)
 	: window{std::make_shared<Window>(windowSize)},
 	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
+	  tankOnePathName{tankOne},
+	  tankEnemyPathName{tankEnemy},
 	  introMusicPathName{introMusicName} {}
 
 SDLEnvironment::~SDLEnvironment()
@@ -107,5 +109,38 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
-	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, isVsyncOn);
+	
+
+	// tank sprites
+
+	const std::shared_ptr<SDL_Surface> pOneTankSurface(IMG_Load(tankOnePathName), SDL_FreeSurface);
+	if (pOneTankSurface == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("IMG pOne Loading Error", IMG_GetError());
+	}
+
+	std::shared_ptr<SDL_Texture> pOneTankTexture(SDL_CreateTextureFromSurface(renderer.get(), pOneTankSurface.get()),
+											 SDL_DestroyTexture);
+	if (pOneTankTexture == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("IMG pOne Texture Creating Error", IMG_GetError());
+	}
+	const std::shared_ptr<SDL_Surface> enemyTankSurface(IMG_Load(tankEnemyPathName), SDL_FreeSurface);
+	if (enemyTankSurface == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("IMG enemy Loading Error", IMG_GetError());
+	}
+
+	std::shared_ptr<SDL_Texture> enemyTankTexture(SDL_CreateTextureFromSurface(renderer.get(), enemyTankSurface.get()),
+												 SDL_DestroyTexture);
+	if (enemyTankTexture == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("IMG enemy Texture Creating Error", IMG_GetError());
+	}
+	
+
+
+	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, pOneTankTexture,
+										   enemyTankTexture, isVsyncOn);
+
 }
