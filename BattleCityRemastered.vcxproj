@@ -144,6 +144,8 @@
     <ClCompile Include="source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="source\components\TankSpawner.cpp" />
     <ClCompile Include="source\Map.cpp" />
+    <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
+    <ClCompile Include="source\network\commands\BonusSpawn.cpp" />
     <ClCompile Include="source\network\commands\Command.cpp" />
     <ClCompile Include="source\network\commands\Dispose.cpp" />
     <ClCompile Include="source\network\commands\FortressChange.cpp" />
@@ -218,6 +220,8 @@
     <ClInclude Include="headers\enums\ObstacleType.h" />
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\MouseButton.h" />
+    <ClInclude Include="headers\network\commands\BonusDeSpawn.h" />
+    <ClInclude Include="headers\network\commands\BonusSpawn.h" />
     <ClInclude Include="headers\network\commands\Command.h" />
     <ClInclude Include="headers\network\commands\Dispose.h" />
     <ClInclude Include="headers\network\commands\FortressChange.h" />

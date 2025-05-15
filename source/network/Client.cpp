@@ -8,6 +8,8 @@
 #include <boost/archive/text_oarchive.hpp>
 
 #include "../../headers/enums/ComandType.h"
+#include "../../headers/network/commands/BonusDeSpawn.h"
+#include "../../headers/network/commands/BonusSpawn.h"
 #include "../../headers/network/commands/Command.h"
 #include "../../headers/network/commands/Dispose.h"
 #include "../../headers/network/commands/FortressChange.h"
@@ -124,16 +126,7 @@ void Client::ReadResponse()
 
 			// TODO: add unpause when clint connect to ready server game
 
-			// else if (data.eventName == "BonusSpawn")
-			// {
-			// 	events->EmitEvent<const FPoint, const BonusType, const int>(
-			// 			"ClientReceived_BonusSpawn", data.pos, data.type, data.id);
-			// }
-			// else if (data.eventName == "BonusDeSpawn")
-			// {
-			// 	events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
-			// }
-			// else if (data.eventName == "OnHelmetActivate")
+			// if (data.eventName == "OnHelmetActivate")
 			// {
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
@@ -255,6 +248,23 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 	}
 }
 
+void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
+	{
+		_events->EmitEvent<const FPoint, const BonusType, const int>(
+				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetId());
+	}
+}
+
+void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
+	{
+		_events->EmitEvent<const int>("ClientReceived_BonusDeSpawn", cmd->GetId());
+	}
+}
+
 void Client::ProcessReceivedData(const std::string& archiveData) const
 {
 	try
@@ -278,7 +288,7 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 				}
 				case CommandType::TANK_SHOT:
 				{
-					OnTankShot(command);
+					OnTankShot(command);//TODO: refactored tankShot event to bullet pool spawn with bulletId
 					break;
 				}
 				case CommandType::HEALTH_CHANGE:
@@ -304,6 +314,16 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 				case CommandType::FORTRESS_CHANGE:
 				{
 					OnFortressChange(command);
+					break;
+				}
+				case CommandType::BONUS_SPAWN:
+				{
+					OnBonusSpawn(command);
+					break;
+				}
+				case CommandType::BONUS_DESPAWN:
+				{
+					OnBonusDeSpawn(command);
 					break;
 				}
 				//TODO: implement other command types

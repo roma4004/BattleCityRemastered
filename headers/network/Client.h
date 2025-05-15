@@ -56,6 +56,8 @@ public:
 	void OnStatisticsChange(const std::shared_ptr<Command>& command) const;
 	void OnKeyStateChange(const std::shared_ptr<Command>& command) const;
 	void OnFortressChange(const std::shared_ptr<Command>& command) const;
+	void OnBonusSpawn(const std::shared_ptr<Command>& command) const;
+	void OnBonusDeSpawn(const std::shared_ptr<Command>& command) const;
 	void ProcessReceivedData(const std::string& archiveData) const;
 
 private:

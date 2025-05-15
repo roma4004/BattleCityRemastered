@@ -5,6 +5,8 @@
 
 #include "../../headers/network/Server.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/network/commands/BonusDeSpawn.h"
+#include "../../headers/network/commands/BonusSpawn.h"
 #include "../../headers/network/commands/Dispose.h"
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
@@ -198,10 +200,12 @@ void Server::Subscribe() const
 	_events->AddListener("Pause_Released", _name,
 	                     [this]() { SendCommand(std::make_shared<KeyStateChange>("Pause_Released")); });
 
-	_events->AddListener<const std::string&, const int>("ServerSend_FortressChange", _name, [this](const std::string& state, const int id)
-	{
-		SendCommand(std::make_shared<FortressChange>(state, id));
-	});
+	_events->AddListener<const std::string&, const int>(
+			"ServerSend_FortressChange", _name,
+			[this](const std::string& state, const int id)
+			{
+				SendCommand(std::make_shared<FortressChange>(state, id));
+			});
 
 	_events->AddListener<const std::string&, const FPoint, const Direction>(
 			"ServerSend_Pos", _name,
@@ -243,17 +247,17 @@ void Server::Subscribe() const
 
 void Server::SubscribeBonus() const
 {
-	// _events->AddListener<const std::string&, const FPoint, const BonusType, const int>(
-	// 		"ServerSend_BonusSpawn", _name,
-	// 		[this](const std::string& who, const FPoint pos, const BonusType type, const int id)
-	// 		{
-	// 			this->SendBonusSpawn(who, pos, type, id);//TODO: refactor to SendCommand(std::make_shared<
-	// 		});
-	// _events->AddListener<const int>("ServerSend_BonusDeSpawn", _name, [this](const int id)
-	// {
-	// 	this->SendBonusDeSpawn(id);//TODO: refactor to SendCommand(std::make_shared<
-	// });
-	//
+	_events->AddListener<const std::string&, const FPoint, const BonusType, const int>(
+			"ServerSend_BonusSpawn", _name,
+			[this](const std::string& who, const FPoint pos, const BonusType type, const int id)
+			{
+				SendCommand(std::make_shared<BonusSpawn>(pos, type, id));
+			});
+	_events->AddListener<const int>("ServerSend_BonusDeSpawn", _name, [this](const int id)
+	{
+		SendCommand(std::make_shared<BonusDeSpawn>(id));
+	});
+
 	// _events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
 	// {
 	// 	this->OnHelmetActivate(who);//TODO: refactor to SendCommand(std::make_shared<
@@ -352,37 +356,6 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 	oa << command;
 
 	this->SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendBonusSpawn(const std::string& who, const FPoint pos, const BonusType type, const int id) const
-{
-	ServerData data;
-
-	data.who = who;//TODO: remove unused param
-	data.eventName = "BonusSpawn";
-	data.pos = pos;
-	data.id = id;
-	data.type = type;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendBonusDeSpawn(const int id) const
-{
-	ServerData data;
-
-	data.eventName = "BonusDeSpawn";
-	data.id = id;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
 }
 
 void Server::OnHelmetActivate(const std::string& who) const
