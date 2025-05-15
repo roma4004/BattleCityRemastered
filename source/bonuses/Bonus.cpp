@@ -12,7 +12,7 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shar
 	  _creationTime{std::chrono::system_clock::now()},
 	  _gameMode{gameMode},
 	  _bonusType{bonusType},
-	  _duration{duration},
+	  _effectDuration{duration},
 	  _lifetime{lifeTime},
 	  _events{std::move(events)}
 {

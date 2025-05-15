@@ -264,6 +264,14 @@ add_executable(${PROJECT_NAME}
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
         source/Map.cpp
+        source/network/commands/Command.cpp
+        source/network/commands/Dispose.cpp
+        source/network/commands/FortressChange.cpp
+        source/network/commands/HealthChange.cpp
+        source/network/commands/KeyStateChange.cpp
+        source/network/commands/PositionChange.cpp
+        source/network/commands/StatisticsChange.cpp
+        source/network/commands/TankShot.cpp
         source/ObjRectangle.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp

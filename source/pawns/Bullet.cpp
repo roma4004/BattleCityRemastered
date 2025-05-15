@@ -73,7 +73,7 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
                    const float speed, const Direction dir, const int health, std::string author,
                    std::string fraction, const int tier)
 {
-	SetShape(rect);
+	SetRect(rect);
 	SetColor(color);
 	SetHealth(health);
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
@@ -83,10 +83,12 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 	_damage = damage;
 	_bulletDamageRadius = aoeRadius;
 	_speed = speed;
+	_tier = tier;
+	_name = "Bullet" + std::to_string(_id);
+
 	SetIsAlive(true);
 	Enable();
-	_tier = tier;
-}
+}//TODO: disable(return) all bullets on game mode change
 
 void Bullet::TickUpdate(const float deltaTime)
 {

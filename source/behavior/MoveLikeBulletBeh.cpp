@@ -28,11 +28,10 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float del
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
 
-	// For some reason I can't make rect1 in if's Rider say I make unused object. So I made more crutches
 	if (const Direction dir = bullet->GetDirection();
 		dir == UP)
 	{
-		//36 37 initialize in if
+		//36 37 initializing in if
 		speedY *= -1;
 		speedX *= 0;
 	}
@@ -61,7 +60,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float del
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(bulletNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(bulletNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPenetrable())
 			{
@@ -196,7 +195,7 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(circle, object->GetShape()))
+		if (ColliderUtils::IsCollide(circle, object->GetRect()))
 		{
 			aoeList.emplace_back(std::weak_ptr(object));
 		}

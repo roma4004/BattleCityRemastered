@@ -60,7 +60,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float delta
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPassable())
 			{

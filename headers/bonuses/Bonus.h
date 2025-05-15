@@ -22,7 +22,7 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 protected:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
-	std::chrono::milliseconds _duration{0};
+	std::chrono::milliseconds _effectDuration{0};
 	std::chrono::milliseconds _lifetime{0};
 
 	std::shared_ptr<EventSystem> _events{nullptr};

@@ -79,8 +79,8 @@ public:
 
 	void SetIsPenetrable(bool value) override;
 
-	[[nodiscard]] ObjRectangle GetShape() const override;
-	void SetShape(ObjRectangle shape) override;
+	[[nodiscard]] ObjRectangle GetRect() const override;
+	void SetRect(ObjRectangle rect) override;
 
 	[[nodiscard]] bool GetIsAlive() const override;
 	void SetIsAlive(bool isAlive) override;

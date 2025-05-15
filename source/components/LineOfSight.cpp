@@ -61,22 +61,22 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 
 		if (!object->GetIsPassable() && !object->GetIsPenetrable())
 		{
-			if (ColliderUtils::IsCollide(_checkLos[UP], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[UP], object->GetRect()))
 			{
 				_upSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 
-			if (ColliderUtils::IsCollide(_checkLos[LEFT], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[LEFT], object->GetRect()))
 			{
 				_leftSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 
-			if (ColliderUtils::IsCollide(_checkLos[DOWN], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[DOWN], object->GetRect()))
 			{
 				_downSideObstacles.emplace_back(std::weak_ptr(object));
 			}
 
-			if (ColliderUtils::IsCollide(_checkLos[RIGHT], object->GetShape()))
+			if (ColliderUtils::IsCollide(_checkLos[RIGHT], object->GetRect()))
 			{
 				_rightSideObstacles.emplace_back(std::weak_ptr(object));
 			}

@@ -125,6 +125,7 @@ void ShootingBeh::Shot() const
 	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
+
 	_bulletPool->SpawnBullet(
 			std::move(rect), damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction),
 			tier);

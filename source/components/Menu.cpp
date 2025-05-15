@@ -21,9 +21,10 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
 	Subscribe();
 
 	_padding = 25;
-	const auto winSizeX = static_cast<unsigned int>(_window->size.x);
+	const auto windowWidth = static_cast<unsigned int>(_window->size.x);
 	_height = static_cast<int>(_window->size.y) - _padding * 3;
-	_width = winSizeX - 228 - _padding;
+	constexpr int sideBarWidth = 228;
+	_width = windowWidth - sideBarWidth - _padding;
 
 	PregenerateMenuBackground();
 
@@ -97,9 +98,9 @@ void Menu::TickUpdate() const
 void Menu::PregenerateMenuBackground()
 {
 	_menuBackground = std::make_shared<int[]>(_height * _width);
-	for (unsigned y = 0; y < _height; ++y)
+	for (int y = 0; y < _height; ++y)
 	{
-		for (unsigned x = 0; x < _width; ++x)
+		for (int x = 0; x < _width; ++x)
 		{
 			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency
 			_menuBackground[y * _width + x] = menuColor;

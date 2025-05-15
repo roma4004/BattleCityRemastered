@@ -1,10 +1,17 @@
-#include "../../headers/network/Server.h"
-#include "../../headers/components/EventSystem.h"
-
 #include <fstream>
 #include <iostream>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+
+#include "../../headers/network/Server.h"
+#include "../../headers/components/EventSystem.h"
+#include "../../headers/network/commands/Dispose.h"
+#include "../../headers/network/commands/FortressChange.h"
+#include "../../headers/network/commands/HealthChange.h"
+#include "../../headers/network/commands/KeyStateChange.h"
+#include "../../headers/network/commands/PositionChange.h"
+#include "../../headers/network/commands/StatisticsChange.h"
+#include "../../headers/network/commands/TankShot.h"
 
 // std::ofstream error_log("error_log.txt");
 
@@ -186,53 +193,49 @@ Server::~Server()
 
 void Server::Subscribe() const
 {
-	_events->AddListener("Pause_Pressed", _name, [this]() { this->SendKeyState("Pause_Pressed"); });
-	_events->AddListener("Pause_Released", _name, [this]() { this->SendKeyState("Pause_Released"); });
+	_events->AddListener("Pause_Pressed", _name,
+	                     [this]() { SendCommand(std::make_shared<KeyStateChange>("Pause_Pressed")); });
+	_events->AddListener("Pause_Released", _name,
+	                     [this]() { SendCommand(std::make_shared<KeyStateChange>("Pause_Released")); });
 
-	_events->AddListener<const int>("ServerSend_FortressDied", _name, [this](const int id)
+	_events->AddListener<const std::string&, const int>("ServerSend_FortressChange", _name, [this](const std::string& state, const int id)
 	{
-		this->SendFortressDied(id);
-	});
-
-	_events->AddListener<const int>("ServerSend_FortressToBrick", _name, [this](const int id)
-	{
-		this->SendFortressToBrick(id);
-	});
-
-	_events->AddListener<const int>("ServerSend_FortressToSteel", _name, [this](const int id)
-	{
-		this->SendFortressToSteel(id);
+		SendCommand(std::make_shared<FortressChange>(state, id));
 	});
 
 	_events->AddListener<const std::string&, const FPoint, const Direction>(
-			"ServerSend_Pos", _name, [this](const std::string& who, const FPoint pos, const Direction dir)
+			"ServerSend_Pos", _name,
+			[this](const std::string& who, const FPoint pos, const Direction dir)
 			{
-				this->SendPos(who, pos, dir);
+				SendCommand(std::make_shared<PositionChange>(who, pos, dir));
+			});
+
+	_events->AddListener<const std::string&, const Direction>(
+			"ServerSend_Shot"/*TODO: rename_Shot bulletSpawn*/, _name,
+			[this](const std::string& who, const Direction dir)
+			{
+				SendCommand(std::make_shared<TankShot>(who, dir));
 			});
 
 	_events->AddListener<const std::string&, const int>(
-			"ServerSend_Health", _name, [this](const std::string& who, const int health)
+			"ServerSend_Health", _name,
+			[this](const std::string& who, const int health)
 			{
-				this->SendHealth(who, health);
+				SendCommand(std::make_shared<HealthChange>(who, health));
 			});
 
-	_events->AddListener<const int>("ServerSend_Dispose", _name, [this](const int bulletId)
-	{
-		this->SendDispose("Bullet" + std::to_string(bulletId));
-	});
-
-	//TODO: rename_Shot bulletSpawn
-	_events->AddListener<const std::string&, const Direction>(
-			"ServerSend_Shot", _name, [this](const std::string& who, const Direction dir)
+	_events->AddListener<const int>(
+			"ServerSend_Dispose", _name,
+			[this](/*TODO: add who,*/const int id)
 			{
-				this->SendShot(who, dir);
+				SendCommand(std::make_shared<Dispose>("Bullet", id));
 			});
 
 	_events->AddListener<const std::string&, const std::string&, const std::string&>(
-			"ServerSend_Statistics", _name,
+			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
 			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
 			{
-				this->OnStatisticsChange(eventName, author, fraction);
+				SendCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
 	SubscribeBonus();
@@ -240,40 +243,40 @@ void Server::Subscribe() const
 
 void Server::SubscribeBonus() const
 {
-	_events->AddListener<const std::string&, const FPoint, const BonusType, const int>(
-			"ServerSend_BonusSpawn", _name,
-			[this](const std::string& who, const FPoint pos, const BonusType type, const int id)
-			{
-				this->SendBonusSpawn(who, pos, type, id);
-			});
-	_events->AddListener<const int>("ServerSend_BonusDeSpawn", _name, [this](const int id)
-	{
-		this->SendBonusDeSpawn(id);
-	});
-
-	_events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
-	{
-		this->OnHelmetActivate(who);
-	});
-	_events->AddListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name, [this](const std::string& who)
-	{
-		this->OnHelmetDeactivate(who);
-	});
-	_events->AddListener<const std::string&>("ServerSend_OnStar", _name, [this](const std::string& who)
-	{
-		this->OnStar(who);
-	});
-	_events->AddListener<const std::string&, const std::string&>(
-			"ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnTank(author, fraction);
-			});
-
-	_events->AddListener<const std::string&, const std::string&>(
-			"ServerSend_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnGrenade(author, fraction);
-			});
+	// _events->AddListener<const std::string&, const FPoint, const BonusType, const int>(
+	// 		"ServerSend_BonusSpawn", _name,
+	// 		[this](const std::string& who, const FPoint pos, const BonusType type, const int id)
+	// 		{
+	// 			this->SendBonusSpawn(who, pos, type, id);//TODO: refactor to SendCommand(std::make_shared<
+	// 		});
+	// _events->AddListener<const int>("ServerSend_BonusDeSpawn", _name, [this](const int id)
+	// {
+	// 	this->SendBonusDeSpawn(id);//TODO: refactor to SendCommand(std::make_shared<
+	// });
+	//
+	// _events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
+	// {
+	// 	this->OnHelmetActivate(who);//TODO: refactor to SendCommand(std::make_shared<
+	// });
+	// _events->AddListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name, [this](const std::string& who)
+	// {
+	// 	this->OnHelmetDeactivate(who);//TODO: refactor to SendCommand(std::make_shared<
+	// });
+	// _events->AddListener<const std::string&>("ServerSend_OnStar", _name, [this](const std::string& who)
+	// {
+	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
+	// });
+	// _events->AddListener<const std::string&, const std::string&>(
+	// 		"ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
+	// 		{
+	// 			this->OnTank(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
+	// 		});
+	//
+	// _events->AddListener<const std::string&, const std::string&>(
+	// 		"ServerSend_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
+	// 		{
+	// 			this->OnGrenade(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
+	// 		});
 }
 
 void Server::Unsubscribe() const
@@ -295,6 +298,8 @@ void Server::UnsubscribeBonus() const
 	_events->RemoveListener<const std::string&, const FPoint, const BonusType, const int>(
 			"ServerSend_BonusSpawn", _name);
 	_events->RemoveListener<const int>("ServerSend_BonusDeSpawn", _name);
+
+	_events->RemoveListener<const std::string&, const int>("ServerSend_FortressChange", _name);
 
 	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);
 	_events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);
@@ -340,73 +345,13 @@ void Server::SendToAll(const std::string& message) const
 		session->DoWrite(message);
 }
 
-void Server::SendDispose(const std::string& bulletName) const
+void Server::SendCommand(const std::shared_ptr<Command>& command) const
 {
-	ServerData data;
-	data.eventName = "Dispose";
-	data.who = bulletName;
-
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
+	oa << command;
 
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendKeyState(const std::string& who) const
-{
-	ServerData data;
-	data.eventName = "KeyState";
-	data.who = who;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendShot(const std::string& who, const Direction dir) const
-{
-	ServerData data;
-	data.eventName = "Shot";//TODO: refactor bullet pool event to avoid un sync situation
-	data.who = who;
-	data.dir = dir;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendKeyState(const std::string& state, const FPoint newPos, const Direction dir) const
-{
-	ServerData data;
-	data.eventName = state;
-	data.pos = newPos;
-	data.dir = dir;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendPos(const std::string& who, const FPoint pos, const Direction dir) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "Pos";
-	data.pos = pos;
-	data.dir = dir;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
+	this->SendToAll(archiveStream.str() + "\n\n");
 }
 
 void Server::SendBonusSpawn(const std::string& who, const FPoint pos, const BonusType type, const int id) const
@@ -432,20 +377,6 @@ void Server::SendBonusDeSpawn(const int id) const
 
 	data.eventName = "BonusDeSpawn";
 	data.id = id;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendHealth(const std::string& who, const int health) const
-{
-	ServerData data;
-	data.health = health;
-	data.who = who;
-	data.eventName = "Health";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
@@ -513,61 +444,6 @@ void Server::OnGrenade(const std::string& who, const std::string& fraction) cons
 	data.who = who;
 	data.eventName = "OnGrenade";
 	data.fraction = fraction;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::OnStatisticsChange(const std::string& eventName, const std::string& author,
-                                const std::string& fraction) const
-{
-	ServerData data;
-	data.eventType = "Statistics";//TODO: refactor statistics to send actual value not increment
-	data.eventName = eventName;
-	data.who = author;
-	data.fraction = fraction;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendFortressDied(const int id) const
-{
-	ServerData data;
-	data.id = id;
-	data.eventName = "FortressDied";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendFortressToBrick(const int id) const
-{
-	ServerData data;
-	data.id = id;
-	data.eventName = "FortressToBrick";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::SendFortressToSteel(const int id) const
-{
-	ServerData data;
-	data.id = id;
-	data.eventName = "FortressToSteel";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

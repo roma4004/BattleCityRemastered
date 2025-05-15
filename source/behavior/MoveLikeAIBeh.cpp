@@ -58,7 +58,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTi
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPassable())
 			{

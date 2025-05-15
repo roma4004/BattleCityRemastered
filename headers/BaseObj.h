@@ -19,7 +19,7 @@ protected:
 	int _id{0};
 	std::string _name;
 	std::string _fraction;
-	ObjRectangle _shape{};
+	ObjRectangle _rect{};
 
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);
@@ -68,10 +68,11 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
-	[[nodiscard]] virtual ObjRectangle GetShape() const;
-	virtual void SetShape(ObjRectangle shape);
+	[[nodiscard]] virtual ObjRectangle GetRect() const;
+	virtual void SetRect(ObjRectangle rect);
 
 	[[nodiscard]] virtual std::string GetName() const;
 	[[nodiscard]] virtual int GetId() const;
+	virtual void SetId(int id);
 	[[nodiscard]] std::string GetFraction() const override;
 };

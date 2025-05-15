@@ -96,7 +96,7 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& near
 {
 	if (IsBonus(nearestObstacle))
 	{
-		LineOfSight bonusLOS(_shape, _window->size, _allObjects, this);
+		LineOfSight bonusLOS(_rect, _window->size, _allObjects, this);
 		const std::vector<std::weak_ptr<BaseObj>>& dirSideObstacles =
 				[&bonusLOS, dir]() mutable -> std::vector<std::weak_ptr<BaseObj>>& {
 					if (dir == UP)
@@ -149,7 +149,7 @@ bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::weak_p
 
 void Bot::HandleLineOfSight(const Direction dir)
 {
-	LineOfSight lineOfSight(_shape, _window->size, _bulletSize, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _window->size, _bulletSize, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
 	if (HandleSideObstacles(UP, upSideObstacles))
@@ -187,7 +187,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 		if (_nearestSeenObstacle = upSideObstacles.front().lock();
 			_nearestSeenObstacle)
 		{
-			_shootDistance = _shape.y - _nearestSeenObstacle->GetY();
+			_shootDistance = _rect.y - _nearestSeenObstacle->GetY();
 			_bulletOffset = _bulletSize.y;
 		}
 	}
@@ -197,7 +197,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 		if (_nearestSeenObstacle = leftSideObstacles.front().lock();
 			_nearestSeenObstacle)
 		{
-			_shootDistance = _shape.x - _nearestSeenObstacle->GetX();
+			_shootDistance = _rect.x - _nearestSeenObstacle->GetX();
 			_bulletOffset = _bulletSize.x;
 		}
 	}
@@ -207,7 +207,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 		if (_nearestSeenObstacle = downSideObstacles.front().lock();
 			_nearestSeenObstacle)
 		{
-			_shootDistance = _nearestSeenObstacle->GetY() - _shape.y;
+			_shootDistance = _nearestSeenObstacle->GetY() - _rect.y;
 			_bulletOffset = _bulletSize.y;
 		}
 	}
@@ -217,7 +217,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 		if (_nearestSeenObstacle = rightSideObstacles.front().lock();
 			_nearestSeenObstacle)
 		{
-			_shootDistance = _nearestSeenObstacle->GetX() - _shape.x;
+			_shootDistance = _nearestSeenObstacle->GetX() - _rect.x;
 			_bulletOffset = _bulletSize.x;
 		}
 	}

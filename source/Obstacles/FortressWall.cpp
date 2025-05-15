@@ -46,29 +46,26 @@ void FortressWall::SubscribeAsHost()
 
 void FortressWall::SubscribeAsClient()
 {
-	_events->AddListener<const int>("ClientReceived_FortressDied", _name, [this](const int id)
-	{
-		if (id == _id)
-		{
-			this->OnEnemyPickupShovel();
-		}
-	});
-
-	_events->AddListener<const int>("ClientReceived_FortressToSteel", _name, [this](const int id)
-	{
-		if (id == _id)
-		{
-			this->OnPlayerPickupShovel();
-		}
-	});
-
-	_events->AddListener<const int>("ClientReceived_FortressToBrick", _name, [this](const int id)
-	{
-		if (id == _id)
-		{
-			this->OnPlayerShovelCooldownEnd();
-		}
-	});
+	_events->AddListener<const std::string&, const int>(
+			"ClientReceived_FortressChange", _name,
+			[this](const std::string& state, const int id)
+			{
+				if (id == _id)
+				{
+					if (state == "Died")
+					{
+						this->OnEnemyPickupShovel();
+					}
+					else if (state == "ToSteel")
+					{
+						this->OnPlayerPickupShovel();
+					}
+					else if (state == "ToBrick")
+					{
+						this->OnPlayerShovelCooldownEnd();
+					}
+				}
+			});
 }
 
 void FortressWall::SubscribeBonus()
@@ -96,9 +93,7 @@ void FortressWall::UnsubscribeAsHost() const
 
 void FortressWall::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const int>("ClientReceived_FortressDied", _name);
-	_events->RemoveListener<const int>("ClientReceived_FortressToSteel", _name);
-	_events->RemoveListener<const int>("ClientReceived_FortressToBrick", _name);
+	_events->RemoveListener<const std::string&, const int>("ClientReceived_FortressChange", _name);
 }
 
 void FortressWall::UnsubscribeBonus() const
@@ -142,7 +137,7 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const int>("ServerSend_FortressToBrick", _id);
+			_events->EmitEvent<const std::string&, const int>("ServerSend_FortressChange", "ToBrick", _id);
 		}
 	}
 }
@@ -155,7 +150,7 @@ void FortressWall::OnPlayerPickupShovel()
 	{
 		if (dynamic_cast<Pawn*>(object.get()))
 		{
-			return ColliderUtils::IsCollide(_rect, object->GetShape());
+			return ColliderUtils::IsCollide(_rect, object->GetRect());
 		}
 
 		return false;
@@ -167,7 +162,7 @@ void FortressWall::OnPlayerPickupShovel()
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const int>("ServerSend_FortressToSteel", _id);
+			_events->EmitEvent<const std::string&, const int>("ServerSend_FortressChange", "ToSteel", _id);
 		}
 	}
 }
@@ -192,7 +187,7 @@ void FortressWall::TakeDamage(const int damage)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const int>("ServerSend_FortressDied", _id);
+			_events->EmitEvent<const std::string&, const int>("ServerSend_Fortress", "Died", _id);
 		}
 	}
 }
@@ -238,7 +233,7 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const int>("ServerSend_FortressDied", _id);
+		_events->EmitEvent<const std::string&, const int>("ServerSend_FortressChange", "Died", _id);
 	}
 }
 
@@ -346,28 +341,28 @@ void FortressWall::SetHealth(const int health)
 	}, _obstacle);
 }
 
-ObjRectangle FortressWall::GetShape() const
+ObjRectangle FortressWall::GetRect() const
 {
-	ObjRectangle shape{};
+	ObjRectangle rect{};
 
-	std::visit([&shape](auto&& uniqPtr)
+	std::visit([&rect](auto&& uniqPtr)
 	{
 		if (uniqPtr)
 		{
-			shape = uniqPtr.get()->GetShape();
+			rect = uniqPtr.get()->GetRect();
 		}
 	}, _obstacle);
 
-	return shape;
+	return rect;
 }
 
-void FortressWall::SetShape(const ObjRectangle shape)
+void FortressWall::SetRect(const ObjRectangle rect)
 {
-	std::visit([&shape](auto&& uniqPtr)
+	std::visit([&rect](auto&& uniqPtr)
 	{
 		if (uniqPtr)
 		{
-			uniqPtr.get()->SetShape(shape);
+			uniqPtr.get()->SetRect(rect);
 		}
 	}, _obstacle);
 }

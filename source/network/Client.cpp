@@ -3,8 +3,18 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+
+#include "../../headers/enums/ComandType.h"
+#include "../../headers/network/commands/Command.h"
+#include "../../headers/network/commands/Dispose.h"
+#include "../../headers/network/commands/FortressChange.h"
+#include "../../headers/network/commands/HealthChange.h"
+#include "../../headers/network/commands/PositionChange.h"
+#include "../../headers/network/commands/StatisticsChange.h"
+#include "../../headers/network/commands/TankShot.h"
 
 // std::ofstream error_log("error_log_client.txt");
 
@@ -92,6 +102,7 @@ void Client::Unsubscribe() const
 	_events->RemoveListener("RCTRL_Released", _name);
 }
 
+//TODO: clear bullets on the scene at host\client start
 void Client::ReadResponse()
 {
 	// auto self(shared_from_this());
@@ -106,83 +117,44 @@ void Client::ReadResponse()
 		{
 			const std::string archiveData(buffers_begin(_read_buffer.data()),
 			                              buffers_begin(_read_buffer.data()) + length);
-			std::istringstream archiveStream(archiveData);
-			boost::archive::text_iarchive ia(archiveStream);
-			ClientData data;
-			ia >> data;
 
 			_read_buffer.consume(length);
 
+			ProcessReceivedData(archiveData);
+
 			// TODO: add unpause when clint connect to ready server game
-			if (data.eventName == "Pos")
-			{
-				events->EmitEvent<const FPoint, const Direction>(
-						"ClientReceived_" + data.who + data.eventName, data.pos, data.dir);
-			}
-			else if (data.eventName == "Shot")
-			{
-				events->EmitEvent<const Direction>("ClientReceived_" + data.who + data.eventName, data.dir);
-			}
-			else if (data.eventName == "Health")
-			{
-				events->EmitEvent<const int>("ClientReceived_" + data.who + data.eventName, data.health);
-			}
-			else if (data.eventName == "Dispose")
-			{
-				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			}
-			else if (data.eventName == "BonusSpawn")
-			{
-				events->EmitEvent<const FPoint, const BonusType, const int>(
-						"ClientReceived_BonusSpawn", data.pos, data.type, data.id);
-			}
-			else if (data.eventName == "BonusDeSpawn")
-			{
-				events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
-			}
-			else if (data.eventName == "FortressDied")
-			{
-				events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
-			}
-			else if (data.eventName == "FortressToSteel")
-			{
-				events->EmitEvent<const int>("ClientReceived_FortressToSteel", data.id);
-			}
-			else if (data.eventName == "FortressToBrick")
-			{
-				events->EmitEvent<const int>("ClientReceived_FortressToBrick", data.id);
-			}
-			else if (data.eventName == "OnHelmetActivate")
-			{
-				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			}
-			else if (data.eventName == "OnHelmetDeactivate")
-			{
-				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			}
-			else if (data.eventName == "OnStar")
-			{
-				events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			}
-			else if (data.eventName == "OnTank")
-			{
-				events->EmitEvent<const std::string&, const std::string&>(
-						"ClientReceived_" + data.eventName, data.who, data.fraction);
-			}
-			else if (data.eventType == "Statistics")
-			{
-				events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-						"ClientReceived_" + data.eventType, data.eventName, data.who, data.fraction);
-			}
-			else if (data.eventName == "OnGrenade")
-			{
-				events->EmitEvent<const std::string&, const std::string&>(
-						"ClientReceived_" + data.eventName, data.who, data.fraction);
-			}
-			else if (data.eventName == "KeyState")//key input
-			{
-				events->EmitEvent(data.who);
-			}
+
+			// else if (data.eventName == "BonusSpawn")
+			// {
+			// 	events->EmitEvent<const FPoint, const BonusType, const int>(
+			// 			"ClientReceived_BonusSpawn", data.pos, data.type, data.id);
+			// }
+			// else if (data.eventName == "BonusDeSpawn")
+			// {
+			// 	events->EmitEvent<const int>("ClientReceived_" + data.eventName, data.id);
+			// }
+			// else if (data.eventName == "OnHelmetActivate")
+			// {
+			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
+			// }
+			// else if (data.eventName == "OnHelmetDeactivate")
+			// {
+			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
+			// }
+			// else if (data.eventName == "OnStar")
+			// {
+			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
+			// }
+			// else if (data.eventName == "OnTank")
+			// {
+			// 	events->EmitEvent<const std::string&, const std::string&>(
+			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
+			// }
+			// else if (data.eventName == "OnGrenade")
+			// {
+			// 	events->EmitEvent<const std::string&, const std::string&>(
+			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
+			// }
 
 			// Since we want to keep listening, initiate reading again
 			this->ReadResponse();
@@ -221,4 +193,128 @@ void Client::SendKeyState(const std::string& state)
 					// this->ReadResponse();
 				}
 			});
+}
+
+void Client::OnPositionChange(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
+	{
+		_events->EmitEvent<const FPoint, const Direction>(
+				"ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir());
+	}
+}
+
+void Client::OnTankShot(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
+	{
+		_events->EmitEvent<const Direction>("ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir());
+	}
+}
+
+void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
+	{
+		_events->EmitEvent<const int>("ClientReceived_" + cmd->GetWho() + "Health", cmd->GetHealth());
+	}
+}
+
+void Client::OnDispose(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
+	{
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + std::to_string(cmd->GetId()) + "Dispose");
+	}
+}
+
+void Client::OnStatisticsChange(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
+	{
+		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+				"ClientReceived_Statistics", cmd->GetEventName(), cmd->GetAuthor(), cmd->GetFraction());
+	}
+}
+
+// void Client::OnKeyStateChange<//TODO: template this>(const std::shared_ptr<Command>& command) const
+void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
+	{
+		_events->EmitEvent(cmd->GetEventName());
+	}
+}
+
+void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
+	{
+		_events->EmitEvent<const std::string&, const int>(
+				"ClientReceived_FortressChange", cmd->GetState(), cmd->GetId());
+	}
+}
+
+void Client::ProcessReceivedData(const std::string& archiveData) const
+{
+	try
+	{
+		std::istringstream archiveStream(archiveData);
+		boost::archive::text_iarchive ia(archiveStream);
+
+		std::shared_ptr<Command> command;
+		ia >> command;
+
+		if (command)
+		{
+			// auto name = command->GetClassNameW();
+			switch (command->GetType())
+			{
+				case CommandType::POSITION_CHANGE:
+				{
+					OnPositionChange(command);
+					//TODO: use more polymorphic way to process commands, uni method onReceived
+					break;
+				}
+				case CommandType::TANK_SHOT:
+				{
+					OnTankShot(command);
+					break;
+				}
+				case CommandType::HEALTH_CHANGE:
+				{
+					OnHealthChange(command);
+					break;
+				}
+				case CommandType::DISPOSE:
+				{
+					OnDispose(command);
+					break;
+				}
+				case CommandType::STATISTICS_CHANGE:
+				{
+					OnStatisticsChange(command);
+					break;
+				}
+				case CommandType::KEY_STATE_CHANGE:
+				{
+					OnKeyStateChange(command);
+					break;
+				}
+				case CommandType::FORTRESS_CHANGE:
+				{
+					OnFortressChange(command);
+					break;
+				}
+				//TODO: implement other command types
+				default:
+					break;
+			}
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Deserialization error: " << e.what() << std::endl;
+		std::cerr << "Raw data: " << archiveData << std::endl;
+	}
 }

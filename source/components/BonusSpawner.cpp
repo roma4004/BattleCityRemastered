@@ -119,7 +119,7 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			return ColliderUtils::IsCollide(rect, object->GetShape());
+			return ColliderUtils::IsCollide(rect, object->GetRect());
 		});
 
 		if (isFreeSpawnSpot)

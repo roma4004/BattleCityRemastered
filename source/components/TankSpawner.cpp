@@ -174,7 +174,7 @@ void TankSpawner::SpawnEnemy(const int id, const float speed, const int health)
 	{
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			return ColliderUtils::IsCollide(rect, object->GetShape());
+			return ColliderUtils::IsCollide(rect, object->GetRect());
 		});
 
 		if (isFreeSpawnSpot)
@@ -197,7 +197,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		return ColliderUtils::IsCollide(rect, object->GetShape());
+		return ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 
 	if (isFreeSpawnSpot)
@@ -243,7 +243,7 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		return ColliderUtils::IsCollide(rect, object->GetShape());
+		return ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 
 	if (isFreeSpawnSpot)
