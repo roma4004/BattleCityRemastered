@@ -36,7 +36,7 @@ protected:
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
-	boost::uuids::uuid _uuid;
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -49,8 +49,6 @@ protected:
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
 
 		BaseObjProperty baseObjProperty{
 			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};

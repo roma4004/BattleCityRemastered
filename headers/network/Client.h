@@ -58,6 +58,7 @@ public:
 	void OnFortressChange(const std::shared_ptr<Command>& command) const;
 	void OnBonusSpawn(const std::shared_ptr<Command>& command) const;
 	void OnBonusDeSpawn(const std::shared_ptr<Command>& command) const;
+	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
 	void ProcessReceivedData(const std::string& archiveData) const;
 
 private:

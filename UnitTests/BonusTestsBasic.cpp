@@ -41,7 +41,7 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
-	boost::uuids::uuid _uuid;
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -55,8 +55,6 @@ protected:
 		std::string name = "Player1";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, std::move(name), std::move(fraction)};

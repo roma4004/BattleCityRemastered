@@ -33,7 +33,7 @@ protected:
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
 	GameMode _gameMode{OnePlayer};
-	boost::uuids::uuid _uuid;
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -45,8 +45,6 @@ protected:
 
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
 
 		const std::string name{"Bullet1"};
 		const std::string fraction{"PlayerTeam"};

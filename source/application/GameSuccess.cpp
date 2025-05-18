@@ -84,14 +84,15 @@ void GameSuccess::Unsubscribe() const
 
 void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
-	_allObjects.clear();
-	_allObjects.reserve(1000);
-
-	SetCurrentGameMode(gameMode);
 	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
 	{
 		_events->EmitEvent("Pause_Released");
 	}
+
+	_allObjects.clear();
+	_allObjects.reserve(1000);
+
+	SetCurrentGameMode(gameMode);
 
 	_events->EmitEvent("Reset");
 
@@ -218,6 +219,8 @@ void GameSuccess::MainLoop()
 
 			_userInput.Update();
 
+			_events->EmitEvent("MenuUpdate");
+
 			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
 			{
 				//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
@@ -226,7 +229,10 @@ void GameSuccess::MainLoop()
 
 			DisposeDeadObject();
 
-			_events->EmitEvent("RespawnTanks");
+			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
+			{
+				_events->EmitEvent("RespawnTanks");
+			}
 
 			_events->EmitEvent("Draw");
 

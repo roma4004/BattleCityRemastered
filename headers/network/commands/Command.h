@@ -10,7 +10,7 @@ class Command
 {
 	friend class boost::serialization::access;
 
-	CommandType _type;
+	CommandType _type{};
 
 public:
 	explicit Command(CommandType type);

@@ -1,13 +1,7 @@
 #include "../../headers/network/Client.h"
 #include "../../headers/components/EventSystem.h"
-
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
 #include "../../headers/enums/ComandType.h"
+#include "../../headers/enums/TankType.h"
 #include "../../headers/network/commands/BonusDeSpawn.h"
 #include "../../headers/network/commands/BonusSpawn.h"
 #include "../../headers/network/commands/Command.h"
@@ -15,9 +9,15 @@
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
 #include "../../headers/network/commands/PositionChange.h"
+#include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
 #include "../../headers/network/commands/TankShot.h"
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
 // std::ofstream error_log("error_log_client.txt");
@@ -273,6 +273,15 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
 	}
 }
 
+void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
+	{
+		_events->EmitEvent<const TankType, const boost::uuids::uuid>(
+				"ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
+	}
+}
+
 void Client::ProcessReceivedData(const std::string& archiveData) const
 {
 	try
@@ -332,6 +341,11 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 				case CommandType::BONUS_DESPAWN:
 				{
 					OnBonusDeSpawn(command);
+					break;
+				}
+				case CommandType::RESPAWN_TANK:
+				{
+					OnRespawnTank(command);
 					break;
 				}
 				//TODO: implement other command types

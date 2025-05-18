@@ -4,6 +4,7 @@
 #include <random>
 #include <boost/uuid/uuid.hpp>
 
+enum TankType : char8_t;
 struct ObjRectangle;
 enum GameMode : char8_t;
 struct Window;
@@ -47,18 +48,19 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health, int type);
+	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health, TankType type);
 	void SetEnemyNeedRespawn();
 
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, bool isFirst);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, bool isFirst);
-	void RespawnEnemyTanks(boost::uuids::uuid uuid, int type);
-	void RespawnPlayerTanks(boost::uuids::uuid uuid, bool isFirst);
-	void RespawnCoopTanks(boost::uuids::uuid uuid, bool isFirst);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
+	void RespawnEnemyTanks(boost::uuids::uuid uuid, TankType type);
+	void RespawnPlayerTanks(boost::uuids::uuid uuid, TankType type);
+	void RespawnCoopTanks(boost::uuids::uuid uuid, TankType type);
 	void SetPlayerNeedRespawn();
 
 	void ResetRespawnStat();
 	void RespawnTanks();
+	void RespawnClient(TankType type, boost::uuids::uuid uuid);
 	void ResetSpawn();
 
 	void IncreaseEnemyRespawnResource();

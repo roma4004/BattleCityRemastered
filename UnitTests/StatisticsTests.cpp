@@ -47,7 +47,7 @@ protected:
 	std::string _name3{"Enemy1"};
 	std::string _fraction3{"EnemyTeam"};
 	GameMode _gameMode{OnePlayer};
-	boost::uuids::uuid _uuid;
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -60,8 +60,6 @@ protected:
 
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
 
 		ObjRectangle rect1{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, _uuid, _name, _fraction};

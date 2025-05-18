@@ -272,6 +272,7 @@ add_executable(${PROJECT_NAME}
         source/network/commands/HealthChange.cpp
         source/network/commands/KeyStateChange.cpp
         source/network/commands/PositionChange.cpp
+        source/network/commands/RespawnTank.cpp
         source/network/commands/StatisticsChange.cpp
         source/network/commands/TankShot.cpp
         source/ObjRectangle.cpp

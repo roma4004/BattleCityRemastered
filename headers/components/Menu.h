@@ -66,7 +66,7 @@ public:
 
 	~Menu();
 
-	void TickUpdate() const;
+	void MenuUpdate() const;
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

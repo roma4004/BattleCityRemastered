@@ -30,7 +30,7 @@ protected:
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
-	boost::uuids::uuid _uuid;
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -38,8 +38,6 @@ protected:
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
 
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};

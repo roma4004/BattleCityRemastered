@@ -35,7 +35,7 @@ protected:
 	std::string _name = "Player1";
 	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";
-	boost::uuids::uuid _uuid;//TODO: init with nil-guid and not generate it for tests
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -48,8 +48,6 @@ protected:
 
 		constexpr int yellow{0xeaea00};
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{std::move(rect), yellow, _tankHealth, true, _uuid, _name, _fraction};

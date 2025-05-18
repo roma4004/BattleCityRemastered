@@ -1,10 +1,6 @@
-#include <fstream>
-#include <iostream>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
 #include "../../headers/network/Server.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/TankType.h"
 #include "../../headers/network/commands/BonusDeSpawn.h"
 #include "../../headers/network/commands/BonusSpawn.h"
 #include "../../headers/network/commands/Dispose.h"
@@ -12,9 +8,14 @@
 #include "../../headers/network/commands/HealthChange.h"
 #include "../../headers/network/commands/KeyStateChange.h"
 #include "../../headers/network/commands/PositionChange.h"
+#include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
 #include "../../headers/network/commands/TankShot.h"
 
+#include <fstream>
+#include <iostream>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/uuid/uuid.hpp>
 
 // std::ofstream error_log("error_log.txt");
@@ -244,6 +245,13 @@ void Server::Subscribe() const
 				SendCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
+	_events->AddListener<const TankType, const boost::uuids::uuid>(
+			"ServerSend_RespawnTank", _name,
+			[this](const TankType type, const boost::uuids::uuid uuid)
+			{
+				SendCommand(std::make_shared<RespawnTank>(type, uuid));
+			});
+
 	SubscribeBonus();
 }
 
@@ -255,11 +263,15 @@ void Server::SubscribeBonus() const
 			{
 				SendCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
 			});
-	_events->AddListener<const boost::uuids::uuid>("ServerSend_BonusDeSpawn", _name,
-	                                               [this](const boost::uuids::uuid uuid)
-	                                               {
-		                                               SendCommand(std::make_shared<BonusDeSpawn>(uuid));
-	                                               });
+	_events->AddListener<const boost::uuids::uuid>(
+			"ServerSend_BonusDeSpawn", _name,
+			[this](const boost::uuids::uuid uuid)
+			{
+				SendCommand(std::make_shared<BonusDeSpawn>(uuid));
+			});
+	//TODO: clien obstacle spawn with uuid
+	//TODO: clien bonus spawn with uuid
+
 
 	// _events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
 	// {
