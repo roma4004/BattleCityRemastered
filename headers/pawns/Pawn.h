@@ -25,14 +25,13 @@ class Pawn : public BaseObj, public ITickUpdatable
 	virtual void SubscribeAsClient();
 
 	void Draw() const override;
-	void DrawTexture() const;
-
 
 protected:
 	Direction _dir{};
 	GameMode _gameMode{};
 	float _speed{0.f};
 	int _tier{1};
+	TextureManager _drawTexture;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<Window> _window{nullptr};

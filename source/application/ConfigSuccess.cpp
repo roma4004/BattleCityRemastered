@@ -7,16 +7,14 @@
 ConfigSuccess::ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
 							 std::shared_ptr<SDL_Texture> logoTexture,
-							 std::shared_ptr<SDL_Texture> pOneTankTexture,
-							 std::shared_ptr<SDL_Texture> enemyTankTexture,
-							 const bool isVsyncOn)
+							 std::shared_ptr<SDL_Texture> atlasTexture,
+                             const bool isVsyncOn)
 	: _window{std::move(window)},
 	  _renderer{std::move(renderer)},
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _logoTexture{std::move(logoTexture)},
-	  _pOneTankTexture{std::move(pOneTankTexture)},
-	  _enemyTankTexture{std::move(enemyTankTexture)},
+	  _atlasTexture{std::move(atlasTexture)},
 	  _isVsyncOn{isVsyncOn} {}
 
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
@@ -26,5 +24,5 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _window, events);
 
 	return std::make_unique<GameSuccess>(_window, _renderer, _screen, _fpsFont, events, statistics, std::move(menu),
-										 _pOneTankTexture, _enemyTankTexture, _isVsyncOn);
+										 _atlasTexture, _isVsyncOn);
 }

@@ -11,12 +11,11 @@
 class IConfig;
 
 SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
-							   const char* introMusicName, const char* tankOne, const char* tankEnemy)
+							   const char* introMusicName, const char* textureCollection)
 	: window{std::make_shared<Window>(windowSize)},
 	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
-	  tankOnePathName{tankOne},
-	  tankEnemyPathName{tankEnemy},
+	  textureAtlasPath{textureCollection},
 	  introMusicPathName{introMusicName} {}
 
 SDLEnvironment::~SDLEnvironment()
@@ -113,34 +112,21 @@ SDLEnvironment::~SDLEnvironment()
 
 	// tank sprites
 
-	const std::shared_ptr<SDL_Surface> pOneTankSurface(IMG_Load(tankOnePathName), SDL_FreeSurface);
-	if (pOneTankSurface == nullptr)
+	const std::shared_ptr<SDL_Surface> atlasSurface(IMG_Load(textureAtlasPath), SDL_FreeSurface);
+	if (atlasSurface == nullptr)
 	{
-		return std::make_unique<ConfigFailure>("IMG pOne Loading Error", IMG_GetError());
+		return std::make_unique<ConfigFailure>("IMG atlas Surface Loading Error", IMG_GetError());
 	}
 
-	std::shared_ptr<SDL_Texture> pOneTankTexture(SDL_CreateTextureFromSurface(renderer.get(), pOneTankSurface.get()),
+	std::shared_ptr<SDL_Texture> atlasTexture(SDL_CreateTextureFromSurface(renderer.get(), atlasSurface.get()),
 											 SDL_DestroyTexture);
-	if (pOneTankTexture == nullptr)
+	if (atlasTexture == nullptr)
 	{
-		return std::make_unique<ConfigFailure>("IMG pOne Texture Creating Error", IMG_GetError());
-	}
-	const std::shared_ptr<SDL_Surface> enemyTankSurface(IMG_Load(tankEnemyPathName), SDL_FreeSurface);
-	if (enemyTankSurface == nullptr)
-	{
-		return std::make_unique<ConfigFailure>("IMG enemy Loading Error", IMG_GetError());
-	}
-
-	std::shared_ptr<SDL_Texture> enemyTankTexture(SDL_CreateTextureFromSurface(renderer.get(), enemyTankSurface.get()),
-												 SDL_DestroyTexture);
-	if (enemyTankTexture == nullptr)
-	{
-		return std::make_unique<ConfigFailure>("IMG enemy Texture Creating Error", IMG_GetError());
+		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
 	
 
-
-	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, pOneTankTexture,
-										   enemyTankTexture, isVsyncOn);
+	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, atlasTexture,
+											isVsyncOn);
 
 }

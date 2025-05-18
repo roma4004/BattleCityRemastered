@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseObjProperty.h"
+#include "TextureManager.h"
 #include "ObjRectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IHaveFraction.h"
@@ -20,6 +21,8 @@ protected:
 	std::string _name;
 	std::string _fraction;
 	ObjRectangle _shape{};
+	
+	
 
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);

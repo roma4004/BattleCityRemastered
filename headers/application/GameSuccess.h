@@ -45,9 +45,7 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
-	std::shared_ptr<SDL_Texture> _pOneTankTexture{nullptr};
-
-	std::shared_ptr<SDL_Texture> _enemyTankTexture{nullptr};
+	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
 	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures; // pregenerated fps texture
 
@@ -82,9 +80,8 @@ public:
 	GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
 	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
 	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-				std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> pOneTankTexture,
-				std::shared_ptr<SDL_Texture> enemyTankTexture,
-				bool isVsyncOn);
+				std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> atlasTexture,
+	            bool isVsyncOn);
 
 	~GameSuccess() override;
 };

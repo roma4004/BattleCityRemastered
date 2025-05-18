@@ -11,12 +11,13 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
+	  _drawTexture{pawnProperty.renderer, pawnProperty.texture},
 	  _allObjects{pawnProperty.allObjects},
 	  _window{std::move(pawnProperty.window)},
 	  _events{std::move(pawnProperty.events)},
 	  _moveBeh{std::move(moveBeh)},
-	  _texture{std::move(pawnProperty.texture)},
-	  _renderer{std::move(pawnProperty.renderer)}
+	  _texture{pawnProperty.texture},
+	  _renderer{pawnProperty.renderer}
 {
 	Pawn::Subscribe();
 }
@@ -28,8 +29,7 @@ Pawn::~Pawn()
 
 void Pawn::Subscribe()
 {
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
-	_events->AddListener("DrawTexture", _name, [this]() { this->DrawTexture(); });
+	_events->AddListener("DrawTexture", _name, [this]() { this->_drawTexture.DrawTexture(this); });
 
 	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
@@ -59,7 +59,6 @@ void Pawn::SubscribeAsClient()
 
 void Pawn::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _name);
 	_events->RemoveListener("DrawTexture", _name);
 
 	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
@@ -105,20 +104,7 @@ void Pawn::Draw() const
 	}
 }
 
-void Pawn::DrawTexture() const
-{
-	if (!GetIsAlive())
-	{
-		return;
-	}
 
-	const SDL_Rect rect{.x = static_cast<int>(_shape.x),
-						.y = static_cast<int>(_shape.y),
-						.w = static_cast<int>(_shape.w),
-						.h = static_cast<int>(_shape.h)};
-
-	SDL_RenderCopy(_renderer.get(), _texture.get(), nullptr, &rect);
-}
 
 UPoint Pawn::GetWindowSize() const { return _window->size; }
 

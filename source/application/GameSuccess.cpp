@@ -23,8 +23,8 @@
 GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-						 std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> pOneTankTexture,
-						 std::shared_ptr<SDL_Texture> enemyTankTexture, const bool isVsyncOn)
+						 std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> atlasTexture,
+                         const bool isVsyncOn)
 	: _selectedGameMode{OnePlayer},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
@@ -33,14 +33,14 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo, atlasTexture, _renderer)},
 	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
 	  _obstacleSpawner{events, &_allObjects, window},
 	  
 	  _isVsyncOn{isVsyncOn}
 {
-	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool, pOneTankTexture, enemyTankTexture, _renderer);
+	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool, atlasTexture, _renderer);
 
 	GenerateFpsTextures();
 

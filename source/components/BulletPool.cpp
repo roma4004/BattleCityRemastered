@@ -4,12 +4,15 @@
 #include "../../headers/pawns/PawnProperty.h"
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       std::shared_ptr<Window> window, const GameMode gameMode)
+std::shared_ptr<Window> window, const GameMode gameMode,std::shared_ptr<SDL_Texture> textureCollection,
+  std::shared_ptr<SDL_Renderer> renderer)
 	: _events{std::move(events)},
 	  _name{"BulletPool"},
 	  _gameMode{gameMode},
 	  _allObjects{allObjects},
-	  _window{std::move(window)}
+	  _window{std::move(window)},
+      _atlasTexture{std::move(textureCollection)},
+	  _renderer(std::move(renderer))
 {
 	Subscribe();
 }
@@ -48,7 +51,7 @@ void BulletPool::SpawnBullet(ObjRectangle rect, const int damage, const double a
 		BaseObjProperty baseObjProperty{
 				std::move(rect), color, health, true, _lastId.load(), std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), _window, dir, speed, _allObjects, _events, tier, _gameMode};
+				std::move(baseObjProperty), _window, dir, speed, _allObjects, _events, tier, _gameMode , _atlasTexture, _renderer};
 		auto bullet = std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty), damage, aoeRadius, std::move(author)},
 		                                      [this](Bullet* b)
 		                                      {
