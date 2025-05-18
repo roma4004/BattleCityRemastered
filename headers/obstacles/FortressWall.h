@@ -48,7 +48,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 
 public:
 	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, int id, GameMode gameMode);
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode);
 
 	~FortressWall() override;
 
@@ -56,7 +56,7 @@ public:
 	//TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
 
 	[[nodiscard]] std::string GetName() const override;
-	[[nodiscard]] int GetId() const override;
+	[[nodiscard]] boost::uuids::uuid GetUuid() const override;
 
 	void TakeDamage(int damage) override;
 

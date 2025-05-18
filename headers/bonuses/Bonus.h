@@ -36,8 +36,8 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name, int id,
-	      GameMode gameMode, BonusType bonusType);
+	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name,
+	      boost::uuids::uuid uuid, GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 

@@ -45,7 +45,7 @@ protected:
 	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
 	BonusStatus _helmet{};
 
-	void Shot() const;
+	void Shot(boost::uuids::uuid withUuid = {}) const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

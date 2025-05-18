@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+#include <boost/uuid/uuid.hpp>
 
 enum ObstacleType : char8_t;
 enum BonusType : char8_t;
@@ -21,7 +22,6 @@ class ObstacleSpawner final : public ITickUpdatable
 	GameMode _gameMode;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	int _obstacleSize{0};
-	int _lastSpawnId{-1};
 	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::mt19937 _gen;
@@ -45,10 +45,10 @@ public:
 
 	~ObstacleSpawner() override;
 
-	void SpawnObstacle(ObjRectangle rect, ObstacleType bonusType, int id = -1);
+	void SpawnObstacle(ObjRectangle rect, ObstacleType bonusType, boost::uuids::uuid uuid = {});
 
 	template<typename TObstaclesType>
-	void SpawnObstacles(const ObjRectangle& rect, int id);
+	void SpawnObstacles(const ObjRectangle& rect, boost::uuids::uuid uuid = {});
 };
 
 // Include the template implementation

@@ -9,12 +9,13 @@ BOOST_CLASS_EXPORT_IMPLEMENT(HealthChange);
 
 HealthChange::HealthChange(): Command(CommandType::HEALTH_CHANGE) {}
 
-HealthChange::HealthChange(const std::string& who, const int health)
-: Command(CommandType::HEALTH_CHANGE), _who(who), _health(health) {}
+HealthChange::HealthChange(const std::string& who, const int health, const boost::uuids::uuid uuid)
+	: Command(CommandType::HEALTH_CHANGE), _who(who), _health(health), _uuid(uuid) {}
 
 const std::string& HealthChange::GetWho() const { return _who; }
 
 int HealthChange::GetHealth() const { return _health; }
 
-const char* HealthChange::GetClassNameW() const { return "HealthChange"; }
+boost::uuids::uuid HealthChange::GetUuid() const { return _uuid; }
 
+const char* HealthChange::GetClassNameW() const { return "HealthChange"; }

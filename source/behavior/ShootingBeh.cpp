@@ -1,7 +1,9 @@
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/Point.h"
 #include "../../headers/components/BulletPool.h"
+#include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/Direction.h"
+#include "../../headers/pawns/Bullet.h"
 #include "../../headers/pawns/Tank.h"
 
 #include <functional>
@@ -101,19 +103,19 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	return bulletRect;
 }
 
-void ShootingBeh::Shot() const
+boost::uuids::uuid ShootingBeh::Shot(const boost::uuids::uuid uuid)
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return {};
 	}
 
 	ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.f || rect.y < 0.f)
 	{
 		//Try shooting outside screen
-		return;
+		return {};
 	}
 
 	constexpr int color = 0xffffff;
@@ -126,7 +128,16 @@ void ShootingBeh::Shot() const
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
 
-	_bulletPool->SpawnBullet(
-			std::move(rect), damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction),
-			tier);
+	auto bulletAsBase = _bulletPool->SpawnBullet(
+			rect, damage, aoeRadius, color, health, dir, speed, author, fraction, tier);
+	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
+	{
+		bullet->Reset(
+				std::move(rect), damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction),
+				tier, uuid);
+	}
+
+	_allObjects->emplace_back(bulletAsBase);
+
+	return uuid;
 }

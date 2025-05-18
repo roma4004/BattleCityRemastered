@@ -98,7 +98,8 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& near
 	{
 		LineOfSight bonusLOS(_rect, _window->size, _allObjects, this);
 		const std::vector<std::weak_ptr<BaseObj>>& dirSideObstacles =
-				[&bonusLOS, dir]() mutable -> std::vector<std::weak_ptr<BaseObj>>& {
+				[&bonusLOS, dir]() mutable -> std::vector<std::weak_ptr<BaseObj>>&
+				{
 					if (dir == UP)
 					{
 						return bonusLOS.GetUpSideObstacles();

@@ -169,5 +169,9 @@
     <Error Condition="!Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.7\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
     <Error Condition="!Exists('..\packages\googlemock.v140.windesktop.static.rt-dyn.1.7.0.1\build\native\googlemock.v140.windesktop.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\googlemock.v140.windesktop.static.rt-dyn.1.7.0.1\build\native\googlemock.v140.windesktop.static.rt-dyn.targets'))" />
     <Error Condition="!Exists('..\packages\google-testmock.1.16.0\build\native\google-testmock.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\google-testmock.1.16.0\build\native\google-testmock.targets'))" />
+    <Error Condition="!Exists('..\packages\boost.1.87.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.87.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets'))" />
   </Target>
+  <Import Project="..\packages\boost.1.87.0\build\boost.targets" Condition="Exists('..\packages\boost.1.87.0\build\boost.targets')" />
+  <Import Project="..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets" Condition="Exists('..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" />
 </Project>

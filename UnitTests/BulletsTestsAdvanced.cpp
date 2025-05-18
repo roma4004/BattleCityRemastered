@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <boost/uuid/random_generator.hpp>
 
 class BulletTestAdvanced : public testing::Test
 {
@@ -29,6 +30,7 @@ protected:
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
+	boost::uuids::uuid _uuid;
 
 	void SetUp() override
 	{
@@ -36,13 +38,15 @@ protected:
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
+		static boost::uuids::random_generator uuidGenerator;
+		_uuid = uuidGenerator();
 
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+				std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
 
@@ -63,7 +67,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	if (auto&& bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(wallRect), _window, _events, 0, _gameMode));
+		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(wallRect), _window, _events, _uuid, _gameMode));
 
 		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
 		{

@@ -45,7 +45,7 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
-	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures; // pregenerated fps texture
+	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
 
 	UserInput _userInput;
 	BonusSpawner _bonusSpawner;

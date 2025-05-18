@@ -1,22 +1,31 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
+#include <boost/uuid/uuid_io.hpp>
+
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	: _color(baseObjProperty.color),
 	  _health(baseObjProperty.health),
-	  _id{baseObjProperty.id},
+	  _uuid{baseObjProperty.uuid},
 	  _name{std::move(baseObjProperty.name)},
 	  _fraction{std::move(baseObjProperty.fraction)},
-	  _rect{std::move(baseObjProperty.rect)} {}
+	  _rect{std::move(baseObjProperty.rect)}
+{
+	_nameWithUuid = _name + boost::uuids::to_string(_uuid);
+}
 
-BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const int id, std::string name,
+//Deprecated
+BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const boost::uuids::uuid uuid, std::string name,
                  std::string fraction)
 	: _color(color),
 	  _health(health),
-	  _id{id},
+	  _uuid{uuid},
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)},
-	  _rect{std::move(rect)} {}
+	  _rect{std::move(rect)}
+{
+	_nameWithUuid = _name + boost::uuids::to_string(_uuid);
+}
 
 BaseObj::~BaseObj() = default;
 
@@ -26,9 +35,9 @@ void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
 std::string BaseObj::GetName() const { return _name; }
 
-int BaseObj::GetId() const { return _id; }
+boost::uuids::uuid BaseObj::GetUuid() const { return _uuid; }
 
-void BaseObj::SetId(const int id) { _id = id; }
+void BaseObj::SetId(const boost::uuids::uuid uuid) { _uuid = uuid; }
 
 std::string BaseObj::GetFraction() const { return _fraction; }
 

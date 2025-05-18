@@ -9,17 +9,19 @@
 
 #include <algorithm>
 #include <string>
+#include <boost/uuid/uuid.hpp>
 
 FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const int id, const GameMode gameMode)
-	: BaseObj{rect, 0x924b00, 1, id, "FortressWall" + std::to_string(id), "Neutral"},
+                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const boost::uuids::uuid uuid,
+                           const GameMode gameMode)
+	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _rect{rect},
 	  _gameMode{gameMode},
 	  _window{window},//TODO: change name for statistic
 	  _events{events},
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, window, events, id, gameMode)}
+	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode)}
 {
 	Subscribe();
 }
@@ -46,11 +48,11 @@ void FortressWall::SubscribeAsHost()
 
 void FortressWall::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&, const int>(
+	_events->AddListener<const std::string&, const boost::uuids::uuid>(
 			"ClientReceived_FortressChange", _name,
-			[this](const std::string& state, const int id)
+			[this](const std::string& state, const boost::uuids::uuid uuid)
 			{
-				if (id == _id)
+				if (uuid == _uuid)
 				{
 					if (state == "Died")
 					{
@@ -93,7 +95,7 @@ void FortressWall::UnsubscribeAsHost() const
 
 void FortressWall::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const int>("ClientReceived_FortressChange", _name);
+	_events->RemoveListener<const std::string&, const boost::uuids::uuid>("ClientReceived_FortressChange", _name);
 }
 
 void FortressWall::UnsubscribeBonus() const
@@ -132,12 +134,13 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 	{
 		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _id, _gameMode);
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode);
 		}
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const int>("ServerSend_FortressChange", "ToBrick", _id);
+			_events->EmitEvent<const std::string&, const boost::uuids::uuid>(
+					"ServerSend_FortressChange", "ToBrick", _uuid);
 		}
 	}
 }
@@ -158,11 +161,13 @@ void FortressWall::OnPlayerPickupShovel()
 
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
-		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _id, _gameMode);
+		const boost::uuids::uuid uuid = _uuid;
+		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, uuid, _gameMode);
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const int>("ServerSend_FortressChange", "ToSteel", _id);
+			_events->EmitEvent<const std::string&, const boost::uuids::uuid>(
+					"ServerSend_FortressChange", "ToSteel", uuid);
 		}
 	}
 }
@@ -187,7 +192,8 @@ void FortressWall::TakeDamage(const int damage)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const int>("ServerSend_Fortress", "Died", _id);
+			const boost::uuids::uuid uuid = _uuid;
+			_events->EmitEvent<const std::string&, const boost::uuids::uuid>("ServerSend_FortressChange", "Died", uuid);
 		}
 	}
 }
@@ -233,7 +239,8 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const int>("ServerSend_FortressChange", "Died", _id);
+		const boost::uuids::uuid uuid = _uuid;
+		_events->EmitEvent<const std::string&, const boost::uuids::uuid>("ServerSend_FortressChange", "Died", uuid);
 	}
 }
 
@@ -391,24 +398,24 @@ std::string FortressWall::GetName() const
 	{
 		if (uniqPtr)
 		{
-			name = uniqPtr.get()->GetIsAlive();
+			name = uniqPtr.get()->GetName();
 		}
 	}, _obstacle);
 
 	return name;
 }
 
-int FortressWall::GetId() const
+boost::uuids::uuid FortressWall::GetUuid() const
 {
-	int id{-1};
+	boost::uuids::uuid uuid{};
 
-	std::visit([&id](auto&& uniqPtr)
+	std::visit([&uuid](auto&& uniqPtr)
 	{
 		if (uniqPtr)
 		{
-			id = uniqPtr.get()->GetIsAlive();
+			uuid = uniqPtr.get()->GetUuid();
 		}
 	}, _obstacle);
 
-	return id;
+	return uuid;
 }

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <random>
+#include <boost/uuid/uuid.hpp>
 
 struct ObjRectangle;
 enum GameMode : char8_t;
@@ -46,14 +47,14 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(int id, float speed, int health);
+	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health, int type);
 	void SetEnemyNeedRespawn();
 
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, int id);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, int id);
-	void RespawnEnemyTanks(int id);
-	void RespawnPlayerTanks(int id);
-	void RespawnCoopTanks(int id);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, bool isFirst);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, bool isFirst);
+	void RespawnEnemyTanks(boost::uuids::uuid uuid, int type);
+	void RespawnPlayerTanks(boost::uuids::uuid uuid, bool isFirst);
+	void RespawnCoopTanks(boost::uuids::uuid uuid, bool isFirst);
 	void SetPlayerNeedRespawn();
 
 	void ResetRespawnStat();

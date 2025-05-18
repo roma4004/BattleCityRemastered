@@ -10,7 +10,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(KeyStateChange);
 KeyStateChange::KeyStateChange(): Command(CommandType::STATISTICS_CHANGE) {}
 
 KeyStateChange::KeyStateChange(const std::string& keyState)
-: Command(CommandType::STATISTICS_CHANGE), _keyState(keyState) {}
+	: Command(CommandType::STATISTICS_CHANGE), _keyState(keyState) {}
 
 const std::string& KeyStateChange::GetKeyState() const { return _keyState; }
 

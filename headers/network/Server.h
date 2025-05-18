@@ -9,7 +9,8 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/serialization/vector.hpp>
+#include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
+//TODO: remove vector.hpp include after refactoring to command pattern
 
 enum Direction : char8_t;
 enum BonusType : char8_t;
@@ -66,8 +67,6 @@ class Server final
 
 	void DoAccept();
 
-	void SendBonusSpawn(const std::string& who, FPoint pos, BonusType type, int id) const;
-	void SendBonusDeSpawn(int id) const;
 	void OnHelmetActivate(const std::string& who) const;
 	void OnHelmetDeactivate(const std::string& who) const;
 	void OnStar(const std::string& who) const;
@@ -79,6 +78,7 @@ public:
 	       std::shared_ptr<EventSystem> events);
 
 	~Server();
+
 	void SendCommand(const std::shared_ptr<Command>& command) const;
 
 	void Subscribe() const;

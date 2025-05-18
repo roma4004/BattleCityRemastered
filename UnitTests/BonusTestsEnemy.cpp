@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <boost/uuid/random_generator.hpp>
 
 class BonusTestEnemy : public testing::Test
 {
@@ -39,6 +40,7 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
+	boost::uuids::uuid _uuid;
 
 	void SetUp() override
 	{
@@ -52,11 +54,13 @@ protected:
 		std::string name = "Player1";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		static boost::uuids::random_generator uuidGenerator;
+		_uuid = uuidGenerator();
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool));
 	}
@@ -75,7 +79,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _window, _events,
-					&_allObjects, 0, _gameMode));
+					&_allObjects, _uuid, _gameMode));
 	const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get());
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
@@ -96,7 +100,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _window, _events,
-					&_allObjects, 0, _gameMode));
+					&_allObjects, _uuid, _gameMode));
 	if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(fortressWall->IsBrickWall());
@@ -104,7 +108,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 		//TODO: rewrite scenario P1 firstly pick up bonus shovel, then create enemy that pick up bonus shovel
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
+		_bonusSpawner->SpawnBonus(
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_NE(fortressWall->GetHealth(), 0);

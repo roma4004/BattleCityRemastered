@@ -11,8 +11,8 @@ class EventSystem;
 class BrickWall final : public Obstacle
 {
 public:
-	BrickWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, int id,
-	          GameMode gameMode);
+	BrickWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+	          boost::uuids::uuid uuid, GameMode gameMode);
 
 	~BrickWall() override = default;
 

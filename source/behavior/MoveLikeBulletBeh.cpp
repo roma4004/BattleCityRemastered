@@ -27,32 +27,54 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float del
 	const float speed = bullet->GetSpeed();
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
-
+	ObjRectangle bulletNextPosRect;
 	if (const Direction dir = bullet->GetDirection();
 		dir == UP)
 	{
 		//36 37 initializing in if
 		speedY *= -1;
 		speedX *= 0;
+
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX(),
+				.y = bullet->GetY() - speedY - 1,
+				.w = bullet->GetWidth(),
+				.h = speedY};
 	}
 	else if (dir == DOWN)
 	{
 		speedY *= 1;
 		speedX *= 0;
+
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX(),
+				.y = bullet->GetY() + bullet->GetHeight() + 1,
+				.w = bullet->GetWidth(),
+				.h = speedY};
 	}
 	else if (dir == LEFT)
 	{
 		speedX *= -1;
 		speedY *= 0;
+
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX() - speedX - 1,
+				.y = bullet->GetY(),
+				.w = speedX,
+				.h = bullet->GetHeight()};
 	}
 	else if (dir == RIGHT)
 	{
 		speedX *= 1;
 		speedY *= 0;
+
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX() + bullet->GetWidth() + 1,
+				.y = bullet->GetY(),
+				.w = speedX,
+				.h = bullet->GetHeight()};
 	}
 
-	const auto bulletNextPosRect = ObjRectangle{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY,
-	                                            .w = bullet->GetWidth(), .h = bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (bullet == object.get())
@@ -202,7 +224,8 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 	}
 }
 
-void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const //TODO: change to shared_ptr
+void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const
+//TODO: change to shared_ptr
 {
 	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
 	if (thisBullet == nullptr)

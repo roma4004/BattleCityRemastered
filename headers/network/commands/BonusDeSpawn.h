@@ -2,32 +2,33 @@
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/uuid/uuid.hpp>
 
-#include "../../Point.h"
-#include "../commands/Command.h"
+#include "Command.h"
+#include "UuidSerialization.h"
 
 class BonusDeSpawn : public Command
 {
 	friend class boost::serialization::access;
 
-	int _id{};
+	boost::uuids::uuid _uuid{};
 
 public:
 	//for deserialization
 	BonusDeSpawn();
 
 	//for serialization
-	explicit BonusDeSpawn(int id);
+	explicit BonusDeSpawn(boost::uuids::uuid uuid);
 
 	~BonusDeSpawn() override = default;
 
-	int GetId() const;
+	boost::uuids::uuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)
 	{
 		ar & boost::serialization::base_object<Command>(*this);
-		ar & _id;
+		ar & _uuid;
 	}
 
 	const char* GetClassNameW() const override;

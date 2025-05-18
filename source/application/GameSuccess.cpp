@@ -176,7 +176,8 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 	if (const Uint64 timeSinceLastUpdate = endFrameTime - lastUpdate;
 		timeSinceLastUpdate >= frequency)
 	{
-		const Uint32 fps = static_cast<int>(std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
+		const Uint32 fps = static_cast<int>(
+			std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
 		// SDL_Log("FPS %i", fps);
 
 		if (fps != lastDisplayedFps

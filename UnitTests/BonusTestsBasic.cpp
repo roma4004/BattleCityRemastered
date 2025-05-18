@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <boost/uuid/random_generator.hpp>
 
 class BonusTest : public testing::Test
 {
@@ -40,6 +41,7 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
+	boost::uuids::uuid _uuid;
 
 	void SetUp() override
 	{
@@ -53,9 +55,11 @@ protected:
 		std::string name = "Player1";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		static boost::uuids::random_generator uuidGenerator;
+		_uuid = uuidGenerator();
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, 1, std::move(name), std::move(fraction)};
+		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 
@@ -127,7 +131,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 		_events->EmitEvent("S_Pressed");
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -155,7 +159,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 		_events->EmitEvent("W_Pressed");
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -197,7 +201,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 		std::string author{"Enemy1"};
 		ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, LEFT, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -243,7 +247,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		std::string author{"Enemy1"};
 		ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, LEFT, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -266,7 +270,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	_events->EmitEvent("S_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
 		std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -294,7 +298,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	_events->EmitEvent("W_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
 		std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -418,7 +422,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, 0, _gameMode);
+			                               _window, _events, &_allObjects, _uuid, _gameMode);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
@@ -435,7 +439,7 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, 0, _gameMode);
+			                               _window, _events, &_allObjects, _uuid, _gameMode);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 

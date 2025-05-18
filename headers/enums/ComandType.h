@@ -1,6 +1,7 @@
 #pragma once
 
-enum CommandType : char8_t {
+enum CommandType : char8_t
+{
 	POSITION_CHANGE,
 	TANK_SHOT,
 	HEALTH_CHANGE,
@@ -11,4 +12,3 @@ enum CommandType : char8_t {
 	BONUS_SPAWN,
 	BONUS_DESPAWN
 };
-

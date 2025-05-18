@@ -4,7 +4,7 @@
 
 BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                          const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime,
-                         const int color, const int id, const GameMode gameMode)
+                         const int color, const boost::uuids::uuid uuid, const GameMode gameMode)
 	: Bonus{rect,
 	        std::move(window),
 	        std::move(events),
@@ -12,7 +12,7 @@ BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<Window> windo
 	        lifeTime,
 	        color,
 	        "BonusShovel",
-	        id,
+	        uuid,
 	        gameMode,
 	        Shovel} {}
 

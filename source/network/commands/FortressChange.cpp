@@ -9,10 +9,10 @@ BOOST_CLASS_EXPORT_IMPLEMENT(FortressChange);
 
 FortressChange::FortressChange(): Command(CommandType::FORTRESS_CHANGE) {}
 
-FortressChange::FortressChange(const std::string& state, const int id)
-: Command(CommandType::FORTRESS_CHANGE), _state(state), _id(id) {}
+FortressChange::FortressChange(const std::string& state, const boost::uuids::uuid uuid)
+	: Command(CommandType::FORTRESS_CHANGE), _state(state), _uuid(uuid) {}
 
 const std::string& FortressChange::GetState() const { return _state; }
-int FortressChange::GetId() const { return _id; }
+boost::uuids::uuid FortressChange::GetUuid() const { return _uuid; }
 
 const char* FortressChange::GetClassNameW() const { return "FortressChange"; }

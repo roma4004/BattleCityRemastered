@@ -13,6 +13,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <boost/uuid/random_generator.hpp>
 
 class StatisticsTestAdvanced : public testing::Test
 {
@@ -32,6 +33,7 @@ protected:
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
 	GameMode _gameMode{OnePlayer};
+	boost::uuids::uuid _uuid;
 
 	void SetUp() override
 	{
@@ -43,6 +45,8 @@ protected:
 
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
+		static boost::uuids::random_generator uuidGenerator;
+		_uuid = uuidGenerator();
 
 		const std::string name{"Bullet1"};
 		const std::string fraction{"PlayerTeam"};
@@ -60,7 +64,7 @@ protected:
 	{
 		ObjRectangle rect2{.x = x, .y = y, .w = _bulletWidth, .h = _bulletHeight};
 		BaseObjProperty baseObjProperty2{
-			rect2, _bulletColor, _bulletHealth, true, 1, std::move(name), std::move(fraction)};
+			rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
 			std::move(baseObjProperty2), _window, dir, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 

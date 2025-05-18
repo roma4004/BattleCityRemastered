@@ -59,8 +59,8 @@ SDLEnvironment::~SDLEnvironment()
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
-							  bounds.x + bounds.w / 2 - static_cast<int>(window->size.x) / 2,
-							  bounds.y + bounds.h / 2 - static_cast<int>(window->size.y) / 2 - windowBordersSize.y);
+		                      bounds.x + bounds.w / 2 - static_cast<int>(window->size.x) / 2,
+		                      bounds.y + bounds.h / 2 - static_cast<int>(window->size.y) / 2 - windowBordersSize.y);
 	}
 
 	renderer = std::shared_ptr<SDL_Renderer>(SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags),

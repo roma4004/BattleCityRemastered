@@ -42,11 +42,13 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	_events->AddListener<const Direction>("ClientReceived_" + _name + "Shot", _name, [this](const Direction dir)
-	{
-		this->SetDirection(dir);
-		this->Shot();
-	});
+	_events->AddListener<const Direction, const boost::uuids::uuid>(
+			"ClientReceived_" + _name + "Shot", _name,
+			[this](const Direction dir, const boost::uuids::uuid uuid)
+			{
+				this->SetDirection(dir);
+				this->Shot(uuid);
+			});
 
 	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _name, [this]()
 	{
@@ -107,7 +109,7 @@ void Tank::Unsubscribe() const
 
 void Tank::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const Direction>("ClientReceived_" + _name + "Shot", _name);
+	_events->RemoveListener<const Direction, const boost::uuids::uuid>("ClientReceived_" + _name + "Shot", _name);
 
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
@@ -150,21 +152,23 @@ void Tank::TakeDamage(const int damage)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const int>("ServerSend_Health", _name, GetHealth());
+			_events->EmitEvent<const std::string&, const int, const boost::uuids::uuid>(
+					"ServerSend_Health", _name, GetHealth(), _uuid);
 		}
 	}
 }
 
 int Tank::GetTier() const { return _tier; }
 
-void Tank::Shot() const
+void Tank::Shot(const boost::uuids::uuid withUuid) const
 {
-	_shootingBeh->Shot();
 	_lastTimeFire = std::chrono::system_clock::now();
+	const boost::uuids::uuid bulletUuid = _shootingBeh->Shot(withUuid);
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const Direction>("ServerSend_Shot", _name, GetDirection());
+		_events->EmitEvent<const std::string&, const Direction, const boost::uuids::uuid>(
+				"ServerSend_Shot", _name, GetDirection(), bulletUuid);
 	}
 }
 

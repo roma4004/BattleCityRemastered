@@ -29,5 +29,5 @@ public:
 
 	~ShootingBeh() override;
 
-	void Shot() const override;
+	boost::uuids::uuid Shot(boost::uuids::uuid uuid = {}) override;
 };

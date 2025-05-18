@@ -3,10 +3,10 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 
-Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, const std::shared_ptr<Window> window,
-                   const std::string& name, const std::shared_ptr<EventSystem> events, const int id,
+Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
+                   const std::string& name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
                    const GameMode gameMode)
-	: BaseObj{rect, color, health, id, std::move(name), "Neutral"},
+	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
 	  _gameMode{gameMode},
 	  _events(std::move(events))
@@ -21,7 +21,7 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
 	if (_gameMode == PlayAsClient)
 	{
@@ -31,19 +31,21 @@ void Obstacle::Subscribe()
 
 void Obstacle::SubscribeAsClient()
 {
-	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
-	{
-		this->SetHealth(health);
-		if (this->GetHealth() < 1)
-		{
-			this->SetIsAlive(false);
-		}
-	});
+	_events->AddListener<const int>(
+			"ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid,
+			[this](const int health)
+			{
+				this->SetHealth(health);
+				if (this->GetHealth() < 1)
+				{
+					this->SetIsAlive(false);
+				}
+			});
 }
 
 void Obstacle::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _name);
+	_events->RemoveListener("Draw", _nameWithUuid);
 
 	if (_gameMode == PlayAsClient)
 	{
@@ -53,7 +55,7 @@ void Obstacle::Unsubscribe() const
 
 void Obstacle::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
+	_events->RemoveListener<const int>("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
 void Obstacle::Draw() const

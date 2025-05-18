@@ -9,11 +9,11 @@ BOOST_CLASS_EXPORT_IMPLEMENT(Dispose);
 
 Dispose::Dispose(): Command(CommandType::DISPOSE) {}
 
-Dispose::Dispose(const std::string& who, const int id)
-: Command(CommandType::DISPOSE), _who(who), _id(id) {}
+Dispose::Dispose(const std::string& who, const boost::uuids::uuid uuid)
+	: Command(CommandType::DISPOSE), _who(who), _uuid(uuid) {}
 
 const std::string& Dispose::GetWho() const { return _who; }
 
-int Dispose::GetId() const { return _id; }
+boost::uuids::uuid Dispose::GetUuid() const { return _uuid; }
 
 const char* Dispose::GetClassNameW() const { return "Dispose"; }

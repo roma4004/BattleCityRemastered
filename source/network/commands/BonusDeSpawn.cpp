@@ -9,10 +9,9 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BonusDeSpawn);
 
 BonusDeSpawn::BonusDeSpawn(): Command(CommandType::BONUS_DESPAWN) {}
 
-BonusDeSpawn::BonusDeSpawn(const int id)
-: Command(CommandType::BONUS_DESPAWN), _id(id) {}
+BonusDeSpawn::BonusDeSpawn(const boost::uuids::uuid uuid)
+	: Command(CommandType::BONUS_DESPAWN), _uuid(uuid) {}
 
-int BonusDeSpawn::GetId() const { return _id; }
+boost::uuids::uuid BonusDeSpawn::GetUuid() const { return _uuid; }
 
 const char* BonusDeSpawn::GetClassNameW() const { return "BonusDeSpawn"; }
-

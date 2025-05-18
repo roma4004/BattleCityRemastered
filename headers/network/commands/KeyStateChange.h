@@ -4,7 +4,7 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 
-#include "../commands/Command.h"
+#include "Command.h"
 
 class KeyStateChange : public Command
 {
