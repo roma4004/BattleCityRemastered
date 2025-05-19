@@ -63,22 +63,22 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 		{
 			if (ColliderUtils::IsCollide(_checkLos[UP], object->GetRect()))
 			{
-				_upSideObstacles.emplace_back(std::weak_ptr(object));
+				_upSideObstacles.emplace_back(std::shared_ptr(object));
 			}
 
 			if (ColliderUtils::IsCollide(_checkLos[LEFT], object->GetRect()))
 			{
-				_leftSideObstacles.emplace_back(std::weak_ptr(object));
+				_leftSideObstacles.emplace_back(std::shared_ptr(object));
 			}
 
 			if (ColliderUtils::IsCollide(_checkLos[DOWN], object->GetRect()))
 			{
-				_downSideObstacles.emplace_back(std::weak_ptr(object));
+				_downSideObstacles.emplace_back(std::shared_ptr(object));
 			}
 
 			if (ColliderUtils::IsCollide(_checkLos[RIGHT], object->GetRect()))
 			{
-				_rightSideObstacles.emplace_back(std::weak_ptr(object));
+				_rightSideObstacles.emplace_back(std::shared_ptr(object));
 			}
 		}
 	}
@@ -88,78 +88,70 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 
 void LineOfSight::SortToNearest()
 {
-	std::ranges::sort(_upSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_upSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
 	{
-		const auto aLck = a.lock();
-		if (!aLck)
+		if (!a)
 		{
 			return false;
 		}
 
-		const auto bLck = b.lock();
-		if (!bLck)
+		if (!b)
 		{
 			return true;
 		}
 
-		return aLck->GetPos().y > bLck->GetPos().y;
+		return a->GetPos().y > b->GetPos().y;
 	});
 
-	std::ranges::sort(_leftSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_leftSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
 	{
-		const auto aLck = a.lock();
-		if (!aLck)
+		if (!a)
 		{
 			return false;
 		}
 
-		const auto bLck = b.lock();
-		if (!bLck)
+		if (!b)
 		{
 			return true;
 		}
 
-		return aLck->GetPos().x > bLck->GetPos().x;
+		return a->GetPos().x > b->GetPos().x;
 	});
 
-	std::ranges::sort(_downSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_downSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
 	{
-		const auto aLck = a.lock();
-		if (!aLck)
+		if (!a)
 		{
 			return false;
 		}
 
-		const auto bLck = b.lock();
-		if (!bLck)
+		if (!b)
 		{
 			return true;
 		}
 
-		return aLck->GetPos().y < bLck->GetPos().y;
+		return a->GetPos().y < b->GetPos().y;
 	});
 
-	std::ranges::sort(_rightSideObstacles, [](const std::weak_ptr<BaseObj>& a, const std::weak_ptr<BaseObj>& b)
+	std::ranges::sort(_rightSideObstacles, [](const std::shared_ptr<BaseObj>& a, const std::shared_ptr<BaseObj>& b)
 	{
-		const auto aLck = a.lock();
-		if (!aLck)
+		if (!a)
 		{
 			return false;
 		}
 
-		const auto bLck = b.lock();
-		if (!bLck)
+		if (!b)
 		{
 			return true;
 		}
 
-		return aLck->GetPos().x < bLck->GetPos().x;
+		return a->GetPos().x < b->GetPos().x;
 	});
 }
 
 LineOfSight::~LineOfSight() = default;
 
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetUpSideObstacles() { return _upSideObstacles; }
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetLeftSideObstacles() { return _leftSideObstacles; }
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetDownSideObstacles() { return _downSideObstacles; }
-std::vector<std::weak_ptr<BaseObj>>& LineOfSight::GetRightSideObstacles() { return _rightSideObstacles; }
+std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetUpSideObstacles() { return _upSideObstacles; }
+std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetLeftSideObstacles() { return _leftSideObstacles; }
+std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetDownSideObstacles() { return _downSideObstacles; }
+std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetRightSideObstacles() { return _rightSideObstacles; }

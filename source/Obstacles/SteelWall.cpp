@@ -1,5 +1,6 @@
 ﻿#include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/ObstacleType.h"
 
 #include <string>
 
@@ -12,7 +13,8 @@ SteelWall::SteelWall(const ObjRectangle& rect, std::shared_ptr<Window> window, s
 	           "SteelWall",//TODO: change name for statistics
 	           std::move(events),
 	           uuid,
-	           gameMode}
+		gameMode,
+		Steel}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

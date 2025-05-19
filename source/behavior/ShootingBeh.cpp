@@ -23,7 +23,7 @@ ShootingBeh::~ShootingBeh() = default;
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float ShootingBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
+float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
@@ -36,10 +36,9 @@ float ShootingBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& ob
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		const std::shared_ptr<BaseObj> objectLck = object.lock();
-		// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
-		const float distance = std::abs(sideDiff(objectLck));
-		// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
+		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
+		const float distance = std::abs(sideDiff(object));
+		// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
 		if (distance < minDist)//TODO: need minimal abs distance
 		{
 			minDist = distance;

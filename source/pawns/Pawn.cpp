@@ -81,6 +81,26 @@ void Pawn::UnsubscribeAsClient() const
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _nameWithUuid);
 }
 
+void Pawn::SetHealth(const int health)
+{
+	BaseObj::SetHealth(health);
+
+	if (!GetIsAlive())
+	{
+		Unsubscribe();
+	}
+}
+
+void Pawn::TakeDamage(const int damage)
+{
+	BaseObj::TakeDamage(damage);
+
+	if (!GetIsAlive())
+	{
+		Unsubscribe();
+	}
+}
+
 void Pawn::Draw() const
 {
 	if (!GetIsAlive())

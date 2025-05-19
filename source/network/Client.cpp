@@ -8,6 +8,7 @@
 #include "../../headers/network/commands/Dispose.h"
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
+#include "../../headers/network/commands/ObstacleSpawn.h"
 #include "../../headers/network/commands/PositionChange.h"
 #include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
@@ -39,6 +40,7 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 				if (!ec)
 				{
 					// Init connection success, start reading from socket
+					//_events->EmitEvent("ClientConnectionEstablished");
 					this->ReadResponse();
 				}
 			});
@@ -89,6 +91,8 @@ void Client::Subscribe()
 	_events->AddListener("ArrowDown_Released", _name, [this]() { this->SendKeyState("ArrowDown_Released"); });
 	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
 	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
+
+	_events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
 }
 
 void Client::Unsubscribe() const
@@ -126,7 +130,11 @@ void Client::ReadResponse()
 
 			ProcessReceivedData(archiveData);
 
-			// TODO: add unpause when clint connect to ready server game
+			// static bool isFirstRead = true;
+			// if (isFirstRead) {
+			// 	// events->EmitEvent("ClientConnected");
+			// 	isFirstRead = false;
+			// }
 
 			// if (data.eventName == "OnHelmetActivate")
 			// {
@@ -259,9 +267,8 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
 	{
-		const boost::uuids::uuid uuid = cmd->GetUuid();
 		_events->EmitEvent<const FPoint, const BonusType, const boost::uuids::uuid>(
-				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), uuid);
+				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
 	}
 }
 
@@ -279,6 +286,15 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
 	{
 		_events->EmitEvent<const TankType, const boost::uuids::uuid>(
 				"ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
+	}
+}
+
+void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
+	{
+		_events->EmitEvent<const FPoint, const ObstacleType, const boost::uuids::uuid>(
+				"ClientReceived_ObstacleSpawn", cmd->GetPos(), cmd->GetObstacleType(), cmd->GetUuid());
 	}
 }
 
@@ -346,6 +362,11 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 				case CommandType::RESPAWN_TANK:
 				{
 					OnRespawnTank(command);
+					break;
+				}
+				case CommandType::OBSTACLE_SPAWN:
+				{
+					OnObstacleSpawn(command);
 					break;
 				}
 				//TODO: implement other command types

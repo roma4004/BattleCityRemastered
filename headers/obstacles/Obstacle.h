@@ -4,6 +4,7 @@
 
 #include <memory>
 
+enum ObstacleType : char8_t;
 enum GameMode : char8_t;
 class EventSystem;
 struct Window;
@@ -22,11 +23,13 @@ class Obstacle : public BaseObj
 
 protected:
 	GameMode _gameMode{};
+	ObstacleType _obstacleType{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
 	Obstacle(const ObjRectangle& rect, int color, int health, std::shared_ptr<Window> window, const std::string& name,
-	         std::shared_ptr<EventSystem> events, boost::uuids::uuid uuid, GameMode gameMode);
+	         std::shared_ptr<EventSystem> events, boost::uuids::uuid uuid, GameMode gameMode,
+	         ObstacleType obstacleType);
 
 	~Obstacle() override;
 };

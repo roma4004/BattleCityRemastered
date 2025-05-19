@@ -151,6 +151,7 @@
     <ClCompile Include="source\network\commands\FortressChange.cpp" />
     <ClCompile Include="source\network\commands\HealthChange.cpp" />
     <ClCompile Include="source\network\commands\KeyStateChange.cpp" />
+    <ClCompile Include="source\network\commands\ObstacleSpawn.cpp" />
     <ClCompile Include="source\network\commands\PositionChange.cpp" />
     <ClCompile Include="source\network\commands\RespawnTank.cpp" />
     <ClCompile Include="source\network\commands\StatisticsChange.cpp" />
@@ -198,6 +199,7 @@
     <ClCompile Include="source\pawns\Player.cpp" />
     <ClCompile Include="source\pawns\Tank.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
+    <ClCompile Include="source\utils\Logger.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -229,6 +231,7 @@
     <ClInclude Include="headers\network\commands\FortressChange.h" />
     <ClInclude Include="headers\network\commands\HealthChange.h" />
     <ClInclude Include="headers\network\commands\KeyStateChange.h" />
+    <ClInclude Include="headers\network\commands\ObstacleSpawn.h" />
     <ClInclude Include="headers\network\commands\PositionChange.h" />
     <ClInclude Include="headers\network\commands\RespawnTank.h" />
     <ClInclude Include="headers\network\commands\StatisticsChange.h" />
@@ -295,6 +298,7 @@
     <ClInclude Include="headers\pawns\Player.h" />
     <ClInclude Include="headers\pawns\Tank.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
+    <ClInclude Include="headers\utils\Logger.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
     <ClInclude Include="resource.h" />

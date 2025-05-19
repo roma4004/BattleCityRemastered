@@ -127,8 +127,7 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusType bonusType,
-                              const boost::uuids::uuid uuid)
+void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusType type, const boost::uuids::uuid uuid)
 {
 	boost::uuids::uuid spawnUuid;
 	if (uuid != boost::uuids::nil_uuid())
@@ -141,7 +140,7 @@ void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusTyp
 		spawnUuid = uuidBonusGenerator();
 	}
 
-	switch (bonusType)
+	switch (type)
 	{
 		case None:
 			break;

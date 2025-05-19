@@ -77,7 +77,7 @@ void ObstacleSpawner::UnsubscribeAsClient() const
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
-void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType bonusType, const boost::uuids::uuid uuid)
+void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
 {
 	boost::uuids::uuid spawnUuid;
 	if (uuid != boost::uuids::nil_uuid())
@@ -90,7 +90,7 @@ void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType bonusT
 		spawnUuid = uuidObstacleGenerator();
 	}
 
-	switch (bonusType)
+	switch (type)
 	{
 		case None:
 			break;

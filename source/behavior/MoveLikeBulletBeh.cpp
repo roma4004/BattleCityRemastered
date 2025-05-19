@@ -13,10 +13,10 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_pt
 	  _allObjects{allObjects},
 	  _events{std::move(events)} {}
 
-std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
+std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
-	std::vector<std::weak_ptr<BaseObj>> aoeCollisions{};
+	std::vector<std::shared_ptr<BaseObj>> aoeCollisions{};
 	constexpr int defaultCollisionReserve{5};
 	aoeCollisions.reserve(defaultCollisionReserve);
 	if (bullet == nullptr)
@@ -201,7 +201,7 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 }
 
 
-void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std::weak_ptr<BaseObj>>& aoeList) const
+void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std::shared_ptr<BaseObj>>& aoeList) const
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
@@ -219,12 +219,12 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 
 		if (ColliderUtils::IsCollide(circle, object->GetRect()))
 		{
-			aoeList.emplace_back(std::weak_ptr(object));
+			aoeList.emplace_back(std::shared_ptr(object));
 		}
 	}
 }
 
-void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const
+void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList) const
 //TODO: change to shared_ptr
 {
 	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
@@ -238,16 +238,14 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& ob
 	{
 		for (const auto& target: objectList)
 		{
-			if (const std::shared_ptr<BaseObj> targetLock = target.lock();
-				targetLock
-				&& !dynamic_cast<WaterTile*>(targetLock.get())
+			if (target && !dynamic_cast<WaterTile*>(target.get())
 				// && !dynamic_cast<BushesTile*>(targetLock.get())
 				// && !dynamic_cast<IceTile*>(targetLock.get())
-				&& (targetLock->GetIsDestructible() || thisBullet->GetTier() > 2))
+				&& (target->GetIsDestructible() || thisBullet->GetTier() > 2))
 			{
-				targetLock->TakeDamage(bulletDamage);
-				targetLock->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
-				if (const auto* otherBullet = dynamic_cast<Bullet*>(targetLock.get()))
+				target->TakeDamage(bulletDamage);
+				target->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
+				if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
 				{
 					thisBullet->SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
 				}

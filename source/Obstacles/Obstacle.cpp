@@ -5,13 +5,20 @@
 
 Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, std::shared_ptr<Window> window,
                    const std::string& name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
-                   const GameMode gameMode)
+                   const GameMode gameMode, const ObstacleType obstacleType)
 	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
 	  _gameMode{gameMode},
+	  _obstacleType(obstacleType),
 	  _events(std::move(events))
 {
 	Obstacle::Subscribe();
+
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const FPoint, const ObstacleType, const boost::uuids::uuid>(
+				"ServerSend_ObstacleSpawn", FPoint{rect.x, rect.y}, _obstacleType, uuid);
+	}
 }
 
 Obstacle::~Obstacle()
@@ -32,7 +39,7 @@ void Obstacle::Subscribe()
 void Obstacle::SubscribeAsClient()
 {
 	_events->AddListener<const int>(
-			"ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid,
+			"ClientReceived_" + _name + "Health", _nameWithUuid,
 			[this](const int health)
 			{
 				this->SetHealth(health);

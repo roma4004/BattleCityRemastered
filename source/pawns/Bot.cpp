@@ -27,40 +27,29 @@ Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
 
 Bot::~Bot() = default;
 
-bool Bot::IsOpponent(const std::weak_ptr<BaseObj>& obstacle) const
+bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const
 {
-	if (const auto obstacleLck = obstacle.lock())
+	if (const auto tank = dynamic_cast<Tank*>(obstacle.get()))
 	{
-		if (const auto tank = dynamic_cast<Tank*>(obstacleLck.get()))
-		{
-			return tank->GetFraction() != _fraction;
-		}
-
-		return false;
+		return tank->GetFraction() != _fraction;
 	}
 
 	return false;
 }
 
-bool Bot::IsAlly(const std::weak_ptr<BaseObj>& obstacle) const
+bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const
 {
-	if (const auto obstacleLck = obstacle.lock())
+	if (const auto tank = dynamic_cast<Tank*>(obstacle.get()))
 	{
-		if (const auto tank = dynamic_cast<Tank*>(obstacleLck.get()))
-		{
-			return tank->GetFraction() == _fraction;
-		}
-
-		return false;
+		return tank->GetFraction() == _fraction;
 	}
 
 	return false;
 }
 
-bool Bot::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
+bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 {
-	if (const std::shared_ptr<BaseObj> obstacleLck = obstacle.lock();
-		dynamic_cast<IPickupableBonus*>(obstacleLck.get()))
+	if (dynamic_cast<IPickupableBonus*>(obstacle.get()))
 	{
 		return true;
 	}
@@ -68,7 +57,7 @@ bool Bot::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 	return false;
 }
 
-bool Bot::IsFreePathToBonus(const std::vector<std::weak_ptr<BaseObj>>& sideObstacles)
+bool Bot::IsFreePathToBonus(const std::vector<std::shared_ptr<BaseObj>>& sideObstacles)
 {
 	if (const auto nearestObstacleBonus = sideObstacles.front();
 		IsBonus(nearestObstacleBonus))
@@ -79,7 +68,7 @@ bool Bot::IsFreePathToBonus(const std::vector<std::weak_ptr<BaseObj>>& sideObsta
 	return false;
 }
 
-bool Bot::ActIfOpponentSeen(const Direction dir, const std::weak_ptr<BaseObj>& nearestObstacle)
+bool Bot::ActIfOpponentSeen(const Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle)
 {
 	if (IsOpponent(nearestObstacle))
 	{
@@ -92,13 +81,13 @@ bool Bot::ActIfOpponentSeen(const Direction dir, const std::weak_ptr<BaseObj>& n
 	return false;
 }
 
-bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& nearestObstacle)
+bool Bot::ActIfBonusSeen(const Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle)
 {
 	if (IsBonus(nearestObstacle))
 	{
 		LineOfSight bonusLOS(_rect, _window->size, _allObjects, this);
-		const std::vector<std::weak_ptr<BaseObj>>& dirSideObstacles =
-				[&bonusLOS, dir]() mutable -> std::vector<std::weak_ptr<BaseObj>>&
+		const std::vector<std::shared_ptr<BaseObj>>& dirSideObstacles =
+				[&bonusLOS, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
 					if (dir == UP)
 					{
@@ -129,11 +118,11 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& near
 	return false;
 }
 
-bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::weak_ptr<BaseObj>>& sideObstacle)
+bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle)
 {
 	if (!sideObstacle.empty())
 	{
-		const std::weak_ptr<BaseObj>& nearestObstacle = sideObstacle.front();
+		const std::shared_ptr<BaseObj>& nearestObstacle = sideObstacle.front();
 		if (ActIfOpponentSeen(dir, nearestObstacle))
 		{
 			return true;
@@ -185,7 +174,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 	// fire on obstacle if player not found
 	if (dir == UP && !upSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = upSideObstacles.front().lock();
+		if (_nearestSeenObstacle = upSideObstacles.front();
 			_nearestSeenObstacle)
 		{
 			_shootDistance = _rect.y - _nearestSeenObstacle->GetY();
@@ -195,7 +184,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 
 	if (dir == LEFT && !leftSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = leftSideObstacles.front().lock();
+		if (_nearestSeenObstacle = leftSideObstacles.front();
 			_nearestSeenObstacle)
 		{
 			_shootDistance = _rect.x - _nearestSeenObstacle->GetX();
@@ -205,7 +194,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 
 	if (dir == DOWN && !downSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = downSideObstacles.front().lock();
+		if (_nearestSeenObstacle = downSideObstacles.front();
 			_nearestSeenObstacle)
 		{
 			_shootDistance = _nearestSeenObstacle->GetY() - _rect.y;
@@ -215,7 +204,7 @@ void Bot::HandleLineOfSight(const Direction dir)
 
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = rightSideObstacles.front().lock();
+		if (_nearestSeenObstacle = rightSideObstacles.front();
 			_nearestSeenObstacle)
 		{
 			_shootDistance = _nearestSeenObstacle->GetX() - _rect.x;

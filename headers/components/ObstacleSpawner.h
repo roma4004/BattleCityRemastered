@@ -45,7 +45,7 @@ public:
 
 	~ObstacleSpawner() override;
 
-	void SpawnObstacle(ObjRectangle rect, ObstacleType bonusType, boost::uuids::uuid uuid = {});
+	void SpawnObstacle(ObjRectangle rect, ObstacleType type, boost::uuids::uuid uuid = {});
 
 	template<typename TObstaclesType>
 	void SpawnObstacles(const ObjRectangle& rect, boost::uuids::uuid uuid = {});

@@ -1,5 +1,6 @@
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/ObstacleType.h"
 
 #include <string>
 
@@ -14,7 +15,8 @@ BrickWall::BrickWall(const ObjRectangle& rect, std::shared_ptr<Window> window, s
 	           {"BrickWall"},//TODO: change name for statistics
 	           std::move(events),
 	           uuid,
-	           gameMode}
+	           gameMode,
+	           Brick}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

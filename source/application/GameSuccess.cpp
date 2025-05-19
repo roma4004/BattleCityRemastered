@@ -55,6 +55,10 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
+	_events->AddListener("ClientReadyToStartGame", _name, [this]()
+	{
+		this->OnClientReady();
+	});
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
 
@@ -82,13 +86,26 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
+void GameSuccess::LoadMap()
+{
+	//Map creation
+	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
+	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
+	field.MapCreation(gridOffset);
+}
+
 void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
 	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
 	{
-		_events->EmitEvent("Pause_Released");
+		//TODO: automate network game start
+		_events->EmitEvent("Pause_Released"); //NOTE: pause on start for awaiting client ready
 	}
 
+	for (std::shared_ptr<BaseObj> item: _allObjects)
+	{
+		item.reset();
+	}
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 
@@ -96,10 +113,15 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	_events->EmitEvent("Reset");
 
-	//Map creation
-	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
-	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
-	field.MapCreation(gridOffset);
+	if (gameMode != PlayAsClient /*&& gameMode != PlayAsHost*/)
+	{
+		LoadMap();
+	}
+
+	// if (gameMode == PlayAsClient)
+	// {
+	// 	_events->EmitEvent("ClientReadyToPlay");
+	// }
 }
 
 void GameSuccess::PrevGameMode()
@@ -202,6 +224,12 @@ void GameSuccess::DisposeDeadObject()
 
 //TODO: recheck rule of 3/5 for all classes
 //TODO: convert enum to enum classes
+
+void GameSuccess::OnClientReady()
+{
+	// LoadMap();
+	// this->_events->EmitEvent("Pause_Released");
+}
 
 void GameSuccess::MainLoop()
 {

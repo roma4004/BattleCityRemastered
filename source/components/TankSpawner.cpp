@@ -14,11 +14,14 @@
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/pawns/Player.h"
 #include "../../headers/utils/ColliderUtils.h"
+#include "../../headers/utils/Logger.h"
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
@@ -27,6 +30,15 @@ TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)}
 {
+	static boost::uuids::random_generator uuidTankGenerator;
+
+	_enemyOneUuid = uuidTankGenerator();
+	_enemyTwoUuid = uuidTankGenerator();
+	_enemyThreeUuid = uuidTankGenerator();
+	_enemyFourUuid = uuidTankGenerator();
+	_playerOneUuid = uuidTankGenerator();
+	_playerTwoUuid = uuidTankGenerator();
+
 	Subscribe();
 }
 
@@ -37,6 +49,8 @@ TankSpawner::~TankSpawner()
 
 void TankSpawner::Subscribe()
 {
+	//TODO: reuse existing tanks when gamemode changed
+	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_events->AddListener("Reset", _name, [this]() { ResetSpawn(); });
 	_events->AddListener("RespawnTanks", _name, [this]()
 	{
@@ -168,6 +182,22 @@ void TankSpawner::SetPlayerNeedRespawn()
 	}
 }
 
+std::string TankSpawner::GetCurrentTimeString()
+{
+	const auto now = std::chrono::system_clock::now();
+	const auto nowTime = std::chrono::system_clock::to_time_t(now);
+	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+	std::tm timeInfo;
+	localtime_s(&timeInfo, &nowTime);
+
+	std::stringstream ss;
+	ss << std::put_time(&timeInfo, "%H:%M:%S") << '.'
+			<< std::setfill('0') << std::setw(3) << ms.count();
+
+	return ss.str();
+}
+
 void TankSpawner::SpawnEnemy(const boost::uuids::uuid uuid, const float speed, const int health, const TankType type)
 {
 	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
@@ -208,9 +238,17 @@ void TankSpawner::SpawnEnemy(const boost::uuids::uuid uuid, const float speed, c
 				name += "4";
 			}
 
+			// Log enemy tank spawn
+			Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
+			std::cout << "[" << GetCurrentTimeString() << "] "
+			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+			<< "SpawnEnemy  UUID = " << uuid
+			<< ", Name = " << name
+			<< std::endl;
+
 			BaseObjProperty baseObjProperty{rect, gray, health, true, uuid, std::move(name), std::move(fraction)};
 			PawnProperty pawnProperty{
-					std::move(baseObjProperty), _window, DOWN, speed, _allObjects, _events, 1, _gameMode};
+					std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode};
 			_allObjects->emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool));
 
 			return;
@@ -258,6 +296,14 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 			}
 		}
 
+		// Log tank spawn
+		Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
+		std::cout << "[" << GetCurrentTimeString() << "] "
+		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+		<< "SpawnPlayer UUID = " << uuid
+		<< ", Name = " << name
+		<< std::endl;
+
 		BaseObjProperty baseObjProperty{std::move(rect), color, health, true, uuid, std::move(name),
 		                                std::move(fraction)};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode};
@@ -278,9 +324,17 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 	{
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
-		const int color = type == PLAYER1 ? yellow : green;
-		std::string name{(type == PLAYER1 ? "CoopBot1" : "CoopBot2")};
+		const int color = type == COOP1 ? yellow : green;
+		std::string name{(type == COOP1 ? "CoopBot1" : "CoopBot2")};
 		std::string fraction{"PlayerTeam"};
+
+		// Log coop bot spawn
+		Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
+		std::cout << "[" << GetCurrentTimeString() << "] "
+		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+		<< "SpawnEnemy  UUID = " << uuid
+		<< ", Name = " << name
+		<< std::endl;
 
 		BaseObjProperty baseObjProperty{std::move(rect), color, health, true, uuid, std::move(name),
 		                                std::move(fraction)};
@@ -289,20 +343,35 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 	}
 }
 
-void TankSpawner::RespawnEnemyTanks(const boost::uuids::uuid uuid, const TankType type)
+void TankSpawner::RespawnEnemyTanks(const TankType type, const boost::uuids::uuid uuid)
 {
-	if (_enemyRespawnResource > 0)
+	constexpr float speed{142};
+	constexpr int health{100};
+	SpawnEnemy(uuid, speed, health, type);
+
+	if (_gameMode == PlayAsHost)
 	{
-		constexpr float speed{142};
-		constexpr int health{100};
-		SpawnEnemy(uuid, speed, health, type);
+		_events->EmitEvent<const TankType, const boost::uuids::uuid>("ServerSend_RespawnTank", type, uuid);
 	}
-	else
+}
+
+void TankSpawner::RespawnPlayerTeam(const TankType type, const boost::uuids::uuid uuid)
+{
+	const float windowSizeY{static_cast<float>(_window->size.y)};
+	const float gridOffset{windowSizeY / 50.f};
+	const float size{gridOffset * 3};
+	constexpr float speed{142};
+	constexpr int health{100};
+	const bool isFirst = type == PLAYER1 || type == COOP1;
+	ObjRectangle rect{.x = gridOffset * (isFirst ? 16.f : 32.f), .y = windowSizeY - size, .w = size, .h = size};
+
+	if (type == PLAYER1 || type == PLAYER2)
 	{
-		_enemyOneNeedRespawn = false;
-		_enemyTwoNeedRespawn = false;
-		_enemyThreeNeedRespawn = false;
-		_enemyFourNeedRespawn = false;
+		SpawnPlayer(std::move(rect), speed, health, uuid, type);
+	}
+	else if (type == COOP1 || type == COOP2)
+	{
+		SpawnCoopBot(std::move(rect), speed, health, uuid, type);
 	}
 
 	if (_gameMode == PlayAsHost)
@@ -311,109 +380,38 @@ void TankSpawner::RespawnEnemyTanks(const boost::uuids::uuid uuid, const TankTyp
 	}
 }
 
-void TankSpawner::RespawnPlayerTanks(const boost::uuids::uuid uuid, const TankType type)
-{
-	const float windowSizeY{static_cast<float>(_window->size.y)};
-	const float gridOffset{windowSizeY / 50.f};
-	const float size{gridOffset * 3};
-	constexpr float speed{142};
-	constexpr int health{100};
-
-	if (type == PLAYER1)
-	{
-		if (_playerOneRespawnResource > 0)
-		{
-			ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
-			SpawnPlayer(std::move(rect), speed, health, uuid, type);
-		}
-		else
-		{
-			_playerOneNeedRespawn = false;
-		}
-	}
-	else
-	{
-		if (_playerTwoRespawnResource > 0)
-		{
-			ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
-			SpawnPlayer(std::move(rect), speed, health, uuid, type);
-		}
-		else
-		{
-			_playerTwoNeedRespawn = false;
-		}
-	}
-}
-
-void TankSpawner::RespawnCoopTanks(const boost::uuids::uuid uuid, const TankType type)
-{
-	const float windowSizeY{static_cast<float>(_window->size.y)};
-	const float gridOffset{windowSizeY / 50.f};
-	const float size{gridOffset * 3};
-	constexpr float speed{142};
-	constexpr int health{100};
-
-	if (type == PLAYER1)
-	{
-		if (_playerOneRespawnResource > 0)
-		{
-			ObjRectangle rect{.x = gridOffset * 16.f, .y = windowSizeY - size, .w = size, .h = size};
-			SpawnCoopBot(std::move(rect), speed, health, uuid, type);
-		}
-		else
-		{
-			_coopBotOneNeedRespawn = false;
-		}
-	}
-	else
-	{
-		if (_playerTwoRespawnResource > 0)
-		{
-			ObjRectangle rect{.x = gridOffset * 32.f, .y = windowSizeY - size, .w = size, .h = size};
-			SpawnCoopBot(std::move(rect), speed, health, uuid, type);
-		}
-		else
-		{
-			_coopBotTwoNeedRespawn = false;
-		}
-	}
-}
-
 void TankSpawner::RespawnTanks()
 {
-	static boost::uuids::random_generator uuidTankGenerator;
-	if (IsEnemyOneNeedRespawn()) { RespawnEnemyTanks(uuidTankGenerator(), ENEMY1); }
+	if (IsEnemyOneNeedRespawn()) { RespawnEnemyTanks(ENEMY1, _enemyOneUuid); }//TODO: check handle if already spawned
 
-	if (IsEnemyTwoNeedRespawn()) { RespawnEnemyTanks(uuidTankGenerator(), ENEMY2); }
+	if (IsEnemyTwoNeedRespawn()) { RespawnEnemyTanks(ENEMY2, _enemyTwoUuid); }
 
-	if (IsEnemyThreeNeedRespawn()) { RespawnEnemyTanks(uuidTankGenerator(), ENEMY3); }
+	if (IsEnemyThreeNeedRespawn()) { RespawnEnemyTanks(ENEMY3, _enemyThreeUuid); }
 
-	if (IsEnemyFourNeedRespawn()) { RespawnEnemyTanks(uuidTankGenerator(), ENEMY4); }
-
-
-	if (IsPlayerOneNeedRespawn()) { RespawnPlayerTanks(uuidTankGenerator(), PLAYER1); }
-
-	if (IsPlayerTwoNeedRespawn()) { RespawnPlayerTanks(uuidTankGenerator(), PLAYER2); }
+	if (IsEnemyFourNeedRespawn()) { RespawnEnemyTanks(ENEMY4, _enemyFourUuid); }
 
 
-	if (IsCoopBotOneNeedRespawn()) { RespawnCoopTanks(uuidTankGenerator(), PLAYER1); }
+	if (IsPlayerOneNeedRespawn()) { RespawnPlayerTeam(PLAYER1, _playerOneUuid); }
 
-	if (IsCoopBotTwoNeedRespawn()) { RespawnCoopTanks(uuidTankGenerator(), PLAYER2); }
+	if (IsPlayerTwoNeedRespawn()) { RespawnPlayerTeam(PLAYER2, _playerTwoUuid); }
+
+
+	if (IsCoopBotOneNeedRespawn()) { RespawnPlayerTeam(COOP1, _playerOneUuid); }
+
+	if (IsCoopBotTwoNeedRespawn()) { RespawnPlayerTeam(COOP2, _playerTwoUuid); }
 }
 
 void TankSpawner::RespawnClient(const TankType type, const boost::uuids::uuid uuid)
 {
-	if (type == ENEMY1) { RespawnEnemyTanks(uuid, ENEMY1); }
+	if (type == ENEMY1 || type == ENEMY2 || type == ENEMY3 || type == ENEMY4)
+	{
+		RespawnEnemyTanks(type, uuid);
+	}
 
-	if (type == ENEMY2) { RespawnEnemyTanks(uuid, ENEMY2); }
-
-	if (type == ENEMY3) { RespawnEnemyTanks(uuid, ENEMY3); }
-
-	if (type == ENEMY4) { RespawnEnemyTanks(uuid, ENEMY4); }
-
-	if (type == PLAYER1) { RespawnPlayerTanks(uuid, PLAYER1); }
-
-	if (type == PLAYER2) { RespawnPlayerTanks(uuid, PLAYER2); }
+	if (type == PLAYER1 || type == PLAYER2)
+	{
+		RespawnPlayerTeam(type, uuid);
+	}
 }
 
 void TankSpawner::IncreaseEnemyRespawnResource()
@@ -483,7 +481,7 @@ void TankSpawner::OnBonusTank(const std::string& author, const std::string& frac
 		{
 			IncreasePlayerOneRespawnResource();
 		}
-		if (author == "Player2" || author == "CoopBot2")
+		else if (author == "Player2" || author == "CoopBot2")
 		{
 			IncreasePlayerTwoRespawnResource();
 		}
@@ -539,38 +537,76 @@ void TankSpawner::OnTankSpawn(const std::string& whoSpawn)
 	}
 }
 
+void TankSpawner::OnEnemyTankDied(const std::string& whoDied)
+{
+	if (_enemyRespawnResource > 0)
+	{
+		if (whoDied == "Enemy1")
+		{
+			_enemyOneNeedRespawn = true;
+		}
+		else if (whoDied == "Enemy2")
+		{
+			_enemyTwoNeedRespawn = true;
+		}
+		else if (whoDied == "Enemy3")
+		{
+			_enemyThreeNeedRespawn = true;
+		}
+		else if (whoDied == "Enemy4")
+		{
+			_enemyFourNeedRespawn = true;
+		}
+	}
+	else
+	{
+		_enemyOneNeedRespawn = false;
+		_enemyTwoNeedRespawn = false;
+		_enemyThreeNeedRespawn = false;
+		_enemyFourNeedRespawn = false;
+	}
+}
+
+void TankSpawner::OnPlayerTankDied(const std::string& whoDied)
+{
+	if (_playerOneRespawnResource > 0)
+	{
+		if (whoDied == "Player1")
+		{
+			_playerOneNeedRespawn = true;
+		}
+		else if (whoDied == "CoopBot1")
+		{
+			_coopBotOneNeedRespawn = true;
+		}
+	}
+	else
+	{
+		_playerOneNeedRespawn = false;
+		_coopBotOneNeedRespawn = false;
+	}
+
+	if (_playerTwoRespawnResource > 0)
+	{
+		if (whoDied == "Player2")
+		{
+			_playerTwoNeedRespawn = true;
+		}
+		else if (whoDied == "CoopBot2")
+		{
+			_coopBotTwoNeedRespawn = true;
+		}
+	}
+	else
+	{
+		_playerTwoNeedRespawn = false;
+		_coopBotTwoNeedRespawn = false;
+	}
+}
+
 void TankSpawner::OnTankDied(const std::string& whoDied)
 {
-	if (whoDied == "Enemy1")
-	{
-		this->_enemyOneNeedRespawn = true;
-	}
-	else if (whoDied == "Enemy2")
-	{
-		this->_enemyTwoNeedRespawn = true;
-	}
-	else if (whoDied == "Enemy3")
-	{
-		this->_enemyThreeNeedRespawn = true;
-	}
-	else if (whoDied == "Enemy4")
-	{
-		this->_enemyFourNeedRespawn = true;
-	}
-	else if (whoDied == "Player1")
-	{
-		this->_playerOneNeedRespawn = true;
-	}
-	else if (whoDied == "Player2")
-	{
-		this->_playerTwoNeedRespawn = true;
-	}
-	else if (whoDied == "CoopBot1")
-	{
-		this->_coopBotOneNeedRespawn = true;
-	}
-	else if (whoDied == "CoopBot2")
-	{
-		this->_coopBotTwoNeedRespawn = true;
-	}
+	OnEnemyTankDied(whoDied);
+
+	OnPlayerTankDied(whoDied);
 }

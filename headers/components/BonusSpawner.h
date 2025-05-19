@@ -53,7 +53,7 @@ public:
 	~BonusSpawner() override;
 
 	void SpawnRandomBonus(ObjRectangle rect);
-	void SpawnBonus(ObjRectangle rect, int color, BonusType bonusType, boost::uuids::uuid uuid = {});
+	void SpawnBonus(ObjRectangle rect, int color, BonusType type, boost::uuids::uuid uuid = {});
 
 	template<typename TBonusType>
 	void SpawnBonus(ObjRectangle rect, int color, boost::uuids::uuid uuid = {});

@@ -21,13 +21,13 @@ BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::sha
 	  _window{std::move(window)}
 {
 	// Pre-generate 20 default bullets
-	for (int i = 0; i < 20; ++i)
-	{
-		constexpr ObjRectangle rect{0, 0, 2, 2};
-		auto bullet = CreateNewBullet(
-				rect, 1, 0.0, 0xFFFFFF, 1, Direction::UP, 1.0f, "Default", "Default", 1);
-		_bullets.push(bullet);
-	}
+	// for (int i = 0; i < 20; ++i)
+	// {
+	// 	constexpr ObjRectangle rect{0, 0, 2, 2};
+	// 	auto bullet = CreateNewBullet(
+	// 			rect, 1, 0.0, 0xFFFFFF, 1, Direction::UP, 1.0f, "Default", "Default", 1);
+	// 	_bullets.push(bullet);
+	// }
 
 	Subscribe();
 }
@@ -80,14 +80,14 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet(ObjRectangle rect, const int
 	std::string uuidStr = boost::uuids::to_string(bulletUuid);
 	std::string name{"Bullet"};
 
-	std::cout << "[" << GetCurrentTimeString() << "] "
-			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-			<< "Bullet CREATED and Bullet pool size =" << _bullets.size()
-			<< ", Author=" << author
-			<< ", Direction=" << static_cast<int>(dir)
-			<< ", Fraction=" << fraction
-			<< ", UUID=" << bulletUuid
-			<< std::endl;
+	// std::cout << "[" << GetCurrentTimeString() << "] "
+	// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 		<< "Bullet CREATED and Bullet pool size =" << _bullets.size()
+	// 		<< ", Author=" << author
+	// 		<< ", Direction=" << static_cast<int>(dir)
+	// 		<< ", Fraction=" << fraction
+	// 		<< ", UUID=" << bulletUuid
+	// 		<< std::endl;
 
 	// TODO: separated bullet pool for each tank or client receive store in order and process one by one from task list
 	BaseObjProperty baseObjProperty{
@@ -122,14 +122,14 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet(const ObjRectangle rect, const 
 
 	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
-		std::cout << "[" << GetCurrentTimeString() << "] "
-				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< "Bullet REUSED and Bullet pool size =" << _bullets.size()
-				<< ", Author=" << author
-				<< ", Direction=" << static_cast<int>(dir)
-				<< ", Fraction=" << fraction
-				<< ", UUID=" << bullet->GetUuid()
-				<< std::endl;
+		// std::cout << "[" << GetCurrentTimeString() << "] "
+		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+		// 		<< "Bullet REUSED and Bullet pool size =" << _bullets.size()
+		// 		<< ", Author=" << author
+		// 		<< ", Direction=" << static_cast<int>(dir)
+		// 		<< ", Fraction=" << fraction
+		// 		<< ", UUID=" << bullet->GetUuid()
+		// 		<< std::endl;
 	}
 
 	return bulletAsBase;
@@ -145,12 +145,12 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 	std::lock_guard<std::mutex> lock(_bulletsMutex);
 	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
-		std::cout << "[" << GetCurrentTimeString() << "] "
-				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< "Bullet RETURNED to pool and Bullet pool size =" << _bullets.size()
-				<< ", Author=" << bulletCast->GetAuthor()
-				<< ", UUID=" << bulletCast->GetUuid()
-				<< std::endl;
+		// std::cout << "[" << GetCurrentTimeString() << "] "
+		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+		// 		<< "Bullet RETURNED to pool and Bullet pool size =" << _bullets.size()
+		// 		<< ", Author=" << bulletCast->GetAuthor()
+		// 		<< ", UUID=" << bulletCast->GetUuid()
+		// 		<< std::endl;
 
 		bulletCast->Disable();
 		_bullets.emplace(std::shared_ptr<BaseObj>(bullet, [this](BaseObj* b)
@@ -167,10 +167,10 @@ void BulletPool::Clear()
 	std::lock_guard<std::mutex> lock(_bulletsMutex);
 	_isClearing = true;
 
-	std::cout << "[" << GetCurrentTimeString() << "] "
-			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-			<< "Bullet pool CLEARED, bullets in pool: " << _bullets.size()
-			<< std::endl;
+	// std::cout << "[" << GetCurrentTimeString() << "] "
+	// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 		<< "Bullet pool CLEARED, bullets in pool: " << _bullets.size()
+	// 		<< std::endl;
 
 	while (!_bullets.empty())
 	{

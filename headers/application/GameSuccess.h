@@ -57,6 +57,7 @@ class GameSuccess final : public IGame
 
 	void Subscribe();
 	void Unsubscribe() const;
+	void LoadMap();
 
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();
@@ -66,6 +67,8 @@ class GameSuccess final : public IGame
 	void CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime);
 
 	void DisposeDeadObject();
+
+	void OnClientReady();
 
 	void MainLoop() override;
 

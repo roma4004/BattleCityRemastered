@@ -271,6 +271,7 @@ add_executable(${PROJECT_NAME}
         source/network/commands/FortressChange.cpp
         source/network/commands/HealthChange.cpp
         source/network/commands/KeyStateChange.cpp
+        source/network/commands/ObstacleSpawn.cpp
         source/network/commands/PositionChange.cpp
         source/network/commands/RespawnTank.cpp
         source/network/commands/StatisticsChange.cpp
@@ -318,6 +319,7 @@ add_executable(${PROJECT_NAME}
         source/pawns/Player.cpp
         source/pawns/Tank.cpp
         source/utils/ColliderUtils.cpp
+        source/utils/Logger.cpp
         source/utils/TimeUtils.cpp
 )
 

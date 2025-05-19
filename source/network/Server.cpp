@@ -7,6 +7,7 @@
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
 #include "../../headers/network/commands/KeyStateChange.h"
+#include "../../headers/network/commands/ObstacleSpawn.h"
 #include "../../headers/network/commands/PositionChange.h"
 #include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
@@ -96,8 +97,15 @@ void Session::DoRead()
 				// std::cout << "Id: " << data.id << "\n";
 				// std::cout << "Name: " << data.name << "\n";
 
-				//TODO: check if key allowed to receive from client and strong validating net input
-				events->EmitEvent("ServerReceive_" + data.eventName);
+				if (data.eventName == "ClientReadyToPlay")
+				{
+					events->EmitEvent("ClientReadyToStartGame");
+				}
+				else
+				{
+					//TODO: check if key allowed to receive from client and strong validating net input
+					events->EmitEvent("ServerReceive_" + data.eventName);
+				}
 
 				// std::cout << "Names: ";
 				// for (auto& name: data.names)
@@ -252,6 +260,13 @@ void Server::Subscribe() const
 				SendCommand(std::make_shared<RespawnTank>(type, uuid));
 			});
 
+	_events->AddListener<const FPoint, const ObstacleType, const boost::uuids::uuid>(
+			"ServerSend_ObstacleSpawn", _name,
+			[this](const FPoint pos, const ObstacleType type, const boost::uuids::uuid uuid)
+			{
+				SendCommand(std::make_shared<ObstacleSpawn>(pos, type, uuid));
+			});
+
 	SubscribeBonus();
 }
 
@@ -341,6 +356,7 @@ void Server::DoAccept()
 				_sessions.emplace_back(std::make_shared<Session>(std::move(socket), _events));
 				if (const auto& lastSession = _sessions.back(); lastSession)
 				{
+					// _events->EmitEvent("NewClientConnected");
 					lastSession->Start();
 				}
 			}

@@ -7,7 +7,7 @@ class BaseObj;
 
 class IMoveBeh
 {
-	[[nodiscard]] virtual std::vector<std::weak_ptr<BaseObj>> IsCanMove(float deltaTime) const = 0;
+	[[nodiscard]] virtual std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const = 0;
 
 protected:
 	virtual void MoveLeft(float deltaTime) const = 0;

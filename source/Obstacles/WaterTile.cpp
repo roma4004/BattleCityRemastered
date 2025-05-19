@@ -1,5 +1,6 @@
 ﻿#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/ObstacleType.h"
 
 #include <string>
 
@@ -12,7 +13,8 @@ WaterTile::WaterTile(const ObjRectangle& rect, std::shared_ptr<Window> window, s
 	           "Water",
 	           std::move(events),
 	           uuid,
-	           gameMode}
+	           gameMode,
+	           Water}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

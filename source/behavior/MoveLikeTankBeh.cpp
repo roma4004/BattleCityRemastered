@@ -12,10 +12,10 @@
 MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _selfParent{selfParent}, _allObjects{allObjects} {}
 
-std::vector<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
+std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
-	std::vector<std::weak_ptr<BaseObj>> obstacles{};
+	std::vector<std::shared_ptr<BaseObj>> obstacles{};
 	constexpr int defaultCollisionReserve{5};
 	obstacles.reserve(defaultCollisionReserve);
 	if (tank == nullptr)
@@ -64,7 +64,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float delta
 		{
 			if (!object->GetIsPassable())
 			{
-				obstacles.emplace_back(std::weak_ptr(object));
+				obstacles.emplace_back(std::shared_ptr(object));
 			}
 		}
 	}
@@ -77,7 +77,7 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float delta
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float MoveLikeTankBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
+float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
@@ -90,10 +90,9 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		const std::shared_ptr<BaseObj> objectLck = object.lock();
-		// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
-		const float distance = std::abs(sideDiff(objectLck));
-		// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
+		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
+		const float distance = std::abs(sideDiff(object));
+		// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
 		if (distance < minDist)//TODO: need minimal abs distance
 		{
 			minDist = distance;
@@ -275,15 +274,15 @@ void MoveLikeTankBeh::MoveDown(const float deltaTime) const
 	}
 }
 
-void MoveLikeTankBeh::HandleBonusPickUp(const std::weak_ptr<BaseObj>& object, const Tank* tank)
+void MoveLikeTankBeh::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank)
 {
-	if (const auto objLck = object.lock())
+	if (const auto target = object)
 	{
-		if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
+		if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
 		{
 			bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
 			//TODO: destroy bonus on emit in PickUpBonus by subscription
-			objLck->TakeDamage(1);
+			target->TakeDamage(1);
 		}
 	}
 }
