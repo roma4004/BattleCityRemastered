@@ -85,20 +85,20 @@ void Pawn::SetHealth(const int health)
 {
 	BaseObj::SetHealth(health);
 
-	if (!GetIsAlive())
-	{
-		Unsubscribe();
-	}
+	// if (!GetIsAlive())
+	// {
+	// 	Unsubscribe();
+	// }
 }
 
 void Pawn::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
 
-	if (!GetIsAlive())
-	{
-		Unsubscribe();
-	}
+	// if (!GetIsAlive())
+	// {
+	// 	Unsubscribe();
+	// }
 }
 
 void Pawn::Draw() const

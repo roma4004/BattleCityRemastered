@@ -31,53 +31,40 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float d
 	if (const Direction dir = bullet->GetDirection();
 		dir == UP)
 	{
-		//36 37 initializing in if
-		speedY *= -1;
-		speedX *= 0;
-
 		bulletNextPosRect = ObjRectangle{
 				.x = bullet->GetX(),
-				.y = bullet->GetY() - speedY - 1,
+				.y = bullet->GetY() - speedY,
 				.w = bullet->GetWidth(),
-				.h = speedY};
+				.h = bullet->GetHeight() + speedY};
 	}
 	else if (dir == DOWN)
 	{
-		speedY *= 1;
-		speedX *= 0;
-
 		bulletNextPosRect = ObjRectangle{
 				.x = bullet->GetX(),
-				.y = bullet->GetY() + bullet->GetHeight() + 1,
+				.y = bullet->GetY(),
 				.w = bullet->GetWidth(),
-				.h = speedY};
+				.h = bullet->GetHeight() + speedY};
 	}
 	else if (dir == LEFT)
 	{
-		speedX *= -1;
-		speedY *= 0;
-
-		bulletNextPosRect = ObjRectangle{
-				.x = bullet->GetX() - speedX - 1,
+		bulletNextPosRect = ObjRectangle{//TODO: recheck all the move math
+				.x = bullet->GetX() - speedX,//TODO: write bullet test that can damage tank from all sides
 				.y = bullet->GetY(),
-				.w = speedX,
+				.w = bullet->GetWidth() + speedX,
 				.h = bullet->GetHeight()};
 	}
 	else if (dir == RIGHT)
 	{
-		speedX *= 1;
-		speedY *= 0;
-
 		bulletNextPosRect = ObjRectangle{
-				.x = bullet->GetX() + bullet->GetWidth() + 1,
+				.x = bullet->GetX(),
 				.y = bullet->GetY(),
-				.w = speedX,
+				.w = bullet->GetWidth() + speedX,
 				.h = bullet->GetHeight()};
 	}
 
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (bullet == object.get())
+		if (object.get() == nullptr || bullet == object.get())
 		{
 			continue;
 		}
@@ -212,14 +199,14 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageRadius()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (_selfParent == object.get())
+		if (object.get() == nullptr || _selfParent == object.get())
 		{
 			continue;
 		}
 
 		if (ColliderUtils::IsCollide(circle, object->GetRect()))
 		{
-			aoeList.emplace_back(std::shared_ptr(object));
+			aoeList.emplace_back(object);
 		}
 	}
 }

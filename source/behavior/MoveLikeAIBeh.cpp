@@ -53,7 +53,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float delta
 	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (tank == object.get())
+		if (object.get() == nullptr || tank == object.get())//TODO: investigate how it posible adding to allObject item with empty shared ptr
 		{
 			continue;
 		}
@@ -62,7 +62,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float delta
 		{
 			if (!object->GetIsPassable())
 			{
-				obstacles.emplace_back(std::shared_ptr(object));
+				obstacles.emplace_back(object);
 			}
 		}
 	}

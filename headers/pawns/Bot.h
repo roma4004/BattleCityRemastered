@@ -18,7 +18,6 @@ protected:
 	std::chrono::milliseconds _turnDuration{std::chrono::seconds(2)};
 
 	//LOS
-	std::shared_ptr<BaseObj> _nearestSeenObstacle{nullptr};
 	float _shootDistance{0.f};
 	float _bulletOffset{0.f};
 
@@ -29,7 +28,7 @@ protected:
 	[[nodiscard]] bool ActIfOpponentSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
 	[[nodiscard]] bool ActIfBonusSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
 	[[nodiscard]] bool HandleSideObstacles(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
-	void HandleLineOfSight(Direction dir);
+	std::shared_ptr<BaseObj> HandleLineOfSight(Direction dir);
 	void TickUpdate(float deltaTime) override;
 
 public:

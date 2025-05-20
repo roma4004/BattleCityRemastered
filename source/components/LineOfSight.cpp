@@ -54,7 +54,7 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (excludeSelf == object.get())
+		if (object.get() == nullptr || excludeSelf == object.get()) //TODO: investigate empty object adding
 		{
 			continue;
 		}
@@ -63,22 +63,22 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 		{
 			if (ColliderUtils::IsCollide(_checkLos[UP], object->GetRect()))
 			{
-				_upSideObstacles.emplace_back(std::shared_ptr(object));
+				_upSideObstacles.emplace_back(object);
 			}
 
 			if (ColliderUtils::IsCollide(_checkLos[LEFT], object->GetRect()))
 			{
-				_leftSideObstacles.emplace_back(std::shared_ptr(object));
+				_leftSideObstacles.emplace_back(object);
 			}
 
 			if (ColliderUtils::IsCollide(_checkLos[DOWN], object->GetRect()))
 			{
-				_downSideObstacles.emplace_back(std::shared_ptr(object));
+				_downSideObstacles.emplace_back(object);
 			}
 
 			if (ColliderUtils::IsCollide(_checkLos[RIGHT], object->GetRect()))
 			{
-				_rightSideObstacles.emplace_back(std::shared_ptr(object));
+				_rightSideObstacles.emplace_back(object);
 			}
 		}
 	}

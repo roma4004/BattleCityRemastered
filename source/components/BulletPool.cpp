@@ -120,7 +120,8 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet(const ObjRectangle rect, const 
 	std::shared_ptr<BaseObj> bulletAsBase = _bullets.front();
 	_bullets.pop();
 
-	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
+	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get());
+		bulletAsBase.get() != nullptr && bullet != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
 		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
@@ -139,6 +140,8 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 {
 	if (_isClearing)
 	{
+		delete bullet;
+
 		return;
 	}
 

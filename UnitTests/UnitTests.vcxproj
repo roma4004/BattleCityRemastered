@@ -48,6 +48,7 @@
     <ClCompile Include="..\source\Obstacles\SteelWall.cpp" />
     <ClCompile Include="..\source\Obstacles\WaterTile.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
+    <ClCompile Include="..\source\utils\Logger.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="..\source\application\Window.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeAIBeh.cpp" />

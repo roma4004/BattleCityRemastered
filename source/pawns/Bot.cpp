@@ -137,32 +137,32 @@ bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::shared
 	return false;
 }
 
-void Bot::HandleLineOfSight(const Direction dir)
+std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 {
 	LineOfSight lineOfSight(_rect, _window->size, _bulletSize, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
 	if (HandleSideObstacles(UP, upSideObstacles))
 	{
-		return;
+		return{};
 	}
 
 	const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
 	if (HandleSideObstacles(LEFT, leftSideObstacles))
 	{
-		return;
+		return{};
 	}
 
 	const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
 	if (HandleSideObstacles(DOWN, downSideObstacles))
 	{
-		return;
+		return{};
 	}
 
 	const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
 	if (HandleSideObstacles(RIGHT, rightSideObstacles))
 	{
-		return;
+		return{};
 	}
 
 	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
@@ -171,46 +171,49 @@ void Bot::HandleLineOfSight(const Direction dir)
 	// 	Shot();
 	// }
 
+	std::shared_ptr<BaseObj> nearestSeenObstacle{nullptr};
 	// fire on obstacle if player not found
 	if (dir == UP && !upSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = upSideObstacles.front();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = upSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _rect.y - _nearestSeenObstacle->GetY();
+			_shootDistance = _rect.y - upSideObstacles[0]->GetY();
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
 	if (dir == LEFT && !leftSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = leftSideObstacles.front();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = leftSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _rect.x - _nearestSeenObstacle->GetX();
+			_shootDistance = _rect.x - leftSideObstacles[0]->GetX();
 			_bulletOffset = _bulletSize.x;
 		}
 	}
 
 	if (dir == DOWN && !downSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = downSideObstacles.front();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = downSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _nearestSeenObstacle->GetY() - _rect.y;
+			_shootDistance = downSideObstacles[0]->GetY() - _rect.y;
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = rightSideObstacles.front();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = rightSideObstacles[0];//TODO: investigate empty obj can be checked as valid
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _nearestSeenObstacle->GetX() - _rect.x;
+			_shootDistance = rightSideObstacles[0]->GetX() - _rect.x; //TODO: invalid empty obj can be call ->GetX() and have access violation
 			_bulletOffset = _bulletSize.x;
 		}
 	}
+
+	return nearestSeenObstacle;
 }
 
 void Bot::TickUpdate(const float deltaTime)

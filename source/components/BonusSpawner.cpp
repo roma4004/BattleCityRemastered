@@ -117,6 +117,11 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
+			if (object.get() == nullptr)
+			{
+				return false;
+			}
+
 			return ColliderUtils::IsCollide(rect, object->GetRect());
 		});
 
@@ -180,9 +185,13 @@ void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const boost::u
 	constexpr std::chrono::milliseconds lifetime{std::chrono::seconds{15}};
 	constexpr std::chrono::milliseconds duration{std::chrono::seconds{15}};
 
-	_allObjects->emplace_back(
-			std::make_shared<TBonusType>(
-					std::move(rect), _window, _events, duration, lifetime, color, uuid, _gameMode));
+
+	if (auto bonus = std::make_shared<TBonusType>(
+				std::move(rect), _window, _events, duration, lifetime, color, uuid, _gameMode);
+		bonus.get() != nullptr)
+	{
+		_allObjects->emplace_back(bonus);
+	}
 
 	_lastTimeSpawn = std::chrono::system_clock::now();
 }

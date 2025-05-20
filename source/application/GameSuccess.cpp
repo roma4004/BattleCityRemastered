@@ -102,10 +102,10 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 		_events->EmitEvent("Pause_Released"); //NOTE: pause on start for awaiting client ready
 	}
 
-	for (std::shared_ptr<BaseObj> item: _allObjects)
-	{
-		item.reset();
-	}
+	// for (std::shared_ptr<BaseObj> item: _allObjects)
+	// {
+	// 	item.reset();
+	// }
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 
@@ -118,10 +118,10 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 		LoadMap();
 	}
 
-	// if (gameMode == PlayAsClient)
-	// {
-	// 	_events->EmitEvent("ClientReadyToPlay");
-	// }
+	if (gameMode == PlayAsClient)
+	{
+		_events->EmitEvent("ClientReadyToPlay");
+	}
 }
 
 void GameSuccess::PrevGameMode()
@@ -218,7 +218,26 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 
 void GameSuccess::DisposeDeadObject()
 {
-	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj) { return !obj->GetIsAlive(); }).begin();
+	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj)
+	{
+		if (obj.get() == nullptr || obj.use_count() < 1)
+		{
+			return true;
+		}
+
+		return !obj->GetIsAlive();
+	}).begin();
+
+	for (auto itCopy= it; itCopy != _allObjects.end(); ++itCopy)
+	{
+		if (itCopy->get() == nullptr)
+		{
+			std::cout << "Disposing object nullptr " << std::endl;
+			continue;
+		}
+		std::cout << "Disposing object " << (*itCopy)->GetName() << /*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
+	}
+
 	_allObjects.erase(it, _allObjects.end());
 }
 
@@ -227,7 +246,7 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::OnClientReady()
 {
-	// LoadMap();
+	//LoadMap();
 	// this->_events->EmitEvent("Pause_Released");
 }
 
@@ -255,14 +274,20 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 
-			DisposeDeadObject();
+			if (_gameMode != PlayAsClient)
+			{
+				DisposeDeadObject();
+			}
 
 			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
 			{
 				_events->EmitEvent("RespawnTanks");
 			}
 
-			_events->EmitEvent("Draw");
+			if (!_userInput.IsPause())
+			{
+				_events->EmitEvent("Draw"); //TODO: we cant draw during load map on client, multithreading problem
+			}
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 

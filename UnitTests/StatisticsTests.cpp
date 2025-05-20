@@ -134,6 +134,12 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
+	//TODO: remove this after moving test to separate file
+	_allObjects.pop_back();
+	auto backup = _allObjects.back();
+	_allObjects.clear();
+	_allObjects.emplace_back(backup);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
@@ -197,6 +203,12 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
+	//TODO: remove this after moving test to separate file
+	_allObjects.pop_back();
+	auto backup = _allObjects.back();
+	_allObjects.clear();
+	_allObjects.emplace_back(backup);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
@@ -218,10 +230,14 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
+	//TODO: remove this after moving test to separate file
+	_allObjects.pop_back();
+	_allObjects.pop_back();
+
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
+	ObjRectangle rect{.x = _bulletWidth, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
 			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
@@ -260,6 +276,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
+	//TODO: remove this after moving test to separate file
+	auto backup = _allObjects.back();
+	_allObjects.clear();
+	_allObjects.emplace_back(backup);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy2"};
@@ -326,6 +347,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
+	//TODO: remove this after moving test to separate file
+	auto backup = _allObjects.back();
+	_allObjects.clear();
+	_allObjects.emplace_back(backup);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy2"};
@@ -351,7 +377,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize + 1, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
 			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
@@ -389,9 +415,6 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 1);
 }
-
-
-
 
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 {

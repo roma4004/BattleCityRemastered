@@ -136,7 +136,10 @@ boost::uuids::uuid ShootingBeh::Shot(const boost::uuids::uuid uuid)
 				tier, uuid);
 	}
 
-	_allObjects->emplace_back(bulletAsBase);
+	if (bulletAsBase.get() != nullptr)
+	{
+		_allObjects->emplace_back(bulletAsBase);
+	}
 
 	return uuid;
 }

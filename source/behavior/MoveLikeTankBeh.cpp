@@ -55,7 +55,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (tank == object.get())
+		if (object.get() == nullptr || tank == object.get())
 		{
 			continue;
 		}
@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 		{
 			if (!object->GetIsPassable())
 			{
-				obstacles.emplace_back(std::shared_ptr(object));
+				obstacles.emplace_back(object);
 			}
 		}
 	}

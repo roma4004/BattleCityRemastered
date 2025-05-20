@@ -213,6 +213,11 @@ void TankSpawner::SpawnEnemy(const boost::uuids::uuid uuid, const float speed, c
 	{
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
+			if (object.get() == nullptr)
+			{
+				return false;
+			}
+
 			return ColliderUtils::IsCollide(rect, object->GetRect());
 		});
 
@@ -241,15 +246,19 @@ void TankSpawner::SpawnEnemy(const boost::uuids::uuid uuid, const float speed, c
 			// Log enemy tank spawn
 			Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
 			std::cout << "[" << GetCurrentTimeString() << "] "
-			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-			<< "SpawnEnemy  UUID = " << uuid
-			<< ", Name = " << name
-			<< std::endl;
+					<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+					<< "SpawnEnemy  UUID = " << uuid
+					<< ", Name = " << name
+					<< std::endl;
 
 			BaseObjProperty baseObjProperty{rect, gray, health, true, uuid, std::move(name), std::move(fraction)};
 			PawnProperty pawnProperty{
 					std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode};
-			_allObjects->emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool));
+
+			if (auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool))
+			{
+				_allObjects->emplace_back(enemy);
+			}
 
 			return;
 		}
@@ -261,6 +270,11 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
+		if (object.get() == nullptr)
+		{
+			return false;
+		}
+
 		return ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 
@@ -299,16 +313,21 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		// Log tank spawn
 		Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
 		std::cout << "[" << GetCurrentTimeString() << "] "
-		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-		<< "SpawnPlayer UUID = " << uuid
-		<< ", Name = " << name
-		<< std::endl;
+				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< "SpawnPlayer UUID = " << uuid
+				<< ", Name = " << name
+				<< std::endl;
 
 		BaseObjProperty baseObjProperty{std::move(rect), color, health, true, uuid, std::move(name),
 		                                std::move(fraction)};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode};
-		_allObjects->emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+
+		if (auto player = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
+			player.get() != nullptr)
+		{
+			_allObjects->emplace_back(player);
+		}
+
 	}
 }
 
@@ -317,6 +336,11 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
+		if (object.get() == nullptr)
+		{
+			return false;
+		}
+
 		return ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 
@@ -331,15 +355,20 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		// Log coop bot spawn
 		Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
 		std::cout << "[" << GetCurrentTimeString() << "] "
-		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-		<< "SpawnEnemy  UUID = " << uuid
-		<< ", Name = " << name
-		<< std::endl;
+				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< "SpawnEnemy  UUID = " << uuid
+				<< ", Name = " << name
+				<< std::endl;
 
 		BaseObjProperty baseObjProperty{std::move(rect), color, health, true, uuid, std::move(name),
 		                                std::move(fraction)};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode};
-		_allObjects->emplace_back(std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool));
+
+		if (auto coopBot = std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool);
+			coopBot.get() != nullptr)
+		{
+			_allObjects->emplace_back(coopBot);
+		}
 	}
 }
 
