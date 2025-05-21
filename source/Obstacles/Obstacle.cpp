@@ -16,8 +16,8 @@ Obstacle::Obstacle(const ObjRectangle& rect, const int color, const int health, 
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const FPoint, const ObstacleType, const boost::uuids::uuid>(
-				"ServerSend_ObstacleSpawn", FPoint{rect.x, rect.y}, _obstacleType, uuid);
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+				"ServerSend_ObstacleSpawn", rect, _obstacleType, uuid);
 	}
 }
 

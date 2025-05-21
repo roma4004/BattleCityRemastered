@@ -2,6 +2,7 @@
 
 #include "../Point.h"
 #include "commands/Command.h"
+#include "commands/CommandBatch.h"
 
 #include <memory>
 #include <string>
@@ -9,6 +10,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <mutex>
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
 //TODO: remove vector.hpp include after refactoring to command pattern
 
@@ -65,6 +67,9 @@ class Server final
 	std::vector<std::shared_ptr<Session>> _sessions;
 	std::string _name;
 
+	std::mutex _batchWriteMutex;
+	std::shared_ptr<CommandBatch> _batch;
+
 	void DoAccept();
 
 	void OnHelmetActivate(const std::string& who) const;
@@ -81,7 +86,7 @@ public:
 
 	void SendCommand(const std::shared_ptr<Command>& command) const;
 
-	void Subscribe() const;
+	void Subscribe();
 	void SubscribeBonus() const;
 	void Unsubscribe() const;
 	void UnsubscribeBonus() const;

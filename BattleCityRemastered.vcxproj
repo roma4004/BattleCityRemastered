@@ -147,6 +147,7 @@
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="source\network\commands\BonusSpawn.cpp" />
     <ClCompile Include="source\network\commands\Command.cpp" />
+    <ClCompile Include="source\network\commands\CommandBatch.cpp" />
     <ClCompile Include="source\network\commands\Dispose.cpp" />
     <ClCompile Include="source\network\commands\FortressChange.cpp" />
     <ClCompile Include="source\network\commands\HealthChange.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="headers\network\commands\BonusDeSpawn.h" />
     <ClInclude Include="headers\network\commands\BonusSpawn.h" />
     <ClInclude Include="headers\network\commands\Command.h" />
+    <ClInclude Include="headers\network\commands\CommandBatch.h" />
     <ClInclude Include="headers\network\commands\Dispose.h" />
     <ClInclude Include="headers\network\commands\FortressChange.h" />
     <ClInclude Include="headers\network\commands\HealthChange.h" />
@@ -238,6 +240,7 @@
     <ClInclude Include="headers\network\commands\TankShot.h" />
     <ClInclude Include="headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="headers\ObjRectangle.h" />
+    <ClInclude Include="headers\ObjRectangle.tpp" />
     <ClInclude Include="headers\pawns\PawnProperty.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\Point.h" />

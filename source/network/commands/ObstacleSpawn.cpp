@@ -1,4 +1,6 @@
 #include "../../../headers/network/commands/ObstacleSpawn.h"
+
+#include "../../../headers/ObjRectangle.h"
 #include "../../../headers/enums/ObstacleType.h"
 
 #include <boost/archive/text_iarchive.hpp>
@@ -10,10 +12,10 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ObstacleSpawn);
 
 ObstacleSpawn::ObstacleSpawn(): Command(CommandType::OBSTACLE_SPAWN) {}
 
-ObstacleSpawn::ObstacleSpawn(const FPoint& pos, const ObstacleType obstacleType, const boost::uuids::uuid uuid)
-	: Command(CommandType::OBSTACLE_SPAWN), _pos(pos), _obstacleType(obstacleType), _uuid(uuid) {}
+ObstacleSpawn::ObstacleSpawn(const ObjRectangle& rect, const ObstacleType obstacleType, const boost::uuids::uuid uuid)
+	: Command(CommandType::OBSTACLE_SPAWN), _rect(rect), _obstacleType(obstacleType), _uuid(uuid) {}
 
-FPoint ObstacleSpawn::GetPos() const { return _pos; }
+ObjRectangle ObstacleSpawn::GetRect() const { return _rect; }
 
 ObstacleType ObstacleSpawn::GetObstacleType() const { return _obstacleType; }
 

@@ -267,6 +267,7 @@ add_executable(${PROJECT_NAME}
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp
+        source/network/commands/CommandBatch.cpp
         source/network/commands/Dispose.cpp
         source/network/commands/FortressChange.cpp
         source/network/commands/HealthChange.cpp

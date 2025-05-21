@@ -49,13 +49,11 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const ObstacleType, const boost::uuids::uuid>(
+	_events->AddListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
 			"ClientReceived_ObstacleSpawn", _name,
-			[this](const FPoint spawnPos, const ObstacleType type, const boost::uuids::uuid uuid)
+			[this](const ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
 			{
-				const auto size = static_cast<float>(_obstacleSize);
-				ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
-				SpawnObstacle(std::move(rect), type, uuid);
+				SpawnObstacle(rect, type, uuid);
 			});
 }
 
@@ -71,7 +69,7 @@ void ObstacleSpawner::Unsubscribe() const
 
 void ObstacleSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const ObstacleType, const boost::uuids::uuid>(
+	_events->RemoveListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
 			"ClientReceived_ObstacleSpawn", _name);
 }
 

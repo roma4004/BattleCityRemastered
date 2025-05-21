@@ -27,5 +27,4 @@ public:
 	}
 };
 
-// BOOST_CLASS_EXPORT(Command);
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Command);

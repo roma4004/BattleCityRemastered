@@ -2,6 +2,7 @@
 
 enum CommandType : char8_t
 {
+	COMMAND_BATCH,
 	POSITION_CHANGE,
 	TANK_SHOT,
 	HEALTH_CHANGE,

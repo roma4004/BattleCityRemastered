@@ -4,6 +4,9 @@ struct ObjRectangle final
 {
 	float x{}, y{}, w{}, h{};
 
+	template<class Archive>
+	void serialize(Archive& ar, unsigned int version);
+
 	[[nodiscard]] float Area() const;
 
 	// Get the x-coordinate of the right side
@@ -12,3 +15,6 @@ struct ObjRectangle final
 	// Get the y-coordinate of the bottom side
 	[[nodiscard]] float Bottom() const;
 };
+
+// Include the template implementation
+#include "ObjRectangle.tpp"

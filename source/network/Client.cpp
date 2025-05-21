@@ -1,10 +1,13 @@
 #include "../../headers/network/Client.h"
+
+#include "../../headers/ObjRectangle.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/ComandType.h"
 #include "../../headers/enums/TankType.h"
 #include "../../headers/network/commands/BonusDeSpawn.h"
 #include "../../headers/network/commands/BonusSpawn.h"
 #include "../../headers/network/commands/Command.h"
+#include "../../headers/network/commands/CommandBatch.h"
 #include "../../headers/network/commands/Dispose.h"
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
@@ -293,8 +296,91 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const ObstacleType, const boost::uuids::uuid>(
-				"ClientReceived_ObstacleSpawn", cmd->GetPos(), cmd->GetObstacleType(), cmd->GetUuid());
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+				"ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
+	}
+}
+
+void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
+{
+	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
+	{
+		for (const auto& command : cmd->GetCommands()) {
+			ProcessClientCommand(command);
+		}
+	}
+}
+void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
+{
+	if (command)
+	{
+		switch (command->GetType())
+		{
+			case CommandType::COMMAND_BATCH:
+			{
+				OnCommandBatch(command);
+				break;
+			}
+			case CommandType::POSITION_CHANGE:
+			{
+				OnPositionChange(command);
+				//TODO: use more polymorphic way to process commands, uni method onReceived
+				break;
+			}
+			case CommandType::TANK_SHOT:
+			{
+				OnTankShot(command);//TODO: refactored tankShot event to bullet pool spawn with bulletId
+				break;
+			}
+			case CommandType::HEALTH_CHANGE:
+			{
+				OnHealthChange(command);
+				break;
+			}
+			case CommandType::DISPOSE:
+			{
+				OnDispose(command);
+				break;
+			}
+			case CommandType::STATISTICS_CHANGE:
+			{
+				OnStatisticsChange(command);
+				break;
+			}
+			case CommandType::KEY_STATE_CHANGE:
+			{
+				OnKeyStateChange(command);
+				break;
+			}
+			case CommandType::FORTRESS_CHANGE:
+			{
+				OnFortressChange(command);
+				break;
+			}
+			case CommandType::BONUS_SPAWN:
+			{
+				OnBonusSpawn(command);
+				break;
+			}
+			case CommandType::BONUS_DESPAWN:
+			{
+				OnBonusDeSpawn(command);
+				break;
+			}
+			case CommandType::RESPAWN_TANK:
+			{
+				OnRespawnTank(command);
+				break;
+			}
+			case CommandType::OBSTACLE_SPAWN:
+			{
+				OnObstacleSpawn(command);
+				break;
+			}
+			//TODO: implement other command types
+			default:
+				break;
+		}
 	}
 }
 
@@ -303,77 +389,13 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 	try
 	{
 		std::istringstream archiveStream(archiveData);
+		// std::stringstream archiveStream(archiveData);
 		boost::archive::text_iarchive ia(archiveStream);
 
 		std::shared_ptr<Command> command;
 		ia >> command;
 
-		if (command)
-		{
-			// auto name = command->GetClassNameW();
-			switch (command->GetType())
-			{
-				case CommandType::POSITION_CHANGE:
-				{
-					OnPositionChange(command);
-					//TODO: use more polymorphic way to process commands, uni method onReceived
-					break;
-				}
-				case CommandType::TANK_SHOT:
-				{
-					OnTankShot(command);//TODO: refactored tankShot event to bullet pool spawn with bulletId
-					break;
-				}
-				case CommandType::HEALTH_CHANGE:
-				{
-					OnHealthChange(command);
-					break;
-				}
-				case CommandType::DISPOSE:
-				{
-					OnDispose(command);
-					break;
-				}
-				case CommandType::STATISTICS_CHANGE:
-				{
-					OnStatisticsChange(command);
-					break;
-				}
-				case CommandType::KEY_STATE_CHANGE:
-				{
-					OnKeyStateChange(command);
-					break;
-				}
-				case CommandType::FORTRESS_CHANGE:
-				{
-					OnFortressChange(command);
-					break;
-				}
-				case CommandType::BONUS_SPAWN:
-				{
-					OnBonusSpawn(command);
-					break;
-				}
-				case CommandType::BONUS_DESPAWN:
-				{
-					OnBonusDeSpawn(command);
-					break;
-				}
-				case CommandType::RESPAWN_TANK:
-				{
-					OnRespawnTank(command);
-					break;
-				}
-				case CommandType::OBSTACLE_SPAWN:
-				{
-					OnObstacleSpawn(command);
-					break;
-				}
-				//TODO: implement other command types
-				default:
-					break;
-			}
-		}
+		ProcessClientCommand(command);
 	}
 	catch (const std::exception& e)
 	{

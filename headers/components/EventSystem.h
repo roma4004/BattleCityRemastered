@@ -46,7 +46,7 @@ class EventSystem final
 		Event<const std::string&, const int>,// local respawn resource changed(who,val)
 		Event<const std::string&, const std::string&>,//(author,fraction) stat, bonusEffect, obstacleDied send/recieved
 		Event<const FPoint, const BonusType, const uuid>,// send/received bonusSpawn(pos,bonusType,uuid)
-		Event<const FPoint, const ObstacleType, const uuid>,// send/received obstacleSpawn(pos,obstacleType,uuid)
+		Event<const ObjRectangle, const ObstacleType, const uuid>,// send/received obstacleSpawn(rect,obstacleType,uuid)
 		Event<const FPoint, const Direction, const uuid>,// received posChange(pos,dir,uuid)
 		Event<const std::string&, const int, const uuid>,// send healthChanged(who,val,uuid),
 		Event<const std::string&, const Direction, const uuid>,// send tankShot(who,dir,uuid)

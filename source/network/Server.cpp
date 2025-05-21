@@ -1,8 +1,11 @@
 #include "../../headers/network/Server.h"
+
+#include "../../headers/ObjRectangle.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/TankType.h"
 #include "../../headers/network/commands/BonusDeSpawn.h"
 #include "../../headers/network/commands/BonusSpawn.h"
+#include "../../headers/network/commands/CommandBatch.h"
 #include "../../headers/network/commands/Dispose.h"
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
@@ -15,6 +18,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -187,6 +191,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	  _events{std::move(events)},
 	  _name{"Server"}
 {
+	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
 
 	Subscribe();
@@ -204,67 +209,92 @@ Server::~Server()
 	Unsubscribe();
 }
 
-void Server::Subscribe() const
+void Server::Subscribe()
 {
+	_events->AddListener(
+			"ServerSend_StartFrame", _name,
+			[this]()
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				//TODO: add new commandBatchToSendQueue
+				// send queue like <shared_ptr<BatchCommand>>
+				_batch = std::make_shared<CommandBatch>();
+			});
+	_events->AddListener(
+			"ServerSend_EndFrame", _name,
+			[this]()
+			{
+				//TODO: before that create and emmit new event FrameEnd and FrameStart
+				//TODO: before that create and feel by all ServerSend_ command
+
+				//Mark that one batch need to be send (or send immediately)
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				if (_batch.get() != nullptr)
+				{
+					SendCommand(_batch);
+				}
+			});
+
 	_events->AddListener("Pause_Pressed", _name,
-	                     [this]() { SendCommand(std::make_shared<KeyStateChange>("Pause_Pressed")); });
+	                     [this]() { _batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed")); });
 	_events->AddListener("Pause_Released", _name,
-	                     [this]() { SendCommand(std::make_shared<KeyStateChange>("Pause_Released")); });
+	                     [this]() { _batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released")); });
 
 	_events->AddListener<const std::string&, const boost::uuids::uuid>(
 			"ServerSend_FortressChange", _name,
 			[this](const std::string& state, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<FortressChange>(state, uuid));
+				_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
 			});
 
 	_events->AddListener<const std::string&, const FPoint, const Direction, const boost::uuids::uuid>(
 			"ServerSend_Pos", _name,
 			[this](const std::string& who, const FPoint pos, const Direction dir, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<PositionChange>(who, pos, dir, uuid));
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<PositionChange>(who, pos, dir, uuid));
 			});
 
 	_events->AddListener<const std::string&, const Direction, const boost::uuids::uuid>(
 			"ServerSend_Shot"/*TODO: rename_Shot bulletSpawn*/, _name,
 			[this](const std::string& who, const Direction dir, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<TankShot>(who, dir, uuid));
+				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
 			});
 
 	_events->AddListener<const std::string&, const int, const boost::uuids::uuid>(
 			"ServerSend_Health", _name,
 			[this](const std::string& who, const int health, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<HealthChange>(who, health, uuid));
+				_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
 			});
 
 	_events->AddListener<const boost::uuids::uuid>(
 			"ServerSend_Dispose", _name,
 			[this](/*TODO: add who,*/const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<Dispose>("Bullet", uuid));
+				_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
 			});
 
 	_events->AddListener<const std::string&, const std::string&, const std::string&>(
 			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
 			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
 			{
-				SendCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
+				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
 	_events->AddListener<const TankType, const boost::uuids::uuid>(
 			"ServerSend_RespawnTank", _name,
 			[this](const TankType type, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<RespawnTank>(type, uuid));
+				_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
 			});
 
-	_events->AddListener<const FPoint, const ObstacleType, const boost::uuids::uuid>(
+	_events->AddListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
 			"ServerSend_ObstacleSpawn", _name,
-			[this](const FPoint pos, const ObstacleType type, const boost::uuids::uuid uuid)
+			[this](const ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<ObstacleSpawn>(pos, type, uuid));
+				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
 
 	SubscribeBonus();
@@ -276,13 +306,13 @@ void Server::SubscribeBonus() const
 			"ServerSend_BonusSpawn", _name,
 			[this](const FPoint pos, const BonusType type, const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
+				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
 			});
 	_events->AddListener<const boost::uuids::uuid>(
 			"ServerSend_BonusDeSpawn", _name,
 			[this](const boost::uuids::uuid uuid)
 			{
-				SendCommand(std::make_shared<BonusDeSpawn>(uuid));
+				_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 			});
 	//TODO: clien obstacle spawn with uuid
 	//TODO: clien bonus spawn with uuid

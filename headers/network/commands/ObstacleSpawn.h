@@ -6,7 +6,7 @@
 
 #include "Command.h"
 #include "UuidSerialization.h"
-#include "../../Point.h"
+#include "../../ObjRectangle.h"
 
 enum ObstacleType : char8_t;
 
@@ -14,7 +14,7 @@ class ObstacleSpawn : public Command
 {
 	friend class boost::serialization::access;
 
-	FPoint _pos{};
+	ObjRectangle _rect{};
 	ObstacleType _obstacleType{};
 	boost::uuids::uuid _uuid{};
 
@@ -23,11 +23,11 @@ public:
 	ObstacleSpawn();
 
 	//for serialization
-	ObstacleSpawn(const FPoint& pos, ObstacleType obstacleType, boost::uuids::uuid uuid);
+	ObstacleSpawn(const ObjRectangle& rect, ObstacleType obstacleType, boost::uuids::uuid uuid);
 
 	~ObstacleSpawn() override = default;
 
-	FPoint GetPos() const;
+	ObjRectangle GetRect() const;
 	ObstacleType GetObstacleType() const;
 	boost::uuids::uuid GetUuid() const;
 
@@ -35,7 +35,7 @@ public:
 	void serialize(Archive& ar, const unsigned int /*version*/)
 	{
 		ar & boost::serialization::base_object<Command>(*this);
-		ar & _pos;
+		ar & _rect;
 		ar & _obstacleType;
 		ar & _uuid;
 	}

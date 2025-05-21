@@ -60,6 +60,8 @@ public:
 	void OnBonusDeSpawn(const std::shared_ptr<Command>& command) const;
 	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
 	void OnObstacleSpawn(const std::shared_ptr<Command>& command) const;
+	void OnCommandBatch(const std::shared_ptr<Command>& commands) const;
+	void ProcessClientCommand(const std::shared_ptr<Command>& command) const;
 	void ProcessReceivedData(const std::string& archiveData) const;
 
 private:

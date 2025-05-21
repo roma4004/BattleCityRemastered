@@ -246,8 +246,8 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::OnClientReady()
 {
-	//LoadMap();
-	// this->_events->EmitEvent("Pause_Released");
+	LoadMap();
+	this->_events->EmitEvent("Pause_Released");
 }
 
 void GameSuccess::MainLoop()
@@ -260,6 +260,11 @@ void GameSuccess::MainLoop()
 		Uint64 endFrameTime{0u};
 		while (!_userInput.IsGameOver())
 		{
+			if (_gameMode == PlayAsHost)
+			{
+				_events->EmitEvent("ServerSend_StartFrame");
+			}
+
 			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
 
 			_window->ClearBuffer();
@@ -284,10 +289,10 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent("RespawnTanks");
 			}
 
-			if (!_userInput.IsPause())
-			{
+			// if (!_userInput.IsPause())
+			// {
 				_events->EmitEvent("Draw"); //TODO: we cant draw during load map on client, multithreading problem
-			}
+			// }
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
@@ -303,6 +308,11 @@ void GameSuccess::MainLoop()
 			SDL_RenderPresent(_renderer.get());
 
 			endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
+
+			if (_gameMode == PlayAsHost)
+			{
+				_events->EmitEvent("ServerSend_EndFrame");
+			}
 		}
 	}
 	catch (std::exception& e)
