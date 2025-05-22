@@ -215,18 +215,14 @@ void Server::Subscribe()
 			"ServerSend_StartFrame", _name,
 			[this]()
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				//TODO: add new commandBatchToSendQueue
-				// send queue like <shared_ptr<BatchCommand>>
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch = std::make_shared<CommandBatch>();
 			});
 	_events->AddListener(
 			"ServerSend_EndFrame", _name,
 			[this]()
 			{
-				//TODO: before that create and emmit new event FrameEnd and FrameStart
-				//TODO: before that create and feel by all ServerSend_ command
-
 				//Mark that one batch need to be send (or send immediately)
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				if (_batch.get() != nullptr)

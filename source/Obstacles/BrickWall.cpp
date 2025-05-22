@@ -8,7 +8,7 @@ struct Window;
 
 BrickWall::BrickWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                      const boost::uuids::uuid uuid, const GameMode gameMode)
-	: Obstacle{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1},
+	: Obstacle{rect,
 	           0x924b00,
 	           1,
 	           std::move(window),
