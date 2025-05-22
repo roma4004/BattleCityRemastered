@@ -39,7 +39,7 @@ void Obstacle::Subscribe()
 void Obstacle::SubscribeAsClient()
 {
 	_events->AddListener<const int>(
-			"ClientReceived_" + _name + "Health", _nameWithUuid,
+			"ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid,
 			[this](const int health)
 			{
 				this->SetHealth(health);
