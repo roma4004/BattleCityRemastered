@@ -4,9 +4,9 @@
 
 #include <string>
 
-WaterTile::WaterTile(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                      const boost::uuids::uuid uuid, const GameMode gameMode)
-	: Obstacle{rect,
+	: Obstacle{std::move(rect),
 	           0x1e90ff,
 	           1,
 	           std::move(window),

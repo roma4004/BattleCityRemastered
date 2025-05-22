@@ -8,4 +8,3 @@ void ObjRectangle::serialize(Archive& ar, const unsigned int /*version*/)
 	ar & w;
 	ar & h;
 }
-

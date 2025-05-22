@@ -16,7 +16,6 @@ class BrickWall;
 
 class FortressWall final : public BaseObj, public ITickUpdatable
 {
-	ObjRectangle _rect;
 	GameMode _gameMode{};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -47,7 +46,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	void OnBonusShovelPickup(const std::string& fraction, std::chrono::milliseconds duration);
 
 public:
-	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
+	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
 	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode);
 
 	~FortressWall() override;

@@ -47,7 +47,8 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float d
 	}
 	else if (dir == LEFT)
 	{
-		bulletNextPosRect = ObjRectangle{//TODO: recheck all the move math
+		bulletNextPosRect = ObjRectangle{
+				//TODO: recheck all the move math
 				.x = bullet->GetX() - speedX,//TODO: write bullet test that can damage tank from all sides
 				.y = bullet->GetY(),
 				.w = bullet->GetWidth() + speedX,
@@ -226,9 +227,9 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& 
 		for (const auto& target: objectList)
 		{
 			if (target && !dynamic_cast<WaterTile*>(target.get())
-				// && !dynamic_cast<BushesTile*>(targetLock.get())
-				// && !dynamic_cast<IceTile*>(targetLock.get())
-				&& (target->GetIsDestructible() || thisBullet->GetTier() > 2))
+			    // && !dynamic_cast<BushesTile*>(targetLock.get())
+			    // && !dynamic_cast<IceTile*>(targetLock.get())
+			    && (target->GetIsDestructible() || thisBullet->GetTier() > 2))
 			{
 				target->TakeDamage(bulletDamage);
 				target->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());

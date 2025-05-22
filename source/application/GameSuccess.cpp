@@ -98,8 +98,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
 	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
 	{
-		//TODO: automate network game start
-		_events->EmitEvent("Pause_Released"); //NOTE: pause on start for awaiting client ready
+		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting client ready
 	}
 
 	// for (std::shared_ptr<BaseObj> item: _allObjects)
@@ -113,7 +112,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	_events->EmitEvent("Reset");
 
-	if (gameMode != PlayAsClient /*&& gameMode != PlayAsHost*/)
+	if (gameMode != PlayAsClient && gameMode != PlayAsHost)
 	{
 		LoadMap();
 	}
@@ -228,14 +227,15 @@ void GameSuccess::DisposeDeadObject()
 		return !obj->GetIsAlive();
 	}).begin();
 
-	for (auto itCopy= it; itCopy != _allObjects.end(); ++itCopy)
+	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
 	{
 		if (itCopy->get() == nullptr)
 		{
 			std::cout << "Disposing object nullptr " << std::endl;
 			continue;
 		}
-		std::cout << "Disposing object " << (*itCopy)->GetName() << /*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
+		std::cout << "Disposing object " << (*itCopy)->GetName() <<
+				/*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
 	}
 
 	_allObjects.erase(it, _allObjects.end());
@@ -291,7 +291,7 @@ void GameSuccess::MainLoop()
 
 			// if (!_userInput.IsPause())
 			// {
-				_events->EmitEvent("Draw"); //TODO: we cant draw during load map on client, multithreading problem
+			_events->EmitEvent("Draw");//TODO: we cant draw during load map on client, multithreading problem
 			// }
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)

@@ -305,11 +305,13 @@ void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 {
 	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
 	{
-		for (const auto& command : cmd->GetCommands()) {
+		for (const auto& command: cmd->GetCommands())
+		{
 			ProcessClientCommand(command);
 		}
 	}
 }
+
 void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 {
 	if (command)
@@ -389,7 +391,6 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 	try
 	{
 		std::istringstream archiveStream(archiveData);
-		// std::stringstream archiveStream(archiveData);
 		boost::archive::text_iarchive ia(archiveStream);
 
 		std::shared_ptr<Command> command;

@@ -4,17 +4,17 @@
 
 #include <string>
 
-SteelWall::SteelWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                      const boost::uuids::uuid uuid, const GameMode gameMode)
-	: Obstacle{rect,
+	: Obstacle{std::move(rect),
 	           0xaaaaaa,
 	           1,
 	           std::move(window),
 	           "SteelWall",//TODO: change name for statistics
 	           std::move(events),
 	           uuid,
-		gameMode,
-		Steel}
+	           gameMode,
+	           Steel}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

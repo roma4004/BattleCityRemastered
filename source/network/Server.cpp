@@ -225,21 +225,33 @@ void Server::Subscribe()
 			{
 				//Mark that one batch need to be send (or send immediately)
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				if (_batch.get() != nullptr)
+				if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
 				{
 					SendCommand(_batch);
 				}
 			});
 
-	_events->AddListener("Pause_Pressed", _name,
-	                     [this]() { _batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed")); });
-	_events->AddListener("Pause_Released", _name,
-	                     [this]() { _batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released")); });
+	_events->AddListener(
+			"Pause_Pressed", _name,
+			[this]()
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed"));
+			});
+
+	_events->AddListener(
+			"Pause_Released", _name,
+			[this]()
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released"));
+			});
 
 	_events->AddListener<const std::string&, const boost::uuids::uuid>(
 			"ServerSend_FortressChange", _name,
 			[this](const std::string& state, const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
 			});
 
@@ -255,6 +267,7 @@ void Server::Subscribe()
 			"ServerSend_Shot"/*TODO: rename_Shot bulletSpawn*/, _name,
 			[this](const std::string& who, const Direction dir, const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
 			});
 
@@ -262,6 +275,7 @@ void Server::Subscribe()
 			"ServerSend_Health", _name,
 			[this](const std::string& who, const int health, const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
 			});
 
@@ -269,6 +283,7 @@ void Server::Subscribe()
 			"ServerSend_Dispose", _name,
 			[this](/*TODO: add who,*/const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
 			});
 
@@ -276,6 +291,7 @@ void Server::Subscribe()
 			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
 			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
@@ -283,6 +299,7 @@ void Server::Subscribe()
 			"ServerSend_RespawnTank", _name,
 			[this](const TankType type, const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
 			});
 
@@ -290,24 +307,27 @@ void Server::Subscribe()
 			"ServerSend_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
-
+	//TODO: write obstacle dispose
 	SubscribeBonus();
 }
 
-void Server::SubscribeBonus() const
+void Server::SubscribeBonus()
 {
 	_events->AddListener<const FPoint, const BonusType, const boost::uuids::uuid>(
 			"ServerSend_BonusSpawn", _name,
 			[this](const FPoint pos, const BonusType type, const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
 			});
 	_events->AddListener<const boost::uuids::uuid>(
 			"ServerSend_BonusDeSpawn", _name,
 			[this](const boost::uuids::uuid uuid)
 			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 			});
 	//TODO: clien obstacle spawn with uuid

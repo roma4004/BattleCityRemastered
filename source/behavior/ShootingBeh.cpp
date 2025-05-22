@@ -78,24 +78,24 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction dir = tank->GetDirection();
-		dir == UP && tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
+		dir == UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
-		bulletRect.y = tankPos.y - bulletHalf.y;
+		bulletRect.y = tankPos.y - bulletHeight - 1;
 	}
-	else if (dir == DOWN && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
+	else if (dir == DOWN && tankBottomY + bulletHeight <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
-		bulletRect.y = tankBottomY - bulletHalf.y;
+		bulletRect.y = tankBottomY + 1;
 	}
 	else if (dir == LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
-		bulletRect.x = tankPos.x - bulletHalf.x;
+		bulletRect.x = tankPos.x - bulletWidth - 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (dir == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
+	else if (dir == RIGHT && tankRightX + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
-		bulletRect.x = tankRightX - bulletHalf.x;
+		bulletRect.x = tankRightX + 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 
@@ -141,5 +141,5 @@ boost::uuids::uuid ShootingBeh::Shot(const boost::uuids::uuid uuid)
 		_allObjects->emplace_back(bulletAsBase);
 	}
 
-	return uuid;
+	return bulletAsBase->GetUuid();
 }

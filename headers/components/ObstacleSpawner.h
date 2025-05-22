@@ -24,10 +24,10 @@ class ObstacleSpawner final : public ITickUpdatable
 	int _obstacleSize{0};
 	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-	std::mt19937 _gen;
-	std::uniform_int_distribution<> _distSpawnPosY;
-	std::uniform_int_distribution<> _distSpawnPosX;
-	std::uniform_int_distribution<> _distSpawnType;
+	// std::mt19937 _gen;
+	// std::uniform_int_distribution<> _distSpawnPosY;
+	// std::uniform_int_distribution<> _distSpawnPosX;
+	// std::uniform_int_distribution<> _distSpawnType;
 
 	void Subscribe();
 	void SubscribeAsClient();
@@ -37,11 +37,11 @@ class ObstacleSpawner final : public ITickUpdatable
 
 	void TickUpdate(float deltaTime) override;
 
-	void SpawnRandomObstacle(ObjRectangle rect);
+	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:
 	ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                std::shared_ptr<Window> window, int sideBarWidth = 175, int obstacleSize = 36);
+	                std::shared_ptr<Window> window/*, int sideBarWidth = 175*/, int obstacleSize = 36);
 
 	~ObstacleSpawner() override;
 

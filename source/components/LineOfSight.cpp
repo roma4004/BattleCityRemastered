@@ -54,7 +54,7 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object.get() == nullptr || excludeSelf == object.get()) //TODO: investigate empty object adding
+		if (object.get() == nullptr || excludeSelf == object.get())//TODO: investigate empty object adding
 		{
 			continue;
 		}

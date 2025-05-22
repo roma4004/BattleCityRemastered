@@ -144,25 +144,25 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
 	if (HandleSideObstacles(UP, upSideObstacles))
 	{
-		return{};
+		return {};
 	}
 
 	const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
 	if (HandleSideObstacles(LEFT, leftSideObstacles))
 	{
-		return{};
+		return {};
 	}
 
 	const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
 	if (HandleSideObstacles(DOWN, downSideObstacles))
 	{
-		return{};
+		return {};
 	}
 
 	const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
 	if (HandleSideObstacles(RIGHT, rightSideObstacles))
 	{
-		return{};
+		return {};
 	}
 
 	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
@@ -178,7 +178,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 		if (nearestSeenObstacle = upSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _rect.y - upSideObstacles[0]->GetY();
+			_shootDistance = _rect.y - (nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight());
 			_bulletOffset = _bulletSize.y;
 		}
 	}
@@ -188,7 +188,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 		if (nearestSeenObstacle = leftSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _rect.x - leftSideObstacles[0]->GetX();
+			_shootDistance = _rect.x - (nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth());
 			_bulletOffset = _bulletSize.x;
 		}
 	}
@@ -198,17 +198,17 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 		if (nearestSeenObstacle = downSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = downSideObstacles[0]->GetY() - _rect.y;
+			_shootDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
-		if (nearestSeenObstacle = rightSideObstacles[0];//TODO: investigate empty obj can be checked as valid
+		if (nearestSeenObstacle = rightSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = rightSideObstacles[0]->GetX() - _rect.x; //TODO: invalid empty obj can be call ->GetX() and have access violation
+			_shootDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
 			_bulletOffset = _bulletSize.x;
 		}
 	}

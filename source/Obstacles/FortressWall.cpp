@@ -11,12 +11,11 @@
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
-FortressWall::FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window,
+FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const boost::uuids::uuid uuid,
                            const GameMode gameMode)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
-	  _rect{rect},
 	  _gameMode{gameMode},
 	  _window{window},//TODO: change name for statistic
 	  _events{events},
