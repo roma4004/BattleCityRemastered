@@ -279,7 +279,7 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 
-			if (_gameMode != PlayAsClient)
+			if (_gameMode != PlayAsClient && !_userInput.IsPause())
 			{
 				DisposeDeadObject();
 			}
@@ -289,10 +289,7 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent("RespawnTanks");
 			}
 
-			// if (!_userInput.IsPause())
-			// {
-			_events->EmitEvent("Draw");//TODO: we cant draw during load map on client, multithreading problem
-			// }
+			_events->EmitEvent("Draw");
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 

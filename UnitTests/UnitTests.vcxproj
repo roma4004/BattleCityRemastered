@@ -83,8 +83,8 @@
     <ClCompile Include="BulletsTestsBasic.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
     <ClCompile Include="RespawnTankTests.cpp" />
-    <ClCompile Include="StatisticsTests.cpp" />
-    <ClCompile Include="StatisticTestsAdvanced.cpp" />
+    <ClCompile Include="StatisticsTestsBasic.cpp" />
+    <ClCompile Include="StatisticsTestsAdvanced.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

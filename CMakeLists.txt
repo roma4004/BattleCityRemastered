@@ -331,10 +331,13 @@ endif()
 # Додаємо тестовий виконуваний файл
 add_executable(unit_tests
     # Підключаємо файли з тестами
-    UnitTests/BonusTests.cpp
+    UnitTests/BonusTestsBasic.cpp
+    UnitTests/BonusTestsEnemy.cpp
     UnitTests/PlayerTests.cpp
-    UnitTests/BulletsTests.cpp
-    UnitTests/StatisticsTests.cpp
+    UnitTests/BulletsTestsBasic.cpp
+    UnitTests/BulletsTestsAdvanced.cpp
+    UnitTests/StatisticsTestsBasic.cpp
+    UnitTests/StatisticsTestsAdvanced.cpp
     UnitTests/RespawnTankTests.cpp
 )
 

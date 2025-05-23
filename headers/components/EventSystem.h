@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 #include <variant>
-#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid.hpp>//TODO: add uuid lib to cmake
 
 enum TankType : char8_t;
 enum ObstacleType : char8_t;
@@ -12,6 +12,7 @@ enum BonusType : char8_t;
 enum Direction : char8_t;
 enum GameMode : char8_t;
 struct FPoint;
+struct ObjRectangle;
 
 template<typename... Args>
 struct Event final

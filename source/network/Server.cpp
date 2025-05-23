@@ -217,18 +217,23 @@ void Server::Subscribe()
 			{
 				//TODO: add new commandBatchToSendQueue
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				const auto toSend = _batch;
 				_batch = std::make_shared<CommandBatch>();
+				if (toSend.get() != nullptr && toSend->GetCommands().size() > 0)
+				{
+					SendCommand(toSend);
+				}
 			});
 	_events->AddListener(
 			"ServerSend_EndFrame", _name,
 			[this]()
 			{
 				//Mark that one batch need to be send (or send immediately)
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
-				{
-					SendCommand(_batch);
-				}
+				// std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				// if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
+				// {
+				// 	SendCommand(_batch);
+				// }
 			});
 
 	_events->AddListener(
@@ -398,7 +403,7 @@ void Server::DoAccept()
 		else
 		{
 			try
-			{
+			{//TODO: add feature to restart game with existing session
 				_sessions.emplace_back(std::make_shared<Session>(std::move(socket), _events));
 				if (const auto& lastSession = _sessions.back(); lastSession)
 				{
