@@ -17,7 +17,7 @@ FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
                            const GameMode gameMode)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _gameMode{gameMode},
-	  _window{window},//TODO: change name for statistic
+	  _window{window},
 	  _events{events},
 	  _allObjects{allObjects},
 	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode)}
@@ -119,11 +119,11 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 {
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);//for statistic
+		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
 	}
 	else
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("SteelWallDied", author, fraction);//for statistic
+		_events->EmitEvent<const std::string&, const std::string&>("Statistics_SteelWallDied", author, fraction);
 	}
 }
 

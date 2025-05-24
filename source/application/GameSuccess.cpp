@@ -101,10 +101,6 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting client ready
 	}
 
-	// for (std::shared_ptr<BaseObj> item: _allObjects)
-	// {
-	// 	item.reset();
-	// }
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 

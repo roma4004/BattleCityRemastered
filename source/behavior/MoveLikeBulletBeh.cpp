@@ -48,7 +48,6 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float d
 	else if (dir == LEFT)
 	{
 		bulletNextPosRect = ObjRectangle{
-				//TODO: recheck all the move math
 				.x = bullet->GetX() - speedX,//TODO: write bullet test that can damage tank from all sides
 				.y = bullet->GetY(),
 				.w = bullet->GetWidth() + speedX,

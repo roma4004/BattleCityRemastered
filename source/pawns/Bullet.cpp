@@ -103,7 +103,6 @@ void Bullet::Enable()
 	Subscribe();
 }
 
-//TODO: call this from event subscription
 void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
                    const float speed, const Direction dir, const int health, std::string author,
                    std::string fraction, const int tier, const boost::uuids::uuid uuid)
@@ -126,12 +125,10 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 		_uuidStr = boost::uuids::to_string(_uuid);
 	}
 	_nameWithUuid = _name + _uuidStr;
-	// _id = bulletId;
-	// _name = "Bullet" + std::to_string(_id)+author; //TODO: use bulletIdWithAuthorName
 
 	SetIsAlive(true);
 	Enable();
-}//TODO: disable(return) all bullets on game mode change
+}
 
 void Bullet::TickUpdate(const float deltaTime)
 {

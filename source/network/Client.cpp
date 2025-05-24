@@ -113,7 +113,6 @@ void Client::Unsubscribe() const
 	_events->RemoveListener("RCTRL_Released", _name);
 }
 
-//TODO: clear bullets on the scene at host\client start
 void Client::ReadResponse()
 {
 	// auto self(shared_from_this());

@@ -4,7 +4,7 @@
 #include "../../headers/enums/GameMode.h"
 
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::shared_ptr<Window> window,
-                   const std::string& name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
+                   std::string name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
                    const GameMode gameMode, const ObstacleType obstacleType)
 	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),

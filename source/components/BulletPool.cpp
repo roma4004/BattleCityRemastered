@@ -89,7 +89,6 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet(ObjRectangle rect, const int
 	// 		<< ", UUID=" << bulletUuid
 	// 		<< std::endl;
 
-	// TODO: separated bullet pool for each tank or client receive store in order and process one by one from task list
 	BaseObjProperty baseObjProperty{
 			std::move(rect), color, health, true, bulletUuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
@@ -182,5 +181,3 @@ void BulletPool::Clear()
 
 	_isClearing = false;
 }
-
-//TODO: write statistics for pickuped bonuses

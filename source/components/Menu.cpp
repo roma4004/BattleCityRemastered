@@ -121,7 +121,7 @@ void Menu::DrawMenu()
 	_pos.x = _padding;
 	_pos.y = _padding + _yOffsetStart;
 
-	DrawBackground();//TODO: sync animation speed background and text with logo
+	DrawBackground();
 	DrawMenuLogo();
 	DrawText();
 }

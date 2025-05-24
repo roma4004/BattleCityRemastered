@@ -36,7 +36,7 @@ protected:
 	float _tankSize{0.f};
 	float _tankSpeed{142.f};
 	float _bulletSpeed{300.f};
-	float _deltaTimeOneFrame{1.f / 60.f};//TODO: Implement this in other tests
+	float _deltaTimeOneFrame{1.f / 60.f};
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};

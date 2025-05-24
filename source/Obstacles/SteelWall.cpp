@@ -10,7 +10,7 @@ SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	           0xaaaaaa,
 	           1,
 	           std::move(window),
-	           "SteelWall",//TODO: change name for statistics
+	           "SteelWall",
 	           std::move(events),
 	           uuid,
 	           gameMode,
@@ -25,6 +25,6 @@ void SteelWall::SendDamageStatistics(const std::string& author, const std::strin
 {
 	if (GetHealth() < 1)
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("SteelWallDied", author, fraction);
+		_events->EmitEvent<const std::string&, const std::string&>("Statistics_SteelWallDied", author, fraction);
 	}
 }

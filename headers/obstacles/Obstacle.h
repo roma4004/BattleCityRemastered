@@ -27,7 +27,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, const std::string& name,
+	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, std::string name,
 	         std::shared_ptr<EventSystem> events, boost::uuids::uuid uuid, GameMode gameMode,
 	         ObstacleType obstacleType);
 
