@@ -403,7 +403,8 @@ void Server::DoAccept()
 		else
 		{
 			try
-			{//TODO: add feature to restart game with existing session
+			{
+				//TODO: add feature to restart game with existing session
 				_sessions.emplace_back(std::make_shared<Session>(std::move(socket), _events));
 				if (const auto& lastSession = _sessions.back(); lastSession)
 				{

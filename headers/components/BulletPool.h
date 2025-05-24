@@ -5,7 +5,7 @@
 #include <mutex>
 #include <queue>
 #include <string>
-#include "SDL.h""
+#include "SDL.h"
 
 enum GameMode : char8_t;
 enum Direction : char8_t;
