@@ -5,9 +5,7 @@
 
 TextureManager::TextureManager(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> texture):
 	_renderer(std::move(renderer)),
-	_texture(std::move(texture)),
-	_offset(PLAYER_ONE) {}
-
+	_texture(std::move(texture)){}
 
 void TextureManager::DrawTexture(BaseObj* obj)
 {
@@ -20,9 +18,12 @@ void TextureManager::DrawTexture(BaseObj* obj)
 
 	//What is it
 	const auto name = obj->GetName();
+	SDL_Rect textureRect{};
+	const auto pawn = static_cast<Pawn*>(obj);
 	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
-		id = ENEMY;// 0
+		textureRect = _offset.enemy;
+		textureRect.x += pawn->_animationId * 15;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
@@ -38,28 +39,22 @@ void TextureManager::DrawTexture(BaseObj* obj)
 	}
 	else if (name == "EAGLE")
 	{
-		id = EAGLE;// 4
+		textureRect = _offset.eagle;
 	}
 	else
 	{
 		//TODO all types of objects
 	}
 
-	//Source texture (viewport)
-	const SDL_Rect textureRect{.x = 0,
-	                           .y = 15 * id,
-	                           .w = 15,
-	                           .h = 15};
-
 	//local angle and flip for texture
 	double angle = 0.0;
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 
-	if (const auto pawn = dynamic_cast<Pawn*>(obj); pawn != nullptr)
+	if (pawn != nullptr)
 	{
 		switch (pawn->GetDirection())
 		{
-			case UP: //UP
+			case UP:
 				angle = 0;
 				flip = SDL_FLIP_NONE;
 				break;

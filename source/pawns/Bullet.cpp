@@ -134,7 +134,15 @@ void Bullet::TickUpdate(const float deltaTime)
 {
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
-		_moveBeh->Move(deltaTime);
+		if (_moveBeh->Move(deltaTime))
+		{
+			++_animationFrameId;
+			if (_animationFrameId % 12 && ++_animationId > _animationIdLimit)
+			{
+				_animationId = 0;
+				_animationFrameId = 0;
+			}
+		}
 
 		if (_gameMode == PlayAsHost)
 		{

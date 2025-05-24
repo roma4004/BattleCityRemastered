@@ -82,99 +82,113 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float d
 	return aoeCollisions;
 }
 
-void MoveLikeBulletBeh::Move(const float deltaTime) const
+bool MoveLikeBulletBeh::Move(const float deltaTime) const
 {
 	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	constexpr int sideBarWidth = 175;
 	const float speed = bullet->GetSpeed() * deltaTime;
-	if (const int direction = bullet->GetDirection(); direction == UP && bullet->GetY() - speed >= 0.0f)
+	const int direction = bullet->GetDirection();
+	if (direction == UP && bullet->GetY() - speed >= 0.0f)
 	{
-		MoveUp(deltaTime);
+		return MoveUp(deltaTime);
 	}
-	else if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
+	if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
 	{
-		MoveDown(deltaTime);
+		return MoveDown(deltaTime);
 	}
-	else if (direction == LEFT && bullet->GetX() - speed >= 0.0f)
+	if (direction == LEFT && bullet->GetX() - speed >= 0.0f)
 	{
-		MoveLeft(deltaTime);
+		return MoveLeft(deltaTime);
 	}
-	else if (direction == RIGHT && bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x)
+	if (direction == RIGHT && bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x)
 	         - sideBarWidth)
 	{
-		MoveRight(deltaTime);
+		return MoveRight(deltaTime);
 	}
-	else// Self-destroy when edge of windows is reached
-	{
-		bullet->SetIsAlive(false);
-	}
+
+	bullet->SetIsAlive(false);// Self-destroy when edge of windows is reached
+
+	return false;
+
 }
 
-void MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
 {
 	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		bullet->MoveX(-bullet->GetSpeed() * deltaTime);
+
+		return true;
 	}
 	else
 	{
 		DealDamage(objects);
 	}
+
+	return false;
 }
 
-void MoveLikeBulletBeh::MoveRight(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveRight(const float deltaTime) const
 {
 	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		bullet->MoveX(bullet->GetSpeed() * deltaTime);
+
+		return true;
 	}
 	else
 	{
 		DealDamage(objects);
 	}
+
+	return false;
 }
 
-void MoveLikeBulletBeh::MoveUp(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveUp(const float deltaTime) const
 {
 	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		bullet->MoveY(-bullet->GetSpeed() * deltaTime);
+
+		return true;
 	}
 	else
 	{
 		DealDamage(objects);
 	}
+
+	return false;
 }
 
-void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 {
 	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
@@ -185,6 +199,8 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 	{
 		DealDamage(objects);
 	}
+
+	return false;
 }
 
 

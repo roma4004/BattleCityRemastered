@@ -18,11 +18,11 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList) const;
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 
-	void Move(float deltaTime) const override;
-	void MoveLeft(float deltaTime) const override;
-	void MoveRight(float deltaTime) const override;
-	void MoveUp(float deltaTime) const override;
-	void MoveDown(float deltaTime) const override;
+	[[nodiscard]] bool Move(float deltaTime) const override;
+	[[nodiscard]] bool MoveLeft(float deltaTime) const override;
+	[[nodiscard]] bool MoveRight(float deltaTime) const override;
+	[[nodiscard]] bool MoveUp(float deltaTime) const override;
+	[[nodiscard]] bool MoveDown(float deltaTime) const override;
 
 public:
 	MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,

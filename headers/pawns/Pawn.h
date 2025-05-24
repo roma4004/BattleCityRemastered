@@ -47,6 +47,10 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
+	int _animationId{0};
+	int _animationIdLimit{1};
+	int _animationFrameId{0};
+
 	Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;

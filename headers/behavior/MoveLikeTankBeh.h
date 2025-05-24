@@ -24,9 +24,9 @@ public:
 	float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
-	void Move(float deltaTime) const override;
-	void MoveLeft(float deltaTime) const override;
-	void MoveRight(float deltaTime) const override;
-	void MoveUp(float deltaTime) const override;
-	void MoveDown(float deltaTime) const override;
+	[[nodiscard]] bool Move(float deltaTime) const override;
+	[[nodiscard]] bool MoveLeft(float deltaTime) const override;
+	[[nodiscard]] bool MoveRight(float deltaTime) const override;
+	[[nodiscard]] bool MoveUp(float deltaTime) const override;
+	[[nodiscard]] bool MoveDown(float deltaTime) const override;
 };

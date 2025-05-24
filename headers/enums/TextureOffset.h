@@ -1,11 +1,12 @@
 #pragma once
 
-enum TextureOffset : char8_t // TODO make atlas coords x y w h aka json for atlas
+#include <SDL_rect.h>
+
+struct TextureOffset : SDL_Rect //TODO make atlas.png
 {
-	ENEMY, // 0
-	PLAYER_TWO, //1
-	PLAYER_ONE, //2
-	BULLET, //3
-	EAGLE, //4
-	BONUS
+	SDL_Rect enemy{0, 0, 15, 15};
+	SDL_Rect playerOne{0, 30, 15, 15};
+	SDL_Rect playerTwo{0, 15, 15, 15};
+	SDL_Rect bullet{7, 66,3, 4};
+	SDL_Rect eagle{0, 45, 15, 15};
 };

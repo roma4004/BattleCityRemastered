@@ -113,39 +113,41 @@ float MoveLikeAIBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>
 	// return distance;
 }
 
-void MoveLikeAIBeh::Move(const float deltaTime) const
+bool MoveLikeAIBeh::Move(const float deltaTime) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
-	if (const auto currentDirection = tank->GetDirection();
-		currentDirection == UP)
+	const auto currentDirection = tank->GetDirection();
+	if (currentDirection == UP)
 	{
-		MoveUp(deltaTime);
+		return MoveUp(deltaTime);
 	}
-	else if (currentDirection == LEFT)
+	if (currentDirection == LEFT)
 	{
-		MoveLeft(deltaTime);
+		return MoveLeft(deltaTime);
 	}
-	else if (currentDirection == DOWN)
+	if (currentDirection == DOWN)
 	{
-		MoveDown(deltaTime);
+		return MoveDown(deltaTime);
 	}
-	else if (currentDirection == RIGHT)
+	if (currentDirection == RIGHT)
 	{
-		MoveRight(deltaTime);
+		return MoveRight(deltaTime);
 	}
+
+	return false;
 }
 
-void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
+bool MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetX() - speed >= 0.f)
@@ -153,6 +155,8 @@ void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveX(-std::floor(speed));
+
+			return true;
 		}
 		else
 		{
@@ -179,9 +183,11 @@ void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 			}
 		}
 	}
+
+	return false;
 }
 
-void MoveLikeAIBeh::MoveRight(const float deltaTime) const
+bool MoveLikeAIBeh::MoveRight(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -196,6 +202,8 @@ void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveX(std::floor(speed));
+
+			return true;
 		}
 		else
 		{
@@ -209,6 +217,8 @@ void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveX(std::floor(distance));
+
+				return true;
 			}
 
 			// bonusPickUp
@@ -222,9 +232,11 @@ void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 			}
 		}
 	}
+
+	return false;
 }
 
-void MoveLikeAIBeh::MoveUp(const float deltaTime) const
+bool MoveLikeAIBeh::MoveUp(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -263,9 +275,11 @@ void MoveLikeAIBeh::MoveUp(const float deltaTime) const
 			}
 		}
 	}
+
+	return false;
 }
 
-void MoveLikeAIBeh::MoveDown(const float deltaTime) const
+bool MoveLikeAIBeh::MoveDown(const float deltaTime) const
 {
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -306,4 +320,6 @@ void MoveLikeAIBeh::MoveDown(const float deltaTime) const
 			}
 		}
 	}
+
+	return false;
 }
