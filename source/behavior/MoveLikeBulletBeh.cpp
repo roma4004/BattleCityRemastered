@@ -194,6 +194,8 @@ bool MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 	if (const auto objects = IsCanMove(deltaTime); objects.empty())
 	{
 		bullet->MoveY(bullet->GetSpeed() * deltaTime);
+
+		return true;
 	}
 	else
 	{

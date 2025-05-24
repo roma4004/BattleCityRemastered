@@ -116,26 +116,30 @@ bool MoveLikeTankBeh::Move(const float deltaTime) const
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const auto currentDirection = tank->GetDirection();
 		currentDirection == UP)
 	{
-		MoveUp(deltaTime);
+		return MoveUp(deltaTime);
+
 	}
 	else if (currentDirection == LEFT)
 	{
-		MoveLeft(deltaTime);
+		return MoveLeft(deltaTime);
+
 	}
 	else if (currentDirection == DOWN)
 	{
-		MoveDown(deltaTime);
+		return MoveDown(deltaTime);
 	}
 	else if (currentDirection == RIGHT)
 	{
-		MoveRight(deltaTime);
+		return MoveRight(deltaTime);
 	}
+
+	return false;
 }
 
 bool MoveLikeTankBeh::MoveLeft(const float deltaTime) const
@@ -143,7 +147,7 @@ bool MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetX() - speed >= 0.f)
@@ -173,6 +177,8 @@ bool MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
+
+	return false;
 }
 
 bool MoveLikeTankBeh::MoveRight(const float deltaTime) const
@@ -180,7 +186,7 @@ bool MoveLikeTankBeh::MoveRight(const float deltaTime) const
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
@@ -205,6 +211,8 @@ bool MoveLikeTankBeh::MoveRight(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveX(std::floor(distance));
+
+				return true;
 			}
 
 			HandleBonusPickUp(objects.front(), tank);
@@ -242,6 +250,8 @@ bool MoveLikeTankBeh::MoveUp(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(-std::floor(distance));
+
+				return true;
 			}
 
 			HandleBonusPickUp(objects.front(), tank);
@@ -256,7 +266,7 @@ bool MoveLikeTankBeh::MoveDown(const float deltaTime) const
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const float speed = tank->GetSpeed() * deltaTime;
@@ -288,6 +298,8 @@ bool MoveLikeTankBeh::MoveDown(const float deltaTime) const
 			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
+
+	return false;
 }
 
 void MoveLikeTankBeh::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank)

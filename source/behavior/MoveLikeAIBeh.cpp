@@ -192,7 +192,7 @@ bool MoveLikeAIBeh::MoveRight(const float deltaTime) const
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	constexpr int sideBarWidth = 175;
@@ -241,7 +241,7 @@ bool MoveLikeAIBeh::MoveUp(const float deltaTime) const
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const float speed = tank->GetSpeed() * deltaTime; tank->GetY() - speed >= 0.0f)
@@ -249,6 +249,8 @@ bool MoveLikeAIBeh::MoveUp(const float deltaTime) const
 		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveY(-std::floor(speed));
+
+			return true;
 		}
 		else
 		{
@@ -262,6 +264,8 @@ bool MoveLikeAIBeh::MoveUp(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(-std::floor(distance));
+
+				return true;
 			}
 
 			// bonusPickUp
@@ -284,7 +288,7 @@ bool MoveLikeAIBeh::MoveDown(const float deltaTime) const
 	const auto tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (const float speed = tank->GetSpeed() * deltaTime;
@@ -293,6 +297,8 @@ bool MoveLikeAIBeh::MoveDown(const float deltaTime) const
 		if (const auto objects = IsCanMove(deltaTime); objects.empty())
 		{
 			tank->MoveY(std::floor(speed));
+
+			return true;
 		}
 		else
 		{
@@ -307,6 +313,8 @@ bool MoveLikeAIBeh::MoveDown(const float deltaTime) const
 			if (const float distance = FindMinDistance(objects, getSideDiff) - padding; distance > 0.f)
 			{
 				tank->MoveY(std::floor(distance));
+
+				return true;
 			}
 
 			// bonusPickUp

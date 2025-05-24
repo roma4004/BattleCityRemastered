@@ -9,12 +9,11 @@ TextureManager::TextureManager(std::shared_ptr<SDL_Renderer> renderer, std::shar
 
 void TextureManager::DrawTexture(BaseObj* obj)
 {
-	const ObjRectangle shape = obj->GetRect();
-	TextureOffset id{ENEMY};
-	const SDL_Rect destRect{.x = static_cast<int>(shape.x),
-	                        .y = static_cast<int>(shape.y),
-	                        .w = static_cast<int>(shape.w),
-	                        .h = static_cast<int>(shape.h)};
+	const auto [x, y, w, h] = obj->GetRect();
+	const SDL_Rect destRect{.x = static_cast<int>(x),
+	                        .y = static_cast<int>(y),
+	                        .w = static_cast<int>(w),
+	                        .h = static_cast<int>(h)};
 
 	//What is it
 	const auto name = obj->GetName();
@@ -25,17 +24,19 @@ void TextureManager::DrawTexture(BaseObj* obj)
 		textureRect = _offset.enemy;
 		textureRect.x += pawn->_animationId * 15;
 	}
-	else if (name == "Player2" || name == "CoopBot2")
-	{
-		id = PLAYER_TWO;// 1
-	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
-		id = PLAYER_ONE;// 2
+		textureRect = _offset.playerOne;
+		textureRect.x += pawn->_animationId * 15;
+	}
+	else if (name == "Player2" || name == "CoopBot2")
+	{
+		textureRect = _offset.playerTwo;
+		textureRect.x += pawn->_animationId * 15;
 	}
 	else if (name == "Bullet")
 	{
-		id = BULLET;// 3
+		textureRect = _offset.bullet;
 	}
 	else if (name == "EAGLE")
 	{

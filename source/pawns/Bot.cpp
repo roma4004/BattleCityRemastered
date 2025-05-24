@@ -231,7 +231,15 @@ void Bot::TickUpdate(const float deltaTime)
 
 	// move
 	const auto pos = GetPos();
-	_moveBeh->Move(deltaTime);
+	if (_moveBeh->Move(deltaTime))
+	{
+		++_animationFrameId;
+		if (_animationFrameId % 12 && ++_animationId > _animationIdLimit)
+		{
+			_animationId = 0;
+			_animationFrameId = 0;
+		}
+	}
 
 	// change dir it cant move
 	if (pos == GetPos())
