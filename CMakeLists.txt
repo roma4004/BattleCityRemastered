@@ -263,6 +263,7 @@ add_executable(${PROJECT_NAME}
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
+        source/TextureManager.cpp
         source/Map.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
