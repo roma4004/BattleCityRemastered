@@ -34,8 +34,9 @@ SDLEnvironment::~SDLEnvironment()
 
 	const auto title = "Battle City remastered";
 	constexpr auto windowFlags = SDL_WINDOW_SHOWN;
-	const auto [x, y, w, h] = SDL_Rect{100, 100, static_cast<int>(window->size.x), static_cast<int>(window->size.y)};
-	sdlWindow = std::shared_ptr<SDL_Window>(SDL_CreateWindow(title, x, y, w, h, windowFlags), SDL_DestroyWindow);
+	const SDL_Rect rect{100, 100, static_cast<int>(window->size.x), static_cast<int>(window->size.y)};
+	sdlWindow = std::shared_ptr<SDL_Window>(SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags),
+	                                        SDL_DestroyWindow);
 	if (sdlWindow == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
@@ -59,8 +60,8 @@ SDLEnvironment::~SDLEnvironment()
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
-		                      bounds.x + bounds.w / 2 - static_cast<int>(window->size.x) / 2,
-		                      bounds.y + bounds.h / 2 - static_cast<int>(window->size.y) / 2 - windowBordersSize.y);
+		                      bounds.x + bounds.w / 2 - rect.w / 2,
+		                      bounds.y + bounds.h / 2 - rect.h / 2 - windowBordersSize.y);
 	}
 
 	renderer = std::shared_ptr<SDL_Renderer>(SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags),
@@ -72,7 +73,7 @@ SDLEnvironment::~SDLEnvironment()
 
 	constexpr auto format = SDL_PIXELFORMAT_ARGB8888;
 	constexpr auto textureType = SDL_TEXTUREACCESS_TARGET;
-	const std::shared_ptr<SDL_Texture> screen(SDL_CreateTexture(renderer.get(), format, textureType, w, h),
+	const std::shared_ptr<SDL_Texture> screen(SDL_CreateTexture(renderer.get(), format, textureType, rect.w, rect.h),
 	                                          SDL_DestroyTexture);
 	if (screen == nullptr)
 	{
