@@ -33,32 +33,48 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_Init Error: ", SDL_GetError());
 	}
 
-	sdlWindow = std::shared_ptr<SDL_Window>(
-			SDL_CreateWindow("Battle City remastered", 100, 100, static_cast<int>(window->size.x),
-			                 static_cast<int>(window->size.y), SDL_WINDOW_SHOWN),
-			SDL_DestroyWindow);
+	const auto title = "Battle City remastered";
+	constexpr auto windowFlags = SDL_WINDOW_SHOWN;
+	const auto [x, y, w, h] = SDL_Rect{100, 100, static_cast<int>(window->size.x), static_cast<int>(window->size.y)};
+	sdlWindow = std::shared_ptr<SDL_Window>(SDL_CreateWindow(title, x, y, w, h, windowFlags), SDL_DestroyWindow);
 	if (sdlWindow == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
-	Uint32 flags = SDL_RENDERER_ACCELERATED;
-	if (isVsyncOn) {
-		flags |= SDL_RENDERER_PRESENTVSYNC;
+	Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
+	if (isVsyncOn)
+	{
+		renderFlags |= SDL_RENDERER_PRESENTVSYNC;
 	}
-	constexpr int monitorIndex = -1;//NOTE: -1 mean use the default monitor
-	renderer = std::shared_ptr<SDL_Renderer>(
-			SDL_CreateRenderer(sdlWindow.get(), monitorIndex, flags),
-			SDL_DestroyRenderer);
+
+	constexpr int monitorIndex = -1;//NOTE: -1 mean use the default//TODO: move to userSettings
+
+	SDL_Rect bounds;
+	SDL_GetDisplayBounds(monitorIndex, &bounds);
+
+	SDL_Rect windowBordersSize;
+	SDL_GetWindowBordersSize(
+			sdlWindow.get(), &windowBordersSize.y, &windowBordersSize.x, &windowBordersSize.h, &windowBordersSize.w);
+
+	if constexpr (monitorIndex != -1)
+	{
+		SDL_SetWindowPosition(sdlWindow.get(),
+		                      bounds.x + bounds.w / 2 - static_cast<int>(window->size.x) / 2,
+		                      bounds.y + bounds.h / 2 - static_cast<int>(window->size.y) / 2 - windowBordersSize.y);
+	}
+
+	renderer = std::shared_ptr<SDL_Renderer>(SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags),
+	                                         SDL_DestroyRenderer);
 	if (renderer == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
-	const std::shared_ptr<SDL_Texture> screen(
-			SDL_CreateTexture(renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-			                  static_cast<int>(window->size.x), static_cast<int>(window->size.y)),
-			SDL_DestroyTexture);
+	constexpr auto format = SDL_PIXELFORMAT_ARGB8888;
+	constexpr auto textureType = SDL_TEXTUREACCESS_TARGET;
+	const std::shared_ptr<SDL_Texture> screen(SDL_CreateTexture(renderer.get(), format, textureType, w, h),
+	                                          SDL_DestroyTexture);
 	if (screen == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("Screen SDL_CreateTexture Error", SDL_GetError());

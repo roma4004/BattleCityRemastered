@@ -47,7 +47,7 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
-	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures; // pregenerated fps texture
+	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
 
 	UserInput _userInput;
 	BonusSpawner _bonusSpawner;
@@ -59,6 +59,7 @@ class GameSuccess final : public IGame
 
 	void Subscribe();
 	void Unsubscribe() const;
+	void LoadMap();
 
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();
@@ -68,6 +69,8 @@ class GameSuccess final : public IGame
 	void CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime);
 
 	void DisposeDeadObject();
+
+	void OnClientReady();
 
 	void MainLoop() override;
 

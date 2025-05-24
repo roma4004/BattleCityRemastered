@@ -11,10 +11,10 @@
 MoveLikeAIBeh::MoveLikeAIBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _selfParent{selfParent}, _allObjects{allObjects} {}
 
-std::vector<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
+std::vector<std::shared_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
-	std::vector<std::weak_ptr<BaseObj>> obstacles{};
+	std::vector<std::shared_ptr<BaseObj>> obstacles{};
 	constexpr int defaultCollisionReserve{5};
 	obstacles.reserve(defaultCollisionReserve);
 	if (tank == nullptr)
@@ -53,16 +53,16 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeAIBeh::IsCanMove(const float deltaTi
 	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (tank == object.get())
+		if (object.get() == nullptr || tank == object.get())
 		{
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPassable())
 			{
-				obstacles.emplace_back(std::weak_ptr(object));
+				obstacles.emplace_back(object);
 			}
 		}
 	}
@@ -75,7 +75,7 @@ inline float Distance(const FPoint a, const FPoint b)
 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 }
 
-float MoveLikeAIBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
+float MoveLikeAIBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
                                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
@@ -89,11 +89,10 @@ float MoveLikeAIBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& 
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		if (const std::shared_ptr<BaseObj> objectLck = object.lock();
-			objectLck)
+		if (object.get() != nullptr)
 		{
 			// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
-			const float distance = std::abs(sideDiff(objectLck));
+			const float distance = std::abs(sideDiff(object));
 			// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
 			if (distance < minDist)//TODO: need minimal abs distance
 			{
@@ -170,12 +169,12 @@ void MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 			}
 
 			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
+			if (const auto target = objects.front())
 			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
+					target->TakeDamage(1);
 				}
 			}
 		}
@@ -213,12 +212,12 @@ void MoveLikeAIBeh::MoveRight(const float deltaTime) const
 			}
 
 			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
+			if (const auto target = objects.front())
 			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
+					target->TakeDamage(1);
 				}
 			}
 		}
@@ -254,12 +253,12 @@ void MoveLikeAIBeh::MoveUp(const float deltaTime) const
 			}
 
 			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
+			if (const auto target = objects.front())
 			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
+					target->TakeDamage(1);
 				}
 			}
 		}
@@ -297,12 +296,12 @@ void MoveLikeAIBeh::MoveDown(const float deltaTime) const
 			}
 
 			// bonusPickUp
-			if (const auto objLck = objects.front().lock())
+			if (const auto target = objects.front())
 			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(objLck.get()))
+				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
 				{
 					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					objLck->TakeDamage(1);
+					target->TakeDamage(1);
 				}
 			}
 		}

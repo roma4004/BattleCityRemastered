@@ -264,6 +264,19 @@ add_executable(${PROJECT_NAME}
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
         source/Map.cpp
+        source/network/commands/BonusDeSpawn.cpp
+        source/network/commands/BonusSpawn.cpp
+        source/network/commands/Command.cpp
+        source/network/commands/CommandBatch.cpp
+        source/network/commands/Dispose.cpp
+        source/network/commands/FortressChange.cpp
+        source/network/commands/HealthChange.cpp
+        source/network/commands/KeyStateChange.cpp
+        source/network/commands/ObstacleSpawn.cpp
+        source/network/commands/PositionChange.cpp
+        source/network/commands/RespawnTank.cpp
+        source/network/commands/StatisticsChange.cpp
+        source/network/commands/TankShot.cpp
         source/ObjRectangle.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
@@ -307,6 +320,7 @@ add_executable(${PROJECT_NAME}
         source/pawns/Player.cpp
         source/pawns/Tank.cpp
         source/utils/ColliderUtils.cpp
+        source/utils/Logger.cpp
         source/utils/TimeUtils.cpp
 )
 
@@ -317,10 +331,13 @@ endif()
 # Додаємо тестовий виконуваний файл
 add_executable(unit_tests
     # Підключаємо файли з тестами
-    UnitTests/BonusTests.cpp
+    UnitTests/BonusTestsBasic.cpp
+    UnitTests/BonusTestsEnemy.cpp
     UnitTests/PlayerTests.cpp
-    UnitTests/BulletsTests.cpp
-    UnitTests/StatisticsTests.cpp
+    UnitTests/BulletsTestsBasic.cpp
+    UnitTests/BulletsTestsAdvanced.cpp
+    UnitTests/StatisticsTestsBasic.cpp
+    UnitTests/StatisticsTestsAdvanced.cpp
     UnitTests/RespawnTankTests.cpp
 )
 

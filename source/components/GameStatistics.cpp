@@ -2,6 +2,7 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 
+//TODO: write statistics for pickuped bonuses
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
 	: _name{"Statistics"}, _events{std::move(events)}
 {
@@ -18,18 +19,7 @@ void GameStatistics::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		this->_gameMode = newGameMode;
-
-		if (_gameMode == PlayAsClient)
-		{
-			UnsubscribeAsHost();
-			SubscribeAsClient();
-		}
-		else
-		{
-			UnsubscribeAsClient();
-			SubscribeHost();
-		}
+		this->OnGameModeChangedTo(newGameMode);
 	});
 
 	SubscribeHost();
@@ -40,51 +30,29 @@ void GameStatistics::SubscribeHost()
 	//TODO: replace <std::string> with <Enum::statisticsType>
 	_events->AddListener<const std::string&, const std::string&>(
 			"Statistics_BulletHit", _name,
-			[this](const std::string& author, const std::string& fraction) { BulletHit(author, fraction); });
+			[this](const std::string& author, const std::string& fraction) { this->OnBulletHit(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&, const std::string&>(
 			"Statistics_TankHit", _name,
 			[this](const std::string& whoHit, const std::string& author, const std::string& fraction)
 			{
-				if (whoHit == "Enemy1" || whoHit == "Enemy2" || whoHit == "Enemy3" || whoHit == "Enemy4")
-				{
-					EnemyHit(author, fraction);
-				}
-				else if (whoHit == "Player1" || whoHit == "CoopBot1")
-				{
-					PlayerOneHit(author, fraction);
-				}
-				else if (whoHit == "Player2" || whoHit == "CoopBot2")
-				{
-					PlayerTwoHit(author, fraction);
-				}
+				this->OnTankHit(whoHit, author, fraction);
 			});
 
 	_events->AddListener<const std::string&, const std::string&, const std::string&>(
 			"Statistics_TankDied", _name,
 			[this](const std::string& whoDied, const std::string& author, const std::string& fraction)
 			{
-				if (whoDied == "Enemy1" || whoDied == "Enemy2" || whoDied == "Enemy3" || whoDied == "Enemy4")
-				{
-					EnemyDied(author, fraction);
-				}
-				else if (whoDied == "Player1" || whoDied == "CoopBot1")
-				{
-					PlayerOneDied(author, fraction);
-				}
-				else if (whoDied == "Player2" || whoDied == "CoopBot2")
-				{
-					PlayerTwoDied(author, fraction);
-				}
+				this->OnTankDied(whoDied, author, fraction);
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BrickWallDied", _name,
-			[this](const std::string& author, const std::string& fraction) { BrickWallDied(author, fraction); });
+			"Statistics_BrickWallDied", _name,
+			[this](const std::string& author, const std::string& fraction) { OnBrickWallDied(author, fraction); });
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"SteelWallDied", _name,
-			[this](const std::string& author, const std::string& fraction) { SteelWallDied(author, fraction); });
+			"Statistics_SteelWallDied", _name,
+			[this](const std::string& author, const std::string& fraction) { OnSteelWallDied(author, fraction); });
 }
 
 void GameStatistics::SubscribeAsClient()
@@ -92,7 +60,7 @@ void GameStatistics::SubscribeAsClient()
 	_events->AddListener<const std::string&, const std::string&, const std::string&>("ClientReceived_Statistics", _name,
 		[this](const std::string& type, const std::string& author, const std::string& fraction)
 		{
-			ClientGateway(type, author, fraction);
+			this->OnClientStatisticsChange(type, author, fraction);
 		});
 }
 
@@ -109,8 +77,8 @@ void GameStatistics::UnsubscribeAsHost() const
 	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("Statistics_TankHit", _name);
 	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("Statistics_TankDied", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("BrickWallDied", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("SteelWallDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Statistics_BrickWallDied", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("Statistics_SteelWallDied", _name);
 }
 
 void GameStatistics::UnsubscribeAsClient() const
@@ -119,47 +87,64 @@ void GameStatistics::UnsubscribeAsClient() const
 			"ClientReceived_Statistics", _name);
 }
 
-void GameStatistics::ClientGateway(const std::string& type, const std::string& author, const std::string& fraction)
+void GameStatistics::OnGameModeChangedTo(const GameMode newGameMode)
 {
-	if (type == "BulletHit")
+	this->_gameMode = newGameMode;
+
+	if (_gameMode == PlayAsClient)
 	{
-		BulletHit(author, fraction);
+		UnsubscribeAsHost();
+		SubscribeAsClient();
 	}
-	else if (type == "EnemyHit")
+	else
 	{
-		EnemyHit(author, fraction);
-	}
-	else if (type == "PlayerOneHit")
-	{
-		PlayerOneHit(author, fraction);
-	}
-	else if (type == "PlayerTwoHit")
-	{
-		PlayerTwoHit(author, fraction);
-	}
-	else if (type == "EnemyDied")
-	{
-		EnemyDied(author, fraction);
-	}
-	else if (type == "PlayerOneDied")
-	{
-		PlayerOneDied(author, fraction);
-	}
-	else if (type == "PlayerTwoDied")
-	{
-		PlayerTwoDied(author, fraction);
-	}
-	else if (type == "BrickWallDied")
-	{
-		BrickWallDied(author, fraction);
-	}
-	else if (type == "SteelWallDied")
-	{
-		SteelWallDied(author, fraction);
+		UnsubscribeAsClient();
+		SubscribeHost();
 	}
 }
 
-void GameStatistics::BulletHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnClientStatisticsChange(const std::string& type, const std::string& author,
+                                              const std::string& fraction)
+{
+	if (type == "BulletHit")
+	{
+		OnBulletHit(author, fraction);
+	}
+	else if (type == "EnemyHit")
+	{
+		OnEnemyHit(author, fraction);
+	}
+	else if (type == "PlayerOneHit")
+	{
+		OnPlayerOneHit(author, fraction);
+	}
+	else if (type == "PlayerTwoHit")
+	{
+		OnPlayerTwoHit(author, fraction);
+	}
+	else if (type == "EnemyDied")
+	{
+		OnEnemyDied(author, fraction);
+	}
+	else if (type == "PlayerOneDied")
+	{
+		OnPlayerOneDied(author, fraction);
+	}
+	else if (type == "PlayerTwoDied")
+	{
+		OnPlayerTwoDied(author, fraction);
+	}
+	else if (type == "BrickWallDied")
+	{
+		OnBrickWallDied(author, fraction);
+	}
+	else if (type == "SteelWallDied")
+	{
+		OnSteelWallDied(author, fraction);
+	}
+}
+
+void GameStatistics::OnBulletHit(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -184,7 +169,7 @@ void GameStatistics::BulletHit(const std::string& author, const std::string& fra
 	}
 }
 
-void GameStatistics::EnemyHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -209,7 +194,7 @@ void GameStatistics::EnemyHit(const std::string& author, const std::string& frac
 	}
 }
 
-void GameStatistics::PlayerOneHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -230,7 +215,7 @@ void GameStatistics::PlayerOneHit(const std::string& author, const std::string& 
 	}
 }
 
-void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -251,7 +236,23 @@ void GameStatistics::PlayerTwoHit(const std::string& author, const std::string& 
 	}
 }
 
-void GameStatistics::EnemyDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnTankHit(const std::string& whoHit, const std::string& author, const std::string& fraction)
+{
+	if (whoHit == "Enemy1" || whoHit == "Enemy2" || whoHit == "Enemy3" || whoHit == "Enemy4")
+	{
+		OnEnemyHit(author, fraction);
+	}
+	else if (whoHit == "Player1" || whoHit == "CoopBot1")
+	{
+		OnPlayerOneHit(author, fraction);
+	}
+	else if (whoHit == "Player2" || whoHit == "CoopBot2")
+	{
+		OnPlayerTwoHit(author, fraction);
+	}
+}
+
+void GameStatistics::OnEnemyDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -276,7 +277,7 @@ void GameStatistics::EnemyDied(const std::string& author, const std::string& fra
 	}
 }
 
-void GameStatistics::PlayerOneDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerOneDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -297,7 +298,7 @@ void GameStatistics::PlayerOneDied(const std::string& author, const std::string&
 	}
 }
 
-void GameStatistics::PlayerTwoDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -318,7 +319,23 @@ void GameStatistics::PlayerTwoDied(const std::string& author, const std::string&
 	}
 }
 
-void GameStatistics::BrickWallDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnTankDied(const std::string& whoDied, const std::string& author, const std::string& fraction)
+{
+	if (whoDied == "Enemy1" || whoDied == "Enemy2" || whoDied == "Enemy3" || whoDied == "Enemy4")
+	{
+		OnEnemyDied(author, fraction);
+	}
+	else if (whoDied == "Player1" || whoDied == "CoopBot1")
+	{
+		OnPlayerOneDied(author, fraction);
+	}
+	else if (whoDied == "Player2" || whoDied == "CoopBot2")
+	{
+		OnPlayerTwoDied(author, fraction);
+	}
+}
+
+void GameStatistics::OnBrickWallDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{
@@ -343,7 +360,7 @@ void GameStatistics::BrickWallDied(const std::string& author, const std::string&
 	}
 }
 
-void GameStatistics::SteelWallDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnSteelWallDied(const std::string& author, const std::string& fraction)
 {
 	if (fraction == "EnemyTeam")
 	{

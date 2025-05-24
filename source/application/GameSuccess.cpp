@@ -57,6 +57,10 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
+	_events->AddListener("ClientReadyToStartGame", _name, [this]()
+	{
+		this->OnClientReady();
+	});
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
 
@@ -84,23 +88,37 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
-void GameSuccess::ResetBattlefield(const GameMode gameMode)
+void GameSuccess::LoadMap()
 {
-	_allObjects.clear();
-	_allObjects.reserve(1000);
-
-	SetCurrentGameMode(gameMode);
-	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
-	{
-		_events->EmitEvent("Pause_Released");
-	}
-
-	_events->EmitEvent("Reset");
-
 	//Map creation
 	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
 	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
 	field.MapCreation(gridOffset);
+}
+
+void GameSuccess::ResetBattlefield(const GameMode gameMode)
+{
+	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
+	{
+		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting client ready
+	}
+
+	_allObjects.clear();
+	_allObjects.reserve(1000);
+
+	SetCurrentGameMode(gameMode);
+
+	_events->EmitEvent("Reset");
+
+	if (gameMode != PlayAsClient && gameMode != PlayAsHost)
+	{
+		LoadMap();
+	}
+
+	if (gameMode == PlayAsClient)
+	{
+		_events->EmitEvent("ClientReadyToPlay");
+	}
 }
 
 void GameSuccess::PrevGameMode()
@@ -178,7 +196,8 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 	if (const Uint64 timeSinceLastUpdate = endFrameTime - lastUpdate;
 		timeSinceLastUpdate >= frequency)
 	{
-		const int fps = static_cast<int>(std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
+		const Uint32 fps = static_cast<int>(
+			std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
 		// SDL_Log("FPS %i", fps);
 
 		if (fps != lastDisplayedFps
@@ -196,12 +215,38 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime,
 
 void GameSuccess::DisposeDeadObject()
 {
-	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj) { return !obj->GetIsAlive(); }).begin();
+	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj)
+	{
+		if (obj.get() == nullptr || obj.use_count() < 1)
+		{
+			return true;
+		}
+
+		return !obj->GetIsAlive();
+	}).begin();
+
+	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
+	{
+		if (itCopy->get() == nullptr)
+		{
+			std::cout << "Disposing object nullptr " << std::endl;
+			continue;
+		}
+		std::cout << "Disposing object " << (*itCopy)->GetName() <<
+				/*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
+	}
+
 	_allObjects.erase(it, _allObjects.end());
 }
 
 //TODO: recheck rule of 3/5 for all classes
 //TODO: convert enum to enum classes
+
+void GameSuccess::OnClientReady()
+{
+	LoadMap();
+	this->_events->EmitEvent("Pause_Released");
+}
 
 void GameSuccess::MainLoop()
 {
@@ -213,11 +258,18 @@ void GameSuccess::MainLoop()
 		Uint64 endFrameTime{0u};
 		while (!_userInput.IsGameOver())
 		{
+			if (_gameMode == PlayAsHost)
+			{
+				_events->EmitEvent("ServerSend_StartFrame");
+			}
+
 			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
 
 			_window->ClearBuffer();
 
 			_userInput.Update();
+
+			_events->EmitEvent("MenuUpdate");
 
 			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
 			{
@@ -225,9 +277,15 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 
-			DisposeDeadObject();
+			if (_gameMode != PlayAsClient && !_userInput.IsPause())
+			{
+				DisposeDeadObject();
+			}
 
-			_events->EmitEvent("RespawnTanks");
+			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
+			{
+				_events->EmitEvent("RespawnTanks");
+			}
 
 			_events->EmitEvent("Draw");
 
@@ -247,6 +305,11 @@ void GameSuccess::MainLoop()
 			SDL_RenderPresent(_renderer.get());
 
 			endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
+
+			if (_gameMode == PlayAsHost)
+			{
+				_events->EmitEvent("ServerSend_EndFrame");
+			}
 		}
 	}
 	catch (std::exception& e)

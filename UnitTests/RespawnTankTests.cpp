@@ -14,6 +14,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <boost/uuid/random_generator.hpp>
 
 class TankSpawnerTest : public testing::Test
 {
@@ -36,6 +37,7 @@ protected:
 	std::string _name2 = "Player2";
 	std::string _fraction2 = "PlayerTeam";
 	GameMode _gameMode{OnePlayer};
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -51,12 +53,12 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 
 		const ObjRectangle rect1{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, 1, _name, _fraction};
+		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		const ObjRectangle rect2{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty2{std::move(rect2), _green, _tankHealth, true, 2, _name2, _fraction2};
+		BaseObjProperty baseObjProperty2{std::move(rect2), _green, _tankHealth, true, _uuid, _name2, _fraction2};
 		PawnProperty pawnProperty2{
 				std::move(baseObjProperty2), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -78,7 +80,7 @@ TEST_F(TankSpawnerTest, EnemyOneRespawnNeededFlag)
 	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), false);
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -92,7 +94,7 @@ TEST_F(TankSpawnerTest, EnemyTwoRespawnNeededFlag)
 	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), false);
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 2, "Enemy2", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy2", "EnemyTeam"};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -106,7 +108,7 @@ TEST_F(TankSpawnerTest, EnemyThreeRespawnNeededFlag)
 	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), false);
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 3, "Enemy3", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy3", "EnemyTeam"};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -120,7 +122,7 @@ TEST_F(TankSpawnerTest, EnemyFourRespawnNeededFlag)
 	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), false);
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 4, "Enemy4", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy4", "EnemyTeam"};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -134,7 +136,7 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawnNeededFlag)
 	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), false);
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, 1, _name, _fraction};
+		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -149,7 +151,7 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnNeededFlag)
 	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), false);
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, 2, _name2, _fraction2};
+		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, _uuid, _name2, _fraction2};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -164,7 +166,7 @@ TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)
 	const int respawnResource = _tankSpawner->GetEnemyRespawnResource();
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, 1, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -178,7 +180,7 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawnCount)
 	const int respawnResource = _tankSpawner->GetPlayerOneRespawnResource();
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, 1, _name, _fraction};
+		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -193,7 +195,7 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnCount)
 	const int respawnResource = _tankSpawner->GetPlayerTwoRespawnResource();
 	{
 		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, 2, _name2, _fraction2};
+		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, _uuid, _name2, _fraction2};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 

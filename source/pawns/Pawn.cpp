@@ -29,14 +29,14 @@ Pawn::~Pawn()
 
 void Pawn::Subscribe()
 {
-	_events->AddListener("DrawTexture", _name, [this]() { this->_drawTexture.DrawTexture(this); });
+	_events->AddListener("DrawTexture", _nameWithUuid, [this]() { this->_drawTexture.DrawTexture(this); });
 
 	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
 
 void Pawn::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -44,35 +44,64 @@ void Pawn::SubscribeAsHost()
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const Direction>(
-			"ClientReceived_" + _name + "Pos", _name, [this](const FPoint newPos, const Direction dir)
+	_events->AddListener<const FPoint, const Direction, const boost::uuids::uuid>(
+			"ClientReceived_" + _name + "Pos", _nameWithUuid,
+			[this](const FPoint newPos, const Direction dir, const boost::uuids::uuid uuid)
 			{
+				if (uuid != this->_uuid)
+				{
+					return;
+				}
+
 				this->SetDirection(dir);
 				this->SetPos(newPos);
 			});
 
-	_events->AddListener<const int>("ClientReceived_" + _name + "Health", _name, [this](const int health)
-	{
-		this->SetHealth(health);
-	});
+	_events->AddListener<const int>(
+			"ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid,
+			[this](const int health)
+			{
+				this->SetHealth(health);
+			});
 }
 
 void Pawn::Unsubscribe() const
 {
-	_events->RemoveListener("DrawTexture", _name);
+	_events->RemoveListener("DrawTexture", _nameWithUuid);
 
 	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
 }
 
 void Pawn::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
 }
 
 void Pawn::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const Direction>("ClientReceived_" + _name + "Pos", _name);
-	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _name);
+	_events->RemoveListener<const FPoint, const Direction, const boost::uuids::uuid>(
+			"ClientReceived_" + _name + "Pos", _nameWithUuid);
+	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _nameWithUuid);
+}
+
+void Pawn::SetHealth(const int health)
+{
+	BaseObj::SetHealth(health);
+
+	// if (!GetIsAlive())
+	// {
+	// 	Unsubscribe();
+	// }
+}
+
+void Pawn::TakeDamage(const int damage)
+{
+	BaseObj::TakeDamage(damage);
+
+	// if (!GetIsAlive())
+	// {
+	// 	Unsubscribe();
+	// }
 }
 
 void Pawn::Draw() const
@@ -103,8 +132,6 @@ void Pawn::Draw() const
 		}
 	}
 }
-
-
 
 UPoint Pawn::GetWindowSize() const { return _window->size; }
 

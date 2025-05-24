@@ -4,12 +4,15 @@
 #include <functional>
 #include <string>
 #include <variant>
+#include <boost/uuid/uuid.hpp>//TODO: add uuid lib to cmake
 
+enum TankType : char8_t;
 enum ObstacleType : char8_t;
 enum BonusType : char8_t;
 enum Direction : char8_t;
 enum GameMode : char8_t;
 struct FPoint;
+struct ObjRectangle;
 
 template<typename... Args>
 struct Event final
@@ -28,28 +31,29 @@ private:
 
 class EventSystem final
 {
+	using milliseconds = std::chrono::milliseconds;
+	using uuid = boost::uuids::uuid;//TODO: apply this using to solution
 	using allEventTypes = std::variant<
 		Event<>,// regular events eg method call
-		Event<const float>,// update(deltaTime)
-		Event<const FPoint>,// bullets tank new pos,
-		Event<const FPoint, const int>,// bullets send new pos, bulletId
-		Event<const FPoint, const BonusType, const int>,// received bonusSpawn
-		Event<const FPoint, const ObstacleType, const int>,// received bonusSpawn
-		Event<const FPoint, const int, const Direction>,// bullets send new pos, bulletId, direction
-		Event<const FPoint, const Direction>,// received newPos and direction
-		Event<const std::string&, const FPoint, const Direction>,// send new pos and direction
-		Event<const std::string&, const FPoint, const BonusType, const int>,// send bonusSpawn
-		Event<const Direction>,// received tank shot
-		Event<const std::string&, const Direction>,// send tank shot
-		Event<const int>,// serverSend bonusDeSpawn, clientReceived onHealthChange
-		Event<const int, const int>,// clientReceived health changed
-		Event<const std::string&>,// send/receive onGrenade
-		Event<const std::string&, const int>,// serverSend health changed, respawn resource changed
-		Event<const std::string&, const std::string&>,// statistics, bonus effect
-		Event<const std::string&, const std::string&, const std::string&>,// serverSend statistics, local statistics
-		Event<const std::string&, const std::string&, const std::chrono::milliseconds>,// bonus with duration
+		Event<const float>,// tickUpdate(deltaTime)
+		Event<const int>,// received healthChange(val)
+		Event<const bool>,// pause keyStatus
 		Event<const GameMode>,// gameMode switch
-		Event<const bool>// pause status
+		Event<const uuid>,//send/received bonusDeSpawn, send/received bulletDispose
+		Event<const std::string&>,//(who) tankDied, tankSpawn, send bonusEffect
+		Event<const Direction, const uuid>,// received tankShot(dir,uuid)
+		Event<const TankType, const uuid>,// send/received respawnTank(type,uuid)
+		Event<const std::string&, const uuid>,// send fortressChange(state,uuid)
+		Event<const std::string&, const int>,// local respawn resource changed(who,val)
+		Event<const std::string&, const std::string&>,//(author,fraction) stat, bonusEffect, obstacleDied send/recieved
+		Event<const FPoint, const BonusType, const uuid>,// send/received bonusSpawn(pos,bonusType,uuid)
+		Event<const ObjRectangle, const ObstacleType, const uuid>,// send/received obstacleSpawn(rect,obstacleType,uuid)
+		Event<const FPoint, const Direction, const uuid>,// received posChange(pos,dir,uuid)
+		Event<const std::string&, const int, const uuid>,// send healthChanged(who,val,uuid),
+		Event<const std::string&, const Direction, const uuid>,// send tankShot(who,dir,uuid)
+		Event<const std::string&, const std::string&, const std::string&>,//send/recieved stat(who,author,fraction)
+		Event<const std::string&, const std::string&, const milliseconds>,//bonusEffect(author,fraction,duration)
+		Event<const std::string&, const FPoint, const Direction, const uuid>//send posChange(who,pos,dir,uuid)
 	>;
 
 	std::unordered_map<std::string, allEventTypes> _events;

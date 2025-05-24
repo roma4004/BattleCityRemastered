@@ -13,10 +13,10 @@ class LineOfSight final
 	std::vector<ObjRectangle> _checkLos;
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	std::vector<std::weak_ptr<BaseObj>> _upSideObstacles{};
-	std::vector<std::weak_ptr<BaseObj>> _leftSideObstacles{};
-	std::vector<std::weak_ptr<BaseObj>> _downSideObstacles{};
-	std::vector<std::weak_ptr<BaseObj>> _rightSideObstacles{};
+	std::vector<std::shared_ptr<BaseObj>> _upSideObstacles{};
+	std::vector<std::shared_ptr<BaseObj>> _leftSideObstacles{};
+	std::vector<std::shared_ptr<BaseObj>> _downSideObstacles{};
+	std::vector<std::shared_ptr<BaseObj>> _rightSideObstacles{};
 
 public:
 	LineOfSight(ObjRectangle tankShape, const UPoint& windowSize, FPoint bulletSize,
@@ -29,8 +29,8 @@ public:
 	void CheckLOS(const BaseObj* excludeSelf);
 	void SortToNearest();
 
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetUpSideObstacles();
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetLeftSideObstacles();
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetDownSideObstacles();
-	[[nodiscard]] std::vector<std::weak_ptr<BaseObj>>& GetRightSideObstacles();
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetUpSideObstacles();
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetLeftSideObstacles();
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetDownSideObstacles();
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetRightSideObstacles();
 };

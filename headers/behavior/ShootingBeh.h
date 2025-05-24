@@ -18,7 +18,7 @@ class ShootingBeh final : public IShootable
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
-	[[nodiscard]] float FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
+	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
@@ -29,5 +29,5 @@ public:
 
 	~ShootingBeh() override;
 
-	void Shot() const override;
+	boost::uuids::uuid Shot(boost::uuids::uuid uuid = {}) override;
 };

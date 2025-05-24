@@ -7,7 +7,7 @@ class BulletPool;
 
 class Player final : public Tank
 {
-	std::unique_ptr<IInputProvider> _inputProvider;//TODO: write input provider for bot
+	std::unique_ptr<IInputProvider> _inputProvider;
 
 	void Move(Direction dir, float deltaTime);
 

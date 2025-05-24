@@ -17,17 +17,16 @@ class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatis
 	bool _isAlive{true};
 
 protected:
-	int _id{0};
+	boost::uuids::uuid _uuid{};
 	std::string _name;
+	std::string _nameWithUuid;
 	std::string _fraction;
-	ObjRectangle _shape{};
-	
-	
+	ObjRectangle _rect{};
 
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);
 
-	BaseObj(ObjRectangle rect, int color, int health, int id, std::string name, std::string fraction);
+	BaseObj(ObjRectangle rect, int color, int health, boost::uuids::uuid uuid, std::string name, std::string fraction);
 
 	~BaseObj() override;
 
@@ -71,10 +70,11 @@ public:
 	[[nodiscard]] bool GetIsPenetrable() const override;
 	void SetIsPenetrable(bool value) override;
 
-	[[nodiscard]] virtual ObjRectangle GetShape() const;
-	virtual void SetShape(ObjRectangle shape);
+	[[nodiscard]] virtual ObjRectangle GetRect() const;
+	virtual void SetRect(ObjRectangle rect);
 
 	[[nodiscard]] virtual std::string GetName() const;
-	[[nodiscard]] virtual int GetId() const;
+	[[nodiscard]] virtual boost::uuids::uuid GetUuid() const;
+	virtual void SetId(boost::uuids::uuid uuid);
 	[[nodiscard]] std::string GetFraction() const override;
 };

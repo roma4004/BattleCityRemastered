@@ -1,18 +1,20 @@
 ﻿#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/ObstacleType.h"
 
 #include <string>
 
-WaterTile::WaterTile(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const int id, const GameMode gameMode)
-	: Obstacle{rect,
+WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                     const boost::uuids::uuid uuid, const GameMode gameMode)
+	: Obstacle{std::move(rect),
 	           0x1e90ff,
 	           1,
 	           std::move(window),
-	           "Water " + std::to_string(id),
+	           "Water",
 	           std::move(events),
-	           id,
-	           gameMode}
+	           uuid,
+	           gameMode,
+	           Water}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

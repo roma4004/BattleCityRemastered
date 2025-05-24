@@ -4,15 +4,17 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/TimeUtils.h"
 
+#include <boost/uuid/uuid_io.hpp>
+
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
              const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime, const int color,
-             std::string name, const int id, const GameMode gameMode, const BonusType bonusType)
-	: BaseObj{rect, color, 1, id, std::move(name), "Neutral"},
+             std::string name, const boost::uuids::uuid uuid, const GameMode gameMode, const BonusType bonusType)
+	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
 	  _gameMode{gameMode},
 	  _bonusType{bonusType},
-	  _duration{duration},
+	  _effectDuration{duration},
 	  _lifetime{lifeTime},
 	  _events{std::move(events)}
 {
@@ -24,8 +26,8 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shar
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const FPoint, const BonusType, const int>(
-				"ServerSend_BonusSpawn", _name, FPoint{rect.x, rect.y}, _bonusType, _id);
+		_events->EmitEvent<const FPoint, const BonusType, const boost::uuids::uuid>(
+				"ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
 	}
 }
 
@@ -35,20 +37,21 @@ Bonus::~Bonus()
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const int>("ServerSend_BonusDeSpawn", _id);//TODO: move to pick up moment in tank move beh
+		_events->EmitEvent<const boost::uuids::uuid>("ServerSend_BonusDeSpawn", _uuid);
+		//TODO: move to pick up moment in tank move beh
 	}
 }
 
 void Bonus::Subscribe()
 {
-	_events->AddListener("Draw", _name + std::to_string(_id), [this]() { this->Draw(); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _name + std::to_string(_id), [this](const float deltaTime)
+	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -56,30 +59,34 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener<const int>("ClientReceived_BonusDeSpawn", _name, [this](const int id)
-	{
-		if (id == this->_id)
-		{
-			this->SetIsAlive(false);
-		}
-	});
+	_events->AddListener<const boost::uuids::uuid>(
+			"ClientReceived_BonusDeSpawn", _name,
+			[this](const boost::uuids::uuid uuid)
+			{
+				if (uuid != this->_uuid)
+				{
+					return;
+				}
+
+				this->SetIsAlive(false);
+			});
 }
 
 void Bonus::Unsubscribe() const
 {
 	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
-	_events->RemoveListener("Draw", _name + std::to_string(_id));
+	_events->RemoveListener("Draw", _nameWithUuid);
 }
 
 void Bonus::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _name + std::to_string(_id));
+	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
 }
 
 void Bonus::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const int>("ClientReceived_BonusDeSpawn", _name);
+	_events->RemoveListener<const boost::uuids::uuid>("ClientReceived_BonusDeSpawn", _name);
 }
 
 void Bonus::Draw() const

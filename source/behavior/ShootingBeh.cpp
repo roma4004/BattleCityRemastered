@@ -1,7 +1,9 @@
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/Point.h"
 #include "../../headers/components/BulletPool.h"
+#include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/Direction.h"
+#include "../../headers/pawns/Bullet.h"
 #include "../../headers/pawns/Tank.h"
 
 #include <functional>
@@ -21,7 +23,7 @@ ShootingBeh::~ShootingBeh() = default;
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float ShootingBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& objects,
+float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
@@ -34,10 +36,9 @@ float ShootingBeh::FindMinDistance(const std::vector<std::weak_ptr<BaseObj>>& ob
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		const std::shared_ptr<BaseObj> objectLck = object.lock();
-		// auto getSide = [](const std::shared_ptr<BaseObj>& objectLck) -> float { return objectLck->GetX() + objectLck->GetWidth();};
-		const float distance = std::abs(sideDiff(objectLck));
-		// const float distance = abs(this->GetX() - objectLck->GetX() + objectLck->GetWidth());
+		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
+		const float distance = std::abs(sideDiff(object));
+		// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
 		if (distance < minDist)//TODO: need minimal abs distance
 		{
 			minDist = distance;
@@ -77,43 +78,43 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction dir = tank->GetDirection();
-		dir == UP && tankPos.y - bulletHalf.y >= 0.f)//TODO: rewrite check with zero to use epsilon
+		dir == UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
-		bulletRect.y = tankPos.y - bulletHalf.y;
+		bulletRect.y = tankPos.y - bulletHeight - 1;
 	}
-	else if (dir == DOWN && tankBottomY + bulletHalf.y <= static_cast<float>(tank->GetWindowSize().y))
+	else if (dir == DOWN && tankBottomY + bulletHeight <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
-		bulletRect.y = tankBottomY - bulletHalf.y;
+		bulletRect.y = tankBottomY + 1;
 	}
 	else if (dir == LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
-		bulletRect.x = tankPos.x - bulletHalf.x;
+		bulletRect.x = tankPos.x - bulletWidth - 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (dir == RIGHT && tankRightX + bulletHalf.x + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
+	else if (dir == RIGHT && tankRightX + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
-		bulletRect.x = tankRightX - bulletHalf.x;
+		bulletRect.x = tankRightX + 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 
 	return bulletRect;
 }
 
-void ShootingBeh::Shot() const
+boost::uuids::uuid ShootingBeh::Shot(const boost::uuids::uuid uuid)
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		return;
+		return {};
 	}
 
 	ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.f || rect.y < 0.f)
 	{
 		//Try shooting outside screen
-		return;
+		return {};
 	}
 
 	constexpr int color = 0xffffff;
@@ -125,7 +126,20 @@ void ShootingBeh::Shot() const
 	std::string author = tank->GetName();
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
-	_bulletPool->SpawnBullet(
-			std::move(rect), damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction),
-			tier);
+
+	auto bulletAsBase = _bulletPool->SpawnBullet(
+			rect, damage, aoeRadius, color, health, dir, speed, author, fraction, tier);
+	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
+	{
+		bullet->Reset(
+				std::move(rect), damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction),
+				tier, uuid);
+	}
+
+	if (bulletAsBase.get() != nullptr)
+	{
+		_allObjects->emplace_back(bulletAsBase);
+	}
+
+	return bulletAsBase->GetUuid();
 }

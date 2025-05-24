@@ -3,6 +3,7 @@
 #include "ObjRectangle.h"
 
 #include <string>
+#include <boost/uuid/uuid.hpp>
 
 struct BaseObjProperty
 {
@@ -10,7 +11,7 @@ struct BaseObjProperty
 	int color{0};
 	int health{0};
 	bool isAlive{true};
-	int id{0};
+	boost::uuids::uuid uuid{};
 	std::string name{};
 	std::string fraction{};
 };
