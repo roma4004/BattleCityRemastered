@@ -22,6 +22,7 @@ FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
 	  _allObjects{allObjects},
 	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode)}
 {
+//TODO: fix perlication
 	Subscribe();
 }
 
