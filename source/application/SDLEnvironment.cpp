@@ -11,7 +11,7 @@
 class IConfig;
 
 SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
-							   const char* introMusicName, const char* textureCollection)
+                               const char* introMusicName, const char* textureCollection)
 	: window{std::make_shared<Window>(windowSize)},
 	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
@@ -54,15 +54,14 @@ SDLEnvironment::~SDLEnvironment()
 	SDL_Rect bounds;
 	SDL_GetDisplayBounds(monitorIndex, &bounds);
 
-	SDL_Rect windowBordersSize;
-	SDL_GetWindowBordersSize(
-			sdlWindow.get(), &windowBordersSize.y, &windowBordersSize.x, &windowBordersSize.h, &windowBordersSize.w);
+	SDL_Rect bordersSize;
+	SDL_GetWindowBordersSize(sdlWindow.get(), &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
 		                      bounds.x + bounds.w / 2 - rect.w / 2,
-		                      bounds.y + bounds.h / 2 - rect.h / 2 - windowBordersSize.y);
+		                      bounds.y + bounds.h / 2 - rect.h / 2 - bordersSize.y);
 	}
 
 	renderer = std::shared_ptr<SDL_Renderer>(SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags),
@@ -125,10 +124,6 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
-	
-
-	// tank sprites
-
 	const std::shared_ptr<SDL_Surface> atlasSurface(IMG_Load(textureAtlasPath), SDL_FreeSurface);
 	if (atlasSurface == nullptr)
 	{
@@ -136,14 +131,11 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	std::shared_ptr<SDL_Texture> atlasTexture(SDL_CreateTextureFromSurface(renderer.get(), atlasSurface.get()),
-											 SDL_DestroyTexture);
+	                                          SDL_DestroyTexture);
 	if (atlasTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
-	
 
-	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, atlasTexture,
-											isVsyncOn);
-
+	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }

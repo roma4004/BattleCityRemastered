@@ -382,12 +382,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-bu
         "../${FONT_PATH_NAME}"                                  # <--this is in-file
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${FONT_PATH_NAME}") # <--this is out-file path
 
-set(LOGO_PATH                   Resources/Images)
-set(LOGO_PATH_NAME              ${LOGO_PATH}/Title.png)
+set(IMG_PATH                   Resources/Images)
+set(LOGO_PATH_NAME              ${IMG_PATH}/Title.png)
+set(ATLAS_PATH_NAME              ${IMG_PATH}/SpriteCollection.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LOGO_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${ATLAS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${ATLAS_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)
