@@ -25,6 +25,7 @@ FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
 	  _renderer{renderer},
 	  _textureCollection{textureCollection}
 {
+//TODO: fix perlication
 	Subscribe();
 }
 

@@ -174,7 +174,9 @@ set(BOOST_SUBMODULES
     libs/type_traits
     libs/utility
     libs/winapi
-    tools/boost_install)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
+    libs/uuid
+    tools/boost_install
+)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     ExternalProject_Add(Boost
@@ -199,9 +201,9 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 #            LOG_INSTALL ON
 
 #            PATCH_COMMAND ./bootstrap.sh gcc
-            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
+            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization,uuid
 #            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
+            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization --with-uuid -j${ThreadAmount} -d+2 stage install
             BUILD_IN_SOURCE 1
             INSTALL_COMMAND ""
             DOWNLOAD_EXTRACT_TIMESTAMP true
@@ -221,7 +223,7 @@ endif()
 
 set(Boost_NO_SYSTEM_PATHS ON)
 set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/libraries/boost_install)
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization)
+find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization uuid)
 if(Boost_FOUND)
     message(STATUS "------------------------------------------------------------")
     message(STATUS "Found Boost ${Boost_VERSION} with libraries: ${Boost_LIBRARIES}")
@@ -263,6 +265,7 @@ add_executable(${PROJECT_NAME}
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
+        source/TextureManager.cpp
         source/Map.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
@@ -379,12 +382,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-bu
         "../${FONT_PATH_NAME}"                                  # <--this is in-file
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${FONT_PATH_NAME}") # <--this is out-file path
 
-set(LOGO_PATH                   Resources/Images)
-set(LOGO_PATH_NAME              ${LOGO_PATH}/Title.png)
+set(IMG_PATH                   Resources/Images)
+set(LOGO_PATH_NAME              ${IMG_PATH}/Title.png)
+set(ATLAS_PATH_NAME              ${IMG_PATH}/SpriteCollection.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LOGO_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${ATLAS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${ATLAS_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)
