@@ -29,14 +29,14 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
 	  _window{window},
-	  _renderer{std::move(renderer)},
+	  _renderer{renderer},
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo, atlasTexture, _renderer)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo, atlasTexture, renderer)},
 	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window},
+	  _obstacleSpawner{events, &_allObjects, window, atlasTexture, renderer},
 	  
 	  _isVsyncOn{isVsyncOn}
 {

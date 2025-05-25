@@ -3,44 +3,56 @@
 #include "../headers/enums/Direction.h"
 #include "../headers/pawns/Pawn.h"
 
-TextureManager::TextureManager(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> texture):
+TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer):
 	_renderer(std::move(renderer)),
 	_texture(std::move(texture)){}
 
 void TextureManager::DrawTexture(BaseObj* obj)
 {
-	const auto [x, y, w, h] = obj->GetRect();
-	const SDL_Rect destRect{.x = static_cast<int>(x),
-	                        .y = static_cast<int>(y),
-	                        .w = static_cast<int>(w),
-	                        .h = static_cast<int>(h)};
+	const ObjRectangle rect = obj->GetRect();
+	const SDL_Rect destRect{.x = static_cast<int>(rect.x),
+	                        .y = static_cast<int>(rect.y),
+	                        .w = static_cast<int>(rect.w),
+	                        .h = static_cast<int>(rect.h)};
 
 	//What is it
 	const auto name = obj->GetName();
 	SDL_Rect textureRect{};
-	const auto pawn = static_cast<Pawn*>(obj);
+	const auto pawn = dynamic_cast<Pawn*>(obj);
 	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = _offset.enemy;
-		textureRect.x += pawn->_animationId * 15;
+		textureRect.x += pawn->_animationId * 13;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
 		textureRect = _offset.playerOne;
-		textureRect.x += pawn->_animationId * 15;
+		textureRect.x += pawn->_animationId * 13;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
 		textureRect = _offset.playerTwo;
-		textureRect.x += pawn->_animationId * 15;
+		textureRect.x += pawn->_animationId * 13;
 	}
 	else if (name == "Bullet")
 	{
 		textureRect = _offset.bullet;
 	}
-	else if (name == "EAGLE")
+	else if (name == "Eagle")
 	{
 		textureRect = _offset.eagle;
+	}
+	else if (name == "BrickWall")
+	{
+		textureRect = _offset.brick;
+	}
+	else if (name == "SteelWall")
+	{
+		
+	}
+	else if (name == "WaterTile")
+	{
+		
 	}
 	else
 	{

@@ -16,7 +16,7 @@ class TextureManager final : public ITextureDrawable
 public:
 	void DrawTexture(BaseObj* obj) override;
 
-	TextureManager(std::shared_ptr<SDL_Renderer> renderer,std::shared_ptr<SDL_Texture> texture);
+	TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer);
 
 	~TextureManager() override = default;
 

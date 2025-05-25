@@ -20,6 +20,7 @@ class Obstacle : public BaseObj
 	virtual void UnsubscribeAsClient() const;
 
 	void Draw() const override;
+	TextureManager _drawTexture;
 
 protected:
 	GameMode _gameMode{};
@@ -28,8 +29,8 @@ protected:
 
 public:
 	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, std::string name,
-	         std::shared_ptr<EventSystem> events, boost::uuids::uuid uuid, GameMode gameMode,
-	         ObstacleType obstacleType);
+	         std::shared_ptr<EventSystem> events, boost::uuids::uuid uuid, GameMode gameMode, ObstacleType obstacleType,
+	         std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer);
 
 	~Obstacle() override;
 };

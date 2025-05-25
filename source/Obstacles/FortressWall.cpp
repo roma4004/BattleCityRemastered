@@ -14,13 +14,16 @@
 FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const boost::uuids::uuid uuid,
-                           const GameMode gameMode)
+                           const GameMode gameMode, std::shared_ptr<SDL_Texture> textureCollection,
+                           std::shared_ptr<SDL_Renderer> renderer)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _gameMode{gameMode},
 	  _window{window},
 	  _events{events},
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode)}
+	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode, textureCollection, renderer)},
+	  _renderer{renderer},
+	  _textureCollection{textureCollection}
 {
 	Subscribe();
 }
@@ -133,7 +136,7 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 	{
 		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode);
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode, _textureCollection, _renderer);
 		}
 
 		if (_gameMode == PlayAsHost)
@@ -166,7 +169,7 @@ void FortressWall::OnPlayerPickupShovel()
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
 		const boost::uuids::uuid uuid = _uuid;
-		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, uuid, _gameMode);
+		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, uuid, _gameMode, _textureCollection, _renderer);
 
 		if (_gameMode == PlayAsHost)
 		{

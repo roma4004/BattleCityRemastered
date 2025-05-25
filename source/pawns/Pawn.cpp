@@ -11,7 +11,7 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
-	  _drawTexture{pawnProperty.renderer, pawnProperty.texture},
+	  _drawTexture{pawnProperty.texture, pawnProperty.renderer},
 	  _allObjects{pawnProperty.allObjects},
 	  _window{std::move(pawnProperty.window)},
 	  _events{std::move(pawnProperty.events)},

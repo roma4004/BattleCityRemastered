@@ -25,6 +25,8 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	             std::unique_ptr<SteelWall>> _obstacle;
 
 	BonusStatus _shovel{};
+	std::shared_ptr<struct SDL_Renderer> _renderer;
+	std::shared_ptr<struct SDL_Texture> _textureCollection;
 
 	void Subscribe();
 	void SubscribeAsHost();
@@ -47,7 +49,9 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 
 public:
 	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode);
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode,
+	             std::shared_ptr<SDL_Texture> textureCollection,
+	             std::shared_ptr<SDL_Renderer> renderer);
 
 	~FortressWall() override;
 

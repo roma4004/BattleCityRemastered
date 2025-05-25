@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "../../headers/obstacles/Obstacle.h"
 #include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
@@ -5,9 +7,10 @@
 
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::shared_ptr<Window> window,
                    std::string name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
-                   const GameMode gameMode, const ObstacleType obstacleType)
+                   const GameMode gameMode, const ObstacleType obstacleType, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer)
 	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
+	  _drawTexture{std::move(texture), std::move(renderer)},
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _events(std::move(events))
@@ -28,7 +31,8 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener("DrawTexture", _nameWithUuid, [this]() { this->_drawTexture.DrawTexture(this); });
+
 
 	if (_gameMode == PlayAsClient)
 	{
@@ -52,7 +56,7 @@ void Obstacle::SubscribeAsClient()
 
 void Obstacle::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _nameWithUuid);
+	_events->RemoveListener("DrawTexture", _nameWithUuid);
 
 	if (_gameMode == PlayAsClient)
 	{
