@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Obstacle.h"
-
 #include <memory>
 
 struct ObjRectangle;

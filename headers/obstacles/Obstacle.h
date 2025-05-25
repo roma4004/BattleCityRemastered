@@ -1,7 +1,7 @@
 #pragma once
 
+#include "SDL.h"
 #include "../BaseObj.h"
-
 #include <memory>
 
 enum ObstacleType : char8_t;
@@ -19,13 +19,13 @@ class Obstacle : public BaseObj
 	virtual void Unsubscribe() const;
 	virtual void UnsubscribeAsClient() const;
 
-	void Draw() const override;
 	TextureManager _drawTexture;
 
 protected:
 	GameMode _gameMode{};
 	ObstacleType _obstacleType{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	void Draw() const override;
 
 public:
 	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, std::string name,

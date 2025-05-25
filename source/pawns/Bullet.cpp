@@ -5,6 +5,7 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/pawns/PawnProperty.h"
 
+// #include <iostream>
 #include <string>
 #include <boost/uuid/nil_generator.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -42,6 +43,11 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 
 Bullet::~Bullet()
 {
+	// std::cout << "[" << "Bullet::~Bullet()" << "] "
+	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 			<< ", name=" << _name
+	// 			<< ", name+UUID=" << _nameWithUuid
+	// 			<< std::endl;
 	Unsubscribe();
 }
 
@@ -80,6 +86,11 @@ void Bullet::SubscribeAsClient()
 
 void Bullet::Unsubscribe() const
 {
+	// std::cout << "[" << "Bullet::Unsubscribe" << "] "
+	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 			<< ", name=" << _name
+	// 			<< ", name+UUID=" << _nameWithUuid
+	// 			<< std::endl;
 	if (_gameMode == PlayAsClient)
 	{
 		UnsubscribeAsClient();
@@ -93,6 +104,11 @@ void Bullet::UnsubscribeAsClient() const
 
 void Bullet::Disable() const
 {
+	// std::cout << "[" << "Bullet::Disable()" << "] "
+	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 			<< ", name=" << _name
+	// 			<< ", name+UUID=" << _nameWithUuid
+	// 			<< std::endl;
 	Pawn::Unsubscribe();
 	Unsubscribe();
 }
@@ -107,6 +123,8 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
                    const float speed, const Direction dir, const int health, std::string author,
                    std::string fraction, const int tier, const boost::uuids::uuid uuid)
 {
+	Disable();
+
 	SetRect(rect);
 	SetColor(color);
 	SetHealth(health);

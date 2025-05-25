@@ -5,6 +5,8 @@
 #include "../../headers/interfaces/IMoveBeh.h"
 #include "../../headers/pawns/PawnProperty.h"
 
+// #include <iostream>
+
 Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)},
 	  _dir{pawnProperty.dir},
@@ -24,6 +26,11 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 
 Pawn::~Pawn()
 {
+	// std::cout << "[" << "Pawn::~Pawn()" << "] "
+	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 			<< ", name=" << _name
+	// 			<< ", name+UUID=" << _nameWithUuid
+	// 			<< std::endl;
 	Pawn::Unsubscribe();
 }
 
@@ -67,6 +74,11 @@ void Pawn::SubscribeAsClient()
 
 void Pawn::Unsubscribe() const
 {
+	// std::cout << "[" << "Pawn::Unsubscribe()" << "] "
+	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 			<< ", name=" << _name
+	// 			<< ", name+UUID=" << _nameWithUuid
+	// 			<< std::endl;
 	_events->RemoveListener("DrawTexture", _nameWithUuid);
 
 	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();

@@ -23,11 +23,13 @@ void Map::MapCreation(const float gridSize) const
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Brick);
 					break;
 				case 2:
+					rect.w -= 1;
+					rect.h -= 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Steel);
 					break;
 				case 3:
-					rect.w -= 1;
-					rect.h -= 1;
+					rect.w += 1;
+					rect.h += 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Water);
 					break;
 				case 4:

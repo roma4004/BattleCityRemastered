@@ -23,6 +23,15 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
+
+	//TODO: remove this after load steel texture
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+}
+
+WaterTile::~WaterTile()
+{
+	//TODO: remove this after load steel texture
+	_events->RemoveListener("Draw", _nameWithUuid);
 }
 
 void WaterTile::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}

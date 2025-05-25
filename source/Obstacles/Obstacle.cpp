@@ -7,7 +7,8 @@
 
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::shared_ptr<Window> window,
                    std::string name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
-                   const GameMode gameMode, const ObstacleType obstacleType, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer)
+                   const GameMode gameMode, const ObstacleType obstacleType, std::shared_ptr<SDL_Texture> texture,
+                   std::shared_ptr<SDL_Renderer> renderer)
 	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
 	  _drawTexture{std::move(texture), std::move(renderer)},

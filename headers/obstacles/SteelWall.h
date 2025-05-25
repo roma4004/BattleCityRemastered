@@ -13,7 +13,7 @@ public:
 	          boost::uuids::uuid uuid, GameMode gameMode, std::shared_ptr<SDL_Texture> textureCollection,
 	          std::shared_ptr<SDL_Renderer> renderer);
 
-	~SteelWall() override = default;
+	~SteelWall() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 };

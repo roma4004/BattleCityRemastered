@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Obstacle.h"
-
 #include <memory>
 
 struct ObjRectangle;
@@ -15,7 +14,7 @@ public:
 	          boost::uuids::uuid uuid, GameMode gameMode, std::shared_ptr<SDL_Texture> textureCollection,
 	          std::shared_ptr<SDL_Renderer> renderer);
 
-	~WaterTile() override = default;
+	~WaterTile() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 };

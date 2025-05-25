@@ -13,6 +13,7 @@
 //#include <fstream>
 #include <iostream>
 #include <memory>
+#include <boost/uuid/uuid_io.hpp>
 
 //#ifdef _WIN32
 //#define _WIN32_WINNT 0x0A00
@@ -23,8 +24,7 @@
 GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-						 std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> atlasTexture,
-                         const bool isVsyncOn)
+                         std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> atlasTexture, const bool isVsyncOn)
 	: _selectedGameMode{OnePlayer},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
@@ -37,7 +37,6 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _userInput{window, events},
 	  _bonusSpawner{events, &_allObjects, window},
 	  _obstacleSpawner{events, &_allObjects, window, atlasTexture, renderer},
-	  
 	  _isVsyncOn{isVsyncOn}
 {
 	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool, atlasTexture, _renderer);
@@ -75,6 +74,10 @@ void GameSuccess::Subscribe()
 		else if (_gameMode == PlayAsClient)
 		{
 			_networkNode = std::make_unique<ClientHandler>(_events);
+		}
+		else
+		{
+			_networkNode = nullptr;
 		}
 	});
 }
@@ -232,8 +235,14 @@ void GameSuccess::DisposeDeadObject()
 			std::cout << "Disposing object nullptr " << std::endl;
 			continue;
 		}
-		std::cout << "Disposing object " << (*itCopy)->GetName() <<
-				/*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
+		auto baseObj = (*itCopy);
+		std::cout << "[" << "Disposing object" << "] "
+				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< ", name=" << baseObj->GetName()
+				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
+				<< std::endl;
+		// std::cout << "Disposing object " << baseObj->GetName() <<
+		// /*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
 	}
 
 	_allObjects.erase(it, _allObjects.end());
@@ -277,7 +286,7 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 
-			if (_gameMode != PlayAsClient && !_userInput.IsPause())
+			if (!_userInput.IsPause())
 			{
 				DisposeDeadObject();
 			}

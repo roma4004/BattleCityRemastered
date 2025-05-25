@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <memory>
+// #include <boost/uuid/uuid_io.hpp>
 
 ShootingBeh::ShootingBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
@@ -134,6 +135,10 @@ boost::uuids::uuid ShootingBeh::Shot(const boost::uuids::uuid uuid)
 		bullet->Reset(
 				std::move(rect), damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction),
 				tier, uuid);
+		// std::cout << "[" << "bullet->Reset" << "] "
+		// 			<< ", name=" << bullet->GetName()
+		// 			<< ", UUID=" << boost::uuids::to_string(bullet->GetUuid())
+		// 			<< std::endl;
 	}
 
 	if (bulletAsBase.get() != nullptr)

@@ -3,7 +3,6 @@
 #include "../BaseObj.h"
 #include "../bonuses/BonusStatus.h"
 #include "../interfaces/ITickUpdatable.h"
-
 #include <chrono>
 #include <memory>
 #include <variant>

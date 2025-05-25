@@ -11,6 +11,7 @@
 #include "../../headers/network/commands/Dispose.h"
 #include "../../headers/network/commands/FortressChange.h"
 #include "../../headers/network/commands/HealthChange.h"
+#include "../../headers/network/commands/KeyStateChange.h"
 #include "../../headers/network/commands/ObstacleSpawn.h"
 #include "../../headers/network/commands/PositionChange.h"
 #include "../../headers/network/commands/RespawnTank.h"
@@ -249,9 +250,9 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command) const
 // void Client::OnKeyStateChange<//TODO: template this>(const std::shared_ptr<Command>& command) const
 void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
 {
-	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
+	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetEventName());
+		_events->EmitEvent(cmd->GetKeyState());
 	}
 }
 
