@@ -166,7 +166,6 @@
     <ClCompile Include="source\application\SDLEnvironment.cpp" />
     <ClCompile Include="source\application\UserInput.cpp" />
     <ClCompile Include="source\application\Window.cpp" />
-    <ClCompile Include="source\behavior\MoveLikeAIBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\behavior\ShootingBeh.cpp" />
@@ -258,7 +257,6 @@
     <ClInclude Include="headers\application\SDLEnvironment.h" />
     <ClInclude Include="headers\application\UserInput.h" />
     <ClInclude Include="headers\application\Window.h" />
-    <ClInclude Include="headers\behavior\MoveLikeAIBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
     <ClInclude Include="headers\behavior\ShootingBeh.h" />

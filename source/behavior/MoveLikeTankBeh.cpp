@@ -86,16 +86,20 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
 		return 0.f;
 	}
 
-	float minDist = static_cast<float>(tank->GetWindowSize().x * tank->GetWindowSize().y);
+	const UPoint windowSize = tank->GetWindowSize();
+	auto minDist = static_cast<float>(windowSize.x * windowSize.y);
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
-		const float distance = std::abs(sideDiff(object));
-		// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
-		if (distance < minDist)//TODO: need minimal abs distance
+		if (object.get() != nullptr)
 		{
-			minDist = distance;
+			// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
+			const float distance = std::abs(sideDiff(object));
+			// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
+			if (distance < minDist)//TODO: need minimal abs distance
+			{
+				minDist = distance;
+			}
 		}
 	}
 

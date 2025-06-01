@@ -25,8 +25,8 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float d
 	}
 
 	const float speed = bullet->GetSpeed();
-	float speedX = speed * deltaTime;
-	float speedY = speed * deltaTime;
+	const float speedX = speed * deltaTime;
+	const float speedY = speed * deltaTime;
 	ObjRectangle bulletNextPosRect;
 	if (const Direction dir = bullet->GetDirection();
 		dir == UP)

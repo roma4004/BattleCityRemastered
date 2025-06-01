@@ -1,5 +1,5 @@
 #include "../../headers/application/Window.h"
-#include "../../headers/behavior/MoveLikeAIBeh.h"
+#include "../../headers/behavior/MoveLikeTankBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/components/LineOfSight.h"
 #include "../../headers/enums/Direction.h"
@@ -13,7 +13,7 @@
 
 Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
 	: Tank{pawnProperty,
-	       std::make_unique<MoveLikeAIBeh>(this, pawnProperty.allObjects),
+	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
 	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool))
 	  },
 	  _distDirection(0, 3),

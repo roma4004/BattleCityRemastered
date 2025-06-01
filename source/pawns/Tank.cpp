@@ -97,7 +97,7 @@ void Tank::SubscribeBonus()
 
 void Tank::Unsubscribe() const
 {
-	_events->RemoveListener("DrawHealthBar", _name);
+	_events->RemoveListener("DrawHealthBar", _nameWithUuid);
 
 	if (_gameMode == PlayAsClient)
 	{

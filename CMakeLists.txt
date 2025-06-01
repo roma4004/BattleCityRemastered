@@ -288,7 +288,6 @@ add_executable(${PROJECT_NAME}
         source/application/SDLEnvironment.cpp
         source/application/UserInput.cpp
         source/application/Window.cpp
-        source/behavior/MoveLikeAIBeh.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
