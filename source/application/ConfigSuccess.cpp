@@ -6,8 +6,7 @@
 
 ConfigSuccess::ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-							 std::shared_ptr<SDL_Texture> logoTexture,
-							 std::shared_ptr<SDL_Texture> atlasTexture,
+                             std::shared_ptr<SDL_Texture> logoTexture, std::shared_ptr<SDL_Texture> atlasTexture,
                              const bool isVsyncOn)
 	: _window{std::move(window)},
 	  _renderer{std::move(renderer)},
@@ -23,6 +22,6 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto statistics = std::make_shared<GameStatistics>(events);
 	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _window, events);
 
-	return std::make_unique<GameSuccess>(_window, _renderer, _screen, _fpsFont, events, statistics, std::move(menu),
-										 _atlasTexture, _isVsyncOn);
+	return std::make_unique<GameSuccess>(
+			_window, _renderer, _screen, _fpsFont, events, statistics, std::move(menu), _atlasTexture, _isVsyncOn);
 }

@@ -13,14 +13,14 @@
 #include <boost/uuid/uuid_io.hpp>
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-std::shared_ptr<Window> window, const GameMode gameMode,std::shared_ptr<SDL_Texture> textureCollection,
-  std::shared_ptr<SDL_Renderer> renderer)
+                       std::shared_ptr<Window> window, const GameMode gameMode,
+                       std::shared_ptr<SDL_Texture> textureCollection, std::shared_ptr<SDL_Renderer> renderer)
 	: _events{std::move(events)},
 	  _name{"BulletPool"},
 	  _gameMode{gameMode},
 	  _allObjects{allObjects},
 	  _window{std::move(window)},
-      _atlasTexture{std::move(textureCollection)},
+	  _atlasTexture{std::move(textureCollection)},
 	  _renderer(std::move(renderer))
 {
 	// Pre-generate 20 default bullets
@@ -95,7 +95,8 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet(ObjRectangle rect, const int
 	BaseObjProperty baseObjProperty{
 			std::move(rect), color, health, true, bulletUuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, dir, speed, _allObjects, _events, tier, _gameMode , _atlasTexture, _renderer};
+			std::move(baseObjProperty), _window, dir, speed, _allObjects, _events, tier, _gameMode, _atlasTexture,
+			_renderer};
 	return std::shared_ptr<Bullet>(
 			new Bullet{std::move(pawnProperty), damage, aoeRadius, std::move(author), bulletUuid, uuidStr},
 			[this](Bullet* b)
@@ -163,7 +164,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		_events->EmitEvent<const boost::uuids::uuid>("ServerSend_Dispose", bulletCast->GetUuid());
+		_events->EmitEvent<const boost::uuids::uuid&>("ServerSend_Dispose", bulletCast->GetUuid());
 	}
 }
 

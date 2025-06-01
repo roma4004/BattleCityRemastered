@@ -71,9 +71,9 @@ const std::string& Bullet::GetUuidStr() const
 
 void Bullet::SubscribeAsClient()
 {
-	_events->AddListener<const boost::uuids::uuid>(
+	_events->AddListener<const boost::uuids::uuid&>(
 			"ClientReceived_" + _name + "Dispose", _nameWithUuid,
-			[this](const boost::uuids::uuid uuid)
+			[this](const boost::uuids::uuid& uuid)
 			{
 				if (uuid != _uuid)
 				{
@@ -123,7 +123,7 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
                    const float speed, const Direction dir, const int health, std::string author,
                    std::string fraction, const int tier, const boost::uuids::uuid uuid)
 {
-	Disable();
+	Disable();//TODO: remove this, and not subscribe on create bullets
 
 	SetRect(rect);
 	SetColor(color);

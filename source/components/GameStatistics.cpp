@@ -238,7 +238,7 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 
 void GameStatistics::OnTankHit(const std::string& whoHit, const std::string& author, const std::string& fraction)
 {
-	if (whoHit == "Enemy1" || whoHit == "Enemy2" || whoHit == "Enemy3" || whoHit == "Enemy4")
+	if (whoHit == "Enemy")
 	{
 		OnEnemyHit(author, fraction);
 	}

@@ -35,12 +35,11 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo, atlasTexture, renderer)},
 	  _userInput{window, events},
+	  _tankSpawner{window, &_allObjects, events, _bulletPool, atlasTexture, _renderer},
 	  _bonusSpawner{events, &_allObjects, window},
 	  _obstacleSpawner{events, &_allObjects, window, atlasTexture, renderer},
 	  _isVsyncOn{isVsyncOn}
 {
-	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool, atlasTexture, _renderer);
-
 	GenerateFpsTextures();
 
 	Subscribe();

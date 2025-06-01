@@ -7,7 +7,8 @@ enum GameMode : char8_t;
 class EventSystem;
 
 class GameStatistics final
-{//TODO: fix desync in statistics
+{
+	//TODO: fix desync in statistics
 	std::string _name;
 	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};

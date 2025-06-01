@@ -25,7 +25,7 @@ FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
 	  _renderer{renderer},
 	  _textureCollection{textureCollection}
 {
-//TODO: fix fortress replication
+	//TODO: fix fortress replication
 	Subscribe();
 }
 
@@ -137,7 +137,8 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 	{
 		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode, _textureCollection, _renderer);
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode, _textureCollection,
+			                                        _renderer);
 		}
 
 		if (_gameMode == PlayAsHost)
@@ -170,7 +171,8 @@ void FortressWall::OnPlayerPickupShovel()
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
 		const boost::uuids::uuid uuid = _uuid;
-		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, uuid, _gameMode, _textureCollection, _renderer);
+		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, uuid, _gameMode, _textureCollection,
+		                                        _renderer);
 
 		if (_gameMode == PlayAsHost)
 		{

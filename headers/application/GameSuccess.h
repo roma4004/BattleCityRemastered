@@ -3,6 +3,7 @@
 #include "UserInput.h"
 #include "../../headers/components/BonusSpawner.h"
 #include "../../headers/components/ObstacleSpawner.h"
+#include "../../headers/components/TankSpawner.h"
 #include "../interfaces/IGame.h"
 
 #include <SDL.h>
@@ -18,7 +19,6 @@ class BulletPool;
 class Client;
 class EventSystem;
 class GameStatistics;
-class TankSpawner;
 class Server;
 
 class GameSuccess final : public IGame
@@ -30,7 +30,6 @@ class GameSuccess final : public IGame
 	std::unique_ptr<INetworkNode> _networkNode;
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
@@ -50,6 +49,7 @@ class GameSuccess final : public IGame
 	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
 
 	UserInput _userInput;
+	TankSpawner _tankSpawner;
 	BonusSpawner _bonusSpawner;
 	ObstacleSpawner _obstacleSpawner;
 
@@ -83,8 +83,7 @@ public:
 	GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
 	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
 	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-				std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> atlasTexture,
-	            bool isVsyncOn);
+	            std::unique_ptr<Menu> menu, std::shared_ptr<SDL_Texture> atlasTexture, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

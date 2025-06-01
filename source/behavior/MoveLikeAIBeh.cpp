@@ -172,15 +172,7 @@ bool MoveLikeAIBeh::MoveLeft(const float deltaTime) const
 				tank->MoveX(-std::floor(distance));
 			}
 
-			// bonusPickUp
-			if (const auto target = objects.front())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					target->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 
@@ -221,15 +213,7 @@ bool MoveLikeAIBeh::MoveRight(const float deltaTime) const
 				return true;
 			}
 
-			// bonusPickUp
-			if (const auto target = objects.front())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					target->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 
@@ -268,15 +252,7 @@ bool MoveLikeAIBeh::MoveUp(const float deltaTime) const
 				return true;
 			}
 
-			// bonusPickUp
-			if (const auto target = objects.front())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					target->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 
@@ -317,17 +293,22 @@ bool MoveLikeAIBeh::MoveDown(const float deltaTime) const
 				return true;
 			}
 
-			// bonusPickUp
-			if (const auto target = objects.front())
-			{
-				if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
-				{
-					bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
-					target->TakeDamage(1);
-				}
-			}
+			HandleBonusPickUp(objects.front(), tank);
 		}
 	}
 
 	return false;
+}
+
+void MoveLikeAIBeh::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank)
+{
+	if (const auto target = object)
+	{
+		if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
+		{
+			bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+			//TODO: destroy bonus on emit in PickUpBonus by subscription
+			target->TakeDamage(1);
+		}
+	}
 }

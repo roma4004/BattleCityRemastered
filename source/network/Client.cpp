@@ -234,7 +234,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		_events->EmitEvent<const boost::uuids::uuid>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
+		_events->EmitEvent<const boost::uuids::uuid&>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
 	}
 }
 
@@ -279,7 +279,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const boost::uuids::uuid>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
+		_events->EmitEvent<const boost::uuids::uuid&>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
 	}
 }
 

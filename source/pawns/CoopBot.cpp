@@ -24,7 +24,6 @@ void CoopBot::TickUpdate(const float deltaTime)
 	// shot
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
-
 		const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight(GetDirection());
 
 		if (nearestSeenObstacle && nearestSeenObstacle.get() != nullptr

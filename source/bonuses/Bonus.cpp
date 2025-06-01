@@ -37,7 +37,7 @@ Bonus::~Bonus()
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const boost::uuids::uuid>("ServerSend_BonusDeSpawn", _uuid);
+		_events->EmitEvent<const boost::uuids::uuid&>("ServerSend_BonusDeSpawn", _uuid);
 		//TODO: move to pick up moment in tank move beh
 	}
 }
@@ -59,9 +59,9 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener<const boost::uuids::uuid>(
+	_events->AddListener<const boost::uuids::uuid&>(
 			"ClientReceived_BonusDeSpawn", _name,
-			[this](const boost::uuids::uuid uuid)
+			[this](const boost::uuids::uuid& uuid)
 			{
 				if (uuid != this->_uuid)
 				{
@@ -86,7 +86,7 @@ void Bonus::UnsubscribeAsHost() const
 
 void Bonus::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const boost::uuids::uuid>("ClientReceived_BonusDeSpawn", _name);
+	_events->RemoveListener<const boost::uuids::uuid&>("ClientReceived_BonusDeSpawn", _name);
 }
 
 void Bonus::Draw() const

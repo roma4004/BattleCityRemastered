@@ -218,6 +218,8 @@
     <ClInclude Include="headers\components\ObstacleSpawner.h" />
     <ClInclude Include="headers\components\ObstacleSpawner.tpp" />
     <ClInclude Include="headers\components\TankSpawner.h" />
+    <ClInclude Include="headers\components\TankSpawner.tpp" />
+    <ClInclude Include="headers\enums\RespawnResource.h" />
     <ClInclude Include="headers\TextureManager.h" />
     <ClInclude Include="headers\enums\BonusType.h" />
     <ClInclude Include="headers\enums\ComandType.h" />

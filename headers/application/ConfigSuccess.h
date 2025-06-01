@@ -30,9 +30,7 @@ public:
 
 	ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
 	              std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-				  std::shared_ptr<SDL_Texture> logoTexture,
-				  std::shared_ptr<SDL_Texture> atlasTexture,
-	              bool isVsyncOn);
+	              std::shared_ptr<SDL_Texture> logoTexture, std::shared_ptr<SDL_Texture> atlasTexture, bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

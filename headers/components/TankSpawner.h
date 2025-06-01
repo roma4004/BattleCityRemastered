@@ -5,9 +5,19 @@
 #include <boost/uuid/uuid.hpp>
 
 #include "SDL.h"
+#include "../BaseObjProperty.h"
+#include "../ObjRectangle.h"
+#include "../enums/Direction.h"
+#include "../enums/GameMode.h"
+#include "../enums/RespawnResource.h"
+#include "../input/InputProviderForPlayerOne.h"
+#include "../input/InputProviderForPlayerOneNet.h"
+#include "../input/InputProviderForPlayerTwo.h"
+#include "../input/InputProviderForPlayerTwoNet.h"
+#include "../pawns/PawnProperty.h"
+#include "../pawns/Player.h"
 
 enum TankType : char8_t;
-struct ObjRectangle;
 enum GameMode : char8_t;
 struct Window;
 class BaseObj;
@@ -30,25 +40,16 @@ class TankSpawner final
 	std::random_device _rd;
 
 	// TODO: use std::atomic when multithreading is used
-	int _enemyRespawnResource{20};
-	int _playerOneRespawnResource{3};
-	int _playerTwoRespawnResource{3};
+	std::vector<int> _respawnResource{20, 3, 3};
+	int _enemyNeedRespawn{4};
 
-	bool _enemyOneNeedRespawn{false};
-	bool _enemyTwoNeedRespawn{false};
-	bool _enemyThreeNeedRespawn{false};
-	bool _enemyFourNeedRespawn{false};
-	bool _playerOneNeedRespawn{false};
-	bool _playerTwoNeedRespawn{false};
-	bool _coopBotOneNeedRespawn{false};
-	bool _coopBotTwoNeedRespawn{false};
+	struct SpawnSlot
+	{
+		boost::uuids::uuid id{};
+		bool isAvailable{false};
+	};
 
-	boost::uuids::uuid _enemyOneUuid;
-	boost::uuids::uuid _enemyTwoUuid;
-	boost::uuids::uuid _enemyThreeUuid;
-	boost::uuids::uuid _enemyFourUuid;
-	boost::uuids::uuid _playerOneUuid;
-	boost::uuids::uuid _playerTwoUuid;
+	std::vector<SpawnSlot> _slots;
 
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusTank(const std::string& author, const std::string& fraction);
@@ -59,11 +60,16 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health, TankType type);
+	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health);
 	void SetEnemyNeedRespawn();
 
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
+
+	template<typename TTankType>
+	void RespawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
+	                 boost::uuids::uuid uuid);
+
 	void RespawnEnemyTanks(TankType type, boost::uuids::uuid uuid);
 	void RespawnPlayerTeam(TankType type, boost::uuids::uuid uuid);
 	void SetPlayerNeedRespawn();
@@ -81,30 +87,36 @@ class TankSpawner final
 	void DecreaseEnemyRespawnResource();
 	void DecreasePlayerOneRespawnResource();
 	void DecreasePlayerTwoRespawnResource();
-	void OnTankSpawn(const std::string& whoSpawn);
-	void OnEnemyTankDied(const std::string& whoDied);
-	void OnPlayerTankDied(const std::string& whoDied);
-	void OnTankDied(const std::string& whoDied);
+	void OnTankSpawn(const boost::uuids::uuid& uuid);
+	void OnTankDied(const boost::uuids::uuid& uuid);
 
 public:
 	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-				std::shared_ptr<SDL_Texture> textureCollection,
-				std::shared_ptr<SDL_Renderer> _renderer);
+	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
+	            std::shared_ptr<SDL_Texture> textureCollection,
+	            std::shared_ptr<SDL_Renderer> renderer);
 
 	~TankSpawner();
 
-	[[nodiscard]] int GetEnemyRespawnResource() const { return _enemyRespawnResource; }
-	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _playerOneRespawnResource; }
-	[[nodiscard]] int GetPlayerTwoRespawnResource() const { return _playerTwoRespawnResource; }
+	[[nodiscard]] int GetEnemyRespawnResource() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
+	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
+	[[nodiscard]] int GetPlayerTwoRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_TWO]; }
+	[[nodiscard]] int IsEnemyNeedRespawn() const { return _enemyNeedRespawn; }
 
-	[[nodiscard]] bool IsEnemyOneNeedRespawn() const { return _enemyOneNeedRespawn; }
-	[[nodiscard]] bool IsEnemyTwoNeedRespawn() const { return _enemyTwoNeedRespawn; }
-	[[nodiscard]] bool IsEnemyThreeNeedRespawn() const { return _enemyThreeNeedRespawn; }
-	[[nodiscard]] bool IsEnemyFourNeedRespawn() const { return _enemyFourNeedRespawn; }
+	[[nodiscard]] bool IsEnemyOneNeedRespawn() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
+	//TODO: remove this after tests fixes
+	[[nodiscard]] bool IsEnemyTwoNeedRespawn() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
+	//TODO: remove this after tests fixes
+	[[nodiscard]] bool IsEnemyThreeNeedRespawn() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
+	//TODO: remove this after tests fixes
+	[[nodiscard]] bool IsEnemyFourNeedRespawn() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
+	//TODO: remove this after tests fixes
 
-	[[nodiscard]] bool IsPlayerOneNeedRespawn() const { return _playerOneNeedRespawn; }
-	[[nodiscard]] bool IsPlayerTwoNeedRespawn() const { return _playerTwoNeedRespawn; }
-	[[nodiscard]] bool IsCoopBotOneNeedRespawn() const { return _coopBotOneNeedRespawn; }
-	[[nodiscard]] bool IsCoopBotTwoNeedRespawn() const { return _coopBotTwoNeedRespawn; }
+	[[nodiscard]] bool IsPlayerOneNeedRespawn() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
+	[[nodiscard]] bool IsPlayerTwoNeedRespawn() const { return _respawnResource[RespawnResource::PLAYER_TWO]; }
+	[[nodiscard]] bool IsCoopBotOneNeedRespawn() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
+	[[nodiscard]] bool IsCoopBotTwoNeedRespawn() const { return _respawnResource[RespawnResource::PLAYER_TWO]; }
 };
+
+// Include the template implementation
+#include "TankSpawner.tpp"

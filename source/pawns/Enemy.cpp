@@ -12,9 +12,7 @@
 
 //TODO: if enemy see bullets they should tru or prioritize move aside
 Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
-	: Bot{std::move(pawnProperty), std::move(bulletPool)}
-{
-}
+	: Bot{std::move(pawnProperty), std::move(bulletPool)} {}
 
 Enemy::~Enemy() = default;
 

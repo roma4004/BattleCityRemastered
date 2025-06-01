@@ -39,8 +39,8 @@ class EventSystem final
 		Event<const int>,// received healthChange(val)
 		Event<const bool>,// pause keyStatus
 		Event<const GameMode>,// gameMode switch
-		Event<const uuid>,//send/received bonusDeSpawn, send/received bulletDispose
-		Event<const std::string&>,//(who) tankDied, tankSpawn, send bonusEffect
+		Event<const uuid&>,//tankDied, tankSpawn, send/received bonusDeSpawn, send/received bulletDispose
+		Event<const std::string&>,//send bonusEffect
 		Event<const Direction, const uuid>,// received tankShot(dir,uuid)
 		Event<const TankType, const uuid>,// send/received respawnTank(type,uuid)
 		Event<const std::string&, const uuid>,// send fortressChange(state,uuid)

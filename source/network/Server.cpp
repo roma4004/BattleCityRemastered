@@ -284,9 +284,9 @@ void Server::Subscribe()
 				_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
 			});
 
-	_events->AddListener<const boost::uuids::uuid>(
+	_events->AddListener<const boost::uuids::uuid&>(
 			"ServerSend_Dispose", _name,
-			[this](/*TODO: add who,*/const boost::uuids::uuid uuid)
+			[this](/*TODO: add who,*/const boost::uuids::uuid& uuid)
 			{
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
@@ -328,9 +328,9 @@ void Server::SubscribeBonus()
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
 			});
-	_events->AddListener<const boost::uuids::uuid>(
+	_events->AddListener<const boost::uuids::uuid&>(
 			"ServerSend_BonusDeSpawn", _name,
-			[this](const boost::uuids::uuid uuid)
+			[this](const boost::uuids::uuid& uuid)
 			{
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
@@ -372,7 +372,7 @@ void Server::Unsubscribe() const
 	_events->RemoveListener<const std::string&, const FPoint, const Direction, const boost::uuids::uuid>(
 			"ServerSend_Pos", _name);
 	_events->RemoveListener<const std::string&, const int, const boost::uuids::uuid>("ServerSend_Health", _name);
-	_events->RemoveListener<const boost::uuids::uuid>("ServerSend_Dispose", _name);
+	_events->RemoveListener<const boost::uuids::uuid&>("ServerSend_Dispose", _name);
 	_events->RemoveListener<const std::string&, const Direction, const boost::uuids::uuid>("ServerSend_Shot", _name);
 	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("ServerSend_Statistics", _name);
 
@@ -382,7 +382,7 @@ void Server::Unsubscribe() const
 void Server::UnsubscribeBonus() const
 {
 	_events->RemoveListener<const FPoint, const BonusType, const boost::uuids::uuid>("ServerSend_BonusSpawn", _name);
-	_events->RemoveListener<const boost::uuids::uuid>("ServerSend_BonusDeSpawn", _name);
+	_events->RemoveListener<const boost::uuids::uuid&>("ServerSend_BonusDeSpawn", _name);
 
 	_events->RemoveListener<const std::string&, const boost::uuids::uuid>("ServerSend_FortressChange", _name);
 

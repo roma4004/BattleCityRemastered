@@ -18,19 +18,19 @@ Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::sh
 
 	Tank::Subscribe();
 
-	_events->EmitEvent<const std::string&>("TankSpawn", _name);
+	_events->EmitEvent<const boost::uuids::uuid&>("TankSpawn", _uuid);
 }
 
 Tank::~Tank()
 {
 	Tank::Unsubscribe();
 
-	_events->EmitEvent<const std::string&>("TankDied", _name);
+	_events->EmitEvent<const boost::uuids::uuid&>("TankDied", _uuid);
 }
 
 void Tank::Subscribe()
 {
-	_events->AddListener("DrawHealthBar", _name, [this]() { this->DrawHealthBar(); });
+	_events->AddListener("DrawHealthBar", _nameWithUuid, [this]() { this->DrawHealthBar(); });
 
 	if (_gameMode == PlayAsClient)
 	{

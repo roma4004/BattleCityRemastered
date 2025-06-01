@@ -119,22 +119,20 @@ bool MoveLikeTankBeh::Move(const float deltaTime) const
 		return false;
 	}
 
-	if (const auto currentDirection = tank->GetDirection();
-		currentDirection == UP)
+	const auto currentDirection = tank->GetDirection();
+	if (currentDirection == UP)
 	{
 		return MoveUp(deltaTime);
-
 	}
-	else if (currentDirection == LEFT)
+	if (currentDirection == LEFT)
 	{
 		return MoveLeft(deltaTime);
-
 	}
-	else if (currentDirection == DOWN)
+	if (currentDirection == DOWN)
 	{
 		return MoveDown(deltaTime);
 	}
-	else if (currentDirection == RIGHT)
+	if (currentDirection == RIGHT)
 	{
 		return MoveRight(deltaTime);
 	}

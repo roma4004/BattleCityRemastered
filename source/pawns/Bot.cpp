@@ -241,7 +241,7 @@ void Bot::TickUpdate(const float deltaTime)
 		}
 	}
 
-	// change dir it cant move
+	// change dir it can't move
 	if (pos == GetPos())
 	{
 		const int randDir = _distDirection(_gen);

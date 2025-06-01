@@ -105,8 +105,8 @@ bool MoveLikeBulletBeh::Move(const float deltaTime) const
 	{
 		return MoveLeft(deltaTime);
 	}
-	if (direction == RIGHT && bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x)
-	         - sideBarWidth)
+	if (direction == RIGHT
+	    && bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x) - sideBarWidth)
 	{
 		return MoveRight(deltaTime);
 	}

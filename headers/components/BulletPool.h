@@ -32,8 +32,8 @@ class BulletPool final
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	std::shared_ptr<Window> window, GameMode gameMode,std::shared_ptr<SDL_Texture> textureCollection,
-			  std::shared_ptr<SDL_Renderer> renderer);
+	           std::shared_ptr<Window> window, GameMode gameMode, std::shared_ptr<SDL_Texture> textureCollection,
+	           std::shared_ptr<SDL_Renderer> renderer);
 
 	~BulletPool();
 

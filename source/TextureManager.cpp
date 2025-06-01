@@ -5,7 +5,7 @@
 
 TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer):
 	_renderer(std::move(renderer)),
-	_texture(std::move(texture)){}
+	_texture(std::move(texture)) {}
 
 void TextureManager::DrawTexture(BaseObj* obj)
 {
@@ -19,7 +19,7 @@ void TextureManager::DrawTexture(BaseObj* obj)
 	const auto name = obj->GetName();
 	SDL_Rect textureRect{};
 	const auto pawn = dynamic_cast<Pawn*>(obj);
-	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
+	if (name == "Enemy")
 	{
 		textureRect = _offset.enemy;
 		textureRect.x += pawn->_animationId * 13;
@@ -48,11 +48,9 @@ void TextureManager::DrawTexture(BaseObj* obj)
 	}
 	else if (name == "SteelWall")
 	{
-		
 	}
 	else if (name == "WaterTile")
 	{
-		
 	}
 	else
 	{

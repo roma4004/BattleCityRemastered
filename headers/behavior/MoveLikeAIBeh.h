@@ -6,6 +6,9 @@
 #include <memory>
 #include <random>
 
+class BaseObj;
+class Tank;
+
 class MoveLikeAIBeh final : public IMoveBeh
 {
 	std::mt19937 gen;
@@ -19,6 +22,8 @@ class MoveLikeAIBeh final : public IMoveBeh
 	[[nodiscard]] bool MoveRight(float deltaTime) const override;
 	[[nodiscard]] bool MoveUp(float deltaTime) const override;
 	[[nodiscard]] bool MoveDown(float deltaTime) const override;
+
+	static void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank);
 
 public:
 	MoveLikeAIBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects);
