@@ -49,8 +49,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 public:
 	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
 	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode,
-	             std::shared_ptr<SDL_Texture> textureCollection,
-	             std::shared_ptr<SDL_Renderer> renderer);
+	             std::shared_ptr<SDL_Texture> textureCollection, std::shared_ptr<SDL_Renderer> renderer);
 
 	~FortressWall() override;
 

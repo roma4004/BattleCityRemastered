@@ -15,6 +15,8 @@ void Map::MapCreation(const float gridSize) const
 			const float x = static_cast<float>(vertical) * gridSize;
 			const float y = static_cast<float>(horizontal) * gridSize;
 			ObjRectangle rect = {.x = x, .y = y, .w = gridSize, .h = gridSize};
+			rect.w += 1;
+			rect.h += 1;
 			switch (fieldLevelOne[horizontal][vertical])
 			{
 				case 0:
@@ -23,13 +25,9 @@ void Map::MapCreation(const float gridSize) const
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Brick);
 					break;
 				case 2:
-					rect.w -= 1;
-					rect.h -= 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Steel);
 					break;
 				case 3:
-					rect.w += 1;
-					rect.h += 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Water);
 					break;
 				case 4:
