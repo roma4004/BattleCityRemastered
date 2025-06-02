@@ -25,34 +25,46 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 	}
 
 	const float speed = tank->GetSpeed();
-	float speedX = speed * deltaTime;
-	float speedY = speed * deltaTime;
-
+	const float moveSpeed = speed * deltaTime;
+	ObjRectangle tankNextPosRect;
 	if (const Direction dir = tank->GetDirection();
 		dir == UP)
 	{
-		//36 37 initialize in if
-		speedY *= -1;
-		speedX *= 0;
+		tankNextPosRect = ObjRectangle{
+			.x = tank->GetX(),
+			.y = tank->GetY() - moveSpeed,
+			.w = tank->GetWidth(),
+			.h = tank->GetHeight() + moveSpeed
+		};
 	}
 	else if (dir == DOWN)
 	{
-		speedY *= 1;
-		speedX *= 0;
+		tankNextPosRect = ObjRectangle{
+			.x = tank->GetX(),
+			.y = tank->GetY(),
+			.w = tank->GetWidth(),
+			.h = tank->GetHeight() + moveSpeed
+		};
 	}
 	else if (dir == LEFT)
 	{
-		speedX *= -1;
-		speedY *= 0;
+		tankNextPosRect = ObjRectangle{
+			.x = tank->GetX() - moveSpeed,
+			.y = tank->GetY(),
+			.w = tank->GetWidth() + moveSpeed,
+			.h = tank->GetHeight()
+		};
 	}
 	else if (dir == RIGHT)
 	{
-		speedX *= 1;
-		speedY *= 0;
+		tankNextPosRect = ObjRectangle{
+			.x = tank->GetX(),
+			.y = tank->GetY(),
+			.w = tank->GetWidth() + moveSpeed,
+			.h = tank->GetHeight()
+		};
 	}
 
-	const auto thisNextPosRect = ObjRectangle{.x = tank->GetX() + speedX, .y = tank->GetY() + speedY,
-	                                          .w = tank->GetWidth(), .h = tank->GetHeight()};
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (object.get() == nullptr || tank == object.get())
@@ -60,7 +72,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(thisNextPosRect, object->GetRect()))
+		if (ColliderUtils::IsCollide(tankNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPassable())
 			{
