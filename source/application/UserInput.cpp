@@ -30,13 +30,18 @@ void UserInput::Unsubscribe() const
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {
+	//TODO: if already pause not to pause window again on start dragging
 	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_MOVED)
 	{
 		if (!_isMoving)
 		{
 			_isMoving = true;
 
-			_events->EmitEvent("Pause_Released");
+			if (!_isPause)
+			{
+				_isPauseBeforeDragNDrop = _isPause;//Backup to let pause status the same as it was before dragging
+				_events->EmitEvent("Pause_Released");
+			}
 		}
 
 		_lastMoveEventTime = std::chrono::system_clock::now();
@@ -51,7 +56,10 @@ void UserInput::OnWindowMoveStop()
 		{
 			_isMoving = false;
 
-			_events->EmitEvent("Pause_Released");
+			if (!_isPauseBeforeDragNDrop)
+			{
+				_events->EmitEvent("Pause_Released");
+			}
 		}
 	}
 }

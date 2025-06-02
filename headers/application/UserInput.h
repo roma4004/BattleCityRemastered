@@ -15,6 +15,7 @@ class UserInput final
 	MouseButtons _mouseButtons{};
 	bool _isGameOver{false};
 	bool _isPause{false};
+	bool _isPauseBeforeDragNDrop{false};
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
 
