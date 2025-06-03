@@ -8,6 +8,7 @@
 
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <chrono>
 #include <random>
 #include <unordered_map>
 
@@ -56,6 +57,11 @@ class GameSuccess final : public IGame
 	std::random_device _rd;
 
 	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
+	const int _targetFPS{60};
+	std::chrono::duration<double> _targetFrameDuration;
+
+	SDL_TimerID _frameTimer{0};
+	bool _frameReady{true};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -66,7 +72,7 @@ class GameSuccess final : public IGame
 	void NextGameMode();
 	void GenerateFpsTextures();
 
-	void CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime);
+	void CountFpsAndDeltaTime(float& deltaTime, const std::chrono::high_resolution_clock::time_point& startFrameTime);
 
 	void DisposeDeadObject();
 

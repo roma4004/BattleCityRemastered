@@ -11,7 +11,7 @@ class EventSystem;
 class Bullet final : public Pawn
 {
 	std::string _author;
-	double _bulletDamageRadius{12.f};
+	double _bulletDamageRadius{18.f};
 	int _damage{0};
 	std::string _uuidStr{};
 

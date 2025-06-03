@@ -20,6 +20,14 @@
 //#endif
 #define ASIO_STANDALONE
 
+Uint32 FrameTimerCallback(Uint32 interval, void* param)
+{
+	const auto frameReady = static_cast<bool*>(param);
+	*frameReady = true;
+
+	return 0;
+}
+
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
@@ -38,7 +46,8 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _tankSpawner{window, &_allObjects, events, _bulletPool, atlasTexture, _renderer},
 	  _bonusSpawner{events, &_allObjects, window},
 	  _obstacleSpawner{events, &_allObjects, window, atlasTexture, renderer},
-	  _isVsyncOn{isVsyncOn}
+	  _isVsyncOn{isVsyncOn},
+	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
 {
 	GenerateFpsTextures();
 
@@ -49,6 +58,12 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 
 GameSuccess::~GameSuccess()
 {
+	if (_frameTimer)
+	{
+		SDL_RemoveTimer(_frameTimer);
+		_frameTimer = 0;
+	}
+
 	Unsubscribe();
 }
 
@@ -178,41 +193,65 @@ void GameSuccess::GenerateFpsTextures()
 	}
 }
 
-void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime)
+void GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
+                                       const std::chrono::high_resolution_clock::time_point& startFrameTime)
 {
-	static Uint64 lastUpdate{0};
+	static auto lastFpsUpdate = std::chrono::high_resolution_clock::now();
 	static Uint32 lastDisplayedFps{0};
-	static const Uint64 frequency{SDL_GetPerformanceFrequency()};
+	static Uint32 frameCounter{0};
 
-	const Uint64 frameDelta = endFrameTime - startFrameTime;
-	deltaTime = frameDelta / static_cast<float>(frequency);
+	std::chrono::high_resolution_clock::time_point endFrameTime = std::chrono::high_resolution_clock::now();
+	auto frameDuration = std::chrono::duration<double>(endFrameTime - startFrameTime);
+	deltaTime = static_cast<float>(frameDuration.count());
 
-	//Cap to 60 FPS
-	if (constexpr double targetFrameTime = 1.f / 60.f;
-		!_isVsyncOn && deltaTime < targetFrameTime)
+	if (!_isVsyncOn)
 	{
-		SDL_Delay(static_cast<Uint32>((targetFrameTime - deltaTime) * 1000));
-		deltaTime = targetFrameTime;
-	}
-
-	if (const Uint64 timeSinceLastUpdate = endFrameTime - lastUpdate;
-		timeSinceLastUpdate >= frequency)
-	{
-		const Uint32 fps = static_cast<int>(
-			std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
-		// SDL_Log("FPS %i", fps);
-
-		if (fps != lastDisplayedFps
-		    && _fpsTextures.contains(fps))
+		if (const auto timeToWait = _targetFrameDuration - frameDuration;
+			timeToWait.count() > 0)
 		{
-			lastDisplayedFps = fps;
-			_fpsTexture = _fpsTextures[fps];
-		}
+			_frameReady = false;
+			const Uint32 waitMs = static_cast<Uint32>(timeToWait.count() * 1000.0);
+			_frameTimer = SDL_AddTimer(waitMs, FrameTimerCallback, &_frameReady);
+			if (waitMs > 5)
+			{
+				SDL_Delay(waitMs - 5);
+			}
 
-		lastUpdate = endFrameTime;
+			while (!_frameReady)
+			{
+				SDL_PumpEvents();
+			}
+
+			if (_frameTimer)
+			{
+				SDL_RemoveTimer(_frameTimer);
+				_frameTimer = 0;
+			}
+
+			endFrameTime = std::chrono::high_resolution_clock::now();
+			frameDuration = std::chrono::duration<double>(endFrameTime - startFrameTime);
+			deltaTime = static_cast<float>(frameDuration.count());
+		}
 	}
 
-	startFrameTime = endFrameTime;
+	frameCounter++;
+	if (const auto timeSinceLastFpsUpdate = std::chrono::duration<double>(endFrameTime - lastFpsUpdate);
+		timeSinceLastFpsUpdate.count() >= 1.0)
+	{
+		const Uint32 fps = static_cast<Uint32>(std::round(frameCounter / timeSinceLastFpsUpdate.count()));
+		frameCounter = 0;
+		lastFpsUpdate = endFrameTime;
+
+		if (fps != lastDisplayedFps)
+		{
+			if (const Uint32 cappedFps = std::min(fps, 1000u);
+				_fpsTextures.contains(cappedFps))
+			{
+				lastDisplayedFps = fps;
+				_fpsTexture = _fpsTextures[cappedFps];
+			}
+		}
+	}
 }
 
 void GameSuccess::DisposeDeadObject()
@@ -260,18 +299,16 @@ void GameSuccess::MainLoop()
 {
 	try
 	{
-		Uint64 startFrameTime = SDL_GetPerformanceCounter();
 		float deltaTime{0.f};
 		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
-		Uint64 endFrameTime{0u};
 		while (!_userInput.IsGameOver())
 		{
+			std::chrono::high_resolution_clock::time_point startFrameTime = std::chrono::high_resolution_clock::now();
+
 			if (_gameMode == PlayAsHost)
 			{
 				_events->EmitEvent("ServerSend_StartFrame");
 			}
-
-			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
 
 			_window->ClearBuffer();
 
@@ -312,12 +349,12 @@ void GameSuccess::MainLoop()
 
 			SDL_RenderPresent(_renderer.get());
 
-			endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
-
 			if (_gameMode == PlayAsHost)
 			{
 				_events->EmitEvent("ServerSend_EndFrame");
 			}
+
+			CountFpsAndDeltaTime(deltaTime, startFrameTime);
 		}
 	}
 	catch (std::exception& e)

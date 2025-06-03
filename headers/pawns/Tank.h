@@ -36,7 +36,7 @@ class Tank : public Pawn, public IHealthBar
 
 protected:
 	FPoint _bulletSize{9.f, 9.f};
-	double _bulletDamageRadius{12.f};
+	double _bulletDamageRadius{18.f};
 	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
