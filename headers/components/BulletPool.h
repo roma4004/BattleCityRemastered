@@ -39,13 +39,9 @@ public:
 	void Subscribe();
 	void Unsubscribe() const;
 
-	std::shared_ptr<Bullet> CreateNewBullet(ObjRectangle rect, int damage, double aoeRadius, int color, int health,
-	                                        Direction dir, float speed, std::string author, std::string fraction,
-	                                        int tier);
+	std::shared_ptr<Bullet> CreateNewBullet();
 
-	std::shared_ptr<BaseObj> SpawnBullet(ObjRectangle rect, int damage, double aoeRadius, int color, int health,
-	                                     Direction dir, float speed, std::string author, std::string fraction,
-	                                     int tier);
+	std::shared_ptr<BaseObj> SpawnBullet();
 
 	void ReturnBullet(BaseObj* bullet);
 

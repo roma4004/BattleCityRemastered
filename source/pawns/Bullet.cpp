@@ -11,10 +11,12 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+Bullet::Bullet(PawnProperty pawnProperty)
+	: Bullet(std::move(pawnProperty), 0, {18.f}, "", boost::uuids::nil_uuid()){}
+
 Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
-               const boost::uuids::uuid uuid, const std::string& uuidStr)
-	: Pawn{std::move(pawnProperty),
-	       std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)
+               const boost::uuids::uuid uuid)
+	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)
 	  },
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
@@ -24,21 +26,20 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	if (uuid == boost::uuids::nil_uuid() || uuidStr == "")
+	if (uuid == boost::uuids::nil_uuid())
 	{
 		static boost::uuids::random_generator uuidGenerator;
 		_uuid = uuidGenerator();
-		_uuidStr = boost::uuids::to_string(_uuid);
 	}
 	else
 	{
 		_uuid = uuid;
-		_uuidStr = uuidStr;
 	}
+	_uuidStr = boost::uuids::to_string(_uuid);
 
 	_name = "Bullet";
 
-	Subscribe();
+	// Subscribe();
 }
 
 Bullet::~Bullet()
@@ -120,7 +121,7 @@ void Bullet::Enable()
 }
 
 void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
-                   const float speed, const Direction dir, const int health, std::string author,
+                   const int health, const Direction dir, const float speed, std::string author,
                    std::string fraction, const int tier, const boost::uuids::uuid uuid)
 {
 	Disable();//TODO: remove this, and not subscribe on create bullets

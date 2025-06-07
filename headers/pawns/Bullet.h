@@ -24,13 +24,13 @@ class Bullet final : public Pawn
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author,
-	       boost::uuids::uuid uuid = {}, const std::string& uuidStr = {});
+	explicit Bullet(PawnProperty pawnProperty);
+	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, boost::uuids::uuid uuid = {});
 
 	~Bullet() override;
 
-	void Reset(const ObjRectangle& rect, int damage, double aoeRadius, int color, float speed, Direction dir,
-	           int health, std::string author, std::string fraction, int tier, boost::uuids::uuid uuid = {});
+	void Reset(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health, Direction dir,
+	           float speed, std::string author, std::string fraction, int tier, boost::uuids::uuid uuid = {});
 
 	void Disable() const;
 	void Enable();

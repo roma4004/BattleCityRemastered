@@ -128,13 +128,11 @@ boost::uuids::uuid ShootingBeh::Shot(const boost::uuids::uuid uuid)
 	std::string fraction = tank->GetFraction();
 	const int tier = tank->GetTier();
 
-	auto bulletAsBase = _bulletPool->SpawnBullet(
-			rect, damage, aoeRadius, color, health, dir, speed, author, fraction, tier);
+	auto bulletAsBase = _bulletPool->SpawnBullet();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
-		bullet->Reset(
-				std::move(rect), damage, aoeRadius, color, speed, dir, health, std::move(author), std::move(fraction),
-				tier, uuid);
+		bullet->Reset(rect, damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction),
+		              tier, uuid);
 		// std::cout << "[" << "bullet->Reset" << "] "
 		// 			<< ", name=" << bullet->GetName()
 		// 			<< ", UUID=" << boost::uuids::to_string(bullet->GetUuid())

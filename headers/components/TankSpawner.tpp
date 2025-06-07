@@ -13,7 +13,7 @@ void TankSpawner::RespawnTank(const ObjRectangle rect, int color, int health, st
 	BaseObjProperty baseObjProperty{
 			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode, _textureManager};
+			std::move(baseObjProperty), _allObjects, _events, _window, _textureManager, _gameMode,  1, UP, speed};
 
 	if (auto tank = std::make_shared<TTankType>(std::move(pawnProperty), _bulletPool);
 		tank.get() != nullptr)
@@ -53,7 +53,7 @@ inline void TankSpawner::RespawnTank<Player>(const ObjRectangle rect, int color,
 	BaseObjProperty baseObjProperty{
 		std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode, _textureManager};
+			std::move(baseObjProperty), _allObjects, _events, _window, _textureManager, _gameMode,  1, UP, speed};
 
 	if (auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
 		tank.get() != nullptr)

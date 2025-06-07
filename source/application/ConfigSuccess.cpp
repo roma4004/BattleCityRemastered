@@ -1,5 +1,5 @@
 #include "../../headers/application/ConfigSuccess.h"
-#include "../../headers/TextureManager.h"
+#include "../../headers/components/TextureManager.h"
 #include "../../headers/application/GameSuccess.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/GameStatistics.h"
