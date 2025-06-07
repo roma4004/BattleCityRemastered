@@ -134,6 +134,8 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 
+		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+
 		const FPoint enemyPos = enemy->GetPos();
 
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
@@ -146,7 +148,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can pick up random bonus
+// Check that tank can pick up a random bonus
 TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
