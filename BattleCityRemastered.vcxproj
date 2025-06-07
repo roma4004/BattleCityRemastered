@@ -143,7 +143,7 @@
     <ClCompile Include="source\components\Menu.cpp" />
     <ClCompile Include="source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="source\components\TankSpawner.cpp" />
-    <ClCompile Include="source\TextureManager.cpp" />
+    <ClCompile Include="source\components\TextureManager.cpp" />
     <ClCompile Include="source\Map.cpp" />
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="source\network\commands\BonusSpawn.cpp" />
@@ -218,8 +218,8 @@
     <ClInclude Include="headers\components\ObstacleSpawner.tpp" />
     <ClInclude Include="headers\components\TankSpawner.h" />
     <ClInclude Include="headers\components\TankSpawner.tpp" />
+    <ClInclude Include="headers\components\TextureManager.h" />
     <ClInclude Include="headers\enums\RespawnResource.h" />
-    <ClInclude Include="headers\TextureManager.h" />
     <ClInclude Include="headers\enums\BonusType.h" />
     <ClInclude Include="headers\enums\ComandType.h" />
     <ClInclude Include="headers\enums\Direction.h" />

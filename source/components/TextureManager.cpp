@@ -1,6 +1,6 @@
-﻿#include "../headers/TextureManager.h"
-#include "../headers/enums/Direction.h"
-#include "../headers/pawns/Pawn.h"
+﻿#include "../../headers/components/TextureManager.h"
+#include "../../headers/enums/Direction.h"
+#include "../../headers/pawns/Pawn.h"
 #include <SDL.h>
 
 TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer):

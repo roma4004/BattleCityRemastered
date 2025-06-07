@@ -161,6 +161,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
+	_allObjects.pop_back();
+	auto backup = _allObjects.back();
+	_allObjects.clear();
+	_allObjects.emplace_back(backup);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
@@ -255,6 +260,12 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 {
+	//TODO: remove this after moving test to separate file
+	_allObjects.pop_back();
+	auto backup = _allObjects.back();
+	_allObjects.clear();
+	_allObjects.emplace_back(backup);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};

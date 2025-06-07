@@ -124,7 +124,11 @@ void Pawn::Draw(const BaseObj* /*obj*/) const
 		return;
 	}
 
-	if (!_textureManager)
+	if (_textureManager)
+	{
+		_textureManager->Draw(this);
+	}
+	else
 	{
 		int startY = static_cast<int>(GetY());
 		const int startX = static_cast<int>(GetX());
@@ -143,10 +147,6 @@ void Pawn::Draw(const BaseObj* /*obj*/) const
 				std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
 			}
 		}
-	}
-	else
-	{
-		_textureManager->Draw(this);
 	}
 }
 

@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "BaseObj.h"
-#include "enums/TextureOffset.h"
-#include "interfaces/IDrawable.h"
+#include "../BaseObj.h"
+#include "../enums/TextureOffset.h"
+#include "../interfaces/IDrawable.h"
 
 #include <memory>
 
