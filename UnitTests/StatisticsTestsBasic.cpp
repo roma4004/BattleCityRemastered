@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class StatisticsTest : public testing::Test
 {
@@ -62,17 +61,17 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 
 		ObjRectangle rect1{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{rect1, _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		ObjRectangle rect2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty2{std::move(rect2), _green, _tankHealth, true, _uuid, _name2, _fraction};
+		BaseObjProperty baseObjProperty2{rect2, _green, _tankHealth, true, _uuid, _name2, _fraction};
 		PawnProperty pawnProperty2{
 				std::move(baseObjProperty2), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		ObjRectangle rect3{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty3{std::move(rect3), _gray, _tankHealth, true, _uuid, _name3, _fraction3};
+		BaseObjProperty baseObjProperty3{rect3, _gray, _tankHealth, true, _uuid, _name3, _fraction3};
 		PawnProperty pawnProperty3{
 				std::move(baseObjProperty3), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -97,7 +96,7 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -118,7 +117,7 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 	std::string author{"Player2"};
 	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -145,7 +144,7 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -171,7 +170,7 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -192,7 +191,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 	std::string author{"Player2"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+		rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -219,7 +218,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -244,7 +243,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = _bulletWidth, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -271,7 +270,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -298,7 +297,7 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -320,7 +319,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -342,7 +341,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize + 1, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -369,7 +368,7 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -391,7 +390,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize + 1, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -413,7 +412,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -434,7 +433,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -446,7 +445,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	std::string author2{"Player2"};
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty2{
-			std::move(rect2), _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
+			rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
 	PawnProperty pawnProperty2{
 			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -466,14 +465,14 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -491,14 +490,14 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -516,14 +515,14 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
 	ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickRect), _window, _events, _uuid, _gameMode, nullptr));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(brickRect, _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -541,14 +540,14 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
 
@@ -566,14 +565,14 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
 
@@ -591,14 +590,14 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
 	ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickRect), _window, _events, _uuid, _gameMode, nullptr));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(brickRect, _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
 
@@ -619,7 +618,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -631,7 +630,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	std::string author2{"Enemy2"};
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty2{
-			std::move(rect2), _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
+			rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
 	PawnProperty pawnProperty2{
 			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -652,7 +651,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -664,7 +663,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	std::string author2{"Player2"};
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty2{
-			std::move(rect2), _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
+			rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
 	PawnProperty pawnProperty2{
 			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -687,7 +686,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	std::string author{"Player1"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -699,7 +698,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	std::string author2{"Enemy1"};
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty2{
-			std::move(rect2), _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
+			rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
 	PawnProperty pawnProperty2{
 			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -722,7 +721,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	std::string author{"Player2"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -734,7 +733,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	std::string author2{"Enemy1"};
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _bulletHeight + 1.f, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty2{
-			std::move(rect2), _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
+			rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name2), std::move(fraction2)};
 	PawnProperty pawnProperty2{
 			std::move(baseObjProperty2), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 

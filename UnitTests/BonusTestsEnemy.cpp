@@ -6,16 +6,15 @@
 #include "../headers/enums/BonusType.h"
 #include "../headers/enums/Direction.h"
 #include "../headers/enums/GameMode.h"
-#include "../headers/input/InputProviderForPlayerOne.h"
+// #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/obstacles/FortressWall.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PawnProperty.h"
-#include "../headers/pawns/Player.h"
+// #include "../headers/pawns/Player.h"
 
 #include "gtest/gtest.h"
 
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class BonusTestEnemy : public testing::Test
 {
@@ -51,9 +50,9 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
-		std::string name = "Player1";
-		std::string fraction = "PlayerTeam";
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		// std::string name = "Player1";
+		// std::string fraction = "PlayerTeam";
+		// std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
@@ -71,7 +70,7 @@ protected:
 };
 
 
-// NOTE: when enemy pick up shovel bonus fortressWalls hide (destroyed behaviour)
+// NOTE: when the enemy picks up shovel bonus fortressWalls hide (destroyed behavior)
 
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 {
@@ -79,7 +78,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _window, _events,
 					&_allObjects, _uuid, _gameMode, nullptr));
-	const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get());
+	const auto fortressWall = dynamic_cast<const FortressWall*>(_allObjects.back().get());
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
 
@@ -92,7 +91,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	EXPECT_EQ(fortressWall->GetHealth(), 0);
 }
 
-// NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch)
+// NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch),
 //       then enemy pick up shovel bonus fortressWalls should hide (destroy)
 TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 {

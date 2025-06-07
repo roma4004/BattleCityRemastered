@@ -15,7 +15,6 @@
 #include "gtest/gtest.h"
 
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class BulletTest : public testing::Test
 {
@@ -51,7 +50,7 @@ protected:
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 
 		BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
@@ -85,14 +84,14 @@ TEST_F(BulletTest, BulletSetPos)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can move inside of screen
+// Check that a bullet can move inside the screen
 TEST_F(BulletTest, BulletMoveInsideScreen)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		{
-			//success bullet move down test, try to move inside screen bullet
+			//success bullet moves down test, try to move inside a screen bullet
 			bullet->SetDirection(DOWN);
 			const FPoint bulletStartPos = bullet->GetPos();
 			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
@@ -101,7 +100,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 		}
 		{
-			//success bullet right test, try to move inside screen bullet
+			//success bullet right test, try to move inside a screen bullet
 			bullet->SetDirection(RIGHT);
 			const FPoint bulletStartPos = bullet->GetPos();
 			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
@@ -110,12 +109,12 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
 		}
 
-		const float windowWidth = static_cast<float>(_window->size.x);
-		const float windowHeight = static_cast<float>(_window->size.y);
+		const auto windowWidth = static_cast<float>(_window->size.x);
+		const auto windowHeight = static_cast<float>(_window->size.y);
 
 		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 		{
-			//success shot up test, try to create inside screen bullet
+			//success shot up test, try to create an inside screen bullet
 			bullet->SetDirection(UP);
 			const FPoint bulletStartPos = bullet->GetPos();
 			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
@@ -124,7 +123,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 		}
 		{
-			//success move left test, try to move inside screen bullet
+			//success move left test, try to move inside a screen bullet
 			bullet->SetDirection(LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
 			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
@@ -139,17 +138,17 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can't move outside of screen
+// Check that a bullet can't move outside the screen
 TEST_F(BulletTest, BulletMoveOutSideScreen)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_window->size.x);
-		const float windowHeight = static_cast<float>(_window->size.y);
+		const auto windowWidth = static_cast<float>(_window->size.x);
+		const auto windowHeight = static_cast<float>(_window->size.y);
 
 		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 		{
-			//fail bullet move down test, try to move outside screen bullet
+			//fail bullet move down test, try to move an outside screen bullet
 			bullet->SetDirection(DOWN);
 			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
@@ -159,7 +158,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
 		{
-			//fail bullet move right test, try to move outside screen bullet
+			//fail the bullet move right test, try to move an outside screen bullet
 			bullet->SetDirection(RIGHT);
 			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
@@ -171,7 +170,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		{
-			//fail bullet move up test, try to move outside screen bullet
+			//fail bullet move up test, try to move an outside screen bullet
 			bullet->SetDirection(UP);
 			const FPoint bulletStartPos = bullet->GetPos();
 
@@ -180,7 +179,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
 		{
-			//fail bullet move left test, try to move outside screen bullet
+			//fail the bullet move left test, try to move an outside screen bullet
 			bullet->SetDirection(LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
 
@@ -195,7 +194,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can deal damage to other obstacle and self
+// Check that a bullet can deal damage to another obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
@@ -203,8 +202,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 		bullet->SetPos({.x = 0.f, .y = 7.f});
 		bullet->SetDirection(UP);
 		ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(rect), _window, _events, _uuid, _gameMode, nullptr));
-		if (const auto brickWall = dynamic_cast<BrickWall*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode, nullptr));
+		if (const auto brickWall = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickWallHealth = brickWall->GetHealth();
@@ -221,7 +220,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can deal damage to other obstacle and self
+// Check that a bullet can deal damage to another obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
@@ -229,8 +228,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 		bullet->SetPos({.x = 7.f, .y = 0.f});
 		bullet->SetDirection(LEFT);
 		ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(rect), _window, _events, _uuid, _gameMode, nullptr));
-		if (const auto brickWall = dynamic_cast<BrickWall*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode, nullptr));
+		if (const auto brickWall = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickWallHealth = brickWall->GetHealth();
@@ -247,7 +246,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can deal damage to other obstacle and self
+// Check that a bullet can deal damage to another obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
@@ -255,8 +254,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(rect), _window, _events, _uuid, _gameMode, nullptr));
-		if (const auto brick = dynamic_cast<BrickWall*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode, nullptr));
+		if (const auto brick = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
@@ -273,7 +272,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can deal damage to other obstacle and self
+// Check that a bullet can deal damage to another obstacle and self
 TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
@@ -281,8 +280,8 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(RIGHT);
 		ObjRectangle rect{.x = 7.f, .y = 0.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(rect), _window, _events, _uuid, _gameMode, nullptr));
-		if (const auto brick = dynamic_cast<BrickWall*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode, nullptr));
+		if (const auto brick = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
@@ -308,13 +307,13 @@ TEST_F(BulletTest, BulletDamageTank)
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode, nullptr, nullptr);
 
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
-	BaseObjProperty baseObjProperty{std::move(rect), gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
 		std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool)));
 
-	const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get());
+	const auto enemy = dynamic_cast<const Enemy*>(_allObjects.back().get());
 
 	EXPECT_EQ(enemy->GetHealth(), 1);
 
@@ -323,24 +322,24 @@ TEST_F(BulletTest, BulletDamageTank)
 	EXPECT_EQ(enemy->GetHealth(), 0);
 }
 
-// Check that bullet can deal damage to other bullet and self
+// Check that a bullet can deal damage to another bullet and self
 TEST_F(BulletTest, BulletToBulletDamageEachOther)
 {
-	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
+	if (const auto bullet = dynamic_cast<const Bullet*>(_allObjects.front().get()))
 	{
 		std::string name{"Bullet2"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player2"};
 		ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
-		if (const auto bullet2 = dynamic_cast<Bullet*>(_allObjects.back().get()))
+		if (const auto bullet2 = dynamic_cast<const Bullet*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int bullet2Health = bullet2->GetHealth();
@@ -357,7 +356,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can't deal damage to undestractable object
+// Check that a bullet can't deal damage to an undestractable object
 TEST_F(BulletTest, BulletCantDamageSteelWall)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
@@ -365,8 +364,8 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(rect), _window, _events, _uuid, _gameMode, nullptr));
-		if (const auto brick = dynamic_cast<SteelWall*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _window, _events, _uuid, _gameMode, nullptr));
+		if (const auto brick = dynamic_cast<const SteelWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
@@ -383,7 +382,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 	EXPECT_TRUE(false);
 }
 
-// Check that bullet can pass through water
+// Check that a bullet can pass through water
 TEST_F(BulletTest, BulletCantDamageWater)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
@@ -391,8 +390,8 @@ TEST_F(BulletTest, BulletCantDamageWater)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<WaterTile>(std::move(rect), _window, _events, _uuid, _gameMode, nullptr));
-		if (const auto brick = dynamic_cast<WaterTile*>(_allObjects.back().get()))
+		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _window, _events, _uuid, _gameMode, nullptr));
+		if (const auto brick = dynamic_cast<const WaterTile*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
@@ -417,7 +416,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = 36, .h = 36};
 		_allObjects.emplace_back(
-				std::make_shared<FortressWall>(std::move(rect), _window, _events, &_allObjects, _uuid, _gameMode, nullptr));
+				std::make_shared<FortressWall>(rect, _window, _events, &_allObjects, _uuid, _gameMode, nullptr));
 		if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{
 			fortressWall->SetHealth(1);

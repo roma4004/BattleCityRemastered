@@ -44,7 +44,7 @@ protected:
 		std::string author{"Player1"};
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
 
@@ -62,10 +62,10 @@ protected:
 
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
-	if (auto&& bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (/*auto&& bullet = */dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(wallRect), _window, _events, _uuid, _gameMode, nullptr));
+		_allObjects.emplace_back(std::make_shared<SteelWall>(wallRect, _window, _events, _uuid, _gameMode, nullptr));
 
 		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
 		{

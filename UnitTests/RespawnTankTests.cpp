@@ -14,7 +14,6 @@
 #include "gtest/gtest.h"
 
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class TankSpawnerTest : public testing::Test
 {
@@ -53,12 +52,12 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 
 		const ObjRectangle rect1{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect1), _yellow, _tankHealth, true, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{rect1, _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		const ObjRectangle rect2{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty2{std::move(rect2), _green, _tankHealth, true, _uuid, _name2, _fraction2};
+		BaseObjProperty baseObjProperty2{rect2, _green, _tankHealth, true, _uuid, _name2, _fraction2};
 		PawnProperty pawnProperty2{
 				std::move(baseObjProperty2), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 

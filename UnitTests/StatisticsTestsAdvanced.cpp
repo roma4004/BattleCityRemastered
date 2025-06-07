@@ -13,7 +13,6 @@
 #include "gtest/gtest.h"
 
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class StatisticsTestAdvanced : public testing::Test
 {

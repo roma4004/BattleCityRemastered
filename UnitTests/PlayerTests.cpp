@@ -50,7 +50,7 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), yellow, _tankHealth, true, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{rect, yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		_allObjects.reserve(4);
@@ -63,12 +63,12 @@ protected:
 	}
 };
 
-// Check that tank can move inside screen
+// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		const float windowHeight = static_cast<float>(_window->size.y);
+		const auto windowHeight = static_cast<float>(_window->size.y);
 		player->SetPos({.x = 0.f, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
@@ -87,12 +87,12 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can move inside screen
+// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_window->size.x);
+		const auto windowWidth = static_cast<float>(_window->size.x);
 		player->SetPos({.x = windowWidth - _tankSize, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
@@ -111,7 +111,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can move inside screen
+// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenDown)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -134,7 +134,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can move inside screen
+// Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenRight)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -200,8 +200,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_window->size.x);
-		const float windowHeight = static_cast<float>(_window->size.y);
+		const auto windowWidth = static_cast<float>(_window->size.x);
+		const auto windowHeight = static_cast<float>(_window->size.y);
 		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
@@ -221,8 +221,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		const float windowWidth = static_cast<float>(_window->size.x);
-		const float windowHeight = static_cast<float>(_window->size.y);
+		const auto windowWidth = static_cast<float>(_window->size.x);
+		const auto windowHeight = static_cast<float>(_window->size.y);
 		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
@@ -339,13 +339,13 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can shoot inside of screen
+// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenDown)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = 0.f, .y = 0.f});
-		//success shot down test, try to create inside screen bullet
+		//success shot down test, try to create an inside screen bullet
 		player->SetDirection(DOWN);
 		const size_t size = _allObjects.size();
 
@@ -360,13 +360,13 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can shoot inside of screen
+// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenRight)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = 0.f, .y = 0.f});
-		//success shot right test, try to create inside screen bullet
+		//success shot right test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
 		_events->EmitEvent("D_Pressed");
@@ -381,14 +381,14 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can shoot inside of screen
+// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_window->size.x) - _tankSize,
 		                .y = static_cast<float>(_window->size.y) - _tankSize});
-		//success shot up test, try to create inside screen bullet
+		//success shot up test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
 		_events->EmitEvent("W_Pressed");
@@ -403,14 +403,14 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can shoot inside of screen
+// Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_window->size.x) - _tankSize,
 		                .y = static_cast<float>(_window->size.y) - _tankSize});
-		//success shot left test, try to create inside screen bullet
+		//success shot left test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
 		_events->EmitEvent("A_Pressed");
@@ -425,14 +425,14 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can't shoot outside of screen
+// Check that tank can't shoot outside the screen
 TEST_F(PlayerTest, TankShotOutSideScreen)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = 0.f, .y = 0.f});
 		{
-			//fail shot up test, try to create outside screen bullet
+			//fail the shot up test, try to create an outside screen bullet
 			const size_t size = _allObjects.size();
 
 			_events->EmitEvent("W_Pressed");
@@ -442,7 +442,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 			EXPECT_EQ(size, _allObjects.size());
 		}
 		{
-			//fail shot left test, try to create outside screen bullet
+			//fail shot left test, try to create an outside screen bullet
 			const size_t size = _allObjects.size();
 
 			_events->EmitEvent("A_Pressed");
@@ -455,7 +455,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		player->SetPos({.x = static_cast<float>(_window->size.x) - _tankSize,
 		                .y = static_cast<float>(_window->size.y) - _tankSize});
 		{
-			//fail shot down test, try to create outside screen bullet
+			//fail the shot down test, try to create an outside screen bullet
 			const size_t size = _allObjects.size();
 
 			_events->EmitEvent("S_Pressed");
@@ -465,7 +465,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 			EXPECT_EQ(size, _allObjects.size());
 		}
 		{
-			//fail shot right test, try to create outside screen bullet
+			//fail the shot right test, try to create an outside screen bullet
 			const size_t size = _allObjects.size();
 
 			_events->EmitEvent("D_Pressed");
@@ -481,21 +481,21 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank cant move through tank
+// Check that tank can't move through tank
 TEST_F(PlayerTest, TankCantPassThroughTank)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
 		constexpr int green = 0x408000;
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), green, _tankHealth, true, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{rect, green, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2)));
 
-		if (const auto player2 = dynamic_cast<Player*>(_allObjects.back().get()))
+		if (const auto player2 = dynamic_cast<const Player*>(_allObjects.back().get()))
 		{
-			//both player should failure, because they face each other blocking move each other
+			//both players should failure, because they face each other blocking move each other
 			const FPoint playerStartPos = player->GetPos();
 			const FPoint player2StartPos = player2->GetPos();
 
@@ -513,10 +513,10 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank cant move through brickWall
+// Check that tank can't move through brickWall
 TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(
@@ -540,7 +540,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 // Check that tank cant move through steelWall
 TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
 		_allObjects.emplace_back(
 				std::make_shared<SteelWall>(
@@ -564,7 +564,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 // Check that tank cant move through water
 TEST_F(PlayerTest, TankCantPassThroughWater)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
@@ -591,7 +591,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 // Check that tank can't move through fortressWall
 TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(
