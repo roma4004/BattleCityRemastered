@@ -44,7 +44,7 @@ protected:
 	std::string _fraction{"PlayerTeam"};
 	std::string _name2{"Player2"};
 	std::string _fraction2{"PlayerTeam"};
-	std::string _name3{"Enemy1"};
+	std::string _name3{"Enemy"};
 	std::string _fraction3{"EnemyTeam"};
 	GameMode _gameMode{OnePlayer};
 	boost::uuids::uuid _uuid{};
@@ -53,7 +53,7 @@ protected:
 	{
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode, nullptr, nullptr);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
@@ -328,7 +328,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize, .w = _bulletWidth,
+	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f, .y = _tankSize + 1, .w = _bulletWidth,
 	                  .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
 			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
@@ -455,7 +455,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
@@ -480,7 +480,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
@@ -505,7 +505,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 {
 	ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickRect), _window, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<BrickWall>(std::move(brickRect), _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
@@ -530,7 +530,7 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
@@ -555,7 +555,7 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
 	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickWallRect), _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
@@ -580,7 +580,7 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 {
 	ObjRectangle brickRect{.x = 0.f, .y = _tankSize + _bulletHeight + 1, .w = _bulletWidth, .h = _bulletHeight};
 
-	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickRect), _window, _events, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(brickRect), _window, _events, _uuid, _gameMode, nullptr));
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};

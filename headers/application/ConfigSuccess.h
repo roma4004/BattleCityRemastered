@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../interfaces/IConfig.h"
-
 #include <SDL.h>
 #include <SDL_ttf.h>
 

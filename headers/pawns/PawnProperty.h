@@ -13,6 +13,7 @@ struct UPoint;
 class BaseObj;
 class IMoveBeh;
 class EventSystem;
+class IDrawable;
 
 struct PawnProperty
 {
@@ -24,6 +25,5 @@ struct PawnProperty
 	std::shared_ptr<EventSystem> events{nullptr};
 	int tier{1};
 	GameMode gameMode;
-	std::shared_ptr<SDL_Texture> texture;
-	std::shared_ptr<SDL_Renderer> renderer;
+	std::shared_ptr<IDrawable> textureManager{nullptr};
 };

@@ -161,7 +161,7 @@ set(BOOST_SUBMODULES
     libs/iterator
     libs/move
     libs/mpl
-    libs/numeric"
+    libs/numeric
     libs/optional
     libs/predef
     libs/preprocessor
@@ -175,7 +175,7 @@ set(BOOST_SUBMODULES
     libs/utility
     libs/winapi
     libs/uuid
-    tools/boost_install
+    tools/boost_install"
 )#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
@@ -239,7 +239,6 @@ else ()
     message(STATUS "------------------------------------------------------------")
 endif()
 
-# Додаємо Google Test
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -248,7 +247,7 @@ FetchContent_Declare(
     GIT_PROGRESS 1
     GIT_SHALLOW TRUE
 )
-# Вимикаємо створення тестових прикладів самого Google Test
+
 set(BUILD_GMOCK OFF CACHE BOOL "Build gmock" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
 FetchContent_MakeAvailable(googletest)
@@ -256,7 +255,7 @@ enable_testing()
 
 include_directories(headers)
 
-add_executable(${PROJECT_NAME}
+set(SOURCE_FILES
         source/BaseObj.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
@@ -326,39 +325,74 @@ add_executable(${PROJECT_NAME}
         source/utils/TimeUtils.cpp
 )
 
+set(SOURCE_FILES_FOR_UNIT_TESTS
+        source/BaseObj.cpp
+        source/components/BonusSpawner.cpp
+        source/components/BulletPool.cpp
+        source/components/GameStatistics.cpp
+        source/components/LineOfSight.cpp
+        source/components/ObstacleSpawner.cpp
+        source/components/TankSpawner.cpp
+        source/ObjRectangle.cpp
+        source/Obstacles/BrickWall.cpp
+        source/Obstacles/SteelWall.cpp
+        source/Obstacles/WaterTile.cpp
+        source/Utils/ColliderUtils.cpp
+        source/utils/Logger.cpp
+        source/Utils/TimeUtils.cpp
+        source/application/Window.cpp
+        source/behavior/MoveLikeBulletBeh.cpp
+        source/behavior/MoveLikeTankBeh.cpp
+        source/behavior/ShootingBeh.cpp
+        source/bonuses/Bonus.cpp
+        source/bonuses/BonusGrenade.cpp
+        source/bonuses/BonusHelmet.cpp
+        source/bonuses/BonusShovel.cpp
+        source/bonuses/BonusStar.cpp
+        source/bonuses/BonusStatus.cpp
+        source/bonuses/BonusTank.cpp
+        source/bonuses/BonusTimer.cpp
+        source/input/InputProviderForMenu.cpp
+        source/input/InputProviderForPlayerOne.cpp
+        source/input/InputProviderForPlayerOneNet.cpp
+        source/input/InputProviderForPlayerTwo.cpp
+        source/input/InputProviderForPlayerTwoNet.cpp
+        source/obstacles/FortressWall.cpp
+        source/obstacles/Obstacle.cpp
+        source/pawns/Bot.cpp
+        source/pawns/Bullet.cpp
+        source/pawns/CoopBot.cpp
+        source/pawns/Enemy.cpp
+        source/pawns/Pawn.cpp
+        source/pawns/Player.cpp
+        source/pawns/Tank.cpp
+)
+
+set(UNIT_TESTS_FILES
+        UnitTests/BonusTestsBasic.cpp
+        UnitTests/BonusTestsEnemy.cpp
+        UnitTests/PlayerTests.cpp
+        UnitTests/BulletsTestsBasic.cpp
+        UnitTests/BulletsTestsAdvanced.cpp
+        UnitTests/StatisticsTestsBasic.cpp
+        UnitTests/StatisticsTestsAdvanced.cpp
+        UnitTests/RespawnTankTests.cpp
+)
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     add_dependencies(${PROJECT_NAME} Boost)
 endif()
 
-# Додаємо тестовий виконуваний файл
-add_executable(unit_tests
-    # Підключаємо файли з тестами
-    UnitTests/BonusTestsBasic.cpp
-    UnitTests/BonusTestsEnemy.cpp
-    UnitTests/PlayerTests.cpp
-    UnitTests/BulletsTestsBasic.cpp
-    UnitTests/BulletsTestsAdvanced.cpp
-    UnitTests/StatisticsTestsBasic.cpp
-    UnitTests/StatisticsTestsAdvanced.cpp
-    UnitTests/RespawnTankTests.cpp
-)
+add_executable(unit_tests ${SOURCE_FILES_FOR_UNIT_TESTS} ${UNIT_TESTS_FILES})
 
-# Підключаємо необхідні бібліотеки до тестів
-target_link_libraries(unit_tests
-    gtest
-    gtest_main
-    # Додаємо ті ж бібліотеки, що й у основному проекті
-    SDL2-static
-    SDL2main
-    SDL2_ttf
-    SDL2_image
-    SDL2_mixer
-    ${Boost_LIBRARIES}
-    wsock32
-    ws2_32
-)
+if (NOT EXISTS ${BOOST_SEMAPHORE})
+    add_dependencies(unit_tests Boost)
+endif()
 
-# Додаємо інтеграцію тестів з CTest
+target_include_directories(unit_tests PRIVATE headers)
+target_link_libraries(unit_tests gtest gtest_main ${Boost_LIBRARIES})
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 

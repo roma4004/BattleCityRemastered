@@ -26,12 +26,12 @@
 
 TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-                         std::shared_ptr<SDL_Texture> textureCollection, std::shared_ptr<SDL_Renderer> renderer)
+                         std::shared_ptr<IDrawable> textureManager, std::shared_ptr<SDL_Renderer> renderer)
 	: _allObjects{allObjects},
 	  _window{std::move(window)},
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)},
-	  _atlasTexture{std::move(textureCollection)},
+	  _textureManager{std::move(textureManager)},
 	  _renderer(std::move(renderer))
 {
 	static boost::uuids::random_generator uuidTankGenerator;
@@ -132,6 +132,15 @@ void TankSpawner::SetEnemyNeedRespawn()
 	for (int i = 0; i < 4; ++i)
 	{
 		_slots[i].isAvailable = true;
+	}
+}
+
+//NOTE: use only in unit tests
+void TankSpawner::SetSlotNeedRespawn(const int slotIndex)
+{
+	if (slotIndex >= 0 && slotIndex < 6)
+	{
+		_slots[slotIndex].isAvailable = true;
 	}
 }
 

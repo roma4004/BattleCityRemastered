@@ -44,7 +44,7 @@ Bonus::~Bonus()
 
 void Bonus::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 
 	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
@@ -89,7 +89,7 @@ void Bonus::UnsubscribeAsClient() const
 	_events->RemoveListener<const boost::uuids::uuid&>("ClientReceived_BonusDeSpawn", _name);
 }
 
-void Bonus::Draw() const
+void Bonus::Draw(const BaseObj* /*obj*/) const
 {
 	if (!GetIsAlive())
 	{

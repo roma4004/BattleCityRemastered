@@ -3,7 +3,7 @@
 #include "../../headers/application/ConfigSuccess.h"
 #include "../../headers/application/Window.h"
 
-#include <SDL.h>
+#include <SDL_ttf.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <memory>
@@ -15,8 +15,8 @@ SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const
 	: window{std::make_shared<Window>(windowSize)},
 	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
-	  textureAtlasPath{textureCollection},
-	  introMusicPathName{introMusicName} {}
+	  introMusicPathName{introMusicName},
+	  textureAtlasPath{textureCollection} {}
 
 SDLEnvironment::~SDLEnvironment()
 {

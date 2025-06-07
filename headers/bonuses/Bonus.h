@@ -29,7 +29,7 @@ protected:
 
 	void TickUpdate(float deltaTime) override;
 
-	void Draw() const override;
+	void Draw(const BaseObj* obj) const override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void PickUpBonus(const std::string& author, const std::string& fraction) override;

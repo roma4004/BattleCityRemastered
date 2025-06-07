@@ -47,8 +47,8 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode, nullptr, nullptr);
+		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool, nullptr, nullptr);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -60,7 +60,6 @@ protected:
 		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
-
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
 	}
@@ -71,11 +70,11 @@ protected:
 	}
 };
 
-// Check that tank can pick up random bonus
+// Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusPickUp)
 {
 	const size_t size = _allObjects.size();
-	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 2.f, .w = _tankSize, .h = _tankSize});
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 	_events->EmitEvent("S_Pressed");
 
 	if (const auto bonus = _allObjects.back().get())
@@ -420,7 +419,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, _uuid, _gameMode);
+			                               _window, _events, &_allObjects, _uuid, _gameMode, nullptr);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
@@ -437,7 +436,7 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, _uuid, _gameMode);
+			                               _window, _events, &_allObjects, _uuid, _gameMode, nullptr);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 

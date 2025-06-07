@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Bot.h"
-#include "SDL.h"
 
 #include <random>
 

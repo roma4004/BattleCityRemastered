@@ -1,5 +1,11 @@
 #pragma once
 
+#include "../enums/Direction.h"
+#include "../input/InputProviderForPlayerOne.h"
+#include "../input/InputProviderForPlayerOneNet.h"
+#include "../input/InputProviderForPlayerTwo.h"
+#include "../input/InputProviderForPlayerTwoNet.h"
+
 template<typename TTankType>
 void TankSpawner::RespawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                               const float speed, boost::uuids::uuid uuid)
@@ -7,8 +13,7 @@ void TankSpawner::RespawnTank(const ObjRectangle rect, int color, int health, st
 	BaseObjProperty baseObjProperty{
 			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode, _atlasTexture,
-			_renderer};
+			std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode, _textureManager};
 
 	if (auto tank = std::make_shared<TTankType>(std::move(pawnProperty), _bulletPool);
 		tank.get() != nullptr)
@@ -46,10 +51,9 @@ inline void TankSpawner::RespawnTank<Player>(const ObjRectangle rect, int color,
 	}
 
 	BaseObjProperty baseObjProperty{
-			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
+		std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode, _atlasTexture,
-			_renderer};
+			std::move(baseObjProperty), _window, UP, speed, _allObjects, _events, 1, _gameMode, _textureManager};
 
 	if (auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
 		tank.get() != nullptr)

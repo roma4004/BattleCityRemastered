@@ -12,20 +12,20 @@ struct Window;
 class EventSystem;
 class SteelWall;
 class BrickWall;
+class TextureManager;
 
 class FortressWall final : public BaseObj, public ITickUpdatable
 {
 	GameMode _gameMode{};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<IDrawable> _textureManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
 	std::variant<std::unique_ptr<BrickWall>,
 	             std::unique_ptr<SteelWall>> _obstacle;
 
 	BonusStatus _shovel{};
-	std::shared_ptr<struct SDL_Renderer> _renderer;
-	std::shared_ptr<struct SDL_Texture> _textureCollection;
 
 	void Subscribe();
 	void SubscribeAsHost();
@@ -37,7 +37,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	void UnsubscribeAsClient() const;
 	void UnsubscribeBonus() const;
 
-	void Draw() const override;
+	void Draw(const BaseObj* obj) const override;
 	void TickUpdate(float deltaTime) override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
@@ -49,7 +49,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 public:
 	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
 	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode,
-	             std::shared_ptr<SDL_Texture> textureCollection, std::shared_ptr<SDL_Renderer> renderer);
+	             std::shared_ptr<IDrawable> textureManager);
 
 	~FortressWall() override;
 

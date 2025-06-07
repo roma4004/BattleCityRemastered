@@ -1,50 +1,58 @@
 ﻿#include "../headers/TextureManager.h"
-#include "SDL.h"
 #include "../headers/enums/Direction.h"
 #include "../headers/pawns/Pawn.h"
+#include <SDL.h>
 
 TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer):
 	_renderer(std::move(renderer)),
 	_texture(std::move(texture)) {}
 
-void TextureManager::DrawTexture(BaseObj* obj)
+SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
+{
+	return SDL_Rect {
+		static_cast<int>(rect.x),
+		static_cast<int>(rect.y),
+		static_cast<int>(rect.w),
+		static_cast<int>(rect.h)};
+}
+
+TextureManager::~TextureManager() {}
+
+void TextureManager::Draw(const BaseObj* obj) const
 {
 	const ObjRectangle rect = obj->GetRect();
-	const SDL_Rect destRect{.x = static_cast<int>(rect.x),
-	                        .y = static_cast<int>(rect.y),
-	                        .w = static_cast<int>(rect.w),
-	                        .h = static_cast<int>(rect.h)};
+	const SDL_Rect destRect = RectToSdlRect(rect);
 
 	//What is it
 	const auto name = obj->GetName();
 	SDL_Rect textureRect{};
-	const auto pawn = dynamic_cast<Pawn*>(obj);
+	const auto pawn = dynamic_cast<const Pawn*>(obj);
 	if (name == "Enemy")
 	{
-		textureRect = _offset.enemy;
+		textureRect = RectToSdlRect(_offset.enemy);
 		textureRect.x += pawn->_animationId * 13;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
-		textureRect = _offset.playerOne;
+		textureRect = RectToSdlRect(_offset.playerOne);
 		textureRect.x += pawn->_animationId * 13;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
-		textureRect = _offset.playerTwo;
+		textureRect = RectToSdlRect(_offset.playerTwo);
 		textureRect.x += pawn->_animationId * 13;
 	}
 	else if (name == "Bullet")
 	{
-		textureRect = _offset.bullet;
+		textureRect = RectToSdlRect(_offset.bullet);
 	}
 	else if (name == "Eagle")
 	{
-		textureRect = _offset.eagle;
+		textureRect = RectToSdlRect(_offset.eagle);
 	}
 	else if (name == "BrickWall")
 	{
-		textureRect = _offset.brick;
+		textureRect = RectToSdlRect(_offset.brick);
 	}
 	else if (name == "SteelWall")
 	{

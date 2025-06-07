@@ -4,9 +4,9 @@
 
 class IInputProvider
 {
-public:
-	[[nodiscard]] PlayerKeys GetKeysStats() const { return playerKeys; }
-
 protected:
 	PlayerKeys playerKeys;
+
+public:
+	[[nodiscard]] PlayerKeys GetKeysStats() const { return playerKeys; }
 };

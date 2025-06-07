@@ -43,9 +43,9 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode, nullptr, nullptr);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
+		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool, nullptr, nullptr);
 		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
 
@@ -78,129 +78,89 @@ protected:
 TEST_F(TankSpawnerTest, EnemyOneRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), false);
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
-		PawnProperty pawnProperty{
-				std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(0);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
-	}
 	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), true);
 }
 
 TEST_F(TankSpawnerTest, EnemyTwoRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), false);
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy2", "EnemyTeam"};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(1);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
-	}
 	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), true);
 }
 
 TEST_F(TankSpawnerTest, EnemyThreeRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), false);
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy3", "EnemyTeam"};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(2);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
-	}
 	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), true);
 }
 
 TEST_F(TankSpawnerTest, EnemyFourRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), false);
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy4", "EnemyTeam"};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(3);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
-	}
 	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), true);
 }
 
 TEST_F(TankSpawnerTest, PlayerOneDiedRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), false);
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, _name, _fraction};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(4);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
-	}
 	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), true);
 }
 
 TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), false);
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, _uuid, _name2, _fraction2};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(5);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2));
-	}
 	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), true);
 }
 
 TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetEnemyRespawnResource();
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(1);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		const auto tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
-	}
 	EXPECT_GT(respawnResource, _tankSpawner->GetEnemyRespawnResource());
 }
 
 TEST_F(TankSpawnerTest, PlayerOneDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetPlayerOneRespawnResource();
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, _name, _fraction};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(4);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
-	}
 	EXPECT_GT(respawnResource, _tankSpawner->GetPlayerOneRespawnResource());
 }
 
 TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetPlayerTwoRespawnResource();
-	{
-		ObjRectangle rect{.x = _tankSize * 2, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _green, _tankHealth, true, _uuid, _name2, _fraction2};
-		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+	_tankSpawner->SetSlotNeedRespawn(5);
+	_events->EmitEvent("RespawnTanks");
+	_allObjects.pop_back();
 
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-		const auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2));
-	}
 	EXPECT_GT(respawnResource, _tankSpawner->GetPlayerTwoRespawnResource());
 }

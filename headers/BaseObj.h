@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseObjProperty.h"
-#include "TextureManager.h"
 #include "ObjRectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IHaveFraction.h"

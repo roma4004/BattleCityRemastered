@@ -321,7 +321,7 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 
 void GameStatistics::OnTankDied(const std::string& whoDied, const std::string& author, const std::string& fraction)
 {
-	if (whoDied == "Enemy1" || whoDied == "Enemy2" || whoDied == "Enemy3" || whoDied == "Enemy4")
+	if (whoDied == "Enemy")
 	{
 		OnEnemyDied(author, fraction);
 	}

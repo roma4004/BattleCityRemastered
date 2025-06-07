@@ -1,21 +1,20 @@
 #pragma once
 
-#include <atomic>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
-#include "SDL.h"
 
 enum GameMode : char8_t;
 enum Direction : char8_t;
-
 struct ObjRectangle;
-
+struct Window;
+struct SDL_Renderer;
 class Bullet;
 class BaseObj;
 class EventSystem;
-struct Window;
+class IDrawable;
+class TextureManager;
 
 class BulletPool final
 {
@@ -27,12 +26,12 @@ class BulletPool final
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::shared_ptr<Window> _window;
 	bool _isClearing{false};
-	std::shared_ptr<SDL_Texture> _atlasTexture;
+	std::shared_ptr<IDrawable> _textureManager;
 	std::shared_ptr<SDL_Renderer> _renderer;
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	           std::shared_ptr<Window> window, GameMode gameMode, std::shared_ptr<SDL_Texture> textureCollection,
+	           std::shared_ptr<Window> window, GameMode gameMode, std::shared_ptr<IDrawable> textureManager,
 	           std::shared_ptr<SDL_Renderer> renderer);
 
 	~BulletPool();

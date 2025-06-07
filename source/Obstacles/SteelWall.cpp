@@ -6,8 +6,7 @@
 
 SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
                      const boost::uuids::uuid uuid, const GameMode gameMode,
-                     std::shared_ptr<SDL_Texture> textureCollection,
-                     std::shared_ptr<SDL_Renderer> renderer)
+                     std::shared_ptr<IDrawable> textureManager)
 	: Obstacle{std::move(rect),
 	           0xaaaaaa,
 	           1,
@@ -17,15 +16,14 @@ SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	           uuid,
 	           gameMode,
 	           Steel,
-	           std::move(textureCollection),
-	           std::move(renderer)}
+	           std::move(textureManager)}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
 
 	//TODO: remove this after load steel texture
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 }
 
 SteelWall::~SteelWall()

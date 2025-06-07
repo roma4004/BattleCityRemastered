@@ -10,8 +10,7 @@ class SteelWall final : public Obstacle
 {
 public:
 	SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	          boost::uuids::uuid uuid, GameMode gameMode, std::shared_ptr<SDL_Texture> textureCollection,
-	          std::shared_ptr<SDL_Renderer> renderer);
+	          boost::uuids::uuid uuid, GameMode gameMode, std::shared_ptr<IDrawable> textureManager);
 
 	~SteelWall() override;
 

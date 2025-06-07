@@ -41,7 +41,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode, nullptr, nullptr);
 
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -521,7 +521,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						_uuid, _gameMode));
+						_uuid, _gameMode, nullptr));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -545,7 +545,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 		_allObjects.emplace_back(
 				std::make_shared<SteelWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						_uuid, _gameMode));
+						_uuid, _gameMode, nullptr));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -569,7 +569,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						_uuid, _gameMode));
+						_uuid, _gameMode, nullptr));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
@@ -588,7 +588,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank cant move through fortressWall
+// Check that tank can't move through fortressWall
 TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -596,7 +596,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						&_allObjects, _uuid, _gameMode));
+						&_allObjects, _uuid, _gameMode, nullptr));
 
 		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{

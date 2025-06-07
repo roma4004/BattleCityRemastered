@@ -13,13 +13,11 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
-	  _drawTexture{pawnProperty.texture, pawnProperty.renderer},
+	  _textureManager{pawnProperty.textureManager},
 	  _allObjects{pawnProperty.allObjects},
 	  _window{std::move(pawnProperty.window)},
 	  _events{std::move(pawnProperty.events)},
-	  _moveBeh{std::move(moveBeh)},
-	  _texture{pawnProperty.texture},
-	  _renderer{pawnProperty.renderer}
+	  _moveBeh{std::move(moveBeh)}
 {
 	Pawn::Subscribe();
 }
@@ -36,7 +34,10 @@ Pawn::~Pawn()
 
 void Pawn::Subscribe()
 {
-	_events->AddListener("DrawTexture", _nameWithUuid, [this]() { this->_drawTexture.DrawTexture(this); });
+	_events->AddListener("DrawTexture", _nameWithUuid, [this]()
+	{
+		this->Draw(this);
+	});
 
 	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
@@ -116,14 +117,14 @@ void Pawn::TakeDamage(const int damage)
 	// }
 }
 
-void Pawn::Draw() const
+void Pawn::Draw(const BaseObj* /*obj*/) const
 {
 	if (!GetIsAlive())
 	{
 		return;
 	}
 
-	if (!_texture)
+	if (!_textureManager)
 	{
 		int startY = static_cast<int>(GetY());
 		const int startX = static_cast<int>(GetX());
@@ -142,6 +143,10 @@ void Pawn::Draw() const
 				std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
 			}
 		}
+	}
+	else
+	{
+		_textureManager->Draw(this);
 	}
 }
 

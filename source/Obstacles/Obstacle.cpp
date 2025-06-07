@@ -7,11 +7,11 @@
 
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::shared_ptr<Window> window,
                    std::string name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
-                   const GameMode gameMode, const ObstacleType obstacleType, std::shared_ptr<SDL_Texture> texture,
-                   std::shared_ptr<SDL_Renderer> renderer)
+                   const GameMode gameMode, const ObstacleType obstacleType,
+                   std::shared_ptr<IDrawable> textureManager)
 	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
-	  _drawTexture{std::move(texture), std::move(renderer)},
+	  _textureManager{textureManager},
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _events(std::move(events))
@@ -32,7 +32,10 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	_events->AddListener("DrawTexture", _nameWithUuid, [this]() { this->_drawTexture.DrawTexture(this); });
+	_events->AddListener("DrawTexture", _nameWithUuid, [this]()
+	{
+		this->_textureManager->Draw(this);
+	});
 
 
 	if (_gameMode == PlayAsClient)
@@ -70,7 +73,7 @@ void Obstacle::UnsubscribeAsClient() const
 	_events->RemoveListener<const int>("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
-void Obstacle::Draw() const
+void Obstacle::Draw(const BaseObj* /*obj*/) const
 {
 	if (!GetIsAlive())
 	{

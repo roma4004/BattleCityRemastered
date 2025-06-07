@@ -46,8 +46,8 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode, nullptr, nullptr);
+		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool, nullptr, nullptr);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -78,7 +78,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _window, _events,
-					&_allObjects, _uuid, _gameMode));
+					&_allObjects, _uuid, _gameMode, nullptr));
 	const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get());
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
@@ -99,7 +99,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
 					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _window, _events,
-					&_allObjects, _uuid, _gameMode));
+					&_allObjects, _uuid, _gameMode, nullptr));
 	if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(fortressWall->IsBrickWall());

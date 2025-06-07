@@ -65,7 +65,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	if (auto&& bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(wallRect), _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<SteelWall>(std::move(wallRect), _window, _events, _uuid, _gameMode, nullptr));
 
 		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
 		{

@@ -2,7 +2,6 @@
 
 #include "../BaseObj.h"
 #include "../interfaces/ITickUpdatable.h"
-#include "SDL.h"
 
 #include <memory>
 #include <vector>
@@ -15,6 +14,7 @@ struct Window;
 struct UPoint;
 class IMoveBeh;
 class EventSystem;
+class TextureManager;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
@@ -24,21 +24,19 @@ class Pawn : public BaseObj, public ITickUpdatable
 	virtual void SubscribeAsHost();
 	virtual void SubscribeAsClient();
 
-	void Draw() const override;
+	void Draw(const BaseObj* obj) const override;
 
 protected:
 	Direction _dir{};
 	GameMode _gameMode{};
 	float _speed{0.f};
 	int _tier{1};
-	TextureManager _drawTexture;
+	std::shared_ptr<IDrawable> _textureManager{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
-	std::shared_ptr<SDL_Texture> _texture{nullptr};
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;

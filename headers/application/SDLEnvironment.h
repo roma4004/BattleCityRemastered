@@ -1,11 +1,12 @@
 #pragma once
 
-#include <SDL.h>
-#include <SDL_mixer.h>
+#include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
 #include <memory>
 
 struct UPoint;
 struct Window;
+struct Mix_Chunk;
+
 class IConfig;
 
 struct SDLEnvironment final

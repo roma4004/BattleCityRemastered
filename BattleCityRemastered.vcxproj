@@ -226,7 +226,6 @@
     <ClInclude Include="headers\enums\GameMode.h" />
     <ClInclude Include="headers\enums\ObstacleType.h" />
     <ClInclude Include="headers\enums\TextureOffset.h" />
-    <ClInclude Include="headers\interfaces\ITextureDrawable.h" />
     <ClInclude Include="headers\enums\TankType.h" />
     <ClInclude Include="headers\Map.h" />
     <ClInclude Include="headers\MouseButton.h" />
