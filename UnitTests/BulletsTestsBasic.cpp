@@ -52,13 +52,14 @@ protected:
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 
 		BaseObjProperty baseObjProperty{
-			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+				std::make_shared<Bullet>(
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 	}
 
 	void TearDown() override
@@ -311,7 +312,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
 	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-		std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
 
 	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool)));
 
@@ -334,12 +335,13 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		std::string author{"Player2"};
 		ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _bulletSpeed};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+				std::make_shared<Bullet>(
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 		if (const auto bullet2 = dynamic_cast<const Bullet*>(_allObjects.back().get()))
 		{

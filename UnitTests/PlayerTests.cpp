@@ -53,10 +53,12 @@ protected:
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, yellow, _tankHealth, true, _uuid, _name, _fraction};
-		PawnProperty pawnProperty{std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};;
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};;
 
 		_allObjects.reserve(4);
-		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+		_allObjects.emplace_back(
+				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
 	}
 
 	void TearDown() override
@@ -492,8 +494,10 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, green, _tankHealth, true, _uuid, _name, _fraction};
-		PawnProperty pawnProperty{std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
-		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2)));
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
+		_allObjects.emplace_back(
+				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2)));
 
 		if (const auto player2 = dynamic_cast<const Player*>(_allObjects.back().get()))
 		{

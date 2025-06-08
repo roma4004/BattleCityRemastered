@@ -192,7 +192,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 	std::string author{"Player2"};
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _bulletWidth, .h = _bulletHeight};
 	BaseObjProperty baseObjProperty{
-		rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _bulletSpeed};
 
