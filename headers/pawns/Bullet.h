@@ -10,6 +10,8 @@ class EventSystem;
 
 class Bullet final : public Pawn
 {
+	using buuid = boost::uuids::uuid;
+
 	std::string _author;
 	double _bulletDamageRadius{18.f};
 	int _damage{0};
@@ -25,12 +27,12 @@ class Bullet final : public Pawn
 
 public:
 	explicit Bullet(PawnProperty pawnProperty);
-	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, boost::uuids::uuid uuid = {});
+	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, buuid uuid = {});
 
 	~Bullet() override;
 
 	void Reset(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health, Direction dir,
-	           float speed, std::string author, std::string fraction, int tier, boost::uuids::uuid uuid = {});
+	           float speed, std::string author, std::string fraction, int tier, buuid uuid = {});
 
 	void Disable() const;
 	void Enable();
@@ -41,7 +43,7 @@ public:
 
 	[[nodiscard]] std::string GetAuthor() const;
 
-	[[nodiscard]] boost::uuids::uuid GetUuid() const override;
+	[[nodiscard]] buuid GetUuid() const override;
 	[[nodiscard]] const std::string& GetUuidStr() const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;

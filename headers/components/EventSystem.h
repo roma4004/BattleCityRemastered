@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 #include <variant>
-#include <boost/uuid/uuid.hpp>//TODO: add uuid lib to cmake
+#include <boost/uuid/uuid.hpp>
 
 enum TankType : char8_t;
 enum ObstacleType : char8_t;
@@ -31,29 +31,30 @@ private:
 
 class EventSystem final
 {
-	using milliseconds = std::chrono::milliseconds;
-	using uuid = boost::uuids::uuid;//TODO: apply this using to solution
+	using milliseconds = std::chrono::milliseconds;//TODO: apply this using to solution
+	using buuid = boost::uuids::uuid;
+
 	using allEventTypes = std::variant<
 		Event<>,// regular events eg method call
 		Event<const float>,// tickUpdate(deltaTime)
 		Event<const int>,// received healthChange(val)
 		Event<const bool>,// pause keyStatus
 		Event<const GameMode>,// gameMode switch
-		Event<const uuid&>,//tankDied, tankSpawn, send/received bonusDeSpawn, send/received bulletDispose
-		Event<const std::string&>,//send bonusEffect
-		Event<const Direction, const uuid>,// received tankShot(dir,uuid)
-		Event<const TankType, const uuid>,// send/received respawnTank(type,uuid)
-		Event<const std::string&, const uuid>,// send fortressChange(state,uuid)
+		Event<const buuid&>,// tankDied, tankSpawn, send/received bonusDeSpawn, send/received bulletDispose
+		Event<const std::string&>,// send bonusEffect
+		Event<const Direction, const buuid&>,// received tankShot(dir,uuid)
+		Event<const TankType, const buuid&>,// send/received respawnTank(type,uuid)
+		Event<const std::string&, const buuid&>,// send fortressChange(state,uuid)
 		Event<const std::string&, const int>,// local respawn resource changed(who,val)
-		Event<const std::string&, const std::string&>,//(author,fraction) stat, bonusEffect, obstacleDied send/recieved
-		Event<const FPoint, const BonusType, const uuid>,// send/received bonusSpawn(pos,bonusType,uuid)
-		Event<const ObjRectangle, const ObstacleType, const uuid>,// send/received obstacleSpawn(rect,obstacleType,uuid)
-		Event<const FPoint, const Direction, const uuid>,// received posChange(pos,dir,uuid)
-		Event<const std::string&, const int, const uuid>,// send healthChanged(who,val,uuid),
-		Event<const std::string&, const Direction, const uuid>,// send tankShot(who,dir,uuid)
-		Event<const std::string&, const std::string&, const std::string&>,//send/recieved stat(who,author,fraction)
-		Event<const std::string&, const std::string&, const milliseconds>,//bonusEffect(author,fraction,duration)
-		Event<const std::string&, const FPoint, const Direction, const uuid>//send posChange(who,pos,dir,uuid)
+		Event<const std::string&, const std::string&>,// (author,fraction) stat, bonusEffect, obstacleDied send/recieved
+		Event<const FPoint, const BonusType, const buuid&>,// send/received bonusSpawn(pos,bonusType,uuid)
+		Event<const ObjRectangle, const ObstacleType, const buuid&>,// send/received obstacleSpawn(rect,obstType,uuid)
+		Event<const FPoint, const Direction, const buuid&>,// received posChange(pos,dir,uuid)
+		Event<const std::string&, const int, const buuid&>,// send healthChanged(who,val,uuid),
+		Event<const std::string&, const Direction, const buuid&>,// send tankShot(who,dir,uuid)
+		Event<const std::string&, const std::string&, const std::string&>,// send/recieved stat(who,author,fraction)
+		Event<const std::string&, const std::string&, const milliseconds>,// bonusEffect(author,fraction,duration)
+		Event<const std::string&, const FPoint, const Direction, const buuid&>// send posChange(who,pos,dir,uuid)
 	>;
 
 	std::unordered_map<std::string, allEventTypes> _events;

@@ -45,7 +45,7 @@ void Enemy::TickUpdate(const float deltaTime)
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const FPoint, const Direction, const boost::uuids::uuid>(
+		_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
 				"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 	}
 }

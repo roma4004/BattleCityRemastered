@@ -11,22 +11,24 @@ enum TankType : char8_t;
 
 class RespawnTank : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
 	TankType _tankType{};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	RespawnTank();
 
 	//for serialization
-	explicit RespawnTank(TankType tankType, boost::uuids::uuid uuid);
+	explicit RespawnTank(TankType tankType, buuid uuid);
 
 	~RespawnTank() override = default;
 
 	TankType GetTankType() const;
-	boost::uuids::uuid GetUuid() const;
+	buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)

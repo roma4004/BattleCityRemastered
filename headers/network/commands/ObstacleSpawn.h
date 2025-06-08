@@ -12,24 +12,26 @@ enum ObstacleType : char8_t;
 
 class ObstacleSpawn : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
 	ObjRectangle _rect{};
 	ObstacleType _obstacleType{};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	ObstacleSpawn();
 
 	//for serialization
-	ObstacleSpawn(const ObjRectangle& rect, ObstacleType obstacleType, boost::uuids::uuid uuid);
+	ObstacleSpawn(const ObjRectangle& rect, ObstacleType obstacleType, buuid uuid);
 
 	~ObstacleSpawn() override = default;
 
 	ObjRectangle GetRect() const;
 	ObstacleType GetObstacleType() const;
-	boost::uuids::uuid GetUuid() const;
+	buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)

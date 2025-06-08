@@ -10,24 +10,26 @@
 
 class HealthChange : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
 	std::string _who{};
 	int _health{};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	HealthChange();
 
 	//for serialization
-	HealthChange(const std::string& who, int health, boost::uuids::uuid uuid);
+	HealthChange(const std::string& who, int health, buuid uuid);
 
 	~HealthChange() override = default;
 
 	const std::string& GetWho() const;
 	int GetHealth() const;
-	boost::uuids::uuid GetUuid() const;
+	buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)

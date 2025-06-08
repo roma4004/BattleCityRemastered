@@ -15,6 +15,8 @@ class EventSystem;
 
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
+	using buuid = boost::uuids::uuid;
+
 	std::shared_ptr<Window> _window{nullptr};
 
 	std::chrono::system_clock::time_point _creationTime;
@@ -37,7 +39,7 @@ protected:
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
 	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name,
-	      boost::uuids::uuid uuid, GameMode gameMode, BonusType bonusType);
+	      buuid uuid, GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 

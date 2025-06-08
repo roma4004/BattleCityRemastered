@@ -18,6 +18,8 @@
 
 class BonusTestEnemy : public testing::Test
 {
+	using buuid = boost::uuids::uuid;
+
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -39,7 +41,7 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 	void SetUp() override
 	{

@@ -10,22 +10,24 @@
 
 class FortressChange : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
 	std::string _state{};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	FortressChange();
 
 	//for serialization
-	FortressChange(const std::string& state, boost::uuids::uuid uuid);
+	FortressChange(const std::string& state, buuid uuid);
 
 	~FortressChange() override = default;
 
 	const std::string& GetState() const;
-	boost::uuids::uuid GetUuid() const;
+	buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)

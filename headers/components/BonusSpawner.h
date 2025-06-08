@@ -18,6 +18,8 @@ class EventSystem;
 
 class BonusSpawner final : public ITickUpdatable
 {
+	using buuid = boost::uuids::uuid;
+
 	std::string _name{"BonusSpawner"};
 	GameMode _gameMode{};
 	int _bonusSize{0};
@@ -53,8 +55,8 @@ public:
 	~BonusSpawner() override;
 
 	void SpawnRandomBonus(ObjRectangle rect);
-	void SpawnBonus(ObjRectangle rect, int color, BonusType type, boost::uuids::uuid uuid = {});
+	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {});
 
 	template<typename TBonusType>
-	void SpawnBonus(ObjRectangle rect, int color, boost::uuids::uuid uuid = {});
+	void SpawnBonus(ObjRectangle rect, int color, buuid uuid = {});
 };

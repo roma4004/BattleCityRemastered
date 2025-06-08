@@ -11,24 +11,26 @@
 
 class TankShot : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
 	std::string _who{};
 	Direction _dir{};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	TankShot();
 
 	//for serialization
-	TankShot(const std::string& who, Direction dir, boost::uuids::uuid uuid);
+	TankShot(const std::string& who, Direction dir, buuid uuid);
 
 	~TankShot() override = default;
 
 	const std::string& GetWho() const;
 	Direction GetDir() const;
-	boost::uuids::uuid GetUuid() const;
+	buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)

@@ -12,6 +12,8 @@ class BulletPool;
 
 class ShootingBeh final : public IShootable
 {
+	using buuid = boost::uuids::uuid;
+
 	BaseObj* _selfParent{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -29,5 +31,5 @@ public:
 
 	~ShootingBeh() override;
 
-	boost::uuids::uuid Shot(boost::uuids::uuid uuid = {}) override;
+	buuid Shot(buuid uuid = {}) override;
 };

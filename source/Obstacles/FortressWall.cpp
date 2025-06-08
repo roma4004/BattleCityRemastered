@@ -13,8 +13,8 @@
 
 FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const boost::uuids::uuid uuid,
-                           const GameMode gameMode, std::shared_ptr<IDrawable> textureManager)
+                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode,
+                           std::shared_ptr<IDrawable> textureManager)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _gameMode{gameMode},
 	  _window{window},
@@ -49,9 +49,9 @@ void FortressWall::SubscribeAsHost()
 
 void FortressWall::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&, const boost::uuids::uuid>(
+	_events->AddListener<const std::string&, const buuid&>(
 			"ClientReceived_FortressChange", _name,
-			[this](const std::string& state, const boost::uuids::uuid uuid)
+			[this](const std::string& state, const buuid& uuid)
 			{
 				if (uuid == _uuid)
 				{
@@ -96,7 +96,7 @@ void FortressWall::UnsubscribeAsHost() const
 
 void FortressWall::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const boost::uuids::uuid>("ClientReceived_FortressChange", _name);
+	_events->RemoveListener<const std::string&, const buuid&>("ClientReceived_FortressChange", _name);
 }
 
 void FortressWall::UnsubscribeBonus() const
@@ -140,7 +140,7 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const boost::uuids::uuid>(
+			_events->EmitEvent<const std::string&, const buuid&>(
 					"ServerSend_FortressChange", "ToBrick", _uuid);
 		}
 	}
@@ -167,13 +167,12 @@ void FortressWall::OnPlayerPickupShovel()
 
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
-		const boost::uuids::uuid uuid = _uuid;
-		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, uuid, _gameMode, _textureManager);
+		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _uuid, _gameMode, _textureManager);
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const boost::uuids::uuid>(
-					"ServerSend_FortressChange", "ToSteel", uuid);
+			_events->EmitEvent<const std::string&, const buuid&>(
+					"ServerSend_FortressChange", "ToSteel", _uuid);
 		}
 	}
 }
@@ -198,8 +197,7 @@ void FortressWall::TakeDamage(const int damage)
 
 		if (_gameMode == PlayAsHost)
 		{
-			const boost::uuids::uuid uuid = _uuid;
-			_events->EmitEvent<const std::string&, const boost::uuids::uuid>("ServerSend_FortressChange", "Died", uuid);
+			_events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
 		}
 	}
 }
@@ -245,8 +243,7 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (_gameMode == PlayAsHost)
 	{
-		const boost::uuids::uuid uuid = _uuid;
-		_events->EmitEvent<const std::string&, const boost::uuids::uuid>("ServerSend_FortressChange", "Died", uuid);
+		_events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
 	}
 }
 
@@ -411,9 +408,11 @@ std::string FortressWall::GetName() const
 	return name;
 }
 
-boost::uuids::uuid FortressWall::GetUuid() const
+using buuid = boost::uuids::uuid;
+
+buuid FortressWall::GetUuid() const
 {
-	boost::uuids::uuid uuid{};
+	buuid uuid{};
 
 	std::visit([&uuid](auto&& uniqPtr)
 	{

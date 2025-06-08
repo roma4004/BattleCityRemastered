@@ -7,6 +7,8 @@ class BulletPool;
 
 class Player final : public Tank
 {
+	using buuid = boost::uuids::uuid;
+
 	std::unique_ptr<IInputProvider> _inputProvider;
 
 	void Move(Direction dir, float deltaTime);

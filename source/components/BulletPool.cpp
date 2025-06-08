@@ -132,7 +132,8 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		_events->EmitEvent<const boost::uuids::uuid&>("ServerSend_Dispose", bulletCast->GetUuid());
+		using buuid = boost::uuids::uuid;
+		_events->EmitEvent<const buuid&>("ServerSend_Dispose", bulletCast->GetUuid());
 	}
 }
 

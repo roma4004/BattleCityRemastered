@@ -9,20 +9,22 @@
 
 class BonusDeSpawn : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	BonusDeSpawn();
 
 	//for serialization
-	explicit BonusDeSpawn(boost::uuids::uuid uuid);
+	explicit BonusDeSpawn(buuid uuid);
 
 	~BonusDeSpawn() override = default;
 
-	boost::uuids::uuid GetUuid() const;
+	buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)

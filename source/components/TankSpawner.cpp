@@ -68,11 +68,11 @@ void TankSpawner::Subscribe()
 
 		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
-	_events->AddListener<const boost::uuids::uuid&>("TankSpawn", _name, [this](const boost::uuids::uuid& uuid)
+	_events->AddListener<const buuid&>("TankSpawn", _name, [this](const buuid& uuid)
 	{
 		OnTankSpawn(uuid);
 	});
-	_events->AddListener<const boost::uuids::uuid&>("TankDied", _name, [this](const boost::uuids::uuid& uuid)
+	_events->AddListener<const buuid&>("TankDied", _name, [this](const buuid& uuid)
 	{
 		OnTankDied(uuid);
 	});
@@ -98,8 +98,8 @@ void TankSpawner::SubscribeAsClient()
 				this->OnBonusGrenade(author, fraction);
 			});
 
-	_events->AddListener<const TankType, const boost::uuids::uuid>(
-			"ClientReceived_RespawnTank", _name, [this](const TankType type, const boost::uuids::uuid uuid)
+	_events->AddListener<const TankType, const buuid&>(
+			"ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
 			{
 				this->RespawnClient(type, uuid);
 			});
@@ -110,8 +110,8 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("RespawnTanks", _name);
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
-	_events->RemoveListener<const boost::uuids::uuid&>("TankSpawn", _name);
-	_events->RemoveListener<const boost::uuids::uuid&>("TankDied", _name);
+	_events->RemoveListener<const buuid&>("TankSpawn", _name);
+	_events->RemoveListener<const buuid&>("TankDied", _name);
 
 	if (_gameMode == PlayAsClient)
 	{
@@ -191,7 +191,7 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
-void TankSpawner::SpawnEnemy(const boost::uuids::uuid uuid, const float speed, const int health)
+void TankSpawner::SpawnEnemy(const buuid uuid, const float speed, const int health)
 {
 	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
 	const float size{gridOffset * 3};
@@ -236,7 +236,7 @@ void TankSpawner::SpawnEnemy(const boost::uuids::uuid uuid, const float speed, c
 	}
 }
 
-void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const boost::uuids::uuid uuid,
+void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const buuid uuid,
                               const TankType type)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
@@ -270,7 +270,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 	}
 }
 
-void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int health, const boost::uuids::uuid uuid,
+void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int health, const buuid uuid,
                                const TankType type)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
@@ -304,7 +304,7 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 	}
 }
 
-void TankSpawner::RespawnEnemyTanks(const TankType type, const boost::uuids::uuid uuid)
+void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
 {
 	constexpr float speed{142};
 	constexpr int health{100};
@@ -312,11 +312,11 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const boost::uuids::uui
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const TankType, const boost::uuids::uuid>("ServerSend_RespawnTank", type, uuid);
+		_events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", type, uuid);
 	}
 }
 
-void TankSpawner::RespawnPlayerTeam(const TankType type, const boost::uuids::uuid uuid)
+void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 {
 	const float windowSizeY{static_cast<float>(_window->size.y)};
 	const float gridOffset{windowSizeY / 50.f};
@@ -341,7 +341,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const boost::uuids::uui
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const TankType, const boost::uuids::uuid>("ServerSend_RespawnTank", type, uuid);
+		_events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", type, uuid);
 	}
 }
 
@@ -372,7 +372,7 @@ void TankSpawner::RespawnTanks()
 	}
 }
 
-void TankSpawner::RespawnClient(const TankType type, const boost::uuids::uuid uuid)
+void TankSpawner::RespawnClient(const TankType type, const buuid uuid)
 {
 	switch (type)
 	{
@@ -476,7 +476,7 @@ void TankSpawner::OnBonusTank(const std::string& author, const std::string& frac
 	}
 }
 
-void TankSpawner::OnTankSpawn(const boost::uuids::uuid& uuid)
+void TankSpawner::OnTankSpawn(const buuid& uuid)
 {
 	for (int i = 0; i < _slots.size(); ++i)
 	{
@@ -505,7 +505,7 @@ void TankSpawner::OnTankSpawn(const boost::uuids::uuid& uuid)
 	}
 }
 
-void TankSpawner::OnTankDied(const boost::uuids::uuid& uuid)
+void TankSpawner::OnTankDied(const buuid& uuid)
 {
 	//TODO: replace with std:: algorithm
 	for (int i = 0; i < _slots.size(); ++i)

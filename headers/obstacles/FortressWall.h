@@ -16,6 +16,8 @@ class TextureManager;
 
 class FortressWall final : public BaseObj, public ITickUpdatable
 {
+	using buuid = boost::uuids::uuid;
+
 	GameMode _gameMode{};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -48,7 +50,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 
 public:
 	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode,
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode,
 	             std::shared_ptr<IDrawable> textureManager);
 
 	~FortressWall() override;
@@ -57,7 +59,7 @@ public:
 	//TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
 
 	[[nodiscard]] std::string GetName() const override;
-	[[nodiscard]] boost::uuids::uuid GetUuid() const override;
+	[[nodiscard]] buuid GetUuid() const override;
 
 	void TakeDamage(int damage) override;
 

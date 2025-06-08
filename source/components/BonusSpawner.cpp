@@ -78,9 +78,8 @@ void BonusSpawner::SubscribeAsHost()
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const BonusType, const boost::uuids::uuid>(
-			"ClientReceived_BonusSpawn", _name,
-			[this](const FPoint pos, const BonusType type, const boost::uuids::uuid uuid)
+	_events->AddListener<const FPoint, const BonusType, const buuid&>(
+			"ClientReceived_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
 				const auto size = static_cast<float>(_bonusSize);
 				const int color = _distRandColor(_gen);
@@ -103,8 +102,7 @@ void BonusSpawner::UnsubscribeAsHost() const
 
 void BonusSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const BonusType, const boost::uuids::uuid>(
-			"ClientReceived_BonusSpawn", _name);
+	_events->RemoveListener<const FPoint, const BonusType, const buuid&>("ClientReceived_BonusSpawn", _name);
 }
 
 void BonusSpawner::TickUpdate(const float /*deltaTime*/)
@@ -132,9 +130,9 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusType type, const boost::uuids::uuid uuid)
+void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusType type, const buuid uuid)
 {
-	boost::uuids::uuid spawnUuid;
+	buuid spawnUuid;
 	if (uuid != boost::uuids::nil_uuid())
 	{
 		spawnUuid = uuid;
@@ -180,7 +178,7 @@ void BonusSpawner::SpawnRandomBonus(ObjRectangle rect)
 }
 
 template<typename TBonusType>
-void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const boost::uuids::uuid uuid)
+void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const buuid uuid)
 {
 	constexpr std::chrono::milliseconds lifetime{std::chrono::seconds{15}};
 	constexpr std::chrono::milliseconds duration{std::chrono::seconds{15}};

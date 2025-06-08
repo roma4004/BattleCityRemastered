@@ -19,6 +19,8 @@ class TextureManager;
 
 class ObstacleSpawner final : public ITickUpdatable
 {
+	using buuid = boost::uuids::uuid;
+
 	std::string _name{"ObstacleSpawner"};
 	GameMode _gameMode;
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -48,10 +50,10 @@ public:
 
 	~ObstacleSpawner() override;
 
-	void SpawnObstacle(ObjRectangle rect, ObstacleType type, boost::uuids::uuid uuid = {});
+	void SpawnObstacle(ObjRectangle rect, ObstacleType type, buuid uuid = {});
 
 	template<typename TObstaclesType>
-	void SpawnObstacles(const ObjRectangle& rect, boost::uuids::uuid uuid = {});
+	void SpawnObstacles(const ObjRectangle& rect, buuid uuid = {});
 };
 
 // Include the template implementation

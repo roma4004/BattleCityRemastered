@@ -8,12 +8,12 @@
 
 template<typename TTankType>
 void TankSpawner::RespawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
-                              const float speed, boost::uuids::uuid uuid)
+                              const float speed, buuid uuid)
 {
 	BaseObjProperty baseObjProperty{
 			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _allObjects, _events, _window, _textureManager, _gameMode,  1, UP, speed};
+			std::move(baseObjProperty), _allObjects, _events, _window, _textureManager, _gameMode, 1, UP, speed};
 
 	if (auto tank = std::make_shared<TTankType>(std::move(pawnProperty), _bulletPool);
 		tank.get() != nullptr)
@@ -24,7 +24,7 @@ void TankSpawner::RespawnTank(const ObjRectangle rect, int color, int health, st
 
 template<>
 inline void TankSpawner::RespawnTank<Player>(const ObjRectangle rect, int color, int health, std::string name,
-                                             std::string fraction, const float speed, boost::uuids::uuid uuid)
+                                             std::string fraction, const float speed, buuid uuid)
 {
 	std::unique_ptr<IInputProvider> inputProvider;
 	if (name == "Player1")
@@ -51,9 +51,9 @@ inline void TankSpawner::RespawnTank<Player>(const ObjRectangle rect, int color,
 	}
 
 	BaseObjProperty baseObjProperty{
-		std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
+			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _allObjects, _events, _window, _textureManager, _gameMode,  1, UP, speed};
+			std::move(baseObjProperty), _allObjects, _events, _window, _textureManager, _gameMode, 1, UP, speed};
 
 	if (auto tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider));
 		tank.get() != nullptr)

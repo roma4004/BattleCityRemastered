@@ -9,11 +9,11 @@ TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared
 
 SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
 {
-	return SDL_Rect {
-		static_cast<int>(rect.x),
-		static_cast<int>(rect.y),
-		static_cast<int>(rect.w),
-		static_cast<int>(rect.h)};
+	return SDL_Rect{
+			static_cast<int>(rect.x),
+			static_cast<int>(rect.y),
+			static_cast<int>(rect.w),
+			static_cast<int>(rect.h)};
 }
 
 TextureManager::~TextureManager() {}
@@ -54,12 +54,8 @@ void TextureManager::Draw(const BaseObj* obj) const
 	{
 		textureRect = RectToSdlRect(_offset.brick);
 	}
-	else if (name == "SteelWall")
-	{
-	}
-	else if (name == "WaterTile")
-	{
-	}
+	else if (name == "SteelWall") {}
+	else if (name == "WaterTile") {}
 	else
 	{
 		//TODO all types of objects

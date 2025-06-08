@@ -12,12 +12,11 @@
 #include <boost/uuid/uuid_io.hpp>
 
 Bullet::Bullet(PawnProperty pawnProperty)
-	: Bullet(std::move(pawnProperty), 0, {18.f}, "", boost::uuids::nil_uuid()){}
+	: Bullet(std::move(pawnProperty), 0, {18.f}, "", boost::uuids::nil_uuid()) {}
 
 Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
-               const boost::uuids::uuid uuid)
-	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)
-	  },
+               const buuid uuid)
+	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)},
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage}
@@ -60,7 +59,9 @@ void Bullet::Subscribe()
 	}
 }
 
-boost::uuids::uuid Bullet::GetUuid() const
+using buuid = boost::uuids::uuid;
+
+buuid Bullet::GetUuid() const
 {
 	return _uuid;
 }
@@ -72,17 +73,15 @@ const std::string& Bullet::GetUuidStr() const
 
 void Bullet::SubscribeAsClient()
 {
-	_events->AddListener<const boost::uuids::uuid&>(
-			"ClientReceived_" + _name + "Dispose", _nameWithUuid,
-			[this](const boost::uuids::uuid& uuid)
-			{
-				if (uuid != _uuid)
-				{
-					return;
-				}
+	_events->AddListener<const buuid&>("ClientReceived_" + _name + "Dispose", _nameWithUuid, [this](const buuid& uuid)
+	{
+		if (uuid != _uuid)
+		{
+			return;
+		}
 
-				this->SetIsAlive(false);
-			});
+		this->SetIsAlive(false);
+	});
 }
 
 void Bullet::Unsubscribe() const
@@ -122,7 +121,7 @@ void Bullet::Enable()
 
 void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
                    const int health, const Direction dir, const float speed, std::string author,
-                   std::string fraction, const int tier, const boost::uuids::uuid uuid)
+                   std::string fraction, const int tier, const buuid uuid)
 {
 	Disable();//TODO: remove this, and not subscribe on create bullets
 
@@ -165,7 +164,7 @@ void Bullet::TickUpdate(const float deltaTime)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const FPoint, const Direction, const boost::uuids::uuid>(
+			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
 					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 		}
 	}
@@ -189,7 +188,7 @@ void Bullet::TakeDamage(const int damage)
 	if (_gameMode == PlayAsHost)
 	{
 		//TODO: move this to onHealthChange
-		_events->EmitEvent<const std::string&, const int, const boost::uuids::uuid>(
+		_events->EmitEvent<const std::string&, const int, const buuid&>(
 				"ServerSend_Health", GetName(), GetHealth(), _uuid);
 	}
 }

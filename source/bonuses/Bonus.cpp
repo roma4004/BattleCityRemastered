@@ -4,11 +4,9 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/TimeUtils.h"
 
-#include <boost/uuid/uuid_io.hpp>
-
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
              const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime, const int color,
-             std::string name, const boost::uuids::uuid uuid, const GameMode gameMode, const BonusType bonusType)
+             std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
@@ -26,7 +24,7 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shar
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const boost::uuids::uuid>(
+		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
 				"ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
 	}
 }
@@ -37,7 +35,7 @@ Bonus::~Bonus()
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const boost::uuids::uuid&>("ServerSend_BonusDeSpawn", _uuid);
+		_events->EmitEvent<const buuid&>("ServerSend_BonusDeSpawn", _uuid);
 		//TODO: move to pick up moment in tank move beh
 	}
 }
@@ -59,17 +57,15 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener<const boost::uuids::uuid&>(
-			"ClientReceived_BonusDeSpawn", _name,
-			[this](const boost::uuids::uuid& uuid)
-			{
-				if (uuid != this->_uuid)
-				{
-					return;
-				}
+	_events->AddListener<const buuid&>("ClientReceived_BonusDeSpawn", _name, [this](const buuid& uuid)
+	{
+		if (uuid != this->_uuid)
+		{
+			return;
+		}
 
-				this->SetIsAlive(false);
-			});
+		this->SetIsAlive(false);
+	});
 }
 
 void Bonus::Unsubscribe() const
@@ -86,7 +82,7 @@ void Bonus::UnsubscribeAsHost() const
 
 void Bonus::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const boost::uuids::uuid&>("ClientReceived_BonusDeSpawn", _name);
+	_events->RemoveListener<const buuid&>("ClientReceived_BonusDeSpawn", _name);
 }
 
 void Bonus::Draw(const BaseObj* /*obj*/) const

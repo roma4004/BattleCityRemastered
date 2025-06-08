@@ -18,6 +18,8 @@ class TextureManager;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
+	using buuid = boost::uuids::uuid;
+
 	virtual void UnsubscribeAsHost() const;
 	virtual void UnsubscribeAsClient() const;
 

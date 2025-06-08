@@ -12,6 +12,8 @@ class IShootable;
 
 class Tank : public Pawn, public IHealthBar
 {
+	using buuid = boost::uuids::uuid;
+
 	int _bulletDamage{15};
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
 
@@ -45,7 +47,7 @@ protected:
 	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
 	BonusStatus _helmet{};
 
-	void Shot(boost::uuids::uuid withUuid = {}) const;
+	void Shot(buuid withUuid = {}) const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

@@ -3,9 +3,11 @@
 
 class IShootable
 {
+	using buuid = boost::uuids::uuid;
+
 protected:
 	virtual ~IShootable() = default;
 
 public:
-	virtual boost::uuids::uuid Shot(boost::uuids::uuid uuid = {}) = 0;
+	virtual buuid Shot(buuid uuid = {}) = 0;
 };

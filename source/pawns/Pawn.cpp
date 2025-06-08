@@ -52,9 +52,9 @@ void Pawn::SubscribeAsHost()
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const Direction, const boost::uuids::uuid>(
+	_events->AddListener<const FPoint, const Direction, const buuid&>(
 			"ClientReceived_" + _name + "Pos", _nameWithUuid,
-			[this](const FPoint newPos, const Direction dir, const boost::uuids::uuid uuid)
+			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
 			{
 				if (uuid != this->_uuid)
 				{
@@ -92,7 +92,7 @@ void Pawn::UnsubscribeAsHost() const
 
 void Pawn::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const Direction, const boost::uuids::uuid>(
+	_events->RemoveListener<const FPoint, const Direction, const buuid&>(
 			"ClientReceived_" + _name + "Pos", _nameWithUuid);
 	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _nameWithUuid);
 }

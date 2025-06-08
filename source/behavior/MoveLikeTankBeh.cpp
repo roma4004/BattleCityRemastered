@@ -31,37 +31,37 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 		dir == UP)
 	{
 		tankNextPosRect = ObjRectangle{
-			.x = tank->GetX(),
-			.y = tank->GetY() - moveSpeed,
-			.w = tank->GetWidth(),
-			.h = tank->GetHeight() + moveSpeed
+				.x = tank->GetX(),
+				.y = tank->GetY() - moveSpeed,
+				.w = tank->GetWidth(),
+				.h = tank->GetHeight() + moveSpeed
 		};
 	}
 	else if (dir == DOWN)
 	{
 		tankNextPosRect = ObjRectangle{
-			.x = tank->GetX(),
-			.y = tank->GetY(),
-			.w = tank->GetWidth(),
-			.h = tank->GetHeight() + moveSpeed
+				.x = tank->GetX(),
+				.y = tank->GetY(),
+				.w = tank->GetWidth(),
+				.h = tank->GetHeight() + moveSpeed
 		};
 	}
 	else if (dir == LEFT)
 	{
 		tankNextPosRect = ObjRectangle{
-			.x = tank->GetX() - moveSpeed,
-			.y = tank->GetY(),
-			.w = tank->GetWidth() + moveSpeed,
-			.h = tank->GetHeight()
+				.x = tank->GetX() - moveSpeed,
+				.y = tank->GetY(),
+				.w = tank->GetWidth() + moveSpeed,
+				.h = tank->GetHeight()
 		};
 	}
 	else if (dir == RIGHT)
 	{
 		tankNextPosRect = ObjRectangle{
-			.x = tank->GetX(),
-			.y = tank->GetY(),
-			.w = tank->GetWidth() + moveSpeed,
-			.h = tank->GetHeight()
+				.x = tank->GetX(),
+				.y = tank->GetY(),
+				.w = tank->GetWidth() + moveSpeed,
+				.h = tank->GetHeight()
 		};
 	}
 

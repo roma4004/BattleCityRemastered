@@ -11,10 +11,12 @@ class EventSystem;
 
 class BonusTank final : public Bonus
 {
+	using buuid = boost::uuids::uuid;
+
 public:
 	BonusTank(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	          std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color,
-	          boost::uuids::uuid uuid, GameMode gameMode);
+	          std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, buuid uuid,
+	          GameMode gameMode);
 
 	~BonusTank() override;
 };

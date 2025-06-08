@@ -20,6 +20,8 @@ class EventSystem;
 
 class TankSpawner final
 {
+	using buuid = boost::uuids::uuid;
+
 	std::string _name{"TankSpawner"};
 	GameMode _gameMode{};
 
@@ -39,7 +41,7 @@ class TankSpawner final
 
 	struct SpawnSlot
 	{
-		boost::uuids::uuid id{};
+		buuid id{};
 		bool isAvailable{false};
 	};
 
@@ -54,24 +56,24 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health);
+	void SpawnEnemy(buuid uuid, float speed, int health);
 	void SetEnemyNeedRespawn();
 
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
 
 	template<typename TTankType>
 	void RespawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
-	                 boost::uuids::uuid uuid);
+	                 buuid uuid);
 
-	void RespawnEnemyTanks(TankType type, boost::uuids::uuid uuid);
-	void RespawnPlayerTeam(TankType type, boost::uuids::uuid uuid);
+	void RespawnEnemyTanks(TankType type, buuid uuid);
+	void RespawnPlayerTeam(TankType type, buuid uuid);
 	void SetPlayerNeedRespawn();
 	static std::string GetCurrentTimeString();
 
 	void ResetRespawnStat();
 	void RespawnTanks();
-	void RespawnClient(TankType type, boost::uuids::uuid uuid);
+	void RespawnClient(TankType type, buuid uuid);
 	void ResetSpawn();
 
 	void IncreaseEnemyRespawnResource();
@@ -81,8 +83,8 @@ class TankSpawner final
 	void DecreaseEnemyRespawnResource();
 	void DecreasePlayerOneRespawnResource();
 	void DecreasePlayerTwoRespawnResource();
-	void OnTankSpawn(const boost::uuids::uuid& uuid);
-	void OnTankDied(const boost::uuids::uuid& uuid);
+	void OnTankSpawn(const buuid& uuid);
+	void OnTankDied(const buuid& uuid);
 
 public:
 	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,

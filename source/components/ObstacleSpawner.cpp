@@ -17,7 +17,8 @@ class BaseObj;
 class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                 std::shared_ptr<Window> window, std::shared_ptr<IDrawable> textureManager/*, const int sideBarWidth*/,
+                                 std::shared_ptr<Window> window,
+                                 std::shared_ptr<IDrawable> textureManager/*, const int sideBarWidth*/,
                                  const int obstacleSize)
 	: _events{std::move(events)},
 	  _obstacleSize{obstacleSize},
@@ -52,9 +53,9 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+	_events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
 			"ClientReceived_ObstacleSpawn", _name,
-			[this](const ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
+			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
 				SpawnObstacle(rect, type, uuid);
 			});
@@ -72,15 +73,15 @@ void ObstacleSpawner::Unsubscribe() const
 
 void ObstacleSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+	_events->RemoveListener<const ObjRectangle, const ObstacleType, const buuid&>(
 			"ClientReceived_ObstacleSpawn", _name);
 }
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
-void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
+void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, const buuid uuid)
 {
-	boost::uuids::uuid spawnUuid;
+	buuid spawnUuid;
 	if (uuid != boost::uuids::nil_uuid())
 	{
 		spawnUuid = uuid;

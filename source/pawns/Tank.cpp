@@ -18,14 +18,14 @@ Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::sh
 
 	Tank::Subscribe();
 
-	_events->EmitEvent<const boost::uuids::uuid&>("TankSpawn", _uuid);
+	_events->EmitEvent<const buuid&>("TankSpawn", _uuid);
 }
 
 Tank::~Tank()
 {
 	Tank::Unsubscribe();
 
-	_events->EmitEvent<const boost::uuids::uuid&>("TankDied", _uuid);
+	_events->EmitEvent<const buuid&>("TankDied", _uuid);
 }
 
 void Tank::Subscribe()
@@ -42,9 +42,8 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	_events->AddListener<const Direction, const boost::uuids::uuid>(
-			"ClientReceived_" + _name + "Shot", _name,
-			[this](const Direction dir, const boost::uuids::uuid uuid)
+	_events->AddListener<const Direction, const buuid&>(
+			"ClientReceived_" + _name + "Shot", _name, [this](const Direction dir, const buuid& uuid)
 			{
 				this->SetDirection(dir);
 				this->Shot(uuid);
@@ -109,7 +108,7 @@ void Tank::Unsubscribe() const
 
 void Tank::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const Direction, const boost::uuids::uuid>("ClientReceived_" + _name + "Shot", _name);
+	_events->RemoveListener<const Direction, const buuid&>("ClientReceived_" + _name + "Shot", _name);
 
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
@@ -152,7 +151,7 @@ void Tank::TakeDamage(const int damage)
 
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const int, const boost::uuids::uuid>(
+			_events->EmitEvent<const std::string&, const int, const buuid&>(
 					"ServerSend_Health", _name, GetHealth(), _uuid);
 		}
 	}
@@ -160,14 +159,14 @@ void Tank::TakeDamage(const int damage)
 
 int Tank::GetTier() const { return _tier; }
 
-void Tank::Shot(const boost::uuids::uuid withUuid) const
+void Tank::Shot(const buuid withUuid) const
 {
 	_lastTimeFire = std::chrono::system_clock::now();
-	const boost::uuids::uuid bulletUuid = _shootingBeh->Shot(withUuid);
+	const buuid bulletUuid = _shootingBeh->Shot(withUuid);
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const Direction, const boost::uuids::uuid>(
+		_events->EmitEvent<const std::string&, const Direction, const buuid&>(
 				"ServerSend_Shot", _name, GetDirection(), bulletUuid);
 	}
 }

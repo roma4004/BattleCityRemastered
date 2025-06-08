@@ -9,13 +9,14 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BonusSpawn);
 
 BonusSpawn::BonusSpawn(): Command(CommandType::BONUS_SPAWN) {}
 
-BonusSpawn::BonusSpawn(const FPoint& pos, const BonusType bonusType, const boost::uuids::uuid uuid)
+BonusSpawn::BonusSpawn(const FPoint& pos, const BonusType bonusType, const buuid uuid)
 	: Command(CommandType::BONUS_SPAWN), _pos(pos), _bonusType(bonusType), _uuid(uuid) {}
 
 FPoint BonusSpawn::GetPos() const { return _pos; }
 
 BonusType BonusSpawn::GetBonusType() const { return _bonusType; }
 
-boost::uuids::uuid BonusSpawn::GetUuid() const { return _uuid; }
+using buuid = boost::uuids::uuid;
+buuid BonusSpawn::GetUuid() const { return _uuid; }
 
 const char* BonusSpawn::GetClassNameW() const { return "BonusSpawn"; }

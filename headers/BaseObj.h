@@ -11,12 +11,14 @@ struct FPoint;
 
 class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics, public IHaveFraction
 {
+	using buuid = boost::uuids::uuid;
+
 	int _color{0};
 	int _health{0};
 	bool _isAlive{true};
 
 protected:
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 	std::string _name;
 	std::string _nameWithUuid;
 	std::string _fraction;
@@ -25,7 +27,7 @@ protected:
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);
 
-	BaseObj(ObjRectangle rect, int color, int health, boost::uuids::uuid uuid, std::string name, std::string fraction);
+	BaseObj(ObjRectangle rect, int color, int health, buuid uuid, std::string name, std::string fraction);
 
 	~BaseObj() override;
 
@@ -73,7 +75,7 @@ public:
 	virtual void SetRect(ObjRectangle rect);
 
 	[[nodiscard]] virtual std::string GetName() const;
-	[[nodiscard]] virtual boost::uuids::uuid GetUuid() const;
-	virtual void SetId(boost::uuids::uuid uuid);
+	[[nodiscard]] virtual buuid GetUuid() const;
+	virtual void SetId(buuid uuid);
 	[[nodiscard]] std::string GetFraction() const override;
 };

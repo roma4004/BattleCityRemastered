@@ -27,6 +27,8 @@
 
 // std::ofstream error_log("error_log_client.txt");
 
+using buuid = boost::uuids::uuid;
+
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
                std::shared_ptr<EventSystem> events)
 	: _socket(ioContext),
@@ -205,7 +207,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const Direction, const boost::uuids::uuid>(
+		_events->EmitEvent<const FPoint, const Direction, const buuid&>(
 				"ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
 	}
 }
@@ -214,8 +216,8 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
 	{
-		const boost::uuids::uuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const Direction, const boost::uuids::uuid>(
+		const buuid uuid = cmd->GetUuid();
+		_events->EmitEvent<const Direction, const buuid&>(
 				"ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), uuid);
 	}
 }
@@ -234,7 +236,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		_events->EmitEvent<const boost::uuids::uuid&>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
+		_events->EmitEvent<const buuid&>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
 	}
 }
 
@@ -260,8 +262,8 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		const boost::uuids::uuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const std::string&, const boost::uuids::uuid>(
+		const buuid uuid = cmd->GetUuid();
+		_events->EmitEvent<const std::string&, const buuid&>(
 				"ClientReceived_FortressChange", cmd->GetState(), uuid);
 	}
 }
@@ -270,7 +272,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const boost::uuids::uuid>(
+		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
 				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
 	}
 }
@@ -279,7 +281,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const boost::uuids::uuid&>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
+		_events->EmitEvent<const buuid&>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
 	}
 }
 
@@ -287,7 +289,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
 	{
-		_events->EmitEvent<const TankType, const boost::uuids::uuid>(
+		_events->EmitEvent<const TankType, const buuid&>(
 				"ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
 	}
 }
@@ -296,7 +298,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
 				"ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
 	}
 }

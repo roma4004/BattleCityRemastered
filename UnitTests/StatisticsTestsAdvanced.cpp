@@ -16,6 +16,8 @@
 
 class StatisticsTestAdvanced : public testing::Test
 {
+	using buuid = boost::uuids::uuid;
+
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
@@ -32,7 +34,7 @@ protected:
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
 	GameMode _gameMode{OnePlayer};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 	void SetUp() override
 	{

@@ -6,12 +6,11 @@
 #include "../../headers/enums/GameMode.h"
 
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::shared_ptr<Window> window,
-                   std::string name, std::shared_ptr<EventSystem> events, const boost::uuids::uuid uuid,
-                   const GameMode gameMode, const ObstacleType obstacleType,
-                   std::shared_ptr<IDrawable> textureManager)
+                   std::string name, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
+                   const ObstacleType obstacleType, std::shared_ptr<IDrawable> textureManager)
 	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
-	  _textureManager{textureManager},
+	  _textureManager{std::move(textureManager)},
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _events(std::move(events))
@@ -20,7 +19,7 @@ Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::sh
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
 				"ServerSend_ObstacleSpawn", _rect, _obstacleType, uuid);
 	}
 }

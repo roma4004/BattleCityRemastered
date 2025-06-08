@@ -7,8 +7,7 @@
 struct Window;
 
 BrickWall::BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const boost::uuids::uuid uuid, const GameMode gameMode,
-                     std::shared_ptr<IDrawable> textureManager)
+                     const buuid uuid, const GameMode gameMode, std::shared_ptr<IDrawable> textureManager)
 	: Obstacle{std::move(rect),
 	           0x924b00,
 	           1,
@@ -33,7 +32,7 @@ void BrickWall::SendDamageStatistics(const std::string& author, const std::strin
 		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
 
 		//TODO: move this to onHealthChange
-		_events->EmitEvent<const std::string&, const int, const boost::uuids::uuid>(
-				"ServerSend_Health", _name, GetHealth(), _uuid);//for replication
+		//for replication
+		_events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", _name, GetHealth(), _uuid);
 	}
 }

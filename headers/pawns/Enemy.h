@@ -8,6 +8,8 @@ class BulletPool;
 
 class Enemy final : public Bot
 {
+	using buuid = boost::uuids::uuid;
+
 	void TickUpdate(float deltaTime) override;
 
 public:

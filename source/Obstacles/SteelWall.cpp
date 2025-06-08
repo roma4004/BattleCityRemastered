@@ -5,8 +5,7 @@
 #include <string>
 
 SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const boost::uuids::uuid uuid, const GameMode gameMode,
-                     std::shared_ptr<IDrawable> textureManager)
+                     const buuid uuid, const GameMode gameMode, std::shared_ptr<IDrawable> textureManager)
 	: Obstacle{std::move(rect),
 	           0xaaaaaa,
 	           1,

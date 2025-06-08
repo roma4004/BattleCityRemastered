@@ -15,7 +15,7 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 }
 
 //Deprecated
-BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const boost::uuids::uuid uuid, std::string name,
+BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
                  std::string fraction)
 	: _color(color),
 	  _health(health),
@@ -35,9 +35,10 @@ void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
 std::string BaseObj::GetName() const { return _name; }
 
-boost::uuids::uuid BaseObj::GetUuid() const { return _uuid; }
+using buuid = boost::uuids::uuid;
+buuid BaseObj::GetUuid() const { return _uuid; }
 
-void BaseObj::SetId(const boost::uuids::uuid uuid) { _uuid = uuid; }
+void BaseObj::SetId(const buuid uuid) { _uuid = uuid; }
 
 std::string BaseObj::GetFraction() const { return _fraction; }
 
