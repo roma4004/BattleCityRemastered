@@ -15,7 +15,5 @@ public:
 	BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, buuid uuid,
 	          GameMode gameMode, std::shared_ptr<IDrawable> textureManager);
 
-	~BrickWall() override = default;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	~BrickWall() override;
 };

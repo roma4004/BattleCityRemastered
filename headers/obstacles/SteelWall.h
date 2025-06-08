@@ -15,6 +15,4 @@ public:
 	          GameMode gameMode, std::shared_ptr<IDrawable> textureManager);
 
 	~SteelWall() override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 };

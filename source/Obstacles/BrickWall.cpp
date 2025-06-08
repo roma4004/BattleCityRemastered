@@ -24,15 +24,4 @@ BrickWall::BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	BaseObj::SetIsPenetrable(false);
 }
 
-void BrickWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	if (GetHealth() < 1)
-	{
-		//TODO: generalize who died in {_Name}Died and move method to Obstacle
-		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
-
-		//TODO: move this to onHealthChange
-		//for replication
-		_events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", _name, GetHealth(), _uuid);
-	}
-}
+BrickWall::~BrickWall() = default;

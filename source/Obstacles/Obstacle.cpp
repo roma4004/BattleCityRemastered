@@ -98,3 +98,17 @@ void Obstacle::Draw(const BaseObj* /*obj*/) const
 		}
 	}
 }
+
+void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
+{
+	if (GetHealth() < 1)
+	{
+		_events->EmitEvent<const std::string&, const std::string&>("Statistics_" + _name + "Died", author, fraction);
+
+		//TODO: move this to onHealthChange
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", _name, GetHealth(), _uuid);
+		}
+	}
+}

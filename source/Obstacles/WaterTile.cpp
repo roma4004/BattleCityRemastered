@@ -30,5 +30,3 @@ WaterTile::~WaterTile()
 	//TODO: remove this after load steel texture
 	_events->RemoveListener("Draw", _nameWithUuid);
 }
-
-void WaterTile::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}

@@ -26,7 +26,9 @@ protected:
 	GameMode _gameMode{};
 	ObstacleType _obstacleType{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+
 	void Draw(const BaseObj* obj) const override;
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
 	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, std::string name,

@@ -121,10 +121,18 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", GetName(), GetHealth(), GetUuid());
+		}
 	}
 	else
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("Statistics_SteelWallDied", author, fraction);
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", GetName(), GetHealth(), GetUuid());
+		}
 	}
 }
 

@@ -30,11 +30,3 @@ SteelWall::~SteelWall()
 	//TODO: remove this after load steel texture
 	_events->RemoveListener("Draw", _nameWithUuid);
 }
-
-void SteelWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	if (GetHealth() < 1)
-	{
-		_events->EmitEvent<const std::string&, const std::string&>("Statistics_SteelWallDied", author, fraction);
-	}
-}
