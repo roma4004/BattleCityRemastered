@@ -7,6 +7,8 @@
 
 class Logger
 {
+	using milliseconds = std::chrono::milliseconds;
+
 public:
 	static Logger& GetInstance();
 

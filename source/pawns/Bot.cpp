@@ -223,7 +223,7 @@ void Bot::TickUpdate(const float deltaTime)
 	// change dir when random time span left
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{
-		_turnDuration = std::chrono::milliseconds(_distTurnRate(_gen));
+		_turnDuration = milliseconds(_distTurnRate(_gen));
 		const int randDir = _distDirection(_gen);
 		SetDirection(static_cast<Direction>(randDir));
 		_lastTimeTurn = std::chrono::system_clock::now();

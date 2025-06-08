@@ -18,6 +18,8 @@ class TextureManager;
 
 class BulletPool final
 {
+	using milliseconds = std::chrono::milliseconds;
+
 	std::queue<std::shared_ptr<BaseObj>> _bullets;
 	std::mutex _bulletsMutex;
 	std::shared_ptr<EventSystem> _events{nullptr};

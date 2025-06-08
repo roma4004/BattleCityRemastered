@@ -18,6 +18,7 @@ class EventSystem;
 
 class BonusSpawner final : public ITickUpdatable
 {
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"BonusSpawner"};
@@ -35,7 +36,7 @@ class BonusSpawner final : public ITickUpdatable
 	std::uniform_int_distribution<> _distSpawnType;
 	std::uniform_int_distribution<> _distRandColor;
 
-	std::chrono::milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};
+	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};
 	std::chrono::system_clock::time_point _lastTimeSpawn;
 
 	void Subscribe();

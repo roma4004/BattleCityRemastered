@@ -20,6 +20,7 @@ class EventSystem;
 
 class TankSpawner final
 {
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"TankSpawner"};

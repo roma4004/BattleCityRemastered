@@ -5,8 +5,8 @@
 #include "../../headers/utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-             const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime, const int color,
-             std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
+             const milliseconds duration, const milliseconds lifeTime, const int color, std::string name,
+             const buuid uuid, const GameMode gameMode, const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},

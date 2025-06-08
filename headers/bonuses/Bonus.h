@@ -15,6 +15,7 @@ class EventSystem;
 
 class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<Window> _window{nullptr};
@@ -24,8 +25,8 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 protected:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
-	std::chrono::milliseconds _effectDuration{0};
-	std::chrono::milliseconds _lifetime{0};
+	milliseconds _effectDuration{0};
+	milliseconds _lifetime{0};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
@@ -38,8 +39,8 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name,
-	      buuid uuid, GameMode gameMode, BonusType bonusType);
+	      milliseconds duration, milliseconds lifeTime, int color, std::string name, buuid uuid, GameMode gameMode,
+	      BonusType bonusType);
 
 	~Bonus() override;
 

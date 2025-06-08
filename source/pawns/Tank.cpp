@@ -67,16 +67,16 @@ void Tank::SubscribeAsClient()
 
 void Tank::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+	_events->AddListener<const std::string&, const std::string&, const milliseconds>(
 			"BonusTimer", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const std::chrono::milliseconds duration)
+			[this](const std::string& /*author*/, const std::string& fraction, const milliseconds duration)
 			{
 				this->OnBonusTimer(fraction, duration);
 			});
 
-	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+	_events->AddListener<const std::string&, const std::string&, const milliseconds>(
 			"BonusHelmet", _name,
-			[this](const std::string& author, const std::string& fraction, const std::chrono::milliseconds duration)
+			[this](const std::string& author, const std::string& fraction, const milliseconds duration)
 			{
 				this->OnBonusHelmet(author, fraction, duration);
 			});
@@ -117,10 +117,8 @@ void Tank::UnsubscribeAsClient() const
 
 void Tank::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
-			"BonusTimer", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
-			"BonusHelmet", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const milliseconds>("BonusTimer", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const milliseconds>("BonusHelmet", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
 }
@@ -228,7 +226,7 @@ void Tank::DrawHealthBar() const
 	}
 }
 
-void Tank::OnBonusTimer(const std::string& fraction, const std::chrono::milliseconds duration)
+void Tank::OnBonusTimer(const std::string& fraction, const milliseconds duration)
 {
 	if (fraction != _fraction)
 	{
@@ -237,8 +235,7 @@ void Tank::OnBonusTimer(const std::string& fraction, const std::chrono::millisec
 	}
 }
 
-void Tank::OnBonusHelmet(const std::string& author, const std::string& fraction,
-                         const std::chrono::milliseconds duration)
+void Tank::OnBonusHelmet(const std::string& author, const std::string& fraction, const milliseconds duration)
 {
 	if (fraction == _fraction && author == _name)
 	{
@@ -275,7 +272,7 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 		_speed *= 1.10f;
 		_bulletSpeed *= 1.10f;
 		_bulletDamage += 15;
-		_fireCooldown -= std::chrono::milliseconds{150};
+		_fireCooldown -= milliseconds{150};
 		_bulletDamageRadius *= 1.25f;
 
 		if (_gameMode == PlayAsHost)

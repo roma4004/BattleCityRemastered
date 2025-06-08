@@ -10,12 +10,12 @@ class EventSystem;
 
 class BonusShovel final : public Bonus
 {
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 public:
 	BonusShovel(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	            std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, buuid uuid,
-	            GameMode gameMode);
+	            milliseconds duration, milliseconds lifeTime, int color, buuid uuid, GameMode gameMode);
 
 	~BonusShovel() override;
 

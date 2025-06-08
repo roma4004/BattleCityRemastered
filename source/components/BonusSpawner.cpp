@@ -180,8 +180,8 @@ void BonusSpawner::SpawnRandomBonus(ObjRectangle rect)
 template<typename TBonusType>
 void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const buuid uuid)
 {
-	constexpr std::chrono::milliseconds lifetime{std::chrono::seconds{15}};
-	constexpr std::chrono::milliseconds duration{std::chrono::seconds{15}};
+	constexpr milliseconds lifetime{std::chrono::seconds{15}};
+	constexpr milliseconds duration{std::chrono::seconds{15}};
 
 
 	if (auto bonus = std::make_shared<TBonusType>(

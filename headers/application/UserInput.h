@@ -12,6 +12,8 @@ class EventSystem;
 
 class UserInput final
 {
+	using milliseconds = std::chrono::milliseconds;
+
 	MouseButtons _mouseButtons{};
 	bool _isGameOver{false};
 	bool _isPause{false};
@@ -23,7 +25,7 @@ class UserInput final
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::chrono::system_clock::time_point _lastMoveEventTime;
-	std::chrono::milliseconds _moveEndDelay{150};
+	milliseconds _moveEndDelay{150};
 
 	void MouseEvents(const SDL_Event& event);
 	void KeyPressed(const SDL_Event& event) const;

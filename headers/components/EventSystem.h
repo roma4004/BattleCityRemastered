@@ -31,7 +31,7 @@ private:
 
 class EventSystem final
 {
-	using milliseconds = std::chrono::milliseconds;//TODO: apply this using to solution
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 	using allEventTypes = std::variant<

@@ -73,10 +73,10 @@ void FortressWall::SubscribeAsClient()
 
 void FortressWall::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
+	_events->AddListener<const std::string&, const std::string&, const milliseconds>(
 			//TODO: remove duration for bonuses
 			"BonusShovel", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const std::chrono::milliseconds duration)
+			[this](const std::string& /*author*/, const std::string& fraction, const milliseconds duration)
 			{
 				this->OnBonusShovelPickup(fraction, duration);
 			});
@@ -101,8 +101,7 @@ void FortressWall::UnsubscribeAsClient() const
 
 void FortressWall::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, const std::chrono::milliseconds>(
-			"BonusShovel", _name);
+	_events->RemoveListener<const std::string&, const std::string&, const milliseconds>("BonusShovel", _name);
 }
 
 void FortressWall::Draw(const BaseObj* /*obj*/) const {}
@@ -212,7 +211,7 @@ bool FortressWall::IsSteelWall() const
 	return std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle);
 }
 
-void FortressWall::OnBonusShovelPickup(const std::string& fraction, const std::chrono::milliseconds duration)
+void FortressWall::OnBonusShovelPickup(const std::string& fraction, const milliseconds duration)
 {
 	if (fraction == "PlayerTeam")
 	{

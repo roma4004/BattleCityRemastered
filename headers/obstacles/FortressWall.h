@@ -16,6 +16,7 @@ class TextureManager;
 
 class FortressWall final : public BaseObj, public ITickUpdatable
 {
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 	GameMode _gameMode{};
@@ -46,7 +47,7 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	void OnPlayerShovelCooldownEnd();
 
 	void OnEnemyPickupShovel();
-	void OnBonusShovelPickup(const std::string& fraction, std::chrono::milliseconds duration);
+	void OnBonusShovelPickup(const std::string& fraction, milliseconds duration);
 
 public:
 	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,

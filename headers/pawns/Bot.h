@@ -10,12 +10,14 @@ class BulletPool;
 
 class Bot : public Tank
 {
+	using milliseconds = std::chrono::milliseconds;
+
 protected:
 	std::mt19937 _gen;
 	std::uniform_int_distribution<> _distDirection;
 	std::uniform_int_distribution<> _distTurnRate;
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn;
-	std::chrono::milliseconds _turnDuration{std::chrono::seconds(2)};
+	milliseconds _turnDuration{std::chrono::seconds(2)};
 
 	//LOS
 	float _shootDistance{0.f};

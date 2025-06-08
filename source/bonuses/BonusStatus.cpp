@@ -2,7 +2,7 @@
 
 BonusStatus::BonusStatus() {}
 
-BonusStatus::BonusStatus(const bool isActive, const std::chrono::milliseconds cooldown,
+BonusStatus::BonusStatus(const bool isActive, const milliseconds cooldown,
                          const std::chrono::system_clock::time_point activateTime)
 	: isActive{isActive},
 	  cooldown{cooldown},

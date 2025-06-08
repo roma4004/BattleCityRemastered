@@ -12,6 +12,7 @@ class IShootable;
 
 class Tank : public Pawn, public IHealthBar
 {
+	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
 	int _bulletDamage{15};
@@ -31,15 +32,15 @@ class Tank : public Pawn, public IHealthBar
 
 	inline void SetPixel(size_t x, size_t y, int color) const;
 
-	void OnBonusTimer(const std::string& fraction, std::chrono::milliseconds duration);
-	void OnBonusHelmet(const std::string& author, const std::string& fraction, std::chrono::milliseconds duration);
+	void OnBonusTimer(const std::string& fraction, milliseconds duration);
+	void OnBonusHelmet(const std::string& author, const std::string& fraction, milliseconds duration);
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusStar(const std::string& author, const std::string& fraction);
 
 protected:
 	FPoint _bulletSize{9.f, 9.f};
 	double _bulletDamageRadius{18.f};
-	std::chrono::milliseconds _fireCooldown{std::chrono::seconds{1}};
+	milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	// bonuses

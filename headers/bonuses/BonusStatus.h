@@ -4,13 +4,15 @@
 
 struct BonusStatus
 {
+	using milliseconds = std::chrono::milliseconds;
+
 	bool isActive{false};
-	std::chrono::milliseconds cooldown{0};
+	milliseconds cooldown{0};
 	std::chrono::system_clock::time_point activateTime;
 
 	BonusStatus();
 
-	BonusStatus(bool isActive, std::chrono::milliseconds cooldown, std::chrono::system_clock::time_point activateTime);
+	BonusStatus(bool isActive, milliseconds cooldown, std::chrono::system_clock::time_point activateTime);
 
 	~BonusStatus();
 };

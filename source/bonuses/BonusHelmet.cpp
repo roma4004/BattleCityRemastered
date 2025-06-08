@@ -3,8 +3,8 @@
 #include "../../headers/enums/BonusType.h"
 
 BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                         const std::chrono::milliseconds duration, const std::chrono::milliseconds lifeTime,
-                         const int color, const buuid uuid, const GameMode gameMode)
+                         const milliseconds duration, const milliseconds lifeTime, const int color, const buuid uuid,
+                         const GameMode gameMode)
 	: Bonus{rect,
 	        std::move(window),
 	        std::move(events),
@@ -20,6 +20,6 @@ BonusHelmet::~BonusHelmet() = default;
 
 void BonusHelmet::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, const std::chrono::milliseconds>(
+	_events->EmitEvent<const std::string&, const std::string&, const milliseconds>(
 			_name, author, fraction, _effectDuration);
 }
