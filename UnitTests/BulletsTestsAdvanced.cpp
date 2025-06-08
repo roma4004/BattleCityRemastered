@@ -46,7 +46,7 @@ protected:
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 3, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 3, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(

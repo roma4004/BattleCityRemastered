@@ -54,12 +54,12 @@ protected:
 		const ObjRectangle rect1{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect1, _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
 
 		const ObjRectangle rect2{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty2{rect2, _green, _tankHealth, true, _uuid, _name2, _fraction2};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty2), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(

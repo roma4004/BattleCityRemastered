@@ -52,7 +52,7 @@ protected:
 		BaseObjProperty baseObjProperty{
 			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
@@ -309,7 +309,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
 	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-		std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+		std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
 
 	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool)));
 
@@ -334,7 +334,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		BaseObjProperty baseObjProperty{
 			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, UP, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));

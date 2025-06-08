@@ -57,7 +57,7 @@ protected:
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, _yellow, _tankHealth, true, _uuid, std::move(name), std::move(fraction)};
-		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+		PawnProperty pawnProperty{std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, UP, _tankSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
@@ -129,7 +129,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _tankSpeed};
 
 		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 
@@ -159,7 +159,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _tankSpeed};
 
 		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 
@@ -201,7 +201,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 		BaseObjProperty baseObjProperty{
 			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, LEFT, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, LEFT, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
@@ -247,7 +247,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		BaseObjProperty baseObjProperty{
 			rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, LEFT, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, LEFT, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
@@ -270,7 +270,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-		std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+		std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _tankSpeed};
 
 	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 
@@ -298,7 +298,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-		std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+		std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 1, DOWN, _tankSpeed};
 
 	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
 
