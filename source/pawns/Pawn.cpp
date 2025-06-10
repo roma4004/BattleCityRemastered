@@ -13,7 +13,6 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
-	  _textureManager{pawnProperty.textureManager},
 	  _allObjects{pawnProperty.allObjects},
 	  _window{std::move(pawnProperty.window)},
 	  _events{std::move(pawnProperty.events)},
@@ -34,10 +33,7 @@ Pawn::~Pawn()
 
 void Pawn::Subscribe()
 {
-	_events->AddListener("DrawTexture", _nameWithUuid, [this]()
-	{
-		this->Draw(this);
-	});
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 
 	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
@@ -80,7 +76,7 @@ void Pawn::Unsubscribe() const
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	_events->RemoveListener("DrawTexture", _nameWithUuid);
+	_events->RemoveListener("Draw", _nameWithUuid);
 
 	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
 }
@@ -117,38 +113,7 @@ void Pawn::TakeDamage(const int damage)
 	// }
 }
 
-void Pawn::Draw(const BaseObj* /*obj*/) const
-{
-	if (!GetIsAlive())
-	{
-		return;
-	}
-
-	if (_textureManager)
-	{
-		_textureManager->Draw(this);
-	}
-	else
-	{
-		int startY = static_cast<int>(GetY());
-		const int startX = static_cast<int>(GetX());
-		const size_t windowWidth = _window->size.x;
-		const int height = static_cast<int>(GetHeight());
-		const int width = static_cast<int>(GetWidth());
-		const int color = GetColor();
-
-		for (const int maxY = startY + height; startY < maxY; ++startY)
-		{
-			int x = startX;
-			for (const int maxX = x + width; x < maxX; ++x)
-			{
-				const size_t offset = startY * windowWidth + startX;
-				const int rowWidth = maxX - startX;
-				std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
-			}
-		}
-	}
-}
+void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
 
 UPoint Pawn::GetWindowSize() const { return _window->size; }
 

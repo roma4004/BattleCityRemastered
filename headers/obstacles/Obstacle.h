@@ -14,7 +14,6 @@ class Obstacle : public BaseObj
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<Window> _window{nullptr};
-	std::shared_ptr<IDrawable> _textureManager{nullptr};
 
 	virtual void Subscribe();
 	virtual void SubscribeAsClient();
@@ -32,8 +31,7 @@ protected:
 
 public:
 	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, std::string name,
-	         std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode, ObstacleType obstacleType,
-	         std::shared_ptr<IDrawable> textureManager);
+	         std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode, ObstacleType obstacleType);
 
 	~Obstacle() override;
 };

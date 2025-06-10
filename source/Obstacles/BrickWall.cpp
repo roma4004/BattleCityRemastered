@@ -7,7 +7,7 @@
 struct Window;
 
 BrickWall::BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const buuid uuid, const GameMode gameMode, std::shared_ptr<IDrawable> textureManager)
+                     const buuid uuid, const GameMode gameMode)
 	: Obstacle{std::move(rect),
 	           0x924b00,
 	           1,
@@ -16,8 +16,7 @@ BrickWall::BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	           std::move(events),
 	           uuid,
 	           gameMode,
-	           Brick,
-	           std::move(textureManager)}
+	           Brick}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

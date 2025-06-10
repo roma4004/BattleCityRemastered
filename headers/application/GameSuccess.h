@@ -24,11 +24,11 @@ class Server;
 
 class GameSuccess final : public IGame
 {
-	GameMode _selectedGameMode;
-	GameMode _gameMode;
+	GameMode _selectedGameMode{};
+	GameMode _gameMode{};
 	std::string _name{"Game"};
 
-	std::unique_ptr<INetworkNode> _networkNode;
+	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 
@@ -44,6 +44,8 @@ class GameSuccess final : public IGame
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+
+	std::shared_ptr<IDrawable> _textureManager{nullptr};
 
 	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
 

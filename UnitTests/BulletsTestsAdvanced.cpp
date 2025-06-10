@@ -48,7 +48,7 @@ protected:
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window, nullptr, _gameMode, 3, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window, _gameMode, 3, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
@@ -67,7 +67,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	if (/*auto&& bullet = */dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(wallRect, _window, _events, _uuid, _gameMode, nullptr));
+		_allObjects.emplace_back(std::make_shared<SteelWall>(wallRect, _window, _events, _uuid, _gameMode));
 
 		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
 		{

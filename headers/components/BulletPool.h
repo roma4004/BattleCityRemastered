@@ -28,13 +28,10 @@ class BulletPool final
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::shared_ptr<Window> _window;
 	bool _isClearing{false};
-	std::shared_ptr<IDrawable> _textureManager;
-	std::shared_ptr<SDL_Renderer> _renderer;
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	           std::shared_ptr<Window> window, GameMode gameMode, std::shared_ptr<IDrawable> textureManager,
-	           std::shared_ptr<SDL_Renderer> renderer);
+	           std::shared_ptr<Window> window, GameMode gameMode);
 
 	~BulletPool();
 

@@ -5,7 +5,7 @@
 #include <string>
 
 SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const buuid uuid, const GameMode gameMode, std::shared_ptr<IDrawable> textureManager)
+                     const buuid uuid, const GameMode gameMode)
 	: Obstacle{std::move(rect),
 	           0xaaaaaa,
 	           1,
@@ -14,8 +14,7 @@ SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	           std::move(events),
 	           uuid,
 	           gameMode,
-	           Steel,
-	           std::move(textureManager)}
+	           Steel}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

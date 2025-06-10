@@ -2,11 +2,11 @@
 
 #include "../MouseButton.h"
 
-#include <SDL.h>
 #include <chrono>
 #include <memory>
 #include <string>
 
+union SDL_Event;
 struct Window;
 class EventSystem;
 
@@ -24,7 +24,7 @@ class UserInput final
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::chrono::system_clock::time_point _lastMoveEventTime;
+	std::chrono::system_clock::time_point _lastMoveEventTime{};
 	milliseconds _moveEndDelay{150};
 
 	void MouseEvents(const SDL_Event& event);

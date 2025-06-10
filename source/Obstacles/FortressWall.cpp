@@ -13,15 +13,14 @@
 
 FortressWall::FortressWall(ObjRectangle rect, std::shared_ptr<Window> window,
                            const std::shared_ptr<EventSystem>& events,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode,
-                           std::shared_ptr<IDrawable> textureManager)
+                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode
+		)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _gameMode{gameMode},
 	  _window{window},
 	  _events{events},
-	  _textureManager{textureManager},
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode, textureManager)}
+	  _obstacle{std::make_unique<BrickWall>(rect, window, events, uuid, gameMode)}
 {
 	//TODO: fix fortress replication
 	Subscribe();
@@ -142,7 +141,7 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 	{
 		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode, _textureManager);
+			_obstacle = std::make_unique<BrickWall>(_rect, _window, _events, _uuid, _gameMode);
 		}
 
 		if (_gameMode == PlayAsHost)
@@ -174,7 +173,7 @@ void FortressWall::OnPlayerPickupShovel()
 
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
-		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _uuid, _gameMode, _textureManager);
+		_obstacle = std::make_unique<SteelWall>(_rect, _window, _events, _uuid, _gameMode);
 
 		if (_gameMode == PlayAsHost)
 		{

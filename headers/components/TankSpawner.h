@@ -31,8 +31,6 @@ class TankSpawner final
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	std::shared_ptr<IDrawable> _textureManager{nullptr};
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 
 	std::random_device _rd;
 
@@ -89,9 +87,8 @@ class TankSpawner final
 
 public:
 	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-	            std::shared_ptr<IDrawable> textureManager,
-	            std::shared_ptr<SDL_Renderer> renderer);
+	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool
+			);
 
 	~TankSpawner();
 

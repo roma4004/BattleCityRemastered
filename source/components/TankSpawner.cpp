@@ -25,14 +25,11 @@
 #include <boost/uuid/uuid_io.hpp>
 
 TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-                         std::shared_ptr<IDrawable> textureManager, std::shared_ptr<SDL_Renderer> renderer)
+                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
 	: _allObjects{allObjects},
 	  _window{std::move(window)},
 	  _events{std::move(events)},
-	  _bulletPool{std::move(bulletPool)},
-	  _textureManager{std::move(textureManager)},
-	  _renderer(std::move(renderer))
+	  _bulletPool{std::move(bulletPool)}
 {
 	static boost::uuids::random_generator uuidTankGenerator;
 

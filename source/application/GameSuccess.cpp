@@ -37,15 +37,16 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
 	  _window{window},
-	  _renderer{renderer},
+	  _renderer{std::move(renderer)},
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo, textureManager, renderer)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
+	  _textureManager(std::move(textureManager)),
 	  _userInput{window, events},
-	  _tankSpawner{window, &_allObjects, events, _bulletPool, textureManager, renderer},
+	  _tankSpawner{window, &_allObjects, events, _bulletPool},
 	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window, textureManager},
+	  _obstacleSpawner{events, &_allObjects, window},
 	  _isVsyncOn{isVsyncOn},
 	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
 {
@@ -266,6 +267,7 @@ void GameSuccess::DisposeDeadObject()
 		return !obj->GetIsAlive();
 	}).begin();
 
+	//TODO: run on debug only
 	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
 	{
 		if (itCopy->get() == nullptr)
@@ -273,14 +275,12 @@ void GameSuccess::DisposeDeadObject()
 			std::cout << "Disposing object nullptr " << std::endl;
 			continue;
 		}
-		auto baseObj = (*itCopy);
+		const auto baseObj = *itCopy;
 		std::cout << "[" << "Disposing object" << "] "
 				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< ", name=" << baseObj->GetName()
 				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
 				<< std::endl;
-		// std::cout << "Disposing object " << baseObj->GetName() <<
-		// /*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
 	}
 
 	_allObjects.erase(it, _allObjects.end());
@@ -340,7 +340,7 @@ void GameSuccess::MainLoop()
 			SDL_UpdateTexture(_screen.get(), nullptr, _window->buffer.get(), static_cast<int>(_window->size.x) << 2);
 			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
 
-			_events->EmitEvent("DrawTexture");
+			_events->EmitEvent("Draw");
 
 			_events->EmitEvent("DrawMenu");
 

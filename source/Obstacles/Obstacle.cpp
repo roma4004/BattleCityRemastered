@@ -7,10 +7,9 @@
 
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::shared_ptr<Window> window,
                    std::string name, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
-                   const ObstacleType obstacleType, std::shared_ptr<IDrawable> textureManager)
+                   const ObstacleType obstacleType)
 	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
 	  _window(std::move(window)),
-	  _textureManager{std::move(textureManager)},
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _events(std::move(events))
@@ -31,11 +30,7 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	_events->AddListener("DrawTexture", _nameWithUuid, [this]()
-	{
-		this->_textureManager->Draw(this);
-	});
-
+	_events->AddListener("Draw", _nameWithUuid, [this]() { Draw(this); });
 
 	if (_gameMode == PlayAsClient)
 	{
@@ -59,7 +54,7 @@ void Obstacle::SubscribeAsClient()
 
 void Obstacle::Unsubscribe() const
 {
-	_events->RemoveListener("DrawTexture", _nameWithUuid);
+	_events->RemoveListener("Draw", _nameWithUuid);
 
 	if (_gameMode == PlayAsClient)
 	{
@@ -72,32 +67,7 @@ void Obstacle::UnsubscribeAsClient() const
 	_events->RemoveListener<const int>("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
-void Obstacle::Draw(const BaseObj* /*obj*/) const
-{
-	if (!GetIsAlive())
-	{
-		return;
-	}
-
-	int startY = static_cast<int>(GetY());
-	const int startX = static_cast<int>(GetX());
-	const size_t windowWidth = _window->size.x;
-	const int height = static_cast<int>(GetHeight());
-	const int width = static_cast<int>(GetWidth());
-	const int color = GetColor();
-	const int maxY = startY + height;
-	const int maxX = startX + width;
-
-	for (; startY < maxY; ++startY)
-	{
-		for (int x = startX; x < maxX; ++x)
-		{
-			const size_t offset = startY * windowWidth + startX;
-			const int rowWidth = maxX - startX;
-			std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
-		}
-	}
-}
+void Obstacle::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
@@ -108,7 +78,8 @@ void Obstacle::SendDamageStatistics(const std::string& author, const std::string
 		//TODO: move this to onHealthChange
 		if (_gameMode == PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", _name, GetHealth(), _uuid);
+			_events->EmitEvent<const std::string&, const int, const buuid&>(
+					"ServerSend_Health", _name, GetHealth(), _uuid);
 		}
 	}
 }

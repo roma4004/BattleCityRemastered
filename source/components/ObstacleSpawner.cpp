@@ -17,14 +17,11 @@ class BaseObj;
 class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                 std::shared_ptr<Window> window,
-                                 std::shared_ptr<IDrawable> textureManager/*, const int sideBarWidth*/,
-                                 const int obstacleSize)
+                                 std::shared_ptr<Window> window,/*, const int sideBarWidth*/ const int obstacleSize)
 	: _events{std::move(events)},
 	  _obstacleSize{obstacleSize},
 	  _window{std::move(window)},
-	  _allObjects{allObjects},
-	  _textureManager{std::move(textureManager)}
+	  _allObjects{allObjects}
 
 // _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
 // _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},

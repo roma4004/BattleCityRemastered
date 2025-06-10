@@ -5,7 +5,7 @@
 #include <string>
 
 WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const buuid uuid, const GameMode gameMode, std::shared_ptr<IDrawable> textureManager)
+                     const buuid uuid, const GameMode gameMode)
 	: Obstacle{std::move(rect),
 	           0x1e90ff,
 	           1,
@@ -14,8 +14,7 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::sha
 	           std::move(events),
 	           uuid,
 	           gameMode,
-	           Water,
-	           std::move(textureManager)}
+	           Water}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

@@ -113,7 +113,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		return {};
 	}
 
-	ObjRectangle rect = GetBulletStartRect();
+	const ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.f || rect.y < 0.f)
 	{
 		//Try shooting outside screen

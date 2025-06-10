@@ -13,15 +13,12 @@
 #include <boost/uuid/uuid_io.hpp>
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       std::shared_ptr<Window> window, const GameMode gameMode,
-                       std::shared_ptr<IDrawable> textureManager, std::shared_ptr<SDL_Renderer> renderer)
+                       std::shared_ptr<Window> window, const GameMode gameMode)
 	: _events{std::move(events)},
 	  _name{"BulletPool"},
 	  _gameMode{gameMode},
 	  _allObjects{allObjects},
-	  _window{std::move(window)},
-	  _textureManager{std::move(textureManager)},
-	  _renderer(std::move(renderer))
+	  _window{std::move(window)}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)
@@ -75,7 +72,7 @@ void BulletPool::Unsubscribe() const
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
-	PawnProperty pawnProperty{{}, _allObjects, _events, _window, _textureManager, _gameMode};
+	PawnProperty pawnProperty{{}, _allObjects, _events, _window, _gameMode};
 	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
 }
 

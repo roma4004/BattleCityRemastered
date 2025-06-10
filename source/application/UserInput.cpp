@@ -2,6 +2,7 @@
 #include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
 
+#include <SDL_events.h>
 #include <iostream>
 
 UserInput::UserInput(std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events)

@@ -33,7 +33,6 @@ protected:
 	GameMode _gameMode{};
 	float _speed{0.f};
 	int _tier{1};
-	std::shared_ptr<IDrawable> _textureManager{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<Window> _window{nullptr};

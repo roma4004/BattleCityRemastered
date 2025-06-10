@@ -23,7 +23,7 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto events = std::make_shared<EventSystem>();
 	auto statistics = std::make_shared<GameStatistics>(events);
 	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _window, events);
-	auto textureManager = std::make_shared<TextureManager>(_atlasTexture, _renderer);
+	auto textureManager = std::make_shared<TextureManager>(_atlasTexture, _renderer, events, _window);
 
 	return std::make_unique<GameSuccess>(
 			_window, _renderer, _screen, _fpsFont, events, statistics, std::move(menu), std::move(textureManager),

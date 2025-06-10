@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../BaseObj.h"
 #include <chrono>
 #include <functional>
 #include <string>
@@ -42,6 +43,7 @@ class EventSystem final
 		Event<const GameMode>,// gameMode switch
 		Event<const buuid&>,// tankDied, tankSpawn, send/received bonusDeSpawn, send/received bulletDispose
 		Event<const std::string&>,// send bonusEffect
+		Event<const BaseObj*>,// draw obj
 		Event<const Direction, const buuid&>,// received tankShot(dir,uuid)
 		Event<const TankType, const buuid&>,// send/received respawnTank(type,uuid)
 		Event<const std::string&, const buuid&>,// send fortressChange(state,uuid)

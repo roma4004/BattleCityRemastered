@@ -22,7 +22,6 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	GameMode _gameMode{};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<IDrawable> _textureManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
 	std::variant<std::unique_ptr<BrickWall>,
@@ -51,8 +50,8 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 
 public:
 	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode,
-	             std::shared_ptr<IDrawable> textureManager);
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode
+			);
 
 	~FortressWall() override;
 

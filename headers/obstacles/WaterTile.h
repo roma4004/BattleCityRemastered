@@ -13,7 +13,7 @@ class WaterTile final : public Obstacle
 
 public:
 	WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, buuid uuid,
-	          GameMode gameMode, std::shared_ptr<IDrawable> textureManager);
+	          GameMode gameMode);
 
 	~WaterTile() override;
 };

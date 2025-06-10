@@ -1,11 +1,24 @@
 ﻿#include "../../headers/components/TextureManager.h"
+#include "../../headers/application/Window.h"
+#include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/Direction.h"
 #include "../../headers/pawns/Pawn.h"
 #include <SDL.h>
 
-TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer):
-	_renderer(std::move(renderer)),
-	_texture(std::move(texture)) {}
+TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
+                               std::shared_ptr<EventSystem> events, std::shared_ptr<Window> window)
+	: _renderer(std::move(renderer)),
+	  _texture(std::move(texture)),
+	  _events(std::move(events)),
+	  _window{std::move(window)}
+{
+	_events->AddListener<const BaseObj*>("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
+}
+
+TextureManager::~TextureManager()
+{
+	_events->RemoveListener<const BaseObj*>("DrawObj", _name);
+}
 
 SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
 {
@@ -16,7 +29,33 @@ SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
 			static_cast<int>(rect.h)};
 }
 
-TextureManager::~TextureManager() {}
+void TextureManager::RectDraw(const BaseObj* obj, const ObjRectangle rect) const
+{
+	// if (!obj->GetIsAlive())
+	// {
+	// 	return;
+	// }
+
+	int startY = static_cast<int>(rect.y);
+	const int startX = static_cast<int>(rect.x);
+	const size_t windowWidth = _window->size.x;
+	const int height = static_cast<int>(rect.h);
+	const int width = static_cast<int>(rect.w);
+	const int color = obj->GetColor();
+	const auto buffer = _window->buffer.get();
+
+	const int maxY = startY + height;
+	const int maxX = startX + width;
+	for (; startY < maxY; ++startY)
+	{
+		for (int x = startX; x < maxX; ++x)
+		{
+			const size_t offset = startY * windowWidth + startX;
+			const int rowWidth = maxX - startX;
+			std::ranges::fill_n(buffer + offset, rowWidth, color);
+		}
+	}
+}
 
 void TextureManager::Draw(const BaseObj* obj) const
 {
@@ -54,11 +93,11 @@ void TextureManager::Draw(const BaseObj* obj) const
 	{
 		textureRect = RectToSdlRect(_offset.brick);
 	}
-	else if (name == "SteelWall") {}
-	else if (name == "WaterTile") {}
+	// else if (name == "SteelWall") {}
+	// else if (name == "WaterTile") {}
 	else
 	{
-		//TODO all types of objects
+		RectDraw(obj, rect);
 	}
 
 	//local angle and flip for texture
