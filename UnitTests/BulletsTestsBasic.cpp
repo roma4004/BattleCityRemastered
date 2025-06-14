@@ -54,7 +54,7 @@ protected:
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window, _gameMode, 1, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
@@ -205,7 +205,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 		bullet->SetPos({.x = 0.f, .y = 7.f});
 		bullet->SetDirection(UP);
 		ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brickWall = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -231,7 +231,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 		bullet->SetPos({.x = 7.f, .y = 0.f});
 		bullet->SetDirection(LEFT);
 		ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brickWall = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -257,7 +257,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -283,7 +283,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(RIGHT);
 		ObjRectangle rect{.x = 7.f, .y = 0.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -307,12 +307,12 @@ TEST_F(BulletTest, BulletDamageTank)
 	const float tankSize = gridSize * 3;// for better turns
 	constexpr int tankHealth = 1;
 	constexpr int gray = 0x808080;
-	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window->size, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
 	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, _window, _gameMode, 1, UP, _tankSpeed};
+			std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, UP, _tankSpeed};
 
 	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool)));
 
@@ -337,7 +337,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, UP, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
@@ -368,7 +368,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const SteelWall*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -394,7 +394,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
-		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _window, _events, _uuid, _gameMode));
+		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const WaterTile*>(_allObjects.back().get()))
 		{
 			const int bulletHealth = bullet->GetHealth();
@@ -420,7 +420,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 		bullet->SetDirection(DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = 36, .h = 36};
 		_allObjects.emplace_back(
-				std::make_shared<FortressWall>(rect, _window, _events, &_allObjects, _uuid, _gameMode));
+				std::make_shared<FortressWall>(rect, _events, &_allObjects, _uuid, _gameMode));
 		if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{
 			fortressWall->SetHealth(1);

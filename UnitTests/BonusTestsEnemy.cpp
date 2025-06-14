@@ -47,9 +47,9 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window->size, _gameMode);
+		_tankSpawner = std::make_shared<TankSpawner>(_window->size, &_allObjects, _events, _bulletPool);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window->size);
 		_gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 		// std::string name = "Player1";
@@ -60,7 +60,7 @@ protected:
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window, _gameMode, 1, DOWN, _tankSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, DOWN, _tankSpeed};
 
 		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool));
 	}
@@ -78,8 +78,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 {
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
-					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _window, _events,
-					&_allObjects, _uuid, _gameMode));
+					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _events, &_allObjects,
+					_uuid, _gameMode));
 	const auto fortressWall = dynamic_cast<const FortressWall*>(_allObjects.back().get());
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
@@ -99,8 +99,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 {
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
-					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _window, _events,
-					&_allObjects, _uuid, _gameMode));
+					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _events, &_allObjects,
+					_uuid, _gameMode));
 	if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(fortressWall->IsBrickWall());

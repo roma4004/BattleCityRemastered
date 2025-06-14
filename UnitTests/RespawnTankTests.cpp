@@ -44,9 +44,9 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window->size, _gameMode);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
+		_tankSpawner = std::make_shared<TankSpawner>(_window->size, &_allObjects, _events, _bulletPool);
 		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
 
@@ -56,12 +56,12 @@ protected:
 		const ObjRectangle rect1{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect1, _yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window, _gameMode, 1, UP, _tankSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, UP, _tankSpeed};
 
 		const ObjRectangle rect2{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty2{rect2, _green, _tankHealth, true, _uuid, _name2, _fraction2};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, _window, _gameMode, 1, UP, _tankSpeed};
+				std::move(baseObjProperty2), &_allObjects, _events, _window->size, _gameMode, 1, UP, _tankSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(

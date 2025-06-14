@@ -65,7 +65,7 @@ protected:
 		BaseObjProperty baseObjProperty2{
 				rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, _window, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty2), &_allObjects, _events, _window->size, _gameMode, 1, UP, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
