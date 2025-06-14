@@ -1,5 +1,4 @@
 #include "../../headers/pawns/Pawn.h"
-#include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/interfaces/IMoveBeh.h"
@@ -13,8 +12,8 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
-	  _allObjects{pawnProperty.allObjects},
 	  _windowSize{pawnProperty.windowSize},
+	  _allObjects{pawnProperty.allObjects},
 	  _events{std::move(pawnProperty.events)},
 	  _moveBeh{std::move(moveBeh)}
 {

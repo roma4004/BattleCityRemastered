@@ -1,5 +1,5 @@
 #include "../../headers/components/BonusSpawner.h"
-#include "../../headers/application/Window.h"
+#include "../../headers/Point.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
 #include "../../headers/bonuses/BonusShovel.h"
@@ -11,7 +11,6 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
-
 #include <algorithm>
 #include <chrono>
 #include <limits>

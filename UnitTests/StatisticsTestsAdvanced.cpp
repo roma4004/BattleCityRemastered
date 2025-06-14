@@ -1,5 +1,4 @@
-﻿#include "../headers/application/Window.h"
-#include "../headers/components/EventSystem.h"
+﻿#include "../headers/components/EventSystem.h"
 #include "../headers/components/GameStatistics.h"
 #include "../headers/enums/Direction.h"
 #include "../headers/enums/GameMode.h"
@@ -19,8 +18,8 @@ class StatisticsTestAdvanced : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
+	UPoint _windowSize{.x = 800, .y = 600};
 	int _bulletHealth{1};
 	int _bulletColor{0xffffff};
 	int _bulletDamage{1};
@@ -36,10 +35,9 @@ protected:
 
 	void SetUp() override
 	{
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
 		_events = std::make_shared<EventSystem>();
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const float gridSize = static_cast<float>(_window->size.y) / 50.f;
+		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
 
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
@@ -63,7 +61,7 @@ protected:
 		BaseObjProperty baseObjProperty2{
 				rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, _window->size, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty2), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

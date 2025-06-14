@@ -213,7 +213,7 @@ Server::~Server()
 
 void Server::Subscribe()
 {
-	_events->AddListener("ServerSend_StartFrame", _name, [this]()
+	_events->AddListener("Server_StartFrame", _name, [this]()
 	{
 		//TODO: add new commandBatchToSendQueue
 		std::lock_guard<std::mutex> lock(_batchWriteMutex);
@@ -224,7 +224,7 @@ void Server::Subscribe()
 			SendCommand(toSend);
 		}
 	});
-	_events->AddListener("ServerSend_EndFrame", _name, [this]()
+	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
 		//Mark that one batch need to be sent (or send immediately)
 		// std::lock_guard<std::mutex> lock(_batchWriteMutex);
@@ -359,6 +359,8 @@ void Server::Unsubscribe() const
 {
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
+	_events->RemoveListener("Server_StartFrame", _name);
+	_events->RemoveListener("Server_EndFrame", _name);
 
 	_events->RemoveListener<const std::string&, const FPoint, const Direction, const buuid&>("ServerSend_Pos", _name);
 	_events->RemoveListener<const std::string&, const int, const buuid&>("ServerSend_Health", _name);

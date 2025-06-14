@@ -286,7 +286,6 @@ set(SOURCE_FILES
         source/application/GameSuccess.cpp
         source/application/SDLEnvironment.cpp
         source/application/UserInput.cpp
-        source/application/Window.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -340,7 +339,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/Utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/Utils/TimeUtils.cpp
-        source/application/Window.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp

@@ -1,7 +1,5 @@
 #include "../../headers/application/UserInput.h"
-#include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
-
 #include <SDL_events.h>
 #include <iostream>
 

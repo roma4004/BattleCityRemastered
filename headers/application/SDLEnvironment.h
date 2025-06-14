@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../Point.h"
 #include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
 #include <memory>
 
 struct UPoint;
-struct Window;
 struct Mix_Chunk;
 
 class IConfig;
@@ -15,7 +15,7 @@ struct SDLEnvironment final
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::shared_ptr<Mix_Chunk> levelStartedSound{nullptr};
 
-	std::shared_ptr<Window> window{nullptr};
+	UPoint windowSize{};
 
 	const char* fpsFontPathName{nullptr};
 	const char* logoPathName{nullptr};

@@ -1,6 +1,5 @@
 #include "../../headers/application/GameSuccess.h"
 #include "../../headers/Map.h"
-#include "../../headers/application/Window.h"
 #include "../../headers/components/BulletPool.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/Menu.h"
@@ -29,23 +28,23 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 }
 
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
+GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
                          std::unique_ptr<Menu> menu, std::shared_ptr<IDrawable> textureManager, const bool isVsyncOn)
 	: _selectedGameMode{OnePlayer},
+	  _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
-	  _window{window},
 	  _renderer{std::move(renderer)},
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window->size, Demo)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
 	  _textureManager(std::move(textureManager)),
-	  _userInput{window->size, events},
-	  _tankSpawner{window->size, &_allObjects, events, _bulletPool},
-	  _bonusSpawner{events, &_allObjects, window->size},
+	  _userInput{windowSize, events},
+	  _tankSpawner{windowSize, &_allObjects, events, _bulletPool},
+	  _bonusSpawner{events, &_allObjects, windowSize},
 	  _obstacleSpawner{events, &_allObjects},
 	  _isVsyncOn{isVsyncOn},
 	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
@@ -109,7 +108,7 @@ void GameSuccess::Unsubscribe() const
 void GameSuccess::LoadMap()
 {
 	//Map creation
-	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
+	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
 	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
 	field.MapCreation(gridOffset);
 }
@@ -300,17 +299,18 @@ void GameSuccess::MainLoop()
 	try
 	{
 		float deltaTime{0.f};
-		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
+		const SDL_Rect fpsRectangle{.x = static_cast<int>(_windowSize.x) - 80, .y = 20, .w = 40, .h = 40};
 		while (!_userInput.IsGameOver())
 		{
 			std::chrono::high_resolution_clock::time_point startFrameTime = std::chrono::high_resolution_clock::now();
 
 			if (_gameMode == PlayAsHost)
 			{
-				_events->EmitEvent("ServerSend_StartFrame");
+				_events->EmitEvent("Server_StartFrame");
 			}
 
-			_window->ClearBuffer();
+			SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
+			SDL_RenderClear(_renderer.get());
 
 			_userInput.Update();
 
@@ -332,17 +332,12 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent("RespawnTanks");
 			}
 
-			_events->EmitEvent("Draw"); //NOTE: rectangle drawing //TODO: don't draw placeholder rectangle to buffer, do draw to render as texture do
+			_events->EmitEvent("Draw");
+			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
-			// update screen with buffer
-			SDL_UpdateTexture(_screen.get(), nullptr, _window->buffer.get(), static_cast<int>(_window->size.x) << 2);
-			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
-
-			_events->EmitEvent("Draw"); //NOTE: texture drawing //TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
-
-			_events->EmitEvent("DrawMenu"); //TODO: optimize draw call with cache non changed text part
+			_events->EmitEvent("DrawMenu");//TODO: optimize draw call with cache non changed text part
 
 			// Copy the texture with FPS to the renderer
 			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);
@@ -351,7 +346,7 @@ void GameSuccess::MainLoop()
 
 			if (_gameMode == PlayAsHost)
 			{
-				_events->EmitEvent("ServerSend_EndFrame");
+				_events->EmitEvent("Server_EndFrame");
 			}
 
 			CountFpsAndDeltaTime(deltaTime, startFrameTime);

@@ -1,5 +1,4 @@
 #include "../headers/Point.h"
-#include "../headers/application/Window.h"
 #include "../headers/components/BulletPool.h"
 #include "../headers/components/EventSystem.h"
 #include "../headers/enums/Direction.h"
@@ -20,8 +19,8 @@ class BulletTest : public testing::Test
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
+	UPoint _windowSize{.x = 800, .y = 600};
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
@@ -40,8 +39,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_gridSize = static_cast<float>(_window->size.y) / 50.f;
+		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
 
 		std::string name{"Bullet1"};
@@ -52,7 +50,7 @@ protected:
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
@@ -75,7 +73,7 @@ TEST_F(BulletTest, BulletSetPos)
 		bullet->SetPos({});
 		const FPoint startPos = bullet->GetPos();
 
-		bullet->SetPos({.x = static_cast<float>(_window->size.x), .y = static_cast<float>(_window->size.y)});
+		bullet->SetPos({.x = static_cast<float>(_windowSize.x), .y = static_cast<float>(_windowSize.y)});
 
 		EXPECT_LT(startPos, bullet->GetPos());
 
@@ -110,8 +108,8 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
 		}
 
-		const auto windowWidth = static_cast<float>(_window->size.x);
-		const auto windowHeight = static_cast<float>(_window->size.y);
+		const auto windowWidth = static_cast<float>(_windowSize.x);
+		const auto windowHeight = static_cast<float>(_windowSize.y);
 
 		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 		{
@@ -144,8 +142,8 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 {
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
-		const auto windowWidth = static_cast<float>(_window->size.x);
-		const auto windowHeight = static_cast<float>(_window->size.y);
+		const auto windowWidth = static_cast<float>(_windowSize.x);
+		const auto windowHeight = static_cast<float>(_windowSize.y);
 
 		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 		{
@@ -301,16 +299,16 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 
 TEST_F(BulletTest, BulletDamageTank)
 {
-	const float gridSize = static_cast<float>(_window->size.y) / 50.f;
+	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	const float tankSize = gridSize * 3;// for better turns
 	constexpr int tankHealth = 1;
 	constexpr int gray = 0x808080;
-	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window->size, _gameMode);
+	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
 	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, UP, _tankSpeed};
+			std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
 
 	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool)));
 
@@ -335,7 +333,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _bulletSpeed};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

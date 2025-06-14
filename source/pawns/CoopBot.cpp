@@ -1,7 +1,4 @@
 #include "../../headers/pawns/CoopBot.h"
-#include "../../headers/application/Window.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/enums/GameMode.h"
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/PawnProperty.h"

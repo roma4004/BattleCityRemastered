@@ -1,4 +1,3 @@
-#include "../../headers/application/Window.h"
 #include "../../headers/behavior/MoveLikeTankBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/components/LineOfSight.h"

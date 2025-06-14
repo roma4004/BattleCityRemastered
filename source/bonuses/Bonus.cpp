@@ -1,5 +1,5 @@
 #include "../../headers/bonuses/Bonus.h"
-#include "../../headers/application/Window.h"
+#include "../../headers/Point.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/TimeUtils.h"

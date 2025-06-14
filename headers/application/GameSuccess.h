@@ -12,7 +12,6 @@
 #include <unordered_map>
 
 enum GameMode : char8_t;
-struct Window;
 class INetworkNode;
 class Menu;
 class BaseObj;
@@ -26,13 +25,13 @@ class GameSuccess final : public IGame
 {
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
+	UPoint _windowSize{};
 	std::string _name{"Game"};
 
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 
-	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
@@ -86,10 +85,10 @@ class GameSuccess final : public IGame
 	void SetCurrentGameMode(GameMode selectedGameMode);
 
 public:
-	GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
-	            std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-	            std::unique_ptr<Menu> menu, std::shared_ptr<IDrawable> textureManager, bool isVsyncOn);
+	GameSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
+	            std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
+	            std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
+	            std::shared_ptr<IDrawable> textureManager, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

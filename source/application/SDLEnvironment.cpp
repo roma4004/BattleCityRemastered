@@ -1,7 +1,6 @@
 #include "../../headers/application/SDLEnvironment.h"
 #include "../../headers/application/ConfigFailure.h"
 #include "../../headers/application/ConfigSuccess.h"
-#include "../../headers/application/Window.h"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
@@ -9,9 +8,9 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
                                const char* introMusicName, const char* textureCollection)
-	: window{std::make_shared<Window>(windowSize)},
+	: windowSize{windowSize},
 	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
 	  introMusicPathName{introMusicName},
@@ -34,7 +33,7 @@ SDLEnvironment::~SDLEnvironment()
 
 	const auto title = "Battle City remastered";
 	constexpr auto windowFlags = SDL_WINDOW_SHOWN;
-	const SDL_Rect rect{100, 100, static_cast<int>(window->size.x), static_cast<int>(window->size.y)};
+	const SDL_Rect rect{100, 100, static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)};
 	sdlWindow = std::shared_ptr<SDL_Window>(SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags),
 	                                        SDL_DestroyWindow);
 	if (sdlWindow == nullptr)
@@ -136,5 +135,5 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
 
-	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, atlasTexture, isVsyncOn);
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, screen, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }

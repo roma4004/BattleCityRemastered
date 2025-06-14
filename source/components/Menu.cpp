@@ -1,5 +1,4 @@
 #include "../../headers/components/Menu.h"
-#include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/GameStatistics.h"
 #include "../../headers/enums/GameMode.h"

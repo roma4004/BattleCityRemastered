@@ -1,5 +1,4 @@
 ﻿#include "../headers/Point.h"
-#include "../headers/application/Window.h"
 #include "../headers/components/EventSystem.h"
 #include "../headers/enums/Direction.h"
 #include "../headers/enums/GameMode.h"
@@ -17,8 +16,8 @@ class BulletTestAdvanced : public testing::Test
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
+	UPoint _windowSize{.x = 800, .y = 600};
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
@@ -35,8 +34,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_gridSize = static_cast<float>(_window->size.y) / 50.f;
+		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
 
 		std::string name{"Bullet1"};
@@ -46,7 +44,7 @@ protected:
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _window->size, _gameMode, 3, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 3, DOWN, _bulletSpeed};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(

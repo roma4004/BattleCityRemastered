@@ -1,5 +1,4 @@
 #include "../../headers/pawns/Enemy.h"
-#include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/Direction.h"
 #include "../../headers/enums/GameMode.h"
