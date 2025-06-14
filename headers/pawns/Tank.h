@@ -28,7 +28,7 @@ class Tank : public Pawn, public IHealthBar
 	void UnsubscribeAsClient() const override;
 	void UnsubscribeBonus() const;
 
-	void DrawHealthBar() const override;
+	void DrawHealthBar(const BaseObj* obj) const override;
 
 	inline void SetPixel(size_t x, size_t y, int color) const;
 

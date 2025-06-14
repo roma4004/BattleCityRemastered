@@ -74,7 +74,7 @@ public:
 	[[nodiscard]] virtual ObjRectangle GetRect() const;
 	virtual void SetRect(ObjRectangle rect);
 
-	[[nodiscard]] virtual std::string GetName() const;
+	[[nodiscard]] virtual const std::string& GetName() const;
 	[[nodiscard]] virtual buuid GetUuid() const;
 	virtual void SetId(buuid uuid);
 	[[nodiscard]] std::string GetFraction() const override;

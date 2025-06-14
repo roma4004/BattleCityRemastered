@@ -2,14 +2,14 @@
 #include "../../headers/BaseObjProperty.h"
 #include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/Direction.h"
+// #include "../../headers/enums/Direction.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/enums/RespawnResource.h"
 #include "../../headers/enums/TankType.h"
-#include "../../headers/input/InputProviderForPlayerOne.h"
-#include "../../headers/input/InputProviderForPlayerOneNet.h"
-#include "../../headers/input/InputProviderForPlayerTwo.h"
-#include "../../headers/input/InputProviderForPlayerTwoNet.h"
+// #include "../../headers/input/InputProviderForPlayerOne.h"
+// #include "../../headers/input/InputProviderForPlayerOneNet.h"
+// #include "../../headers/input/InputProviderForPlayerTwo.h"
+// #include "../../headers/input/InputProviderForPlayerTwoNet.h"
 #include "../../headers/pawns/CoopBot.h"
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/pawns/PawnProperty.h"
@@ -24,6 +24,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+//TODO: fix respawn on client
 TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
 	: _allObjects{allObjects},
@@ -52,7 +53,7 @@ TankSpawner::~TankSpawner()
 
 void TankSpawner::Subscribe()
 {
-	//TODO: reuse existing tanks when gamemode changed
+	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_events->AddListener("Reset", _name, [this]() { ResetSpawn(); });
 	_events->AddListener("RespawnTanks", _name, [this]()

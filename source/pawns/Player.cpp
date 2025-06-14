@@ -26,12 +26,7 @@ void Player::Move(const Direction dir, const float deltaTime)
 	SetDirection(dir);
 	if (_moveBeh->Move(deltaTime))
 	{
-		++_animationFrameId;
-		if (_animationFrameId % 12 && ++_animationId > _animationIdLimit)
-		{
-			_animationId = 0;
-			_animationFrameId = 0;
-		}
+		UpdateAnimationFrame();
 	}
 
 	if (_gameMode == PlayAsHost)

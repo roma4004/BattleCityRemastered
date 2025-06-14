@@ -399,11 +399,11 @@ void FortressWall::SetIsAlive(const bool isAlive)
 	}, _obstacle);
 }
 
-std::string FortressWall::GetName() const
+const std::string& FortressWall::GetName() const
 {
-	std::string name;
+	static std::string name;//TODO: use string_view instead
 
-	std::visit([&name](auto&& uniqPtr)
+	std::visit([&](auto&& uniqPtr)
 	{
 		if (uniqPtr)
 		{

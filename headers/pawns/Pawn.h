@@ -56,6 +56,7 @@ public:
 
 	void SetHealth(int health) override;
 	void TakeDamage(int damage) override;
+	void UpdateAnimationFrame();
 
 	[[nodiscard]] UPoint GetWindowSize() const;
 

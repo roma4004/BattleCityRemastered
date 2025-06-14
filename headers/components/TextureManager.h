@@ -28,8 +28,13 @@ public:
 
 	~TextureManager() override;
 
+	void Subscribe() const;
+	void Unsubscribe() const;
+	void SetPixel(size_t x, size_t y, int color) const;
+
 	void Draw(const BaseObj* obj) const override;
 
+	void DrawHealthBar(const BaseObj* obj) const;
 	static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
-	void RectDraw(const BaseObj* obj, ObjRectangle rect) const;
+	void RectDraw(const BaseObj* obj) const;
 };
