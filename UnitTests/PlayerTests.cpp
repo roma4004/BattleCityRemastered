@@ -11,9 +11,7 @@
 #include "../headers/obstacles/WaterTile.h"
 #include "../headers/pawns/PawnProperty.h"
 #include "../headers/pawns/Player.h"
-
 #include "gtest/gtest.h"
-
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 

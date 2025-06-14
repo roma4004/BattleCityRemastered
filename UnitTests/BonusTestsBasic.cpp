@@ -12,9 +12,7 @@
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PawnProperty.h"
 #include "../headers/pawns/Player.h"
-
 #include "gtest/gtest.h"
-
 #include <memory>
 
 class BonusTest : public testing::Test

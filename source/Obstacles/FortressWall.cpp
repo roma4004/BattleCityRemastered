@@ -157,7 +157,7 @@ void FortressWall::OnPlayerPickupShovel()
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [this](const std::shared_ptr<BaseObj>& object)
 	{
-		if (object.get() == nullptr)
+		if (object == nullptr)
 		{
 			return false;
 		}
@@ -186,11 +186,10 @@ void FortressWall::TakeDamage(const int damage)
 {
 	int health{0};
 
-	std::visit([damage, &health](auto&& uniqPtr)
+	std::visit([damage, &health](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			auto* obstacle = uniqPtr.get();
 			obstacle->TakeDamage(damage);
 			health = obstacle->GetHealth();
 		}
@@ -256,11 +255,11 @@ bool FortressWall::GetIsPassable() const
 {
 	bool result{true};
 
-	std::visit([&result](auto&& uniqPtr)
+	std::visit([&result](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			result = uniqPtr.get()->GetIsPassable();
+			result = obstacle->GetIsPassable();
 		}
 	}, _obstacle);
 
@@ -269,11 +268,11 @@ bool FortressWall::GetIsPassable() const
 
 void FortressWall::SetIsPassable(const bool value)
 {
-	std::visit([value](auto&& uniqPtr)
+	std::visit([value](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uniqPtr.get()->SetIsPassable(value);
+			obstacle->SetIsPassable(value);
 		}
 	}, _obstacle);
 }
@@ -282,11 +281,11 @@ bool FortressWall::GetIsDestructible() const
 {
 	bool result{false};
 
-	std::visit([&result](auto&& uniqPtr)
+	std::visit([&result](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			result = uniqPtr.get()->GetIsDestructible();
+			result = obstacle->GetIsDestructible();
 		}
 	}, _obstacle);
 
@@ -295,11 +294,11 @@ bool FortressWall::GetIsDestructible() const
 
 void FortressWall::SetIsDestructible(const bool value)
 {
-	std::visit([value](auto&& uniqPtr)
+	std::visit([value](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uniqPtr.get()->SetIsDestructible(value);
+			obstacle->SetIsDestructible(value);
 		}
 	}, _obstacle);
 }
@@ -308,11 +307,11 @@ bool FortressWall::GetIsPenetrable() const
 {
 	bool result{true};
 
-	std::visit([&result](auto&& uniqPtr)
+	std::visit([&result](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			result = uniqPtr.get()->GetIsPenetrable();
+			result = obstacle->GetIsPenetrable();
 		}
 	}, _obstacle);
 
@@ -321,11 +320,11 @@ bool FortressWall::GetIsPenetrable() const
 
 void FortressWall::SetIsPenetrable(const bool value)
 {
-	std::visit([value](auto&& uniqPtr)
+	std::visit([value](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uniqPtr.get()->SetIsPenetrable(value);
+			obstacle->SetIsPenetrable(value);
 		}
 	}, _obstacle);
 }
@@ -334,11 +333,11 @@ int FortressWall::GetHealth() const
 {
 	int health{0};
 
-	std::visit([&health](auto&& uniqPtr)
+	std::visit([&health](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			health = uniqPtr.get()->GetHealth();
+			health = obstacle->GetHealth();
 		}
 	}, _obstacle);
 
@@ -347,11 +346,11 @@ int FortressWall::GetHealth() const
 
 void FortressWall::SetHealth(const int health)
 {
-	std::visit([health](auto&& uniqPtr)
+	std::visit([health](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uniqPtr.get()->SetHealth(health);
+			obstacle->SetHealth(health);
 		}
 	}, _obstacle);
 }
@@ -360,11 +359,11 @@ ObjRectangle FortressWall::GetRect() const
 {
 	ObjRectangle rect{};
 
-	std::visit([&rect](auto&& uniqPtr)
+	std::visit([&rect](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			rect = uniqPtr.get()->GetRect();
+			rect = obstacle->GetRect();
 		}
 	}, _obstacle);
 
@@ -373,11 +372,11 @@ ObjRectangle FortressWall::GetRect() const
 
 void FortressWall::SetRect(const ObjRectangle rect)
 {
-	std::visit([&rect](auto&& uniqPtr)
+	std::visit([&rect](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uniqPtr.get()->SetRect(rect);
+			obstacle->SetRect(rect);
 		}
 	}, _obstacle);
 }
@@ -389,28 +388,26 @@ bool FortressWall::GetIsAlive() const
 
 void FortressWall::SetIsAlive(const bool isAlive)
 {
-	std::visit([&isAlive](auto&& uniqPtr)
+	std::visit([&isAlive](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uniqPtr.get()->SetIsAlive(isAlive);
+			obstacle->SetIsAlive(isAlive);
 		}
 	}, _obstacle);
 }
 
 const std::string& FortressWall::GetName() const
 {
-	static std::string name;//TODO: use string_view instead
-
-	std::visit([&](auto&& uniqPtr)
+	return std::visit([&](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			name = uniqPtr.get()->GetName();
+			return obstacle->GetName();
 		}
-	}, _obstacle);
 
-	return name;
+		return _name;//TODO: use string_view instead
+	}, _obstacle);
 }
 
 using buuid = boost::uuids::uuid;
@@ -419,11 +416,11 @@ buuid FortressWall::GetUuid() const
 {
 	buuid uuid{};
 
-	std::visit([&uuid](auto&& uniqPtr)
+	std::visit([&uuid](auto&& obstacle)
 	{
-		if (uniqPtr)
+		if (obstacle)
 		{
-			uuid = uniqPtr.get()->GetUuid();
+			uuid = obstacle->GetUuid();
 		}
 	}, _obstacle);
 

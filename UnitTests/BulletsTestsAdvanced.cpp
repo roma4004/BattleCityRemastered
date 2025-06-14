@@ -7,9 +7,7 @@
 #include "../headers/obstacles/SteelWall.h"
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/PawnProperty.h"
-
 #include "gtest/gtest.h"
-
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 

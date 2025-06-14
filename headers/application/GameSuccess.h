@@ -5,7 +5,6 @@
 #include "../../headers/components/ObstacleSpawner.h"
 #include "../../headers/components/TankSpawner.h"
 #include "../interfaces/IGame.h"
-
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <chrono>

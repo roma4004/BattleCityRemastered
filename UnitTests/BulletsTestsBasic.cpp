@@ -11,9 +11,7 @@
 #include "../headers/pawns/Bullet.h"
 #include "../headers/pawns/Enemy.h"
 #include "../headers/pawns/PawnProperty.h"
-
 #include "gtest/gtest.h"
-
 #include <memory>
 
 class BulletTest : public testing::Test
