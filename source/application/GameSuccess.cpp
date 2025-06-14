@@ -332,7 +332,7 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent("RespawnTanks");
 			}
 
-			// _events->EmitEvent("Draw"); //TODO: don't draw placeholder rectangle to buffer, do draw to render as texture do
+			_events->EmitEvent("Draw"); //NOTE: rectangle drawing //TODO: don't draw placeholder rectangle to buffer, do draw to render as texture do
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
@@ -340,7 +340,7 @@ void GameSuccess::MainLoop()
 			SDL_UpdateTexture(_screen.get(), nullptr, _window->buffer.get(), static_cast<int>(_window->size.x) << 2);
 			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
 
-			_events->EmitEvent("Draw"); //TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
+			_events->EmitEvent("Draw"); //NOTE: texture drawing //TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("DrawMenu"); //TODO: optimize draw call with cache non changed text part
 

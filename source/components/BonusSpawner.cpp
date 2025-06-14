@@ -184,8 +184,7 @@ void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const buuid uu
 	constexpr milliseconds duration{std::chrono::seconds{15}};
 
 
-	if (auto bonus = std::make_shared<TBonusType>(
-				std::move(rect), _window, _events, duration, lifetime, color, uuid, _gameMode);
+	if (auto bonus = std::make_shared<TBonusType>(std::move(rect), _events, duration, lifetime, color, uuid, _gameMode);
 		bonus.get() != nullptr)
 	{
 		_allObjects->emplace_back(bonus);

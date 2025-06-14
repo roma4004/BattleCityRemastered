@@ -9,7 +9,6 @@
 
 enum GameMode : char8_t;
 enum BonusType : char8_t;
-struct Window;
 struct BaseObjProperty;
 class EventSystem;
 
@@ -17,8 +16,6 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
-
-	std::shared_ptr<Window> _window{nullptr};
 
 	std::chrono::system_clock::time_point _creationTime;
 
@@ -38,7 +35,7 @@ protected:
 	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 
 public:
-	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+	Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events,
 	      milliseconds duration, milliseconds lifeTime, int color, std::string name, buuid uuid, GameMode gameMode,
 	      BonusType bonusType);
 
@@ -51,5 +48,4 @@ public:
 	void Unsubscribe() const;
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
-
 };

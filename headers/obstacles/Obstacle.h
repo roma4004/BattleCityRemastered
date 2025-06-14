@@ -5,15 +5,12 @@
 
 enum ObstacleType : char8_t;
 enum GameMode : char8_t;
-struct Window;
 class EventSystem;
 class TextureManager;
 
 class Obstacle : public BaseObj
 {
 	using buuid = boost::uuids::uuid;
-
-	std::shared_ptr<Window> _window{nullptr};
 
 	virtual void Subscribe();
 	virtual void SubscribeAsClient();
@@ -30,8 +27,8 @@ protected:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	Obstacle(ObjRectangle rect, int color, int health, std::shared_ptr<Window> window, std::string name,
-	         std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode, ObstacleType obstacleType);
+	Obstacle(ObjRectangle rect, int color, int health, std::string name, std::shared_ptr<EventSystem> events,
+	         buuid uuid, GameMode gameMode, ObstacleType obstacleType);
 
 	~Obstacle() override;
 };

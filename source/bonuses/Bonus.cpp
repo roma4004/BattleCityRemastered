@@ -4,11 +4,10 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/TimeUtils.h"
 
-Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-             const milliseconds duration, const milliseconds lifeTime, const int color, std::string name,
-             const buuid uuid, const GameMode gameMode, const BonusType bonusType)
+Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
+             const milliseconds lifeTime, const int color, std::string name, const buuid uuid, const GameMode gameMode,
+             const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
-	  _window{std::move(window)},
 	  _creationTime{std::chrono::system_clock::now()},
 	  _gameMode{gameMode},
 	  _bonusType{bonusType},
@@ -85,31 +84,7 @@ void Bonus::UnsubscribeAsClient() const
 	_events->RemoveListener<const buuid&>("ClientReceived_BonusDeSpawn", _name);
 }
 
-void Bonus::Draw(const BaseObj* /*obj*/) const
-{
-	if (!GetIsAlive())
-	{
-		return;
-	}
-
-	int startY = static_cast<int>(GetY());
-	const int startX = static_cast<int>(GetX());
-	const size_t windowWidth = _window->size.x;
-	const int height = static_cast<int>(GetHeight());
-	const int width = static_cast<int>(GetWidth());
-	const int color = GetColor();
-
-	for (const int maxY = startY + height; startY < maxY; ++startY)
-	{
-		int x = startX;
-		for (const int maxX = x + width; x < maxX; ++x)
-		{
-			const size_t offset = startY * windowWidth + startX;
-			const int rowWidth = maxX - startX;
-			std::ranges::fill_n(_window->buffer.get() + offset, rowWidth, color);
-		}
-	}
-}
+void Bonus::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
 
 void Bonus::TickUpdate(float /*deltaTime*/)
 {

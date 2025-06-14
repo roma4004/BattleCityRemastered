@@ -15,8 +15,8 @@ class BonusTimer final : public Bonus
 	using buuid = boost::uuids::uuid;
 
 public:
-	BonusTimer(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	           milliseconds duration, milliseconds lifeTime, int color, buuid uuid, GameMode gameMode);
+	BonusTimer(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, milliseconds duration,
+	           milliseconds lifeTime, int color, buuid uuid, GameMode gameMode);
 
 	~BonusTimer() override;
 

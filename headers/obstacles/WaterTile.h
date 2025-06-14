@@ -4,7 +4,6 @@
 #include <memory>
 
 struct ObjRectangle;
-struct Window;
 class EventSystem;
 
 class WaterTile final : public Obstacle
@@ -12,8 +11,7 @@ class WaterTile final : public Obstacle
 	using buuid = boost::uuids::uuid;
 
 public:
-	WaterTile(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, buuid uuid,
-	          GameMode gameMode);
+	WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
 
 	~WaterTile() override;
 };

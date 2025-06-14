@@ -4,7 +4,6 @@
 #include <memory>
 
 struct ObjRectangle;
-struct Window;
 class EventSystem;
 
 class BrickWall final : public Obstacle
@@ -12,8 +11,7 @@ class BrickWall final : public Obstacle
 	using buuid = boost::uuids::uuid;
 
 public:
-	BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, buuid uuid,
-	          GameMode gameMode);
+	BrickWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
 
 	~BrickWall() override;
 };

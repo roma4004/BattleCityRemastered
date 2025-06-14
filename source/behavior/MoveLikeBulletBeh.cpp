@@ -90,14 +90,13 @@ bool MoveLikeBulletBeh::Move(const float deltaTime) const
 		return false;
 	}
 
-	constexpr int sideBarWidth = 175;
 	const float speed = bullet->GetSpeed() * deltaTime;
 	const int direction = bullet->GetDirection();
 	if (direction == UP && bullet->GetY() - speed >= 0.0f)
 	{
 		return MoveUp(deltaTime);
 	}
-	if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
+	if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y)) //TODO: pass _window to movelikeBullet instead of bullet
 	{
 		return MoveDown(deltaTime);
 	}
@@ -105,8 +104,9 @@ bool MoveLikeBulletBeh::Move(const float deltaTime) const
 	{
 		return MoveLeft(deltaTime);
 	}
-	if (direction == RIGHT
-	    && bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x) - sideBarWidth)
+	if (constexpr int sideBarWidth = 175;
+		direction == RIGHT
+		&& bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x) - sideBarWidth)
 	{
 		return MoveRight(deltaTime);
 	}
