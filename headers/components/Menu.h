@@ -9,7 +9,6 @@
 class GameStatistics;
 class InputProviderForMenu;
 class EventSystem;
-struct Window;
 
 class Menu final
 {
@@ -20,7 +19,6 @@ class Menu final
 	unsigned int _yOffsetStart{};
 	GameMode _selectedGameMode{};
 
-	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<TTF_Font> _menuFont{nullptr};
@@ -60,8 +58,7 @@ class Menu final
 
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
-	     std::shared_ptr<Window> window,
+	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();

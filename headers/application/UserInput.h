@@ -1,13 +1,13 @@
 #pragma once
 
 #include "../MouseButton.h"
+#include "../Point.h"
 
 #include <chrono>
 #include <memory>
 #include <string>
 
 union SDL_Event;
-struct Window;
 class EventSystem;
 
 class UserInput final
@@ -21,7 +21,7 @@ class UserInput final
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
 
-	std::shared_ptr<Window> _window{nullptr};
+	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::chrono::system_clock::time_point _lastMoveEventTime{};
@@ -38,7 +38,7 @@ class UserInput final
 	void WindowsMoveEvents(const SDL_Event& event);
 
 public:
-	UserInput(std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events);
+	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 
 	~UserInput();
 

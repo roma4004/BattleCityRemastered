@@ -5,11 +5,10 @@
 #include "../../headers/enums/GameMode.h"
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-           std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
-           std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events)
-	: _yOffsetStart{static_cast<unsigned int>(window->size.y)},
+           std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, const UPoint windowSize,
+           std::shared_ptr<EventSystem> events)
+	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)},
 	  _selectedGameMode{OnePlayer},
-	  _window{std::move(window)},
 	  _renderer{std::move(renderer)},
 	  _events{events},
 	  _menuFont{std::move(menuFont)},
@@ -21,8 +20,8 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
 	Subscribe();
 
 	_padding = 25;
-	const auto windowWidth = static_cast<unsigned int>(_window->size.x);
-	_height = static_cast<int>(_window->size.y) - _padding * 3;
+	const auto windowWidth = static_cast<unsigned int>(windowSize.x);
+	_height = static_cast<int>(windowSize.y) - _padding * 3;
 	constexpr int sideBarWidth = 228;
 	_width = windowWidth - sideBarWidth - _padding;
 

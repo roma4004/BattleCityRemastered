@@ -6,7 +6,6 @@
 enum ObstacleType : char8_t;
 enum GameMode : char8_t;
 class EventSystem;
-class TextureManager;
 
 class Obstacle : public BaseObj
 {

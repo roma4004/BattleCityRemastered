@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 enum GameMode : char8_t;
+struct Window;
 class INetworkNode;
 class Menu;
 class BaseObj;

@@ -12,10 +12,8 @@ enum ObstacleType : char8_t;
 enum BonusType : char8_t;
 struct UPoint;
 struct ObjRectangle;
-struct Window;
 class BaseObj;
 class EventSystem;
-class TextureManager;
 
 class ObstacleSpawner final : public ITickUpdatable
 {
@@ -25,7 +23,6 @@ class ObstacleSpawner final : public ITickUpdatable
 	GameMode _gameMode;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	int _obstacleSize{0};
-	std::shared_ptr<Window> _window{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	// std::mt19937 _gen;
 	// std::uniform_int_distribution<> _distSpawnPosY;
@@ -44,7 +41,7 @@ class ObstacleSpawner final : public ITickUpdatable
 
 public:
 	ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                std::shared_ptr<Window> window,/*, int sideBarWidth = 175*/ int obstacleSize = 36);
+	                /*, int sideBarWidth = 175*/ int obstacleSize = 36);
 
 	~ObstacleSpawner() override;
 

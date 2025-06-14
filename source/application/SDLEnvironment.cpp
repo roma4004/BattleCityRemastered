@@ -2,10 +2,9 @@
 #include "../../headers/application/ConfigFailure.h"
 #include "../../headers/application/ConfigSuccess.h"
 #include "../../headers/application/Window.h"
-
-#include <SDL_ttf.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <memory>
 
 class IConfig;

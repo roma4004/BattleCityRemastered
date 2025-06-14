@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
 
 #include <memory>
@@ -10,11 +11,8 @@ struct PawnProperty;
 enum Direction : char8_t;
 enum GameMode : char8_t;
 struct ObjRectangle;
-struct Window;
-struct UPoint;
 class IMoveBeh;
 class EventSystem;
-class TextureManager;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
@@ -33,9 +31,9 @@ protected:
 	GameMode _gameMode{};
 	float _speed{0.f};
 	int _tier{1};
+	UPoint _windowSize{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 

@@ -5,8 +5,8 @@
 #include <SDL_events.h>
 #include <iostream>
 
-UserInput::UserInput(std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events)
-	: _window{std::move(window)}, _events{std::move(events)}
+UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events)
+	: _windowSize{windowSize}, _events{std::move(events)}
 {
 	Subscribe();
 }
@@ -92,8 +92,8 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
-		if (x < 1 || y < 1 ||
-		    x >= static_cast<Sint32>(_window->size.x) - 1 && y >= static_cast<Sint32>(_window->size.y) - 1)
+		if (x < 1 || y < 1 || x >= static_cast<Sint32>(_windowSize.x) - 1
+		    && y >= static_cast<Sint32>(_windowSize.y) - 1)
 		{
 			return;
 		}

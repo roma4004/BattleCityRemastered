@@ -24,13 +24,12 @@ class BaseObj;
 class EventSystem;
 
 BonusSpawner::BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                           std::shared_ptr<Window> window, const int sideBarWidth, const int bonusSize)
+                           const UPoint windowSize, const int sideBarWidth, const int bonusSize)
 	: _bonusSize{bonusSize},
 	  _events{std::move(events)},
-	  _window{window},
 	  _allObjects{allObjects},
-	  _distSpawnPosY{0, static_cast<int>(window->size.y) - bonusSize},
-	  _distSpawnPosX{0, static_cast<int>(window->size.x) - sideBarWidth - bonusSize},
+	  _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize},
+	  _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize},
 	  _distSpawnType{None + 1, lastId - 1},
 	  _distRandColor{0, std::numeric_limits<int>::max()},
 	  _lastTimeSpawn{std::chrono::system_clock::now()}

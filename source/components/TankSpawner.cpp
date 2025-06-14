@@ -25,10 +25,10 @@
 #include <boost/uuid/uuid_io.hpp>
 
 //TODO: fix respawn on client
-TankSpawner::TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
-	: _allObjects{allObjects},
-	  _window{std::move(window)},
+	: _windowSize{windowSize},
+	  _allObjects{allObjects},
 	  _events{std::move(events)},
 	  _bulletPool{std::move(bulletPool)}
 {
@@ -191,7 +191,7 @@ std::string TankSpawner::GetCurrentTimeString()
 
 void TankSpawner::SpawnEnemy(const buuid uuid, const float speed, const int health)
 {
-	const float gridOffset{static_cast<float>(_window->size.y) / 50.f};
+	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
 	const float size{gridOffset * 3};
 	const static std::vector<ObjRectangle> spawnPos{{
 			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
@@ -316,7 +316,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
 
 void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 {
-	const float windowSizeY{static_cast<float>(_window->size.y)};
+	const float windowSizeY{static_cast<float>(_windowSize.y)};
 	const float gridOffset{windowSizeY / 50.f};
 	const float size{gridOffset * 3};
 	constexpr float speed{142};

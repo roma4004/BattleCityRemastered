@@ -1,9 +1,10 @@
 #include "../../headers/application/ConfigSuccess.h"
-#include "../../headers/components/TextureManager.h"
 #include "../../headers/application/GameSuccess.h"
+#include "../../headers/application/Window.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/GameStatistics.h"
 #include "../../headers/components/Menu.h"
+#include "../../headers/components/TextureManager.h"
 #include <SDL_ttf.h>
 
 ConfigSuccess::ConfigSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
@@ -22,7 +23,7 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
 	auto statistics = std::make_shared<GameStatistics>(events);
-	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _window, events);
+	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _window->size, events);
 	auto textureManager = std::make_shared<TextureManager>(_atlasTexture, _renderer, events, _window);
 
 	return std::make_unique<GameSuccess>(

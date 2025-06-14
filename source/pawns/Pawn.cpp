@@ -14,7 +14,7 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
 	  _allObjects{pawnProperty.allObjects},
-	  _window{std::move(pawnProperty.window)},
+	  _windowSize{pawnProperty.windowSize},
 	  _events{std::move(pawnProperty.events)},
 	  _moveBeh{std::move(moveBeh)}
 {
@@ -126,7 +126,7 @@ void Pawn::UpdateAnimationFrame()
 
 void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
 
-UPoint Pawn::GetWindowSize() const { return _window->size; }
+UPoint Pawn::GetWindowSize() const { return _windowSize; }
 
 Direction Pawn::GetDirection() const { return _dir; }
 

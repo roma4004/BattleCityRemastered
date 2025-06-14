@@ -41,12 +41,12 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window->size, Demo)},
 	  _textureManager(std::move(textureManager)),
-	  _userInput{window, events},
-	  _tankSpawner{window, &_allObjects, events, _bulletPool},
-	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window},
+	  _userInput{window->size, events},
+	  _tankSpawner{window->size, &_allObjects, events, _bulletPool},
+	  _bonusSpawner{events, &_allObjects, window->size},
+	  _obstacleSpawner{events, &_allObjects},
 	  _isVsyncOn{isVsyncOn},
 	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
 {

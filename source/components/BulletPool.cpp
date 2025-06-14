@@ -1,6 +1,6 @@
 #include "../../headers/components/BulletPool.h"
+#include "../../headers/Point.h"
 #include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/Direction.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/pawns/Bullet.h"
 #include "../../headers/pawns/PawnProperty.h"
@@ -13,12 +13,12 @@
 #include <boost/uuid/uuid_io.hpp>
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       std::shared_ptr<Window> window, const GameMode gameMode)
-	: _events{std::move(events)},
-	  _name{"BulletPool"},
+                       const UPoint windowSize, const GameMode gameMode)
+	: _name{"BulletPool"},
 	  _gameMode{gameMode},
-	  _allObjects{allObjects},
-	  _window{std::move(window)}
+	  _windowSize{windowSize},
+	  _events{std::move(events)},
+	  _allObjects{allObjects}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)
@@ -72,7 +72,7 @@ void BulletPool::Unsubscribe() const
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
-	PawnProperty pawnProperty{{}, _allObjects, _events, _window, _gameMode};
+	PawnProperty pawnProperty{{}, _allObjects, _events, _windowSize, _gameMode};
 	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
 }
 

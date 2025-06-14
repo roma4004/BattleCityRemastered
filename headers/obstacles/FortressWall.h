@@ -11,7 +11,6 @@ enum GameMode : char8_t;
 class EventSystem;
 class SteelWall;
 class BrickWall;
-class TextureManager;
 
 class FortressWall final : public BaseObj, public ITickUpdatable
 {

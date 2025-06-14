@@ -12,7 +12,6 @@
 
 enum TankType : char8_t;
 enum GameMode : char8_t;
-struct Window;
 struct SDL_Renderer;
 class BaseObj;
 class BulletPool;
@@ -25,10 +24,10 @@ class TankSpawner final
 
 	std::string _name{"TankSpawner"};
 	GameMode _gameMode{};
+	UPoint _windowSize{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
-	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
@@ -86,9 +85,8 @@ class TankSpawner final
 	void OnTankDied(const buuid& uuid);
 
 public:
-	TankSpawner(std::shared_ptr<Window> window, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool
-			);
+	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool);
 
 	~TankSpawner();
 

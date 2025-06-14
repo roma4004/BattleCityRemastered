@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../headers/Point.h"
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -8,30 +9,27 @@
 enum GameMode : char8_t;
 enum Direction : char8_t;
 struct ObjRectangle;
-struct Window;
 struct SDL_Renderer;
 class Bullet;
 class BaseObj;
 class EventSystem;
-class IDrawable;
-class TextureManager;
 
 class BulletPool final
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	std::queue<std::shared_ptr<BaseObj>> _bullets;
 	std::mutex _bulletsMutex;
-	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
 	GameMode _gameMode;
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
-	std::shared_ptr<Window> _window;
+	UPoint _windowSize;
 	bool _isClearing{false};
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+	std::queue<std::shared_ptr<BaseObj>> _bullets;
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	           std::shared_ptr<Window> window, GameMode gameMode);
+	           UPoint windowSize, GameMode gameMode);
 
 	~BulletPool();
 

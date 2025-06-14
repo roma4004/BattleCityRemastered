@@ -11,7 +11,6 @@
 enum GameMode : char8_t;
 enum BonusType : char8_t;
 struct UPoint;
-struct Window;
 struct ObjRectangle;
 class BaseObj;
 class EventSystem;
@@ -26,7 +25,6 @@ class BonusSpawner final : public ITickUpdatable
 	int _bonusSize{0};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<Window> _window{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -51,7 +49,7 @@ class BonusSpawner final : public ITickUpdatable
 
 public:
 	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	             std::shared_ptr<Window> window, int sideBarWidth = 175, int bonusSize = 36);
+	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);
 
 	~BonusSpawner() override;
 

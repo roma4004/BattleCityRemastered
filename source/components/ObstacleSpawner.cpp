@@ -17,10 +17,9 @@ class BaseObj;
 class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                 std::shared_ptr<Window> window,/*, const int sideBarWidth*/ const int obstacleSize)
+                                 /*, const int sideBarWidth*/ const int obstacleSize)
 	: _events{std::move(events)},
 	  _obstacleSize{obstacleSize},
-	  _window{std::move(window)},
 	  _allObjects{allObjects}
 
 // _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
