@@ -96,7 +96,8 @@ bool MoveLikeBulletBeh::Move(const float deltaTime) const
 	{
 		return MoveUp(deltaTime);
 	}
-	if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y)) //TODO: pass _window to movelikeBullet instead of bullet
+	if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
+	//TODO: pass _window to movelikeBullet instead of bullet
 	{
 		return MoveDown(deltaTime);
 	}

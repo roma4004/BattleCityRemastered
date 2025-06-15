@@ -6,7 +6,7 @@ struct ObjRectangle;
 // eagle = 15 px
 // explosion = 16 px
 
-struct TextureOffset//TODO make atlas.png
+struct TextureOffset
 {
 	/*ObjRectangle enemy{0, 0, 13, 13};
 	ObjRectangle playerOne{0, 13, 13, 13};
@@ -44,15 +44,12 @@ struct TextureOffset//TODO make atlas.png
 	ObjRectangle grass{272, 32, 8, 8};
 	ObjRectangle ice{288, 32, 8, 8};
 	//ObjRectangle water{264, 80, 8, 8}; // waterflow right - > left
-	ObjRectangle water{272, 80, 8, 8}; // waterflow left  - > right
-	
-	
-	//Explosions and spawn , left to right, 
-	ObjRectangle spawnAnim{256, 96, 16, 16}; // 4 step animation 16x16
-	ObjRectangle smallExplosion{256, 128, 16, 16}; // 3 step animation 16x16
-	ObjRectangle bigExplosion{304, 128, 32, 32}; // 2 steps 32x32 
-	
-	
+	ObjRectangle water{272, 80, 8, 8};// waterflow left  - > right
+
+	//Explosions and spawn , left to right,
+	ObjRectangle spawnAnim{256, 96, 16, 16};// 4 step animation 16x16
+	ObjRectangle smallExplosion{256, 128, 16, 16};// 3 step animation 16x16
+	ObjRectangle bigExplosion{304, 128, 32, 32};// 2 steps 32x32
+
 	//Bonuses
-	
 };

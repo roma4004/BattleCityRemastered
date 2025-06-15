@@ -116,7 +116,7 @@ void Pawn::TakeDamage(const int damage)
 void Pawn::UpdateAnimationFrame()
 {
 	++_animationFrameId;
-	if (_animationFrameId % 12 && ++_animationId > _animationIdLimit) //TODO: 12 is frame cycle, need skip for bullet
+	if (_animationFrameId % 12 && ++_animationId > _animationIdLimit)//TODO: 12 is frame cycle, need skip for bullet
 	{
 		_animationId = 0;
 		_animationFrameId = 0;
