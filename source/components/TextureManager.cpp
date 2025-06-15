@@ -1,6 +1,7 @@
 ﻿#include "../../headers/components/TextureManager.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/Direction.h"
+#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/Pawn.h"
 #include <SDL.h>
 #include <ranges>
@@ -135,17 +136,17 @@ void TextureManager::Draw(const BaseObj* obj) const
 		name == "Enemy")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
-		textureRect.x += pawn->_animationId * 13;
+		textureRect.x += pawn->_animationId * 16;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
 		textureRect = RectToSdlRect(_offset.playerOne);
-		textureRect.x += pawn->_animationId * 13;
+		textureRect.x += pawn->_animationId * 16;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
 		textureRect = RectToSdlRect(_offset.playerTwo);
-		textureRect.x += pawn->_animationId * 13;
+		textureRect.x += pawn->_animationId * 16;
 	}
 	else if (name == "Bullet")
 	{
@@ -159,8 +160,24 @@ void TextureManager::Draw(const BaseObj* obj) const
 	{
 		textureRect = RectToSdlRect(_offset.brick);
 	}
-	// else if (name == "SteelWall") {}
-	// else if (name == "WaterTile") {}
+	else if (name == "SteelWall")
+	{
+		textureRect = RectToSdlRect(_offset.steel);
+	}
+	else if (name == "Grass")
+	{
+		textureRect = RectToSdlRect(_offset.grass);
+	}
+	else if (name == "Ice")
+	{
+		textureRect = RectToSdlRect(_offset.ice);
+	}
+	else if (name == "Water")
+	{
+		const auto water = dynamic_cast<const WaterTile*>(obj);
+		textureRect = RectToSdlRect(_offset.water);
+		textureRect.x -= water->_animFrame;
+	}
 	else
 	{
 		RectDraw(obj);

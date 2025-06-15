@@ -15,13 +15,44 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
-
-	//TODO: remove this after load steel texture
+	
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
+	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float /*deltaTime*/)
+	{
+		if (++_animFrameCounter; _animFrameCounter % 24 == 0)
+		{
+			// Animation with 1 px step and 1 frames
+			++_animFrame;
+			_animFrameCounter = 0;
+			if (_animFrame > 8)
+			{
+				_animFrame = 0;
+				_animFrameCounter = 0;
+			}
+
+			/* animation 8px step and 2 frames
+			_animFrame = 0;
+			if ( _animFrameCounter == 24)
+			{
+				_animFrame = 8;
+				_animFrameCounter = 0;
+			}
+			*/
+
+			// animation with 1 px step and 2 frame
+			/*++_animFrame;
+			_animFrameCounter = 0;
+			if (_animFrame > 16)
+			{
+				_animFrame = 0;
+				_animFrameCounter = 0;
+			}*/
+		}
+		
+	});
 }
 
 WaterTile::~WaterTile()
 {
-	//TODO: remove this after load steel texture
 	_events->RemoveListener("Draw", _nameWithUuid);
 }

@@ -14,4 +14,6 @@ public:
 	WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
 
 	~WaterTile() override;
+	int _animFrame{0};
+	int _animFrameCounter{0};
 };

@@ -21,24 +21,27 @@ void Map::MapCreation(const float gridSize) const
 				case 0:
 					break;
 				case 1:
-					rect.w += 1;
-					rect.h += 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Brick);
 					break;
 				case 2:
-					rect.w -= 1;
-					rect.h -= 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Steel);
 					break;
 				case 3:
-					rect.w += 1;
-					rect.h += 1;
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Water);
+					rect.w += gridSize * 3;
+					rect.h += gridSize * 3;
+					_obstacleSpawner->SpawnObstacle(std::move(rect), Eagle);
 					break;
 				case 4:
-					rect.w += 1;
-					rect.h += 1;
 					_obstacleSpawner->SpawnObstacle(std::move(rect), Fortress);
+					break;
+				case 5:
+					_obstacleSpawner->SpawnObstacle(std::move(rect), Water);
+					break;
+				case 6:
+					_obstacleSpawner->SpawnObstacle(std::move(rect), Grass);
+					break;
+				case 7:
+					_obstacleSpawner->SpawnObstacle(std::move(rect), Ice);
 					break;
 				default:
 					break;

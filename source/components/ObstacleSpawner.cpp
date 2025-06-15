@@ -6,11 +6,15 @@
 #include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/obstacles/WaterTile.h"
+#include "../../headers/obstacles/EagleTile.h"
+#include "../../headers/obstacles/GrassTile.h"
+#include "../../headers/obstacles/IceTile.h"
 
 #include <chrono>
 #include <memory>
 #include <boost/uuid/nil_generator.hpp>
 #include <boost/uuid/random_generator.hpp>
+
 
 class BaseObj;
 class EventSystem;
@@ -102,6 +106,16 @@ void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, 
 			break;
 		case Fortress:
 			SpawnObstacles<FortressWall>(std::move(rect), spawnUuid);
+			break;
+		case Eagle:
+			SpawnObstacles<EagleTile>(std::move(rect), spawnUuid);
+			break;
+		case Grass:
+			SpawnObstacles<GrassTile>(std::move(rect), spawnUuid);
+			break;
+		case Ice:
+			SpawnObstacles<IceTile>(std::move(rect), spawnUuid);
+			break;
 		default:
 			break;
 	}

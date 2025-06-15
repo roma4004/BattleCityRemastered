@@ -8,7 +8,7 @@ struct ObjRectangle;
 
 struct TextureOffset//TODO make atlas.png
 {
-	ObjRectangle enemy{0, 0, 13, 13};
+	/*ObjRectangle enemy{0, 0, 13, 13};
 	ObjRectangle playerOne{0, 13, 13, 13};
 	ObjRectangle playerTwo{0, 26, 13, 13};
 	ObjRectangle bullet{39, 13, 13, 13};
@@ -25,5 +25,34 @@ struct TextureOffset//TODO make atlas.png
 
 	ObjRectangle bonusTimer{39, 39, 15, 15};
 	ObjRectangle bonusTank{39, 54, 15, 15};
-	ObjRectangle bonusHelmet{39, 69, 15, 15};
+	ObjRectangle bonusHelmet{39, 69, 15, 15};*/
+
+
+	// Battle City SpriteSheet.png Grid size 16x16
+	// tanks are 13x13 so we need to make 1px offset cuz they're not aligned properly and start flickering while we rotate them  
+
+	//Tanks
+	ObjRectangle enemy{129, 1, 13, 13};
+	ObjRectangle playerOne{1, 1, 13, 13};
+	ObjRectangle playerTwo{1, 129, 13, 13};
+
+	//Map
+	ObjRectangle bullet{320, 80, 16, 16};
+	ObjRectangle eagle{304, 32, 16, 16};
+	ObjRectangle brick{256, 64, 8, 8};
+	ObjRectangle steel{256, 16, 8, 8};
+	ObjRectangle grass{272, 32, 8, 8};
+	ObjRectangle ice{288, 32, 8, 8};
+	//ObjRectangle water{264, 80, 8, 8}; // waterflow right - > left
+	ObjRectangle water{272, 80, 8, 8}; // waterflow left  - > right
+	
+	
+	//Explosions and spawn , left to right, 
+	ObjRectangle spawnAnim{256, 96, 16, 16}; // 4 step animation 16x16
+	ObjRectangle smallExplosion{256, 128, 16, 16}; // 3 step animation 16x16
+	ObjRectangle bigExplosion{304, 128, 32, 32}; // 2 steps 32x32 
+	
+	
+	//Bonuses
+	
 };
