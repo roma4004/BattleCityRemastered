@@ -31,7 +31,8 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-                         std::unique_ptr<Menu> menu, std::shared_ptr<IDrawable> textureManager, const bool isVsyncOn)
+                         std::unique_ptr<Menu> menu, std::shared_ptr<IDrawable> textureManager, const bool isVsyncOn,
+                         std::shared_ptr<BonusEffectManager> bonusEffectManager)
 	: _selectedGameMode{OnePlayer},
 	  _windowSize{windowSize},
 	  _menu{std::move(menu)},
@@ -43,7 +44,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> 
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
 	  _textureManager(std::move(textureManager)),
 	  _userInput{windowSize, events},
-	  _tankSpawner{windowSize, &_allObjects, events, _bulletPool},
+	  _tankSpawner{windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager)},
 	  _bonusSpawner{events, &_allObjects, windowSize},
 	  _obstacleSpawner{events, &_allObjects},
 	  _isVsyncOn{isVsyncOn},

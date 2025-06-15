@@ -58,11 +58,11 @@ class GameStatistics final
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
 	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnTankHit(const std::string& whoHit, const std::string& author, const std::string& fraction);
+	void OnTankHit(const std::string& who, const std::string& author, const std::string& fraction);
 	void OnEnemyDied(const std::string& author, const std::string& fraction);
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
-	void OnTankDied(const std::string& whoDied, const std::string& author, const std::string& fraction);
+	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
 	void OnBrickWallDied(const std::string& author, const std::string& fraction);
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
 

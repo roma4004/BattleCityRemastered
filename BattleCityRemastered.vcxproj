@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\BaseObj.cpp" />
+    <ClCompile Include="source\components\BonusEffectManager.cpp" />
     <ClCompile Include="source\components\BonusSpawner.cpp" />
     <ClCompile Include="source\components\BulletPool.cpp" />
     <ClCompile Include="source\components\GameStatistics.cpp" />
@@ -430,7 +431,9 @@
   <ItemGroup>
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\BaseObjProperty.h" />
+    <ClInclude Include="headers\BonusEffectProperty.h" />
     <ClInclude Include="headers\Circle.h" />
+    <ClInclude Include="headers\components\BonusEffectManager.h" />
     <ClInclude Include="headers\components\BonusSpawner.h" />
     <ClInclude Include="headers\components\BulletPool.h" />
     <ClInclude Include="headers\components\EventSystem.h" />

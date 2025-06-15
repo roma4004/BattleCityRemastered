@@ -329,7 +329,6 @@ void Server::SubscribeBonus()
 	//TODO: clien obstacle spawn with uuid
 	//TODO: clien bonus spawn with uuid
 
-
 	// _events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
 	// {
 	// 	this->OnHelmetActivate(who);//TODO: refactor to SendCommand(std::make_shared<
@@ -378,10 +377,10 @@ void Server::UnsubscribeBonus() const
 
 	_events->RemoveListener<const std::string&, const buuid&>("ServerSend_FortressChange", _name);
 
-	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);
-	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);
-	// _events->RemoveListener<const std::string&>("ServerSend_OnStar", _name);
-	// _events->RemoveListener<const std::string&, const std::string&>("ServerSend_OnTank", _name);
+	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener<const std::string&>("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener<const std::string&, const std::string&>("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
 }
 
 void Server::DoAccept()

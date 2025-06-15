@@ -6,8 +6,8 @@
 #include <SDL.h>
 #include <ranges>
 
-TextureManager::TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
-                               std::shared_ptr<EventSystem> events, const UPoint windowSize)
+TextureManager::TextureManager(const UPoint windowSize, std::shared_ptr<SDL_Texture> texture,
+                               std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<EventSystem> events)
 	: _windowSize{windowSize},
 	  _renderer(std::move(renderer)),
 	  _texture(std::move(texture)),
@@ -20,19 +20,6 @@ TextureManager::~TextureManager()
 {
 	Unsubscribe();
 	ClearColorTextureCache();
-}
-
-void TextureManager::ClearColorTextureCache() const
-{
-	for (const auto& texture: _colorTextureCache | std::views::values)
-	{
-		if (texture)
-		{
-			SDL_DestroyTexture(texture);
-		}
-	}
-
-	_colorTextureCache.clear();
 }
 
 void TextureManager::Subscribe() const
@@ -48,6 +35,19 @@ void TextureManager::Unsubscribe() const
 {
 	_events->RemoveListener<const BaseObj*>("DrawObj", _name);
 	_events->RemoveListener<const BaseObj*>("DrawHealthBarObj", _name);
+}
+
+void TextureManager::ClearColorTextureCache() const
+{
+	for (const auto& texture: _colorTextureCache | std::views::values)
+	{
+		if (texture)
+		{
+			SDL_DestroyTexture(texture);
+		}
+	}
+
+	_colorTextureCache.clear();
 }
 
 void TextureManager::SetRenderDrawColor(const int color, const Uint8 transparency = 255) const
@@ -75,10 +75,10 @@ void TextureManager::DrawHealthBar(const BaseObj* obj) const
 	SetRenderDrawColor(obj->GetColor(), 127);
 
 	SDL_BlendMode blendMode;
-	SDL_GetRenderDrawBlendMode(_renderer.get(), &blendMode); //backup blendmode type
-	SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND); //set blendmode type
+	SDL_GetRenderDrawBlendMode(_renderer.get(), &blendMode);//backup blendmode type
+	SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);//set blendmode type
 	SDL_RenderFillRect(_renderer.get(), &healthBarRect);
-	SDL_SetRenderDrawBlendMode(_renderer.get(), blendMode); //restore blendmode type
+	SDL_SetRenderDrawBlendMode(_renderer.get(), blendMode);//restore blendmode type
 }
 
 SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
@@ -105,7 +105,7 @@ SDL_Texture* TextureManager::CreateColorTexture(const int color) const
 
 	SetRenderDrawColor(color);
 
-	SDL_RenderClear(_renderer.get()); // Fill rect with color
+	SDL_RenderClear(_renderer.get());// Fill rect with color
 
 	SDL_SetRenderTarget(_renderer.get(), nullptr);
 
@@ -133,7 +133,7 @@ void TextureManager::Draw(const BaseObj* obj) const
 	SDL_Rect textureRect{};
 	const auto pawn = dynamic_cast<const Pawn*>(obj);
 	if (const auto& name = obj->GetName();//TODO: replace with enum
-		name == "Enemy")
+		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
 		textureRect.x += pawn->_animationId * 16;

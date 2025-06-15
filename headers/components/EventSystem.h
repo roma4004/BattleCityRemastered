@@ -48,7 +48,9 @@ class EventSystem final
 		Event<const TankType, const buuid&>,// send/received respawnTank(type,uuid)
 		Event<const std::string&, const buuid&>,// send fortressChange(state,uuid)
 		Event<const std::string&, const int>,// local respawn resource changed(who,val)
-		Event<const std::string&, const std::string&>,// (author,fraction) stat, bonusEffect, obstacleDied send/recieved
+		Event<const std::string&, const bool>,// bonus status effect changed(name/team,isActive)
+		Event<const std::string&, const milliseconds>,// bonus effect activates (author/fraction,duration)
+		Event<const std::string&, const std::string&>,// (author,fraction) stat, bonusEffect,obstacleDied send/recieved
 		Event<const FPoint, const BonusType, const buuid&>,// send/received bonusSpawn(pos,bonusType,uuid)
 		Event<const ObjRectangle, const ObstacleType, const buuid&>,// send/received obstacleSpawn(rect,obstType,uuid)
 		Event<const FPoint, const Direction, const buuid&>,// received posChange(pos,dir,uuid)

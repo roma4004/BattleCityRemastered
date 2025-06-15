@@ -6,17 +6,19 @@
 
 #include <algorithm>
 
-CoopBot::CoopBot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
-	: Bot{std::move(pawnProperty), std::move(bulletPool)} {}
+CoopBot::CoopBot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
+	: Bot{std::move(pawnProperty), std::move(bulletPool), effects} {}
 
 CoopBot::~CoopBot() = default;
 
 void CoopBot::TickUpdate(const float deltaTime)
 {
-	if (!this->_timer.isActive)
+	if (_effects.isTimerActive)
 	{
-		this->Bot::TickUpdate(deltaTime);
+		return;
 	}
+
+	Bot::TickUpdate(deltaTime);
 
 	// shot
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))

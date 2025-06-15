@@ -5,6 +5,7 @@
 #include <chrono>
 #include <random>
 
+struct BonusEffectProperty;
 class EventSystem;
 class BulletPool;
 
@@ -34,7 +35,7 @@ protected:
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool);
+	Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, BonusEffectProperty effects);
 
 	~Bot() override;
 };

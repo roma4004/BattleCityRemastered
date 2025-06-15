@@ -7,7 +7,7 @@
 Obstacle::Obstacle(ObjRectangle rect, const int color, const int health, std::string name,
                    std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
                    const ObstacleType obstacleType)
-	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},
+	: BaseObj{std::move(rect), color, health, uuid, std::move(name), "Neutral"},// TODO: remove move for rect
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _events(std::move(events))

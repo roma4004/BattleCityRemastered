@@ -17,7 +17,7 @@ class Player final : public Tank
 
 public:
 	Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool,
-	       std::unique_ptr<IInputProvider> inputProvider);
+	       std::unique_ptr<IInputProvider> inputProvider, BonusEffectProperty effects);
 
 	~Player() override;
 };

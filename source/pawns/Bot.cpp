@@ -1,3 +1,4 @@
+#include "../../headers/BonusEffectProperty.h"
 #include "../../headers/behavior/MoveLikeTankBeh.h"
 #include "../../headers/behavior/ShootingBeh.h"
 #include "../../headers/components/LineOfSight.h"
@@ -10,10 +11,11 @@
 #include <algorithm>
 #include <chrono>
 
-Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
+Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
 	: Tank{pawnProperty,
 	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
-	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool))
+	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
+	       effects
 	  },
 	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
@@ -217,8 +219,6 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 
 void Bot::TickUpdate(const float deltaTime)
 {
-	Tank::TickUpdate(deltaTime);
-
 	// change dir when random time span left
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{

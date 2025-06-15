@@ -257,6 +257,7 @@ include_directories(headers)
 
 set(SOURCE_FILES
         source/BaseObj.cpp
+        source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp

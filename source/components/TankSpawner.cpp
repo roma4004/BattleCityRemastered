@@ -1,5 +1,6 @@
 #include "../../headers/components/TankSpawner.h"
 #include "../../headers/BaseObjProperty.h"
+#include "../../headers/components/BonusEffectManager.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/enums/RespawnResource.h"
@@ -10,21 +11,23 @@
 #include "../../headers/pawns/Player.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/Logger.h"
-
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <boost/mpl/integral_c_tag.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
 //TODO: fix respawn on client
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool)
+                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
+                         std::shared_ptr<BonusEffectManager> bonusEffectManager)
 	: _windowSize{windowSize},
 	  _allObjects{allObjects},
 	  _events{std::move(events)},
-	  _bulletPool{std::move(bulletPool)}
+	  _bulletPool{std::move(bulletPool)},
+	  _bonusEffectManager{std::move(bonusEffectManager)}
 {
 	static boost::uuids::random_generator uuidTankGenerator;
 
@@ -183,7 +186,7 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
-void TankSpawner::SpawnEnemy(const buuid uuid, const float speed, const int health)
+void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health)
 {
 	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
 	const float size{gridOffset * 3};
@@ -209,7 +212,7 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const float speed, const int heal
 		if (isFreeSpawnSpot)
 		{
 			std::string fraction{"EnemyTeam"};
-			std::string name{"Enemy"};
+			std::string name{"Enemy" + std::to_string(type + 1)};
 
 			// Log enemy tank spawn
 			Logger::GetInstance().LogTankSpawn(name, fraction, boost::uuids::to_string(uuid));
@@ -220,9 +223,10 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const float speed, const int heal
 					<< std::endl;
 
 			constexpr int gray{0x808080};
+			const bool isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive;
+			const bool isHelmetActive = _bonusEffectManager->GetHelmet(type).isActive;
 			RespawnTank<Enemy>(std::move(rect), gray, health, std::move(name), std::move(fraction), speed,
-			                   std::move(uuid));
-
+			                   std::move(uuid), {isTimerActive, isHelmetActive});
 			return;
 		}
 	}
@@ -257,8 +261,10 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
 		const int color = type == PLAYER1 ? yellow : green;
+		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
+		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == PLAYER1 ? 4 : 5).isActive;
 		RespawnTank<Player>(std::move(rect), color, health, std::move(name), std::move(fraction), speed,
-		                    std::move(uuid));
+		                    std::move(uuid), {isTimerActive, isHelmetActive});
 	}
 }
 
@@ -291,8 +297,10 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
 		const int color = type == COOP1 ? yellow : green;
+		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
+		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == COOP1 ? 4 : 5).isActive;
 		RespawnTank<CoopBot>(std::move(rect), color, health, std::move(name), std::move(fraction), speed,
-		                     std::move(uuid));
+		                     std::move(uuid), {isTimerActive, isHelmetActive});
 	}
 }
 
@@ -300,7 +308,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
 {
 	constexpr float speed{142};
 	constexpr int health{100};
-	SpawnEnemy(uuid, speed, health);
+	SpawnEnemy(uuid, type, speed, health);
 
 	if (_gameMode == PlayAsHost)
 	{
@@ -345,10 +353,10 @@ void TankSpawner::RespawnTanks()
 		{
 			switch (i)
 			{
-				case TankType::ENEMY:
-				case 1:
-				case 2:
-				case 3:
+				case TankType::ENEMY1:
+				case TankType::ENEMY2:
+				case TankType::ENEMY3:
+				case TankType::ENEMY4:
 					RespawnEnemyTanks(static_cast<TankType>(i), _slots[i].id);
 					break;
 				case TankType::PLAYER1:
@@ -368,10 +376,10 @@ void TankSpawner::RespawnClient(const TankType type, const buuid uuid)
 {
 	switch (type)
 	{
-		case TankType::ENEMY:
-		case 1:
-		case 2:
-		case 3:
+		case TankType::ENEMY1:
+		case TankType::ENEMY2:
+		case TankType::ENEMY3:
+		case TankType::ENEMY4:
 			RespawnEnemyTanks(type, uuid);
 			break;
 		case TankType::PLAYER1:
@@ -476,10 +484,10 @@ void TankSpawner::OnTankSpawn(const buuid& uuid)
 		{
 			switch (i)
 			{
-				case TankType::ENEMY:
-				case 1:
-				case 2:
-				case 3:
+				case TankType::ENEMY1:
+				case TankType::ENEMY2:
+				case TankType::ENEMY3:
+				case TankType::ENEMY4:
 					DecreaseEnemyRespawnResource();
 					break;
 				case TankType::PLAYER1:
@@ -506,10 +514,10 @@ void TankSpawner::OnTankDied(const buuid& uuid)
 		{
 			switch (i)
 			{
-				case TankType::ENEMY:
-				case 1:
-				case 2:
-				case 3:
+				case TankType::ENEMY1:
+				case TankType::ENEMY2:
+				case TankType::ENEMY3:
+				case TankType::ENEMY4:
 					_slots[i].isAvailable = _respawnResource[ENEMY_ALL] > 0;
 					break;
 				case TankType::PLAYER1:

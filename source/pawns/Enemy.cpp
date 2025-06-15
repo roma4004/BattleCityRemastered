@@ -10,17 +10,19 @@
 #include <algorithm>
 
 //TODO: if enemy see bullets they should try or prioritize move aside
-Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
-	: Bot{std::move(pawnProperty), std::move(bulletPool)} {}
+Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
+	: Bot{std::move(pawnProperty), std::move(bulletPool), effects} {}
 
 Enemy::~Enemy() = default;
 
 void Enemy::TickUpdate(const float deltaTime)
 {
-	if (!this->_timer.isActive)
+	if (_effects.isTimerActive)
 	{
-		this->Bot::TickUpdate(deltaTime);
+		return;
 	}
+
+	Bot::TickUpdate(deltaTime);
 
 	// shot
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))

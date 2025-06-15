@@ -2,7 +2,10 @@
 
 enum TankType : char8_t
 {
-	ENEMY,
+	ENEMY1,
+	ENEMY2,
+	ENEMY3,
+	ENEMY4,
 	PLAYER1 = 4,
 	PLAYER2 = 5,
 	COOP1,

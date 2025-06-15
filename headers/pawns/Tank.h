@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Pawn.h"
+#include "../BonusEffectProperty.h"
 #include "../Point.h"
 #include "../bonuses/BonusStatus.h"
 #include "../interfaces/IHealthBar.h"
@@ -29,11 +30,9 @@ class Tank : public Pawn, public IHealthBar
 	void UnsubscribeBonus() const;
 
 	void DrawHealthBar(const BaseObj* obj) const override;
+	void OnBonusTimer(const std::string& fraction, bool isActive);
+	void OnBonusHelmet(const std::string& name, bool isActive);
 
-	inline void SetPixel(size_t x, size_t y, int color) const;
-
-	void OnBonusTimer(const std::string& fraction, milliseconds duration);
-	void OnBonusHelmet(const std::string& author, const std::string& fraction, milliseconds duration);
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusStar(const std::string& author, const std::string& fraction);
 
@@ -44,20 +43,21 @@ protected:
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire;
 
 	// bonuses
-	BonusStatus _timer{};
-	//TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
+	BonusEffectProperty _effects{};
+	//in progress TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
 	BonusStatus _helmet{};
 
 	void Shot(buuid withUuid = {}) const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(float deltaTime) override = 0;
 
 	void TakeDamage(int damage) override;
 
 public:
-	Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh);
+	Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
+	     BonusEffectProperty effects);
 
 	~Tank() override;
 

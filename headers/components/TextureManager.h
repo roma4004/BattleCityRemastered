@@ -26,11 +26,10 @@ class TextureManager final : public IDrawable
 	mutable std::unordered_map<int, SDL_Texture*> _colorTextureCache;
 
 public:
-	TextureManager(std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
-	               std::shared_ptr<EventSystem> events, UPoint windowSize);
+	TextureManager(UPoint windowSize, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
+	               std::shared_ptr<EventSystem> events);
 
 	~TextureManager() override;
-
 
 	void Subscribe() const;
 	void Unsubscribe() const;

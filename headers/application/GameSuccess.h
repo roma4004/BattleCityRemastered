@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UserInput.h"
+#include "../../headers/components/BonusEffectManager.h"
 #include "../../headers/components/BonusSpawner.h"
 #include "../../headers/components/ObstacleSpawner.h"
 #include "../../headers/components/TankSpawner.h"
@@ -88,7 +89,8 @@ public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
 	            std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
 	            std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
-	            std::shared_ptr<IDrawable> textureManager, bool isVsyncOn);
+	            std::shared_ptr<IDrawable> textureManager, bool isVsyncOn,
+	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
 
 	~GameSuccess() override;
 };

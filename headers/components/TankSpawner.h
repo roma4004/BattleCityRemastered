@@ -10,6 +10,8 @@
 #include "../pawns/PawnProperty.h"
 #include "../pawns/Player.h"
 
+struct BonusEffectProperty;
+class BonusEffectManager;
 enum TankType : char8_t;
 enum GameMode : char8_t;
 struct SDL_Renderer;
@@ -30,6 +32,7 @@ class TankSpawner final
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<BonusEffectManager> _bonusEffectManager;
 
 	std::random_device _rd;
 
@@ -54,7 +57,7 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(buuid uuid, float speed, int health);
+	void SpawnEnemy(buuid uuid, TankType type, float speed, int health);
 	void SetEnemyNeedRespawn();
 
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
@@ -62,7 +65,7 @@ class TankSpawner final
 
 	template<typename TTankType>
 	void RespawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
-	                 buuid uuid);
+	                 buuid uuid, BonusEffectProperty effects);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid);
 	void RespawnPlayerTeam(TankType type, buuid uuid);
@@ -86,7 +89,8 @@ class TankSpawner final
 
 public:
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool);
+	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
+	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
 
 	~TankSpawner();
 

@@ -19,8 +19,7 @@ BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<EventSystem> ev
 
 BonusTimer::~BonusTimer() = default;
 
-void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
+void BonusTimer::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, const milliseconds>(
-			_name, author, fraction, _effectDuration);
+	_events->EmitEvent<const std::string&, const milliseconds>("TimerActive", fraction, _effectDuration);
 }
