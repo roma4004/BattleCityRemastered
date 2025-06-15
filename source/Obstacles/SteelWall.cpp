@@ -15,13 +15,6 @@ SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
-
-	//TODO: remove this after load steel texture
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 }
 
-SteelWall::~SteelWall()
-{
-	//TODO: remove this after load steel texture
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
+SteelWall::~SteelWall() = default;

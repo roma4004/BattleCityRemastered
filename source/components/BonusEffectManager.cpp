@@ -5,7 +5,7 @@
 BonusEffectManager::BonusEffectManager(std::shared_ptr<EventSystem> events)
 	: _name{"BonusEffectManager"}, _events{std::move(events)}
 {
-	_helmetSlots = {{}, {}, {}, {}, {}, {},};
+	Reset();
 
 	Subscribe();
 }
@@ -15,10 +15,15 @@ BonusEffectManager::~BonusEffectManager()
 	Unsubscribe();
 }
 
-using milliseconds = std::chrono::milliseconds;
-
 void BonusEffectManager::Subscribe()
 {
+	_events->AddListener("Reset", _name, [this]() { Reset(); });
+
+	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
+
 	_events->AddListener<const std::string&, const milliseconds>(
 			"TimerActive", _name,
 			[this](const std::string& fraction, const milliseconds effectDuration)
@@ -71,16 +76,30 @@ void BonusEffectManager::Subscribe()
 				}
 			});
 
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
+	_events->AddListener<const std::string&, const std::string&, const milliseconds>(
+			//TODO: remove duration for bonuses
+			"BonusShovel", _name,
+			[this](const std::string& /*author*/, const std::string& fraction, const milliseconds effectDuration)
+			{
+				this->OnBonusShovelPickup(fraction, effectDuration);
+			});
 }
 
 void BonusEffectManager::Unsubscribe() const
 {
+	_events->RemoveListener("Reset", _name);
+	_events->RemoveListener<const float>("TickUpdate", _name);
 	_events->RemoveListener("TimerActive", _name);
 	_events->RemoveListener("HelmetActive", _name);
+	_events->RemoveListener("BonusShovel", _name);
+}
+
+void BonusEffectManager::Reset()
+{
+	_timerEnemy = {};
+	_timerPlayer = {};
+	_shovelPlayer = {};
+	_helmetSlots = {{}, {}, {}, {}, {}, {}};
 }
 
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool value) const
@@ -134,6 +153,12 @@ void BonusEffectManager::TickUpdate(const float /*deltaTime*/)
 			}
 		}
 	}
+
+	if (_shovelPlayer.isActive && TimeUtils::IsCooldownFinish(_shovelPlayer.activateTime, _shovelPlayer.cooldown))
+	{
+		_shovelPlayer.isActive = false;
+		_events->EmitEvent("BonusShovelOnCooldownEnd");
+	}
 }
 
 BonusStatus BonusEffectManager::GetTimerEnemy() const { return _timerEnemy; }
@@ -146,4 +171,28 @@ BonusStatus BonusEffectManager::GetHelmet(const int id) const
 		return {};
 
 	return _helmetSlots[id];
+}
+
+void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const milliseconds effectDuration)
+{
+	if (fraction == "PlayerTeam")
+	{
+		if (_shovelPlayer.isActive)
+		{
+			_shovelPlayer.cooldown += effectDuration;
+		}
+		else
+		{
+			_shovelPlayer.cooldown = effectDuration;
+			_shovelPlayer.isActive = true;
+			_events->EmitEvent("BonusShovelOnPlayerPickup");
+		}
+	}
+	else if (fraction == "EnemyTeam")
+	{
+		_shovelPlayer.isActive = false;
+		_events->EmitEvent("BonusShovelOnEnemyPickup");
+	}
+
+	_shovelPlayer.activateTime = std::chrono::system_clock::now();
 }

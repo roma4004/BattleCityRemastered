@@ -6,12 +6,15 @@ class EventSystem;
 
 class BonusEffectManager
 {
+	using milliseconds = std::chrono::milliseconds;
+
 	BonusStatus _timerEnemy;
 	BonusStatus _timerPlayer;
+	BonusStatus _shovelPlayer;
+	std::vector<BonusStatus> _helmetSlots;
 	std::string _name;
 
 	std::shared_ptr<EventSystem> _events;
-	std::vector<BonusStatus> _helmetSlots;
 
 public:
 	explicit BonusEffectManager(std::shared_ptr<EventSystem> events);
@@ -21,7 +24,10 @@ public:
 	void Subscribe();
 	void Unsubscribe() const;
 
+	void Reset();
+
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool value) const;
+	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
 
 	void TickUpdate(float);
 

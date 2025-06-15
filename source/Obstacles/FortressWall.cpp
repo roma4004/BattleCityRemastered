@@ -5,7 +5,6 @@
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/utils/ColliderUtils.h"
-#include "../../headers/utils/TimeUtils.h"
 #include <algorithm>
 #include <string>
 #include <boost/uuid/uuid.hpp>
@@ -29,23 +28,18 @@ FortressWall::~FortressWall()
 
 void FortressWall::Subscribe()
 {
-	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	if (_gameMode == PlayAsClient)
+	{
+		SubscribeAsClient();
+	}
 
 	SubscribeBonus();
-}
-
-void FortressWall::SubscribeAsHost()
-{
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
 }
 
 void FortressWall::SubscribeAsClient()
 {
 	_events->AddListener<const std::string&, const buuid&>(
-			"ClientReceived_FortressChange", _name,
+			"ClientReceived_FortressChange", _nameWithUuid,
 			[this](const std::string& state, const buuid& uuid)
 			{
 				if (uuid == _uuid)
@@ -68,48 +62,34 @@ void FortressWall::SubscribeAsClient()
 
 void FortressWall::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const std::string&, const milliseconds>(
-			//TODO: remove duration for bonuses
-			"BonusShovel", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const milliseconds duration)
-			{
-				this->OnBonusShovelPickup(fraction, duration);
-			});
+	_events->AddListener("BonusShovelOnPlayerPickup", _nameWithUuid, [this]() { this->OnPlayerPickupShovel(); });
+	_events->AddListener("BonusShovelOnCooldownEnd", _nameWithUuid, [this]() { this->OnPlayerShovelCooldownEnd(); });
+	_events->AddListener("BonusShovelOnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
 }
 
 void FortressWall::Unsubscribe() const
 {
-	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	if (_gameMode == PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
 
 	UnsubscribeBonus();
 }
 
-void FortressWall::UnsubscribeAsHost() const
-{
-	_events->RemoveListener<const float>("TickUpdate", _name);
-}
-
 void FortressWall::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const buuid&>("ClientReceived_FortressChange", _name);
+	_events->RemoveListener<const std::string&, const buuid&>("ClientReceived_FortressChange", _nameWithUuid);
 }
 
 void FortressWall::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, const milliseconds>("BonusShovel", _name);
+	_events->RemoveListener("BonusShovelOnPlayerPickup", _nameWithUuid);
+	_events->RemoveListener("BonusShovelOnCooldownEnd", _nameWithUuid);
+	_events->RemoveListener("BonusShovelOnEnemyPickup", _nameWithUuid);
 }
 
 void FortressWall::Draw(const BaseObj* /*obj*/) const {}
-
-void FortressWall::TickUpdate(const float /*deltaTime*/)
-{
-	// bonus disable timer
-	if (_shovel.isActive && TimeUtils::IsCooldownFinish(_shovel.activateTime, _shovel.cooldown))
-	{
-		_shovel.isActive = false;
-		OnPlayerShovelCooldownEnd();
-	}
-}
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
@@ -215,31 +195,7 @@ bool FortressWall::IsSteelWall() const
 	return std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle);
 }
 
-void FortressWall::OnBonusShovelPickup(const std::string& fraction, const milliseconds duration)
-{
-	if (fraction == "PlayerTeam")
-	{
-		if (this->_shovel.isActive)
-		{
-			this->_shovel.cooldown += duration;
-
-			return;
-		}
-
-		this->_shovel.isActive = true;
-		this->_shovel.cooldown = duration;
-		this->OnPlayerPickupShovel();
-	}
-	else if (fraction == "EnemyTeam")
-	{
-		this->_shovel.isActive = false;
-		this->OnEnemyPickupShovel();
-	}
-
-	this->_shovel.activateTime = std::chrono::system_clock::now();
-}
-
-// NOTE: call when enemy team bonus pick up
+// NOTE: call when enemy team pickup bonus
 void FortressWall::OnEnemyPickupShovel()
 {
 	_obstacle = std::unique_ptr<BrickWall>(nullptr);

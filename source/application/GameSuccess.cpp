@@ -117,7 +117,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
 	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
 	{
-		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting client ready
+		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
 	}
 
 	_allObjects.clear();
@@ -125,7 +125,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	SetCurrentGameMode(gameMode);
 
-	_events->EmitEvent("Reset");
+	_events->EmitEvent("Reset"); //TODO: recheck reset for new components
 
 	if (gameMode != PlayAsClient && gameMode != PlayAsHost)
 	{

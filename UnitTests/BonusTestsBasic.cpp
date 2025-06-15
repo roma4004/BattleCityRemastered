@@ -160,7 +160,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _tankSpeed};
 
-		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
+		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);//TODO: spawn with helmet or timer effect for test instead of bonus pickup in separated test
 
 		const FPoint enemyPos = enemy->GetPos();
 

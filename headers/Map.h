@@ -10,7 +10,7 @@ class Map final
 	ObstacleSpawner* _obstacleSpawner;
 
 public:
-	Map(ObstacleSpawner* obstacleSpawner);
+	explicit Map(ObstacleSpawner* obstacleSpawner);
 
 	~Map();
 

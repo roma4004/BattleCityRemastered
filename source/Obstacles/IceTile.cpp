@@ -15,11 +15,6 @@ IceTile::IceTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, const b
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
-
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 }
 
-IceTile::~IceTile()
-{
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
+IceTile::~IceTile() = default;

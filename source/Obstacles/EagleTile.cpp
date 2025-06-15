@@ -15,11 +15,6 @@ EagleTile::EagleTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
-
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 }
 
-EagleTile::~EagleTile()
-{
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
+EagleTile::~EagleTile() = default;

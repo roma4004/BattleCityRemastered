@@ -9,7 +9,7 @@
 #include <algorithm>
 
 //TODO: if enemy see bullets they should try or prioritize move aside
-Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
+Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects = {})
 	: Bot{std::move(pawnProperty), std::move(bulletPool), effects} {}
 
 Enemy::~Enemy() = default;

@@ -16,7 +16,6 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
 
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float /*deltaTime*/)
 	{
 		if (++_animFrameCounter; _animFrameCounter % 24 == 0)
@@ -54,5 +53,5 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 
 WaterTile::~WaterTile()
 {
-	_events->RemoveListener("Draw", _nameWithUuid);
+	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
 }

@@ -5,7 +5,7 @@
 #include "../../headers/utils/TimeUtils.h"
 #include <algorithm>
 
-CoopBot::CoopBot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
+CoopBot::CoopBot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects = {})
 	: Bot{std::move(pawnProperty), std::move(bulletPool), effects} {}
 
 CoopBot::~CoopBot() = default;

@@ -2,7 +2,6 @@
 
 #include "../BaseObj.h"
 #include "../bonuses/BonusStatus.h"
-#include "../interfaces/ITickUpdatable.h"
 #include <chrono>
 #include <memory>
 #include <variant>
@@ -12,7 +11,7 @@ class EventSystem;
 class SteelWall;
 class BrickWall;
 
-class FortressWall final : public BaseObj, public ITickUpdatable
+class FortressWall final : public BaseObj
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
@@ -27,23 +26,19 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	BonusStatus _shovel{};
 
 	void Subscribe();
-	void SubscribeAsHost();
 	void SubscribeAsClient();
 	void SubscribeBonus();
 
 	void Unsubscribe() const;
-	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 	void UnsubscribeBonus() const;
 
 	void Draw(const BaseObj* obj) const override;
-	void TickUpdate(float deltaTime) override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void OnPlayerShovelCooldownEnd();
 
 	void OnEnemyPickupShovel();
-	void OnBonusShovelPickup(const std::string& fraction, milliseconds duration);
 
 public:
 	FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
