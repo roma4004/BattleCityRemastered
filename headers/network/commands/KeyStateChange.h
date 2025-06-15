@@ -1,10 +1,9 @@
 #pragma once
 
+#include "Command.h"
 #include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-
-#include "Command.h"
 
 class KeyStateChange : public Command
 {

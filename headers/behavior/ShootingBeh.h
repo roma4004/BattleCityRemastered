@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../interfaces/IShootable.h"
-
 #include <functional>
 #include <memory>
 

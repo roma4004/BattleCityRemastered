@@ -4,7 +4,6 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/pawns/Bullet.h"
 #include "../../headers/pawns/PawnProperty.h"
-
 #include <chrono>
 #include <iomanip>
 #include <iostream>

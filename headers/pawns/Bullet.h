@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Pawn.h"
-
 #include <string>
 #include <boost/uuid/uuid.hpp>
 

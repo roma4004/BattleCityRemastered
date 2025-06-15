@@ -3,7 +3,6 @@
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/TimeUtils.h"
-
 #include <algorithm>
 
 CoopBot::CoopBot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)

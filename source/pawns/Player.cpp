@@ -8,7 +8,6 @@
 #include "../../headers/interfaces/IInputProvider.h"
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/TimeUtils.h"
-
 #include <chrono>
 
 Player::Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool,

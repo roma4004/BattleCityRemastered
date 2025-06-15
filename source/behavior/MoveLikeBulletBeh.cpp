@@ -4,7 +4,6 @@
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/Bullet.h"
 #include "../../headers/utils/ColliderUtils.h"
-
 #include <memory>
 
 MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,

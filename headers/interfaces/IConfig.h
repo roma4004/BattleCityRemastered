@@ -1,7 +1,6 @@
 #pragma once
 
 #include "IGame.h"
-
 #include <memory>
 
 class IConfig

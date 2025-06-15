@@ -1,10 +1,9 @@
 #pragma once
 
+#include "../../enums/ComandType.h"
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-
-#include "../../enums/ComandType.h"
 
 class Command
 {

@@ -1,11 +1,10 @@
 #pragma once
 
+#include "Command.h"
+#include "UuidSerialization.h"
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
-
-#include "Command.h"
-#include "UuidSerialization.h"
 
 enum TankType : char8_t;
 

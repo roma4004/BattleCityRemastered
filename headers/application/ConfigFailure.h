@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../interfaces/IConfig.h"
-
 #include <string>
 
 class ConfigFailure final : public IConfig

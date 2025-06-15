@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Bonus.h"
-
 #include <memory>
 
 struct UPoint;

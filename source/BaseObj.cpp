@@ -1,6 +1,5 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
-
 #include <boost/uuid/uuid_io.hpp>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)

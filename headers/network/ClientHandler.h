@@ -2,7 +2,6 @@
 
 #include "Client.h"
 #include "../interfaces/INetworkNode.h"
-
 #include <thread>
 
 class ClientHandler : public INetworkNode

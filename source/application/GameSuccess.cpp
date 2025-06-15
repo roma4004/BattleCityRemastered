@@ -7,7 +7,6 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/network/ClientHandler.h"
 #include "../../headers/network/ServerHandler.h"
-
 #include <algorithm>
 //#include <fstream>
 #include <iostream>
@@ -254,7 +253,6 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 		}
 	}
 }
-
 void GameSuccess::DisposeDeadObject()
 {
 	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj)

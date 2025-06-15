@@ -5,7 +5,6 @@
 #include "../Point.h"
 #include "../bonuses/BonusStatus.h"
 #include "../interfaces/IHealthBar.h"
-
 #include <chrono>
 
 struct UPoint;

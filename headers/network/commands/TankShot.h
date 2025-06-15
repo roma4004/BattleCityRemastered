@@ -1,13 +1,12 @@
 #pragma once
 
+#include "UuidSerialization.h"
+#include "../../enums/Direction.h"
+#include "../commands/Command.h"
 #include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
-
-#include "UuidSerialization.h"
-#include "../../enums/Direction.h"
-#include "../commands/Command.h"
 
 class TankShot : public Command
 {

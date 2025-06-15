@@ -1,5 +1,4 @@
 #include "../../headers/network/Server.h"
-
 #include "../../headers/ObjRectangle.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/TankType.h"
@@ -15,7 +14,6 @@
 #include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
 #include "../../headers/network/commands/TankShot.h"
-
 #include <fstream>
 #include <iostream>
 #include <mutex>

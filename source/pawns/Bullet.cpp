@@ -4,7 +4,6 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/pawns/PawnProperty.h"
-
 // #include <iostream>
 #include <string>
 #include <boost/uuid/nil_generator.hpp>

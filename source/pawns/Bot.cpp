@@ -7,7 +7,6 @@
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/TimeUtils.h"
-
 #include <algorithm>
 #include <chrono>
 

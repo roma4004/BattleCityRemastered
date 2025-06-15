@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Tank.h"
-
 #include <chrono>
 #include <random>
 

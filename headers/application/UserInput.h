@@ -2,7 +2,6 @@
 
 #include "../MouseButton.h"
 #include "../Point.h"
-
 #include <chrono>
 #include <memory>
 #include <string>

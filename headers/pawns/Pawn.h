@@ -3,7 +3,6 @@
 #include "../BaseObj.h"
 #include "../Point.h"
 #include "../interfaces/ITickUpdatable.h"
-
 #include <memory>
 #include <vector>
 

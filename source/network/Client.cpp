@@ -1,5 +1,4 @@
 #include "../../headers/network/Client.h"
-
 #include "../../headers/ObjRectangle.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/ComandType.h"
@@ -17,7 +16,6 @@
 #include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
 #include "../../headers/network/commands/TankShot.h"
-
 #include <fstream>
 #include <iostream>
 #include <string>

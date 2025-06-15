@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Command.h"
-
 #include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-
 
 class StatisticsChange : public Command
 {

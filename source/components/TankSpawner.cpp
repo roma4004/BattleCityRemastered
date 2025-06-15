@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
-#include <boost/mpl/integral_c_tag.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>

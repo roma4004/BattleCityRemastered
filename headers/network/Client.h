@@ -2,7 +2,6 @@
 
 #include "../../headers/Point.h"
 #include "commands/Command.h"
-
 #include <memory>
 #include <string>
 #include <vector>

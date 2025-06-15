@@ -3,7 +3,6 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/interfaces/IMoveBeh.h"
 #include "../../headers/pawns/PawnProperty.h"
-
 // #include <iostream>
 
 Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)

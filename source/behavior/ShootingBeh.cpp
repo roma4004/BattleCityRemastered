@@ -5,7 +5,6 @@
 #include "../../headers/enums/Direction.h"
 #include "../../headers/pawns/Bullet.h"
 #include "../../headers/pawns/Tank.h"
-
 #include <functional>
 #include <memory>
 // #include <boost/uuid/uuid_io.hpp>

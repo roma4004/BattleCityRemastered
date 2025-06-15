@@ -2,7 +2,6 @@
 
 #include "Server.h"
 #include "../interfaces/INetworkNode.h"
-
 #include <thread>
 
 class ServerHandler : public INetworkNode

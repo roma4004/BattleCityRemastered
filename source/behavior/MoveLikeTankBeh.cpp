@@ -4,7 +4,6 @@
 #include "../../headers/interfaces/IPickupableBonus.h"
 #include "../../headers/pawns/Tank.h"
 #include "../../headers/utils/ColliderUtils.h"
-
 #include <functional>
 #include <memory>
 

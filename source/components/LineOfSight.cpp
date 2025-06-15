@@ -3,7 +3,6 @@
 #include "../../headers/Point.h"
 #include "../../headers/enums/Direction.h"
 #include "../../headers/utils/ColliderUtils.h"
-
 #include <algorithm>
 
 LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize, const FPoint bulletSize,

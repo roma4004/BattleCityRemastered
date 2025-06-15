@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Command.h"
-
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>

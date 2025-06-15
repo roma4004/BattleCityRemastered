@@ -1,5 +1,4 @@
 #include "../../headers/utils/Logger.h"
-
 #include <iostream>
 #include <sstream>
 

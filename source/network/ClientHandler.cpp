@@ -1,5 +1,4 @@
 #include "../../headers/network/ClientHandler.h"
-
 #include <boost/asio/io_context.hpp>
 
 ClientHandler::ClientHandler(std::shared_ptr<EventSystem> events)

@@ -6,7 +6,6 @@
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/TimeUtils.h"
-
 #include <algorithm>
 
 //TODO: if enemy see bullets they should try or prioritize move aside

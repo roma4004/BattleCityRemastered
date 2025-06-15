@@ -2,7 +2,6 @@
 
 #include "../Point.h"
 #include "../input/InputProviderForMenu.h"
-
 #include <SDL.h>
 #include <SDL_ttf.h>
 
@@ -62,7 +61,6 @@ public:
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();
-
 	void MenuUpdate() const;
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }

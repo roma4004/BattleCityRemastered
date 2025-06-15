@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../interfaces/ITickUpdatable.h"
-
 #include <chrono>
 #include <memory>
 #include <random>

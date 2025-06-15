@@ -2,7 +2,6 @@
 
 #include "../interfaces/ITickUpdatable.h"
 #include "../obstacles/FortressWall.h"
-
 #include <memory>
 #include <random>
 #include <vector>

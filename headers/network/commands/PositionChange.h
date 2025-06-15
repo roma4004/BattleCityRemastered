@@ -1,15 +1,13 @@
 #pragma once
 
-#include <string>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/uuid/uuid.hpp>
-
 #include "Command.h"
 #include "UuidSerialization.h"
 #include "../../Point.h"
 #include "../../enums/Direction.h"
-
+#include <string>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/uuid/uuid.hpp>
 
 class PositionChange : public Command
 {

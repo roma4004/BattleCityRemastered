@@ -2,7 +2,6 @@
 
 #include "../BaseObjProperty.h"
 #include "../point.h"
-
 #include <memory>
 #include <vector>
 

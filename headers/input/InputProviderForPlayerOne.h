@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../interfaces/IInputProvider.h"
-
 #include <memory>
 #include <string>
 

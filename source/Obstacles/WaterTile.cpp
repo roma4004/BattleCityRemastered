@@ -15,13 +15,13 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
-	
+
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float /*deltaTime*/)
 	{
 		if (++_animFrameCounter; _animFrameCounter % 24 == 0)
 		{
-			// Animation with 1 px step and 1 frames
+			// Animation with 1 px step and 1 frame
 			++_animFrame;
 			_animFrameCounter = 0;
 			if (_animFrame > 8)
@@ -30,7 +30,7 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 				_animFrameCounter = 0;
 			}
 
-			/* animation 8px step and 2 frames
+			/* animation 8 px step and 2 frames
 			_animFrame = 0;
 			if ( _animFrameCounter == 24)
 			{
@@ -39,7 +39,7 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 			}
 			*/
 
-			// animation with 1 px step and 2 frame
+			// animation with 1 px step and 2 frames
 			/*++_animFrame;
 			_animFrameCounter = 0;
 			if (_animFrame > 16)
@@ -48,7 +48,7 @@ WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, con
 				_animFrameCounter = 0;
 			}*/
 		}
-		
+
 	});
 }
 

@@ -6,7 +6,6 @@
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
-
 #include <algorithm>
 #include <string>
 #include <boost/uuid/uuid.hpp>

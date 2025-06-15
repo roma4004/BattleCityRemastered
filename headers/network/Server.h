@@ -3,14 +3,12 @@
 #include "../Point.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
-
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
-
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <mutex>
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
 //TODO: remove vector.hpp include after refactoring to command pattern
 

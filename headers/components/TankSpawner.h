@@ -1,14 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <random>
-#include <boost/uuid/uuid.hpp>
-
 #include "../ObjRectangle.h"
 #include "../enums/GameMode.h"
 #include "../enums/RespawnResource.h"
 #include "../pawns/PawnProperty.h"
 #include "../pawns/Player.h"
+#include <memory>
+#include <random>
+#include <boost/uuid/uuid.hpp>
 
 struct BonusEffectProperty;
 class BonusEffectManager;

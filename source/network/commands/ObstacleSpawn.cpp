@@ -1,8 +1,6 @@
 #include "../../../headers/network/commands/ObstacleSpawn.h"
-
 #include "../../../headers/ObjRectangle.h"
 #include "../../../headers/enums/ObstacleType.h"
-
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>

@@ -3,18 +3,16 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/enums/ObstacleType.h"
 #include "../../headers/obstacles/BrickWall.h"
-#include "../../headers/obstacles/FortressWall.h"
-#include "../../headers/obstacles/SteelWall.h"
-#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/obstacles/EagleTile.h"
+#include "../../headers/obstacles/FortressWall.h"
 #include "../../headers/obstacles/GrassTile.h"
 #include "../../headers/obstacles/IceTile.h"
-
+#include "../../headers/obstacles/SteelWall.h"
+#include "../../headers/obstacles/WaterTile.h"
 #include <chrono>
 #include <memory>
 #include <boost/uuid/nil_generator.hpp>
 #include <boost/uuid/random_generator.hpp>
-
 
 class BaseObj;
 class EventSystem;
