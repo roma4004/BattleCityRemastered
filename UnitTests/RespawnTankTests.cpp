@@ -1,3 +1,4 @@
+#include "../headers/components/BonusEffectManager.h"
 #include "../headers/components/BulletPool.h"
 #include "../headers/components/EventSystem.h"
 #include "../headers/components/GameStatistics.h"
@@ -21,6 +22,7 @@ protected:
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -42,7 +44,9 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events, _bulletPool);
+		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
+		_tankSpawner = std::make_shared<TankSpawner>(
+				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3;// for better turns
 
@@ -61,9 +65,11 @@ protected:
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+				std::make_shared<Player>(
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
 		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty2), _bulletPool, std::move(inputProvider2)));
+				std::make_shared<Player>(
+						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
 	}
 
 	void TearDown() override

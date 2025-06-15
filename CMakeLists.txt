@@ -309,6 +309,9 @@ set(SOURCE_FILES
         source/network/Server.cpp
         source/network/ServerHandler.cpp
         source/obstacles/BrickWall.cpp
+        source/Obstacles/EagleTile.cpp
+        source/Obstacles/GrassTile.cpp
+        source/Obstacles/IceTile.cpp
         source/obstacles/FortressWall.cpp
         source/obstacles/Obstacle.cpp
         source/obstacles/SteelWall.cpp
@@ -327,6 +330,7 @@ set(SOURCE_FILES
 
 set(SOURCE_FILES_FOR_UNIT_TESTS
         source/BaseObj.cpp
+        source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
@@ -335,6 +339,9 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/TankSpawner.cpp
         source/ObjRectangle.cpp
         source/Obstacles/BrickWall.cpp
+        source/Obstacles/EagleTile.cpp
+        source/Obstacles/GrassTile.cpp
+        source/Obstacles/IceTile.cpp
         source/Obstacles/SteelWall.cpp
         source/Obstacles/WaterTile.cpp
         source/Utils/ColliderUtils.cpp
@@ -416,7 +423,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-bu
 
 set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME              ${IMG_PATH}/Title.png)
-set(ATLAS_PATH_NAME              ${IMG_PATH}/SpriteCollection.png)
+set(ATLAS_PATH_NAME              ${IMG_PATH}/SpriteSheet.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"

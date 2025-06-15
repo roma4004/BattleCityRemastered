@@ -54,7 +54,8 @@ protected:
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+				std::make_shared<Player>(
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
 	}
 
 	void TearDown() override
@@ -493,7 +494,8 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
 		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2)));
+				std::make_shared<Player>(
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
 
 		if (const auto player2 = dynamic_cast<const Player*>(_allObjects.back().get()))
 		{

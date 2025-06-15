@@ -310,7 +310,8 @@ TEST_F(BulletTest, BulletDamageTank)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
 
-	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool)));
+	_allObjects.emplace_back(std::make_shared<Enemy>(
+			std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}));
 
 	const auto enemy = dynamic_cast<const Enemy*>(_allObjects.back().get());
 

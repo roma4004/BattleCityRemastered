@@ -14,6 +14,7 @@ typedef uint8_t Uint8;
 class BaseObj;
 class EventSystem;
 
+//TODO: pack into resource texture atlas
 class TextureManager final : public IDrawable
 {
 	std::string _name{"TextureManager"};

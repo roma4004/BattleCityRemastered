@@ -42,7 +42,7 @@ protected:
 	std::string _fraction{"PlayerTeam"};
 	std::string _name2{"Player2"};
 	std::string _fraction2{"PlayerTeam"};
-	std::string _name3{"Enemy"};
+	std::string _name3{"Enemy1"};
 	std::string _fraction3{"EnemyTeam"};
 	GameMode _gameMode{OnePlayer};
 	buuid _uuid{};
@@ -75,10 +75,12 @@ protected:
 
 		_allObjects.reserve(5);
 		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+				std::make_shared<Player>(
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
 		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty2), _bulletPool, std::move(inputProvider2)));
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool));
+				std::make_shared<Player>(
+						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, BonusEffectProperty{}));
 	}
 
 	void TearDown() override
