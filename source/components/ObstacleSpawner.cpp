@@ -10,23 +10,25 @@
 
 #include <chrono>
 #include <memory>
+#include <boost/uuid/nil_generator.hpp>
+#include <boost/uuid/random_generator.hpp>
 
 class BaseObj;
 class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                 std::shared_ptr<Window> window, const int sideBarWidth, const int obstacleSize)
+                                 std::shared_ptr<Window> window/*, const int sideBarWidth*/, const int obstacleSize)
 	: _events{std::move(events)},
 	  _obstacleSize{obstacleSize},
 	  _window{std::move(window)},
-	  _allObjects{allObjects},
-	  _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
-	  _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
-	  _distSpawnType{None + 1, lastId - 1}
+	  _allObjects{allObjects}
+// _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
+// _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
+// _distSpawnType{None + 1, lastId - 1}
 {
-	std::random_device rd;
-	_gen = std::mt19937(
-			static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + rd());
+	// std::random_device rd;
+	// _gen = std::mt19937(
+	// static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + rd());
 
 	Subscribe();
 }
@@ -38,8 +40,6 @@ ObstacleSpawner::~ObstacleSpawner()
 
 void ObstacleSpawner::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { this->_lastSpawnId = -1; });
-
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
@@ -49,20 +49,16 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const ObstacleType, const int>(
+	_events->AddListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
 			"ClientReceived_ObstacleSpawn", _name,
-			[this](const FPoint spawnPos, const ObstacleType type, const int id)
+			[this](const ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
 			{
-				const auto size = static_cast<float>(_obstacleSize);
-				ObjRectangle rect{.x = spawnPos.x, .y = spawnPos.y, .w = size, .h = size};
-				SpawnObstacle(std::move(rect), type, id);
+				SpawnObstacle(rect, type, uuid);
 			});
 }
 
 void ObstacleSpawner::Unsubscribe() const
 {
-	_events->RemoveListener("Reset", _name);
-
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
 	if (_gameMode == PlayAsClient)
@@ -73,44 +69,47 @@ void ObstacleSpawner::Unsubscribe() const
 
 void ObstacleSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const BonusType, const int>("ClientReceived_ObstacleSpawn", _name);
+	_events->RemoveListener<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+			"ClientReceived_ObstacleSpawn", _name);
 }
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
-void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType bonusType, const int id)
+void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, const boost::uuids::uuid uuid)
 {
-	if (id != -1)
+	boost::uuids::uuid spawnUuid;
+	if (uuid != boost::uuids::nil_uuid())
 	{
-		_lastSpawnId = id;
+		spawnUuid = uuid;
 	}
 	else
 	{
-		++_lastSpawnId;
+		static boost::uuids::random_generator uuidObstacleGenerator;
+		spawnUuid = uuidObstacleGenerator();
 	}
 
-	switch (bonusType)
+	switch (type)
 	{
 		case None:
 			break;
 		case Brick:
-			SpawnObstacles<BrickWall>(std::move(rect), _lastSpawnId);
+			SpawnObstacles<BrickWall>(std::move(rect), spawnUuid);
 			break;
 		case Steel:
-			SpawnObstacles<SteelWall>(std::move(rect), _lastSpawnId);
+			SpawnObstacles<SteelWall>(std::move(rect), spawnUuid);
 			break;
 		case Water:
-			SpawnObstacles<WaterTile>(std::move(rect), _lastSpawnId);
+			SpawnObstacles<WaterTile>(std::move(rect), spawnUuid);
 			break;
 		case Fortress:
-			SpawnObstacles<FortressWall>(std::move(rect), _lastSpawnId);
+			SpawnObstacles<FortressWall>(std::move(rect), spawnUuid);
 		default:
 			break;
 	}
 }
 
-void ObstacleSpawner::SpawnRandomObstacle(ObjRectangle rect)
+/*void ObstacleSpawner::SpawnRandomObstacle(ObjRectangle rect)
 {
 	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
 	SpawnObstacle(std::move(rect), obstacleType);
-}
+}*/

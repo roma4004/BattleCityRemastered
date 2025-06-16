@@ -1,66 +1,77 @@
 #include "../headers/BaseObj.h"
 #include "../headers/Point.h"
 
+#include <boost/uuid/uuid_io.hpp>
+
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	: _color(baseObjProperty.color),
 	  _health(baseObjProperty.health),
-	  _id{baseObjProperty.id},
+	  _uuid{baseObjProperty.uuid},
 	  _name{std::move(baseObjProperty.name)},
 	  _fraction{std::move(baseObjProperty.fraction)},
-	  _shape{std::move(baseObjProperty.rect)} {}
+	  _rect{std::move(baseObjProperty.rect)}
+{
+	_nameWithUuid = _name + boost::uuids::to_string(_uuid);
+}
 
-BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const int id, std::string name,
+//Deprecated
+BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const boost::uuids::uuid uuid, std::string name,
                  std::string fraction)
 	: _color(color),
 	  _health(health),
-	  _id{id},
+	  _uuid{uuid},
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)},
-	  _shape{std::move(rect)} {}
+	  _rect{std::move(rect)}
+{
+	_nameWithUuid = _name + boost::uuids::to_string(_uuid);
+}
 
 BaseObj::~BaseObj() = default;
 
-ObjRectangle BaseObj::GetShape() const { return _shape; }
+ObjRectangle BaseObj::GetRect() const { return _rect; }
 
-void BaseObj::SetShape(const ObjRectangle shape) { _shape = shape; }
+void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
 std::string BaseObj::GetName() const { return _name; }
 
-int BaseObj::GetId() const { return _id; }
+boost::uuids::uuid BaseObj::GetUuid() const { return _uuid; }
+
+void BaseObj::SetId(const boost::uuids::uuid uuid) { _uuid = uuid; }
 
 std::string BaseObj::GetFraction() const { return _fraction; }
 
-FPoint BaseObj::GetPos() const { return FPoint{.x = _shape.x, .y = _shape.y}; }
+FPoint BaseObj::GetPos() const { return FPoint{.x = _rect.x, .y = _rect.y}; }
 
 void BaseObj::SetPos(const FPoint& pos)
 {
-	_shape.x = pos.x;
-	_shape.y = pos.y;
+	_rect.x = pos.x;
+	_rect.y = pos.y;
 }
 
-float BaseObj::GetRightSide() const { return _shape.Right(); }
+float BaseObj::GetRightSide() const { return _rect.Right(); }
 
-float BaseObj::GetBottomSide() const { return _shape.Bottom(); }
+float BaseObj::GetBottomSide() const { return _rect.Bottom(); }
 
-float BaseObj::GetX() const { return _shape.x; }
+float BaseObj::GetX() const { return _rect.x; }
 
-void BaseObj::SetX(const FPoint& pos) { _shape.x = pos.x; }
+void BaseObj::SetX(const FPoint& pos) { _rect.x = pos.x; }
 
-float BaseObj::GetY() const { return _shape.y; }
+float BaseObj::GetY() const { return _rect.y; }
 
-void BaseObj::SetY(const FPoint& pos) { _shape.y = pos.y; }
+void BaseObj::SetY(const FPoint& pos) { _rect.y = pos.y; }
 
-float BaseObj::GetWidth() const { return _shape.w; }
+float BaseObj::GetWidth() const { return _rect.w; }
 
-void BaseObj::SetWidth(const float width) { _shape.w = width; }
+void BaseObj::SetWidth(const float width) { _rect.w = width; }
 
-float BaseObj::GetHeight() const { return _shape.h; }
+float BaseObj::GetHeight() const { return _rect.h; }
 
-void BaseObj::SetHeight(const float height) { _shape.h = height; }
+void BaseObj::SetHeight(const float height) { _rect.h = height; }
 
-void BaseObj::MoveX(const float i) { _shape.x += i; }
+void BaseObj::MoveX(const float i) { _rect.x += i; }
 
-void BaseObj::MoveY(const float i) { _shape.y += i; }
+void BaseObj::MoveY(const float i) { _rect.y += i; }
 
 int BaseObj::GetColor() const { return _color; }
 
@@ -71,7 +82,7 @@ int BaseObj::GetHealth() const { return _health; }
 void BaseObj::SetHealth(const int health)
 {
 	_health = health;
-	_isAlive = _health >= 1;
+	_isAlive = _health > 0;
 }
 
 void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
@@ -81,7 +92,7 @@ bool BaseObj::GetIsAlive() const { return _isAlive; }
 void BaseObj::TakeDamage(const int damage)
 {
 	_health -= damage;
-	_isAlive = _health >= 1;
+	_isAlive = _health > 0;
 }
 
 bool BaseObj::GetIsPassable() const { return _isPassable; }

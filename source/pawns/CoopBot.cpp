@@ -24,15 +24,16 @@ void CoopBot::TickUpdate(const float deltaTime)
 	// shot
 	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
 	{
-		HandleLineOfSight(GetDirection());
 
-		if (_nearestSeenObstacle
-		    && (_nearestSeenObstacle->GetIsDestructible() || _tier > 2)
-		    && !dynamic_cast<WaterTile*>(_nearestSeenObstacle.get())
-		    // && !dynamic_cast<BushesTile*>(_nearestSeenObstacle.get())
-		    // && !dynamic_cast<IceTile*>(_nearestSeenObstacle.get())
-		    && !dynamic_cast<FortressWall*>(_nearestSeenObstacle.get())
-		    && !IsAlly(_nearestSeenObstacle))
+		const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight(GetDirection());
+
+		if (nearestSeenObstacle && nearestSeenObstacle.get() != nullptr
+		    && (nearestSeenObstacle->GetIsDestructible() || _tier > 2)
+		    && !dynamic_cast<WaterTile*>(nearestSeenObstacle.get())
+		    // && !dynamic_cast<BushesTile*>(nearestSeenObstacle.get())
+		    // && !dynamic_cast<IceTile*>(nearestSeenObstacle.get())
+		    && !dynamic_cast<FortressWall*>(nearestSeenObstacle.get())
+		    && !IsAlly(nearestSeenObstacle))
 		{
 			if (_shootDistance > _bulletDamageRadius + _bulletOffset)
 			{

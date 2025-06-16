@@ -27,40 +27,29 @@ Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool)
 
 Bot::~Bot() = default;
 
-bool Bot::IsOpponent(const std::weak_ptr<BaseObj>& obstacle) const
+bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const
 {
-	if (const auto obstacleLck = obstacle.lock())
+	if (const auto tank = dynamic_cast<Tank*>(obstacle.get()))
 	{
-		if (const auto tank = dynamic_cast<Tank*>(obstacleLck.get()))
-		{
-			return tank->GetFraction() != _fraction;
-		}
-
-		return false;
+		return tank->GetFraction() != _fraction;
 	}
 
 	return false;
 }
 
-bool Bot::IsAlly(const std::weak_ptr<BaseObj>& obstacle) const
+bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const
 {
-	if (const auto obstacleLck = obstacle.lock())
+	if (const auto tank = dynamic_cast<Tank*>(obstacle.get()))
 	{
-		if (const auto tank = dynamic_cast<Tank*>(obstacleLck.get()))
-		{
-			return tank->GetFraction() == _fraction;
-		}
-
-		return false;
+		return tank->GetFraction() == _fraction;
 	}
 
 	return false;
 }
 
-bool Bot::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
+bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 {
-	if (const std::shared_ptr<BaseObj> obstacleLck = obstacle.lock();
-		dynamic_cast<IPickupableBonus*>(obstacleLck.get()))
+	if (dynamic_cast<IPickupableBonus*>(obstacle.get()))
 	{
 		return true;
 	}
@@ -68,7 +57,7 @@ bool Bot::IsBonus(const std::weak_ptr<BaseObj>& obstacle)
 	return false;
 }
 
-bool Bot::IsFreePathToBonus(const std::vector<std::weak_ptr<BaseObj>>& sideObstacles)
+bool Bot::IsFreePathToBonus(const std::vector<std::shared_ptr<BaseObj>>& sideObstacles)
 {
 	if (const auto nearestObstacleBonus = sideObstacles.front();
 		IsBonus(nearestObstacleBonus))
@@ -79,7 +68,7 @@ bool Bot::IsFreePathToBonus(const std::vector<std::weak_ptr<BaseObj>>& sideObsta
 	return false;
 }
 
-bool Bot::ActIfOpponentSeen(const Direction dir, const std::weak_ptr<BaseObj>& nearestObstacle)
+bool Bot::ActIfOpponentSeen(const Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle)
 {
 	if (IsOpponent(nearestObstacle))
 	{
@@ -92,13 +81,14 @@ bool Bot::ActIfOpponentSeen(const Direction dir, const std::weak_ptr<BaseObj>& n
 	return false;
 }
 
-bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& nearestObstacle)
+bool Bot::ActIfBonusSeen(const Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle)
 {
 	if (IsBonus(nearestObstacle))
 	{
-		LineOfSight bonusLOS(_shape, _window->size, _allObjects, this);
-		const std::vector<std::weak_ptr<BaseObj>>& dirSideObstacles =
-				[&bonusLOS, dir]() mutable -> std::vector<std::weak_ptr<BaseObj>>& {
+		LineOfSight bonusLOS(_rect, _window->size, _allObjects, this);
+		const std::vector<std::shared_ptr<BaseObj>>& dirSideObstacles =
+				[&bonusLOS, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
+				{
 					if (dir == UP)
 					{
 						return bonusLOS.GetUpSideObstacles();
@@ -128,11 +118,11 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::weak_ptr<BaseObj>& near
 	return false;
 }
 
-bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::weak_ptr<BaseObj>>& sideObstacle)
+bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle)
 {
 	if (!sideObstacle.empty())
 	{
-		const std::weak_ptr<BaseObj>& nearestObstacle = sideObstacle.front();
+		const std::shared_ptr<BaseObj>& nearestObstacle = sideObstacle.front();
 		if (ActIfOpponentSeen(dir, nearestObstacle))
 		{
 			return true;
@@ -147,32 +137,32 @@ bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::weak_p
 	return false;
 }
 
-void Bot::HandleLineOfSight(const Direction dir)
+std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 {
-	LineOfSight lineOfSight(_shape, _window->size, _bulletSize, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _window->size, _bulletSize, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
 	if (HandleSideObstacles(UP, upSideObstacles))
 	{
-		return;
+		return {};
 	}
 
 	const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
 	if (HandleSideObstacles(LEFT, leftSideObstacles))
 	{
-		return;
+		return {};
 	}
 
 	const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
 	if (HandleSideObstacles(DOWN, downSideObstacles))
 	{
-		return;
+		return {};
 	}
 
 	const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
 	if (HandleSideObstacles(RIGHT, rightSideObstacles))
 	{
-		return;
+		return {};
 	}
 
 	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
@@ -181,46 +171,49 @@ void Bot::HandleLineOfSight(const Direction dir)
 	// 	Shot();
 	// }
 
+	std::shared_ptr<BaseObj> nearestSeenObstacle{nullptr};
 	// fire on obstacle if player not found
 	if (dir == UP && !upSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = upSideObstacles.front().lock();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = upSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _shape.y - _nearestSeenObstacle->GetY();
+			_shootDistance = _rect.y - (nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight());
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
 	if (dir == LEFT && !leftSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = leftSideObstacles.front().lock();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = leftSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _shape.x - _nearestSeenObstacle->GetX();
+			_shootDistance = _rect.x - (nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth());
 			_bulletOffset = _bulletSize.x;
 		}
 	}
 
 	if (dir == DOWN && !downSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = downSideObstacles.front().lock();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = downSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _nearestSeenObstacle->GetY() - _shape.y;
+			_shootDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
 	if (dir == RIGHT && !rightSideObstacles.empty())
 	{
-		if (_nearestSeenObstacle = rightSideObstacles.front().lock();
-			_nearestSeenObstacle)
+		if (nearestSeenObstacle = rightSideObstacles[0];
+			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
 		{
-			_shootDistance = _nearestSeenObstacle->GetX() - _shape.x;
+			_shootDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
 			_bulletOffset = _bulletSize.x;
 		}
 	}
+
+	return nearestSeenObstacle;
 }
 
 void Bot::TickUpdate(const float deltaTime)

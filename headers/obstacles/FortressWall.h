@@ -16,7 +16,6 @@ class BrickWall;
 
 class FortressWall final : public BaseObj, public ITickUpdatable
 {
-	ObjRectangle _rect;
 	GameMode _gameMode{};
 	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -47,8 +46,8 @@ class FortressWall final : public BaseObj, public ITickUpdatable
 	void OnBonusShovelPickup(const std::string& fraction, std::chrono::milliseconds duration);
 
 public:
-	FortressWall(const ObjRectangle& rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, int id, GameMode gameMode);
+	FortressWall(ObjRectangle rect, std::shared_ptr<Window> window, const std::shared_ptr<EventSystem>& events,
+	             std::vector<std::shared_ptr<BaseObj>>* allObjects, boost::uuids::uuid uuid, GameMode gameMode);
 
 	~FortressWall() override;
 
@@ -56,7 +55,7 @@ public:
 	//TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
 
 	[[nodiscard]] std::string GetName() const override;
-	[[nodiscard]] int GetId() const override;
+	[[nodiscard]] boost::uuids::uuid GetUuid() const override;
 
 	void TakeDamage(int damage) override;
 
@@ -79,8 +78,8 @@ public:
 
 	void SetIsPenetrable(bool value) override;
 
-	[[nodiscard]] ObjRectangle GetShape() const override;
-	void SetShape(ObjRectangle shape) override;
+	[[nodiscard]] ObjRectangle GetRect() const override;
+	void SetRect(ObjRectangle rect) override;
 
 	[[nodiscard]] bool GetIsAlive() const override;
 	void SetIsAlive(bool isAlive) override;

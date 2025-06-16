@@ -1,13 +1,18 @@
 #pragma once
 
 #include "../Point.h"
+#include "commands/Command.h"
+#include "commands/CommandBatch.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/serialization/vector.hpp>
+#include <mutex>
+#include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
+//TODO: remove vector.hpp include after refactoring to command pattern
 
 enum Direction : char8_t;
 enum BonusType : char8_t;
@@ -62,26 +67,16 @@ class Server final
 	std::vector<std::shared_ptr<Session>> _sessions;
 	std::string _name;
 
+	std::mutex _batchWriteMutex;
+	std::shared_ptr<CommandBatch> _batch;
+
 	void DoAccept();
 
-	void SendToAll(const std::string& message) const;
-	void SendDispose(const std::string& bulletName) const;
-	void SendKeyState(const std::string& who) const;
-	void SendShot(const std::string& who, Direction dir) const;
-	void SendKeyState(const std::string& state, FPoint newPos, Direction dir) const;
-	void SendPos(const std::string& who, FPoint pos, Direction dir) const;
-	void SendBonusSpawn(const std::string& who, FPoint pos, BonusType type, int id) const;
-	void SendBonusDeSpawn(int id) const;
-	void SendHealth(const std::string& who, int health) const;
 	void OnHelmetActivate(const std::string& who) const;
 	void OnHelmetDeactivate(const std::string& who) const;
 	void OnStar(const std::string& who) const;
 	void OnTank(const std::string& who, const std::string& fraction) const;
 	void OnGrenade(const std::string& who, const std::string& fraction) const;
-	void OnStatisticsChange(const std::string& eventName, const std::string& author, const std::string& fraction) const;
-	void SendFortressDied(int id) const;
-	void SendFortressToBrick(int id) const;
-	void SendFortressToSteel(int id) const;
 
 public:
 	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
@@ -89,10 +84,14 @@ public:
 
 	~Server();
 
-	void Subscribe() const;
-	void SubscribeBonus() const;
+	void SendCommand(const std::shared_ptr<Command>& command) const;
+
+	void Subscribe();
+	void SubscribeBonus();
 	void Unsubscribe() const;
 	void UnsubscribeBonus() const;
+
+	void SendToAll(const std::string& message) const;
 };
 
 // Include the template implementation

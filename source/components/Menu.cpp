@@ -21,9 +21,10 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
 	Subscribe();
 
 	_padding = 25;
-	const auto winSizeX = static_cast<unsigned int>(_window->size.x);
+	const auto windowWidth = static_cast<unsigned int>(_window->size.x);
 	_height = static_cast<int>(_window->size.y) - _padding * 3;
-	_width = winSizeX - 228 - _padding;
+	constexpr int sideBarWidth = 228;
+	_width = windowWidth - sideBarWidth - _padding;
 
 	PregenerateMenuBackground();
 
@@ -45,10 +46,7 @@ Menu::~Menu()
 
 void Menu::Subscribe()
 {
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float /*deltaTime*/)
-	{
-		this->TickUpdate();
-	});
+	_events->AddListener("MenuUpdate", _name, [this]() { this->MenuUpdate(); });
 
 	_events->AddListener("DrawMenu", _name, [this]() { this->DrawMenu(); });
 
@@ -66,13 +64,13 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	_events->RemoveListener("MenuUpdate", _name);
 	_events->RemoveListener("DrawMenu", _name);
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener<const std::string&, const int>("RespawnResourceChangedTo", _name);
 }
 
-void Menu::TickUpdate() const
+void Menu::MenuUpdate() const
 {
 	const auto menuKeysStats = _input->GetKeysStats();
 
@@ -97,9 +95,9 @@ void Menu::TickUpdate() const
 void Menu::PregenerateMenuBackground()
 {
 	_menuBackground = std::make_shared<int[]>(_height * _width);
-	for (unsigned y = 0; y < _height; ++y)
+	for (int y = 0; y < _height; ++y)
 	{
-		for (unsigned x = 0; x < _width; ++x)
+		for (int x = 0; x < _width; ++x)
 		{
 			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency
 			_menuBackground[y * _width + x] = menuColor;
@@ -123,7 +121,7 @@ void Menu::DrawMenu()
 	_pos.x = _padding;
 	_pos.y = _padding + _yOffsetStart;
 
-	DrawBackground();//TODO: sync animation speed background and text with logo
+	DrawBackground();
 	DrawMenuLogo();
 	DrawText();
 }

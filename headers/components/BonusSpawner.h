@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+#include <boost/uuid/uuid.hpp>
 
 enum GameMode : char8_t;
 enum BonusType : char8_t;
@@ -20,7 +21,6 @@ class BonusSpawner final : public ITickUpdatable
 	std::string _name{"BonusSpawner"};
 	GameMode _gameMode{};
 	int _bonusSize{0};
-	int _lastSpawnId{-1};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<Window> _window{nullptr};
@@ -53,8 +53,8 @@ public:
 	~BonusSpawner() override;
 
 	void SpawnRandomBonus(ObjRectangle rect);
-	void SpawnBonus(ObjRectangle rect, int color, BonusType bonusType, int id = -1);
+	void SpawnBonus(ObjRectangle rect, int color, BonusType type, boost::uuids::uuid uuid = {});
 
 	template<typename TBonusType>
-	void SpawnBonus(ObjRectangle rect, int color, int id = -1);
+	void SpawnBonus(ObjRectangle rect, int color, boost::uuids::uuid uuid = {});
 };

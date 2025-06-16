@@ -13,10 +13,10 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_pt
 	  _allObjects{allObjects},
 	  _events{std::move(events)} {}
 
-std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
+std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
-	std::vector<std::weak_ptr<BaseObj>> aoeCollisions{};
+	std::vector<std::shared_ptr<BaseObj>> aoeCollisions{};
 	constexpr int defaultCollisionReserve{5};
 	aoeCollisions.reserve(defaultCollisionReserve);
 	if (bullet == nullptr)
@@ -27,41 +27,49 @@ std::vector<std::weak_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float del
 	const float speed = bullet->GetSpeed();
 	float speedX = speed * deltaTime;
 	float speedY = speed * deltaTime;
-
-	// For some reason I can't make rect1 in if's Rider say I make unused object. So I made more crutches
+	ObjRectangle bulletNextPosRect;
 	if (const Direction dir = bullet->GetDirection();
 		dir == UP)
 	{
-		//36 37 initialize in if
-		speedY *= -1;
-		speedX *= 0;
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX(),
+				.y = bullet->GetY() - speedY,
+				.w = bullet->GetWidth(),
+				.h = bullet->GetHeight() + speedY};
 	}
 	else if (dir == DOWN)
 	{
-		speedY *= 1;
-		speedX *= 0;
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX(),
+				.y = bullet->GetY(),
+				.w = bullet->GetWidth(),
+				.h = bullet->GetHeight() + speedY};
 	}
 	else if (dir == LEFT)
 	{
-		speedX *= -1;
-		speedY *= 0;
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX() - speedX,//TODO: write bullet test that can damage tank from all sides
+				.y = bullet->GetY(),
+				.w = bullet->GetWidth() + speedX,
+				.h = bullet->GetHeight()};
 	}
 	else if (dir == RIGHT)
 	{
-		speedX *= 1;
-		speedY *= 0;
+		bulletNextPosRect = ObjRectangle{
+				.x = bullet->GetX(),
+				.y = bullet->GetY(),
+				.w = bullet->GetWidth() + speedX,
+				.h = bullet->GetHeight()};
 	}
 
-	const auto bulletNextPosRect = ObjRectangle{.x = bullet->GetX() + speedX, .y = bullet->GetY() + speedY,
-	                                            .w = bullet->GetWidth(), .h = bullet->GetHeight()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (bullet == object.get())
+		if (object.get() == nullptr || bullet == object.get())
 		{
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(bulletNextPosRect, object->GetShape()))
+		if (ColliderUtils::IsCollide(bulletNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPenetrable())
 			{
@@ -180,7 +188,7 @@ void MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 }
 
 
-void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std::weak_ptr<BaseObj>>& aoeList) const
+void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std::shared_ptr<BaseObj>>& aoeList) const
 {
 	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
 	if (bullet == nullptr)
@@ -191,19 +199,20 @@ void MoveLikeBulletBeh::CheckCircleAoE(const FPoint blowCenter, std::vector<std:
 	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageRadius()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (_selfParent == object.get())
+		if (object.get() == nullptr || _selfParent == object.get())
 		{
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(circle, object->GetShape()))
+		if (ColliderUtils::IsCollide(circle, object->GetRect()))
 		{
-			aoeList.emplace_back(std::weak_ptr(object));
+			aoeList.emplace_back(object);
 		}
 	}
 }
 
-void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& objectList) const //TODO: change to shared_ptr
+void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList) const
+//TODO: change to shared_ptr
 {
 	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
 	if (thisBullet == nullptr)
@@ -216,16 +225,14 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::weak_ptr<BaseObj>>& ob
 	{
 		for (const auto& target: objectList)
 		{
-			if (const std::shared_ptr<BaseObj> targetLock = target.lock();
-				targetLock
-				&& !dynamic_cast<WaterTile*>(targetLock.get())
-				// && !dynamic_cast<BushesTile*>(targetLock.get())
-				// && !dynamic_cast<IceTile*>(targetLock.get())
-				&& (targetLock->GetIsDestructible() || thisBullet->GetTier() > 2))
+			if (target && !dynamic_cast<WaterTile*>(target.get())
+			    // && !dynamic_cast<BushesTile*>(targetLock.get())
+			    // && !dynamic_cast<IceTile*>(targetLock.get())
+			    && (target->GetIsDestructible() || thisBullet->GetTier() > 2))
 			{
-				targetLock->TakeDamage(bulletDamage);
-				targetLock->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
-				if (const auto* otherBullet = dynamic_cast<Bullet*>(targetLock.get()))
+				target->TakeDamage(bulletDamage);
+				target->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
+				if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
 				{
 					thisBullet->SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
 				}

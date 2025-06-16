@@ -20,7 +20,6 @@ class BulletPool final
 {
 	std::queue<std::shared_ptr<BaseObj>> _bullets;
 	std::mutex _bulletsMutex;
-	std::atomic<int> _lastId{0};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name;
 	GameMode _gameMode;
@@ -37,10 +36,18 @@ public:
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void SpawnBullet(ObjRectangle rect, int damage, double aoeRadius, int color, int health, Direction dir, float speed,
-	                 std::string author, std::string fraction, int tier);
+	std::shared_ptr<Bullet> CreateNewBullet(ObjRectangle rect, int damage, double aoeRadius, int color, int health,
+	                                        Direction dir, float speed, std::string author, std::string fraction,
+	                                        int tier);
+
+	std::shared_ptr<BaseObj> SpawnBullet(ObjRectangle rect, int damage, double aoeRadius, int color, int health,
+	                                     Direction dir, float speed, std::string author, std::string fraction,
+	                                     int tier);
 
 	void ReturnBullet(BaseObj* bullet);
 
 	void Clear();
+
+	static std::string GetCurrentTimeString();
+
 };

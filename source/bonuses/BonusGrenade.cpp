@@ -3,7 +3,7 @@
 
 BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> window,
                            std::shared_ptr<EventSystem> events, const std::chrono::milliseconds duration,
-                           const std::chrono::milliseconds lifeTime, const int color, const int id,
+                           const std::chrono::milliseconds lifeTime, const int color, const boost::uuids::uuid uuid,
                            const GameMode gameMode)
 	: Bonus{rect,
 	        std::move(window),
@@ -12,7 +12,7 @@ BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<Window> win
 	        lifeTime,
 	        color,
 	        "BonusGrenade",
-	        id,
+	        uuid,
 	        gameMode,
 	        Grenade} {}
 

@@ -7,7 +7,7 @@ enum GameMode : char8_t;
 class EventSystem;
 
 class GameStatistics final
-{
+{//TODO: fix desync in statistics
 	std::string _name;
 	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -43,29 +43,32 @@ class GameStatistics final
 	int _steelWallDiedByPlayerOne{0};
 	int _steelWallDiedByPlayerTwo{0};
 
-public:
-	explicit GameStatistics(std::shared_ptr<EventSystem> events);
-
-	~GameStatistics();
-
 	void Subscribe();
 	void SubscribeHost();
 	void SubscribeAsClient();
-	void ClientGateway(const std::string& type, const std::string& author, const std::string& fraction);
+	void OnGameModeChangedTo(GameMode newGameMode);
+	void OnClientStatisticsChange(const std::string& type, const std::string& author, const std::string& fraction);
 
 	void Unsubscribe() const;
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 
-	void BulletHit(const std::string& author, const std::string& fraction);
-	void EnemyHit(const std::string& author, const std::string& fraction);
-	void PlayerOneHit(const std::string& author, const std::string& fraction);
-	void PlayerTwoHit(const std::string& author, const std::string& fraction);
-	void EnemyDied(const std::string& author, const std::string& fraction);
-	void PlayerOneDied(const std::string& author, const std::string& fraction);
-	void PlayerTwoDied(const std::string& author, const std::string& fraction);
-	void BrickWallDied(const std::string& author, const std::string& fraction);
-	void SteelWallDied(const std::string& author, const std::string& fraction);
+	void OnBulletHit(const std::string& author, const std::string& fraction);
+	void OnEnemyHit(const std::string& author, const std::string& fraction);
+	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
+	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
+	void OnTankHit(const std::string& whoHit, const std::string& author, const std::string& fraction);
+	void OnEnemyDied(const std::string& author, const std::string& fraction);
+	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
+	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
+	void OnTankDied(const std::string& whoDied, const std::string& author, const std::string& fraction);
+	void OnBrickWallDied(const std::string& author, const std::string& fraction);
+	void OnSteelWallDied(const std::string& author, const std::string& fraction);
+
+public:
+	explicit GameStatistics(std::shared_ptr<EventSystem> events);
+
+	~GameStatistics();
 
 	void Reset();
 

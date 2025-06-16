@@ -9,8 +9,8 @@ class EventSystem;
 class SteelWall final : public Obstacle
 {
 public:
-	SteelWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events, int id,
-	          GameMode gameMode);
+	SteelWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+	          boost::uuids::uuid uuid, GameMode gameMode);
 
 	~SteelWall() override = default;
 

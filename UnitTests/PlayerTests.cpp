@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 
 #include <memory>
+#include <boost/uuid/random_generator.hpp>
 
 //TODO: write replication tests, server to client events and client to server
 class PlayerTest : public testing::Test
@@ -34,6 +35,7 @@ protected:
 	std::string _name = "Player1";
 	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";
+	boost::uuids::uuid _uuid{};
 
 	void SetUp() override
 	{
@@ -48,7 +50,7 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), yellow, _tankHealth, true, 1, _name, _fraction};
+		BaseObjProperty baseObjProperty{std::move(rect), yellow, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 
 		_allObjects.reserve(4);
@@ -487,7 +489,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		constexpr int green = 0x408000;
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), green, _tankHealth, true, 2, _name, _fraction};
+		BaseObjProperty baseObjProperty{std::move(rect), green, _tankHealth, true, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
 		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2)));
 
@@ -519,7 +521,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 		_allObjects.emplace_back(
 				std::make_shared<BrickWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						0, _gameMode));
+						_uuid, _gameMode));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -543,7 +545,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 		_allObjects.emplace_back(
 				std::make_shared<SteelWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						0, _gameMode));
+						_uuid, _gameMode));
 
 		//moveDown player should failure, because below we have brickWall obstacle
 		const FPoint startPos = player->GetPos();
@@ -567,7 +569,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						0, _gameMode));
+						_uuid, _gameMode));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
@@ -594,7 +596,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _window, _events,
-						&_allObjects, 0, _gameMode));
+						&_allObjects, _uuid, _gameMode));
 
 		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{

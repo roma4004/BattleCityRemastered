@@ -174,7 +174,9 @@ set(BOOST_SUBMODULES
     libs/type_traits
     libs/utility
     libs/winapi
-    tools/boost_install)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
+    libs/uuid
+    tools/boost_install
+)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     ExternalProject_Add(Boost
@@ -199,9 +201,9 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 #            LOG_INSTALL ON
 
 #            PATCH_COMMAND ./bootstrap.sh gcc
-            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
+            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization,uuid
 #            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
+            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization --with-uuid -j${ThreadAmount} -d+2 stage install
             BUILD_IN_SOURCE 1
             INSTALL_COMMAND ""
             DOWNLOAD_EXTRACT_TIMESTAMP true
@@ -221,7 +223,7 @@ endif()
 
 set(Boost_NO_SYSTEM_PATHS ON)
 set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/libraries/boost_install)
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization)
+find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization uuid)
 if(Boost_FOUND)
     message(STATUS "------------------------------------------------------------")
     message(STATUS "Found Boost ${Boost_VERSION} with libraries: ${Boost_LIBRARIES}")
@@ -264,6 +266,19 @@ add_executable(${PROJECT_NAME}
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
         source/Map.cpp
+        source/network/commands/BonusDeSpawn.cpp
+        source/network/commands/BonusSpawn.cpp
+        source/network/commands/Command.cpp
+        source/network/commands/CommandBatch.cpp
+        source/network/commands/Dispose.cpp
+        source/network/commands/FortressChange.cpp
+        source/network/commands/HealthChange.cpp
+        source/network/commands/KeyStateChange.cpp
+        source/network/commands/ObstacleSpawn.cpp
+        source/network/commands/PositionChange.cpp
+        source/network/commands/RespawnTank.cpp
+        source/network/commands/StatisticsChange.cpp
+        source/network/commands/TankShot.cpp
         source/ObjRectangle.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
@@ -307,6 +322,7 @@ add_executable(${PROJECT_NAME}
         source/pawns/Player.cpp
         source/pawns/Tank.cpp
         source/utils/ColliderUtils.cpp
+        source/utils/Logger.cpp
         source/utils/TimeUtils.cpp
 )
 
@@ -317,10 +333,13 @@ endif()
 # Додаємо тестовий виконуваний файл
 add_executable(unit_tests
     # Підключаємо файли з тестами
-    UnitTests/BonusTests.cpp
+    UnitTests/BonusTestsBasic.cpp
+    UnitTests/BonusTestsEnemy.cpp
     UnitTests/PlayerTests.cpp
-    UnitTests/BulletsTests.cpp
-    UnitTests/StatisticsTests.cpp
+    UnitTests/BulletsTestsBasic.cpp
+    UnitTests/BulletsTestsAdvanced.cpp
+    UnitTests/StatisticsTestsBasic.cpp
+    UnitTests/StatisticsTestsAdvanced.cpp
     UnitTests/RespawnTankTests.cpp
 )
 

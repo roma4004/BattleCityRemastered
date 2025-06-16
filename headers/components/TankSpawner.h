@@ -2,7 +2,9 @@
 
 #include <memory>
 #include <random>
+#include <boost/uuid/uuid.hpp>
 
+enum TankType : char8_t;
 struct ObjRectangle;
 enum GameMode : char8_t;
 struct Window;
@@ -37,6 +39,13 @@ class TankSpawner final
 	bool _coopBotOneNeedRespawn{false};
 	bool _coopBotTwoNeedRespawn{false};
 
+	boost::uuids::uuid _enemyOneUuid;
+	boost::uuids::uuid _enemyTwoUuid;
+	boost::uuids::uuid _enemyThreeUuid;
+	boost::uuids::uuid _enemyFourUuid;
+	boost::uuids::uuid _playerOneUuid;
+	boost::uuids::uuid _playerTwoUuid;
+
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusTank(const std::string& author, const std::string& fraction);
 
@@ -46,18 +55,19 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(int id, float speed, int health);
+	void SpawnEnemy(boost::uuids::uuid uuid, float speed, int health, TankType type);
 	void SetEnemyNeedRespawn();
 
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, int id);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, int id);
-	void RespawnEnemyTanks(int id);
-	void RespawnPlayerTanks(int id);
-	void RespawnCoopTanks(int id);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, boost::uuids::uuid uuid, TankType type);
+	void RespawnEnemyTanks(TankType type, boost::uuids::uuid uuid);
+	void RespawnPlayerTeam(TankType type, boost::uuids::uuid uuid);
 	void SetPlayerNeedRespawn();
+	static std::string GetCurrentTimeString();
 
 	void ResetRespawnStat();
 	void RespawnTanks();
+	void RespawnClient(TankType type, boost::uuids::uuid uuid);
 	void ResetSpawn();
 
 	void IncreaseEnemyRespawnResource();
@@ -68,6 +78,8 @@ class TankSpawner final
 	void DecreasePlayerOneRespawnResource();
 	void DecreasePlayerTwoRespawnResource();
 	void OnTankSpawn(const std::string& whoSpawn);
+	void OnEnemyTankDied(const std::string& whoDied);
+	void OnPlayerTankDied(const std::string& whoDied);
 	void OnTankDied(const std::string& whoDied);
 
 public:

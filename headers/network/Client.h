@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../headers/Point.h"
+#include "commands/Command.h"
 
 #include <memory>
 #include <string>
@@ -48,6 +49,20 @@ public:
 	void ReadResponse();
 
 	void SendKeyState(const std::string& state);
+	void OnPositionChange(const std::shared_ptr<Command>& command) const;
+	void OnTankShot(const std::shared_ptr<Command>& command) const;
+	void OnHealthChange(const std::shared_ptr<Command>& command) const;
+	void OnDispose(const std::shared_ptr<Command>& command) const;
+	void OnStatisticsChange(const std::shared_ptr<Command>& command) const;
+	void OnKeyStateChange(const std::shared_ptr<Command>& command) const;
+	void OnFortressChange(const std::shared_ptr<Command>& command) const;
+	void OnBonusSpawn(const std::shared_ptr<Command>& command) const;
+	void OnBonusDeSpawn(const std::shared_ptr<Command>& command) const;
+	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
+	void OnObstacleSpawn(const std::shared_ptr<Command>& command) const;
+	void OnCommandBatch(const std::shared_ptr<Command>& commands) const;
+	void ProcessClientCommand(const std::shared_ptr<Command>& command) const;
+	void ProcessReceivedData(const std::string& archiveData) const;
 
 private:
 	boost::asio::ip::tcp::socket _socket;

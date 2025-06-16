@@ -28,8 +28,8 @@ void Player::Move(const Direction dir, const float deltaTime)
 
 	if (_gameMode == PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const FPoint, const Direction>(
-				"ServerSend_Pos", _name, GetPos(), GetDirection());
+		_events->EmitEvent<const std::string&, const FPoint, const Direction, const boost::uuids::uuid>(
+				"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 	}
 }
 

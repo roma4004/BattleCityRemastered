@@ -1,20 +1,22 @@
 #include "../../headers/obstacles/BrickWall.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/ObstacleType.h"
 
 #include <string>
 
 struct Window;
 
-BrickWall::BrickWall(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-                     const int id, const GameMode gameMode)
-	: Obstacle{{.x = rect.x, .y = rect.y, .w = rect.w - 1, .h = rect.h - 1},
+BrickWall::BrickWall(ObjRectangle rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
+                     const boost::uuids::uuid uuid, const GameMode gameMode)
+	: Obstacle{std::move(rect),
 	           0x924b00,
 	           1,
 	           std::move(window),
-	           {"BrickWall" + std::to_string(id)},//TODO: change name for statistics
+	           {"BrickWall"},
 	           std::move(events),
-	           id,
-	           gameMode}
+	           uuid,
+	           gameMode,
+	           Brick}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -26,9 +28,10 @@ void BrickWall::SendDamageStatistics(const std::string& author, const std::strin
 	if (GetHealth() < 1)
 	{
 		//TODO: generalize who died in {_Name}Died and move method to Obstacle
-		_events->EmitEvent<const std::string&, const std::string&>("BrickWallDied", author, fraction);//for statistic
+		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
 
 		//TODO: move this to onHealthChange
-		_events->EmitEvent<const std::string&, const int>("ServerSend_Health", _name, GetHealth());//for replication
+		_events->EmitEvent<const std::string&, const int, const boost::uuids::uuid>(
+				"ServerSend_Health", _name, GetHealth(), _uuid);//for replication
 	}
 }

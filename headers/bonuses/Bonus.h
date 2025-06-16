@@ -22,7 +22,7 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 protected:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
-	std::chrono::milliseconds _duration{0};
+	std::chrono::milliseconds _effectDuration{0};
 	std::chrono::milliseconds _lifetime{0};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -36,8 +36,8 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events,
-	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name, int id,
-	      GameMode gameMode, BonusType bonusType);
+	      std::chrono::milliseconds duration, std::chrono::milliseconds lifeTime, int color, std::string name,
+	      boost::uuids::uuid uuid, GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 
