@@ -178,6 +178,34 @@ void TextureManager::Draw(const BaseObj* obj) const
 		textureRect = RectToSdlRect(_offset.water);
 		textureRect.x -= water->_animFrame;
 	}
+	else if (name == "BonusHelmet")
+	{
+		textureRect = RectToSdlRect(_offset.bonusHelmet);
+	}
+	else if (name == "BonusTimer")
+	{
+		textureRect = RectToSdlRect(_offset.bonusTimer);
+	}
+	else if (name == "BonusShovel")
+	{
+		textureRect = RectToSdlRect(_offset.bonusShovel);
+	}
+	else if (name == "BonusStar")
+	{
+		textureRect = RectToSdlRect(_offset.bonusStar);
+	}
+	else if (name == "BonusGrenade")
+	{
+		textureRect = RectToSdlRect(_offset.bonusGrenade);
+	}
+	else if (name == "BonusTank")
+	{
+		textureRect = RectToSdlRect(_offset.bonusTank);
+	}
+	/*else if (name == "BonusCaliber") 
+	{
+		textureRect = RectToSdlRect(_offset.bonusCaliber);
+	}*/
 	else
 	{
 		RectDraw(obj);
