@@ -33,7 +33,7 @@ void Enemy::TickUpdate(const float deltaTime)
 		    && !dynamic_cast<WaterTile*>(nearestSeenObstacle.get())
 		    // && !dynamic_cast<BushesTile*>(nearestSeenObstacle.get())
 		    // && !dynamic_cast<IceTile*>(nearestSeenObstacle.get())
-		    && !dynamic_cast<FortressWall*>(nearestSeenObstacle.get())
+		    && !dynamic_cast<FortressWall*>(nearestSeenObstacle.get()) //TODO: check if enemy can shot fortress wall
 		    && !IsAlly(nearestSeenObstacle))
 		{
 			if (_shootDistance > _bulletDamageRadius + _bulletOffset)//TODO: cover this by test

@@ -9,10 +9,9 @@
 #include "../../headers/obstacles/IceTile.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/obstacles/WaterTile.h"
+#include "../../headers/utils/UuidUtils.h"
 #include <chrono>
 #include <memory>
-#include <boost/uuid/nil_generator.hpp>
-#include <boost/uuid/random_generator.hpp>
 
 class BaseObj;
 class EventSystem;
@@ -76,51 +75,43 @@ void ObstacleSpawner::UnsubscribeAsClient() const
 
 void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
 
-void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, const buuid uuid)
+void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
 {
-	buuid spawnUuid;
-	if (uuid != boost::uuids::nil_uuid())
+	if (uuid == UuidUtils::GetNilUuid())
 	{
-		spawnUuid = uuid;
-	}
-	else
-	{
-		static boost::uuids::random_generator uuidObstacleGenerator;
-		spawnUuid = uuidObstacleGenerator();
+		uuid = UuidUtils::GetRandomUuid();
 	}
 
 	switch (type)
 	{
-		case None:
-			break;
 		case Brick:
-			SpawnObstacles<BrickWall>(std::move(rect), spawnUuid);
+			SpawnObstacles<BrickWall>(rect, uuid);
 			break;
 		case Steel:
-			SpawnObstacles<SteelWall>(std::move(rect), spawnUuid);
+			SpawnObstacles<SteelWall>(rect, uuid);
 			break;
 		case Water:
-			SpawnObstacles<WaterTile>(std::move(rect), spawnUuid);
+			SpawnObstacles<WaterTile>(rect, uuid);
 			break;
 		case Fortress:
-			SpawnObstacles<FortressWall>(std::move(rect), spawnUuid);
+			SpawnObstacles<FortressWall>(rect, uuid);
 			break;
 		case Eagle:
-			SpawnObstacles<EagleTile>(std::move(rect), spawnUuid);
+			SpawnObstacles<EagleTile>(rect, uuid);
 			break;
 		case Grass:
-			SpawnObstacles<GrassTile>(std::move(rect), spawnUuid);
+			SpawnObstacles<GrassTile>(rect, uuid);
 			break;
 		case Ice:
-			SpawnObstacles<IceTile>(std::move(rect), spawnUuid);
+			SpawnObstacles<IceTile>(rect, uuid);
 			break;
 		default:
 			break;
 	}
 }
 
-/*void ObstacleSpawner::SpawnRandomObstacle(ObjRectangle rect)
+/*void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
 {
 	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
-	SpawnObstacle(std::move(rect), obstacleType);
+	SpawnObstacle(rect, obstacleType);
 }*/

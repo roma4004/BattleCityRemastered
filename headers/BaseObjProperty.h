@@ -2,7 +2,7 @@
 
 #include "ObjRectangle.h"
 #include <string>
-#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid.hpp> //TODO: use PCH
 
 struct BaseObjProperty
 {

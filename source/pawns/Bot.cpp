@@ -27,25 +27,9 @@ Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, cons
 
 Bot::~Bot() = default;
 
-bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const
-{
-	if (const auto tank = dynamic_cast<Tank*>(obstacle.get()))
-	{
-		return tank->GetFraction() != _fraction;
-	}
+bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const { return obstacle->GetFraction() != _fraction; }
 
-	return false;
-}
-
-bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const
-{
-	if (const auto tank = dynamic_cast<Tank*>(obstacle.get()))
-	{
-		return tank->GetFraction() == _fraction;
-	}
-
-	return false;
-}
+bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const { return obstacle->GetFraction() == _fraction; }
 
 bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 {

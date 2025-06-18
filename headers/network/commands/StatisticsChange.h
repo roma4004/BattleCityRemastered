@@ -27,15 +27,17 @@ public:
 	const std::string& GetFraction() const;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/)
-	{
-		ar & boost::serialization::base_object<Command>(*this);
-		ar & _eventName;
-		ar & _author;
-		ar & _fraction;
-	}
+	void serialize(Archive& ar, const unsigned int /*version*/);
 
 	const char* GetClassNameW() const override;
 };
+
+template<class Archive>
+void StatisticsChange::serialize(Archive& ar, const unsigned int) {
+	ar & boost::serialization::base_object<Command>(*this);
+	ar & _eventName;
+	ar & _author;
+	ar & _fraction;
+}
 
 BOOST_CLASS_EXPORT_KEY(StatisticsChange);

@@ -1,6 +1,7 @@
 #include "../headers/BaseObj.h"
+#include "../headers/BaseObjProperty.h"
 #include "../headers/Point.h"
-#include <boost/uuid/uuid_io.hpp>
+#include "../headers/utils/UuidUtils.h"
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	: _color(baseObjProperty.color),
@@ -10,20 +11,20 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	  _fraction{std::move(baseObjProperty.fraction)},
 	  _rect{std::move(baseObjProperty.rect)}
 {
-	_nameWithUuid = _name + boost::uuids::to_string(_uuid);
+	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
 
 //Deprecated
-BaseObj::BaseObj(ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
+BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
                  std::string fraction)
 	: _color(color),
 	  _health(health),
 	  _uuid{uuid},
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)},
-	  _rect{std::move(rect)}
+	  _rect{rect}
 {
-	_nameWithUuid = _name + boost::uuids::to_string(_uuid);
+	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
 
 BaseObj::~BaseObj() = default;

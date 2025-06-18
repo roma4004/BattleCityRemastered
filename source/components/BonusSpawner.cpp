@@ -11,13 +11,11 @@
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include "../../headers/utils/TimeUtils.h"
+#include "../../headers/utils/UuidUtils.h"
 #include <algorithm>
 #include <chrono>
 #include <limits>
 #include <memory>
-#include <boost/uuid/nil_generator.hpp>
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid.hpp>
 
 class BaseObj;
 class EventSystem;
@@ -81,8 +79,8 @@ void BonusSpawner::SubscribeAsClient()
 			{
 				const auto size = static_cast<float>(_bonusSize);
 				const int color = _distRandColor(_gen);
-				ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
-				SpawnBonus(std::move(rect), color, type, uuid);
+				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
+				SpawnBonus(rect, color, type, uuid);
 			});
 }
 
@@ -105,7 +103,7 @@ void BonusSpawner::UnsubscribeAsClient() const
 
 void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))
+	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn)) //TODO: extract to timer manager
 	{
 		const auto size = static_cast<float>(_bonusSize);
 		const auto x = static_cast<float>(_distSpawnPosX(_gen));
@@ -113,7 +111,7 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			if (object.get() == nullptr)
+			if (object == nullptr)
 			{
 				return false;
 			}
@@ -123,56 +121,48 @@ void BonusSpawner::TickUpdate(const float /*deltaTime*/)
 
 		if (isFreeSpawnSpot)
 		{
-			SpawnRandomBonus(std::move(rect));
+			SpawnRandomBonus(rect);
 		}
 	}
 }
 
-void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const BonusType type, const buuid uuid)
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const BonusType type, buuid uuid)
 {
-	buuid spawnUuid;
-	if (uuid != boost::uuids::nil_uuid())
+	if (uuid == UuidUtils::GetNilUuid())
 	{
-		spawnUuid = uuid;
-	}
-	else
-	{
-		static boost::uuids::random_generator uuidBonusGenerator;//TODO: move to utils for GUID generator
-		spawnUuid = uuidBonusGenerator();
+		uuid = UuidUtils::GetRandomUuid();
 	}
 
 	switch (type)
 	{
-		case None:
-			break;
 		case Timer:
-			SpawnBonus<BonusTimer>(std::move(rect), color, spawnUuid);
+			SpawnBonus<BonusTimer>(rect, color, uuid);
 			break;
 		case Helmet:
-			SpawnBonus<BonusHelmet>(std::move(rect), color, spawnUuid);
+			SpawnBonus<BonusHelmet>(rect, color, uuid);
 			break;
 		case Grenade:
-			SpawnBonus<BonusGrenade>(std::move(rect), color, spawnUuid);
+			SpawnBonus<BonusGrenade>(rect, color, uuid);
 			break;
 		case Tank:
-			SpawnBonus<BonusTank>(std::move(rect), color, spawnUuid);
+			SpawnBonus<BonusTank>(rect, color, uuid);
 			break;
 		case Star:
-			SpawnBonus<BonusStar>(std::move(rect), color, spawnUuid);
+			SpawnBonus<BonusStar>(rect, color, uuid);
 			break;
 		case Shovel:
-			SpawnBonus<BonusShovel>(std::move(rect), color, spawnUuid);
+			SpawnBonus<BonusShovel>(rect, color, uuid);
 			break;
 		default:
 			break;
 	}
 }
 
-void BonusSpawner::SpawnRandomBonus(ObjRectangle rect)
+void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
 	const int color = _distRandColor(_gen);
 	const auto bonusType = static_cast<BonusType>(_distSpawnType(_gen));
-	SpawnBonus(std::move(rect), color, bonusType);
+	SpawnBonus(rect, color, bonusType);
 }
 
 template<typename TBonusType>
@@ -182,7 +172,7 @@ void BonusSpawner::SpawnBonus(ObjRectangle rect, const int color, const buuid uu
 	constexpr milliseconds duration{std::chrono::seconds{15}};
 
 
-	if (auto bonus = std::make_shared<TBonusType>(std::move(rect), _events, duration, lifetime, color, uuid, _gameMode);
+	if (auto bonus = std::make_shared<TBonusType>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 		bonus.get() != nullptr)
 	{
 		_allObjects->emplace_back(bonus);

@@ -2,8 +2,8 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/ObstacleType.h"
 
-WaterTile::WaterTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode)
-	: Obstacle{std::move(rect),
+WaterTile::WaterTile(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode)
+	: Obstacle{rect,
 	           0x1e90ff,
 	           1,
 	           "Water",

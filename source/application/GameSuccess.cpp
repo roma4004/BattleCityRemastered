@@ -1,8 +1,12 @@
 #include "../../headers/application/GameSuccess.h"
 #include "../../headers/Map.h"
+#include "../../headers/application/userInput.h"
+#include "../../headers/components/BonusEffectManager.h"
+#include "../../headers/components/BonusSpawner.h"
 #include "../../headers/components/BulletPool.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/Menu.h"
+#include "../../headers/components/ObstacleSpawner.h"
 #include "../../headers/components/TankSpawner.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/network/ClientHandler.h"
@@ -42,10 +46,10 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> 
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
 	  _textureManager(std::move(textureManager)),
-	  _userInput{windowSize, events},
-	  _tankSpawner{windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager)},
-	  _bonusSpawner{events, &_allObjects, windowSize},
-	  _obstacleSpawner{events, &_allObjects},
+	  _userInput{std::make_shared<UserInput>(windowSize, events)},
+	  _tankSpawner{std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager))},
+	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
+	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _isVsyncOn{isVsyncOn},
 	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
 {
@@ -105,11 +109,11 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
-void GameSuccess::LoadMap()
+void GameSuccess::LoadMap() const
 {
 	//Map creation
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
+	const Map field{_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
 	field.MapCreation(gridOffset);
 }
 
@@ -299,7 +303,7 @@ void GameSuccess::MainLoop()
 	{
 		float deltaTime{0.f};
 		const SDL_Rect fpsRectangle{.x = static_cast<int>(_windowSize.x) - 80, .y = 20, .w = 40, .h = 40};
-		while (!_userInput.IsGameOver())
+		while (!_userInput->IsGameOver())
 		{
 			std::chrono::high_resolution_clock::time_point startFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -311,22 +315,22 @@ void GameSuccess::MainLoop()
 			SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
 			SDL_RenderClear(_renderer.get());
 
-			_userInput.Update();
+			_userInput->Update();
 
 			_events->EmitEvent("MenuUpdate");
 
-			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
+			if (!_userInput->IsPause() && _gameMode != PlayAsClient)
 			{
 				//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 				_events->EmitEvent<const float>("TickUpdate", deltaTime);
 			}
 
-			if (!_userInput.IsPause())
+			if (!_userInput->IsPause())
 			{
 				DisposeDeadObject();
 			}
 
-			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
+			if (!_userInput->IsPause() && _gameMode != PlayAsClient)
 			{
 				_events->EmitEvent("RespawnTanks");
 			}

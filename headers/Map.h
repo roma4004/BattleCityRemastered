@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <memory>
+
 struct UPoint;
 class BaseObj;
 class EventSystem;
@@ -7,10 +9,10 @@ class ObstacleSpawner;
 
 class Map final
 {
-	ObstacleSpawner* _obstacleSpawner;
+	std::shared_ptr<ObstacleSpawner> _obstacleSpawner;
 
 public:
-	explicit Map(ObstacleSpawner* obstacleSpawner);
+	explicit Map(std::shared_ptr<ObstacleSpawner> obstacleSpawner);
 
 	~Map();
 

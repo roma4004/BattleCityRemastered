@@ -30,14 +30,16 @@ public:
 	buuid GetUuid() const;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/)
-	{
-		ar & boost::serialization::base_object<Command>(*this);
-		ar & _tankType;
-		ar & _uuid;
-	}
+	void serialize(Archive& ar, const unsigned int /*version*/);
 
 	const char* GetClassNameW() const override;
 };
+
+template<class Archive>
+void RespawnTank::serialize(Archive& ar, const unsigned int) {
+	ar & boost::serialization::base_object<Command>(*this);
+	ar & _tankType;
+	ar & _uuid;
+}
 
 BOOST_CLASS_EXPORT_KEY(RespawnTank);

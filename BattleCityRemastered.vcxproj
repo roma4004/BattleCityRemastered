@@ -205,6 +205,7 @@
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\Logger.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
+    <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\BaseObj.h" />
@@ -314,6 +315,7 @@
     <ClInclude Include="headers\utils\Logger.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
+    <ClInclude Include="headers\utils\UuidUtils.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

@@ -48,7 +48,7 @@ class BonusSpawner final : public ITickUpdatable
 
 public:
 	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);
+	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be from bonus.h
 
 	~BonusSpawner() override;
 

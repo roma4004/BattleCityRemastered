@@ -2,8 +2,8 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/ObstacleType.h"
 
-BrickWall::BrickWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode)
-	: Obstacle{std::move(rect),
+BrickWall::BrickWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode)
+	: Obstacle{rect,
 	           0x924b00,
 	           1,
 	           {"BrickWall"},

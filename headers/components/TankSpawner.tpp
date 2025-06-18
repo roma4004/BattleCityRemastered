@@ -11,8 +11,7 @@ template<typename TTankType>
 void TankSpawner::RespawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                               const float speed, buuid uuid, BonusEffectProperty effects)
 {
-	BaseObjProperty baseObjProperty{
-			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
+	BaseObjProperty baseObjProperty{rect, color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _allObjects, _events, _windowSize, _gameMode, 1, UP, speed};
 
@@ -52,8 +51,7 @@ inline void TankSpawner::RespawnTank<Player>(const ObjRectangle rect, int color,
 		}
 	}
 
-	BaseObjProperty baseObjProperty{
-			std::move(rect), color, health, true, uuid, std::move(name), std::move(fraction)};
+	BaseObjProperty baseObjProperty{rect, color, health, true, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _allObjects, _events, _windowSize, _gameMode, 1, UP, speed};
 
