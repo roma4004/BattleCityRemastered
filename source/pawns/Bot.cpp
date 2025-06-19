@@ -27,7 +27,10 @@ Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, cons
 
 Bot::~Bot() = default;
 
-bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const { return obstacle->GetFraction() != _fraction; }
+bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const
+{
+	return obstacle->GetFraction() != _fraction && obstacle->GetFraction() != "Neutral";
+}
 
 bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const { return obstacle->GetFraction() == _fraction; }
 
@@ -156,7 +159,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	// }
 
 	std::shared_ptr<BaseObj> nearestSeenObstacle{nullptr};
-	// fire on obstacle if player not found
+	// fire on an obstacle if player not found
 	if (dir == UP && !upSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = upSideObstacles[0];

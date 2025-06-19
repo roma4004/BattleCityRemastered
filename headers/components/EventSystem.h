@@ -5,7 +5,8 @@
 #include <string>
 #include <variant>
 
-namespace boost::uuids {
+namespace boost::uuids
+{
 	struct uuid;
 }
 

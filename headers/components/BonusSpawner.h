@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../interfaces/ITickUpdatable.h"
 #include <chrono>
 #include <memory>
 #include <random>
@@ -14,7 +13,7 @@ struct ObjRectangle;
 class BaseObj;
 class EventSystem;
 
-class BonusSpawner final : public ITickUpdatable
+class BonusSpawner final
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
@@ -44,17 +43,14 @@ class BonusSpawner final : public ITickUpdatable
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 
-	void TickUpdate(float deltaTime) override;
+	void Update();
 
 public:
 	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be from bonus.h
+	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be in bonus.h
 
-	~BonusSpawner() override;
+	~BonusSpawner();
 
 	void SpawnRandomBonus(ObjRectangle rect);
 	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {});
-
-	template<typename TBonusType>
-	void SpawnBonus(ObjRectangle rect, int color, buuid uuid = {});
 };

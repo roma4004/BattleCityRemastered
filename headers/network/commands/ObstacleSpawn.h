@@ -39,7 +39,8 @@ public:
 };
 
 template<class Archive>
-void ObstacleSpawn::serialize(Archive& ar, const unsigned int) {
+void ObstacleSpawn::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _rect;
 	ar & _obstacleType;

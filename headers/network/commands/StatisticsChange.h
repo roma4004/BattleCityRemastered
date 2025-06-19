@@ -33,7 +33,8 @@ public:
 };
 
 template<class Archive>
-void StatisticsChange::serialize(Archive& ar, const unsigned int) {
+void StatisticsChange::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _eventName;
 	ar & _author;

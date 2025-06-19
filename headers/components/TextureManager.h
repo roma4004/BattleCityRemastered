@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "../BaseObj.h"
 #include "../Point.h"
 #include "../enums/TextureOffset.h"
 #include "../interfaces/IDrawable.h"

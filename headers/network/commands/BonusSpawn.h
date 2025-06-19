@@ -38,7 +38,8 @@ public:
 };
 
 template<class Archive>
-void BonusSpawn::serialize(Archive& ar, const unsigned int) {
+void BonusSpawn::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _pos;
 	ar & _bonusType;

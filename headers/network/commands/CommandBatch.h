@@ -26,7 +26,8 @@ public:
 };
 
 template<class Archive>
-void CommandBatch::serialize(Archive& ar, const unsigned int) {
+void CommandBatch::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _commands;
 }

@@ -10,7 +10,6 @@
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/utils/UuidUtils.h"
-#include <chrono>
 #include <memory>
 
 class BaseObj;
@@ -73,8 +72,6 @@ void ObstacleSpawner::UnsubscribeAsClient() const
 			"ClientReceived_ObstacleSpawn", _name);
 }
 
-void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
-
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
 {
 	if (uuid == UuidUtils::GetNilUuid())
@@ -82,31 +79,38 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 		uuid = UuidUtils::GetRandomUuid();
 	}
 
+	std::shared_ptr<BaseObj> obstacle{nullptr};
+
 	switch (type)
 	{
 		case Brick:
-			SpawnObstacles<BrickWall>(rect, uuid);
+			obstacle = std::make_shared<BrickWall>(rect, _events, uuid, _gameMode);
 			break;
 		case Steel:
-			SpawnObstacles<SteelWall>(rect, uuid);
+			obstacle = std::make_shared<SteelWall>(rect, _events, uuid, _gameMode);
 			break;
 		case Water:
-			SpawnObstacles<WaterTile>(rect, uuid);
+			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameMode);
 			break;
 		case Fortress:
-			SpawnObstacles<FortressWall>(rect, uuid);
+			obstacle = std::make_shared<FortressWall>(rect, _events, _allObjects, uuid, _gameMode);
 			break;
 		case Eagle:
-			SpawnObstacles<EagleTile>(rect, uuid);
+			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
 			break;
 		case Grass:
-			SpawnObstacles<GrassTile>(rect, uuid);
+			obstacle = std::make_shared<GrassTile>(rect, _events, uuid, _gameMode);
 			break;
 		case Ice:
-			SpawnObstacles<IceTile>(rect, uuid);
+			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameMode);
 			break;
 		default:
 			break;
+	}
+
+	if (obstacle)
+	{
+		_allObjects->emplace_back(obstacle);
 	}
 }
 

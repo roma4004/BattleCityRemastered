@@ -2,13 +2,15 @@
 
 #include <string>
 
-namespace boost::uuids {
+namespace boost::uuids
+{
 	struct uuid;
 }
 
 class UuidUtils final
 {
 	using buuid = boost::uuids::uuid;
+
 public:
 	[[nodiscard]] static buuid GetRandomUuid();
 	[[nodiscard]] static buuid GetNilUuid();

@@ -1,10 +1,14 @@
 #include "../../headers/components/TankSpawner.h"
-#include "../../headers/BaseObjProperty.h"
 #include "../../headers/components/BonusEffectManager.h"
 #include "../../headers/components/EventSystem.h"
+#include "../../headers/enums/Direction.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/enums/RespawnResource.h"
 #include "../../headers/enums/TankType.h"
+#include "../../headers/input/InputProviderForPlayerOne.h"
+#include "../../headers/input/InputProviderForPlayerOneNet.h"
+#include "../../headers/input/InputProviderForPlayerTwo.h"
+#include "../../headers/input/InputProviderForPlayerTwoNet.h"
 #include "../../headers/pawns/CoopBot.h"
 #include "../../headers/pawns/Enemy.h"
 #include "../../headers/pawns/PawnProperty.h"
@@ -222,8 +226,8 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			constexpr int gray{0x808080};
 			const bool isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive;
 			const bool isHelmetActive = _bonusEffectManager->GetHelmet(type).isActive;
-			RespawnTank<Enemy>(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid),
-			                   {isTimerActive, isHelmetActive});
+			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid),
+			          {isTimerActive, isHelmetActive}, type);
 			return;
 		}
 	}
@@ -261,8 +265,8 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		const int color = type == PLAYER1 ? yellow : green;
 		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
 		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == PLAYER1 ? 4 : 5).isActive;
-		RespawnTank<Player>(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
-		                    {isTimerActive, isHelmetActive});
+		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
+		          {isTimerActive, isHelmetActive}, type);
 	}
 }
 
@@ -298,8 +302,8 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		const int color = type == COOP1 ? yellow : green;
 		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
 		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == COOP1 ? 4 : 5).isActive;
-		RespawnTank<CoopBot>(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
-		                     {isTimerActive, isHelmetActive});
+		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
+		          {isTimerActive, isHelmetActive}, type);
 	}
 }
 
@@ -530,5 +534,57 @@ void TankSpawner::OnTankDied(const buuid& uuid)
 			}
 			break;
 		}
+	}
+}
+
+void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
+                            const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
+{
+	BaseObjProperty baseObjProperty{rect, color, health, true, uuid, std::move(name), std::move(fraction)};
+	PawnProperty pawnProperty{
+			std::move(baseObjProperty), _allObjects, _events, _windowSize, _gameMode, 1, UP, speed};
+
+	std::shared_ptr<BaseObj> tank{nullptr};
+
+	if (type == ENEMY1 || type == ENEMY2 || type == ENEMY3 || type == ENEMY4)
+	{
+		tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, effects);
+	}
+	else if (type == COOP1 || type == COOP2)
+	{
+		tank = std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, effects);
+	}
+	else if (type == PLAYER1 || type == PLAYER2)
+	{
+		std::unique_ptr<IInputProvider> inputProvider;
+		if (name == "Player1")
+		{
+			if (_gameMode == PlayAsClient)
+			{
+				inputProvider = std::make_unique<InputProviderForPlayerOneNet>(_events);
+			}
+			else
+			{
+				inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+			}
+		}
+		else
+		{
+			if (_gameMode == PlayAsClient || _gameMode == PlayAsHost)
+			{
+				inputProvider = std::make_unique<InputProviderForPlayerTwoNet>(_events);
+			}
+			else
+			{
+				inputProvider = std::make_unique<InputProviderForPlayerTwo>(_events);
+			}
+		}
+
+		tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider), effects);
+	}
+
+	if (tank)
+	{
+		_allObjects->emplace_back(tank);
 	}
 }

@@ -24,7 +24,8 @@ public:
 };
 
 template<class Archive>
-void Command::serialize(Archive& ar, const unsigned int) {
+void Command::serialize(Archive& ar, const unsigned int)
+{
 	ar & _type;
 }
 

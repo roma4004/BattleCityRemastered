@@ -35,7 +35,8 @@ public:
 };
 
 template<class Archive>
-void FortressChange::serialize(Archive& ar, const unsigned int) {
+void FortressChange::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _state;
 	ar & _uuid;

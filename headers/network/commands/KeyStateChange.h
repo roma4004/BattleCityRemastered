@@ -29,7 +29,8 @@ public:
 };
 
 template<class Archive>
-void KeyStateChange::serialize(Archive& ar, const unsigned int) {
+void KeyStateChange::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _keyState;
 }

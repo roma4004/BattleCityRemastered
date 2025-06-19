@@ -36,7 +36,8 @@ public:
 };
 
 template<class Archive>
-void RespawnTank::serialize(Archive& ar, const unsigned int) {
+void RespawnTank::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _tankType;
 	ar & _uuid;

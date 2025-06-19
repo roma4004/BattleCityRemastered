@@ -50,7 +50,7 @@ void Pawn::SubscribeAsClient()
 			"ClientReceived_" + _name + "Pos", _nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
 			{
-				if (uuid != this->_uuid) //TODO: check maybe never true
+				if (uuid != this->_uuid)//TODO: check maybe never true
 				{
 					return;
 				}

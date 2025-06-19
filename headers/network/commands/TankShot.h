@@ -38,7 +38,8 @@ public:
 };
 
 template<class Archive>
-void TankShot::serialize(Archive& ar, const unsigned int) {
+void TankShot::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _who;
 	ar & _dir;

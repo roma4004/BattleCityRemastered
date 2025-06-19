@@ -1,4 +1,5 @@
 ﻿#include "../headers/Map.h"
+#include "../headers/ObjRectangle.h"
 #include "../headers/components/ObstacleSpawner.h"
 #include "../headers/enums/ObstacleType.h"
 

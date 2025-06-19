@@ -41,7 +41,8 @@ public:
 };
 
 template<class Archive>
-void PositionChange::serialize(Archive& ar, const unsigned int) {
+void PositionChange::serialize(Archive& ar, const unsigned int)
+{
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _who;
 	ar & _pos;

@@ -1,4 +1,5 @@
 #include "../../headers/application/GameSuccess.h"
+#include "../../headers/BaseObj.h"
 #include "../../headers/Map.h"
 #include "../../headers/application/userInput.h"
 #include "../../headers/components/BonusEffectManager.h"
@@ -30,6 +31,7 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 	return 0;
 }
 
+class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
@@ -47,7 +49,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> 
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
 	  _textureManager(std::move(textureManager)),
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
-	  _tankSpawner{std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager))},
+	  _tankSpawner{
+			  std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool,
+			                                std::move(bonusEffectManager))},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _isVsyncOn{isVsyncOn},
@@ -129,7 +133,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	SetCurrentGameMode(gameMode);
 
-	_events->EmitEvent("Reset"); //TODO: recheck reset for new components
+	_events->EmitEvent("Reset");//TODO: recheck reset for new components
 
 	if (gameMode != PlayAsClient && gameMode != PlayAsHost)
 	{
@@ -257,6 +261,7 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 		}
 	}
 }
+
 void GameSuccess::DisposeDeadObject()
 {
 	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj)

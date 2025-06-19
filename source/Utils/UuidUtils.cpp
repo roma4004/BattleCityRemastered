@@ -5,6 +5,7 @@
 #include <boost/uuid/uuid_io.hpp>
 
 using buuid = boost::uuids::uuid;
+
 buuid UuidUtils::GetRandomUuid()
 {
 	static boost::uuids::random_generator uuidGenerator;
