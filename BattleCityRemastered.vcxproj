@@ -170,6 +170,7 @@
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\behavior\ShootingBeh.cpp" />
     <ClCompile Include="source\bonuses\Bonus.cpp" />
+    <ClCompile Include="source\bonuses\BonusCaliber.cpp" />
     <ClCompile Include="source\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="source\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="source\bonuses\BonusShovel.cpp" />
