@@ -1,11 +1,14 @@
 #pragma once
 
-#include "../BaseObj.h"
 #include <chrono>
 #include <functional>
 #include <string>
 #include <variant>
-#include <boost/uuid/uuid.hpp>
+
+namespace boost::uuids
+{
+	struct uuid;
+}
 
 enum TankType : char8_t;
 enum ObstacleType : char8_t;
@@ -14,6 +17,7 @@ enum Direction : char8_t;
 enum GameMode : char8_t;
 struct FPoint;
 struct ObjRectangle;
+class BaseObj;
 
 template<typename... Args>
 struct Event final

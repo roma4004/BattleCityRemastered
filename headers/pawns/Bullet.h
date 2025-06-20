@@ -26,7 +26,7 @@ class Bullet final : public Pawn
 
 public:
 	explicit Bullet(PawnProperty pawnProperty);
-	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, buuid uuid = {});
+	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author);
 
 	~Bullet() override;
 

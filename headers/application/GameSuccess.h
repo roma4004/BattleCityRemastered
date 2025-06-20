@@ -1,10 +1,6 @@
 #pragma once
 
-#include "UserInput.h"
-#include "../../headers/components/BonusEffectManager.h"
-#include "../../headers/components/BonusSpawner.h"
-#include "../../headers/components/ObstacleSpawner.h"
-#include "../../headers/components/TankSpawner.h"
+#include "../Point.h"
 #include "../interfaces/IGame.h"
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -21,6 +17,12 @@ class Client;
 class EventSystem;
 class GameStatistics;
 class Server;
+class IDrawable;
+class UserInput;
+class TankSpawner;
+class BonusSpawner;
+class ObstacleSpawner;
+class BonusEffectManager;
 
 class GameSuccess final : public IGame
 {
@@ -49,10 +51,10 @@ class GameSuccess final : public IGame
 
 	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
 
-	UserInput _userInput;
-	TankSpawner _tankSpawner;
-	BonusSpawner _bonusSpawner;
-	ObstacleSpawner _obstacleSpawner;
+	std::shared_ptr<UserInput> _userInput;
+	std::shared_ptr<TankSpawner> _tankSpawner;
+	std::shared_ptr<BonusSpawner> _bonusSpawner;
+	std::shared_ptr<ObstacleSpawner> _obstacleSpawner;
 
 	std::random_device _rd;
 
@@ -65,7 +67,7 @@ class GameSuccess final : public IGame
 
 	void Subscribe();
 	void Unsubscribe() const;
-	void LoadMap();
+	void LoadMap() const;
 
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();

@@ -3,7 +3,6 @@
 #include "../../headers/enums/Direction.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/obstacles/FortressWall.h"
-#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/TimeUtils.h"
 #include <algorithm>
@@ -28,13 +27,15 @@ void Enemy::TickUpdate(const float deltaTime)
 	{
 		const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight(GetDirection());
 
-		if (nearestSeenObstacle && nearestSeenObstacle.get() != nullptr
-		    && (nearestSeenObstacle->GetIsDestructible() || _tier > 2)
-		    && !dynamic_cast<WaterTile*>(nearestSeenObstacle.get())
-		    // && !dynamic_cast<BushesTile*>(nearestSeenObstacle.get())
-		    // && !dynamic_cast<IceTile*>(nearestSeenObstacle.get())
-		    && !dynamic_cast<FortressWall*>(nearestSeenObstacle.get())
-		    && !IsAlly(nearestSeenObstacle))
+		if (!nearestSeenObstacle || IsAlly(nearestSeenObstacle))
+		{
+			return;
+		}
+
+		if (const auto obstacle = nearestSeenObstacle.get();
+			obstacle
+			&& (obstacle->GetIsDestructible() || _tier > 2)
+			&& !obstacle->GetIsPenetrable())// skip water, ice, bush(Grass)
 		{
 			if (_shootDistance > _bulletDamageRadius + _bulletOffset)//TODO: cover this by test
 			{

@@ -9,7 +9,7 @@
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
-FortressWall::FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
+FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _gameMode{gameMode},

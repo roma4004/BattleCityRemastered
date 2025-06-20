@@ -50,7 +50,7 @@ void Pawn::SubscribeAsClient()
 			"ClientReceived_" + _name + "Pos", _nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
 			{
-				if (uuid != this->_uuid)
+				if (uuid != this->_uuid)//TODO: check maybe never true
 				{
 					return;
 				}
@@ -96,7 +96,7 @@ void Pawn::SetHealth(const int health)
 {
 	BaseObj::SetHealth(health);
 
-	// if (!GetIsAlive())
+	// if (!GetIsAlive()) //TODO: remove or check if needed
 	// {
 	// 	Unsubscribe();
 	// }
@@ -106,7 +106,7 @@ void Pawn::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
 
-	// if (!GetIsAlive())
+	// if (!GetIsAlive()) //TODO: remove or check if needed
 	// {
 	// 	Unsubscribe();
 	// }

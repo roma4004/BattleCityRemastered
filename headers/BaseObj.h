@@ -1,13 +1,14 @@
 #pragma once
 
-#include "BaseObjProperty.h"
 #include "ObjRectangle.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
+#include <boost/uuid/uuid.hpp>
 
 struct FPoint;
+struct BaseObjProperty;
 
 class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics, public IHaveFraction
 {
@@ -22,7 +23,7 @@ protected:
 	std::string _name;
 	std::string _nameWithUuid;
 	std::string _fraction;
-	ObjRectangle _rect{};
+	ObjRectangle _rect;
 
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);

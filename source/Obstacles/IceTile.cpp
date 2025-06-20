@@ -2,8 +2,9 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/ObstacleType.h"
 
-IceTile::IceTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode)
-	: Obstacle{std::move(rect),
+IceTile::IceTile(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+                 const GameMode gameMode)
+	: Obstacle{rect,
 	           0x1e90ff,
 	           1,
 	           "Ice",

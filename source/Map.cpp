@@ -1,8 +1,9 @@
 ﻿#include "../headers/Map.h"
+#include "../headers/ObjRectangle.h"
 #include "../headers/components/ObstacleSpawner.h"
 #include "../headers/enums/ObstacleType.h"
 
-Map::Map(ObstacleSpawner* obstacleSpawner) : _obstacleSpawner{obstacleSpawner} {}
+Map::Map(std::shared_ptr<ObstacleSpawner> obstacleSpawner) : _obstacleSpawner{std::move(obstacleSpawner)} {}
 
 Map::~Map() {}
 
@@ -21,27 +22,27 @@ void Map::MapCreation(const float gridSize) const
 				case 0:
 					break;
 				case 1:
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Brick);
+					_obstacleSpawner->SpawnObstacle(rect, Brick);
 					break;
 				case 2:
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Steel);
+					_obstacleSpawner->SpawnObstacle(rect, Steel);
 					break;
 				case 3:
 					rect.w += gridSize * 3;
 					rect.h += gridSize * 3;
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Eagle);
+					_obstacleSpawner->SpawnObstacle(rect, Eagle);
 					break;
 				case 4:
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Fortress);
+					_obstacleSpawner->SpawnObstacle(rect, Fortress);
 					break;
 				case 5:
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Water);
+					_obstacleSpawner->SpawnObstacle(rect, Water);
 					break;
 				case 6:
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Grass);
+					_obstacleSpawner->SpawnObstacle(rect, Grass);
 					break;
 				case 7:
-					_obstacleSpawner->SpawnObstacle(std::move(rect), Ice);
+					_obstacleSpawner->SpawnObstacle(rect, Ice);
 					break;
 				default:
 					break;

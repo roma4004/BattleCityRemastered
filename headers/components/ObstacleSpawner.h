@@ -1,12 +1,11 @@
 #pragma once
 
-#include "../interfaces/ITickUpdatable.h"
-#include "../obstacles/FortressWall.h"
 #include <memory>
 #include <random>
 #include <vector>
 #include <boost/uuid/uuid.hpp>
 
+enum GameMode : char8_t;
 enum ObstacleType : char8_t;
 enum BonusType : char8_t;
 struct UPoint;
@@ -14,7 +13,7 @@ struct ObjRectangle;
 class BaseObj;
 class EventSystem;
 
-class ObstacleSpawner final : public ITickUpdatable
+class ObstacleSpawner final
 {
 	using buuid = boost::uuids::uuid;
 
@@ -34,21 +33,13 @@ class ObstacleSpawner final : public ITickUpdatable
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void TickUpdate(float deltaTime) override;
-
 	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:
 	ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	                /*, int sideBarWidth = 175*/ int obstacleSize = 36);
 
-	~ObstacleSpawner() override;
+	~ObstacleSpawner();
 
 	void SpawnObstacle(ObjRectangle rect, ObstacleType type, buuid uuid = {});
-
-	template<typename TObstaclesType>
-	void SpawnObstacles(const ObjRectangle& rect, buuid uuid = {});
 };
-
-// Include the template implementation
-#include "ObstacleSpawner.tpp"

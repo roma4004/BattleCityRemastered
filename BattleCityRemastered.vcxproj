@@ -205,6 +205,7 @@
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\Logger.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
+    <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\BaseObj.h" />
@@ -220,9 +221,7 @@
     <ClInclude Include="headers\components\LineOfSight.h" />
     <ClInclude Include="headers\components\Menu.h" />
     <ClInclude Include="headers\components\ObstacleSpawner.h" />
-    <ClInclude Include="headers\components\ObstacleSpawner.tpp" />
     <ClInclude Include="headers\components\TankSpawner.h" />
-    <ClInclude Include="headers\components\TankSpawner.tpp" />
     <ClInclude Include="headers\components\TextureManager.h" />
     <ClInclude Include="headers\enums\RespawnResource.h" />
     <ClInclude Include="headers\enums\BonusType.h" />
@@ -314,6 +313,7 @@
     <ClInclude Include="headers\utils\Logger.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
+    <ClInclude Include="headers\utils\UuidUtils.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

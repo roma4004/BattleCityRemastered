@@ -22,11 +22,14 @@ public:
 	const char* GetClassNameW() const override;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/)
-	{
-		ar & boost::serialization::base_object<Command>(*this);
-		ar & _commands;
-	}
+	void serialize(Archive& ar, const unsigned int /*version*/);
 };
+
+template<class Archive>
+void CommandBatch::serialize(Archive& ar, const unsigned int)
+{
+	ar & boost::serialization::base_object<Command>(*this);
+	ar & _commands;
+}
 
 BOOST_CLASS_EXPORT_KEY(CommandBatch);

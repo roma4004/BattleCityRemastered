@@ -1,5 +1,6 @@
 #include "../../headers/application/ConfigSuccess.h"
 #include "../../headers/application/GameSuccess.h"
+#include "../../headers/components/BonusEffectManager.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/components/GameStatistics.h"
 #include "../../headers/components/Menu.h"

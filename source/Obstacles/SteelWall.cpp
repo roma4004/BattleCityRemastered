@@ -2,8 +2,9 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/ObstacleType.h"
 
-SteelWall::SteelWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode)
-	: Obstacle{std::move(rect),
+SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+                     const GameMode gameMode)
+	: Obstacle{rect,
 	           0xaaaaaa,
 	           1,
 	           "SteelWall",

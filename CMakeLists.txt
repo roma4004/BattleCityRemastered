@@ -326,6 +326,7 @@ set(SOURCE_FILES
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/utils/TimeUtils.cpp
+        source/utils/UuidUtils.cpp
 )
 
 set(SOURCE_FILES_FOR_UNIT_TESTS
@@ -347,6 +348,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/Utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/Utils/TimeUtils.cpp
+        source/Utils/UuidUtils.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp

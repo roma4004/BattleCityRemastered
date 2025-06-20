@@ -16,12 +16,12 @@
 #include "../../headers/network/commands/RespawnTank.h"
 #include "../../headers/network/commands/StatisticsChange.h"
 #include "../../headers/network/commands/TankShot.h"
+#include "../../headers/utils/UuidUtils.h"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 // std::ofstream error_log("error_log_client.txt");
 
@@ -117,7 +117,7 @@ void Client::Unsubscribe() const
 void Client::ReadResponse()
 {
 	// auto self(shared_from_this());
-	auto lambda = [this, events = _events](const boost::system::error_code& ec, const std::size_t length)
+	auto lambda = [this/*, events = _events*/](const boost::system::error_code& ec, const std::size_t length)
 	{
 		if (ec)
 		{
@@ -225,7 +225,7 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
 		_events->EmitEvent<const int>(
-				"ClientReceived_" + cmd->GetWho() + boost::uuids::to_string(cmd->GetUuid()) + "Health",
+				"ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
 				cmd->GetHealth());
 	}
 }

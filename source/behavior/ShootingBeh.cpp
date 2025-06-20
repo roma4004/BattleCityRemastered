@@ -136,7 +136,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		              tier, uuid);
 		// std::cout << "[" << "bullet->Reset" << "] "
 		// 			<< ", name=" << bullet->GetName()
-		// 			<< ", UUID=" << boost::uuids::to_string(bullet->GetUuid())
+		// 			<< ", UUID=" << UuidUtils::ToStringUuid(bullet->GetUuid())
 		// 			<< std::endl;
 	}
 

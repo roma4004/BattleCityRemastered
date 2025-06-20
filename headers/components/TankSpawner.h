@@ -1,22 +1,23 @@
 #pragma once
 
-#include "../ObjRectangle.h"
+#include "../Point.h"
 #include "../enums/GameMode.h"
 #include "../enums/RespawnResource.h"
-#include "../pawns/PawnProperty.h"
-#include "../pawns/Player.h"
 #include <memory>
 #include <random>
 #include <boost/uuid/uuid.hpp>
 
-struct BonusEffectProperty;
-class BonusEffectManager;
+struct PawnProperty;
 enum TankType : char8_t;
 enum GameMode : char8_t;
 struct SDL_Renderer;
+struct ObjRectangle;
+struct BonusEffectProperty;
 class BaseObj;
 class BulletPool;
 class EventSystem;
+class BonusEffectManager;
+class IInputProvider;
 
 class TankSpawner final
 {
@@ -62,9 +63,10 @@ class TankSpawner final
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
 
-	template<typename TTankType>
-	void RespawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
-	                 buuid uuid, BonusEffectProperty effects);
+	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
+	               buuid uuid, BonusEffectProperty effects, TankType type);
+	std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
+	std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty, BonusEffectProperty effects);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid);
 	void RespawnPlayerTeam(TankType type, buuid uuid);
@@ -113,6 +115,3 @@ public:
 	//TODO: FOR UNIT TESTING ONLY
 	void SetSlotNeedRespawn(int slotIndex);
 };
-
-// Include the template implementation
-#include "TankSpawner.tpp"

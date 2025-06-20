@@ -4,17 +4,13 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
 #include "../../headers/pawns/PawnProperty.h"
+#include "../../headers/utils/UuidUtils.h"
 // #include <iostream>
 #include <string>
-#include <boost/uuid/nil_generator.hpp>
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
-Bullet::Bullet(PawnProperty pawnProperty)
-	: Bullet(std::move(pawnProperty), 0, {18.f}, "", boost::uuids::nil_uuid()) {}
+Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, {18.f}, "") {}
 
-Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
-               const buuid uuid)
+Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author)
 	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)},
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
@@ -24,16 +20,11 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	if (uuid == boost::uuids::nil_uuid())
+	if (_uuid == UuidUtils::GetNilUuid())
 	{
-		static boost::uuids::random_generator uuidGenerator;
-		_uuid = uuidGenerator();
+		_uuid = UuidUtils::GetRandomUuid();
 	}
-	else
-	{
-		_uuid = uuid;
-	}
-	_uuidStr = boost::uuids::to_string(_uuid);
+	_uuidStr = UuidUtils::GetStringUuid(_uuid);
 
 	_name = "Bullet";
 
@@ -136,10 +127,10 @@ void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeR
 	_speed = speed;
 	_tier = tier;
 
-	if (uuid != boost::uuids::nil_uuid())
+	if (uuid != UuidUtils::GetNilUuid())
 	{
 		_uuid = uuid;
-		_uuidStr = boost::uuids::to_string(_uuid);
+		_uuidStr = UuidUtils::GetStringUuid(_uuid);
 	}
 	_nameWithUuid = _name + _uuidStr;
 

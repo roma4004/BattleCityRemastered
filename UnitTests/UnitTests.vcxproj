@@ -79,6 +79,7 @@
     <ClCompile Include="..\source\pawns\Pawn.cpp" />
     <ClCompile Include="..\source\pawns\Player.cpp" />
     <ClCompile Include="..\source\pawns\Tank.cpp" />
+    <ClCompile Include="..\source\utils\UuidUtils.cpp" />
     <ClCompile Include="BonusTestsBasic.cpp" />
     <ClCompile Include="BonusTestsEnemy.cpp" />
     <ClCompile Include="BulletsTestsAdvanced.cpp" />

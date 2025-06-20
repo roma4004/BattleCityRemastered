@@ -20,10 +20,13 @@ public:
 	virtual const char* GetClassNameW() const = 0;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/)
-	{
-		ar & _type;
-	}
+	void serialize(Archive& ar, const unsigned int /*version*/);
 };
+
+template<class Archive>
+void Command::serialize(Archive& ar, const unsigned int)
+{
+	ar & _type;
+}
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Command);

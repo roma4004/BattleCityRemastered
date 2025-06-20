@@ -9,10 +9,8 @@
 #include "../../headers/obstacles/IceTile.h"
 #include "../../headers/obstacles/SteelWall.h"
 #include "../../headers/obstacles/WaterTile.h"
-#include <chrono>
+#include "../../headers/utils/UuidUtils.h"
 #include <memory>
-#include <boost/uuid/nil_generator.hpp>
-#include <boost/uuid/random_generator.hpp>
 
 class BaseObj;
 class EventSystem;
@@ -74,53 +72,50 @@ void ObstacleSpawner::UnsubscribeAsClient() const
 			"ClientReceived_ObstacleSpawn", _name);
 }
 
-void ObstacleSpawner::TickUpdate(const float /*deltaTime*/) {}
-
-void ObstacleSpawner::SpawnObstacle(ObjRectangle rect, const ObstacleType type, const buuid uuid)
+void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
 {
-	buuid spawnUuid;
-	if (uuid != boost::uuids::nil_uuid())
+	if (uuid == UuidUtils::GetNilUuid())
 	{
-		spawnUuid = uuid;
+		uuid = UuidUtils::GetRandomUuid();
 	}
-	else
-	{
-		static boost::uuids::random_generator uuidObstacleGenerator;
-		spawnUuid = uuidObstacleGenerator();
-	}
+
+	std::shared_ptr<BaseObj> obstacle{nullptr};
 
 	switch (type)
 	{
-		case None:
-			break;
 		case Brick:
-			SpawnObstacles<BrickWall>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<BrickWall>(rect, _events, uuid, _gameMode);
 			break;
 		case Steel:
-			SpawnObstacles<SteelWall>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<SteelWall>(rect, _events, uuid, _gameMode);
 			break;
 		case Water:
-			SpawnObstacles<WaterTile>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameMode);
 			break;
 		case Fortress:
-			SpawnObstacles<FortressWall>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<FortressWall>(rect, _events, _allObjects, uuid, _gameMode);
 			break;
 		case Eagle:
-			SpawnObstacles<EagleTile>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
 			break;
 		case Grass:
-			SpawnObstacles<GrassTile>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<GrassTile>(rect, _events, uuid, _gameMode);
 			break;
 		case Ice:
-			SpawnObstacles<IceTile>(std::move(rect), spawnUuid);
+			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameMode);
 			break;
 		default:
 			break;
 	}
+
+	if (obstacle)
+	{
+		_allObjects->emplace_back(obstacle);
+	}
 }
 
-/*void ObstacleSpawner::SpawnRandomObstacle(ObjRectangle rect)
+/*void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
 {
 	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
-	SpawnObstacle(std::move(rect), obstacleType);
+	SpawnObstacle(rect, obstacleType);
 }*/
