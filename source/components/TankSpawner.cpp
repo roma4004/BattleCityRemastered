@@ -333,7 +333,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 	    || _gameMode == TwoPlayers
 	    || _gameMode == PlayAsHost
 	    || _gameMode == PlayAsClient
-	    || (_gameMode == CoopWithBot && isFirst))
+	    || _gameMode == CoopWithBot)
 	{
 		SpawnPlayer(rect, speed, health, uuid, type);
 	}
@@ -537,6 +537,26 @@ void TankSpawner::OnTankDied(const buuid& uuid)
 	}
 }
 
+std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type)
+{
+	if (type == PLAYER1)
+	{
+		if (_gameMode == PlayAsClient)
+		{
+			return std::make_unique<InputProviderForPlayerOneNet>(_events);
+		}
+
+		return std::make_unique<InputProviderForPlayerOne>(_events);
+	}
+
+	if (_gameMode == PlayAsClient || _gameMode == PlayAsHost)
+	{
+		return std::make_unique<InputProviderForPlayerTwoNet>(_events);
+	}
+
+	return std::make_unique<InputProviderForPlayerTwo>(_events);
+}
+
 void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                             const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
 {
@@ -554,33 +574,10 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std:
 	{
 		tank = std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, effects);
 	}
-	else if (type == PLAYER1 || type == PLAYER2)
+	else
 	{
-		std::unique_ptr<IInputProvider> inputProvider;
-		if (name == "Player1")
-		{
-			if (_gameMode == PlayAsClient)
-			{
-				inputProvider = std::make_unique<InputProviderForPlayerOneNet>(_events);
-			}
-			else
-			{
-				inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-			}
-		}
-		else
-		{
-			if (_gameMode == PlayAsClient || _gameMode == PlayAsHost)
-			{
-				inputProvider = std::make_unique<InputProviderForPlayerTwoNet>(_events);
-			}
-			else
-			{
-				inputProvider = std::make_unique<InputProviderForPlayerTwo>(_events);
-			}
-		}
-
-		tank = std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider), effects);
+		tank = std::make_shared<Player>(
+				std::move(pawnProperty), _bulletPool, std::move(GetInputProvider(type)), effects);
 	}
 
 	if (tank)

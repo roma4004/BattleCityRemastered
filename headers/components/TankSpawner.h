@@ -16,6 +16,7 @@ class BaseObj;
 class BulletPool;
 class EventSystem;
 class BonusEffectManager;
+class IInputProvider;
 
 class TankSpawner final
 {
@@ -63,6 +64,7 @@ class TankSpawner final
 
 	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
 	               buuid uuid, BonusEffectProperty effects, TankType type);
+	std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid);
 	void RespawnPlayerTeam(TankType type, buuid uuid);
