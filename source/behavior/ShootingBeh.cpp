@@ -104,7 +104,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 
 using buuid = boost::uuids::uuid;
 
-buuid ShootingBeh::Shot(const buuid uuid)
+buuid ShootingBeh:: Shot(const buuid uuid)
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)

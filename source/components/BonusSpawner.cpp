@@ -139,6 +139,9 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 
 	std::shared_ptr<Bonus> bonus{nullptr};
 
+	bonus = std::make_shared<BonusCaliber>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+	
+	/*
 	switch (type)
 	{
 		case Timer:
@@ -164,7 +167,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 			break;
 		default:
 			break;
-	}
+	}*/
 
 	if (bonus)
 	{

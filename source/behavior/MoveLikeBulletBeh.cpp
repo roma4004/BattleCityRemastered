@@ -1,6 +1,8 @@
 #include "../../headers/behavior/MoveLikeBulletBeh.h"
 #include "../../headers/Circle.h"
 #include "../../headers/enums/Direction.h"
+#include "../../headers/obstacles/GrassTile.h"
+#include "../../headers/obstacles/IceTile.h"
 #include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/pawns/Bullet.h"
 #include "../../headers/utils/ColliderUtils.h"
@@ -244,8 +246,8 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& 
 		for (const auto& target: objectList)
 		{
 			if (target && !dynamic_cast<WaterTile*>(target.get())
-			    // && !dynamic_cast<BushesTile*>(targetLock.get())
-			    // && !dynamic_cast<IceTile*>(targetLock.get())
+			    && !dynamic_cast<GrassTile*>(target.get())
+			    && !dynamic_cast<IceTile*>(target.get())
 			    && (target->GetIsDestructible() || thisBullet->GetTier() > 2))
 			{
 				target->TakeDamage(bulletDamage);

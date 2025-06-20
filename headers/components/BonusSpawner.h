@@ -32,7 +32,7 @@ class BonusSpawner final
 	std::uniform_int_distribution<> _distSpawnType;
 	std::uniform_int_distribution<> _distRandColor;
 
-	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}}; // Bonus spawn time
+	milliseconds _cooldownBonusSpawn{std::chrono::seconds{6}}; // Bonus spawn time
 	std::chrono::system_clock::time_point _lastTimeSpawn;
 
 	void Subscribe();
