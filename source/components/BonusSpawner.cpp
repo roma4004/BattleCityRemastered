@@ -1,5 +1,6 @@
 #include "../../headers/components/BonusSpawner.h"
 #include "../../headers/Point.h"
+#include "../../headers/bonuses/BonusCaliber.h"
 #include "../../headers/bonuses/BonusGrenade.h"
 #include "../../headers/bonuses/BonusHelmet.h"
 #include "../../headers/bonuses/BonusShovel.h"
@@ -157,6 +158,9 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 			break;
 		case Shovel:
 			bonus = std::make_shared<BonusShovel>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			break;
+		case Caliber:
+			bonus = std::make_shared<BonusCaliber>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
 		default:
 			break;

@@ -151,6 +151,10 @@ void Client::ReadResponse()
 			// {
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
+			//else if (data.eventName == "OnCaliber")
+			// {
+			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
+			// }
 			// else if (data.eventName == "OnTank")
 			// {
 			// 	events->EmitEvent<const std::string&, const std::string&>(

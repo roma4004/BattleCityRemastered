@@ -211,6 +211,7 @@
     <ClInclude Include="headers\BaseObj.h" />
     <ClInclude Include="headers\BaseObjProperty.h" />
     <ClInclude Include="headers\BonusEffectProperty.h" />
+    <ClInclude Include="headers\bonuses\BonusCaliber.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\components\BonusEffectManager.h" />
     <ClInclude Include="headers\components\BonusSpawner.h" />

@@ -10,6 +10,7 @@ enum BonusType : char8_t
 	Tank,
 	Star,
 	Shovel,
+	Caliber,
 
 	lastId
 };

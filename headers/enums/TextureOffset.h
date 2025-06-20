@@ -63,6 +63,7 @@ struct TextureOffset
 	ObjRectangle bonusGrenade{320, 112, 16, 16};
 	ObjRectangle bonusTank{336, 112, 16, 16};
 	ObjRectangle bonusCaliber{352, 112, 16, 16};
+	ObjRectangle bonusShip{352, 80, 16, 16}; //TODO implement bonus (make logic\code)
 	
 	
 };

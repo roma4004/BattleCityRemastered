@@ -339,6 +339,10 @@ void Server::SubscribeBonus()
 	// {
 	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
 	// });
+	// _events->AddListener<const std::string&>("ServerSend_OnCaliber", _name, [this](const std::string& who)
+	// {
+	// 	this->OnCaliber(who);//TODO: refactor to SendCommand(std::make_shared<
+	// });
 	// _events->AddListener<const std::string&, const std::string&>(
 	// 		"ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
 	// 		{
@@ -378,6 +382,7 @@ void Server::UnsubscribeBonus() const
 	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener<const std::string&>("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener<const std::string&>("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener<const std::string&, const std::string&>("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
 }
 
@@ -460,6 +465,19 @@ void Server::OnStar(const std::string& who) const
 	ServerData data;
 	data.who = who;
 	data.eventName = "OnStar";
+
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << data;
+
+	SendToAll(archiveStream.str() + "\n\n");
+}
+
+void Server::OnCaliber(const std::string& who) const
+{
+	ServerData data;
+	data.who = who;
+	data.eventName = "OnCaliber";
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);

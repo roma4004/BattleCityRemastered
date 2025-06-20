@@ -68,6 +68,11 @@ void Tank::SubscribeAsClient()
 	{
 		this->OnBonusStar(_name, _fraction);
 	});
+	
+	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _name, [this]()
+	{
+		this->OnBonusCaliber(_name, _fraction);
+	});
 }
 
 void Tank::SubscribeBonus()
@@ -105,6 +110,12 @@ void Tank::SubscribeBonus()
 			{
 				this->OnBonusStar(author, fraction);
 			});
+
+	_events->AddListener<const std::string&, const std::string&>(
+			"BonusCaliber", _name, [this](const std::string& author, const std::string& fraction)
+			{
+				this->OnBonusCaliber(author, fraction);
+			});
 }
 
 void Tank::Unsubscribe() const
@@ -126,6 +137,7 @@ void Tank::UnsubscribeAsClient() const
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
 	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _name);
 }
 
 void Tank::UnsubscribeBonus() const
@@ -134,6 +146,7 @@ void Tank::UnsubscribeBonus() const
 	_events->RemoveListener<const std::string&, const bool>("BonusHelmetStatusChange", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusCaliber", _name);
 }
 
 void Tank::TakeDamage(const int damage)
@@ -231,6 +244,31 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 		if (_gameMode == PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&>("ServerSend_OnStar", author);
+		}
+	}
+}
+
+void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction)
+{
+	if (fraction == _fraction && author == _name)
+	{
+		SetHealth(GetHealth() + 50);
+		if (_tier > 3)
+		{
+			return;
+		}
+
+		_tier += 3;
+
+		_speed *= 1.30f;
+		_bulletSpeed *= 1.30f;
+		_bulletDamage += 45;
+		_fireCooldown -= milliseconds{450};
+		_bulletDamageRadius *= 1.75f;
+
+		if (_gameMode == PlayAsHost)
+		{
+			_events->EmitEvent<const std::string&>("ServerSend_OnCaliber", author);
 		}
 	}
 }

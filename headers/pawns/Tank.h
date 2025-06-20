@@ -34,6 +34,7 @@ class Tank : public Pawn, public IHealthBar
 
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusStar(const std::string& author, const std::string& fraction);
+	void OnBonusCaliber(const std::string& author, const std::string& fraction);
 
 protected:
 	FPoint _bulletSize{9.f, 9.f};

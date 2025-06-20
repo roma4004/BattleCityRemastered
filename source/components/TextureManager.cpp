@@ -202,10 +202,10 @@ void TextureManager::Draw(const BaseObj* obj) const
 	{
 		textureRect = RectToSdlRect(_offset.bonusTank);
 	}
-	/*else if (name == "BonusCaliber") 
+	else if (name == "BonusCaliber") 
 	{
 		textureRect = RectToSdlRect(_offset.bonusCaliber);
-	}*/
+	}
 	else
 	{
 		RectDraw(obj);
