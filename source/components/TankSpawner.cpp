@@ -333,7 +333,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 	    || _gameMode == TwoPlayers
 	    || _gameMode == PlayAsHost
 	    || _gameMode == PlayAsClient
-	    || _gameMode == CoopWithBot)
+	    || _gameMode == CoopWithBot && isFirst)
 	{
 		SpawnPlayer(rect, speed, health, uuid, type);
 	}
@@ -557,6 +557,23 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 	return std::make_unique<InputProviderForPlayerTwo>(_events);
 }
 
+std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
+                                                 BonusEffectProperty effects)
+{
+	if (type == ENEMY1 || type == ENEMY2 || type == ENEMY3 || type == ENEMY4)
+	{
+		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, std::move(effects));
+	}
+
+	if (type == COOP1 || type == COOP2)
+	{
+		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, std::move(effects));
+	}
+
+	return std::make_shared<Player>(
+			std::move(pawnProperty), _bulletPool, std::move(GetInputProvider(type)), std::move(effects));
+}
+
 void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                             const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
 {
@@ -564,23 +581,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std:
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _allObjects, _events, _windowSize, _gameMode, 1, UP, speed};
 
-	std::shared_ptr<BaseObj> tank{nullptr};
-
-	if (type == ENEMY1 || type == ENEMY2 || type == ENEMY3 || type == ENEMY4)
-	{
-		tank = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, effects);
-	}
-	else if (type == COOP1 || type == COOP2)
-	{
-		tank = std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, effects);
-	}
-	else
-	{
-		tank = std::make_shared<Player>(
-				std::move(pawnProperty), _bulletPool, std::move(GetInputProvider(type)), effects);
-	}
-
-	if (tank)
+	if (std::shared_ptr<BaseObj> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
 	{
 		_allObjects->emplace_back(tank);
 	}
