@@ -1,4 +1,4 @@
-﻿#include "../headers/components/EventSystem.h"
+#include "../headers/components/EventSystem.h"
 #include "../headers/components/GameStatistics.h"
 #include "../headers/enums/Direction.h"
 #include "../headers/enums/GameMode.h"
