@@ -22,6 +22,7 @@ class UserInput;
 class TankSpawner;
 class BonusSpawner;
 class ObstacleSpawner;
+class TextureManager;
 class BonusEffectManager;
 
 class GameSuccess final : public IGame
@@ -47,7 +48,7 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
-	std::shared_ptr<IDrawable> _textureManager{nullptr};
+	std::shared_ptr<TextureManager> _textureManager{nullptr};
 
 	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
 
@@ -91,7 +92,7 @@ public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
 	            std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
 	            std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
-	            std::shared_ptr<IDrawable> textureManager, bool isVsyncOn,
+	            std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
 	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
 
 	~GameSuccess() override;

@@ -36,8 +36,8 @@ class BaseObj;
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-                         std::unique_ptr<Menu> menu, std::shared_ptr<IDrawable> textureManager, const bool isVsyncOn,
-                         std::shared_ptr<BonusEffectManager> bonusEffectManager)
+                         std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager,
+                         const bool isVsyncOn, std::shared_ptr<BonusEffectManager> bonusEffectManager)
 	: _selectedGameMode{OnePlayer},
 	  _windowSize{windowSize},
 	  _menu{std::move(menu)},

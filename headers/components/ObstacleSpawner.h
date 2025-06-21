@@ -37,7 +37,7 @@ class ObstacleSpawner final
 
 public:
 	ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                /*, int sideBarWidth = 175*/ int obstacleSize = 36);
+	                /*, int sideBarWidth = 175*/ int obstacleSize = 36);//TODO: obstacle size should be in obstacle.h
 
 	~ObstacleSpawner();
 

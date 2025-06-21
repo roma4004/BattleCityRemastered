@@ -13,8 +13,7 @@ typedef uint8_t Uint8;
 class BaseObj;
 class EventSystem;
 
-//TODO: pack into resource texture atlas
-class TextureManager final : public IDrawable
+class TextureManager final
 {
 	std::string _name{"TextureManager"};
 	UPoint _windowSize;
@@ -28,7 +27,7 @@ class TextureManager final : public IDrawable
 	void Subscribe() const;
 	void Unsubscribe() const;
 
-	void Draw(const BaseObj* obj) const override;
+	void Draw(const BaseObj* obj) const;
 
 	void SetRenderDrawColor(int color, Uint8 transparency) const;
 
@@ -42,5 +41,5 @@ public:
 	TextureManager(UPoint windowSize, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
 	               std::shared_ptr<EventSystem> events);
 
-	~TextureManager() override;
+	~TextureManager();
 };

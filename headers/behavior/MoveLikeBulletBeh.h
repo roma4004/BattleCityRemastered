@@ -24,6 +24,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] bool MoveRight(float deltaTime) const override;
 	[[nodiscard]] bool MoveUp(float deltaTime) const override;
 	[[nodiscard]] bool MoveDown(float deltaTime) const override;
+
 	[[nodiscard]] static ObjRectangle GetBulletPathRect(const Bullet* bullet, float deltaTime);
 	[[nodiscard]] static FPoint GetBulletNextPoint(const Bullet* bullet, float deltaTime);
 

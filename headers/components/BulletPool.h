@@ -13,7 +13,6 @@ struct SDL_Renderer;
 class Bullet;
 class BaseObj;
 class EventSystem;
-// class BaseObj;
 
 class BulletPool final
 {
