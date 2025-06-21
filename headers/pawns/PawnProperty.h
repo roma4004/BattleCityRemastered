@@ -7,8 +7,6 @@
 
 enum Direction : char8_t;
 enum GameMode : char8_t;
-struct ObjRectangle;
-class BaseObj;
 class EventSystem;
 
 struct PawnProperty
@@ -17,8 +15,8 @@ struct PawnProperty
 	std::vector<std::shared_ptr<BaseObj>>* allObjects{nullptr};
 	std::shared_ptr<EventSystem> events{nullptr};
 	UPoint windowSize{};
-	GameMode gameMode;
+	GameMode gameMode{};
 	int tier{1};
 	Direction dir{};
-	float speed{0.f};
+	float speed{};
 };

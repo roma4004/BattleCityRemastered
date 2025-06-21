@@ -44,10 +44,6 @@ Menu::~Menu()
 
 void Menu::Subscribe()
 {
-	_events->AddListener("MenuUpdate", _name, [this]() { this->MenuUpdate(); });
-
-	_events->AddListener("DrawMenu", _name, [this]() { this->DrawMenu(); });
-
 	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_selectedGameMode = newGameMode;
@@ -62,8 +58,6 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const
 {
-	_events->RemoveListener("MenuUpdate", _name);
-	_events->RemoveListener("DrawMenu", _name);
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener<const std::string&, const int>("RespawnResourceChangedTo", _name);
 }

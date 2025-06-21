@@ -55,15 +55,13 @@ struct TextureOffset
 
 	//Bonuses
 	ObjRectangle bonusHelmet{256, 112, 16, 16};
-	ObjRectangle helmetAnimationFrame{352, 112, 16, 16}; // 2 step animation 16x16 , left -> right
-	
+	ObjRectangle helmetAnimationFrame{352, 112, 16, 16};// 2 step animation 16x16 , left -> right
+
 	ObjRectangle bonusTimer{272, 112, 16, 16};
 	ObjRectangle bonusShovel{288, 112, 16, 16};
 	ObjRectangle bonusStar{304, 112, 16, 16};
 	ObjRectangle bonusGrenade{320, 112, 16, 16};
 	ObjRectangle bonusTank{336, 112, 16, 16};
 	ObjRectangle bonusCaliber{352, 112, 16, 16};
-	ObjRectangle bonusShip{352, 80, 16, 16}; //TODO implement bonus (make logic\code)
-	
-	
+	ObjRectangle bonusShip{352, 80, 16, 16};//TODO implement bonus (make logic\code)
 };

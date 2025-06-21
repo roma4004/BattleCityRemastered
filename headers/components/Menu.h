@@ -48,7 +48,6 @@ class Menu final
 	void RenderTextWithAlignment(Point pos, SDL_Color color, const std::string& text, const std::string& text2,
 	                             const std::string& text3) const;
 
-	void DrawMenu();
 	void DrawBackground() const;
 	void DrawMenuLogo() const;
 	void DrawText() const;
@@ -61,7 +60,9 @@ public:
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();
+
 	void MenuUpdate() const;
+	void DrawMenu();
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

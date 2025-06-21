@@ -68,7 +68,7 @@ void Tank::SubscribeAsClient()
 	{
 		this->OnBonusStar(_name, _fraction);
 	});
-	
+
 	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _name, [this]()
 	{
 		this->OnBonusCaliber(_name, _fraction);

@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
+struct BulletResetProperty;
 struct UPoint;
 class EventSystem;
 
@@ -30,8 +31,7 @@ public:
 
 	~Bullet() override;
 
-	void Reset(const ObjRectangle& rect, int damage, double aoeRadius, int color, int health, Direction dir,
-	           float speed, std::string author, std::string fraction, int tier, buuid uuid = {});
+	void Reset(BulletResetProperty resetProperty);
 
 	void Disable() const;
 	void Enable();

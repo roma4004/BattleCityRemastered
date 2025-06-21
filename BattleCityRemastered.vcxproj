@@ -254,6 +254,7 @@
     <ClInclude Include="headers\obstacles\EagleTile.h" />
     <ClInclude Include="headers\obstacles\GrassTile.h" />
     <ClInclude Include="headers\obstacles\IceTile.h" />
+    <ClInclude Include="headers\pawns\BulletResetProperty.h" />
     <ClInclude Include="headers\pawns\PawnProperty.h" />
     <ClInclude Include="headers\PlayerKeys.h" />
     <ClInclude Include="headers\Point.h" />

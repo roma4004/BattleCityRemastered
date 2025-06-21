@@ -78,7 +78,7 @@ class GameSuccess final : public IGame
 
 	void DisposeDeadObject();
 
-	void OnClientReady();
+	void OnClientReady() const;
 
 	void MainLoop() override;
 

@@ -4,7 +4,9 @@
 #include <functional>
 #include <memory>
 
+class Bullet;
 struct FPoint;
+struct ObjRectangle;
 class EventSystem;
 
 class MoveLikeBulletBeh final : public IMoveBeh
@@ -13,7 +15,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};
 
-	void CheckCircleAoE(FPoint blowCenter, std::vector<std::shared_ptr<BaseObj>>& aoeList) const;
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList) const;
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 
@@ -22,6 +24,8 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] bool MoveRight(float deltaTime) const override;
 	[[nodiscard]] bool MoveUp(float deltaTime) const override;
 	[[nodiscard]] bool MoveDown(float deltaTime) const override;
+	[[nodiscard]] static ObjRectangle GetBulletPathRect(const Bullet* bullet, float deltaTime);
+	[[nodiscard]] static FPoint GetBulletNextPoint(const Bullet* bullet, float deltaTime);
 
 public:
 	MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,

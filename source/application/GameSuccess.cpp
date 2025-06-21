@@ -296,7 +296,7 @@ void GameSuccess::DisposeDeadObject()
 //TODO: recheck rule of 3/5 for all classes
 //TODO: convert enum to enum classes
 
-void GameSuccess::OnClientReady()
+void GameSuccess::OnClientReady() const
 {
 	LoadMap();
 	this->_events->EmitEvent("Pause_Released");
@@ -322,7 +322,7 @@ void GameSuccess::MainLoop()
 
 			_userInput->Update();
 
-			_events->EmitEvent("MenuUpdate");
+			_menu->MenuUpdate();
 
 			if (!_userInput->IsPause() && _gameMode != PlayAsClient)
 			{
@@ -337,7 +337,7 @@ void GameSuccess::MainLoop()
 
 			if (!_userInput->IsPause() && _gameMode != PlayAsClient)
 			{
-				_events->EmitEvent("RespawnTanks");
+				_tankSpawner->RespawnTanks();
 			}
 
 			_events->EmitEvent("Draw");
@@ -345,7 +345,7 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
-			_events->EmitEvent("DrawMenu");//TODO: optimize draw call with cache non changed text part
+			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part
 
 			// Copy the texture with FPS to the renderer
 			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);

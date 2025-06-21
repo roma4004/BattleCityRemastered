@@ -3,6 +3,7 @@
 #include "../../headers/behavior/MoveLikeBulletBeh.h"
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/GameMode.h"
+#include "../../headers/pawns/BulletResetProperty.h"
 #include "../../headers/pawns/PawnProperty.h"
 #include "../../headers/utils/UuidUtils.h"
 // #include <iostream>
@@ -27,8 +28,6 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	_uuidStr = UuidUtils::GetStringUuid(_uuid);
 
 	_name = "Bullet";
-
-	// Subscribe();
 }
 
 Bullet::~Bullet()
@@ -109,32 +108,32 @@ void Bullet::Enable()
 	Subscribe();
 }
 
-void Bullet::Reset(const ObjRectangle& rect, const int damage, const double aoeRadius, const int color,
-                   const int health, const Direction dir, const float speed, std::string author,
-                   std::string fraction, const int tier, const buuid uuid)
+void Bullet::Reset(BulletResetProperty resetProperty)
 {
-	Disable();//TODO: remove this, and not subscribe on create bullets
+	Disable();
 
-	SetRect(rect);
-	SetColor(color);
-	SetHealth(health);
+	SetRect(resetProperty.rect);
+	SetColor(resetProperty.color);
+	SetHealth(resetProperty.health);
+	SetDirection(resetProperty.dir);
+
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
-	SetDirection(dir);
-	_author = std::move(author);
-	_fraction = std::move(fraction);
-	_damage = damage;
-	_bulletDamageRadius = aoeRadius;
-	_speed = speed;
-	_tier = tier;
+	_author = std::move(resetProperty.author);
+	_fraction = std::move(resetProperty.fraction);
+	_damage = resetProperty.damage;
+	_bulletDamageRadius = resetProperty.aoeRadius;
+	_speed = resetProperty.speed;
+	_tier = resetProperty.tier;
 
-	if (uuid != UuidUtils::GetNilUuid())
+	if (resetProperty.uuid != UuidUtils::GetNilUuid())
 	{
-		_uuid = uuid;
+		_uuid = resetProperty.uuid;
 		_uuidStr = UuidUtils::GetStringUuid(_uuid);
 	}
 	_nameWithUuid = _name + _uuidStr;
 
 	SetIsAlive(true);
+
 	Enable();
 }
 

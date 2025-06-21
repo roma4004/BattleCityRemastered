@@ -2,8 +2,8 @@
 #include "../../headers/enums/BonusType.h"
 
 BonusCaliber::BonusCaliber(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-                     const milliseconds lifeTime, const int color, const buuid uuid,
-                     const GameMode gameMode)
+                           const milliseconds lifeTime, const int color, const buuid uuid,
+                           const GameMode gameMode)
 	: Bonus{rect,
 	        std::move(events),
 	        duration,

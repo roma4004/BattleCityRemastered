@@ -4,6 +4,7 @@
 #include "../../headers/components/EventSystem.h"
 #include "../../headers/enums/Direction.h"
 #include "../../headers/pawns/Bullet.h"
+#include "../../headers/pawns/BulletResetProperty.h"
 #include "../../headers/pawns/Tank.h"
 #include <functional>
 #include <memory>
@@ -104,7 +105,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 
 using buuid = boost::uuids::uuid;
 
-buuid ShootingBeh:: Shot(const buuid uuid)
+buuid ShootingBeh::Shot(const buuid uuid)
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
@@ -119,21 +120,25 @@ buuid ShootingBeh:: Shot(const buuid uuid)
 		return {};
 	}
 
-	constexpr int color = 0xffffff;
-	const int damage = tank->GetBulletDamage();
-	const double aoeRadius = tank->GetBulletDamageRadius();
-	constexpr int health = 1;
-	const Direction dir = tank->GetDirection();
-	const float speed = tank->GetBulletSpeed();
-	std::string author = tank->GetName();
-	std::string fraction = tank->GetFraction();
-	const int tier = tank->GetTier();
-
 	auto bulletAsBase = _bulletPool->SpawnBullet();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
-		bullet->Reset(rect, damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction),
-		              tier, uuid);
+		BulletResetProperty bulletResetProperty = {
+				.rect = rect,
+				.damage = tank->GetBulletDamage(),
+				.aoeRadius = tank->GetBulletDamageRadius(),
+				.color = 0xffffff,
+				.health = 1,
+				.dir = tank->GetDirection(),
+				.speed = tank->GetBulletSpeed(),
+				.author = tank->GetName(),
+				.fraction = tank->GetFraction(),//TODO: replace fraction with enum
+				.tier = tank->GetTier(),
+				.uuid = uuid
+		};
+
+		bullet->Reset(std::move(bulletResetProperty));
+
 		// std::cout << "[" << "bullet->Reset" << "] "
 		// 			<< ", name=" << bullet->GetName()
 		// 			<< ", UUID=" << UuidUtils::ToStringUuid(bullet->GetUuid())

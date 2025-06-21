@@ -74,7 +74,6 @@ class TankSpawner final
 	static std::string GetCurrentTimeString();
 
 	void ResetRespawnStat();
-	void RespawnTanks();
 	void RespawnClient(TankType type, buuid uuid);
 	void ResetSpawn();
 
@@ -94,6 +93,8 @@ public:
 	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
 
 	~TankSpawner();
+
+	void RespawnTanks();
 
 	[[nodiscard]] int GetEnemyRespawnResource() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
 	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
