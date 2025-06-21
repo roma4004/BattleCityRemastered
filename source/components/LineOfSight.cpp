@@ -6,46 +6,47 @@
 #include "../../headers/utils/ColliderUtils.h"
 #include <algorithm>
 
-LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize, const FPoint bulletSize,
+LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, const FPoint bulletSize,
                          std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
                          const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const FPoint tankHalf = {.x = tankShape.w / 2.f, .y = tankShape.h / 2.f};
-	const FPoint tankCenter = {.x = tankShape.x + tankHalf.x, .y = tankShape.y + tankHalf.y};
-	const float tankDownY = {tankShape.y + tankShape.h};
-	const float tankRightX = {tankShape.x + tankShape.w};
+	const FPoint tankHalf = {.x = tankRect.w / 2.f, .y = tankRect.h / 2.f};
+	const FPoint tankCenter = {.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankHalf.y};
+	const float tankDownY = {tankRect.y + tankRect.h};
+	const float tankRightX = {tankRect.x + tankRect.w};
 	const FPoint bulletSpawnPos = {tankCenter.x - bulletSize.x, tankCenter.y - bulletSize.y};
+	const FPoint bulletHalfSize = {bulletSize.x / 2, bulletSize.y / 2};
 	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
 
-	_lineOfSightRect = std::vector<ObjRectangle>{
+	_lineOfSightBoundaries = std::vector<ObjRectangle>{
 			/*up, left, down, right*///TODO: align to not needed exclude self
-			{.x = bulletSpawnPos.x, .y = 0.f, .w = bulletSize.x, .h = tankShape.y},
-			{.x = 0.f, .y = bulletSpawnPos.y, .w = tankShape.x, .h = bulletSize.y},
-			{.x = bulletSpawnPos.x, .y = tankDownY, .w = bulletSize.x, .h = sightSize.y},
-			{.x = tankRightX, .y = bulletSpawnPos.y, .w = sightSize.x, .h = bulletSize.y}
+			{.x = bulletSpawnPos.x - bulletHalfSize.x, .y = 0.f, .w = bulletSize.x, .h = tankRect.y},
+			{.x = 0.f, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = tankRect.x, .h = bulletSize.y},
+			{.x = bulletSpawnPos.x - bulletHalfSize.x, .y = tankDownY, .w = bulletSize.x, .h = sightSize.y},
+			{.x = tankRightX, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = sightSize.x, .h = bulletSize.y}
 	};
 
 	CheckLineOfSight(excludeSelf, isWaterSkip);
 }
 
-LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
+LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
                          std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
                          const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const float tankDownY = {tankShape.y + tankShape.h};
-	const float tankRightX = {tankShape.x + tankShape.w};
+	const float tankDownY = {tankRect.y + tankRect.h};
+	const float tankRightX = {tankRect.x + tankRect.w};
 	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
 
-	_lineOfSightRect = std::vector<ObjRectangle>{
+	_lineOfSightBoundaries = std::vector<ObjRectangle>{
 			/*up, left, down, right*/
-			{.x = tankShape.x, .y = 0.f, .w = tankShape.w, .h = tankShape.y},
-			{.x = 0.f, .y = tankShape.y, .w = tankShape.x, .h = tankShape.h},
-			{.x = tankShape.x, .y = tankDownY, .w = tankShape.w, .h = sightSize.y},
-			{.x = tankRightX, .y = tankShape.y, .w = sightSize.x, .h = tankShape.h}
+			{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = tankRect.y},
+			{.x = 0.f, .y = tankRect.y, .w = tankRect.x, .h = tankRect.h},
+			{.x = tankRect.x, .y = tankDownY, .w = tankRect.w, .h = sightSize.y},
+			{.x = tankRightX, .y = tankRect.y, .w = sightSize.x, .h = tankRect.h}
 	};
 
 	CheckLineOfSight(excludeSelf, isWaterSkip);
@@ -67,22 +68,22 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 		const bool isPenetrable = object->GetIsPenetrable();
 		if (!object->GetIsPassable() && (!isPenetrable || (isWater && !isWaterSkip)))
 		{
-			if (ColliderUtils::IsCollide(_lineOfSightRect[UP], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[UP], object->GetRect()))
 			{
 				_upSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightRect[LEFT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[LEFT], object->GetRect()))
 			{
 				_leftSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightRect[DOWN], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[DOWN], object->GetRect()))
 			{
 				_downSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightRect[RIGHT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[RIGHT], object->GetRect()))
 			{
 				_rightSideObstacles.emplace_back(object);
 			}
