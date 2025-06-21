@@ -72,26 +72,26 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::shared_ptr<BaseObj>& ne
 {
 	if (IsBonus(nearestObstacle))
 	{
-		LineOfSight bonusLOS(_rect, _windowSize, _allObjects, this);
+		LineOfSight bonusLineOfSight(_rect, _windowSize, _allObjects, this, false);
 		const std::vector<std::shared_ptr<BaseObj>>& dirSideObstacles =
-				[&bonusLOS, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
+				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
 					if (dir == UP)
 					{
-						return bonusLOS.GetUpSideObstacles();
+						return bonusLineOfSight.GetUpSideObstacles();
 					}
 
 					if (dir == LEFT)
 					{
-						return bonusLOS.GetLeftSideObstacles();
+						return bonusLineOfSight.GetLeftSideObstacles();
 					}
 
 					if (dir == DOWN)
 					{
-						return bonusLOS.GetDownSideObstacles();
+						return bonusLineOfSight.GetDownSideObstacles();
 					}
 
-					return bonusLOS.GetRightSideObstacles();
+					return bonusLineOfSight.GetRightSideObstacles();
 				}();
 
 		if (IsFreePathToBonus(dirSideObstacles))

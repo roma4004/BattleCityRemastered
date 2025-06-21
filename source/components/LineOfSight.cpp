@@ -2,11 +2,13 @@
 #include "../../headers/BaseObj.h"
 #include "../../headers/Point.h"
 #include "../../headers/enums/Direction.h"
+#include "../../headers/obstacles/WaterTile.h"
 #include "../../headers/utils/ColliderUtils.h"
 #include <algorithm>
 
 LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize, const FPoint bulletSize,
-                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
+                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+                         const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
@@ -17,7 +19,7 @@ LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
 	const FPoint bulletSpawnPos = {tankCenter.x - bulletSize.x, tankCenter.y - bulletSize.y};
 	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
 
-	_checkLos = std::vector<ObjRectangle>{
+	_lineOfSightRect = std::vector<ObjRectangle>{
 			/*up, left, down, right*///TODO: align to not needed exclude self
 			{.x = bulletSpawnPos.x, .y = 0.f, .w = bulletSize.x, .h = tankShape.y},
 			{.x = 0.f, .y = bulletSpawnPos.y, .w = tankShape.x, .h = bulletSize.y},
@@ -25,11 +27,12 @@ LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
 			{.x = tankRightX, .y = bulletSpawnPos.y, .w = sightSize.x, .h = bulletSize.y}
 	};
 
-	CheckLOS(excludeSelf);
+	CheckLineOfSight(excludeSelf, isWaterSkip);
 }
 
 LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
-                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf)
+                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+                         const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
@@ -37,7 +40,7 @@ LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
 	const float tankRightX = {tankShape.x + tankShape.w};
 	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
 
-	_checkLos = std::vector<ObjRectangle>{
+	_lineOfSightRect = std::vector<ObjRectangle>{
 			/*up, left, down, right*/
 			{.x = tankShape.x, .y = 0.f, .w = tankShape.w, .h = tankShape.y},
 			{.x = 0.f, .y = tankShape.y, .w = tankShape.x, .h = tankShape.h},
@@ -45,10 +48,10 @@ LineOfSight::LineOfSight(const ObjRectangle tankShape, const UPoint& windowSize,
 			{.x = tankRightX, .y = tankShape.y, .w = sightSize.x, .h = tankShape.h}
 	};
 
-	CheckLOS(excludeSelf);
+	CheckLineOfSight(excludeSelf, isWaterSkip);
 }
 
-void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
+void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWaterSkip = false)
 {
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -58,24 +61,28 @@ void LineOfSight::CheckLOS(const BaseObj* excludeSelf)
 			continue;
 		}
 
-		if (!object->GetIsPassable() && !object->GetIsPenetrable())
+		// tank cannot pass water, so we need to skip water when we find enemy to shoot
+		// but when we search for bonus, we should not skip water to avoid moving to bonus through water.
+		const bool isWater =  dynamic_cast<WaterTile*>(object.get());
+		const bool isPenetrable = object->GetIsPenetrable();
+		if (!object->GetIsPassable() && (!isPenetrable || (isWater && !isWaterSkip)))
 		{
-			if (ColliderUtils::IsCollide(_checkLos[UP], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightRect[UP], object->GetRect()))
 			{
 				_upSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_checkLos[LEFT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightRect[LEFT], object->GetRect()))
 			{
 				_leftSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_checkLos[DOWN], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightRect[DOWN], object->GetRect()))
 			{
 				_downSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_checkLos[RIGHT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightRect[RIGHT], object->GetRect()))
 			{
 				_rightSideObstacles.emplace_back(object);
 			}
