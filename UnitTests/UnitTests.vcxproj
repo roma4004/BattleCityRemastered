@@ -37,6 +37,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="..\source\BaseObj.cpp" />
+    <ClCompile Include="..\source\bonuses\BonusCaliber.cpp" />
     <ClCompile Include="..\source\components\BonusEffectManager.cpp" />
     <ClCompile Include="..\source\components\BonusSpawner.cpp" />
     <ClCompile Include="..\source\components\BulletPool.cpp" />
