@@ -21,7 +21,6 @@ struct SDLEnvironment final
 	const char* logoPathName{nullptr};
 	const char* introMusicPathName{nullptr};
 	const char* textureAtlasPath{nullptr};
-	const char* tankEnemyPathName{nullptr};
 
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
