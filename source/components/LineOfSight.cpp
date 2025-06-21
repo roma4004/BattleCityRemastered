@@ -1,5 +1,4 @@
 #include "../../headers/components/LineOfSight.h"
-#include "../../headers/BaseObj.h"
 #include "../../headers/Point.h"
 #include "../../headers/enums/Direction.h"
 #include "../../headers/obstacles/WaterTile.h"
@@ -36,9 +35,9 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
                          const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
-	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
 	const float tankDownY = {tankRect.y + tankRect.h};
 	const float tankRightX = {tankRect.x + tankRect.w};
+	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
 	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{
@@ -51,6 +50,8 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
 
 	CheckLineOfSight(excludeSelf, isWaterSkip);
 }
+
+LineOfSight::~LineOfSight() = default;
 
 void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWaterSkip = false)
 {
@@ -155,8 +156,6 @@ void LineOfSight::SortToNearest()
 		return a->GetPos().x < b->GetPos().x;
 	});
 }
-
-LineOfSight::~LineOfSight() = default;
 
 std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetUpSideObstacles() { return _upSideObstacles; }
 std::vector<std::shared_ptr<BaseObj>>& LineOfSight::GetLeftSideObstacles() { return _leftSideObstacles; }
