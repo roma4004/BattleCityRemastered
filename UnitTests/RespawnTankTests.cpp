@@ -5,6 +5,7 @@
 #include "../headers/components/TankSpawner.h"
 #include "../headers/enums/Direction.h"
 #include "../headers/enums/GameMode.h"
+#include "../headers/enums/TankType.h"
 #include "../headers/input/InputProviderForPlayerOne.h"
 #include "../headers/input/InputProviderForPlayerTwo.h"
 #include "../headers/pawns/Enemy.h"
@@ -81,7 +82,7 @@ protected:
 TEST_F(TankSpawnerTest, EnemyOneRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(0);
+	_tankSpawner->SetSlotNeedRespawn(ENEMY1);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -91,7 +92,7 @@ TEST_F(TankSpawnerTest, EnemyOneRespawnNeededFlag)
 TEST_F(TankSpawnerTest, EnemyTwoRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(1);
+	_tankSpawner->SetSlotNeedRespawn(ENEMY2);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -101,7 +102,7 @@ TEST_F(TankSpawnerTest, EnemyTwoRespawnNeededFlag)
 TEST_F(TankSpawnerTest, EnemyThreeRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(2);
+	_tankSpawner->SetSlotNeedRespawn(ENEMY3);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -111,7 +112,7 @@ TEST_F(TankSpawnerTest, EnemyThreeRespawnNeededFlag)
 TEST_F(TankSpawnerTest, EnemyFourRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(3);
+	_tankSpawner->SetSlotNeedRespawn(ENEMY4);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -121,7 +122,7 @@ TEST_F(TankSpawnerTest, EnemyFourRespawnNeededFlag)
 TEST_F(TankSpawnerTest, PlayerOneDiedRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(4);
+	_tankSpawner->SetSlotNeedRespawn(PLAYER1);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -131,7 +132,7 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawnNeededFlag)
 TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnNeededFlag)
 {
 	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(5);
+	_tankSpawner->SetSlotNeedRespawn(PLAYER2);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -141,7 +142,7 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnNeededFlag)
 TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetEnemyRespawnResource();
-	_tankSpawner->SetSlotNeedRespawn(1);
+	_tankSpawner->SetSlotNeedRespawn(ENEMY2);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -151,7 +152,7 @@ TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)
 TEST_F(TankSpawnerTest, PlayerOneDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetPlayerOneRespawnResource();
-	_tankSpawner->SetSlotNeedRespawn(4);
+	_tankSpawner->SetSlotNeedRespawn(PLAYER1);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 
@@ -161,7 +162,7 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawnCount)
 TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnCount)
 {
 	const int respawnResource = _tankSpawner->GetPlayerTwoRespawnResource();
-	_tankSpawner->SetSlotNeedRespawn(5);
+	_tankSpawner->SetSlotNeedRespawn(PLAYER2);
 	_tankSpawner->RespawnTanks();
 	_allObjects.pop_back();
 

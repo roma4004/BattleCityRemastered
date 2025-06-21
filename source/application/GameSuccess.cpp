@@ -324,20 +324,17 @@ void GameSuccess::MainLoop()
 
 			_menu->MenuUpdate();
 
-			if (!_userInput->IsPause() && _gameMode != PlayAsClient)
-			{
-				//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
-				_events->EmitEvent<const float>("TickUpdate", deltaTime);
-			}
-
 			if (!_userInput->IsPause())
 			{
 				DisposeDeadObject();
-			}
 
-			if (!_userInput->IsPause() && _gameMode != PlayAsClient)
-			{
-				_tankSpawner->RespawnTanks();
+				if (_gameMode != PlayAsClient)
+				{
+					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
+					_events->EmitEvent<const float>("TickUpdate", deltaTime);
+
+					_tankSpawner->RespawnTanks();
+				}
 			}
 
 			_events->EmitEvent("Draw");
