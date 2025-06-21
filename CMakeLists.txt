@@ -354,6 +354,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
         source/bonuses/Bonus.cpp
+        source/bonuses/BonusCaliber.cpp
         source/bonuses/BonusGrenade.cpp
         source/bonuses/BonusHelmet.cpp
         source/bonuses/BonusShovel.cpp
