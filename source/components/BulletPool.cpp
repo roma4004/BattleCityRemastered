@@ -1,9 +1,9 @@
-#include "../../headers/components/BulletPool.h"
-#include "../../headers/Point.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/GameMode.h"
-#include "../../headers/pawns/Bullet.h"
-#include "../../headers/pawns/PawnProperty.h"
+#include "components/BulletPool.h"
+#include "Point.h"
+#include "components/EventSystem.h"
+#include "entities/pawns/Bullet.h"
+#include "entities/pawns/PawnProperty.h"
+#include "enums/GameMode.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Point.h"
+#include "Point.h"
 #include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
 #include <memory>
 

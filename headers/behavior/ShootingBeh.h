@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../interfaces/IShootable.h"
+#include "interfaces/IShootable.h"
 #include <functional>
 #include <memory>
 
@@ -13,8 +13,8 @@ class ShootingBeh final : public IShootable
 {
 	using buuid = boost::uuids::uuid;
 
-	BaseObj* _selfParent{nullptr};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+	BaseObj* _selfParent{nullptr};//TODO: replace with shared ptr
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -30,5 +30,5 @@ public:
 
 	~ShootingBeh() override;
 
-	buuid Shot(buuid uuid = {}) override;
+	[[nodiscard]] buuid Shot(buuid uuid = {}) override;
 };

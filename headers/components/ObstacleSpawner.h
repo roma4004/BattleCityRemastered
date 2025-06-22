@@ -18,7 +18,7 @@ class ObstacleSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"ObstacleSpawner"};
-	GameMode _gameMode;
+	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	int _obstacleSize{0};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};

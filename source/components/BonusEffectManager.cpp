@@ -1,6 +1,6 @@
-#include "../../headers/components/BonusEffectManager.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/utils/TimeUtils.h"
+#include "components/BonusEffectManager.h"
+#include "components/EventSystem.h"
+#include "utils/TimeUtils.h"
 
 BonusEffectManager::BonusEffectManager(std::shared_ptr<EventSystem> events)
 	: _name{"BonusEffectManager"}, _events{std::move(events)}

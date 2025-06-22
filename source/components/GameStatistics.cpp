@@ -1,6 +1,6 @@
-#include "../../headers/components/GameStatistics.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/GameMode.h"
+#include "components/GameStatistics.h"
+#include "components/EventSystem.h"
+#include "enums/GameMode.h"
 
 //TODO: write statistics for pickuped bonuses
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)

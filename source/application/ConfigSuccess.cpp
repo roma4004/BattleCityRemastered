@@ -1,10 +1,10 @@
-#include "../../headers/application/ConfigSuccess.h"
-#include "../../headers/application/GameSuccess.h"
-#include "../../headers/components/BonusEffectManager.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/components/GameStatistics.h"
-#include "../../headers/components/Menu.h"
-#include "../../headers/components/TextureManager.h"
+#include "application/ConfigSuccess.h"
+#include "application/GameSuccess.h"
+#include "components/BonusEffectManager.h"
+#include "components/EventSystem.h"
+#include "components/GameStatistics.h"
+#include "components/Menu.h"
+#include "components/TextureManager.h"
 #include <SDL_ttf.h>
 
 ConfigSuccess::ConfigSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,

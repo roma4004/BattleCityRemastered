@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ObjRectangle.h"
+#include "entities/ObjRectangle.h"
 
 // struct ObjRectangle;
 // tank size = 13 px

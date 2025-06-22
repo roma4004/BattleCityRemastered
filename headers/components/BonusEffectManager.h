@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../bonuses/BonusStatus.h"
+#include "entities/bonuses/BonusStatus.h"
 
 class EventSystem;
 
@@ -8,13 +8,13 @@ class BonusEffectManager
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	BonusStatus _timerEnemy;
-	BonusStatus _timerPlayer;
-	BonusStatus _shovelPlayer;
-	std::vector<BonusStatus> _helmetSlots;
-	std::string _name;
+	BonusStatus _timerEnemy{};
+	BonusStatus _timerPlayer{};
+	BonusStatus _shovelPlayer{};
+	std::vector<BonusStatus> _helmetSlots{};
+	std::string _name{};
 
-	std::shared_ptr<EventSystem> _events;
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
 	explicit BonusEffectManager(std::shared_ptr<EventSystem> events);

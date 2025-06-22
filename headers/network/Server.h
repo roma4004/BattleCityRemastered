@@ -30,11 +30,11 @@ struct ServerData final
 	int respawnResource{-1};
 	int id{-1};
 	BonusType type{};
-	std::string who;
-	std::string eventType;
-	std::string eventName;
-	std::string fraction;
-	std::vector<std::string> names;
+	std::string who{};
+	std::string eventType{};
+	std::string eventName{};
+	std::string fraction{};
+	std::vector<std::string> names{};
 	FPoint pos{};
 	Direction dir{};
 };
@@ -42,8 +42,8 @@ struct ServerData final
 class Session final : public std::enable_shared_from_this<Session>
 {
 	tcp::socket _socket;
-	boost::asio::streambuf _readBuffer;
-	boost::asio::streambuf _writeBuffer;
+	boost::asio::streambuf _readBuffer{};
+	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:

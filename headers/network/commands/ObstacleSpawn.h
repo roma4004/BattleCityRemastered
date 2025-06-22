@@ -2,7 +2,7 @@
 
 #include "Command.h"
 #include "UuidSerialization.h"
-#include "../../ObjRectangle.h"
+#include "entities/ObjRectangle.h"
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -28,14 +28,14 @@ public:
 
 	~ObstacleSpawn() override = default;
 
-	ObjRectangle GetRect() const;
-	ObstacleType GetObstacleType() const;
-	buuid GetUuid() const;
+	[[nodiscard]] ObjRectangle GetRect() const;
+	[[nodiscard]] ObstacleType GetObstacleType() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

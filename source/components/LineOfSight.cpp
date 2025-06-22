@@ -1,8 +1,8 @@
-#include "../../headers/components/LineOfSight.h"
-#include "../../headers/Point.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/obstacles/WaterTile.h"
-#include "../../headers/utils/ColliderUtils.h"
+#include "components/LineOfSight.h"
+#include "Point.h"
+#include "entities/obstacles/WaterTile.h"
+#include "enums/Direction.h"
+#include "utils/ColliderUtils.h"
 #include <algorithm>
 
 LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, const FPoint bulletSize,

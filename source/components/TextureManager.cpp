@@ -1,8 +1,8 @@
-﻿#include "../../headers/components/TextureManager.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/obstacles/WaterTile.h"
-#include "../../headers/pawns/Pawn.h"
+﻿#include "components/TextureManager.h"
+#include "components/EventSystem.h"
+#include "entities/obstacles/WaterTile.h"
+#include "entities/pawns/Pawn.h"
+#include "enums/Direction.h"
 #include <SDL.h>
 #include <ranges>
 
@@ -136,17 +136,17 @@ void TextureManager::Draw(const BaseObj* obj) const
 		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
-		textureRect.x += pawn->_animationId * 16;
+		textureRect.x += pawn->animationId * 16;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
 		textureRect = RectToSdlRect(_offset.playerOne);
-		textureRect.x += pawn->_animationId * 16;
+		textureRect.x += pawn->animationId * 16;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
 		textureRect = RectToSdlRect(_offset.playerTwo);
-		textureRect.x += pawn->_animationId * 16;
+		textureRect.x += pawn->animationId * 16;
 	}
 	else if (name == "Bullet")
 	{
@@ -176,7 +176,7 @@ void TextureManager::Draw(const BaseObj* obj) const
 	{
 		const auto water = dynamic_cast<const WaterTile*>(obj);
 		textureRect = RectToSdlRect(_offset.water);
-		textureRect.x -= water->_animFrame;
+		textureRect.x -= water->animFrame;
 	}
 	else if (name == "BonusHelmet")
 	{

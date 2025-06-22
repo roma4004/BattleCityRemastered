@@ -1,4 +1,4 @@
-#include "../../../headers/network/commands/StatisticsChange.h"
+#include "network/commands/StatisticsChange.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>

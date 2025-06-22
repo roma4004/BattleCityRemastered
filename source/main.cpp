@@ -1,7 +1,7 @@
-#include "../headers/Point.h"
-#include "../headers/application/SDLEnvironment.h"
-#include "../headers/interfaces/IConfig.h"
-#include "../headers/interfaces/IGame.h"
+#include "Point.h"
+#include "application/SDLEnvironment.h"
+#include "interfaces/IConfig.h"
+#include "interfaces/IGame.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {

@@ -26,13 +26,13 @@ public:
 
 	~RespawnTank() override = default;
 
-	TankType GetTankType() const;
-	buuid GetUuid() const;
+	[[nodiscard]] TankType GetTankType() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

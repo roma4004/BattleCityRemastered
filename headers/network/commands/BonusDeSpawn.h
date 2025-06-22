@@ -23,12 +23,12 @@ public:
 
 	~BonusDeSpawn() override = default;
 
-	buuid GetUuid() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

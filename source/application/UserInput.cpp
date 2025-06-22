@@ -1,5 +1,5 @@
-#include "../../headers/application/UserInput.h"
-#include "../../headers/components/EventSystem.h"
+#include "application/UserInput.h"
+#include "components/EventSystem.h"
 #include <SDL_events.h>
 #include <iostream>
 

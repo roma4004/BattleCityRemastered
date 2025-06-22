@@ -26,14 +26,14 @@ class BonusSpawner final
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	std::mt19937 _gen;
-	std::uniform_int_distribution<> _distSpawnPosY;
-	std::uniform_int_distribution<> _distSpawnPosX;
-	std::uniform_int_distribution<> _distSpawnType;
-	std::uniform_int_distribution<> _distRandColor;
+	std::mt19937 _gen{};
+	std::uniform_int_distribution<> _distSpawnPosY{};
+	std::uniform_int_distribution<> _distSpawnPosX{};
+	std::uniform_int_distribution<> _distSpawnType{};
+	std::uniform_int_distribution<> _distRandColor{};
 
 	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};// Bonus spawn time
-	std::chrono::system_clock::time_point _lastTimeSpawn;
+	std::chrono::system_clock::time_point _lastTimeSpawn{};
 
 	void Subscribe();
 	void SubscribeAsHost();
@@ -52,5 +52,6 @@ public:
 	~BonusSpawner();
 
 	void SpawnRandomBonus(ObjRectangle rect);
-	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {});
+
+	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {}); //NOTE: for unit tests
 };

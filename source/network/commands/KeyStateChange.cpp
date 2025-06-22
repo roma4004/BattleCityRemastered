@@ -1,4 +1,4 @@
-#include "../../../headers/network/commands/KeyStateChange.h"
+#include "network/commands/KeyStateChange.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>

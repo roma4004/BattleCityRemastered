@@ -17,5 +17,6 @@ protected:
 
 public:
 	virtual ~IMoveBeh() = default;
-	virtual bool Move(float deltaTime) const = 0;
+
+	[[nodiscard]] virtual bool Move(float deltaTime) const = 0;
 };

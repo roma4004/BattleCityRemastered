@@ -22,14 +22,14 @@ public:
 
 	~StatisticsChange() override = default;
 
-	const std::string& GetEventName() const;
-	const std::string& GetAuthor() const;
-	const std::string& GetFraction() const;
+	[[nodiscard]] const std::string& GetEventName() const;
+	[[nodiscard]] const std::string& GetAuthor() const;
+	[[nodiscard]] const std::string& GetFraction() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

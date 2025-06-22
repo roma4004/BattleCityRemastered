@@ -256,17 +256,61 @@ enable_testing()
 include_directories(headers)
 
 set(SOURCE_FILES
-        source/BaseObj.cpp
+        source/application/ConfigFailure.cpp
+        source/application/ConfigSuccess.cpp
+        source/application/GameFailure.cpp
+        source/application/GameSuccess.cpp
+        source/application/SDLEnvironment.cpp
+        source/application/UserInput.cpp
+        source/behavior/MoveLikeBulletBeh.cpp
+        source/behavior/MoveLikeTankBeh.cpp
+        source/behavior/ShootingBeh.cpp
         source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
         source/components/LineOfSight.cpp
+        source/components/Map.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
         source/components/TextureManager.cpp
-        source/Map.cpp
+        source/components/input/InputProviderForMenu.cpp
+        source/components/input/InputProviderForPlayerOne.cpp
+        source/components/input/InputProviderForPlayerOneNet.cpp
+        source/components/input/InputProviderForPlayerTwo.cpp
+        source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/entities/BaseObj.cpp
+        source/entities/ObjRectangle.cpp
+        source/entities/Obstacles/EagleTile.cpp
+        source/entities/Obstacles/GrassTile.cpp
+        source/entities/Obstacles/IceTile.cpp
+        source/entities/bonuses/Bonus.cpp
+        source/entities/bonuses/BonusCaliber.cpp
+        source/entities/bonuses/BonusGrenade.cpp
+        source/entities/bonuses/BonusHelmet.cpp
+        source/entities/bonuses/BonusShovel.cpp
+        source/entities/bonuses/BonusStar.cpp
+        source/entities/bonuses/BonusStatus.cpp
+        source/entities/bonuses/BonusTank.cpp
+        source/entities/bonuses/BonusTimer.cpp
+        source/entities/obstacles/BrickWall.cpp
+        source/entities/obstacles/FortressWall.cpp
+        source/entities/obstacles/Obstacle.cpp
+        source/entities/obstacles/SteelWall.cpp
+        source/entities/obstacles/WaterTile.cpp
+        source/entities/pawns/Bot.cpp
+        source/entities/pawns/Bullet.cpp
+        source/entities/pawns/CoopBot.cpp
+        source/entities/pawns/Enemy.cpp
+        source/entities/pawns/Pawn.cpp
+        source/entities/pawns/Player.cpp
+        source/entities/pawns/Tank.cpp
+        source/main.cpp
+        source/network/Client.cpp
+        source/network/ClientHandler.cpp
+        source/network/Server.cpp
+        source/network/ServerHandler.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp
@@ -280,50 +324,6 @@ set(SOURCE_FILES
         source/network/commands/RespawnTank.cpp
         source/network/commands/StatisticsChange.cpp
         source/network/commands/TankShot.cpp
-        source/ObjRectangle.cpp
-        source/application/ConfigFailure.cpp
-        source/application/ConfigSuccess.cpp
-        source/application/GameFailure.cpp
-        source/application/GameSuccess.cpp
-        source/application/SDLEnvironment.cpp
-        source/application/UserInput.cpp
-        source/behavior/MoveLikeBulletBeh.cpp
-        source/behavior/MoveLikeTankBeh.cpp
-        source/behavior/ShootingBeh.cpp
-        source/bonuses/Bonus.cpp
-        source/bonuses/BonusCaliber.cpp
-        source/bonuses/BonusGrenade.cpp
-        source/bonuses/BonusHelmet.cpp
-        source/bonuses/BonusShovel.cpp
-        source/bonuses/BonusStar.cpp
-        source/bonuses/BonusStatus.cpp
-        source/bonuses/BonusTank.cpp
-        source/bonuses/BonusTimer.cpp
-        source/input/InputProviderForMenu.cpp
-        source/input/InputProviderForPlayerOne.cpp
-        source/input/InputProviderForPlayerOneNet.cpp
-        source/input/InputProviderForPlayerTwo.cpp
-        source/input/InputProviderForPlayerTwoNet.cpp
-        source/main.cpp
-        source/network/Client.cpp
-        source/network/ClientHandler.cpp
-        source/network/Server.cpp
-        source/network/ServerHandler.cpp
-        source/obstacles/BrickWall.cpp
-        source/Obstacles/EagleTile.cpp
-        source/Obstacles/GrassTile.cpp
-        source/Obstacles/IceTile.cpp
-        source/obstacles/FortressWall.cpp
-        source/obstacles/Obstacle.cpp
-        source/obstacles/SteelWall.cpp
-        source/obstacles/WaterTile.cpp
-        source/pawns/Bot.cpp
-        source/pawns/Bullet.cpp
-        source/pawns/CoopBot.cpp
-        source/pawns/Enemy.cpp
-        source/pawns/Pawn.cpp
-        source/pawns/Player.cpp
-        source/pawns/Tank.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/utils/TimeUtils.cpp
@@ -331,7 +331,12 @@ set(SOURCE_FILES
 )
 
 set(SOURCE_FILES_FOR_UNIT_TESTS
-        source/BaseObj.cpp
+        source/Utils/ColliderUtils.cpp
+        source/Utils/TimeUtils.cpp
+        source/Utils/UuidUtils.cpp
+        source/behavior/MoveLikeBulletBeh.cpp
+        source/behavior/MoveLikeTankBeh.cpp
+        source/behavior/ShootingBeh.cpp
         source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
@@ -339,54 +344,49 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/LineOfSight.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
-        source/ObjRectangle.cpp
-        source/Obstacles/BrickWall.cpp
-        source/Obstacles/EagleTile.cpp
-        source/Obstacles/GrassTile.cpp
-        source/Obstacles/IceTile.cpp
-        source/Obstacles/SteelWall.cpp
-        source/Obstacles/WaterTile.cpp
-        source/Utils/ColliderUtils.cpp
+        source/components/input/InputProviderForMenu.cpp
+        source/components/input/InputProviderForPlayerOne.cpp
+        source/components/input/InputProviderForPlayerOneNet.cpp
+        source/components/input/InputProviderForPlayerTwo.cpp
+        source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/entities/BaseObj.cpp
+        source/entities/ObjRectangle.cpp
+        source/entities/Obstacles/BrickWall.cpp
+        source/entities/Obstacles/EagleTile.cpp
+        source/entities/Obstacles/GrassTile.cpp
+        source/entities/Obstacles/IceTile.cpp
+        source/entities/Obstacles/SteelWall.cpp
+        source/entities/Obstacles/WaterTile.cpp
+        source/entities/bonuses/Bonus.cpp
+        source/entities/bonuses/BonusCaliber.cpp
+        source/entities/bonuses/BonusGrenade.cpp
+        source/entities/bonuses/BonusHelmet.cpp
+        source/entities/bonuses/BonusShovel.cpp
+        source/entities/bonuses/BonusStar.cpp
+        source/entities/bonuses/BonusStatus.cpp
+        source/entities/bonuses/BonusTank.cpp
+        source/entities/bonuses/BonusTimer.cpp
+        source/entities/obstacles/FortressWall.cpp
+        source/entities/obstacles/Obstacle.cpp
+        source/entities/pawns/Bot.cpp
+        source/entities/pawns/Bullet.cpp
+        source/entities/pawns/CoopBot.cpp
+        source/entities/pawns/Enemy.cpp
+        source/entities/pawns/Pawn.cpp
+        source/entities/pawns/Player.cpp
+        source/entities/pawns/Tank.cpp
         source/utils/Logger.cpp
-        source/Utils/TimeUtils.cpp
-        source/Utils/UuidUtils.cpp
-        source/behavior/MoveLikeBulletBeh.cpp
-        source/behavior/MoveLikeTankBeh.cpp
-        source/behavior/ShootingBeh.cpp
-        source/bonuses/Bonus.cpp
-        source/bonuses/BonusCaliber.cpp
-        source/bonuses/BonusGrenade.cpp
-        source/bonuses/BonusHelmet.cpp
-        source/bonuses/BonusShovel.cpp
-        source/bonuses/BonusStar.cpp
-        source/bonuses/BonusStatus.cpp
-        source/bonuses/BonusTank.cpp
-        source/bonuses/BonusTimer.cpp
-        source/input/InputProviderForMenu.cpp
-        source/input/InputProviderForPlayerOne.cpp
-        source/input/InputProviderForPlayerOneNet.cpp
-        source/input/InputProviderForPlayerTwo.cpp
-        source/input/InputProviderForPlayerTwoNet.cpp
-        source/obstacles/FortressWall.cpp
-        source/obstacles/Obstacle.cpp
-        source/pawns/Bot.cpp
-        source/pawns/Bullet.cpp
-        source/pawns/CoopBot.cpp
-        source/pawns/Enemy.cpp
-        source/pawns/Pawn.cpp
-        source/pawns/Player.cpp
-        source/pawns/Tank.cpp
 )
 
 set(UNIT_TESTS_FILES
         UnitTests/BonusTestsBasic.cpp
         UnitTests/BonusTestsEnemy.cpp
-        UnitTests/PlayerTests.cpp
-        UnitTests/BulletsTestsBasic.cpp
         UnitTests/BulletsTestsAdvanced.cpp
-        UnitTests/StatisticsTestsBasic.cpp
-        UnitTests/StatisticsTestsAdvanced.cpp
+        UnitTests/BulletsTestsBasic.cpp
+        UnitTests/PlayerTests.cpp
         UnitTests/RespawnTankTests.cpp
+        UnitTests/StatisticsTestsAdvanced.cpp
+        UnitTests/StatisticsTestsBasic.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

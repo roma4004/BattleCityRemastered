@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Command.h"
 #include "UuidSerialization.h"
-#include "../../enums/Direction.h"
-#include "../commands/Command.h"
+#include "enums/Direction.h"
 #include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
@@ -27,14 +27,14 @@ public:
 
 	~TankShot() override = default;
 
-	const std::string& GetWho() const;
-	Direction GetDir() const;
-	buuid GetUuid() const;
+	[[nodiscard]] const std::string& GetWho() const;
+	[[nodiscard]] Direction GetDir() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

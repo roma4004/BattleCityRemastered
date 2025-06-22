@@ -1,6 +1,6 @@
-#include "../../headers/utils/ColliderUtils.h"
-#include "../../headers/Circle.h"
-#include "../../headers/ObjRectangle.h"
+#include "utils/ColliderUtils.h"
+#include "Circle.h"
+#include "entities/ObjRectangle.h"
 #include <algorithm>
 
 bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2)

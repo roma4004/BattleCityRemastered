@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Command.h"
+#include "Point.h"
 #include "UuidSerialization.h"
-#include "../../Point.h"
-#include "../../enums/BonusType.h"
+#include "enums/BonusType.h"
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -27,14 +27,14 @@ public:
 
 	~BonusSpawn() override = default;
 
-	FPoint GetPos() const;
-	BonusType GetBonusType() const;
-	buuid GetUuid() const;
+	[[nodiscard]] FPoint GetPos() const;
+	[[nodiscard]] BonusType GetBonusType() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

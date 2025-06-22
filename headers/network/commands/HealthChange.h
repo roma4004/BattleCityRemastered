@@ -26,14 +26,14 @@ public:
 
 	~HealthChange() override = default;
 
-	const std::string& GetWho() const;
-	int GetHealth() const;
-	buuid GetUuid() const;
+	[[nodiscard]] const std::string& GetWho() const;
+	[[nodiscard]] int GetHealth() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

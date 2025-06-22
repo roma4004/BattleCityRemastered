@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../PlayerKeys.h"
+#include "components/input/PlayerKeys.h"
 
 class IInputProvider
 {
 protected:
-	PlayerKeys playerKeys;
+	PlayerKeys _playerKeys{};
 
 public:
-	[[nodiscard]] PlayerKeys GetKeysStats() const { return playerKeys; }
+	[[nodiscard]] PlayerKeys GetKeysStats() const { return _playerKeys; }
 };

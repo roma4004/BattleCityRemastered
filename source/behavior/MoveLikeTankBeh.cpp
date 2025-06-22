@@ -1,9 +1,9 @@
-#include "../../headers/behavior/MoveLikeTankBeh.h"
-#include "../../headers/Point.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/interfaces/IPickupableBonus.h"
-#include "../../headers/pawns/Tank.h"
-#include "../../headers/utils/ColliderUtils.h"
+#include "behavior/MoveLikeTankBeh.h"
+#include "Point.h"
+#include "entities/pawns/Tank.h"
+#include "enums/Direction.h"
+#include "interfaces/IPickupableBonus.h"
+#include "utils/ColliderUtils.h"
 #include <functional>
 #include <memory>
 

@@ -17,9 +17,9 @@ public:
 	~CommandBatch() override = default;
 
 	void AddCommand(const std::shared_ptr<Command>& command);
-	const std::vector<std::shared_ptr<Command>>& GetCommands() const;
+	[[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetCommands() const;
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);

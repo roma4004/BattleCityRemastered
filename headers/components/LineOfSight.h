@@ -10,7 +10,7 @@ class BaseObj;
 
 class LineOfSight final
 {
-	std::vector<ObjRectangle> _lineOfSightBoundaries;
+	std::vector<ObjRectangle> _lineOfSightBoundaries{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>> _upSideObstacles{};
@@ -25,7 +25,6 @@ public:
 	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize,
 	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
 	            bool isWaterSkip = true);
-
 
 	~LineOfSight();
 

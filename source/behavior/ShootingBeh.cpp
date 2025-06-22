@@ -1,11 +1,11 @@
-#include "../../headers/behavior/ShootingBeh.h"
-#include "../../headers/Point.h"
-#include "../../headers/components/BulletPool.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/pawns/Bullet.h"
-#include "../../headers/pawns/BulletResetProperty.h"
-#include "../../headers/pawns/Tank.h"
+#include "behavior/ShootingBeh.h"
+#include "Point.h"
+#include "components/BulletPool.h"
+#include "components/EventSystem.h"
+#include "entities/pawns/Bullet.h"
+#include "entities/pawns/BulletResetProperty.h"
+#include "entities/pawns/Tank.h"
+#include "enums/Direction.h"
 #include <functional>
 #include <memory>
 // #include <boost/uuid/uuid_io.hpp>

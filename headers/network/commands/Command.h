@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../enums/ComandType.h"
+#include "enums/ComandType.h"
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
@@ -15,9 +15,9 @@ public:
 	explicit Command(CommandType type);
 	virtual ~Command() = default;
 
-	CommandType GetType() const;
+	[[nodiscard]] CommandType GetType() const;
 
-	virtual const char* GetClassNameW() const = 0;
+	[[nodiscard]] virtual const char* GetClassNameW() const = 0;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);

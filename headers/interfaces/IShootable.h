@@ -10,5 +10,5 @@ protected:
 	virtual ~IShootable() = default;
 
 public:
-	virtual buuid Shot(buuid uuid = {}) = 0;
+	[[nodiscard]] virtual buuid Shot(buuid uuid = {}) = 0;
 };

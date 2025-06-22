@@ -1,4 +1,4 @@
-#include "../../../headers/network/commands/Command.h"
+#include "network/commands/Command.h"
 
 Command::Command(const CommandType type): _type(type) {}
 

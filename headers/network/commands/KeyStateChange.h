@@ -20,12 +20,12 @@ public:
 
 	~KeyStateChange() override = default;
 
-	const std::string& GetKeyState() const;
+	[[nodiscard]] const std::string& GetKeyState() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

@@ -1,76 +1,24 @@
-#include "../headers/components/BonusEffectManager.h"
-#include "../headers/components/BulletPool.h"
-#include "../headers/components/EventSystem.h"
-#include "../headers/components/GameStatistics.h"
-#include "../headers/components/TankSpawner.h"
-#include "../headers/enums/Direction.h"
-#include "../headers/enums/GameMode.h"
-#include "../headers/enums/TankType.h"
-#include "../headers/input/InputProviderForPlayerOne.h"
-#include "../headers/input/InputProviderForPlayerTwo.h"
-#include "../headers/pawns/Enemy.h"
-#include "../headers/pawns/PawnProperty.h"
-#include "../headers/pawns/Player.h"
+#include "components/BonusEffectManager.h"
+#include "components/BulletPool.h"
+#include "components/EventSystem.h"
+#include "components/TankSpawner.h"
+#include "enums/TankType.h"
 #include "gtest/gtest.h"
 #include <memory>
 
 class TankSpawnerTest : public testing::Test
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
-	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
-	int _tankHealth{100};
-	float _tankSize{};
-	float _tankSpeed{142};
-	float _bulletSpeed{300.f};
-	int _yellow{0xeaea00};
-	int _green{0x408000};
-	int _gray{0x808080};
-	std::string _name = "Player1";
-	std::string _fraction = "PlayerTeam";
-	std::string _name2 = "Player2";
-	std::string _fraction2 = "PlayerTeam";
-	GameMode _gameMode{OnePlayer};
-	buuid _uuid{};
 
 	void SetUp() override
 	{
-		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_statistics = std::make_shared<GameStatistics>(_events);
-		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager);
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		_tankSize = gridSize * 3;// for better turns
-
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-
-		const ObjRectangle rect1{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect1, _yellow, _tankHealth, true, _uuid, _name, _fraction};
-		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
-
-		const ObjRectangle rect2{.x = _tankSize, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty2{rect2, _green, _tankHealth, true, _uuid, _name2, _fraction2};
-		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
-
-		_allObjects.reserve(4);
-		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
-		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
+		constexpr UPoint windowSize{.x = 800, .y = 600};
+		const auto events = std::make_shared<EventSystem>();
+		const auto bulletPool = std::make_shared<BulletPool>(events, &_allObjects, windowSize, OnePlayer);
+		const auto effectsManager = std::make_shared<BonusEffectManager>(events);
+		_tankSpawner = std::make_shared<TankSpawner>(windowSize, &_allObjects, events, bulletPool, effectsManager);
 	}
 
 	void TearDown() override
@@ -79,64 +27,70 @@ protected:
 	}
 };
 
-TEST_F(TankSpawnerTest, EnemyOneRespawnNeededFlag)
+TEST_F(TankSpawnerTest, EnemyOneRespawn)
 {
-	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), false);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 0);
+
 	_tankSpawner->SetSlotNeedRespawn(ENEMY1);
-	_tankSpawner->RespawnTanks();
-	_allObjects.pop_back();
 
-	EXPECT_EQ(_tankSpawner->IsEnemyOneNeedRespawn(), true);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 1);
 }
 
-TEST_F(TankSpawnerTest, EnemyTwoRespawnNeededFlag)
+TEST_F(TankSpawnerTest, EnemyTwoRespawn)
 {
-	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), false);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 0);
+
 	_tankSpawner->SetSlotNeedRespawn(ENEMY2);
-	_tankSpawner->RespawnTanks();
-	_allObjects.pop_back();
 
-	EXPECT_EQ(_tankSpawner->IsEnemyTwoNeedRespawn(), true);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 1);
 }
 
-TEST_F(TankSpawnerTest, EnemyThreeRespawnNeededFlag)
+TEST_F(TankSpawnerTest, EnemyThreeRespawn)
 {
-	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), false);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 0);
+
 	_tankSpawner->SetSlotNeedRespawn(ENEMY3);
-	_tankSpawner->RespawnTanks();
-	_allObjects.pop_back();
 
-	EXPECT_EQ(_tankSpawner->IsEnemyThreeNeedRespawn(), true);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 1);
 }
 
-TEST_F(TankSpawnerTest, EnemyFourRespawnNeededFlag)
+TEST_F(TankSpawnerTest, EnemyFourRespawn)
 {
-	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), false);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 0);
+
 	_tankSpawner->SetSlotNeedRespawn(ENEMY4);
-	_tankSpawner->RespawnTanks();
-	_allObjects.pop_back();
 
-	EXPECT_EQ(_tankSpawner->IsEnemyFourNeedRespawn(), true);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 1);
 }
 
-TEST_F(TankSpawnerTest, PlayerOneDiedRespawnNeededFlag)
+TEST_F(TankSpawnerTest, PlayerOneDiedRespawn)
 {
-	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), false);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 0);
+
 	_tankSpawner->SetSlotNeedRespawn(PLAYER1);
-	_tankSpawner->RespawnTanks();
-	_allObjects.pop_back();
 
-	EXPECT_EQ(_tankSpawner->IsPlayerOneNeedRespawn(), true);
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 1);
 }
 
-TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnNeededFlag)
+TEST_F(TankSpawnerTest, PlayerTwoDiedRespawn)
 {
-	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), false);
-	_tankSpawner->SetSlotNeedRespawn(PLAYER2);
 	_tankSpawner->RespawnTanks();
-	_allObjects.pop_back();
+	EXPECT_EQ(_allObjects.size(), 0);
 
-	EXPECT_EQ(_tankSpawner->IsPlayerTwoNeedRespawn(), true);
+	_tankSpawner->SetSlotNeedRespawn(PLAYER2);
+
+	_tankSpawner->RespawnTanks();
+	EXPECT_EQ(_allObjects.size(), 1);
 }
 
 TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)

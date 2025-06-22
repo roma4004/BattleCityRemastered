@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Point.h"
-#include "../enums/GameMode.h"
-#include "../enums/RespawnResource.h"
+#include "Point.h"
+#include "enums/GameMode.h"
+#include "enums/RespawnResource.h"
 #include <memory>
 #include <random>
 #include <boost/uuid/uuid.hpp>
@@ -28,13 +28,13 @@ class TankSpawner final
 	GameMode _gameMode{};
 	UPoint _windowSize{};
 
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	std::shared_ptr<BonusEffectManager> _bonusEffectManager;
+	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 
-	std::random_device _rd;
+	std::random_device _rd{};
 
 	// TODO: use std::atomic when multithreading is used
 	std::vector<int> _respawnResource{20, 3, 3};
@@ -46,7 +46,7 @@ class TankSpawner final
 		bool isAvailable{false};
 	};
 
-	std::vector<SpawnSlot> _slots;
+	std::vector<SpawnSlot> _slots{};
 
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusTank(const std::string& author, const std::string& fraction);
@@ -65,13 +65,13 @@ class TankSpawner final
 
 	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
 	               buuid uuid, BonusEffectProperty effects, TankType type);
-	std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
-	std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty, BonusEffectProperty effects);
+	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
+	[[nodiscard]] std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty, BonusEffectProperty effects);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid);
 	void RespawnPlayerTeam(TankType type, buuid uuid);
 	void SetPlayerNeedRespawn();
-	static std::string GetCurrentTimeString();
+	[[nodiscard]] static std::string GetCurrentTimeString();
 
 	void ResetRespawnStat();
 	void RespawnClient(TankType type, buuid uuid);
@@ -96,23 +96,9 @@ public:
 
 	void RespawnTanks();
 
+	// NOTE: for unit tests only:
 	[[nodiscard]] int GetEnemyRespawnResource() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
 	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
 	[[nodiscard]] int GetPlayerTwoRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_TWO]; }
-	[[nodiscard]] int IsEnemyNeedRespawn() const { return _enemyNeedRespawn; }
-
-	[[nodiscard]] bool IsEnemyOneNeedRespawn() const { return _slots[0].isAvailable; }
-	//TODO: remove this after tests fixes
-	[[nodiscard]] bool IsEnemyTwoNeedRespawn() const { return _slots[1].isAvailable; }
-	//TODO: remove this after tests fixes
-	[[nodiscard]] bool IsEnemyThreeNeedRespawn() const { return _slots[2].isAvailable; }
-	//TODO: remove this after tests fixes
-	[[nodiscard]] bool IsEnemyFourNeedRespawn() const { return _slots[3].isAvailable; }
-	//TODO: remove this after tests fixes
-
-	[[nodiscard]] bool IsPlayerOneNeedRespawn() const { return _slots[4].isAvailable; }
-	[[nodiscard]] bool IsPlayerTwoNeedRespawn() const { return _slots[5].isAvailable; }
-
-	//TODO: FOR UNIT TESTING ONLY
 	void SetSlotNeedRespawn(int slotIndex);
 };

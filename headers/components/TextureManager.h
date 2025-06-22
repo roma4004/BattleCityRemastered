@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "../Point.h"
-#include "../enums/TextureOffset.h"
-#include "../interfaces/IDrawable.h"
+#include "Point.h"
+#include "enums/TextureOffset.h"
+#include "interfaces/IDrawable.h"
 #include <memory>
 #include <unordered_map>
 
@@ -16,10 +16,10 @@ class EventSystem;
 class TextureManager final
 {
 	std::string _name{"TextureManager"};
-	UPoint _windowSize;
+	UPoint _windowSize{};
 	TextureOffset _offset{};
-	std::shared_ptr<SDL_Renderer> _renderer;
-	std::shared_ptr<SDL_Texture> _texture;
+	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
+	std::shared_ptr<SDL_Texture> _texture{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	mutable std::unordered_map<int, SDL_Texture*> _colorTextureCache;
@@ -33,8 +33,8 @@ class TextureManager final
 
 	void ClearColorTextureCache() const;
 	void DrawHealthBar(const BaseObj* obj) const;
-	static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
-	SDL_Texture* CreateColorTexture(int color) const;
+	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
+	[[nodiscard]] SDL_Texture* CreateColorTexture(int color) const;
 	void RectDraw(const BaseObj* obj) const;
 
 public:

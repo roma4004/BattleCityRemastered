@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../MouseButton.h"
 #include "../Point.h"
+#include "../components/input/MouseButton.h"
 #include <chrono>
 #include <memory>
 #include <string>
@@ -34,6 +34,7 @@ class UserInput final
 
 	void Subscribe();
 	void Unsubscribe() const;
+
 	void WindowsMoveEvents(const SDL_Event& event);
 
 public:
@@ -42,6 +43,7 @@ public:
 	~UserInput();
 
 	void Update();
+
 	[[nodiscard]] bool IsGameOver() const;
 	[[nodiscard]] bool IsPause() const;
 };

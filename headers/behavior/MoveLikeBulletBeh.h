@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../interfaces/IMoveBeh.h"
+#include "interfaces/IMoveBeh.h"
 #include <functional>
 #include <memory>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../headers/Point.h"
+#include "Point.h"
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -18,14 +18,14 @@ class BulletPool final
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	std::mutex _bulletsMutex;
-	std::string _name;
-	GameMode _gameMode;
-	UPoint _windowSize;
+	std::mutex _bulletsMutex{};
+	std::string _name{};
+	GameMode _gameMode{};
+	UPoint _windowSize{};
 	bool _isClearing{false};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
-	std::queue<std::shared_ptr<BaseObj>> _bullets;
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
+	std::queue<std::shared_ptr<BaseObj>> _bullets{};
 
 public:
 	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -36,14 +36,14 @@ public:
 	void Subscribe();
 	void Unsubscribe() const;
 
-	std::shared_ptr<Bullet> CreateNewBullet();
+	[[nodiscard]] std::shared_ptr<Bullet> CreateNewBullet();
 
-	std::shared_ptr<BaseObj> SpawnBullet();
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnBullet();
 
 	void ReturnBullet(BaseObj* bullet);
 
 	void Clear();
 
-	static std::string GetCurrentTimeString();
+	[[nodiscard]] static std::string GetCurrentTimeString();
 
 };

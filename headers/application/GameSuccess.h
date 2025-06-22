@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Point.h"
-#include "../interfaces/IGame.h"
+#include "Point.h"
+#include "interfaces/IGame.h"
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <chrono>
@@ -42,7 +42,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 	std::shared_ptr<SDL_Texture> _fpsTexture{nullptr};
 
-	std::vector<std::shared_ptr<BaseObj>> _allObjects;
+	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
@@ -50,18 +50,18 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<TextureManager> _textureManager{nullptr};
 
-	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures;// pregenerated fps texture
+	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures{};// pregenerated fps texture
 
-	std::shared_ptr<UserInput> _userInput;
-	std::shared_ptr<TankSpawner> _tankSpawner;
-	std::shared_ptr<BonusSpawner> _bonusSpawner;
-	std::shared_ptr<ObstacleSpawner> _obstacleSpawner;
+	std::shared_ptr<UserInput> _userInput{nullptr};
+	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
+	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 
-	std::random_device _rd;
+	std::random_device _rd{};
 
 	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
 	const int _targetFPS{60};
-	std::chrono::duration<double> _targetFrameDuration;
+	std::chrono::duration<double> _targetFrameDuration{};
 
 	SDL_TimerID _frameTimer{0};
 	bool _frameReady{true};

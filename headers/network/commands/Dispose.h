@@ -25,8 +25,8 @@ public:
 
 	~Dispose() override = default;
 
-	const std::string& GetWho() const;
-	buuid GetUuid() const;
+	[[nodiscard]] const std::string& GetWho() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)
@@ -36,7 +36,7 @@ public:
 		ar & _uuid;
 	}
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 BOOST_CLASS_EXPORT_KEY(Dispose);

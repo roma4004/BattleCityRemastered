@@ -1,11 +1,11 @@
-#include "../../headers/behavior/MoveLikeBulletBeh.h"
-#include "../../headers/Circle.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/obstacles/GrassTile.h"
-#include "../../headers/obstacles/IceTile.h"
-#include "../../headers/obstacles/WaterTile.h"
-#include "../../headers/pawns/Bullet.h"
-#include "../../headers/utils/ColliderUtils.h"
+#include "behavior/MoveLikeBulletBeh.h"
+#include "Circle.h"
+#include "entities/obstacles/GrassTile.h"
+#include "entities/obstacles/IceTile.h"
+#include "entities/obstacles/WaterTile.h"
+#include "entities/pawns/Bullet.h"
+#include "enums/Direction.h"
+#include "utils/ColliderUtils.h"
 #include <memory>
 
 MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,

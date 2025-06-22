@@ -25,13 +25,13 @@ public:
 
 	~FortressChange() override = default;
 
-	const std::string& GetState() const;
-	buuid GetUuid() const;
+	[[nodiscard]] const std::string& GetState() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 template<class Archive>

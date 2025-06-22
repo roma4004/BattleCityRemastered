@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Point.h"
-#include "../input/InputProviderForMenu.h"
+#include "Point.h"
+#include "components/input/InputProviderForMenu.h"
 #include <SDL.h>
 #include <SDL_ttf.h>
 
@@ -33,7 +33,7 @@ class Menu final
 	int _playerOneRespawnResource{3};
 	int _playerTwoRespawnResource{3};
 
-	std::string _name;
+	std::string _name{};
 
 	void Subscribe();
 	void Unsubscribe() const;
