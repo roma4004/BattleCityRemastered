@@ -16,43 +16,6 @@ WaterTile::WaterTile(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
-
-	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float /*deltaTime*/)
-	{
-		if (++animFrameCounter; animFrameCounter % 24 == 0)
-		{
-			// Animation with 1 px step and 1 frame
-			++animFrame;
-			animFrameCounter = 0;
-			if (animFrame > 8)
-			{
-				animFrame = 0;
-				animFrameCounter = 0;
-			}
-
-			/* animation 8 px step and 2 frames
-			_animFrame = 0;
-			if ( _animFrameCounter == 24)
-			{
-				_animFrame = 8;
-				_animFrameCounter = 0;
-			}
-			*/
-
-			// animation with 1 px step and 2 frames
-			/*++_animFrame;
-			_animFrameCounter = 0;
-			if (_animFrame > 16)
-			{
-				_animFrame = 0;
-				_animFrameCounter = 0;
-			}*/
-		}
-
-	});
 }
 
-WaterTile::~WaterTile()
-{
-	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
-}
+WaterTile::~WaterTile() = default;

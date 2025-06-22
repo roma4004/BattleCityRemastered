@@ -8,6 +8,7 @@
 #include <random>
 #include <unordered_map>
 
+class AnimationManager;
 enum GameMode : char8_t;
 class INetworkNode;
 class Menu;

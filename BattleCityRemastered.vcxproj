@@ -147,6 +147,7 @@
     <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\behavior\ShootingBeh.cpp" />
+    <ClCompile Include="source\components\AnimationManager.cpp" />
     <ClCompile Include="source\components\BonusEffectManager.cpp" />
     <ClCompile Include="source\components\BonusSpawner.cpp" />
     <ClCompile Include="source\components\BulletPool.cpp" />
@@ -213,6 +214,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Circle.h" />
+    <ClInclude Include="headers\components\AnimationManager.h" />
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\Point.tpp" />
     <ClInclude Include="headers\application\ConfigFailure.h" />

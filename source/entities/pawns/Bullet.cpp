@@ -141,16 +141,9 @@ void Bullet::TickUpdate(const float deltaTime)
 {
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
-		if (_moveBeh->Move(deltaTime))
-		{
-			++animationFrameId;
-			if (animationFrameId % 12 && ++animationId > animationIdLimit)
-			{
-				animationId = 0;
-				animationFrameId = 0;
-			}
-		}
-
+		//if (_moveBeh->Move(deltaTime)){}
+		std::ignore = _moveBeh->Move(deltaTime);
+		
 		if (_gameMode == PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(

@@ -1,4 +1,5 @@
 ﻿#include "components/TextureManager.h"
+#include "components/AnimationManager.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Pawn.h"
@@ -7,11 +8,13 @@
 #include <ranges>
 
 TextureManager::TextureManager(const UPoint windowSize, std::shared_ptr<SDL_Texture> texture,
-                               std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<EventSystem> events)
+                               std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<EventSystem> events,
+                               std::shared_ptr<AnimationManager> animationManager)
 	: _windowSize{windowSize},
 	  _renderer(std::move(renderer)),
 	  _texture(std::move(texture)),
-	  _events(std::move(events))
+	  _events(std::move(events)),
+	  _animationManager(std::move(animationManager))
 {
 	Subscribe();
 }
@@ -136,17 +139,17 @@ void TextureManager::Draw(const BaseObj* obj) const
 		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
-		textureRect.x += pawn->animationId * 16;
+		textureRect.x += _animationManager->GetAnimFrame(name) * 16;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
 		textureRect = RectToSdlRect(_offset.playerOne);
-		textureRect.x += pawn->animationId * 16;
+		textureRect.x += _animationManager->GetAnimFrame(name) * 16;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
 		textureRect = RectToSdlRect(_offset.playerTwo);
-		textureRect.x += pawn->animationId * 16;
+		textureRect.x += _animationManager->GetAnimFrame(name) * 16;
 	}
 	else if (name == "Bullet")
 	{
@@ -176,7 +179,7 @@ void TextureManager::Draw(const BaseObj* obj) const
 	{
 		const auto water = dynamic_cast<const WaterTile*>(obj);
 		textureRect = RectToSdlRect(_offset.water);
-		textureRect.x -= water->animFrame;
+		textureRect.x -= _animationManager->GetAnimWater();
 	}
 	else if (name == "BonusHelmet")
 	{

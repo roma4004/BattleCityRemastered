@@ -57,7 +57,6 @@ void Pawn::SubscribeAsClient()
 
 				this->SetDirection(dir);
 				this->SetPos(newPos);
-				this->UpdateAnimationFrame();
 			});
 
 	_events->AddListener<const int>(
@@ -110,16 +109,6 @@ void Pawn::TakeDamage(const int damage)
 	// {
 	// 	Unsubscribe();
 	// }
-}
-
-void Pawn::UpdateAnimationFrame()
-{
-	++animationFrameId;
-	if (animationFrameId % 12 && ++animationId > animationIdLimit)//TODO: 12 is frame cycle, need skip for bullet
-	{
-		animationId = 0;
-		animationFrameId = 0;
-	}
 }
 
 void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }

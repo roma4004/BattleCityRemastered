@@ -31,7 +31,7 @@ void Player::Move(const Direction dir, const float deltaTime)
 	SetDirection(dir);
 	if (_moveBeh->Move(deltaTime))
 	{
-		UpdateAnimationFrame();
+		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
 	}
 
 	if (_gameMode == PlayAsHost)

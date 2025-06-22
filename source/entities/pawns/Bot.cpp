@@ -1,6 +1,7 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
 #include "components/LineOfSight.h"
+#include "components/EventSystem.h"
 #include "entities/BonusEffectProperty.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -218,12 +219,7 @@ void Bot::TickUpdate(const float deltaTime)
 	const auto pos = GetPos();
 	if (_moveBeh->Move(deltaTime))
 	{
-		++animationFrameId;
-		if (animationFrameId % 12 && ++animationId > animationIdLimit)
-		{
-			animationId = 0;
-			animationFrameId = 0;
-		}
+		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
 	}
 
 	// change dir it can't move

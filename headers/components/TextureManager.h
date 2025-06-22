@@ -1,8 +1,8 @@
 ﻿#pragma once
 
+#include "AnimationManager.h"
 #include "Point.h"
 #include "enums/TextureOffset.h"
-#include "interfaces/IDrawable.h"
 #include <memory>
 #include <unordered_map>
 
@@ -23,6 +23,7 @@ class TextureManager final
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	mutable std::unordered_map<int, SDL_Texture*> _colorTextureCache;
+	std::shared_ptr<AnimationManager> _animationManager{nullptr};
 
 	void Subscribe() const;
 	void Unsubscribe() const;
@@ -39,7 +40,7 @@ class TextureManager final
 
 public:
 	TextureManager(UPoint windowSize, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
-	               std::shared_ptr<EventSystem> events);
+	               std::shared_ptr<EventSystem> events, std::shared_ptr<AnimationManager> animationManager);
 
 	~TextureManager();
 };
