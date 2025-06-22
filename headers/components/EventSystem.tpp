@@ -1,5 +1,7 @@
 #pragma once
 
+// #include <iostream>
+
 template<typename... Args>
 void Event<Args...>::AddListener(const std::string& listenerName, listenerCallback callback)
 {
@@ -32,15 +34,12 @@ void Event<Args...>::RemoveListener(const std::string& listenerName) { _listener
 template<typename... Args>
 void EventSystem::AddListener(const std::string& eventName, const std::string& listenerName, auto callback)
 {
-	if (std::holds_alternative<Event<Args...>>(_events[eventName]))
-	{
-		std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
-	}
-	else
+	if (!std::holds_alternative<Event<Args...>>(_events[eventName]))
 	{
 		_events[eventName] = Event<Args...>{};
-		std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
 	}
+
+	std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
 }
 
 template<typename... Args>
@@ -58,5 +57,9 @@ void EventSystem::RemoveListener(const std::string& eventName, const std::string
 	if (std::holds_alternative<Event<Args...>>(_events[eventName]))
 	{
 		std::get<Event<Args...>>(_events[eventName]).RemoveListener(listenerName);
+		// std::cout << "[" << "EventSystem::RemoveListener" << "] "
+		// 			<< ", eventName=" << eventName
+		// 			<< ", listenerName=" << listenerName
+		// 			<< std::endl;
 	}
 }

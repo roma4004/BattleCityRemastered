@@ -1,6 +1,6 @@
-#include "../../headers/components/GameStatistics.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/GameMode.h"
+#include "components/GameStatistics.h"
+#include "components/EventSystem.h"
+#include "enums/GameMode.h"
 
 //TODO: write statistics for pickuped bonuses
 GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
@@ -236,17 +236,17 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 	}
 }
 
-void GameStatistics::OnTankHit(const std::string& whoHit, const std::string& author, const std::string& fraction)
+void GameStatistics::OnTankHit(const std::string& who, const std::string& author, const std::string& fraction)
 {
-	if (whoHit == "Enemy1" || whoHit == "Enemy2" || whoHit == "Enemy3" || whoHit == "Enemy4")
+	if (who == "Enemy1" || who == "Enemy2" || who == "Enemy3" || who == "Enemy4")
 	{
 		OnEnemyHit(author, fraction);
 	}
-	else if (whoHit == "Player1" || whoHit == "CoopBot1")
+	else if (who == "Player1" || who == "CoopBot1")
 	{
 		OnPlayerOneHit(author, fraction);
 	}
-	else if (whoHit == "Player2" || whoHit == "CoopBot2")
+	else if (who == "Player2" || who == "CoopBot2")
 	{
 		OnPlayerTwoHit(author, fraction);
 	}
@@ -319,17 +319,17 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 	}
 }
 
-void GameStatistics::OnTankDied(const std::string& whoDied, const std::string& author, const std::string& fraction)
+void GameStatistics::OnTankDied(const std::string& who, const std::string& author, const std::string& fraction)
 {
-	if (whoDied == "Enemy1" || whoDied == "Enemy2" || whoDied == "Enemy3" || whoDied == "Enemy4")
+	if (who == "Enemy1" || who == "Enemy2" || who == "Enemy3" || who == "Enemy4")
 	{
 		OnEnemyDied(author, fraction);
 	}
-	else if (whoDied == "Player1" || whoDied == "CoopBot1")
+	else if (who == "Player1" || who == "CoopBot1")
 	{
 		OnPlayerOneDied(author, fraction);
 	}
-	else if (whoDied == "Player2" || whoDied == "CoopBot2")
+	else if (who == "Player2" || who == "CoopBot2")
 	{
 		OnPlayerTwoDied(author, fraction);
 	}

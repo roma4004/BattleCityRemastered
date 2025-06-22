@@ -7,8 +7,9 @@ enum GameMode : char8_t;
 class EventSystem;
 
 class GameStatistics final
-{//TODO: fix desync in statistics
-	std::string _name;
+{
+	//TODO: fix desync in statistics
+	std::string _name{};
 	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
@@ -57,11 +58,11 @@ class GameStatistics final
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
 	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnTankHit(const std::string& whoHit, const std::string& author, const std::string& fraction);
+	void OnTankHit(const std::string& who, const std::string& author, const std::string& fraction);
 	void OnEnemyDied(const std::string& author, const std::string& fraction);
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
-	void OnTankDied(const std::string& whoDied, const std::string& author, const std::string& fraction);
+	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
 	void OnBrickWallDied(const std::string& author, const std::string& fraction);
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
 

@@ -6,8 +6,11 @@ enum ObstacleType : char8_t
 
 	Brick,
 	Steel,
-	Water,
+	Eagle,
 	Fortress,
+	Water,
+	Grass,
+	Ice,
 
 	lastId
 };

@@ -1,45 +1,62 @@
-#include "../../headers/application/GameSuccess.h"
-#include "../../headers/Map.h"
-#include "../../headers/application/Window.h"
-#include "../../headers/components/BulletPool.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/components/Menu.h"
-#include "../../headers/components/TankSpawner.h"
-#include "../../headers/enums/GameMode.h"
-#include "../../headers/network/ClientHandler.h"
-#include "../../headers/network/ServerHandler.h"
-
+#include "application/GameSuccess.h"
+#include "application/userInput.h"
+#include "components/BonusEffectManager.h"
+#include "components/BonusSpawner.h"
+#include "components/BulletPool.h"
+#include "components/EventSystem.h"
+#include "components/Map.h"
+#include "components/Menu.h"
+#include "components/ObstacleSpawner.h"
+#include "components/TankSpawner.h"
+#include "entities/BaseObj.h"
+#include "enums/GameMode.h"
+#include "network/ClientHandler.h"
+#include "network/ServerHandler.h"
 #include <algorithm>
 //#include <fstream>
 #include <iostream>
 #include <memory>
+#include <boost/uuid/uuid_io.hpp>
 
 //#ifdef _WIN32
 //#define _WIN32_WINNT 0x0A00
 //#endif
 #define ASIO_STANDALONE
 
+Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
+{
+	const auto frameReady = static_cast<bool*>(param);
+	*frameReady = true;
+
+	return 0;
+}
+
+class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Renderer> renderer,
+GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
                          std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-                         std::unique_ptr<Menu> menu, const bool isVsyncOn)
+                         std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager,
+                         const bool isVsyncOn, std::shared_ptr<BonusEffectManager> bonusEffectManager)
 	: _selectedGameMode{OnePlayer},
+	  _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
-	  _window{window},
 	  _renderer{std::move(renderer)},
 	  _screen{std::move(screen)},
 	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, window, Demo)},
-	  _userInput{window, events},
-	  _bonusSpawner{events, &_allObjects, window},
-	  _obstacleSpawner{events, &_allObjects, window},
-	  _isVsyncOn{isVsyncOn}
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
+	  _textureManager(std::move(textureManager)),
+	  _userInput{std::make_shared<UserInput>(windowSize, events)},
+	  _tankSpawner{
+			  std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool,
+			                                std::move(bonusEffectManager))},
+	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
+	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
+	  _isVsyncOn{isVsyncOn},
+	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
 {
-	_tankSpawner = std::make_shared<TankSpawner>(window, &_allObjects, events, _bulletPool);
-
 	GenerateFpsTextures();
 
 	Subscribe();
@@ -49,6 +66,12 @@ GameSuccess::GameSuccess(std::shared_ptr<Window> window, std::shared_ptr<SDL_Ren
 
 GameSuccess::~GameSuccess()
 {
+	if (_frameTimer)
+	{
+		SDL_RemoveTimer(_frameTimer);
+		_frameTimer = 0;
+	}
+
 	Unsubscribe();
 }
 
@@ -74,6 +97,10 @@ void GameSuccess::Subscribe()
 		{
 			_networkNode = std::make_unique<ClientHandler>(_events);
 		}
+		else
+		{
+			_networkNode = nullptr;
+		}
 	});
 }
 
@@ -86,11 +113,11 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
-void GameSuccess::LoadMap()
+void GameSuccess::LoadMap() const
 {
 	//Map creation
-	const float gridOffset = static_cast<float>(_window->size.y) / 50.f;
-	const Map field{&_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
+	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
+	const Map field{_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
 	field.MapCreation(gridOffset);
 }
 
@@ -98,7 +125,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
 	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
 	{
-		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting client ready
+		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
 	}
 
 	_allObjects.clear();
@@ -106,7 +133,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	SetCurrentGameMode(gameMode);
 
-	_events->EmitEvent("Reset");
+	_events->EmitEvent("Reset");//TODO: recheck reset for new components
 
 	if (gameMode != PlayAsClient && gameMode != PlayAsHost)
 	{
@@ -174,41 +201,65 @@ void GameSuccess::GenerateFpsTextures()
 	}
 }
 
-void GameSuccess::CountFpsAndDeltaTime(float& deltaTime, Uint64& startFrameTime, const Uint64& endFrameTime)
+void GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
+                                       const std::chrono::high_resolution_clock::time_point& startFrameTime)
 {
-	static Uint64 lastUpdate{0};
+	static auto lastFpsUpdate = std::chrono::high_resolution_clock::now();
 	static Uint32 lastDisplayedFps{0};
-	static const Uint64 frequency{SDL_GetPerformanceFrequency()};
+	static Uint32 frameCounter{0};
 
-	const Uint64 frameDelta = endFrameTime - startFrameTime;
-	deltaTime = frameDelta / static_cast<float>(frequency);
+	std::chrono::high_resolution_clock::time_point endFrameTime = std::chrono::high_resolution_clock::now();
+	auto frameDuration = std::chrono::duration<double>(endFrameTime - startFrameTime);
+	deltaTime = static_cast<float>(frameDuration.count());
 
-	//Cap to 60 FPS
-	if (constexpr double targetFrameTime = 1.f / 60.f;
-		!_isVsyncOn && deltaTime < targetFrameTime)
+	if (!_isVsyncOn)
 	{
-		SDL_Delay(static_cast<Uint32>((targetFrameTime - deltaTime) * 1000));
-		deltaTime = targetFrameTime;
-	}
-
-	if (const Uint64 timeSinceLastUpdate = endFrameTime - lastUpdate;
-		timeSinceLastUpdate >= frequency)
-	{
-		const Uint32 fps = static_cast<int>(
-			std::round(static_cast<double>(frequency) / static_cast<double>(frameDelta)));
-		// SDL_Log("FPS %i", fps);
-
-		if (fps != lastDisplayedFps
-		    && _fpsTextures.contains(fps))
+		if (const auto timeToWait = _targetFrameDuration - frameDuration;
+			timeToWait.count() > 0)
 		{
-			lastDisplayedFps = fps;
-			_fpsTexture = _fpsTextures[fps];
-		}
+			_frameReady = false;
+			const Uint32 waitMs = static_cast<Uint32>(timeToWait.count() * 1000.0);
+			_frameTimer = SDL_AddTimer(waitMs, FrameTimerCallback, &_frameReady);
+			if (waitMs > 5)
+			{
+				SDL_Delay(waitMs - 5);
+			}
 
-		lastUpdate = endFrameTime;
+			while (!_frameReady)
+			{
+				SDL_PumpEvents();
+			}
+
+			if (_frameTimer)
+			{
+				SDL_RemoveTimer(_frameTimer);
+				_frameTimer = 0;
+			}
+
+			endFrameTime = std::chrono::high_resolution_clock::now();
+			frameDuration = std::chrono::duration<double>(endFrameTime - startFrameTime);
+			deltaTime = static_cast<float>(frameDuration.count());
+		}
 	}
 
-	startFrameTime = endFrameTime;
+	frameCounter++;
+	if (const auto timeSinceLastFpsUpdate = std::chrono::duration<double>(endFrameTime - lastFpsUpdate);
+		timeSinceLastFpsUpdate.count() >= 1.0)
+	{
+		const Uint32 fps = static_cast<Uint32>(std::round(frameCounter / timeSinceLastFpsUpdate.count()));
+		frameCounter = 0;
+		lastFpsUpdate = endFrameTime;
+
+		if (fps != lastDisplayedFps)
+		{
+			if (const Uint32 cappedFps = std::min(fps, 1000u);
+				_fpsTextures.contains(cappedFps))
+			{
+				lastDisplayedFps = fps;
+				_fpsTexture = _fpsTextures[cappedFps];
+			}
+		}
+	}
 }
 
 void GameSuccess::DisposeDeadObject()
@@ -223,6 +274,7 @@ void GameSuccess::DisposeDeadObject()
 		return !obj->GetIsAlive();
 	}).begin();
 
+	//TODO: run on debug only
 	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
 	{
 		if (itCopy->get() == nullptr)
@@ -230,8 +282,12 @@ void GameSuccess::DisposeDeadObject()
 			std::cout << "Disposing object nullptr " << std::endl;
 			continue;
 		}
-		std::cout << "Disposing object " << (*itCopy)->GetName() <<
-				/*" at position " << (*itCopy)->GetPosition().x << "," << (*itCopy)->GetPosition().y <<*/ std::endl;
+		const auto baseObj = *itCopy;
+		std::cout << "[" << "Disposing object" << "] "
+				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< ", name=" << baseObj->GetName()
+				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
+				<< std::endl;
 	}
 
 	_allObjects.erase(it, _allObjects.end());
@@ -240,7 +296,7 @@ void GameSuccess::DisposeDeadObject()
 //TODO: recheck rule of 3/5 for all classes
 //TODO: convert enum to enum classes
 
-void GameSuccess::OnClientReady()
+void GameSuccess::OnClientReady() const
 {
 	LoadMap();
 	this->_events->EmitEvent("Pause_Released");
@@ -250,62 +306,55 @@ void GameSuccess::MainLoop()
 {
 	try
 	{
-		Uint64 startFrameTime = SDL_GetPerformanceCounter();
 		float deltaTime{0.f};
-		const SDL_Rect fpsRectangle{.x = static_cast<int>(_window->size.x) - 80, .y = 20, .w = 40, .h = 40};
-		Uint64 endFrameTime{0u};
-		while (!_userInput.IsGameOver())
+		const SDL_Rect fpsRectangle{.x = static_cast<int>(_windowSize.x) - 80, .y = 20, .w = 40, .h = 40};
+		while (!_userInput->IsGameOver())
 		{
+			std::chrono::high_resolution_clock::time_point startFrameTime = std::chrono::high_resolution_clock::now();
+
 			if (_gameMode == PlayAsHost)
 			{
-				_events->EmitEvent("ServerSend_StartFrame");
+				_events->EmitEvent("Server_StartFrame");
 			}
 
-			CountFpsAndDeltaTime(deltaTime, startFrameTime, endFrameTime);
+			SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
+			SDL_RenderClear(_renderer.get());
 
-			_window->ClearBuffer();
+			_userInput->Update();
 
-			_userInput.Update();
+			_menu->MenuUpdate();
 
-			_events->EmitEvent("MenuUpdate");
-
-			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
-			{
-				//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
-				_events->EmitEvent<const float>("TickUpdate", deltaTime);
-			}
-
-			if (_gameMode != PlayAsClient && !_userInput.IsPause())
+			if (!_userInput->IsPause())
 			{
 				DisposeDeadObject();
-			}
 
-			if (!_userInput.IsPause() && _gameMode != PlayAsClient)
-			{
-				_events->EmitEvent("RespawnTanks");
+				if (_gameMode != PlayAsClient)
+				{
+					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
+					_events->EmitEvent<const float>("TickUpdate", deltaTime);
+
+					_tankSpawner->RespawnTanks();
+				}
 			}
 
 			_events->EmitEvent("Draw");
+			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
-			// update screen with buffer
-			SDL_UpdateTexture(_screen.get(), nullptr, _window->buffer.get(), static_cast<int>(_window->size.x) << 2);
-			SDL_RenderCopy(_renderer.get(), _screen.get(), nullptr, nullptr);
-
-			_events->EmitEvent("DrawMenu");
+			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part
 
 			// Copy the texture with FPS to the renderer
 			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);
 
 			SDL_RenderPresent(_renderer.get());
 
-			endFrameTime = SDL_GetPerformanceCounter();//TODO: change to system steady clock
-
 			if (_gameMode == PlayAsHost)
 			{
-				_events->EmitEvent("ServerSend_EndFrame");
+				_events->EmitEvent("Server_EndFrame");
 			}
+
+			CountFpsAndDeltaTime(deltaTime, startFrameTime);
 		}
 	}
 	catch (std::exception& e)

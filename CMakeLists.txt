@@ -161,7 +161,7 @@ set(BOOST_SUBMODULES
     libs/iterator
     libs/move
     libs/mpl
-    libs/numeric"
+    libs/numeric
     libs/optional
     libs/predef
     libs/preprocessor
@@ -175,7 +175,7 @@ set(BOOST_SUBMODULES
     libs/utility
     libs/winapi
     libs/uuid
-    tools/boost_install
+    tools/boost_install"
 )#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
@@ -239,7 +239,6 @@ else ()
     message(STATUS "------------------------------------------------------------")
 endif()
 
-# Додаємо Google Test
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -248,7 +247,7 @@ FetchContent_Declare(
     GIT_PROGRESS 1
     GIT_SHALLOW TRUE
 )
-# Вимикаємо створення тестових прикладів самого Google Test
+
 set(BUILD_GMOCK OFF CACHE BOOL "Build gmock" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
 FetchContent_MakeAvailable(googletest)
@@ -256,16 +255,62 @@ enable_testing()
 
 include_directories(headers)
 
-add_executable(${PROJECT_NAME}
-        source/BaseObj.cpp
+set(SOURCE_FILES
+        source/application/ConfigFailure.cpp
+        source/application/ConfigSuccess.cpp
+        source/application/GameFailure.cpp
+        source/application/GameSuccess.cpp
+        source/application/SDLEnvironment.cpp
+        source/application/UserInput.cpp
+        source/behavior/MoveLikeBulletBeh.cpp
+        source/behavior/MoveLikeTankBeh.cpp
+        source/behavior/ShootingBeh.cpp
+        source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
         source/components/LineOfSight.cpp
+        source/components/Map.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
-        source/Map.cpp
+        source/components/TextureManager.cpp
+        source/components/input/InputProviderForMenu.cpp
+        source/components/input/InputProviderForPlayerOne.cpp
+        source/components/input/InputProviderForPlayerOneNet.cpp
+        source/components/input/InputProviderForPlayerTwo.cpp
+        source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/entities/BaseObj.cpp
+        source/entities/ObjRectangle.cpp
+        source/entities/Obstacles/EagleTile.cpp
+        source/entities/Obstacles/GrassTile.cpp
+        source/entities/Obstacles/IceTile.cpp
+        source/entities/bonuses/Bonus.cpp
+        source/entities/bonuses/BonusCaliber.cpp
+        source/entities/bonuses/BonusGrenade.cpp
+        source/entities/bonuses/BonusHelmet.cpp
+        source/entities/bonuses/BonusShovel.cpp
+        source/entities/bonuses/BonusStar.cpp
+        source/entities/bonuses/BonusStatus.cpp
+        source/entities/bonuses/BonusTank.cpp
+        source/entities/bonuses/BonusTimer.cpp
+        source/entities/obstacles/BrickWall.cpp
+        source/entities/obstacles/FortressWall.cpp
+        source/entities/obstacles/Obstacle.cpp
+        source/entities/obstacles/SteelWall.cpp
+        source/entities/obstacles/WaterTile.cpp
+        source/entities/pawns/Bot.cpp
+        source/entities/pawns/Bullet.cpp
+        source/entities/pawns/CoopBot.cpp
+        source/entities/pawns/Enemy.cpp
+        source/entities/pawns/Pawn.cpp
+        source/entities/pawns/Player.cpp
+        source/entities/pawns/Tank.cpp
+        source/main.cpp
+        source/network/Client.cpp
+        source/network/ClientHandler.cpp
+        source/network/Server.cpp
+        source/network/ServerHandler.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp
@@ -279,86 +324,85 @@ add_executable(${PROJECT_NAME}
         source/network/commands/RespawnTank.cpp
         source/network/commands/StatisticsChange.cpp
         source/network/commands/TankShot.cpp
-        source/ObjRectangle.cpp
-        source/application/ConfigFailure.cpp
-        source/application/ConfigSuccess.cpp
-        source/application/GameFailure.cpp
-        source/application/GameSuccess.cpp
-        source/application/SDLEnvironment.cpp
-        source/application/UserInput.cpp
-        source/application/Window.cpp
-        source/behavior/MoveLikeAIBeh.cpp
-        source/behavior/MoveLikeBulletBeh.cpp
-        source/behavior/MoveLikeTankBeh.cpp
-        source/behavior/ShootingBeh.cpp
-        source/bonuses/Bonus.cpp
-        source/bonuses/BonusGrenade.cpp
-        source/bonuses/BonusHelmet.cpp
-        source/bonuses/BonusShovel.cpp
-        source/bonuses/BonusStar.cpp
-        source/bonuses/BonusStatus.cpp
-        source/bonuses/BonusTank.cpp
-        source/bonuses/BonusTimer.cpp
-        source/input/InputProviderForMenu.cpp
-        source/input/InputProviderForPlayerOne.cpp
-        source/input/InputProviderForPlayerOneNet.cpp
-        source/input/InputProviderForPlayerTwo.cpp
-        source/input/InputProviderForPlayerTwoNet.cpp
-        source/main.cpp
-        source/network/Client.cpp
-        source/network/ClientHandler.cpp
-        source/network/Server.cpp
-        source/network/ServerHandler.cpp
-        source/obstacles/BrickWall.cpp
-        source/obstacles/FortressWall.cpp
-        source/obstacles/Obstacle.cpp
-        source/obstacles/SteelWall.cpp
-        source/obstacles/WaterTile.cpp
-        source/pawns/Bot.cpp
-        source/pawns/Bullet.cpp
-        source/pawns/CoopBot.cpp
-        source/pawns/Enemy.cpp
-        source/pawns/Pawn.cpp
-        source/pawns/Player.cpp
-        source/pawns/Tank.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/utils/TimeUtils.cpp
+        source/utils/UuidUtils.cpp
 )
+
+set(SOURCE_FILES_FOR_UNIT_TESTS
+        source/Utils/ColliderUtils.cpp
+        source/Utils/TimeUtils.cpp
+        source/Utils/UuidUtils.cpp
+        source/behavior/MoveLikeBulletBeh.cpp
+        source/behavior/MoveLikeTankBeh.cpp
+        source/behavior/ShootingBeh.cpp
+        source/components/BonusEffectManager.cpp
+        source/components/BonusSpawner.cpp
+        source/components/BulletPool.cpp
+        source/components/GameStatistics.cpp
+        source/components/LineOfSight.cpp
+        source/components/ObstacleSpawner.cpp
+        source/components/TankSpawner.cpp
+        source/components/input/InputProviderForMenu.cpp
+        source/components/input/InputProviderForPlayerOne.cpp
+        source/components/input/InputProviderForPlayerOneNet.cpp
+        source/components/input/InputProviderForPlayerTwo.cpp
+        source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/entities/BaseObj.cpp
+        source/entities/ObjRectangle.cpp
+        source/entities/Obstacles/BrickWall.cpp
+        source/entities/Obstacles/EagleTile.cpp
+        source/entities/Obstacles/GrassTile.cpp
+        source/entities/Obstacles/IceTile.cpp
+        source/entities/Obstacles/SteelWall.cpp
+        source/entities/Obstacles/WaterTile.cpp
+        source/entities/bonuses/Bonus.cpp
+        source/entities/bonuses/BonusCaliber.cpp
+        source/entities/bonuses/BonusGrenade.cpp
+        source/entities/bonuses/BonusHelmet.cpp
+        source/entities/bonuses/BonusShovel.cpp
+        source/entities/bonuses/BonusStar.cpp
+        source/entities/bonuses/BonusStatus.cpp
+        source/entities/bonuses/BonusTank.cpp
+        source/entities/bonuses/BonusTimer.cpp
+        source/entities/obstacles/FortressWall.cpp
+        source/entities/obstacles/Obstacle.cpp
+        source/entities/pawns/Bot.cpp
+        source/entities/pawns/Bullet.cpp
+        source/entities/pawns/CoopBot.cpp
+        source/entities/pawns/Enemy.cpp
+        source/entities/pawns/Pawn.cpp
+        source/entities/pawns/Player.cpp
+        source/entities/pawns/Tank.cpp
+        source/utils/Logger.cpp
+)
+
+set(UNIT_TESTS_FILES
+        UnitTests/BonusTestsBasic.cpp
+        UnitTests/BonusTestsEnemy.cpp
+        UnitTests/BulletsTestsAdvanced.cpp
+        UnitTests/BulletsTestsBasic.cpp
+        UnitTests/PlayerTests.cpp
+        UnitTests/RespawnTankTests.cpp
+        UnitTests/StatisticsTestsAdvanced.cpp
+        UnitTests/StatisticsTestsBasic.cpp
+)
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     add_dependencies(${PROJECT_NAME} Boost)
 endif()
 
-# Додаємо тестовий виконуваний файл
-add_executable(unit_tests
-    # Підключаємо файли з тестами
-    UnitTests/BonusTestsBasic.cpp
-    UnitTests/BonusTestsEnemy.cpp
-    UnitTests/PlayerTests.cpp
-    UnitTests/BulletsTestsBasic.cpp
-    UnitTests/BulletsTestsAdvanced.cpp
-    UnitTests/StatisticsTestsBasic.cpp
-    UnitTests/StatisticsTestsAdvanced.cpp
-    UnitTests/RespawnTankTests.cpp
-)
+add_executable(unit_tests ${SOURCE_FILES_FOR_UNIT_TESTS} ${UNIT_TESTS_FILES})
 
-# Підключаємо необхідні бібліотеки до тестів
-target_link_libraries(unit_tests
-    gtest
-    gtest_main
-    # Додаємо ті ж бібліотеки, що й у основному проекті
-    SDL2-static
-    SDL2main
-    SDL2_ttf
-    SDL2_image
-    SDL2_mixer
-    ${Boost_LIBRARIES}
-    wsock32
-    ws2_32
-)
+if (NOT EXISTS ${BOOST_SEMAPHORE})
+    add_dependencies(unit_tests Boost)
+endif()
 
-# Додаємо інтеграцію тестів з CTest
+target_include_directories(unit_tests PRIVATE headers)
+target_link_libraries(unit_tests gtest gtest_main ${Boost_LIBRARIES})
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 
@@ -381,12 +425,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-bu
         "../${FONT_PATH_NAME}"                                  # <--this is in-file
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${FONT_PATH_NAME}") # <--this is out-file path
 
-set(LOGO_PATH                   Resources/Images)
-set(LOGO_PATH_NAME              ${LOGO_PATH}/Title.png)
+set(IMG_PATH                   Resources/Images)
+set(LOGO_PATH_NAME              ${IMG_PATH}/Title.png)
+set(ATLAS_PATH_NAME              ${IMG_PATH}/SpriteSheet.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LOGO_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${ATLAS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${ATLAS_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)

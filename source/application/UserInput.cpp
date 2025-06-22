@@ -1,11 +1,10 @@
-#include "../../headers/application/UserInput.h"
-#include "../../headers/application/Window.h"
-#include "../../headers/components/EventSystem.h"
-
+#include "application/UserInput.h"
+#include "components/EventSystem.h"
+#include <SDL_events.h>
 #include <iostream>
 
-UserInput::UserInput(std::shared_ptr<Window> window, std::shared_ptr<EventSystem> events)
-	: _window{std::move(window)}, _events{std::move(events)}
+UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events)
+	: _windowSize{windowSize}, _events{std::move(events)}
 {
 	Subscribe();
 }
@@ -30,13 +29,18 @@ void UserInput::Unsubscribe() const
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {
+	//TODO: if already pause not to pause window again on start dragging
 	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_MOVED)
 	{
 		if (!_isMoving)
 		{
 			_isMoving = true;
 
-			_events->EmitEvent("Pause_Released");
+			if (!_isPause)
+			{
+				_isPauseBeforeDragNDrop = _isPause;//Backup to let pause status the same as it was before dragging
+				_events->EmitEvent("Pause_Released");
+			}
 		}
 
 		_lastMoveEventTime = std::chrono::system_clock::now();
@@ -51,7 +55,10 @@ void UserInput::OnWindowMoveStop()
 		{
 			_isMoving = false;
 
-			_events->EmitEvent("Pause_Released");
+			if (!_isPauseBeforeDragNDrop)
+			{
+				_events->EmitEvent("Pause_Released");
+			}
 		}
 	}
 }
@@ -83,8 +90,8 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
-		if (x < 1 || y < 1 ||
-		    x >= static_cast<Sint32>(_window->size.x) - 1 && y >= static_cast<Sint32>(_window->size.y) - 1)
+		if (x < 1 || y < 1 || x >= static_cast<Sint32>(_windowSize.x) - 1
+		    && y >= static_cast<Sint32>(_windowSize.y) - 1)
 		{
 			return;
 		}

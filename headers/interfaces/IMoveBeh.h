@@ -10,12 +10,13 @@ class IMoveBeh
 	[[nodiscard]] virtual std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const = 0;
 
 protected:
-	virtual void MoveLeft(float deltaTime) const = 0;
-	virtual void MoveRight(float deltaTime) const = 0;
-	virtual void MoveUp(float deltaTime) const = 0;
-	virtual void MoveDown(float deltaTime) const = 0;
+	[[nodiscard]] virtual bool MoveLeft(float deltaTime) const = 0;
+	[[nodiscard]] virtual bool MoveRight(float deltaTime) const = 0;
+	[[nodiscard]] virtual bool MoveUp(float deltaTime) const = 0;
+	[[nodiscard]] virtual bool MoveDown(float deltaTime) const = 0;
 
 public:
 	virtual ~IMoveBeh() = default;
-	virtual void Move(float deltaTime) const = 0;
+
+	[[nodiscard]] virtual bool Move(float deltaTime) const = 0;
 };

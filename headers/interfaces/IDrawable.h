@@ -1,9 +1,12 @@
 #pragma once
 
+class BaseObj;
+
 class IDrawable
 {
-	virtual void Draw() const = 0;
-
 protected:
 	virtual ~IDrawable() = default;
+
+public:
+	virtual void Draw(const BaseObj* obj) const = 0;
 };

@@ -1,15 +1,13 @@
 #pragma once
 
-#include "../Point.h"
-#include "../input/InputProviderForMenu.h"
-
+#include "Point.h"
+#include "components/input/InputProviderForMenu.h"
 #include <SDL.h>
 #include <SDL_ttf.h>
 
 class GameStatistics;
 class InputProviderForMenu;
 class EventSystem;
-struct Window;
 
 class Menu final
 {
@@ -20,7 +18,6 @@ class Menu final
 	unsigned int _yOffsetStart{};
 	GameMode _selectedGameMode{};
 
-	std::shared_ptr<Window> _window{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<TTF_Font> _menuFont{nullptr};
@@ -36,7 +33,7 @@ class Menu final
 	int _playerOneRespawnResource{3};
 	int _playerTwoRespawnResource{3};
 
-	std::string _name;
+	std::string _name{};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -51,7 +48,6 @@ class Menu final
 	void RenderTextWithAlignment(Point pos, SDL_Color color, const std::string& text, const std::string& text2,
 	                             const std::string& text3) const;
 
-	void DrawMenu();
 	void DrawBackground() const;
 	void DrawMenuLogo() const;
 	void DrawText() const;
@@ -60,13 +56,13 @@ class Menu final
 
 public:
 	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics,
-	     std::shared_ptr<Window> window,
+	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
 	     std::shared_ptr<EventSystem> events);
 
 	~Menu();
 
 	void MenuUpdate() const;
+	void DrawMenu();
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

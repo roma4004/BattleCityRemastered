@@ -10,7 +10,7 @@ class BaseObj;
 
 class LineOfSight final
 {
-	std::vector<ObjRectangle> _checkLos;
+	std::vector<ObjRectangle> _lineOfSightBoundaries{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>> _upSideObstacles{};
@@ -19,14 +19,16 @@ class LineOfSight final
 	std::vector<std::shared_ptr<BaseObj>> _rightSideObstacles{};
 
 public:
-	LineOfSight(ObjRectangle tankShape, const UPoint& windowSize, FPoint bulletSize,
-	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf);
-	LineOfSight(ObjRectangle tankShape, const UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const BaseObj* excludeSelf);
+	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize, FPoint bulletSize,
+	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+	            bool isWaterSkip = true);
+	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize,
+	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+	            bool isWaterSkip = true);
 
 	~LineOfSight();
 
-	void CheckLOS(const BaseObj* excludeSelf);
+	void CheckLineOfSight(const BaseObj* excludeSelf, bool isWaterSkip);
 	void SortToNearest();
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetUpSideObstacles();

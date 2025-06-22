@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../interfaces/IMoveBeh.h"
-
+#include "interfaces/IMoveBeh.h"
 #include <functional>
 #include <memory>
 
@@ -15,18 +14,19 @@ class MoveLikeTankBeh final : public IMoveBeh
 
 	static void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank);
 
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
+	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
+	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+
+	[[nodiscard]] bool MoveLeft(float deltaTime) const override;
+	[[nodiscard]] bool MoveRight(float deltaTime) const override;
+	[[nodiscard]] bool MoveUp(float deltaTime) const override;
+	[[nodiscard]] bool MoveDown(float deltaTime) const override;
+
 public:
 	MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeTankBeh() override = default;
 
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
-	float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
-
-	void Move(float deltaTime) const override;
-	void MoveLeft(float deltaTime) const override;
-	void MoveRight(float deltaTime) const override;
-	void MoveUp(float deltaTime) const override;
-	void MoveDown(float deltaTime) const override;
+	[[nodiscard]] bool Move(float deltaTime) const override;
 };

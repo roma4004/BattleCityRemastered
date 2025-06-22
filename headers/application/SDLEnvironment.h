@@ -1,11 +1,12 @@
 #pragma once
 
-#include <SDL.h>
-#include <SDL_mixer.h>
+#include "Point.h"
+#include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
 #include <memory>
 
 struct UPoint;
-struct Window;
+struct Mix_Chunk;
+
 class IConfig;
 
 struct SDLEnvironment final
@@ -14,15 +15,17 @@ struct SDLEnvironment final
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::shared_ptr<Mix_Chunk> levelStartedSound{nullptr};
 
-	std::shared_ptr<Window> window{nullptr};
+	UPoint windowSize{};
 
 	const char* fpsFontPathName{nullptr};
 	const char* logoPathName{nullptr};
 	const char* introMusicPathName{nullptr};
+	const char* textureAtlasPath{nullptr};
 
-	bool isVsyncOn{true};//TODO: add input as constructor parameter and export to gameSuccess
+	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
-	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName, const char* introMusicName);
+	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName, const char* introMusicName,
+	               const char* textureCollection);
 
 	~SDLEnvironment();
 

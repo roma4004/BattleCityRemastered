@@ -1,5 +1,4 @@
-#include "../../../headers/network/commands/KeyStateChange.h"
-
+#include "network/commands/KeyStateChange.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>
@@ -7,10 +6,10 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(KeyStateChange);
 
-KeyStateChange::KeyStateChange(): Command(CommandType::STATISTICS_CHANGE) {}
+KeyStateChange::KeyStateChange(): Command(CommandType::KEY_STATE_CHANGE) {}
 
 KeyStateChange::KeyStateChange(const std::string& keyState)
-	: Command(CommandType::STATISTICS_CHANGE), _keyState(keyState) {}
+	: Command(CommandType::KEY_STATE_CHANGE), _keyState(keyState) {}
 
 const std::string& KeyStateChange::GetKeyState() const { return _keyState; }
 

@@ -1,21 +1,20 @@
-#include "../../headers/application/SDLEnvironment.h"
-#include "../../headers/application/ConfigFailure.h"
-#include "../../headers/application/ConfigSuccess.h"
-#include "../../headers/application/Window.h"
-
-#include <SDL.h>
+#include "application/SDLEnvironment.h"
+#include "application/ConfigFailure.h"
+#include "application/ConfigSuccess.h"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <memory>
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
-                               const char* introMusicName)
-	: window{std::make_shared<Window>(windowSize)},
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
+                               const char* introMusicName, const char* textureCollection)
+	: windowSize{windowSize},
 	  fpsFontPathName{fpsFontName},
 	  logoPathName{logoName},
-	  introMusicPathName{introMusicName} {}
+	  introMusicPathName{introMusicName},
+	  textureAtlasPath{textureCollection} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -34,7 +33,7 @@ SDLEnvironment::~SDLEnvironment()
 
 	const auto title = "Battle City remastered";
 	constexpr auto windowFlags = SDL_WINDOW_SHOWN;
-	const SDL_Rect rect{100, 100, static_cast<int>(window->size.x), static_cast<int>(window->size.y)};
+	const SDL_Rect rect{100, 100, static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)};
 	sdlWindow = std::shared_ptr<SDL_Window>(SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags),
 	                                        SDL_DestroyWindow);
 	if (sdlWindow == nullptr)
@@ -53,15 +52,14 @@ SDLEnvironment::~SDLEnvironment()
 	SDL_Rect bounds;
 	SDL_GetDisplayBounds(monitorIndex, &bounds);
 
-	SDL_Rect windowBordersSize;
-	SDL_GetWindowBordersSize(
-			sdlWindow.get(), &windowBordersSize.y, &windowBordersSize.x, &windowBordersSize.h, &windowBordersSize.w);
+	SDL_Rect bordersSize;
+	SDL_GetWindowBordersSize(sdlWindow.get(), &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
 		                      bounds.x + bounds.w / 2 - rect.w / 2,
-		                      bounds.y + bounds.h / 2 - rect.h / 2 - windowBordersSize.y);
+		                      bounds.y + bounds.h / 2 - rect.h / 2 - bordersSize.y);
 	}
 
 	renderer = std::shared_ptr<SDL_Renderer>(SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags),
@@ -124,5 +122,18 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
-	return std::make_unique<ConfigSuccess>(window, renderer, screen, fpsFont, logoTexture, isVsyncOn);
+	const std::shared_ptr<SDL_Surface> atlasSurface(IMG_Load(textureAtlasPath), SDL_FreeSurface);
+	if (atlasSurface == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("IMG atlas Surface Loading Error", IMG_GetError());
+	}
+
+	std::shared_ptr<SDL_Texture> atlasTexture(SDL_CreateTextureFromSurface(renderer.get(), atlasSurface.get()),
+	                                          SDL_DestroyTexture);
+	if (atlasTexture == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
+	}
+
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, screen, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }

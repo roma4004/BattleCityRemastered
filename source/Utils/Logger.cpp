@@ -1,5 +1,4 @@
-#include "../../headers/utils/Logger.h"
-
+#include "utils/Logger.h"
 #include <iostream>
 #include <sstream>
 
@@ -49,7 +48,7 @@ std::string Logger::GetCurrentTimeString()
 {
 	const auto now = std::chrono::system_clock::now();
 	const auto nowTime = std::chrono::system_clock::to_time_t(now);
-	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+	const auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
 	std::tm timeInfo;
 	localtime_s(&timeInfo, &nowTime);

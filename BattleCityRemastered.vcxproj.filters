@@ -104,9 +104,6 @@
     <ClCompile Include="source\application\SDLEnvironment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\application\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\obstacles\BrickWall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -311,9 +308,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\application\SDLEnvironment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\application\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\obstacles\BrickWall.h">

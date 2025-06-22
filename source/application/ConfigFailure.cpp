@@ -1,6 +1,5 @@
-#include "../../headers/application/ConfigFailure.h"
-#include "../../headers/application/GameFailure.h"
-
+#include "application/ConfigFailure.h"
+#include "application/GameFailure.h"
 #include <iostream>
 
 ConfigFailure::ConfigFailure(std::string errorType, const char* errorDescription)

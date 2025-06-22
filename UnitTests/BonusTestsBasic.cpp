@@ -1,33 +1,32 @@
-#include "../headers/application/Window.h"
-#include "../headers/components/BonusSpawner.h"
-#include "../headers/components/BulletPool.h"
-#include "../headers/components/EventSystem.h"
-#include "../headers/components/TankSpawner.h"
-#include "../headers/enums/BonusType.h"
-#include "../headers/enums/Direction.h"
-#include "../headers/enums/GameMode.h"
-#include "../headers/input/InputProviderForPlayerOne.h"
-#include "../headers/obstacles/FortressWall.h"
-#include "../headers/pawns/Bullet.h"
-#include "../headers/pawns/Enemy.h"
-#include "../headers/pawns/PawnProperty.h"
-#include "../headers/pawns/Player.h"
-
+#include "components/BonusEffectManager.h"
+#include "components/BonusSpawner.h"
+#include "components/BulletPool.h"
+#include "components/EventSystem.h"
+#include "components/TankSpawner.h"
+#include "components/input/InputProviderForPlayerOne.h"
+#include "entities/obstacles/FortressWall.h"
+#include "entities/pawns/Bullet.h"
+#include "entities/pawns/Enemy.h"
+#include "entities/pawns/PawnProperty.h"
+#include "entities/pawns/Player.h"
+#include "enums/BonusType.h"
+#include "enums/Direction.h"
+#include "enums/GameMode.h"
 #include "gtest/gtest.h"
-
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class BonusTest : public testing::Test
 {
+	using buuid = boost::uuids::uuid;
+
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<Window> _window{nullptr};
+	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-
+	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
 	int _yellow{0xeaea00};
 	int _gray{0x808080};
@@ -41,28 +40,31 @@ protected:
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_window = std::make_shared<Window>(UPoint{.x = 800, .y = 600}, std::shared_ptr<int[]>());
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _window, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_window, &_allObjects, _events, _bulletPool);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _window);
-		_gridSize = static_cast<float>(_window->size.y) / 50.f;
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
+		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
+		_tankSpawner = std::make_shared<TankSpawner>(
+				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 		std::string name = "Player1";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _yellow, _tankHealth, true, _uuid, std::move(name), std::move(fraction)};
-		PawnProperty pawnProperty{std::move(baseObjProperty), _window, UP, _tankSpeed, &_allObjects, _events, 1, _gameMode};
-
+		BaseObjProperty baseObjProperty{rect, _yellow, _tankHealth, true, _uuid, std::move(name), std::move(fraction)};
+		PawnProperty pawnProperty{
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
 
 		_allObjects.reserve(4);
-		_allObjects.emplace_back(std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider)));
+		_allObjects.emplace_back(
+				std::make_shared<Player>(
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
 	}
 
 	void TearDown() override
@@ -71,11 +73,11 @@ protected:
 	}
 };
 
-// Check that tank can pick up random bonus
+// Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusPickUp)
 {
 	const size_t size = _allObjects.size();
-	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 2.f, .w = _tankSize, .h = _tankSize});
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 	_events->EmitEvent("S_Pressed");
 
 	if (const auto bonus = _allObjects.back().get())
@@ -93,7 +95,7 @@ TEST_F(BonusTest, BonusPickUp)
 	}
 }
 
-// Check that tank can pick up random bonus
+// Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusNotPickUp)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
@@ -129,11 +131,13 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 		_events->EmitEvent("S_Pressed");
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _tankSpeed};
 
-		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
+		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{});
+
+		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint enemyPos = enemy->GetPos();
 
@@ -147,7 +151,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can pick up random bonus
+// Check that tank can pick up a random bonus
 TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
@@ -157,11 +161,12 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 		_events->EmitEvent("W_Pressed");
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _tankSpeed};
 
-		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
+		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{});
+		//TODO: spawn with helmet or timer effect for test instead of bonus pickup in separated test
 
 		const FPoint enemyPos = enemy->GetPos();
 
@@ -199,12 +204,13 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 		std::string author{"Enemy1"};
 		ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, LEFT, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, LEFT, _bulletSpeed};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+				std::make_shared<Bullet>(
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 		if (dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -223,7 +229,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 
 TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
 		const int playerHealth = player->GetHealth();
 
@@ -245,12 +251,13 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		std::string author{"Enemy1"};
 		ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjProperty{
-			std::move(rect), _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, LEFT, _bulletSpeed, &_allObjects, _events, 1, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, LEFT, _bulletSpeed};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+				std::make_shared<Bullet>(
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
 		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
 
@@ -268,11 +275,11 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	_events->EmitEvent("S_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-		std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _tankSpeed};
 
-	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
+	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{});
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -296,11 +303,11 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	_events->EmitEvent("W_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{std::move(rect), _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-		std::move(baseObjProperty), _window, DOWN, _tankSpeed, &_allObjects, _events, 1, _gameMode};
+			std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _tankSpeed};
 
-	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool);
+	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{});
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -420,7 +427,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, _uuid, _gameMode);
+			                               _events, &_allObjects, _uuid, _gameMode);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
@@ -437,7 +444,7 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-			                               _window, _events, &_allObjects, _uuid, _gameMode);
+			                               _events, &_allObjects, _uuid, _gameMode);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 

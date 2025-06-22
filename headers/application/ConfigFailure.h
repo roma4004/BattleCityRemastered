@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../interfaces/IConfig.h"
-
+#include "interfaces/IConfig.h"
 #include <string>
 
 class ConfigFailure final : public IConfig
 {
-	std::string _error;
-	const char* _description;
+	std::string _error{};
+	const char* _description{};
 
 public:
 	ConfigFailure() = delete;

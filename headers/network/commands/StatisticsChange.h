@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Command.h"
-
 #include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-
 
 class StatisticsChange : public Command
 {
@@ -24,20 +22,23 @@ public:
 
 	~StatisticsChange() override = default;
 
-	const std::string& GetEventName() const;
-	const std::string& GetAuthor() const;
-	const std::string& GetFraction() const;
+	[[nodiscard]] const std::string& GetEventName() const;
+	[[nodiscard]] const std::string& GetAuthor() const;
+	[[nodiscard]] const std::string& GetFraction() const;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/)
-	{
-		ar & boost::serialization::base_object<Command>(*this);
-		ar & _eventName;
-		ar & _author;
-		ar & _fraction;
-	}
+	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
+
+template<class Archive>
+void StatisticsChange::serialize(Archive& ar, const unsigned int)
+{
+	ar & boost::serialization::base_object<Command>(*this);
+	ar & _eventName;
+	ar & _author;
+	ar & _fraction;
+}
 
 BOOST_CLASS_EXPORT_KEY(StatisticsChange);

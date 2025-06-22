@@ -1,31 +1,32 @@
 #pragma once
 
+#include "Command.h"
+#include "UuidSerialization.h"
 #include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
-#include "Command.h"
-#include "UuidSerialization.h"
-
 class Dispose : public Command
 {
+	using buuid = boost::uuids::uuid;
+
 	friend class boost::serialization::access;
 
 	std::string _who{};
-	boost::uuids::uuid _uuid{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	Dispose();
 
 	//for serialization
-	Dispose(const std::string& who, boost::uuids::uuid uuid);
+	Dispose(const std::string& who, buuid uuid);
 
 	~Dispose() override = default;
 
-	const std::string& GetWho() const;
-	boost::uuids::uuid GetUuid() const;
+	[[nodiscard]] const std::string& GetWho() const;
+	[[nodiscard]] buuid GetUuid() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/)
@@ -35,7 +36,7 @@ public:
 		ar & _uuid;
 	}
 
-	const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const override;
 };
 
 BOOST_CLASS_EXPORT_KEY(Dispose);

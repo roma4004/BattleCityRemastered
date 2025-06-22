@@ -1,4 +1,4 @@
-#include "../../headers/application/GameFailure.h"
+#include "application/GameFailure.h"
 
 void GameFailure::MainLoop() {}
 

@@ -1,30 +1,31 @@
-#include "../../headers/network/Client.h"
-
-#include "../../headers/ObjRectangle.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/ComandType.h"
-#include "../../headers/enums/TankType.h"
-#include "../../headers/network/commands/BonusDeSpawn.h"
-#include "../../headers/network/commands/BonusSpawn.h"
-#include "../../headers/network/commands/Command.h"
-#include "../../headers/network/commands/CommandBatch.h"
-#include "../../headers/network/commands/Dispose.h"
-#include "../../headers/network/commands/FortressChange.h"
-#include "../../headers/network/commands/HealthChange.h"
-#include "../../headers/network/commands/ObstacleSpawn.h"
-#include "../../headers/network/commands/PositionChange.h"
-#include "../../headers/network/commands/RespawnTank.h"
-#include "../../headers/network/commands/StatisticsChange.h"
-#include "../../headers/network/commands/TankShot.h"
-
+#include "network/Client.h"
+#include "components/EventSystem.h"
+#include "entities/ObjRectangle.h"
+#include "enums/ComandType.h"
+#include "enums/TankType.h"
+#include "network/commands/BonusDeSpawn.h"
+#include "network/commands/BonusSpawn.h"
+#include "network/commands/Command.h"
+#include "network/commands/CommandBatch.h"
+#include "network/commands/Dispose.h"
+#include "network/commands/FortressChange.h"
+#include "network/commands/HealthChange.h"
+#include "network/commands/KeyStateChange.h"
+#include "network/commands/ObstacleSpawn.h"
+#include "network/commands/PositionChange.h"
+#include "network/commands/RespawnTank.h"
+#include "network/commands/StatisticsChange.h"
+#include "network/commands/TankShot.h"
+#include "utils/UuidUtils.h"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 // std::ofstream error_log("error_log_client.txt");
+
+using buuid = boost::uuids::uuid;
 
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
                std::shared_ptr<EventSystem> events)
@@ -116,7 +117,7 @@ void Client::Unsubscribe() const
 void Client::ReadResponse()
 {
 	// auto self(shared_from_this());
-	auto lambda = [this, events = _events](const boost::system::error_code& ec, const std::size_t length)
+	auto lambda = [this/*, events = _events*/](const boost::system::error_code& ec, const std::size_t length)
 	{
 		if (ec)
 		{
@@ -147,6 +148,10 @@ void Client::ReadResponse()
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
 			// else if (data.eventName == "OnStar")
+			// {
+			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
+			// }
+			//else if (data.eventName == "OnCaliber")
 			// {
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
@@ -204,7 +209,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const Direction, const boost::uuids::uuid>(
+		_events->EmitEvent<const FPoint, const Direction, const buuid&>(
 				"ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
 	}
 }
@@ -213,8 +218,8 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
 	{
-		const boost::uuids::uuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const Direction, const boost::uuids::uuid>(
+		const buuid uuid = cmd->GetUuid();
+		_events->EmitEvent<const Direction, const buuid&>(
 				"ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), uuid);
 	}
 }
@@ -224,7 +229,7 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
 		_events->EmitEvent<const int>(
-				"ClientReceived_" + cmd->GetWho() + boost::uuids::to_string(cmd->GetUuid()) + "Health",
+				"ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
 				cmd->GetHealth());
 	}
 }
@@ -233,7 +238,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		_events->EmitEvent<const boost::uuids::uuid>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
+		_events->EmitEvent<const buuid&>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
 	}
 }
 
@@ -249,9 +254,9 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command) const
 // void Client::OnKeyStateChange<//TODO: template this>(const std::shared_ptr<Command>& command) const
 void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
 {
-	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
+	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetEventName());
+		_events->EmitEvent(cmd->GetKeyState());
 	}
 }
 
@@ -259,8 +264,8 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		const boost::uuids::uuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const std::string&, const boost::uuids::uuid>(
+		const buuid uuid = cmd->GetUuid();
+		_events->EmitEvent<const std::string&, const buuid&>(
 				"ClientReceived_FortressChange", cmd->GetState(), uuid);
 	}
 }
@@ -269,7 +274,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const boost::uuids::uuid>(
+		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
 				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
 	}
 }
@@ -278,7 +283,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const boost::uuids::uuid>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
+		_events->EmitEvent<const buuid&>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
 	}
 }
 
@@ -286,7 +291,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
 	{
-		_events->EmitEvent<const TankType, const boost::uuids::uuid>(
+		_events->EmitEvent<const TankType, const buuid&>(
 				"ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
 	}
 }
@@ -295,7 +300,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const ObjRectangle, const ObstacleType, const boost::uuids::uuid>(
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
 				"ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
 	}
 }

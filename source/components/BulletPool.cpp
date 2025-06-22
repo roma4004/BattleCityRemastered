@@ -1,10 +1,9 @@
-#include "../../headers/components/BulletPool.h"
-#include "../../headers/components/EventSystem.h"
-#include "../../headers/enums/Direction.h"
-#include "../../headers/enums/GameMode.h"
-#include "../../headers/pawns/Bullet.h"
-#include "../../headers/pawns/PawnProperty.h"
-
+#include "components/BulletPool.h"
+#include "Point.h"
+#include "components/EventSystem.h"
+#include "entities/pawns/Bullet.h"
+#include "entities/pawns/PawnProperty.h"
+#include "enums/GameMode.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -13,12 +12,12 @@
 #include <boost/uuid/uuid_io.hpp>
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       std::shared_ptr<Window> window, const GameMode gameMode)
-	: _events{std::move(events)},
-	  _name{"BulletPool"},
+                       const UPoint windowSize, const GameMode gameMode)
+	: _name{"BulletPool"},
 	  _gameMode{gameMode},
-	  _allObjects{allObjects},
-	  _window{std::move(window)}
+	  _windowSize{windowSize},
+	  _events{std::move(events)},
+	  _allObjects{allObjects}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)
@@ -41,7 +40,7 @@ std::string BulletPool::GetCurrentTimeString()
 {
 	const auto now = std::chrono::system_clock::now();
 	const auto nowTime = std::chrono::system_clock::to_time_t(now);
-	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+	const auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
 	std::tm timeInfo;
 	localtime_s(&timeInfo, &nowTime);
@@ -70,50 +69,19 @@ void BulletPool::Unsubscribe() const
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 }
 
-std::shared_ptr<Bullet> BulletPool::CreateNewBullet(ObjRectangle rect, const int damage, const double aoeRadius,
-                                                    const int color, const int health, const Direction dir,
-                                                    const float speed, std::string author, std::string fraction,
-                                                    const int tier)
+std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
-	static boost::uuids::random_generator uuidGenerator;
-	boost::uuids::uuid bulletUuid = uuidGenerator();
-	std::string uuidStr = boost::uuids::to_string(bulletUuid);
-	std::string name{"Bullet"};
-
-	// std::cout << "[" << GetCurrentTimeString() << "] "
-	// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 		<< "Bullet CREATED and Bullet pool size =" << _bullets.size()
-	// 		<< ", Author=" << author
-	// 		<< ", Direction=" << static_cast<int>(dir)
-	// 		<< ", Fraction=" << fraction
-	// 		<< ", UUID=" << bulletUuid
-	// 		<< std::endl;
-
-	BaseObjProperty baseObjProperty{
-			std::move(rect), color, health, true, bulletUuid, std::move(name), std::move(fraction)};
-	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _window, dir, speed, _allObjects, _events, tier, _gameMode};
-	return std::shared_ptr<Bullet>(
-			new Bullet{std::move(pawnProperty), damage, aoeRadius, std::move(author), bulletUuid, uuidStr},
-			[this](Bullet* b)
-			{
-				ReturnBullet(b);
-			});
+	PawnProperty pawnProperty{{}, _allObjects, _events, _windowSize, _gameMode};
+	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
 }
 
-std::shared_ptr<BaseObj> BulletPool::SpawnBullet(const ObjRectangle rect, const int damage, const double aoeRadius,
-                                                 const int color, const int health, const Direction dir,
-                                                 const float speed, std::string author, std::string fraction,
-                                                 const int tier)
+std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 {
 	std::lock_guard<std::mutex> lock(_bulletsMutex);
 
 	if (_bullets.empty())
 	{
-		std::shared_ptr<BaseObj> bullet = CreateNewBullet(
-				rect, damage, aoeRadius, color, health, dir, speed, std::move(author), std::move(fraction), tier);
-
-		return bullet;
+		return CreateNewBullet();
 	}
 
 	std::shared_ptr<BaseObj> bulletAsBase = _bullets.front();
@@ -160,7 +128,8 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		_events->EmitEvent<const boost::uuids::uuid>("ServerSend_Dispose", bulletCast->GetUuid());
+		using buuid = boost::uuids::uuid;
+		_events->EmitEvent<const buuid&>("ServerSend_Dispose", bulletCast->GetUuid());
 	}
 }
 

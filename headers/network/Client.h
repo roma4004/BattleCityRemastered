@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../../headers/Point.h"
+#include "Point.h"
 #include "commands/Command.h"
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,11 +25,11 @@ struct ClientData final
 	int respawnResource{-1};
 	int id{-1};
 	BonusType type{};
-	std::string who;
-	std::string eventType;
-	std::string eventName;
-	std::string fraction;
-	std::vector<std::string> names;
+	std::string who{};
+	std::string eventType{};
+	std::string eventName{};
+	std::string fraction{};
+	std::vector<std::string> names{};
 	FPoint pos{};
 	Direction dir{};
 };
@@ -66,10 +65,10 @@ public:
 
 private:
 	boost::asio::ip::tcp::socket _socket;
-	boost::asio::streambuf _read_buffer;
-	boost::asio::streambuf _write_buffer;
+	boost::asio::streambuf _read_buffer{};
+	boost::asio::streambuf _write_buffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::string _name;
+	std::string _name{};
 };
 
 // Include the template implementation

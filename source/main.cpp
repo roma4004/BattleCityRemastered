@@ -1,7 +1,7 @@
-#include "../headers/Point.h"
-#include "../headers/application/SDLEnvironment.h"
-#include "../headers/interfaces/IConfig.h"
-#include "../headers/interfaces/IGame.h"
+#include "Point.h"
+#include "application/SDLEnvironment.h"
+#include "interfaces/IConfig.h"
+#include "interfaces/IGame.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -10,7 +10,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 			windowSize,
 			"Resources/Fonts/PressStart2P-vaV7.ttf",
 			"Resources/Images/Title.png",
-			"Resources/Sounds/levelStarted.wav");
+			"Resources/Sounds/levelStarted.wav",
+			"Resources/Images/SpriteSheet.png");
 	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
 	const std::unique_ptr<IGame> game = sdl->CreateGame();
 

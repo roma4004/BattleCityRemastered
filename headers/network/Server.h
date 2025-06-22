@@ -3,14 +3,12 @@
 #include "../Point.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
-
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
-
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <mutex>
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
 //TODO: remove vector.hpp include after refactoring to command pattern
 
@@ -32,11 +30,11 @@ struct ServerData final
 	int respawnResource{-1};
 	int id{-1};
 	BonusType type{};
-	std::string who;
-	std::string eventType;
-	std::string eventName;
-	std::string fraction;
-	std::vector<std::string> names;
+	std::string who{};
+	std::string eventType{};
+	std::string eventName{};
+	std::string fraction{};
+	std::vector<std::string> names{};
 	FPoint pos{};
 	Direction dir{};
 };
@@ -44,8 +42,8 @@ struct ServerData final
 class Session final : public std::enable_shared_from_this<Session>
 {
 	tcp::socket _socket;
-	boost::asio::streambuf _readBuffer;
-	boost::asio::streambuf _writeBuffer;
+	boost::asio::streambuf _readBuffer{};
+	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
@@ -75,6 +73,7 @@ class Server final
 	void OnHelmetActivate(const std::string& who) const;
 	void OnHelmetDeactivate(const std::string& who) const;
 	void OnStar(const std::string& who) const;
+	void OnCaliber(const std::string& who) const;
 	void OnTank(const std::string& who, const std::string& fraction) const;
 	void OnGrenade(const std::string& who, const std::string& fraction) const;
 

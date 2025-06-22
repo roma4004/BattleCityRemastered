@@ -1,12 +1,14 @@
 #pragma once
 
-#include <string>
-#include <fstream>
 #include <chrono>
-#include <iomanip>
+#include <fstream>
+// #include <iomanip>
+#include <string>
 
 class Logger
 {
+	using milliseconds = std::chrono::milliseconds;
+
 public:
 	static Logger& GetInstance();
 
