@@ -265,6 +265,7 @@ set(SOURCE_FILES
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
+        source/components/AnimationManager.cpp
         source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
@@ -326,6 +327,7 @@ set(SOURCE_FILES
         source/network/commands/TankShot.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
+        source/utils/NetworkLogger.cpp
         source/utils/TimeUtils.cpp
         source/utils/UuidUtils.cpp
 )
