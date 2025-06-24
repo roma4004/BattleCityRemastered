@@ -9,7 +9,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(TankShot);
 TankShot::TankShot(): Command(CommandType::TANK_SHOT) {}
 
 TankShot::TankShot(const std::string& who, const Direction dir, const buuid uuid)
-	: Command(CommandType::TANK_SHOT), _who(who), _dir(dir), _uuid(uuid) {}
+	: Command(CommandType::TANK_SHOT), _who(who), _uuid(uuid), _dir(dir) {}
 
 const std::string& TankShot::GetWho() const { return _who; }
 

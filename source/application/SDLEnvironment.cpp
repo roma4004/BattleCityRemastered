@@ -69,15 +69,6 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
-	constexpr auto format = SDL_PIXELFORMAT_ARGB8888;
-	constexpr auto textureType = SDL_TEXTUREACCESS_TARGET;
-	const std::shared_ptr<SDL_Texture> screen(SDL_CreateTexture(renderer.get(), format, textureType, rect.w, rect.h),
-	                                          SDL_DestroyTexture);
-	if (screen == nullptr)
-	{
-		return std::make_unique<ConfigFailure>("Screen SDL_CreateTexture Error", SDL_GetError());
-	}
-
 	if (TTF_Init() == -1)
 	{
 		return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
@@ -135,5 +126,5 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
 
-	return std::make_unique<ConfigSuccess>(windowSize, renderer, screen, fpsFont, logoTexture, atlasTexture, isVsyncOn);
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }

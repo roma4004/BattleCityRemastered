@@ -1,0 +1,11 @@
+#include "utils/RandUtils.h"
+#include <chrono>
+
+int RandUtils::GetRandNumber(std::uniform_int_distribution<> distribution)
+{
+	std::random_device rd;
+	static std::mt19937 gen{static_cast<unsigned int>(
+		std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd())};
+
+	return distribution(gen);
+}

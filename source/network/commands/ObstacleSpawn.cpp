@@ -11,7 +11,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ObstacleSpawn);
 ObstacleSpawn::ObstacleSpawn(): Command(CommandType::OBSTACLE_SPAWN) {}
 
 ObstacleSpawn::ObstacleSpawn(const ObjRectangle& rect, const ObstacleType obstacleType, const buuid uuid)
-	: Command(CommandType::OBSTACLE_SPAWN), _rect(rect), _obstacleType(obstacleType), _uuid(uuid) {}
+	: Command(CommandType::OBSTACLE_SPAWN), _rect(rect), _uuid(uuid), _obstacleType(obstacleType) {}
 
 ObjRectangle ObstacleSpawn::GetRect() const { return _rect; }
 

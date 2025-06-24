@@ -11,6 +11,7 @@
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
 #include "utils/ColliderUtils.h"
+#include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
@@ -23,19 +24,15 @@ class EventSystem;
 
 BonusSpawner::BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                            const UPoint windowSize, const int sideBarWidth, const int bonusSize)
-	: _bonusSize{bonusSize},
-	  _events{std::move(events)},
+	: _events{std::move(events)},
 	  _allObjects{allObjects},
 	  _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize},
 	  _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize},
 	  _distSpawnType{None + 1, lastId - 1},
 	  _distRandColor{0, std::numeric_limits<int>::max()},
-	  _lastTimeSpawn{std::chrono::system_clock::now()}
+	  _lastTimeSpawn{std::chrono::system_clock::now()},
+	  _bonusSize{bonusSize}
 {
-	std::random_device rd;
-	_gen = std::mt19937(
-			static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + rd());
-
 	Subscribe();
 }
 
@@ -79,7 +76,7 @@ void BonusSpawner::SubscribeAsClient()
 			"ClientReceived_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
 				const auto size = static_cast<float>(_bonusSize);
-				const int color = _distRandColor(_gen);
+				const int color = RandUtils::GetRandNumber(_distRandColor);
 				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
 				SpawnBonus(rect, color, type, uuid);
 			});
@@ -107,8 +104,8 @@ void BonusSpawner::Update()
 	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))//TODO: extract to timer manager
 	{
 		const auto size = static_cast<float>(_bonusSize);
-		const auto x = static_cast<float>(_distSpawnPosX(_gen));
-		const auto y = static_cast<float>(_distSpawnPosY(_gen));
+		const auto x = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosX));
+		const auto y = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosY));
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
@@ -175,7 +172,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 
 void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
-	const int color = _distRandColor(_gen);
-	const auto bonusType = static_cast<BonusType>(_distSpawnType(_gen));
+	const int color = RandUtils::GetRandNumber(_distRandColor);//TODO: remove color from bonus
+	const auto bonusType = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType));
 	SpawnBonus(rect, color, bonusType);
 }

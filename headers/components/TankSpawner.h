@@ -45,7 +45,6 @@ class TankSpawner final
 	};
 
 	GameMode _gameMode{};
-	std::random_device _rd{}; //TODO: move to random manager
 	std::vector<SpawnSlot> _slots{};
 
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);

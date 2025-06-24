@@ -22,7 +22,6 @@ class ObstacleSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	int _obstacleSize{0};
 	GameMode _gameMode{};
-	// std::mt19937 _gen;
 	// std::uniform_int_distribution<> _distSpawnPosY;
 	// std::uniform_int_distribution<> _distSpawnPosX;
 	// std::uniform_int_distribution<> _distSpawnType;

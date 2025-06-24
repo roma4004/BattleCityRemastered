@@ -9,7 +9,6 @@ class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<SDL_Texture> _screen{nullptr};
 
 	//fps
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
@@ -26,9 +25,8 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
-	              std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<SDL_Texture> logoTexture,
-	              std::shared_ptr<SDL_Texture> atlasTexture, bool isVsyncOn);
+	ConfigSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> fpsFont,
+	              std::shared_ptr<SDL_Texture> logoTexture, std::shared_ptr<SDL_Texture> atlasTexture, bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

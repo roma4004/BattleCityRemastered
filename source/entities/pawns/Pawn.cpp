@@ -7,14 +7,14 @@
 
 Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)},
-	  _dir{pawnProperty.dir},
-	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
 	  _windowSize{pawnProperty.windowSize},
 	  _allObjects{pawnProperty.allObjects},
 	  _events{std::move(pawnProperty.events)},
-	  _moveBeh{std::move(moveBeh)}
+	  _moveBeh{std::move(moveBeh)},
+	  _dir{pawnProperty.dir},
+	  _gameMode{pawnProperty.gameMode}
 {
 	Pawn::Subscribe();
 }

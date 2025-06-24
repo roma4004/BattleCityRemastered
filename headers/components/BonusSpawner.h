@@ -24,7 +24,6 @@ class BonusSpawner final
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	std::mt19937 _gen{}; //TODO: mome to random manager
 	std::uniform_int_distribution<> _distSpawnPosY{};
 	std::uniform_int_distribution<> _distSpawnPosX{};
 	std::uniform_int_distribution<> _distSpawnType{};

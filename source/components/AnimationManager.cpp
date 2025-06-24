@@ -56,29 +56,29 @@ int AnimationManager::GetAnimFrame(const std::string& name) const
 
 int AnimationManager::GetAnimWater()
 {
-	if (++animWater.currentFrameCounter % 48 == 0)
+	if (++_animWater.currentFrameCounter % 48 == 0)
 	{
-		animWater.currentFrameCounter = 0;
-		if (++animWater.animationFrame == animWater.animationIdLimit)
+		_animWater.currentFrameCounter = 0;
+		if (++_animWater.animationFrame == _animWater.animationIdLimit)
 		{
-			animWater.animationFrame = 0;
+			_animWater.animationFrame = 0;
 		}
 	}
 
-	return animWater.animationFrame;
+	return _animWater.animationFrame;
 }
 
 int AnimationManager::GetAnimExplosion()
 {
-	if (++animExplosion.currentFrameCounter % 12 == 0)
+	if (++_animExplosion.currentFrameCounter % 12 == 0)
 	{
-		animExplosion.currentFrameCounter = 0;
-		if (++animExplosion.animationFrame == animExplosion.animationIdLimit)
+		_animExplosion.currentFrameCounter = 0;
+		if (++_animExplosion.animationFrame == _animExplosion.animationIdLimit)
 		{
-			animExplosion.animationFrame = 0;
+			_animExplosion.animationFrame = 0;
 		}
 	}
 
-	return animExplosion.animationFrame;
+	return _animExplosion.animationFrame;
 }
 

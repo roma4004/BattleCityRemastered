@@ -12,10 +12,10 @@
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
-	  _gameMode{gameMode},
 	  _events{events},
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}
+	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)},
+	  _gameMode{gameMode}
 {
 	//TODO: fix fortress replication
 	Subscribe();

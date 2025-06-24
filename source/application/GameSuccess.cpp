@@ -14,6 +14,7 @@
 #include "network/ServerHandler.h"
 #include <algorithm>
 //#include <fstream>
+#include "components/TextureManager.h"
 #include <iostream>
 #include <memory>
 #include <boost/uuid/uuid_io.hpp>
@@ -33,18 +34,12 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
-                         std::shared_ptr<SDL_Texture> screen, std::shared_ptr<TTF_Font> fpsFont,
-                         std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
+GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
                          std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager,
                          const bool isVsyncOn, std::shared_ptr<BonusEffectManager> bonusEffectManager)
-	: _selectedGameMode{OnePlayer},
-	  _windowSize{windowSize},
+	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
-	  _renderer{std::move(renderer)},
-	  _screen{std::move(screen)},
-	  _fpsFont{std::move(fpsFont)},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
 	  _textureManager(std::move(textureManager)),
@@ -55,10 +50,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> 
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _isVsyncOn{isVsyncOn},
-	  _targetFrameDuration{1.0 / static_cast<double>(_targetFPS)}
+	  _selectedGameMode{OnePlayer},
+	  _targetFrameDuration{1.0 / static_cast<double>(_targetFps)}
 {
-	GenerateFpsTextures();
-
 	Subscribe();
 
 	ResetBattlefield(Demo);
@@ -172,37 +166,8 @@ void GameSuccess::NextGameMode()
 	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
-void GameSuccess::GenerateFpsTextures()
-{
-	_fpsTextures.clear();
-
-	for (int i = 0; i <= 1000; ++i)
-	{
-		std::string text = std::to_string(i);
-		constexpr SDL_Color textColor = {140, 0, 255, 255};
-
-		SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont.get(), text.c_str(), textColor);
-		if (!surface)
-		{
-			SDL_Log("Failed to create surface for FPS %d: %s", i, SDL_GetError());
-			continue;
-		}
-
-		SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer.get(), surface);
-		SDL_FreeSurface(surface);
-
-		if (!texture)
-		{
-			SDL_Log("Failed to create texture for FPS %d: %s", i, SDL_GetError());
-			continue;
-		}
-
-		_fpsTextures[i] = std::shared_ptr<SDL_Texture>(texture, SDL_DestroyTexture);
-	}
-}
-
-void GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
-                                       const std::chrono::high_resolution_clock::time_point& startFrameTime)
+Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
+                                         const std::chrono::high_resolution_clock::time_point& startFrameTime)
 {
 	static auto lastFpsUpdate = std::chrono::high_resolution_clock::now();
 	static Uint32 lastDisplayedFps{0};
@@ -252,14 +217,11 @@ void GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 
 		if (fps != lastDisplayedFps)
 		{
-			if (const Uint32 cappedFps = std::min(fps, 1000u);
-				_fpsTextures.contains(cappedFps))
-			{
-				lastDisplayedFps = fps;
-				_fpsTexture = _fpsTextures[cappedFps];
-			}
+			lastDisplayedFps = std::min(fps, 1000u);
 		}
 	}
+
+	return lastDisplayedFps;
 }
 
 void GameSuccess::DisposeDeadObject()
@@ -307,7 +269,7 @@ void GameSuccess::MainLoop()
 	try
 	{
 		float deltaTime{0.f};
-		const SDL_Rect fpsRectangle{.x = static_cast<int>(_windowSize.x) - 80, .y = 20, .w = 40, .h = 40};
+		Uint32 fps{0};
 		while (!_userInput->IsGameOver())
 		{
 			std::chrono::high_resolution_clock::time_point startFrameTime = std::chrono::high_resolution_clock::now();
@@ -317,8 +279,7 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent("Server_StartFrame");
 			}
 
-			SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
-			SDL_RenderClear(_renderer.get());
+			_textureManager->ClearFrame();
 
 			_userInput->Update();
 
@@ -344,17 +305,14 @@ void GameSuccess::MainLoop()
 
 			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part
 
-			// Copy the texture with FPS to the renderer
-			SDL_RenderCopy(_renderer.get(), _fpsTexture.get(), nullptr, &fpsRectangle);
-
-			SDL_RenderPresent(_renderer.get());
+			_textureManager->DisplayFrame(fps);
 
 			if (_gameMode == PlayAsHost)
 			{
 				_events->EmitEvent("Server_EndFrame");
 			}
 
-			CountFpsAndDeltaTime(deltaTime, startFrameTime);
+			fps = CountFpsAndDeltaTime(deltaTime, startFrameTime);
 		}
 	}
 	catch (std::exception& e)

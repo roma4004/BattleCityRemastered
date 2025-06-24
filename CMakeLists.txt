@@ -328,6 +328,7 @@ set(SOURCE_FILES
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
+        source/utils/RandUtils.cpp
         source/utils/TimeUtils.cpp
         source/utils/UuidUtils.cpp
 )

@@ -9,7 +9,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(PositionChange);
 PositionChange::PositionChange(): Command(CommandType::POSITION_CHANGE) {}
 
 PositionChange::PositionChange(const std::string& who, const FPoint& pos, const Direction dir, const buuid uuid)
-	: Command(CommandType::POSITION_CHANGE), _who(who), _pos(pos), _dir(dir), _uuid(uuid) {}
+	: Command(CommandType::POSITION_CHANGE), _who(who), _pos(pos), _uuid(uuid), _dir(dir) {}
 
 const std::string& PositionChange::GetWho() const { return _who; }
 

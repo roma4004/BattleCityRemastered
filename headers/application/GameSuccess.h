@@ -3,10 +3,8 @@
 #include "Point.h"
 #include "interfaces/IGame.h"
 #include <SDL.h>
-#include <SDL_ttf.h>
 #include <chrono>
 #include <random>
-#include <unordered_map>
 
 class AnimationManager;
 enum GameMode : char8_t;
@@ -35,12 +33,6 @@ class GameSuccess final : public IGame
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<SDL_Texture> _screen{nullptr};
-
-	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
-	std::shared_ptr<SDL_Texture> _fpsTexture{nullptr};
-
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -49,19 +41,16 @@ class GameSuccess final : public IGame
 
 	std::shared_ptr<TextureManager> _textureManager{nullptr};
 
-	std::unordered_map<int, std::shared_ptr<SDL_Texture>> _fpsTextures{};// pregenerated fps texture
 
 	std::shared_ptr<UserInput> _userInput{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 
-	std::random_device _rd{};
-
 	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
-	const int _targetFPS{60};
+	const int _targetFps{60};
 	std::chrono::duration<double> _targetFrameDuration{};
 
 	SDL_TimerID _frameTimer{0};
@@ -74,9 +63,8 @@ class GameSuccess final : public IGame
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
-	void GenerateFpsTextures();
 
-	void CountFpsAndDeltaTime(float& deltaTime, const std::chrono::high_resolution_clock::time_point& startFrameTime);
+	Uint32 CountFpsAndDeltaTime(float& deltaTime, const std::chrono::high_resolution_clock::time_point& startFrameTime);
 
 	void DisposeDeadObject();
 
@@ -90,10 +78,8 @@ class GameSuccess final : public IGame
 	void SetCurrentGameMode(GameMode selectedGameMode);
 
 public:
-	GameSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
-	            std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
-	            std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
-	            std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
+	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
+	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
 	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
 
 	~GameSuccess() override;

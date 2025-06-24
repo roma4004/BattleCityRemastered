@@ -1,31 +1,36 @@
 ﻿#include "components/TextureManager.h"
 #include "components/AnimationManager.h"
 #include "components/EventSystem.h"
-#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Pawn.h"
 #include "enums/Direction.h"
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <ranges>
 
 TextureManager::TextureManager(const UPoint windowSize, std::shared_ptr<SDL_Texture> texture,
-                               std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<EventSystem> events,
-                               std::shared_ptr<AnimationManager> animationManager)
+                               std::shared_ptr<SDL_Renderer> renderer,
+                               std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events)
 	: _windowSize{windowSize},
 	  _renderer(std::move(renderer)),
 	  _texture(std::move(texture)),
-	  _events(std::move(events)),
-	  _animationManager(std::move(animationManager))
+	  _events(events),
+	  _fpsFont{std::move(fpsFont)},
+	  _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40},
+	  _animationManager(events)
 {
+	GenerateFpsTextures();
+
 	Subscribe();
 }
 
 TextureManager::~TextureManager()
 {
 	Unsubscribe();
+	ClearFpsTextureCache();
 	ClearColorTextureCache();
 }
 
-void TextureManager::Subscribe() const
+void TextureManager::Subscribe()
 {
 	_events->AddListener<const BaseObj*>("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
 	_events->AddListener<const BaseObj*>("DrawHealthBarObj", _name, [this](const BaseObj* baseObj)
@@ -40,7 +45,7 @@ void TextureManager::Unsubscribe() const
 	_events->RemoveListener<const BaseObj*>("DrawHealthBarObj", _name);
 }
 
-void TextureManager::ClearColorTextureCache() const
+void TextureManager::ClearColorTextureCache()
 {
 	for (const auto& texture: _colorTextureCache | std::views::values)
 	{
@@ -51,6 +56,19 @@ void TextureManager::ClearColorTextureCache() const
 	}
 
 	_colorTextureCache.clear();
+}
+
+void TextureManager::ClearFpsTextureCache()
+{
+	for (const auto& texture: _fpsTextures | std::views::values)
+	{
+		if (texture)
+		{
+			SDL_DestroyTexture(texture);
+		}
+	}
+
+	_fpsTextures.clear();
 }
 
 void TextureManager::SetRenderDrawColor(const int color, const Uint8 transparency = 255) const
@@ -93,7 +111,7 @@ SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
 			static_cast<int>(rect.h)};
 }
 
-SDL_Texture* TextureManager::CreateColorTexture(const int color) const
+SDL_Texture* TextureManager::CreateColorTexture(const int color)
 {
 	if (const auto it = _colorTextureCache.find(color);
 		it != _colorTextureCache.end())
@@ -117,7 +135,7 @@ SDL_Texture* TextureManager::CreateColorTexture(const int color) const
 	return colorTexture;
 }
 
-void TextureManager::RectDraw(const BaseObj* obj) const
+void TextureManager::RectDraw(const BaseObj* obj)
 {
 	const ObjRectangle rect = obj->GetRect();
 	const int color = obj->GetColor();
@@ -128,7 +146,7 @@ void TextureManager::RectDraw(const BaseObj* obj) const
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
 }
 
-void TextureManager::Draw(const BaseObj* obj) const
+void TextureManager::Draw(const BaseObj* obj)
 {
 	const ObjRectangle rect = obj->GetRect();
 	const SDL_Rect destRect = RectToSdlRect(rect);
@@ -139,17 +157,17 @@ void TextureManager::Draw(const BaseObj* obj) const
 		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
-		textureRect.x += _animationManager->GetAnimFrame(name) * 16;
+		textureRect.x += _animationManager.GetAnimFrame(name) * 16;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
 		textureRect = RectToSdlRect(_offset.playerOne);
-		textureRect.x += _animationManager->GetAnimFrame(name) * 16;
+		textureRect.x += _animationManager.GetAnimFrame(name) * 16;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
 		textureRect = RectToSdlRect(_offset.playerTwo);
-		textureRect.x += _animationManager->GetAnimFrame(name) * 16;
+		textureRect.x += _animationManager.GetAnimFrame(name) * 16;
 	}
 	else if (name == "Bullet")
 	{
@@ -177,9 +195,8 @@ void TextureManager::Draw(const BaseObj* obj) const
 	}
 	else if (name == "Water")
 	{
-		const auto water = dynamic_cast<const WaterTile*>(obj);
 		textureRect = RectToSdlRect(_offset.water);
-		textureRect.x -= _animationManager->GetAnimWater();
+		textureRect.x -= _animationManager.GetAnimWater();
 	}
 	else if (name == "BonusHelmet")
 	{
@@ -246,4 +263,47 @@ void TextureManager::Draw(const BaseObj* obj) const
 
 	//TODO: move work with sdl to utils to reduce dependencies
 	SDL_RenderCopyEx(_renderer.get(), _texture.get(), &textureRect, &destRect, angle, nullptr, flip);
+}
+
+void TextureManager::GenerateFpsTextures()
+{
+	_fpsTextures.clear();
+
+	for (int i = 0; i <= 1000; ++i)
+	{
+		std::string text = std::to_string(i);
+		constexpr SDL_Color textColor = {140, 0, 255, 255};
+
+		SDL_Surface* surface = TTF_RenderText_Solid(_fpsFont.get(), text.c_str(), textColor);
+		if (!surface)
+		{
+			SDL_Log("Failed to create surface for FPS %d: %s", i, SDL_GetError());
+			continue;
+		}
+
+		SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer.get(), surface);
+		SDL_FreeSurface(surface);
+
+		if (!texture)
+		{
+			SDL_Log("Failed to create texture for FPS %d: %s", i, SDL_GetError());
+			continue;
+		}
+
+		_fpsTextures[i] = texture;
+	}
+}
+
+void TextureManager::ClearFrame() const
+{
+	SDL_SetRenderDrawColor(_renderer.get(), 0, 0, 0, 255);
+	SDL_RenderClear(_renderer.get());
+}
+
+void TextureManager::DisplayFrame(const Uint32 fps)
+{
+	// Copy the texture with FPS to the renderer
+	SDL_RenderCopy(_renderer.get(), _fpsTextures[fps], nullptr, &_fpsRectangle);
+
+	SDL_RenderPresent(_renderer.get());
 }

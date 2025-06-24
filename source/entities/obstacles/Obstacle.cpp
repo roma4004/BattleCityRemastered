@@ -6,9 +6,9 @@ Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, s
                    std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
                    const ObstacleType obstacleType)
 	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
+	  _events(std::move(events)),
 	  _gameMode{gameMode},
-	  _obstacleType(obstacleType),
-	  _events(std::move(events))
+	  _obstacleType(obstacleType)
 {
 	Obstacle::Subscribe();
 

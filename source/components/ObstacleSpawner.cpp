@@ -17,18 +17,14 @@ class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                                  /*, const int sideBarWidth*/ const int obstacleSize)
-	: _events{std::move(events)},
-	  _obstacleSize{obstacleSize},
-	  _allObjects{allObjects}
+	: _allObjects{allObjects},
+	  _events{std::move(events)},
+	  _obstacleSize{obstacleSize}
 
 // _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
 // _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
 // _distSpawnType{None + 1, lastId - 1}
 {
-	// std::random_device rd;
-	// _gen = std::mt19937(
-	// static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + rd());
-
 	Subscribe();
 }
 
@@ -116,6 +112,6 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 /*void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
 {
-	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
+	const auto obstacleType = static_cast<ObstacleType>(RandUtils::GetRandNumber(_distSpawnType));
 	SpawnObstacle(rect, obstacleType);
 }*/

@@ -14,10 +14,10 @@
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        const UPoint windowSize, const GameMode gameMode)
 	: _name{"BulletPool"},
-	  _gameMode{gameMode},
 	  _windowSize{windowSize},
 	  _events{std::move(events)},
-	  _allObjects{allObjects}
+	  _allObjects{allObjects},
+	  _gameMode{gameMode}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)

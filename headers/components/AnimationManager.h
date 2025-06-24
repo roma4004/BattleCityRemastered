@@ -14,17 +14,17 @@ class AnimationManager
 		int animationIdLimit{};
 	};
 
-	AnimationStruct animWater{"Water", 0, 0, 16};
-	AnimationStruct animExplosion{"Explosion", 0, 0, 5};
+	AnimationStruct _animWater{"Water", 0, 0, 16};
+	AnimationStruct _animExplosion{"Explosion", 0, 0, 5};
 	std::vector<AnimationStruct> _animatedObj;
 	std::string _name = "AnimationManager";
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	AnimationManager(std::shared_ptr<EventSystem> events);
+	explicit AnimationManager(std::shared_ptr<EventSystem> events);
 
 	~AnimationManager();
-	
+
 	void Subscribe();
 	void Unsubscribe() const;
 

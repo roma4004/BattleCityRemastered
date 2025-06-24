@@ -9,11 +9,11 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, cons
              const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _creationTime{std::chrono::system_clock::now()},
-	  _gameMode{gameMode},
-	  _bonusType{bonusType},
+	  _events{std::move(events)},
 	  _effectDuration{duration},
 	  _lifetime{lifeTime},
-	  _events{std::move(events)}
+	  _gameMode{gameMode},
+	  _bonusType{bonusType}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

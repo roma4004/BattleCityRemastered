@@ -9,7 +9,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(RespawnTank);
 RespawnTank::RespawnTank(): Command(CommandType::RESPAWN_TANK) {}
 
 RespawnTank::RespawnTank(const TankType tankType, const buuid uuid)
-	: Command(CommandType::RESPAWN_TANK), _tankType(tankType), _uuid(uuid) {}
+	: Command(CommandType::RESPAWN_TANK), _uuid(uuid), _tankType(tankType) {}
 
 using buuid = boost::uuids::uuid;
 buuid RespawnTank::GetUuid() const { return _uuid; }

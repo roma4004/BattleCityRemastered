@@ -210,6 +210,7 @@
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\Logger.cpp" />
     <ClCompile Include="source\utils\NetworkLogger.cpp" />
+    <ClCompile Include="source\utils\RandUtils.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
     <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
@@ -322,6 +323,7 @@
     <ClInclude Include="headers\utils\Logger.h" />
     <ClInclude Include="headers\utils\NetworkLogger.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
+    <ClInclude Include="headers\utils\RandUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
     <ClInclude Include="headers\utils\UuidUtils.h" />
     <ClInclude Include="resource.h" />

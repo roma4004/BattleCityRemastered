@@ -9,7 +9,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(HealthChange);
 HealthChange::HealthChange(): Command(CommandType::HEALTH_CHANGE) {}
 
 HealthChange::HealthChange(const std::string& who, const int health, const buuid uuid)
-	: Command(CommandType::HEALTH_CHANGE), _who(who), _health(health), _uuid(uuid) {}
+	: Command(CommandType::HEALTH_CHANGE), _who(who), _uuid(uuid), _health(health) {}
 
 const std::string& HealthChange::GetWho() const { return _who; }
 

@@ -3,13 +3,13 @@
 #include "Point.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
+#include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <string>
-#include <vector>
 #include <queue>
+#include <string>
 #include <thread>
-#include <condition_variable>
+#include <vector>
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData

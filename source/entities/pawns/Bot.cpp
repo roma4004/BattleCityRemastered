@@ -1,16 +1,17 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
-#include "components/LineOfSight.h"
 #include "components/EventSystem.h"
+#include "components/LineOfSight.h"
 #include "entities/BonusEffectProperty.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "interfaces/IPickupableBonus.h"
+#include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 
 Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
 	: Tank{pawnProperty,
@@ -20,12 +21,7 @@ Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, cons
 	  },
 	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
-	  _lastTimeTurn{std::chrono::system_clock::now()}
-{
-	std::random_device rd;
-	_gen = std::mt19937(static_cast<unsigned int>(
-		std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd()));
-}
+	  _lastTimeTurn{std::chrono::system_clock::now()} {}
 
 Bot::~Bot() = default;
 
@@ -210,9 +206,8 @@ void Bot::TickUpdate(const float deltaTime)
 	// NOTE: change dir when random time span left
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{
-		_turnDuration = milliseconds(_distTurnRate(_gen));
-		const int randDir = _distDirection(_gen);
-		SetDirection(static_cast<Direction>(randDir));
+		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
+		SetDirection(static_cast<Direction>(RandUtils::GetRandNumber(_distDirection)));
 		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
@@ -222,7 +217,6 @@ void Bot::TickUpdate(const float deltaTime)
 
 	if (pos == GetPos())// NOTE: change dir it can't move
 	{
-		const int randDir = _distDirection(_gen);
-		SetDirection(static_cast<Direction>(randDir));
+		SetDirection(static_cast<Direction>(RandUtils::GetRandNumber(_distDirection)));
 	}
 }
