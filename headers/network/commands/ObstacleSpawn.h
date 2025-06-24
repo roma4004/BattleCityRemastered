@@ -16,8 +16,8 @@ class ObstacleSpawn : public Command
 	friend class boost::serialization::access;
 
 	ObjRectangle _rect{};
-	ObstacleType _obstacleType{};
 	buuid _uuid{};
+	ObstacleType _obstacleType{};
 
 public:
 	//for deserialization

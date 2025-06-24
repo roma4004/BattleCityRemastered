@@ -19,14 +19,12 @@ class BonusSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"BonusSpawner"};
-	GameMode _gameMode{};
-	int _bonusSize{0};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	std::mt19937 _gen{};
+	std::mt19937 _gen{}; //TODO: mome to random manager
 	std::uniform_int_distribution<> _distSpawnPosY{};
 	std::uniform_int_distribution<> _distSpawnPosX{};
 	std::uniform_int_distribution<> _distSpawnType{};
@@ -34,6 +32,8 @@ class BonusSpawner final
 
 	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};// Bonus spawn time
 	std::chrono::system_clock::time_point _lastTimeSpawn{};
+	int _bonusSize{};
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeAsHost();

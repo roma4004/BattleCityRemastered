@@ -16,8 +16,8 @@ public:
 	virtual ~Command() = default;
 
 	[[nodiscard]] CommandType GetType() const;
-
 	[[nodiscard]] virtual const char* GetClassNameW() const = 0;
+	[[nodiscard]] const char* GetCommandType() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);

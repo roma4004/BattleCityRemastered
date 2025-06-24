@@ -42,9 +42,9 @@ protected:
 		std::string author{"Player1"};
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 3, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, 3, _bulletSpeed, _windowSize, DOWN, _gameMode};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(

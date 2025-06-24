@@ -10,13 +10,12 @@
 struct FPoint;
 struct BaseObjProperty;
 
-class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics, public IHaveFraction
+class BaseObj : public IDrawable, public ISendableDamageStatistics, public IHaveFraction, public IObstacle
 {
 	using buuid = boost::uuids::uuid;
 
 	int _color{0};
 	int _health{0};
-	bool _isAlive{true};
 
 protected:
 	buuid _uuid{};

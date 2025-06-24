@@ -14,6 +14,7 @@
 #include "network/commands/RespawnTank.h"
 #include "network/commands/StatisticsChange.h"
 #include "network/commands/TankShot.h"
+#include "utils/NetworkLogger.h"
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -85,7 +86,7 @@ void Session::DoRead()
 			if (ec)
 			{
 				_readBuffer.consume(length);
-				std::cerr << "DoRead error ..." << '\n';
+				std::cerr << "DoRead error ..." << ec << '\n';
 			}
 			else
 			{
@@ -96,6 +97,8 @@ void Session::DoRead()
 
 				ServerData data;
 				ia >> data;
+
+				// NetworkLogger::LogServerReceive(data.eventName);
 
 				// std::cout << "Received data:\n";
 				// std::cout << "Id: " << data.id << "\n";
@@ -116,7 +119,7 @@ void Session::DoRead()
 				// 	std::cout << name << " ";
 				// std::cout << "\n";
 
-				// // Respond back to client
+				// // Respond back to a client
 				// self->DoWrite({123, "Test", {"Name1", "Name2"}});
 
 				_readBuffer.consume(length);
@@ -146,7 +149,6 @@ void Session::DoWrite(const std::string& message)
 			return;
 		}
 
-		// Безопасно добавляем сообщение в буфер для записи.
 		{
 			std::ostream os(&_writeBuffer);
 			os << message;
@@ -165,8 +167,8 @@ void Session::DoWrite(const std::string& message)
 			}
 			else
 			{
-				// You can handle custom success write case here
-				// If you want to keep the session alive add your process here. Like DoRead again.
+				// You can handle a custom success write case here
+				// If you want to keep the session alive, add your process here. Like DoRead again.
 				// self->DoRead();
 			}
 		};
@@ -189,17 +191,81 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
 	                                     static_cast<unsigned short>(std::stoul(port)))),
 	  _events{std::move(events)},
-	  _name{"Server"}
+	  _name{"Server"},
+	  _isRunning{true}
 {
 	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
-
+	// StartSendThread();
 	Subscribe();
+}
+
+void Server::StartSendThread()
+{
+	_sendThread = std::thread([this]()
+	{
+		while (_isRunning)
+		{
+			std::shared_ptr<CommandBatch> batch;
+
+			{
+				std::unique_lock<std::mutex> lock(_sendQueueMutex);
+				_sendCondition.wait(lock, [this]
+				{
+					return !_sendQueue.empty() || !_isRunning;
+				});
+
+				if (!_isRunning)
+					break;
+
+				if (_sendQueue.empty())
+					continue;
+
+				batch = _sendQueue.front();
+				_sendQueue.pop();
+			}
+
+			if (batch && batch->GetCommands().size() > 0)
+			{
+				try
+				{
+					SendCommand(batch);
+				}
+				catch (const std::exception& e)
+				{
+					std::cerr << "Exception in send thread: " << e.what() << '\n';
+
+					// retry send
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					{
+						std::lock_guard<std::mutex> lock(_sendQueueMutex);
+						_sendQueue.push(batch);
+					}
+				}
+			}
+		}
+	});
+}
+
+void Server::StopSendThread()
+{
+	{
+		std::lock_guard<std::mutex> lock(_sendQueueMutex);
+		_isRunning = false;
+	}
+
+	_sendCondition.notify_one();
+
+	if (_sendThread.joinable())
+	{
+		_sendThread.join();
+	}
 }
 
 Server::~Server()
 {
 	// error_log.close();
+	StopSendThread();
 
 	if (_acceptor.is_open())
 	{
@@ -213,17 +279,41 @@ void Server::Subscribe()
 {
 	_events->AddListener("Server_StartFrame", _name, [this]()
 	{
-		//TODO: add new commandBatchToSendQueue
 		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		const auto toSend = _batch;
+		// NetworkLogger::WriteLog("===Server_StartFrame");
 		_batch = std::make_shared<CommandBatch>();
-		if (toSend.get() != nullptr && toSend->GetCommands().size() > 0)
-		{
-			SendCommand(toSend);
-		}
+		// NetworkLogger::WriteLog("Server_StartFrame===");
 	});
+
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+
+		// NetworkLogger::WriteLog("===Server_EndFrame");
+		std::shared_ptr<CommandBatch> toSend{nullptr};
+
+		toSend = _batch;
+		SendCommand(toSend);
+
+		// int i = 0;
+		// for (auto& commands = toSend->GetCommands();
+		// 	auto command: commands)
+		// {
+		// 	auto classNameW = std::string(command->GetClassNameW());
+		// 	// NetworkLogger::WriteLog("Server_bach_command i=" + std::to_string(i++) + " " + classNameW);
+		// 	SendCommand(command);
+		// }
+		// NetworkLogger::WriteLog("Server_EndFrame===");
+
+		// if (toSend && toSend->GetCommands().size() > 0)
+		// {
+			// {
+			// 	std::lock_guard<std::mutex> lock(_sendQueueMutex);
+			// 	_sendQueue.push(toSend);
+			// }
+			// _sendCondition.notify_one();// Повідомляємо потік відправки
+		// }
+
 		//Mark that one batch need to be sent (or send immediately)
 		// std::lock_guard<std::mutex> lock(_batchWriteMutex);
 		// if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
@@ -255,8 +345,13 @@ void Server::Subscribe()
 	_events->AddListener<const std::string&, const FPoint, const Direction, const buuid&>("ServerSend_Pos", _name,
 		[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
 		{
-			std::lock_guard<std::mutex> lock(_batchWriteMutex);
-			_batch->AddCommand(std::make_shared<PositionChange>(who, pos, dir, uuid));
+			// NetworkLogger::WriteLog("Server_positionChange add before:" + std::to_string(_batch->GetSize()));
+			// std::lock_guard<std::mutex> lock(_batchWriteMutex);
+			const auto positionChange = std::make_shared<PositionChange>(who, pos, dir, uuid);
+			// auto classNameW = std::string(positionChange->GetClassNameW());
+			// NetworkLogger::WriteLog("Server_positionChange send:"+classNameW);
+			_batch->AddCommand(positionChange);
+			// NetworkLogger::WriteLog("Server_positionChange add after:" + std::to_string(_batch->GetSize()));
 		});
 
 	_events->AddListener<const std::string&, const Direction, const buuid&>(
@@ -431,7 +526,11 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 	boost::archive::text_oarchive oa(archiveStream);
 	oa << command;
 
-	this->SendToAll(archiveStream.str() + "\n\n");
+	// NetworkLogger::LogServerSend(command->GetClassNameW());
+
+	const auto& basicString = archiveStream.str();
+	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
+	this->SendToAll(basicString + "\n\n");
 }
 
 void Server::OnHelmetActivate(const std::string& who) const

@@ -122,3 +122,17 @@ void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
+
+void Pawn::Move(const float deltaTime)
+{
+	if (_moveBeh->Move(deltaTime))
+	{
+		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
+
+		if (_gameMode == PlayAsHost) // NOTE: replication position to the client
+		{
+			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
+					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
+		}
+	}
+}

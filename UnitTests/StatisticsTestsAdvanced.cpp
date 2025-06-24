@@ -59,9 +59,9 @@ protected:
 	{
 		ObjRectangle rect2{.x = x, .y = y, .w = _bulletWidth, .h = _bulletHeight};
 		BaseObjProperty baseObjProperty2{
-				rect2, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect2, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize,  UP, _gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

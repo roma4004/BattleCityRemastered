@@ -572,9 +572,9 @@ std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProper
 void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                             const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
 {
-	BaseObjProperty baseObjProperty{rect, color, health, true, uuid, std::move(name), std::move(fraction)};
+	BaseObjProperty baseObjProperty{rect, color, health, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _allObjects, _events, _windowSize, _gameMode, 1, UP, speed};
+			std::move(baseObjProperty), _allObjects, _events, 1, speed, _windowSize, UP, _gameMode};
 
 	if (std::shared_ptr<BaseObj> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
 	{

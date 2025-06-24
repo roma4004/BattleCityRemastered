@@ -16,7 +16,6 @@ class FortressWall final : public BaseObj
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 
@@ -24,6 +23,7 @@ class FortressWall final : public BaseObj
 	             std::unique_ptr<SteelWall>> _obstacle{};
 
 	BonusStatus _shovel{};
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeAsClient();

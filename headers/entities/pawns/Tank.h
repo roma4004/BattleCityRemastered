@@ -16,7 +16,7 @@ class Tank : public Pawn, public IHealthBar
 	using buuid = boost::uuids::uuid;
 
 	int _bulletDamage{15};
-	float _bulletSpeed{300.f};//TODO: move outside this class to bullet calibre stats class and DI into constructor
+	float _bulletSpeed{300.f};//TODO: move outside this class to bullet caliber stats class and DI into constructor
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
@@ -45,7 +45,6 @@ protected:
 	// bonuses
 	BonusEffectProperty _effects{};
 	//in progress TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
-	BonusStatus _helmet{};
 
 	void Shot(buuid withUuid = {}) const;
 

@@ -18,9 +18,9 @@ class Obstacle : public BaseObj
 	virtual void UnsubscribeAsClient() const;
 
 protected:
+	std::shared_ptr<EventSystem> _events{nullptr};
 	GameMode _gameMode{};
 	ObstacleType _obstacleType{};
-	std::shared_ptr<EventSystem> _events{nullptr};
 
 	void Draw(const BaseObj* obj) const override;
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;

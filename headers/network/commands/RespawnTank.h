@@ -14,8 +14,8 @@ class RespawnTank : public Command
 
 	friend class boost::serialization::access;
 
-	TankType _tankType{};
 	buuid _uuid{};
+	TankType _tankType{};
 
 public:
 	//for deserialization

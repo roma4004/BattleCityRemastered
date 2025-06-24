@@ -16,14 +16,13 @@
 #include "network/commands/RespawnTank.h"
 #include "network/commands/StatisticsChange.h"
 #include "network/commands/TankShot.h"
+#include "utils/NetworkLogger.h"
 #include "utils/UuidUtils.h"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-
-// std::ofstream error_log("error_log_client.txt");
 
 using buuid = boost::uuids::uuid;
 
@@ -182,6 +181,8 @@ void Client::SendKeyState(const std::string& state)
 	data.eventName = state;
 	data.names = {"Name1", "Name2"};
 
+	// NetworkLogger::LogClientSend(state);
+
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
 	oa << data;
@@ -320,6 +321,9 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 {
 	if (command)
 	{
+		// auto classNameW = std::string(command->GetClassNameW());
+		// auto commandName = std::string("client receive:" + classNameW);
+		// NetworkLogger::LogClientReceive(commandName);
 		switch (command->GetType())
 		{
 			case CommandType::COMMAND_BATCH:
@@ -400,11 +404,21 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 		std::shared_ptr<Command> command;
 		ia >> command;
 
+		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
 		ProcessClientCommand(command);
 	}
 	catch (const std::exception& e)
 	{
+		const std::string errorMsg = std::string("error deserialization: ") + e.what();
+		NetworkLogger::WriteLog(errorMsg);
+
+		if (archiveData.length() < 200) {
+			NetworkLogger::WriteLog("raw data: " + archiveData);
+		} else {
+			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
+		}
+
 		std::cerr << "Deserialization error: " << e.what() << std::endl;
-		std::cerr << "Raw data: " << archiveData << std::endl;
+		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << std::endl;
 	}
 }

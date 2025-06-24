@@ -15,8 +15,8 @@ class TankShot : public Command
 	friend class boost::serialization::access;
 
 	std::string _who{};
-	Direction _dir{};
 	buuid _uuid{};
+	Direction _dir{};
 
 public:
 	//for deserialization

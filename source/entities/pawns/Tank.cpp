@@ -31,7 +31,7 @@ void Tank::Subscribe()
 {
 	_events->AddListener("DrawHealthBar", _nameWithUuid, [this]()
 	{
-		if (!_helmet.isActive)
+		if (!_effects.isHelmetActive)
 		{
 			this->DrawHealthBar(this);
 		}
@@ -48,28 +48,28 @@ void Tank::Subscribe()
 void Tank::SubscribeAsClient()
 {
 	_events->AddListener<const Direction, const buuid&>(
-			"ClientReceived_" + _name + "Shot", _name, [this](const Direction dir, const buuid& uuid)
+			"ClientReceived_" + _name + "Shot", _nameWithUuid, [this](const Direction dir, const buuid& uuid)
 			{
 				this->SetDirection(dir);
 				this->Shot(uuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _nameWithUuid, [this]()
 	{
-		this->_helmet.isActive = true;
+		this->_effects.isHelmetActive = true;
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnHelmetDeactivate", _nameWithUuid, [this]()
 	{
-		this->_helmet.isActive = false;
+		this->_effects.isHelmetActive = false;
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnStar", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
 	{
 		this->OnBonusStar(_name, _fraction);
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid, [this]()
 	{
 		this->OnBonusCaliber(_name, _fraction);
 	});
@@ -78,14 +78,14 @@ void Tank::SubscribeAsClient()
 void Tank::SubscribeBonus()
 {
 	_events->AddListener<const std::string&, const bool>(
-			"BonusTimerStatusChange", _name,
+			"BonusTimerStatusChange", _nameWithUuid,
 			[this](const std::string& fraction, const bool isActive)
 			{
 				this->OnBonusTimer(fraction, isActive);
 			});
 
 	_events->AddListener<const std::string&, const bool>(
-			"BonusHelmetStatusChange", _name,
+			"BonusHelmetStatusChange", _nameWithUuid,
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
@@ -95,24 +95,24 @@ void Tank::SubscribeBonus()
 							isActive
 								? "ServerSend_OnHelmetActivate"
 								: "ServerSend_OnHelmetDeactivate",
-							_name);
+							_nameWithUuid);
 				}
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusGrenade", _name, [this](const std::string& author, const std::string& fraction)
+			"BonusGrenade", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
 			{
 				this->OnBonusGrenade(author, fraction);
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusStar", _name, [this](const std::string& author, const std::string& fraction)
+			"BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
 			{
 				this->OnBonusStar(author, fraction);
 			});
 
 	_events->AddListener<const std::string&, const std::string&>(
-			"BonusCaliber", _name, [this](const std::string& author, const std::string& fraction)
+			"BonusCaliber", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
 			{
 				this->OnBonusCaliber(author, fraction);
 			});
@@ -132,26 +132,26 @@ void Tank::Unsubscribe() const
 
 void Tank::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const Direction, const buuid&>("ClientReceived_" + _name + "Shot", _name);
+	_events->RemoveListener<const Direction, const buuid&>("ClientReceived_" + _name + "Shot", _nameWithUuid);
 
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
-	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _name);
-	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid);
 }
 
 void Tank::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const bool>("BonusTimerStatusChange", _name);
-	_events->RemoveListener<const std::string&, const bool>("BonusHelmetStatusChange", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusCaliber", _name);
+	_events->RemoveListener<const std::string&, const bool>("BonusTimerStatusChange", _nameWithUuid);
+	_events->RemoveListener<const std::string&, const bool>("BonusHelmetStatusChange", _nameWithUuid);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _nameWithUuid);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _nameWithUuid);
+	_events->RemoveListener<const std::string&, const std::string&>("BonusCaliber", _nameWithUuid);
 }
 
 void Tank::TakeDamage(const int damage)
 {
-	if (!_helmet.isActive)
+	if (!_effects.isHelmetActive)
 	{
 		Pawn::TakeDamage(damage);
 
@@ -211,7 +211,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 {
 	if (_name == name)
 	{
-		_helmet.isActive = isActive;
+		_effects.isHelmetActive = isActive;
 	}
 }
 

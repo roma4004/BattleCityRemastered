@@ -14,8 +14,8 @@ class HealthChange : public Command
 	friend class boost::serialization::access;
 
 	std::string _who{};
-	int _health{};
 	buuid _uuid{};
+	int _health{};
 
 public:
 	//for deserialization

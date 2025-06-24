@@ -25,7 +25,6 @@ class TankSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"TankSpawner"};
-	GameMode _gameMode{};
 	UPoint _windowSize{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -34,7 +33,6 @@ class TankSpawner final
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 
-	std::random_device _rd{};
 
 	// TODO: use std::atomic when multithreading is used
 	std::vector<int> _respawnResource{20, 3, 3};
@@ -46,6 +44,8 @@ class TankSpawner final
 		bool isAvailable{false};
 	};
 
+	GameMode _gameMode{};
+	std::random_device _rd{}; //TODO: move to random manager
 	std::vector<SpawnSlot> _slots{};
 
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);

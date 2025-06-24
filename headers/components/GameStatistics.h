@@ -10,7 +10,6 @@ class GameStatistics final
 {
 	//TODO: fix desync in statistics
 	std::string _name{};
-	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
@@ -43,6 +42,8 @@ class GameStatistics final
 	int _steelWallDiedByEnemyTeam{0};
 	int _steelWallDiedByPlayerOne{0};
 	int _steelWallDiedByPlayerTwo{0};
+
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeHost();

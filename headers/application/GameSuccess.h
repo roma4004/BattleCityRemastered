@@ -28,8 +28,6 @@ class BonusEffectManager;
 
 class GameSuccess final : public IGame
 {
-	GameMode _selectedGameMode{};
-	GameMode _gameMode{};
 	UPoint _windowSize{};
 	std::string _name{"Game"};
 
@@ -61,6 +59,8 @@ class GameSuccess final : public IGame
 	std::random_device _rd{};
 
 	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
+	GameMode _selectedGameMode{};
+	GameMode _gameMode{};
 	const int _targetFPS{60};
 	std::chrono::duration<double> _targetFrameDuration{};
 

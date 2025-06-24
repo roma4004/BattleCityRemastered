@@ -1,12 +1,15 @@
 #pragma once
 
-#include "../Point.h"
+#include "Point.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
+#include <queue>
+#include <thread>
+#include <condition_variable>
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
@@ -26,16 +29,16 @@ struct ServerData final
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
 
-	int health{-1};
-	int respawnResource{-1};
-	int id{-1};
-	BonusType type{};
 	std::string who{};
 	std::string eventType{};
 	std::string eventName{};
 	std::string fraction{};
 	std::vector<std::string> names{};
 	FPoint pos{};
+	int respawnResource{-1};
+	int id{-1};
+	int health{-1};
+	BonusType type{};
 	Direction dir{};
 };
 
@@ -68,6 +71,12 @@ class Server final
 	std::mutex _batchWriteMutex;
 	std::shared_ptr<CommandBatch> _batch;
 
+	std::queue<std::shared_ptr<CommandBatch>> _sendQueue;
+	std::mutex _sendQueueMutex;
+	std::condition_variable _sendCondition;
+	std::thread _sendThread;
+	bool _isRunning{true};
+
 	void DoAccept();
 
 	void OnHelmetActivate(const std::string& who) const;
@@ -82,6 +91,9 @@ public:
 	       std::shared_ptr<EventSystem> events);
 
 	~Server();
+
+	void StartSendThread();
+	void StopSendThread();
 
 	void SendCommand(const std::shared_ptr<Command>& command) const;
 

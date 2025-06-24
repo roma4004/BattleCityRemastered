@@ -87,7 +87,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	{
 		const Sint32 x = event.motion.x;
 		const Sint32 y = event.motion.y;
-		std::cout << "x: " << x << " \t y: " << y << '\n';
+		// std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
 		if (x < 1 || y < 1 || x >= static_cast<Sint32>(_windowSize.x) - 1

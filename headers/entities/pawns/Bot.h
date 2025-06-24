@@ -11,13 +11,14 @@ class BulletPool;
 class Bot : public Tank
 {
 	using milliseconds = std::chrono::milliseconds;
+	using buuid = boost::uuids::uuid;
 
 protected:
-	std::mt19937 _gen{};
 	std::uniform_int_distribution<> _distDirection{};
 	std::uniform_int_distribution<> _distTurnRate{};
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn{};
 	milliseconds _turnDuration{std::chrono::seconds(2)};
+	std::mt19937 _gen{};//TODO: move random into random manager
 
 	//LOS
 	float _shootDistance{0.f};

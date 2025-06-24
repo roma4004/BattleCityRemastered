@@ -2,9 +2,14 @@
 #include "application/SDLEnvironment.h"
 #include "interfaces/IConfig.h"
 #include "interfaces/IGame.h"
+#include "utils/NetworkLogger.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
+	NetworkLogger::SetConsoleLogging(true);
+	NetworkLogger::SetFileLogging(true, "network_log.txt");
+	NetworkLogger::SetVerbosityLevel(1);
+
 	constexpr UPoint windowSize{.x = 800, .y = 600};
 	auto sdlEnv = SDLEnvironment(
 			windowSize,

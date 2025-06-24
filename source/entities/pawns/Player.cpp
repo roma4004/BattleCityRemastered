@@ -21,46 +21,35 @@ Player::Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool
 
 Player::~Player() = default;
 
-void Player::Move(const Direction dir, const float deltaTime)
+void Player::TickUpdate(const float deltaTime)
 {
 	if (_effects.isTimerActive)
 	{
 		return;
 	}
 
-	SetDirection(dir);
-	if (_moveBeh->Move(deltaTime))
-	{
-		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
-	}
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
-				"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
-	}
-}
-
-void Player::TickUpdate(const float deltaTime)
-{
 	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
 	// move
 	if (up)
 	{
-		Move(UP, deltaTime);
+		SetDirection(UP);
+		Pawn::Move(deltaTime);
 	}
 	else if (left)
 	{
-		Move(LEFT, deltaTime);
+		SetDirection(LEFT);
+		Pawn::Move(deltaTime);
 	}
 	else if (down)
 	{
-		Move(DOWN, deltaTime);
+		SetDirection(DOWN);
+		Pawn::Move(deltaTime);
 	}
 	else if (right)
 	{
-		Move(RIGHT, deltaTime);
+		SetDirection(RIGHT);
+		Pawn::Move(deltaTime);
 	}
 
 	// shot

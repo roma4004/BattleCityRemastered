@@ -16,7 +16,6 @@ class Menu final
 	int _width;
 	int _padding;
 	unsigned int _yOffsetStart{};
-	GameMode _selectedGameMode{};
 
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -28,12 +27,14 @@ class Menu final
 	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
 	std::shared_ptr<SDL_Texture> _backgroundTexture{nullptr};
 
+	std::string _name{};
+
 	//TODO: extract to separate sidebar class
 	int _enemyRespawnResource{20};
 	int _playerOneRespawnResource{3};
 	int _playerTwoRespawnResource{3};
+	GameMode _selectedGameMode{};
 
-	std::string _name{};
 
 	void Subscribe();
 	void Unsubscribe() const;

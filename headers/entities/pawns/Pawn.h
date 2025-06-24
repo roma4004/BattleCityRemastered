@@ -24,15 +24,14 @@ class Pawn : public BaseObj, public ITickUpdatable
 	void Draw(const BaseObj* obj) const override;
 
 protected:
-	Direction _dir{};
-	GameMode _gameMode{};
 	float _speed{0.f};
 	int _tier{1};
 	UPoint _windowSize{};
-
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
+	Direction _dir{};
+	GameMode _gameMode{};
 
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;
@@ -41,10 +40,6 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	int animationId{0};
-	int animationIdLimit{1};
-	int animationFrameId{0};
-
 	Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh);
 
 	~Pawn() override;
@@ -59,4 +54,6 @@ public:
 
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);
+
+	virtual void Move(float deltaTime);
 };

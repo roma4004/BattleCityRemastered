@@ -16,4 +16,4 @@ buuid RespawnTank::GetUuid() const { return _uuid; }
 
 TankType RespawnTank::GetTankType() const { return _tankType; }
 
-const char* RespawnTank::GetClassNameW() const { return "RESPAWN_TANK"; }
+const char* RespawnTank::GetClassNameW() const { return "RespawnTank"; }

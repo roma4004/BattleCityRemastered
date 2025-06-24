@@ -20,6 +20,7 @@ public:
 	[[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetCommands() const;
 
 	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] size_t GetSize() const;;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);

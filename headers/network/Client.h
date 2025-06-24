@@ -21,16 +21,16 @@ struct ClientData final
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int version);
 
-	int health{-1};
-	int respawnResource{-1};
-	int id{-1};
-	BonusType type{};
 	std::string who{};
 	std::string eventType{};
 	std::string eventName{};
 	std::string fraction{};
 	std::vector<std::string> names{};
 	FPoint pos{};
+	int respawnResource{-1};
+	int id{-1};
+	int health{-1};
+	BonusType type{};
 	Direction dir{};
 };
 

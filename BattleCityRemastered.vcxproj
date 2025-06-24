@@ -209,6 +209,7 @@
     <ClCompile Include="source\network\commands\TankShot.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\Logger.cpp" />
+    <ClCompile Include="source\utils\NetworkLogger.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
     <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
@@ -319,6 +320,7 @@
     <ClInclude Include="headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\Logger.h" />
+    <ClInclude Include="headers\utils\NetworkLogger.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
     <ClInclude Include="headers\utils\UuidUtils.h" />

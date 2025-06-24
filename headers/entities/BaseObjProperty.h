@@ -11,8 +11,8 @@ struct BaseObjProperty
 	ObjRectangle rect{};
 	int color{0};
 	int health{0};
-	bool isAlive{true};
 	buuid uuid{};
 	std::string name{};
 	std::string fraction{};
+	bool isAlive{true};
 };

@@ -12,13 +12,13 @@ struct BulletResetProperty
 
 	ObjRectangle rect{};
 	int damage{};
+	Direction dir{};
 	double aoeRadius{};
 	int color{};
 	int health{};
-	Direction dir{};
 	float speed{};
+	int tier{};
 	std::string author{};
 	std::string fraction{};
-	int tier{};
 	buuid uuid{};
 };

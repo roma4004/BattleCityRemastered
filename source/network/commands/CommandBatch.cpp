@@ -6,7 +6,10 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(CommandBatch)
 
-CommandBatch::CommandBatch() : Command(CommandType::COMMAND_BATCH) {}
+CommandBatch::CommandBatch() : Command(CommandType::COMMAND_BATCH)
+{
+	//_commands.reserve(1000);
+}
 
 void CommandBatch::AddCommand(const std::shared_ptr<Command>& command)
 {
@@ -22,3 +25,5 @@ const std::vector<std::shared_ptr<Command>>& CommandBatch::GetCommands() const
 }
 
 const char* CommandBatch::GetClassNameW() const { return "CommandBatch"; }
+
+size_t CommandBatch::GetSize() const { return _commands.size(); }

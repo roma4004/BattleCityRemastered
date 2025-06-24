@@ -6,6 +6,7 @@
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
+#include "enums/GameMode.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
@@ -206,7 +207,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 
 void Bot::TickUpdate(const float deltaTime)
 {
-	// change dir when random time span left
+	// NOTE: change dir when random time span left
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
 	{
 		_turnDuration = milliseconds(_distTurnRate(_gen));
@@ -215,15 +216,11 @@ void Bot::TickUpdate(const float deltaTime)
 		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
-	// move
 	const auto pos = GetPos();
-	if (_moveBeh->Move(deltaTime))
-	{
-		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
-	}
 
-	// change dir it can't move
-	if (pos == GetPos())
+	Pawn::Move(deltaTime);
+
+	if (pos == GetPos())// NOTE: change dir it can't move
 	{
 		const int randDir = _distDirection(_gen);
 		SetDirection(static_cast<Direction>(randDir));

@@ -57,9 +57,9 @@ protected:
 
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _tankSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize,  DOWN, _gameMode};
 
 		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{}));
 	}

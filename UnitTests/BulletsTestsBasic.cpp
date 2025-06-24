@@ -48,9 +48,9 @@ protected:
 		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, DOWN, _gameMode};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
@@ -306,9 +306,9 @@ TEST_F(BulletTest, BulletDamageTank)
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
-	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{rect, gray, tankHealth, _uuid, "Enemy1", "EnemyTeam"};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
+			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, UP, _gameMode};
 
 	_allObjects.emplace_back(std::make_shared<Enemy>(
 			std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}));
@@ -332,9 +332,9 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		std::string author{"Player2"};
 		ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _bulletSpeed};
+				std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, UP, _gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

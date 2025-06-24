@@ -126,14 +126,14 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		BulletResetProperty bulletResetProperty = {
 				.rect = rect,
 				.damage = tank->GetBulletDamage(),
+				.dir = tank->GetDirection(),
 				.aoeRadius = tank->GetBulletDamageRadius(),
 				.color = 0xffffff,
 				.health = 1,
-				.dir = tank->GetDirection(),
 				.speed = tank->GetBulletSpeed(),
+				.tier = tank->GetTier(),
 				.author = tank->GetName(),
 				.fraction = tank->GetFraction(),//TODO: replace fraction with enum
-				.tier = tank->GetTier(),
 				.uuid = uuid
 		};
 

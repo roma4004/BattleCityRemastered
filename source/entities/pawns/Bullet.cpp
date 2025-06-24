@@ -139,16 +139,9 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 
 void Bullet::TickUpdate(const float deltaTime)
 {
-	if (GetIsAlive())//TODO: maybe for all add check isAlive
+	if (GetIsAlive()) //TODO: maybe for all add check isAlive
 	{
-		//if (_moveBeh->Move(deltaTime)){}
-		std::ignore = _moveBeh->Move(deltaTime);
-		
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
-					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
-		}
+		Pawn::Move(deltaTime);
 	}
 }
 

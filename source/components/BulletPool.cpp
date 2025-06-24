@@ -71,7 +71,13 @@ void BulletPool::Unsubscribe() const
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
-	PawnProperty pawnProperty{{}, _allObjects, _events, _windowSize, _gameMode};
+	PawnProperty pawnProperty{
+			.baseObjProperty = {},
+			.allObjects = _allObjects,
+			.events = _events,
+			.windowSize = _windowSize,
+			.gameMode = _gameMode
+	};
 	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
 }
 

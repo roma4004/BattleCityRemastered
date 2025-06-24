@@ -19,12 +19,11 @@ class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
 	std::chrono::system_clock::time_point _creationTime{};
 
 protected:
-	GameMode _gameMode{};
-	BonusType _bonusType{};
+	std::shared_ptr<EventSystem> _events{nullptr};
 	milliseconds _effectDuration{0};
 	milliseconds _lifetime{0};
-
-	std::shared_ptr<EventSystem> _events{nullptr};
+	GameMode _gameMode{};
+	BonusType _bonusType{};
 
 	void TickUpdate(float deltaTime) override;
 

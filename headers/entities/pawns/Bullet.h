@@ -14,8 +14,8 @@ class Bullet final : public Pawn
 
 	std::string _author{};
 	double _bulletDamageRadius{18.f};
-	int _damage{0};
 	std::string _uuidStr{};
+	int _damage{0};
 
 	void Subscribe() override;
 	void SubscribeAsClient() override;

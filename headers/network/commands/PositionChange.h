@@ -17,8 +17,8 @@ class PositionChange : public Command
 
 	std::string _who{};
 	FPoint _pos{};
-	Direction _dir{};
 	buuid _uuid{};
+	Direction _dir{};
 
 public:
 	//for deserialization
