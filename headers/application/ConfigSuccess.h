@@ -8,17 +8,14 @@
 class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{};
+
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-
-	//fps
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
-
 	std::shared_ptr<SDL_Texture> _logoTexture{nullptr};
-
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
-	//user settings //TODO: should be load from config file or default value
-	bool _isVsyncOn{false};
+	//user settings
+	bool _isVsyncOn{false};//TODO: should be load from config file or default value
 
 public:
 	ConfigSuccess() = delete;

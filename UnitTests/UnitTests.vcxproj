@@ -40,6 +40,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
+    <ClCompile Include="..\source\utils\RandUtils.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />

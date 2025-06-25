@@ -32,28 +32,23 @@ class GameSuccess final : public IGame
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
-
-	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
-
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-
 	std::shared_ptr<TextureManager> _textureManager{nullptr};
-
-
 	std::shared_ptr<UserInput> _userInput{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 
+	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+
+	std::chrono::duration<double> _targetFrameDuration{};
+	SDL_TimerID _frameTimer{};
+	const int _targetFps{60};
+
 	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
-	const int _targetFps{60};
-	std::chrono::duration<double> _targetFrameDuration{};
-
-	SDL_TimerID _frameTimer{0};
 	bool _frameReady{true};
 
 	void Subscribe();
@@ -64,7 +59,8 @@ class GameSuccess final : public IGame
 	void PrevGameMode();
 	void NextGameMode();
 
-	Uint32 CountFpsAndDeltaTime(float& deltaTime, const std::chrono::high_resolution_clock::time_point& startFrameTime);
+	[[nodiscard]] Uint32 CountFpsAndDeltaTime(float& deltaTime,
+	                                          const std::chrono::high_resolution_clock::time_point& startFrameTime);
 
 	void DisposeDeadObject();
 

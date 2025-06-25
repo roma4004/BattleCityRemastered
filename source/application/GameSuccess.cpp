@@ -272,7 +272,7 @@ void GameSuccess::MainLoop()
 		Uint32 fps{0};
 		while (!_userInput->IsGameOver())
 		{
-			std::chrono::high_resolution_clock::time_point startFrameTime = std::chrono::high_resolution_clock::now();
+			const auto startFrameTime = std::chrono::high_resolution_clock::now();
 
 			if (_gameMode == PlayAsHost)
 			{
