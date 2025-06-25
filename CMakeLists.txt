@@ -379,6 +379,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/entities/pawns/Player.cpp
         source/entities/pawns/Tank.cpp
         source/utils/Logger.cpp
+        source/utils/RandUtils.cpp
 )
 
 set(UNIT_TESTS_FILES

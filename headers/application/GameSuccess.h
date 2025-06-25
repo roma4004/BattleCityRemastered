@@ -46,7 +46,7 @@ class GameSuccess final : public IGame
 	SDL_TimerID _frameTimer{};
 	const int _targetFps{60};
 
-	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time
+	bool _isVsyncOn{};//TODO: add settings inGame for tweak this in real time
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	bool _frameReady{true};

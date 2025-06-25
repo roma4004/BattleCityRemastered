@@ -15,7 +15,7 @@ class ConfigSuccess final : public IConfig
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
 	//user settings
-	bool _isVsyncOn{false};//TODO: should be load from config file or default value
+	bool _isVsyncOn{};//TODO: should be load from config file or default value
 
 public:
 	ConfigSuccess() = delete;
