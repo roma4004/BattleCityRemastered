@@ -11,7 +11,6 @@
 #include "utils/TimeUtils.h"
 #include <algorithm>
 #include <chrono>
-#include <iostream>
 
 Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
 	: Tank{pawnProperty,
@@ -19,7 +18,6 @@ Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, cons
 	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
 	       effects
 	  },
-	  _distDirection(0, 3),
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
 	  _lastTimeTurn{std::chrono::system_clock::now()} {}
 
@@ -201,22 +199,31 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	return nearestSeenObstacle;
 }
 
+void Bot::SetRandomDirection(const float deltaTime)
+{
+	if (const std::vector<Direction> freePath = _moveBeh->GetFreePathSides(deltaTime);
+		!freePath.empty())
+	{
+		const int max = static_cast<int>(freePath.size() - 1);
+		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
+		SetDirection(freePath[pathIndex]);
+	}
+}
+
 void Bot::TickUpdate(const float deltaTime)
 {
-	// NOTE: change dir when random time span left
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot auto change dir
 	{
+		SetRandomDirection(deltaTime);
+
 		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
-		SetDirection(static_cast<Direction>(RandUtils::GetRandNumber(_distDirection)));
 		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
-	const auto pos = GetPos();
-
-	Pawn::Move(deltaTime);
-
-	if (pos == GetPos())// NOTE: change dir it can't move
+	if (const bool isMove = Pawn::Move(deltaTime);
+		!isMove)
 	{
-		SetDirection(static_cast<Direction>(RandUtils::GetRandNumber(_distDirection)));
+		SetRandomDirection(deltaTime);// NOTE: change dir it can't move
+		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 }

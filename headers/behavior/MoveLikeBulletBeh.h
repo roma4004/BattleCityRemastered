@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 
+enum Direction : char8_t;
 class Bullet;
 struct FPoint;
 struct ObjRectangle;
@@ -11,7 +12,7 @@ class EventSystem;
 
 class MoveLikeBulletBeh final : public IMoveBeh
 {
-	BaseObj* _selfParent{nullptr};
+	BaseObj* _selfParent{nullptr};//TODO: replace with weak_ptr
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};
 
@@ -33,4 +34,6 @@ public:
 	                  std::shared_ptr<EventSystem> events);
 
 	~MoveLikeBulletBeh() override = default;
+
+	[[nodiscard]] std::vector<Direction> GetFreePathSides(float deltaTime) const override;
 };

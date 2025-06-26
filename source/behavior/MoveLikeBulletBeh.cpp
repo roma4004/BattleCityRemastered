@@ -14,6 +14,9 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_pt
 	  _allObjects{allObjects},
 	  _events{std::move(events)} {}
 
+//NOTE: Never user for bullets
+std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(float /*deltaTime*/) const { return {}; }
+
 ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const Bullet* bullet, const float deltaTime)
 {
 	const auto dir = bullet->GetDirection();
@@ -73,7 +76,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float d
 
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object.get() == nullptr || bullet == object.get())
+		if (object == nullptr || bullet == object.get())
 		{
 			continue;
 		}
@@ -234,7 +237,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageRadius()};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object.get() == nullptr || _selfParent == object.get())
+		if (object == nullptr || _selfParent == object.get())
 		{
 			continue;
 		}

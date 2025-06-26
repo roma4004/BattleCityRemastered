@@ -66,7 +66,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object.get() == nullptr || tank == object.get())
+		if (object == nullptr || tank == object.get())
 		{
 			continue;
 		}
@@ -81,6 +81,73 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 	}
 
 	return obstacles;
+}
+
+std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const float deltaTime) const
+{
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
+	std::vector<Direction> freePath;
+	constexpr int defaultCollisionReserve{4};
+	freePath.reserve(defaultCollisionReserve);
+	if (tank == nullptr)
+	{
+		// TODO: assert component must be in tank class
+		return freePath;
+	}
+
+	const float speed = tank->GetSpeed();
+	const float moveSpeed = speed * deltaTime;
+
+	const ObjRectangle tankNextPosRectUP{
+			.x = tank->GetX(), .y = tank->GetY() - moveSpeed, .w = tank->GetWidth(),
+			.h = tank->GetHeight() + moveSpeed};
+
+	const ObjRectangle tankNextPosRectDOWN{
+			.x = tank->GetX(), .y = tank->GetY(), .w = tank->GetWidth(), .h = tank->GetHeight() + moveSpeed};
+
+	const ObjRectangle tankNextPosRectLEFT{
+			.x = tank->GetX() - moveSpeed, .y = tank->GetY(), .w = tank->GetWidth() + moveSpeed,
+			.h = tank->GetHeight()};
+
+	const ObjRectangle tankNextPosRectRIGHT{
+			.x = tank->GetX(), .y = tank->GetY(), .w = tank->GetWidth() + moveSpeed, .h = tank->GetHeight()};
+
+	bool isFreeUp{true};
+	bool isFreeDown{true};
+	bool isFreeLeft{true};
+	bool isFreeRight{true};
+
+	for (std::shared_ptr<BaseObj>& object: *_allObjects)
+	{
+		if (object == nullptr || tank == object.get())
+		{
+			continue;
+		}
+
+		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUP, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeUp = false; }
+		}
+		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDOWN, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeDown = false; }
+		}
+		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLEFT, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeLeft = false; }
+		}
+		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRIGHT, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeRight = false; }
+		}
+	}
+
+	if (isFreeUp) { freePath.emplace_back(UP); }
+	if (isFreeDown) { freePath.emplace_back(DOWN); }
+	if (isFreeLeft) { freePath.emplace_back(LEFT); }
+	if (isFreeRight) { freePath.emplace_back(RIGHT); }
+
+	return freePath;
 }
 
 // inline float Distance(const FPoint a, const FPoint b)
@@ -102,7 +169,7 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
-		if (object.get() != nullptr)
+		if (object != nullptr)
 		{
 			// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
 			const float distance = std::abs(sideDiff(object));

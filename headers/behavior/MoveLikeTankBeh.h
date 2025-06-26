@@ -9,14 +9,14 @@ class Tank;
 
 class MoveLikeTankBeh final : public IMoveBeh
 {
-	BaseObj* _selfParent{nullptr};
+	BaseObj* _selfParent{nullptr};//TODO: replace with weak_ptr
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
 
 	static void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank);
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-	                      const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] bool MoveLeft(float deltaTime) const override;
 	[[nodiscard]] bool MoveRight(float deltaTime) const override;
@@ -29,4 +29,6 @@ public:
 	~MoveLikeTankBeh() override = default;
 
 	[[nodiscard]] bool Move(float deltaTime) const override;
+
+	[[nodiscard]] std::vector<Direction> GetFreePathSides(float deltaTime) const override;
 };

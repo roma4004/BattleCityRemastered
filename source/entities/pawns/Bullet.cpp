@@ -141,7 +141,7 @@ void Bullet::TickUpdate(const float deltaTime)
 {
 	if (GetIsAlive()) //TODO: maybe for all add check isAlive
 	{
-		Pawn::Move(deltaTime);
+		std::ignore = Pawn::Move(deltaTime);
 	}
 }
 

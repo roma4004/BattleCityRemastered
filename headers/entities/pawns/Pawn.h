@@ -55,5 +55,5 @@ public:
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);
 
-	virtual void Move(float deltaTime);
+	[[nodiscard]] virtual bool Move(float deltaTime);
 };

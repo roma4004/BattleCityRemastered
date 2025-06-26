@@ -123,9 +123,10 @@ float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
 
-void Pawn::Move(const float deltaTime)
+bool Pawn::Move(const float deltaTime)
 {
-	if (_moveBeh->Move(deltaTime))
+	const bool isMove = _moveBeh->Move(deltaTime);
+	if (isMove)
 	{
 		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
 
@@ -135,4 +136,6 @@ void Pawn::Move(const float deltaTime)
 					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 		}
 	}
+
+	return isMove;
 }

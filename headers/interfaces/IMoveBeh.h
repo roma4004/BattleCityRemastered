@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+enum Direction : char8_t;
 class BaseObj;
 
 class IMoveBeh
@@ -19,4 +20,6 @@ public:
 	virtual ~IMoveBeh() = default;
 
 	[[nodiscard]] virtual bool Move(float deltaTime) const = 0;
+
+	[[nodiscard]] virtual std::vector<Direction> GetFreePathSides(float deltaTime) const = 0;
 };

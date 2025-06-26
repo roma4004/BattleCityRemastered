@@ -14,7 +14,6 @@ class Bot : public Tank
 	using buuid = boost::uuids::uuid;
 
 protected:
-	std::uniform_int_distribution<> _distDirection{};
 	std::uniform_int_distribution<> _distTurnRate{};
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn{};
 	milliseconds _turnDuration{std::chrono::seconds(2)};
@@ -31,6 +30,7 @@ protected:
 	[[nodiscard]] bool ActIfBonusSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
 	[[nodiscard]] bool HandleSideObstacles(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Direction dir);
+	void SetRandomDirection(float deltaTime);
 
 	void TickUpdate(float deltaTime) override;
 

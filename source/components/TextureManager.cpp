@@ -302,8 +302,11 @@ void TextureManager::ClearFrame() const
 
 void TextureManager::DisplayFrame(const Uint32 fps)
 {
-	// Copy the texture with FPS to the renderer
-	SDL_RenderCopy(_renderer.get(), _fpsTextures[fps], nullptr, &_fpsRectangle);
+	if (fps)
+	{
+		// Copy the texture with FPS to the renderer
+		SDL_RenderCopy(_renderer.get(), _fpsTextures[fps], nullptr, &_fpsRectangle);
+	}
 
 	SDL_RenderPresent(_renderer.get());
 }
