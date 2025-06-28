@@ -14,7 +14,6 @@
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 
-//TODO: write replication tests, server to client events and client to server
 class PlayerTest : public testing::Test
 {
 	using buuid = boost::uuids::uuid;

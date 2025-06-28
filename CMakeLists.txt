@@ -53,7 +53,7 @@ set(SDL2MIXER_MODPLUG OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MIDI OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MP3 OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_FLAC OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_LIBXMP OFF CACHE BOOL "" FORCE)
+#set(SDL2MIXER_LIBXMP OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_LIBXME OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MPG123 OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_OGG OFF CACHE BOOL "" FORCE)
@@ -336,7 +336,6 @@ set(SOURCE_FILES
 set(SOURCE_FILES_FOR_UNIT_TESTS
         source/Utils/ColliderUtils.cpp
         source/Utils/TimeUtils.cpp
-        source/Utils/UuidUtils.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -354,12 +353,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/entities/BaseObj.cpp
         source/entities/ObjRectangle.cpp
-        source/entities/Obstacles/BrickWall.cpp
-        source/entities/Obstacles/EagleTile.cpp
-        source/entities/Obstacles/GrassTile.cpp
-        source/entities/Obstacles/IceTile.cpp
-        source/entities/Obstacles/SteelWall.cpp
-        source/entities/Obstacles/WaterTile.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
         source/entities/bonuses/BonusGrenade.cpp
@@ -369,8 +362,14 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/entities/bonuses/BonusStatus.cpp
         source/entities/bonuses/BonusTank.cpp
         source/entities/bonuses/BonusTimer.cpp
+        source/entities/obstacles/BrickWall.cpp
+        source/entities/obstacles/EagleTile.cpp
         source/entities/obstacles/FortressWall.cpp
+        source/entities/obstacles/GrassTile.cpp
+        source/entities/obstacles/IceTile.cpp
         source/entities/obstacles/Obstacle.cpp
+        source/entities/obstacles/SteelWall.cpp
+        source/entities/obstacles/WaterTile.cpp
         source/entities/pawns/Bot.cpp
         source/entities/pawns/Bullet.cpp
         source/entities/pawns/CoopBot.cpp
@@ -378,8 +377,27 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/entities/pawns/Pawn.cpp
         source/entities/pawns/Player.cpp
         source/entities/pawns/Tank.cpp
+        source/network/Client.cpp
+        source/network/ClientHandler.cpp
+        source/network/Server.cpp
+        source/network/ServerHandler.cpp
+        source/network/commands/BonusDeSpawn.cpp
+        source/network/commands/BonusSpawn.cpp
+        source/network/commands/Command.cpp
+        source/network/commands/CommandBatch.cpp
+        source/network/commands/Dispose.cpp
+        source/network/commands/FortressChange.cpp
+        source/network/commands/HealthChange.cpp
+        source/network/commands/KeyStateChange.cpp
+        source/network/commands/ObstacleSpawn.cpp
+        source/network/commands/PositionChange.cpp
+        source/network/commands/RespawnTank.cpp
+        source/network/commands/StatisticsChange.cpp
+        source/network/commands/TankShot.cpp
         source/utils/Logger.cpp
+        source/utils/NetworkLogger.cpp
         source/utils/RandUtils.cpp
+        source/utils/UuidUtils.cpp
 )
 
 set(UNIT_TESTS_FILES
@@ -387,6 +405,7 @@ set(UNIT_TESTS_FILES
         UnitTests/BonusTestsEnemy.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp
+        UnitTests/NetworkTests.cpp
         UnitTests/PlayerTests.cpp
         UnitTests/RespawnTankTests.cpp
         UnitTests/StatisticsTestsAdvanced.cpp
@@ -406,7 +425,14 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 endif()
 
 target_include_directories(unit_tests PRIVATE headers)
-target_link_libraries(unit_tests gtest gtest_main ${Boost_LIBRARIES})
+target_link_libraries(unit_tests
+        gtest
+        gtest_main
+        ${Boost_LIBRARIES}
+        wsock32  #NOTE: this for windows socket
+        ws2_32   #NOTE: this for windows socket
+)
+
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 

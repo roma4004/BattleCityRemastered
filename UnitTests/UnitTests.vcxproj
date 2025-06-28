@@ -39,7 +39,25 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;</IncludePath>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\network\Client.cpp" />
+    <ClCompile Include="..\source\network\ClientHandler.cpp" />
+    <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp" />
+    <ClCompile Include="..\source\network\commands\BonusSpawn.cpp" />
+    <ClCompile Include="..\source\network\commands\Command.cpp" />
+    <ClCompile Include="..\source\network\commands\CommandBatch.cpp" />
+    <ClCompile Include="..\source\network\commands\Dispose.cpp" />
+    <ClCompile Include="..\source\network\commands\FortressChange.cpp" />
+    <ClCompile Include="..\source\network\commands\HealthChange.cpp" />
+    <ClCompile Include="..\source\network\commands\KeyStateChange.cpp" />
+    <ClCompile Include="..\source\network\commands\ObstacleSpawn.cpp" />
+    <ClCompile Include="..\source\network\commands\PositionChange.cpp" />
+    <ClCompile Include="..\source\network\commands\RespawnTank.cpp" />
+    <ClCompile Include="..\source\network\commands\StatisticsChange.cpp" />
+    <ClCompile Include="..\source\network\commands\TankShot.cpp" />
+    <ClCompile Include="..\source\network\Server.cpp" />
+    <ClCompile Include="..\source\network\ServerHandler.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
+    <ClCompile Include="..\source\utils\NetworkLogger.cpp" />
     <ClCompile Include="..\source\utils\RandUtils.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
@@ -89,6 +107,7 @@
     <ClCompile Include="BonusTestsEnemy.cpp" />
     <ClCompile Include="BulletsTestsAdvanced.cpp" />
     <ClCompile Include="BulletsTestsBasic.cpp" />
+    <ClCompile Include="NetworkTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
     <ClCompile Include="RespawnTankTests.cpp" />
     <ClCompile Include="StatisticsTestsAdvanced.cpp" />

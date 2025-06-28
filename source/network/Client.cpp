@@ -18,7 +18,7 @@
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 #include "utils/UuidUtils.h"
-#include <fstream>
+// #include <fstream>
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
@@ -36,7 +36,7 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 
 	tcp::resolver resolver(ioContext);
 	const auto endpointIterator = resolver.resolve(host, port);
-	boost::asio::async_connect(
+	boost::asio::async_connect(//TODO: extracto to reconect method
 			_socket, endpointIterator,
 			[this](const boost::system::error_code& ec, tcp::endpoint /*endpoint_iterator*/)
 			{

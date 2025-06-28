@@ -183,7 +183,7 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 			timeToWait.count() > 0)
 		{
 			_frameReady = false;
-			const Uint32 waitMs = static_cast<Uint32>(timeToWait.count() * 1000.0);
+			const auto waitMs = static_cast<Uint32>(timeToWait.count() * 1000.0);
 			_frameTimer = SDL_AddTimer(waitMs, FrameTimerCallback, &_frameReady);
 			if (waitMs > 5)
 			{
@@ -211,7 +211,7 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 	if (const auto timeSinceLastFpsUpdate = std::chrono::duration<double>(endFrameTime - lastFpsUpdate);
 		timeSinceLastFpsUpdate.count() >= 1.0)
 	{
-		const Uint32 fps = static_cast<Uint32>(std::round(frameCounter / timeSinceLastFpsUpdate.count()));
+		const auto fps = static_cast<Uint32>(std::round(frameCounter / timeSinceLastFpsUpdate.count()));
 		frameCounter = 0;
 		lastFpsUpdate = endFrameTime;
 
@@ -239,12 +239,12 @@ void GameSuccess::DisposeDeadObject()
 	//TODO: run on debug only
 	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
 	{
-		if (itCopy->get() == nullptr)
+		if (*itCopy == nullptr)
 		{
 			std::cout << "Disposing object nullptr " << std::endl;
 			continue;
 		}
-		const auto baseObj = *itCopy;
+		const auto& baseObj = *itCopy;
 		std::cout << "[" << "Disposing object" << "] "
 				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< ", name=" << baseObj->GetName()

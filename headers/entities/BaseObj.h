@@ -57,8 +57,8 @@ public:
 	[[nodiscard]] virtual int GetHealth() const;
 	virtual void SetHealth(int health);
 
-	[[nodiscard]] virtual bool GetIsAlive() const;
-	virtual void SetIsAlive(bool isAlive);
+	[[nodiscard]] bool GetIsAlive() const override;
+	void SetIsAlive(bool isAlive) override;
 
 	virtual void TakeDamage(int damage);
 

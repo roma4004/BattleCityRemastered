@@ -161,15 +161,17 @@ void Session::DoWrite(const std::string& message)
 
 			if (ec)
 			{
-				std::cerr << "Write error: " << ec.message() << '\n';
+				if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
+				{
+					std::cout << "Connection closed normally" << std::endl;
+				}
+				else
+				{
+					std::cerr << "Write error: " << ec.message() << '\n';
+					//TODO: need handle close connection and delete session
+				}
+
 				self->_socket.close();
-				//TODO: need handle close connection and delete session
-			}
-			else
-			{
-				// You can handle a custom success write case here
-				// If you want to keep the session alive, add your process here. Like DoRead again.
-				// self->DoRead();
 			}
 		};
 
