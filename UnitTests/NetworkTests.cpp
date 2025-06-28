@@ -1,4 +1,5 @@
 #include "components/EventSystem.h"
+#include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
@@ -33,14 +34,14 @@ TEST_F(NetworkTest, PosEventReplication)
 	constexpr FPoint posOrigin{42.f, 42.f};
 	constexpr Direction directionOrigin{UP};
 
-	std::promise<std::tuple<FPoint, Direction, buuid>> replicationPromise;
-	auto replicationFuture = replicationPromise.get_future();
+	std::promise<std::tuple<FPoint, Direction, buuid>> promise;
+	auto future = promise.get_future();
 
 	events->AddListener<const FPoint, const Direction, const buuid&>(
 			"ClientReceived_TestTankPos", "PosEventReplication",
-			[&replicationPromise](const FPoint newPos, const Direction dir, const buuid& uuid) mutable
+			[&promise](const FPoint newPos, const Direction dir, const buuid& uuid) mutable
 			{
-				replicationPromise.set_value({newPos, dir, uuid});
+				promise.set_value({newPos, dir, uuid});
 			});
 
 	events->EmitEvent("Server_StartFrame");
@@ -48,10 +49,10 @@ TEST_F(NetworkTest, PosEventReplication)
 			"ServerSend_Pos", "TestTank", posOrigin, directionOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = replicationFuture.wait_for(std::chrono::milliseconds(1000));
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
 	ASSERT_EQ(status, std::future_status::ready);
 
-	const auto& [posReplicated, dirReplicated, uuidReplicated] = replicationFuture.get();
+	const auto& [posReplicated, dirReplicated, uuidReplicated] = future.get();
 
 	EXPECT_EQ(posOrigin, posReplicated);
 	EXPECT_EQ(directionOrigin, dirReplicated);
@@ -68,15 +69,15 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	constexpr Direction direction{UP};
 
-	std::promise<std::pair<Direction, buuid>> replicationPromise;
-	auto replicationFuture = replicationPromise.get_future();
+	std::promise<std::pair<Direction, buuid>> promise;
+	auto future = promise.get_future();
 
 	events->AddListener<const Direction, const buuid&>(
 			"ClientReceived_TestTankShot", "ShotEventReplication",
-			[&replicationPromise](
+			[&promise](
 			const Direction dir, const buuid& uuid) mutable
 			{
-				replicationPromise.set_value({dir, uuid});
+				promise.set_value({dir, uuid});
 			});
 
 	events->EmitEvent("Server_StartFrame");
@@ -84,10 +85,10 @@ TEST_F(NetworkTest, ShotEventReplication)
 			"ServerSend_Shot", "TestTank", direction, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = replicationFuture.wait_for(std::chrono::milliseconds(1000));
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
 	ASSERT_EQ(status, std::future_status::ready);
 
-	const auto [dirReplicated, uuidReplicated] = replicationFuture.get();
+	const auto [dirReplicated, uuidReplicated] = future.get();
 
 	EXPECT_EQ(direction, dirReplicated);
 	EXPECT_EQ(_uuid, uuidReplicated);
@@ -103,8 +104,8 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	constexpr int healthOrigin{42};
 
-	std::promise<int> replicationPromise;
-	auto replicationFuture = replicationPromise.get_future();
+	std::promise<int> promise;
+	auto future = promise.get_future();
 
 	const auto name = std::string("TestTank");
 	const auto uuidStr = boost::uuids::to_string(_uuid);
@@ -112,16 +113,16 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	events->AddListener<const int>(
 			"ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication",
-			[&replicationPromise](const int health) { replicationPromise.set_value(health); });
+			[&promise](const int health) { promise.set_value(health); });
 
 	events->EmitEvent("Server_StartFrame");
 	events->EmitEvent<const std::string&, const int, const buuid&>("ServerSend_Health", name, healthOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = replicationFuture.wait_for(std::chrono::milliseconds(1000));
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
 	ASSERT_EQ(status, std::future_status::ready);
 
-	const auto healthReplicated = replicationFuture.get();
+	const auto healthReplicated = future.get();
 	EXPECT_EQ(healthOrigin, healthReplicated);
 }
 
@@ -133,23 +134,23 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	std::promise<buuid> replicationPromise;
-	auto replicationFuture = replicationPromise.get_future();
+	std::promise<buuid> promise;
+	auto future = promise.get_future();
 
 	const auto name = std::string("Bullet");
 
 	events->AddListener<const buuid&>(
 			"ClientReceived_" + name + "Dispose", "DisposeEventReplication",
-			[&replicationPromise](const buuid& uuid) { replicationPromise.set_value(uuid); });
+			[&promise](const buuid& uuid) { promise.set_value(uuid); });
 
 	events->EmitEvent("Server_StartFrame");
 	events->EmitEvent<const buuid&>("ServerSend_Dispose", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = replicationFuture.wait_for(std::chrono::milliseconds(1000));
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
 	ASSERT_EQ(status, std::future_status::ready);
 
-	const auto uuidReplicated = replicationFuture.get();
+	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 }
 
@@ -160,14 +161,14 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	std::promise<std::tuple<std::string, std::string, std::string>> replicationPromise;
-	auto replicationFuture = replicationPromise.get_future();
+	std::promise<std::tuple<std::string, std::string, std::string>> promise;
+	auto future = promise.get_future();
 
 	events->AddListener<const std::string&, const std::string&, const std::string&>(
 			"ClientReceived_Statistics", "StatisticsEventReplication",
-			[&replicationPromise](const std::string& type, const std::string& author, const std::string& fraction)
+			[&promise](const std::string& type, const std::string& author, const std::string& fraction)
 			{
-				replicationPromise.set_value({type, author, fraction});
+				promise.set_value({type, author, fraction});
 			});
 
 	events->EmitEvent("Server_StartFrame");
@@ -175,10 +176,10 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 			"ServerSend_Statistics", "BulletHit", "author", "fraction");
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = replicationFuture.wait_for(std::chrono::milliseconds(1000));
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
 	ASSERT_EQ(status, std::future_status::ready);
 
-	const auto& [type, author, fraction] = replicationFuture.get();
+	const auto& [type, author, fraction] = future.get();
 	EXPECT_EQ("BulletHit", type);
 	EXPECT_EQ("author", author);
 	EXPECT_EQ("fraction", fraction);
@@ -248,10 +249,67 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	EXPECT_EQ(_uuid, uuidToSteel);
 }
 
-// TEST_F(NetworkTest, BonusSpawnEventReplication) {
-// TEST_F(NetworkTest, BonusDeSpawnEventReplication) {
+TEST_F(NetworkTest, BonusSpawnEventReplication)
+{
+	using buuid = boost::uuids::uuid;
+
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	std::promise<std::tuple<FPoint, BonusType, buuid>> promise;
+	auto future = promise.get_future();
+
+	events->AddListener<const FPoint, const BonusType, const buuid&>(
+			"ClientReceived_BonusSpawn", "BonusSpawnEventReplication",
+			[&promise](const FPoint& pos, const BonusType& bonusType, const buuid& uuid)
+			{
+				promise.set_value({pos, bonusType, uuid});
+			});
+
+	events->EmitEvent("Server_StartFrame");
+	constexpr FPoint pos{42.f, 42.f};
+	constexpr BonusType type{Timer};
+	events->EmitEvent<const FPoint, const BonusType, const buuid&>("ServerSend_BonusSpawn", pos, type, _uuid);
+	events->EmitEvent("Server_EndFrame");
+
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(status, std::future_status::ready);
+
+	const auto& [posReplicated, typeReplicated, uuid] = future.get();
+	EXPECT_EQ(pos, posReplicated);
+	EXPECT_EQ(type, typeReplicated);
+	EXPECT_EQ(_uuid, uuid);
+}
+
+TEST_F(NetworkTest, BonusDeSpawnEventReplication)
+{
+	using buuid = boost::uuids::uuid;
+
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	std::promise<buuid> promise;
+	auto future = promise.get_future();
+
+	events->AddListener<const buuid&>(
+			"ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication",
+			[&promise](const buuid& uuid) { promise.set_value(uuid); });
+
+	events->EmitEvent("Server_StartFrame");
+	events->EmitEvent<const buuid&>("ServerSend_BonusDeSpawn", _uuid);
+	events->EmitEvent("Server_EndFrame");
+
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(status, std::future_status::ready);
+
+	const auto uuidReplicated = future.get();
+	EXPECT_EQ(_uuid, uuidReplicated);
+}
+
 // TEST_F(NetworkTest, RespawnTankDeSpawnEventReplication) {
 // TEST_F(NetworkTest, ObstacleSpawnEventReplication) {
 
 //TODO: other bonus effect replication test after write this replication
-// TEST_F(NetworkTest, ...SpawnEventReplication) {
+// TEST_F(NetworkTest, bonusKind...EventReplication) {
