@@ -1,8 +1,4 @@
-#include "components/BulletPool.h"
 #include "components/EventSystem.h"
-#include "entities/obstacles/BrickWall.h"
-#include "entities/obstacles/FortressWall.h"
-#include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
@@ -157,8 +153,101 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	EXPECT_EQ(_uuid, uuidReplicated);
 }
 
-// TEST_F(NetworkTest, StatisticsEventReplication) {
-// TEST_F(NetworkTest, FortressChangeEventReplication) {
+//TODO: cover all statistics items like this
+TEST_F(NetworkTest, StatisticsEventReplication)
+{
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	std::promise<std::tuple<std::string, std::string, std::string>> replicationPromise;
+	auto replicationFuture = replicationPromise.get_future();
+
+	events->AddListener<const std::string&, const std::string&, const std::string&>(
+			"ClientReceived_Statistics", "StatisticsEventReplication",
+			[&replicationPromise](const std::string& type, const std::string& author, const std::string& fraction)
+			{
+				replicationPromise.set_value({type, author, fraction});
+			});
+
+	events->EmitEvent("Server_StartFrame");
+	events->EmitEvent<const std::string&, const std::string&, const std::string&>(
+			"ServerSend_Statistics", "BulletHit", "author", "fraction");
+	events->EmitEvent("Server_EndFrame");
+
+	const auto status = replicationFuture.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(status, std::future_status::ready);
+
+	const auto& [type, author, fraction] = replicationFuture.get();
+	EXPECT_EQ("BulletHit", type);
+	EXPECT_EQ("author", author);
+	EXPECT_EQ("fraction", fraction);
+}
+
+//TODO: write retry 3 times logic if failure
+TEST_F(NetworkTest, FortressChangeEventReplication)
+{
+	using buuid = boost::uuids::uuid;
+
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	std::promise<std::tuple<std::string, buuid>> promiseDied;
+	auto futureDied = promiseDied.get_future();
+
+	std::promise<std::tuple<std::string, buuid>> promiseToBrick;
+	auto futureToBrick = promiseToBrick.get_future();
+
+	std::promise<std::tuple<std::string, buuid>> promiseToSteel;
+	auto futureToSteel = promiseToSteel.get_future();
+
+	events->AddListener<const std::string&, const buuid&>(
+			"ClientReceived_FortressChange", "FortressChangeEventReplication",
+			[&promiseDied, &promiseToBrick, &promiseToSteel, this](const std::string& state, const buuid& uuid)
+			{
+				if (uuid == this->_uuid)
+				{
+					if (state == "Died")
+					{
+						promiseDied.set_value({state, uuid});
+					}
+					else if (state == "ToBrick")
+					{
+						promiseToBrick.set_value({state, uuid});
+					}
+					else if (state == "ToSteel")
+					{
+						promiseToSteel.set_value({state, uuid});
+					}
+				}
+			});
+
+	events->EmitEvent("Server_StartFrame");
+	events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
+	events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "ToBrick", _uuid);
+	events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "ToSteel", _uuid);
+	events->EmitEvent("Server_EndFrame");
+
+	const auto statusDied = futureDied.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(statusDied, std::future_status::ready);
+	const auto& [stateDied, uuidDied] = futureDied.get();
+	EXPECT_EQ("Died", stateDied);
+	EXPECT_EQ(_uuid, uuidDied);
+
+	const auto statusToBrick = futureToBrick.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(statusToBrick, std::future_status::ready);
+	const auto& [stateToBrick, uuidToBrick] = futureToBrick.get();
+	EXPECT_EQ("ToBrick", stateToBrick);
+	EXPECT_EQ(_uuid, uuidToBrick);
+
+	const auto statusToSteel = futureToSteel.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(statusToSteel, std::future_status::ready);
+	const auto& [stateToSteel, uuidToSteel] = futureToSteel.get();
+	EXPECT_EQ("ToSteel", stateToSteel);
+	EXPECT_EQ(_uuid, uuidToSteel);
+}
+
 // TEST_F(NetworkTest, BonusSpawnEventReplication) {
 // TEST_F(NetworkTest, BonusDeSpawnEventReplication) {
 // TEST_F(NetworkTest, RespawnTankDeSpawnEventReplication) {

@@ -48,13 +48,13 @@ void FortressWall::SubscribeAsClient()
 					{
 						this->OnEnemyPickupShovel();
 					}
-					else if (state == "ToSteel")
-					{
-						this->OnPlayerPickupShovel();
-					}
 					else if (state == "ToBrick")
 					{
 						this->OnPlayerShovelCooldownEnd();
+					}
+					else if (state == "ToSteel")
+					{
+						this->OnPlayerPickupShovel();
 					}
 				}
 			});
