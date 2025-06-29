@@ -4,6 +4,7 @@
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "enums/GameMode.h"
+#include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
 #include <algorithm>
 #include <string>
@@ -17,8 +18,14 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)},
 	  _gameMode{gameMode}
 {
-	//TODO: fix fortress replication
 	Subscribe();
+
+	//disable replication for fortress _obstacle
+	if (_gameMode == PlayAsHost)
+	{
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
+			"ServerSend_ObstacleSpawn", _rect, Fortress, uuid);
+	}
 }
 
 FortressWall::~FortressWall()
@@ -39,7 +46,7 @@ void FortressWall::Subscribe()
 void FortressWall::SubscribeAsClient()
 {
 	_events->AddListener<const std::string&, const buuid&>(
-			"ClientReceived_FortressChange", _nameWithUuid,
+			"ClientReceived_FortressChange", _nameWithUuid,//TODO: maybe register with name of brick
 			[this](const std::string& state, const buuid& uuid)
 			{
 				if (uuid == _uuid)

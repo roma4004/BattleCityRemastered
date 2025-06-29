@@ -265,9 +265,8 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		const buuid uuid = cmd->GetUuid();
 		_events->EmitEvent<const std::string&, const buuid&>(
-				"ClientReceived_FortressChange", cmd->GetState(), uuid);
+				"ClientReceived_FortressChange", cmd->GetState(), cmd->GetUuid());
 	}
 }
 
