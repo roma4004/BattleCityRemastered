@@ -29,7 +29,7 @@ protected:
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
 	float _gridSize{0.f};
-	GameMode _gameMode{OnePlayer};
+	GameMode _gameMode{GameMode::OnePlayer};
 	std::string _name = "Player1";
 	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";
@@ -49,7 +49,8 @@ protected:
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, yellow, _tankHealth, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize,  UP, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::UP,
+				_gameMode};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
@@ -262,7 +263,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(UP);
+		player->SetDirection(Direction::UP);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
@@ -283,7 +284,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(LEFT);
+		player->SetDirection(Direction::LEFT);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
@@ -304,7 +305,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(DOWN);
+		player->SetDirection(Direction::DOWN);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
@@ -325,7 +326,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(RIGHT);
+		player->SetDirection(Direction::RIGHT);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
@@ -346,7 +347,7 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	{
 		player->SetPos({.x = 0.f, .y = 0.f});
 		//success shot down test, try to create an inside screen bullet
-		player->SetDirection(DOWN);
+		player->SetDirection(Direction::DOWN);
 		const size_t size = _allObjects.size();
 
 		_events->EmitEvent("Space_Pressed");
@@ -491,7 +492,8 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, green, _tankHealth, _uuid, _name, _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize,  UP, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::UP,
+				_gameMode};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));

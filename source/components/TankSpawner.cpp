@@ -57,7 +57,7 @@ void TankSpawner::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 
-		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 	_events->AddListener<const buuid&>("TankSpawn", _name, [this](const buuid& uuid)
 	{
@@ -103,7 +103,7 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener<const buuid&>("TankSpawn", _name);
 	_events->RemoveListener<const buuid&>("TankDied", _name);
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -136,9 +136,9 @@ void TankSpawner::SetSlotNeedRespawn(const int slotIndex)
 
 void TankSpawner::ResetRespawnStat()
 {
-	_respawnResource[ENEMY_ALL] = 20;
-	_respawnResource[PLAYER_ONE] = 3;
-	_respawnResource[PLAYER_TWO] = 3;
+	_respawnResource[static_cast<int>(RespawnResource::ENEMY_ALL)] = 20;
+	_respawnResource[static_cast<int>(RespawnResource::PLAYER_ONE)] = 3;
+	_respawnResource[static_cast<int>(RespawnResource::PLAYER_TWO)] = 3;
 
 	for (SpawnSlot& slot: _slots)
 	{
@@ -159,7 +159,7 @@ void TankSpawner::SetPlayerNeedRespawn()
 {
 	_slots[4].isAvailable = true;
 
-	if (_gameMode != OnePlayer)
+	if (_gameMode != GameMode::OnePlayer)
 	{
 		_slots[5].isAvailable = true;
 	}
@@ -207,20 +207,20 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 		if (isFreeSpawnSpot)
 		{
 			std::string fraction{"EnemyTeam"};
-			std::string name{"Enemy" + std::to_string(type + 1)};
+			std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
 
 			// Log enemy tank spawn
 			const std::string uuidString = UuidUtils::GetStringUuid(uuid);
 			Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
 			std::cout << "[" << GetCurrentTimeString() << "] "
-					<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+					<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 					<< "SpawnEnemy  UUID = " << uuidString
 					<< ", Name = " << name
 					<< std::endl;
 
 			constexpr int gray{0x808080};
 			const bool isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive;
-			const bool isHelmetActive = _bonusEffectManager->GetHelmet(type).isActive;
+			const bool isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<int>(type)).isActive;
 			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid),
 			          {isTimerActive, isHelmetActive}, type);
 			return;
@@ -243,23 +243,23 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 
 	if (isFreeSpawnSpot)
 	{
-		std::string name{type == PLAYER1 ? "Player1" : "Player2"};
+		std::string name{type == TankType::PLAYER1 ? "Player1" : "Player2"};
 		std::string fraction{"PlayerTeam"};
 
 		// Log tank spawn
 		const std::string uuidString = UuidUtils::GetStringUuid(uuid);
 		Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
 		std::cout << "[" << GetCurrentTimeString() << "] "
-				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnPlayer UUID = " << uuidString
 				<< ", Name = " << name
 				<< std::endl;
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
-		const int color = type == PLAYER1 ? yellow : green;
+		const int color = type == TankType::PLAYER1 ? yellow : green;
 		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
-		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == PLAYER1 ? 4 : 5).isActive;
+		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::PLAYER1 ? 4 : 5).isActive;
 		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
 		          {isTimerActive, isHelmetActive}, type);
 	}
@@ -280,23 +280,23 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 
 	if (isFreeSpawnSpot)
 	{
-		std::string name{(type == COOP1 ? "CoopBot1" : "CoopBot2")};
+		std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
 		std::string fraction{"PlayerTeam"};
 
 		// Log coop bot spawn
 		const std::string uuidString = UuidUtils::GetStringUuid(uuid);
 		Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
 		std::cout << "[" << GetCurrentTimeString() << "] "
-				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnEnemy  UUID = " << uuidString
 				<< ", Name = " << name
 				<< std::endl;
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
-		const int color = type == COOP1 ? yellow : green;
+		const int color = type == TankType::COOP1 ? yellow : green;
 		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
-		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == COOP1 ? 4 : 5).isActive;
+		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive;
 		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
 		          {isTimerActive, isHelmetActive}, type);
 	}
@@ -308,7 +308,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
 	constexpr int health{100};
 	SpawnEnemy(uuid, type, speed, health);
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", type, uuid);
 	}
@@ -321,23 +321,23 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 	const float size{gridOffset * 3};
 	constexpr float speed{142};
 	constexpr int health{100};
-	const bool isFirst = type == PLAYER1;
+	const bool isFirst = type == TankType::PLAYER1;
 	const ObjRectangle rect{.x = gridOffset * (isFirst ? 16.f : 32.f), .y = windowSizeY - size, .w = size, .h = size};
 
-	if (_gameMode == OnePlayer
-	    || _gameMode == TwoPlayers
-	    || _gameMode == PlayAsHost
-	    || _gameMode == PlayAsClient
-	    || _gameMode == CoopWithBot && isFirst)
+	if (_gameMode == GameMode::OnePlayer
+	    || _gameMode == GameMode::TwoPlayers
+	    || _gameMode == GameMode::PlayAsHost
+	    || _gameMode == GameMode::PlayAsClient
+	    || _gameMode == GameMode::CoopWithBot && isFirst)
 	{
 		SpawnPlayer(rect, speed, health, uuid, type);
 	}
-	else if (_gameMode == Demo || _gameMode == CoopWithBot)
+	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
 	{
-		SpawnCoopBot(rect, speed, health, uuid, isFirst ? COOP1 : COOP2);
+		SpawnCoopBot(rect, speed, health, uuid, isFirst ? TankType::COOP1 : TankType::COOP2);
 	}
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", type, uuid);
 	}
@@ -349,17 +349,17 @@ void TankSpawner::RespawnTanks()
 	{
 		if (_slots[i].isAvailable)
 		{
-			switch (i)
+			switch (const auto type = static_cast<TankType>(i))
 			{
 				case TankType::ENEMY1:
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					RespawnEnemyTanks(static_cast<TankType>(i), _slots[i].id);
+					RespawnEnemyTanks(type, _slots[i].id);
 					break;
 				case TankType::PLAYER1:
 				case TankType::PLAYER2:
-					RespawnPlayerTeam(static_cast<TankType>(i), _slots[i].id);
+					RespawnPlayerTeam(type, _slots[i].id);
 					break;
 				default:
 					break;
@@ -391,44 +391,44 @@ void TankSpawner::RespawnClient(const TankType type, const buuid uuid)
 
 void TankSpawner::IncreaseEnemyRespawnResource()
 {
-	++_respawnResource[ENEMY_ALL];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy",
-	                                                  _respawnResource[ENEMY_ALL]);
+	constexpr auto id = static_cast<size_t>(RespawnResource::ENEMY_ALL);
+	++_respawnResource[id];
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy", _respawnResource[id]);
 }
 
 void TankSpawner::IncreasePlayerOneRespawnResource()//TODO: combine increase for both players into one
 {
-	++_respawnResource[PLAYER_ONE];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1",
-	                                                  _respawnResource[PLAYER_ONE]);
+	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_ONE);
+	++_respawnResource[id];
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1", _respawnResource[id]);
 }
 
 void TankSpawner::IncreasePlayerTwoRespawnResource()
 {
-	++_respawnResource[PLAYER_TWO];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2",
-	                                                  _respawnResource[PLAYER_TWO]);
+	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_TWO);
+	++_respawnResource[id];
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2", _respawnResource[id]);
 }
 
 void TankSpawner::DecreaseEnemyRespawnResource()
 {
-	--_respawnResource[ENEMY_ALL];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy",
-	                                                  _respawnResource[ENEMY_ALL]);
+	constexpr auto id = static_cast<size_t>(RespawnResource::ENEMY_ALL);
+	--_respawnResource[id];
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy", _respawnResource[id]);
 }
 
 void TankSpawner::DecreasePlayerOneRespawnResource()
 {
-	--_respawnResource[PLAYER_ONE];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1",
-	                                                  _respawnResource[PLAYER_ONE]);
+	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_ONE);
+	--_respawnResource[id];
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1", _respawnResource[id]);
 }
 
 void TankSpawner::DecreasePlayerTwoRespawnResource()
 {
-	--_respawnResource[PLAYER_TWO];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2",
-	                                                  _respawnResource[PLAYER_TWO]);
+	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_TWO);
+	--_respawnResource[id];
+	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2", _respawnResource[id]);
 }
 
 void TankSpawner::OnBonusGrenade(const std::string& author, const std::string& fraction)
@@ -468,7 +468,7 @@ void TankSpawner::OnBonusTank(const std::string& author, const std::string& frac
 		}
 	}
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnTank", author, fraction);
 	}
@@ -480,7 +480,7 @@ void TankSpawner::OnTankSpawn(const buuid& uuid)
 	{
 		if (_slots[i].id == uuid)
 		{
-			switch (i)
+			switch (static_cast<TankType>(i))
 			{
 				case TankType::ENEMY1:
 				case TankType::ENEMY2:
@@ -510,19 +510,19 @@ void TankSpawner::OnTankDied(const buuid& uuid)
 	{
 		if (_slots[i].id == uuid)
 		{
-			switch (i)
+			switch (static_cast<TankType>(i))
 			{
 				case TankType::ENEMY1:
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					_slots[i].isAvailable = _respawnResource[ENEMY_ALL] > 0;
+					_slots[i].isAvailable = _respawnResource[static_cast<size_t>(RespawnResource::ENEMY_ALL)] > 0;
 					break;
 				case TankType::PLAYER1:
-					_slots[i].isAvailable = _respawnResource[PLAYER_ONE] > 0;
+					_slots[i].isAvailable = _respawnResource[static_cast<size_t>(RespawnResource::PLAYER_ONE)] > 0;
 					break;
 				case TankType::PLAYER2:
-					_slots[i].isAvailable = _respawnResource[PLAYER_TWO] > 0;
+					_slots[i].isAvailable = _respawnResource[static_cast<size_t>(RespawnResource::PLAYER_TWO)] > 0;
 					break;
 				default:
 					break;
@@ -534,9 +534,9 @@ void TankSpawner::OnTankDied(const buuid& uuid)
 
 std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type)
 {
-	if (type == PLAYER1)
+	if (type == TankType::PLAYER1)
 	{
-		if (_gameMode == PlayAsClient)
+		if (_gameMode == GameMode::PlayAsClient)
 		{
 			return std::make_unique<InputProviderForPlayerOneNet>(_events);
 		}
@@ -544,7 +544,7 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 		return std::make_unique<InputProviderForPlayerOne>(_events);
 	}
 
-	if (_gameMode == PlayAsClient || _gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsClient || _gameMode == GameMode::PlayAsHost)
 	{
 		return std::make_unique<InputProviderForPlayerTwoNet>(_events);
 	}
@@ -555,12 +555,12 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
                                                  BonusEffectProperty effects)
 {
-	if (type == ENEMY1 || type == ENEMY2 || type == ENEMY3 || type == ENEMY4)
+	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
 	{
 		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, std::move(effects));
 	}
 
-	if (type == COOP1 || type == COOP2)
+	if (type == TankType::COOP1 || type == TankType::COOP2)
 	{
 		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, std::move(effects));
 	}
@@ -574,7 +574,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std:
 {
 	BaseObjProperty baseObjProperty{rect, color, health, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _allObjects, _events, 1, speed, _windowSize, UP, _gameMode};
+			std::move(baseObjProperty), _allObjects, _events, 1, speed, _windowSize, Direction::UP, _gameMode};
 
 	if (std::shared_ptr<BaseObj> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
 	{

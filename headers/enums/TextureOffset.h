@@ -1,5 +1,6 @@
 #pragma once
 
+//TODO: move away non enum structure from enum folders
 #include "entities/ObjRectangle.h"
 
 // struct ObjRectangle;

@@ -81,4 +81,3 @@ int AnimationManager::GetAnimExplosion()
 
 	return _animExplosion.animationFrame;
 }
-

@@ -11,6 +11,6 @@ BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<EventSystem
 	        "BonusGrenade",
 	        uuid,
 	        gameMode,
-	        Grenade} {}
+	        BonusType::Grenade} {}
 
 BonusGrenade::~BonusGrenade() = default;

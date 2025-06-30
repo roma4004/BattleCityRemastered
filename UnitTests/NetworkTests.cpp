@@ -1,6 +1,8 @@
 #include "components/EventSystem.h"
+#include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
+#include "enums/ObstacleType.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include "gtest/gtest.h"
@@ -32,7 +34,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto client = std::make_unique<ClientHandler>(events);
 
 	constexpr FPoint posOrigin{42.f, 42.f};
-	constexpr Direction directionOrigin{UP};
+	constexpr auto directionOrigin{Direction::UP};
 
 	std::promise<std::tuple<FPoint, Direction, buuid>> promise;
 	auto future = promise.get_future();
@@ -67,7 +69,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	constexpr Direction direction{UP};
+	constexpr auto direction{Direction::UP};
 
 	std::promise<std::pair<Direction, buuid>> promise;
 	auto future = promise.get_future();
@@ -269,7 +271,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 
 	events->EmitEvent("Server_StartFrame");
 	constexpr FPoint pos{42.f, 42.f};
-	constexpr BonusType type{Timer};
+	constexpr auto type{BonusType::Timer};
 	events->EmitEvent<const FPoint, const BonusType, const buuid&>("ServerSend_BonusSpawn", pos, type, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -308,8 +310,102 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	EXPECT_EQ(_uuid, uuidReplicated);
 }
 
+TEST_F(NetworkTest, ObstacleSpawnEventReplication)
+{
+	using buuid = boost::uuids::uuid;
+
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	constexpr auto obstacleType = ObstacleType::Brick;
+	constexpr ObjRectangle rectOrigin{42.0f, 43.0f, 44.0f, 45.0f};
+
+	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise;
+	auto future = promise.get_future();
+
+	events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
+			"ClientReceived_ObstacleSpawn", "ObstacleSpawnEventReplication",
+			[&promise](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			{
+				promise.set_value({rect, type, uuid});
+			});
+
+	events->EmitEvent("Server_StartFrame");
+	events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
+			"ServerSend_ObstacleSpawn", rectOrigin, obstacleType, _uuid);
+	events->EmitEvent("Server_EndFrame");
+
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(status, std::future_status::ready);
+
+	auto [rect, type, uuid] = future.get();
+	EXPECT_EQ(rectOrigin.x, rect.x);
+	EXPECT_EQ(rectOrigin.y, rect.y);
+	EXPECT_EQ(rectOrigin.w, rect.w);
+	EXPECT_EQ(rectOrigin.h, rect.h);
+	EXPECT_EQ(obstacleType, type);
+	EXPECT_EQ(_uuid, uuid);
+}
+
+TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
+{
+	using buuid = boost::uuids::uuid;
+
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	constexpr auto obstacleType = ObstacleType::Brick;
+	std::vector<ObjRectangle> bricksRect;
+	std::vector<ObjRectangle> bricksRectReplicated;
+	constexpr int itemsInMassiveTest = 50000;
+	bricksRect.reserve(itemsInMassiveTest);
+	bricksRectReplicated.reserve(itemsInMassiveTest);
+	for (float i = 0; i < itemsInMassiveTest; ++i)
+	{
+		bricksRect.emplace_back(ObjRectangle{i, i + 1, i + 2, i + 3});
+	}
+
+	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises;
+	promises.reserve(itemsInMassiveTest);
+	std::atomic<int> count{0};
+
+	events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
+			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
+			[&promises, &count](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			{
+				promises[count].set_value({rect, type, uuid});
+				++count;
+			});
+
+	events->EmitEvent("Server_StartFrame");
+	for (size_t i = 0; i < itemsInMassiveTest; ++i)
+	{
+		events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
+				"ServerSend_ObstacleSpawn", bricksRect[i], obstacleType, _uuid);
+	}
+	events->EmitEvent("Server_EndFrame");
+
+	if (bricksRect.size() == bricksRectReplicated.size())
+		for (size_t i = 0; i < itemsInMassiveTest; ++i)
+		{
+			const int id = static_cast<int>(i);
+			auto future = promises[id].get_future();
+			const auto status = future.wait_for(std::chrono::milliseconds(10000));
+			ASSERT_EQ(status, std::future_status::ready);
+
+			auto [rect, type, uuid] = future.get();
+			EXPECT_EQ(bricksRect[id].x, rect.x);
+			EXPECT_EQ(bricksRect[id].y + 2, rect.y + 2);
+			EXPECT_EQ(bricksRect[id].w + 3, rect.w + 3);
+			EXPECT_EQ(bricksRect[id].h + 4, rect.h + 4);
+			EXPECT_EQ(obstacleType, type);
+			EXPECT_EQ(_uuid, uuid);
+		}
+}
+
 // TEST_F(NetworkTest, RespawnTankDeSpawnEventReplication) {
-// TEST_F(NetworkTest, ObstacleSpawnEventReplication) {
 
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {

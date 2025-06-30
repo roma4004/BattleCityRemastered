@@ -3,8 +3,8 @@
 #include "point.h"
 #include "../BaseObjProperty.h"
 
-enum Direction : char8_t;
-enum GameMode : char8_t;
+enum class Direction : char8_t;
+enum class GameMode : char8_t;
 class EventSystem;
 
 struct PawnProperty

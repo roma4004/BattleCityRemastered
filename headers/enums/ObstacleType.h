@@ -1,6 +1,6 @@
 #pragma once
 
-enum ObstacleType : char8_t
+enum class ObstacleType : char8_t
 {
 	None,
 

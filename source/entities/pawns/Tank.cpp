@@ -37,7 +37,7 @@ void Tank::Subscribe()
 		}
 	});
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
@@ -89,7 +89,7 @@ void Tank::SubscribeBonus()
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
-				if (_gameMode == PlayAsHost)
+				if (_gameMode == GameMode::PlayAsHost)
 				{
 					_events->EmitEvent<const std::string&>(
 							isActive
@@ -122,7 +122,7 @@ void Tank::Unsubscribe() const
 {
 	_events->RemoveListener("DrawHealthBar", _nameWithUuid);
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -155,7 +155,7 @@ void Tank::TakeDamage(const int damage)
 	{
 		Pawn::TakeDamage(damage);
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const int, const buuid&>(
 					"ServerSend_Health", _name, GetHealth(), _uuid);
@@ -170,7 +170,7 @@ void Tank::Shot(const buuid withUuid) const
 	_lastTimeFire = std::chrono::system_clock::now();
 	const buuid bulletUuid = _shootingBeh->Shot(withUuid);
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const std::string&, const Direction, const buuid&>(
 				"ServerSend_Shot", _name, GetDirection(), bulletUuid);
@@ -241,7 +241,7 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 		_fireCooldown -= milliseconds{150};
 		_bulletDamageRadius *= 1.25f;
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&>("ServerSend_OnStar", author);
 		}
@@ -266,7 +266,7 @@ void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction
 		_fireCooldown -= milliseconds{450};
 		_bulletDamageRadius *= 1.75f;
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&>("ServerSend_OnCaliber", author);
 		}

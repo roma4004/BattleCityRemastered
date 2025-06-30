@@ -8,11 +8,30 @@ Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, s
 	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
 	  _events(std::move(events)),
 	  _gameMode{gameMode},
-	  _obstacleType(obstacleType)
+	  _obstacleType(obstacleType),
+	  _isReplicationOn(true)
 {
 	Obstacle::Subscribe();
 
-	if (_gameMode == PlayAsHost)
+	if (_isReplicationOn && _gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
+				"ServerSend_ObstacleSpawn", _rect, _obstacleType, uuid);
+	}
+}
+
+Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, std::string name,
+                   std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
+                   const ObstacleType obstacleType, const bool isReplicationOn)
+	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
+	  _events(std::move(events)),
+	  _gameMode{gameMode},
+	  _obstacleType(obstacleType),
+	  _isReplicationOn(isReplicationOn)
+{
+	Obstacle::Subscribe();
+
+	if (_isReplicationOn && _gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
 				"ServerSend_ObstacleSpawn", _rect, _obstacleType, uuid);
@@ -28,7 +47,7 @@ void Obstacle::Subscribe()
 {
 	_events->AddListener("Draw", _nameWithUuid, [this]() { Draw(this); });
 
-	if (_gameMode == PlayAsClient)
+	if (_isReplicationOn && _gameMode == GameMode::PlayAsClient)
 	{
 		Obstacle::SubscribeAsClient();
 	}
@@ -52,7 +71,7 @@ void Obstacle::Unsubscribe() const
 {
 	_events->RemoveListener("Draw", _nameWithUuid);
 
-	if (_gameMode == PlayAsClient)
+	if (_isReplicationOn && _gameMode == GameMode::PlayAsClient)
 	{
 		Obstacle::UnsubscribeAsClient();
 	}
@@ -72,7 +91,7 @@ void Obstacle::SendDamageStatistics(const std::string& author, const std::string
 		_events->EmitEvent<const std::string&, const std::string&>("Statistics_" + _name + "Died", author, fraction);
 
 		//TODO: move this to onHealthChange
-		if (_gameMode == PlayAsHost)
+		if (_isReplicationOn && _gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const int, const buuid&>(
 					"ServerSend_Health", _name, GetHealth(), _uuid);

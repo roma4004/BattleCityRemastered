@@ -11,7 +11,24 @@ SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	           std::move(events),
 	           uuid,
 	           gameMode,
-	           Steel}
+	           ObstacleType::Steel}
+{
+	BaseObj::SetIsPassable(false);
+	BaseObj::SetIsDestructible(false);
+	BaseObj::SetIsPenetrable(false);
+}
+
+SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+                     const GameMode gameMode, const bool isReplicationOn)
+	: Obstacle{rect,
+	           0xaaaaaa,
+	           1,
+	           "SteelWall",
+	           std::move(events),
+	           uuid,
+	           gameMode,
+	           ObstacleType::Steel,
+	           isReplicationOn}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

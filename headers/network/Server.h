@@ -15,8 +15,8 @@
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
 //TODO: remove vector.hpp include after refactoring to command pattern
 
-enum Direction : char8_t;
-enum BonusType : char8_t;
+enum class Direction : char8_t;
+enum class BonusType : char8_t;
 class EventSystem;
 
 using boost::asio::ip::tcp;

@@ -8,7 +8,7 @@
 #include <memory>
 #include <variant>
 
-enum GameMode : char8_t;
+enum class GameMode : char8_t;
 class EventSystem;
 
 class FortressWall final : public BaseObj

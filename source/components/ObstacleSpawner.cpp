@@ -38,7 +38,7 @@ void ObstacleSpawner::Subscribe()
 	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
-		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 }
 
@@ -56,7 +56,7 @@ void ObstacleSpawner::Unsubscribe() const
 {
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -79,25 +79,25 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 	switch (type)
 	{
-		case Brick:
+		case ObstacleType::Brick:
 			obstacle = std::make_shared<BrickWall>(rect, _events, uuid, _gameMode);
 			break;
-		case Steel:
+		case ObstacleType::Steel:
 			obstacle = std::make_shared<SteelWall>(rect, _events, uuid, _gameMode);
 			break;
-		case Water:
+		case ObstacleType::Water:
 			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameMode);
 			break;
-		case Fortress:
+		case ObstacleType::Fortress:
 			obstacle = std::make_shared<FortressWall>(rect, _events, _allObjects, uuid, _gameMode);
 			break;
-		case Eagle:
+		case ObstacleType::Eagle:
 			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
 			break;
-		case Grass:
+		case ObstacleType::Grass:
 			obstacle = std::make_shared<GrassTile>(rect, _events, uuid, _gameMode);
 			break;
-		case Ice:
+		case ObstacleType::Ice:
 			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameMode);
 			break;
 		default:

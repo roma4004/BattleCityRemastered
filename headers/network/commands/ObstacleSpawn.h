@@ -7,7 +7,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
-enum ObstacleType : char8_t;
+enum class ObstacleType : char8_t;
 
 class ObstacleSpawn : public Command
 {

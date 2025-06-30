@@ -15,7 +15,7 @@ BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<EventSystem> ev
 	        "BonusTimer",
 	        uuid,
 	        gameMode,
-	        Timer} {}
+	        BonusType::Timer} {}
 
 BonusTimer::~BonusTimer() = default;
 

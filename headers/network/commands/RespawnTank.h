@@ -6,7 +6,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
-enum TankType : char8_t;
+enum class TankType : char8_t;
 
 class RespawnTank : public Command
 {

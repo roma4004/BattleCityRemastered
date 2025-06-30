@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-enum Direction : char8_t;
+enum class Direction : char8_t;
 class BaseObj;
 
 class IMoveBeh

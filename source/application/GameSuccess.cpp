@@ -34,28 +34,29 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-                         std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager,
-                         const bool isVsyncOn, std::shared_ptr<BonusEffectManager> bonusEffectManager)
+GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events,
+                         std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
+                         std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn,
+                         std::shared_ptr<BonusEffectManager> bonusEffectManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, Demo)},
+	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
 	  _textureManager(std::move(textureManager)),
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
 	  _tankSpawner{
-			  std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool,
-			                                std::move(bonusEffectManager))},
+			  std::make_shared<TankSpawner>(
+					  windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager))},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _isVsyncOn{isVsyncOn},
-	  _selectedGameMode{OnePlayer},
-	  _targetFrameDuration{1.0 / static_cast<double>(_targetFps)}
+	  _selectedGameMode{GameMode::OnePlayer}
 {
+	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 	Subscribe();
 
-	ResetBattlefield(Demo);
+	ResetBattlefield(GameMode::Demo);
 }
 
 GameSuccess::~GameSuccess()
@@ -83,11 +84,11 @@ void GameSuccess::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_networkNode = std::make_unique<ServerHandler>(_events);
 		}
-		else if (_gameMode == PlayAsClient)
+		else if (_gameMode == GameMode::PlayAsClient)
 		{
 			_networkNode = std::make_unique<ClientHandler>(_events);
 		}
@@ -117,7 +118,7 @@ void GameSuccess::LoadMap() const
 
 void GameSuccess::ResetBattlefield(const GameMode gameMode)
 {
-	if (gameMode == PlayAsClient || gameMode == PlayAsHost)
+	if (gameMode == GameMode::PlayAsClient || gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
 	}
@@ -129,12 +130,12 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	_events->EmitEvent("Reset");//TODO: recheck reset for new components
 
-	if (gameMode != PlayAsClient && gameMode != PlayAsHost)
+	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
 		LoadMap();
 	}
 
-	if (gameMode == PlayAsClient)
+	if (gameMode == GameMode::PlayAsClient)
 	{
 		_events->EmitEvent("ClientReadyToPlay");
 	}
@@ -142,10 +143,10 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 void GameSuccess::PrevGameMode()
 {
-	int mode = _selectedGameMode;
+	int mode = static_cast<int>(_selectedGameMode);
 	--mode;
 
-	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
+	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
@@ -155,10 +156,10 @@ void GameSuccess::PrevGameMode()
 
 void GameSuccess::NextGameMode()
 {
-	int mode = _selectedGameMode;
+	int mode = static_cast<int>(_selectedGameMode);
 	++mode;
 
-	constexpr int maxMode = static_cast<int>(EndIterator) - 1;
+	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
@@ -246,7 +247,7 @@ void GameSuccess::DisposeDeadObject()
 		}
 		const auto& baseObj = *itCopy;
 		std::cout << "[" << "Disposing object" << "] "
-				<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< ", name=" << baseObj->GetName()
 				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
 				<< std::endl;
@@ -256,7 +257,6 @@ void GameSuccess::DisposeDeadObject()
 }
 
 //TODO: recheck rule of 3/5 for all classes
-//TODO: convert enum to enum classes
 
 void GameSuccess::OnClientReady() const
 {
@@ -274,7 +274,7 @@ void GameSuccess::MainLoop()
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();
 
-			if (_gameMode == PlayAsHost)
+			if (_gameMode == GameMode::PlayAsHost)
 			{
 				_events->EmitEvent("Server_StartFrame");
 			}
@@ -289,7 +289,7 @@ void GameSuccess::MainLoop()
 			{
 				DisposeDeadObject();
 
-				if (_gameMode != PlayAsClient)
+				if (_gameMode != GameMode::PlayAsClient)
 				{
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 					_events->EmitEvent<const float>("TickUpdate", deltaTime);
@@ -307,7 +307,7 @@ void GameSuccess::MainLoop()
 
 			_textureManager->DisplayFrame(fps);
 
-			if (_gameMode == PlayAsHost)
+			if (_gameMode == GameMode::PlayAsHost)
 			{
 				_events->EmitEvent("Server_EndFrame");
 			}

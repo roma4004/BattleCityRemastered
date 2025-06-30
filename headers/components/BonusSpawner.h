@@ -6,8 +6,8 @@
 #include <vector>
 #include <boost/uuid/uuid.hpp>
 
-enum GameMode : char8_t;
-enum BonusType : char8_t;
+enum class GameMode : char8_t;
+enum class BonusType : char8_t;
 struct UPoint;
 struct ObjRectangle;
 class BaseObj;
@@ -52,5 +52,5 @@ public:
 
 	void SpawnRandomBonus(ObjRectangle rect);
 
-	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {}); //NOTE: for unit tests
+	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {});//NOTE: for unit tests
 };

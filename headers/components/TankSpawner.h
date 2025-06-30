@@ -8,8 +8,8 @@
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
-enum TankType : char8_t;
-enum GameMode : char8_t;
+enum class TankType : char8_t;
+enum class GameMode : char8_t;
 struct SDL_Renderer;
 struct ObjRectangle;
 struct BonusEffectProperty;
@@ -65,7 +65,8 @@ class TankSpawner final
 	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
 	               buuid uuid, BonusEffectProperty effects, TankType type);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
-	[[nodiscard]] std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty, BonusEffectProperty effects);
+	[[nodiscard]] std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty,
+	                                                  BonusEffectProperty effects);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid);
 	void RespawnPlayerTeam(TankType type, buuid uuid);
@@ -96,8 +97,20 @@ public:
 	void RespawnTanks();
 
 	// NOTE: for unit tests only:
-	[[nodiscard]] int GetEnemyRespawnResource() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
-	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
-	[[nodiscard]] int GetPlayerTwoRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_TWO]; }
+	[[nodiscard]] int GetEnemyRespawnResource() const
+	{
+		return _respawnResource[static_cast<std::size_t>(RespawnResource::ENEMY_ALL)];
+	}
+
+	[[nodiscard]] int GetPlayerOneRespawnResource() const
+	{
+		return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_ONE)];
+	}
+
+	[[nodiscard]] int GetPlayerTwoRespawnResource() const
+	{
+		return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_TWO)];
+	}
+
 	void SetSlotNeedRespawn(int slotIndex);
 };

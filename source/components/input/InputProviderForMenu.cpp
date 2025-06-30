@@ -23,7 +23,7 @@ void InputProviderForMenu::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 
-		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 }
 
@@ -43,7 +43,7 @@ void InputProviderForMenu::Unsubscribe() const
 	_events->RemoveListener("Pause_Released", _name);
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}

@@ -3,8 +3,8 @@
 #include "../BaseObj.h"
 #include <memory>
 
-enum ObstacleType : char8_t;
-enum GameMode : char8_t;
+enum class ObstacleType : char8_t;
+enum class GameMode : char8_t;
 class EventSystem;
 
 class Obstacle : public BaseObj
@@ -21,6 +21,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameMode _gameMode{};
 	ObstacleType _obstacleType{};
+	bool _isReplicationOn{};
 
 	void Draw(const BaseObj* obj) const override;
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
@@ -28,6 +29,8 @@ protected:
 public:
 	Obstacle(ObjRectangle rect, int color, int health, std::string name, std::shared_ptr<EventSystem> events,
 	         buuid uuid, GameMode gameMode, ObstacleType obstacleType);
+	Obstacle(ObjRectangle rect, int color, int health, std::string name, std::shared_ptr<EventSystem> events,
+	         buuid uuid, GameMode gameMode, ObstacleType obstacleType, bool isReplicationOn);
 
 	~Obstacle() override;
 };

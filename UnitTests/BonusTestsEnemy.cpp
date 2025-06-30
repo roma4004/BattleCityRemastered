@@ -29,7 +29,7 @@ protected:
 	int _tankHealth{100};
 	int _yellow{0xeaea00};
 	int _gray{0x808080};
-	GameMode _gameMode{OnePlayer};
+	GameMode _gameMode{GameMode::OnePlayer};
 	int _bulletColor{0xffffff};
 	int _bulletHealth{1};
 	int _bulletDamage{1};
@@ -59,7 +59,8 @@ protected:
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, _uuid, "Enemy1", "EnemyTeam"};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize,  DOWN, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::DOWN,
+				_gameMode};
 
 		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{}));
 	}
@@ -81,7 +82,8 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 					_uuid, _gameMode));
 	const auto fortressWall = dynamic_cast<const FortressWall*>(_allObjects.back().get());
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
+	                          BonusType::Shovel);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 	EXPECT_NE(fortressWall->GetHealth(), 0);
@@ -108,7 +110,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 
 		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, Shovel);
+				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Shovel);
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_NE(fortressWall->GetHealth(), 0);

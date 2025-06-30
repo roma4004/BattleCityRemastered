@@ -21,7 +21,7 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, cons
 
 	Subscribe();
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
 				"ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
@@ -32,7 +32,7 @@ Bonus::~Bonus()
 {
 	Unsubscribe();
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const buuid&>("ServerSend_BonusDeSpawn", _uuid);
 		//TODO: move to pick up moment in tank move beh
@@ -43,7 +43,7 @@ void Bonus::Subscribe()
 {
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 
-	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
 void Bonus::SubscribeAsHost()
@@ -69,7 +69,7 @@ void Bonus::SubscribeAsClient()
 
 void Bonus::Unsubscribe() const
 {
-	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
 	_events->RemoveListener("Draw", _nameWithUuid);
 }

@@ -79,22 +79,22 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction dir = tank->GetDirection();
-		dir == UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
+		dir == Direction::UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHeight - 1;
 	}
-	else if (dir == DOWN && tankBottomY + bulletHeight <= static_cast<float>(tank->GetWindowSize().y))
+	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(tank->GetWindowSize().y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY + 1;
 	}
-	else if (dir == LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
+	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
 	{
 		bulletRect.x = tankPos.x - bulletWidth - 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (dir == RIGHT && tankRightX + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
+	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(tank->GetWindowSize().x))
 	{
 		bulletRect.x = tankRightX + 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -137,6 +137,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 				.uuid = uuid
 		};
 
+		//TODO: skip bullet set guid on client if bullet not create but get from bullet pool
 		bullet->Reset(std::move(bulletResetProperty));
 
 		// std::cout << "[" << "bullet->Reset" << "] "

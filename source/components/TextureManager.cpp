@@ -239,22 +239,22 @@ void TextureManager::Draw(const BaseObj* obj)
 	{
 		switch (pawn->GetDirection())
 		{
-			case UP:
+			case Direction::UP:
 				angle = 0;
 				flip = SDL_FLIP_NONE;
 				break;
 
-			case LEFT:
+			case Direction::LEFT:
 				angle = -90;
 				flip = SDL_FLIP_NONE;
 				break;
 
-			case DOWN:
+			case Direction::DOWN:
 				angle = 0;
 				flip = SDL_FLIP_VERTICAL;
 				break;
 
-			case RIGHT:
+			case Direction::RIGHT:
 				angle = 90;
 				flip = SDL_FLIP_NONE;
 				break;

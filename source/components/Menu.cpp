@@ -14,7 +14,7 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
 	  _statistics{std::move(statistics)},
 	  _input{std::make_unique<InputProviderForMenu>(events)},
 	  _name{std::string("Menu")},
-	  _selectedGameMode{OnePlayer}
+	  _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
@@ -268,15 +268,15 @@ void Menu::DrawText() const
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender({.x = pos.x, .y = pos.y - 50}, color,
-	             _selectedGameMode == OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
+	             _selectedGameMode == GameMode::OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
 	TextToRender({.x = pos.x, .y = pos.y - 25}, color,
-	             _selectedGameMode == TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
+	             _selectedGameMode == GameMode::TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
 	TextToRender({.x = pos.x, .y = pos.y}, color,
-	             _selectedGameMode == CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
+	             _selectedGameMode == GameMode::CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
 	TextToRender({.x = pos.x, .y = pos.y + 25}, color,
-	             _selectedGameMode == PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
+	             _selectedGameMode == GameMode::PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
 	TextToRender({.x = pos.x, .y = pos.y + 50}, color,
-	             _selectedGameMode == PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
+	             _selectedGameMode == GameMode::PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(pos);
 }

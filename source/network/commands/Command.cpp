@@ -8,29 +8,29 @@ const char* Command::GetCommandType() const
 {
 	switch (_type)
 	{
-		case COMMAND_BATCH:
+		case CommandType::COMMAND_BATCH:
 			return "COMMAND_BATCH";
-		case POSITION_CHANGE:
+		case CommandType::POSITION_CHANGE:
 			return "POSITION_CHANGE";
-		case TANK_SHOT:
+		case CommandType::TANK_SHOT:
 			return "TANK_SHOT";
-		case HEALTH_CHANGE:
+		case CommandType::HEALTH_CHANGE:
 			return "HEALTH_CHANGE";
-		case DISPOSE:
+		case CommandType::DISPOSE:
 			return "DISPOSE";
-		case STATISTICS_CHANGE:
+		case CommandType::STATISTICS_CHANGE:
 			return "STATISTICS_CHANGE";
-		case KEY_STATE_CHANGE:
+		case CommandType::KEY_STATE_CHANGE:
 			return "KEY_STATE_CHANGE";
-		case FORTRESS_CHANGE:
+		case CommandType::FORTRESS_CHANGE:
 			return "FORTRESS_CHANGE";
-		case BONUS_SPAWN:
+		case CommandType::BONUS_SPAWN:
 			return "BONUS_SPAWN";
-		case BONUS_DESPAWN:
+		case CommandType::BONUS_DESPAWN:
 			return "BONUS_DESPAWN";
-		case RESPAWN_TANK:
+		case CommandType::RESPAWN_TANK:
 			return "RESPAWN_TANK";
-		case OBSTACLE_SPAWN:
+		case CommandType::OBSTACLE_SPAWN:
 			return "OBSTACLE_SPAWN";
 		default:
 			return "UNKNOWN_COMMAND";

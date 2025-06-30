@@ -5,9 +5,9 @@
 #include <vector>
 #include <boost/uuid/uuid.hpp>
 
-enum GameMode : char8_t;
-enum ObstacleType : char8_t;
-enum BonusType : char8_t;
+enum class GameMode : char8_t;
+enum class ObstacleType : char8_t;
+enum class BonusType : char8_t;
 struct UPoint;
 struct ObjRectangle;
 class BaseObj;

@@ -65,26 +65,26 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 
 		// tank cannot pass water, so we need to skip water when we find enemy to shoot
 		// but when we search for bonus, we should not skip water to avoid moving to bonus through water.
-		const bool isWater =  dynamic_cast<WaterTile*>(object.get());
+		const bool isWater = dynamic_cast<WaterTile*>(object.get());
 		const bool isPenetrable = object->GetIsPenetrable();
 		if (!object->GetIsPassable() && (!isPenetrable || (isWater && !isWaterSkip)))
 		{
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[UP], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::UP)], object->GetRect()))
 			{
 				_upSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[LEFT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::LEFT)], object->GetRect()))
 			{
 				_leftSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[DOWN], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::DOWN)], object->GetRect()))
 			{
 				_downSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[RIGHT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::RIGHT)], object->GetRect()))
 			{
 				_rightSideObstacles.emplace_back(object);
 			}

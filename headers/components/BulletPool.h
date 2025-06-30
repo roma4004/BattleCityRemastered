@@ -6,8 +6,8 @@
 #include <queue>
 #include <string>
 
-enum GameMode : char8_t;
-enum Direction : char8_t;
+enum class GameMode : char8_t;
+enum class Direction : char8_t;
 struct ObjRectangle;
 struct SDL_Renderer;
 class Bullet;

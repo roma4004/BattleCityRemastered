@@ -4,7 +4,7 @@
 #include <functional>
 #include <memory>
 
-enum Direction : char8_t;
+// enum class Direction : char8_t;
 class Bullet;
 struct FPoint;
 struct ObjRectangle;

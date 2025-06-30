@@ -22,7 +22,7 @@ protected:
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
 	float _deltaTimeOneFrame{1.f / 60.f};
-	GameMode _gameMode{OnePlayer};
+	GameMode _gameMode{GameMode::OnePlayer};
 	int _bulletDamage{1};
 	int _bulletHealth{1};
 	int _bulletColor{0xffffff};
@@ -44,7 +44,8 @@ protected:
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 3, _bulletSpeed, _windowSize, DOWN, _gameMode};
+				std::move(baseObjProperty), &_allObjects, _events, 3, _bulletSpeed, _windowSize, Direction::DOWN,
+				_gameMode};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
