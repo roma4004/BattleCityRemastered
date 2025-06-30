@@ -12,6 +12,6 @@ BonusStar::BonusStar(const ObjRectangle& rect, std::shared_ptr<EventSystem> even
 	        "BonusStar",
 	        uuid,
 	        gameMode,
-	        Star} {}
+	        BonusType::Star} {}
 
 BonusStar::~BonusStar() = default;

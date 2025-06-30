@@ -22,17 +22,17 @@ ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const Bullet* bullet, const fl
 	const auto dir = bullet->GetDirection();
 	const float speed = bullet->GetSpeed() * deltaTime;
 	const auto [x, y, w, h] = bullet->GetRect();
-	if (dir == UP)
+	if (dir == Direction::UP)
 	{
 		return {.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
-	if (dir == DOWN)
+	if (dir == Direction::DOWN)
 	{
 		return {.x = x, .y = y, .w = w, .h = h + speed};
 	}
 
-	if (dir == LEFT)
+	if (dir == Direction::LEFT)
 	{
 		//TODO: write bullet test that can damage tank from all sides
 		return {.x = x - speed, .y = y, .w = w + speed, .h = h};
@@ -47,22 +47,22 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const Bullet* bullet, const float d
 	const auto dir = bullet->GetDirection();
 	const float speed = bullet->GetSpeed() * deltaTime;
 	const auto [x, y, w, h] = bullet->GetRect();
-	if (dir == UP)
+	if (dir == Direction::UP)
 	{
 		return {.x = x, .y = y - speed};
 	}
 
-	if (dir == DOWN)
+	if (dir == Direction::DOWN)
 	{
 		return {.x = x, .y = y + speed};
 	}
 
-	if (dir == LEFT)
+	if (dir == Direction::LEFT)
 	{
 		return {.x = x - speed, .y = y};//TODO: write bullet test that can damage tank from all sides
 	}
 
-	//dir == RIGHT
+	//dir == Direction::RIGHT
 	return {.x = x + speed, .y = y};
 }
 
@@ -103,25 +103,26 @@ bool MoveLikeBulletBeh::Move(const float deltaTime) const
 	}
 
 	const float speed = bullet->GetSpeed() * deltaTime;
-	const int direction = bullet->GetDirection();
-	if (direction == UP && bullet->GetY() - speed >= 0.0f)
+	const Direction direction = bullet->GetDirection();
+	if (direction == Direction::UP && bullet->GetY() - speed >= 0.0f)
 	{
 		return MoveUp(deltaTime);
 	}
 
-	if (direction == DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().y))
+	if (direction == Direction::DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().
+		    y))
 	//TODO: pass _window to movelikeBullet instead of bullet
 	{
 		return MoveDown(deltaTime);
 	}
 
-	if (direction == LEFT && bullet->GetX() - speed >= 0.0f)
+	if (direction == Direction::LEFT && bullet->GetX() - speed >= 0.0f)
 	{
 		return MoveLeft(deltaTime);
 	}
 
 	if (constexpr int sideBarWidth = 175;//TODO: move sidebar width to params
-		direction == RIGHT
+		direction == Direction::RIGHT
 		&& bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x) - sideBarWidth)
 	{
 		return MoveRight(deltaTime);

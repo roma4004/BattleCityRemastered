@@ -411,9 +411,12 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 		const std::string errorMsg = std::string("error deserialization: ") + e.what();
 		NetworkLogger::WriteLog(errorMsg);
 
-		if (archiveData.length() < 200) {
+		if (archiveData.length() < 200)
+		{
 			NetworkLogger::WriteLog("raw data: " + archiveData);
-		} else {
+		}
+		else
+		{
 			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
 		}
 

@@ -33,22 +33,22 @@ void Player::TickUpdate(const float deltaTime)
 	// move
 	if (up)
 	{
-		SetDirection(UP);
+		SetDirection(Direction::UP);
 		std::ignore = Pawn::Move(deltaTime);
 	}
 	else if (left)
 	{
-		SetDirection(LEFT);
+		SetDirection(Direction::LEFT);
 		std::ignore = Pawn::Move(deltaTime);
 	}
 	else if (down)
 	{
-		SetDirection(DOWN);
+		SetDirection(Direction::DOWN);
 		std::ignore = Pawn::Move(deltaTime);
 	}
 	else if (right)
 	{
-		SetDirection(RIGHT);
+		SetDirection(Direction::RIGHT);
 		std::ignore = Pawn::Move(deltaTime);
 	}
 

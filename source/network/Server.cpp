@@ -309,11 +309,11 @@ void Server::Subscribe()
 
 		// if (toSend && toSend->GetCommands().size() > 0)
 		// {
-			// {
-			// 	std::lock_guard<std::mutex> lock(_sendQueueMutex);
-			// 	_sendQueue.push(toSend);
-			// }
-			// _sendCondition.notify_one();// Повідомляємо потік відправки
+		// 	{
+		// 		std::lock_guard<std::mutex> lock(_sendQueueMutex);
+		// 		_sendQueue.push(toSend);
+		// 	}
+		// 	_sendCondition.notify_one();// Повідомляємо потік відправки
 		// }
 
 		//Mark that one batch need to be sent (or send immediately)

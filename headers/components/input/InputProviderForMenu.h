@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-enum GameMode : char8_t;
+enum class GameMode : char8_t;
 class EventSystem;
 
 struct MenuKeys final

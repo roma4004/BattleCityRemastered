@@ -27,7 +27,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 	const float moveSpeed = speed * deltaTime;
 	ObjRectangle tankNextPosRect;
 	if (const Direction dir = tank->GetDirection();
-		dir == UP)
+		dir == Direction::UP)
 	{
 		tankNextPosRect = ObjRectangle{
 				.x = tank->GetX(),
@@ -36,7 +36,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 				.h = tank->GetHeight() + moveSpeed
 		};
 	}
-	else if (dir == DOWN)
+	else if (dir == Direction::DOWN)
 	{
 		tankNextPosRect = ObjRectangle{
 				.x = tank->GetX(),
@@ -45,7 +45,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 				.h = tank->GetHeight() + moveSpeed
 		};
 	}
-	else if (dir == LEFT)
+	else if (dir == Direction::LEFT)
 	{
 		tankNextPosRect = ObjRectangle{
 				.x = tank->GetX() - moveSpeed,
@@ -54,7 +54,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 				.h = tank->GetHeight()
 		};
 	}
-	else if (dir == RIGHT)
+	else if (dir == Direction::RIGHT)
 	{
 		tankNextPosRect = ObjRectangle{
 				.x = tank->GetX(),
@@ -142,10 +142,10 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const float deltaTime) 
 		}
 	}
 
-	if (isFreeUp) { freePath.emplace_back(UP); }
-	if (isFreeDown) { freePath.emplace_back(DOWN); }
-	if (isFreeLeft) { freePath.emplace_back(LEFT); }
-	if (isFreeRight) { freePath.emplace_back(RIGHT); }
+	if (isFreeUp) { freePath.emplace_back(Direction::UP); }
+	if (isFreeDown) { freePath.emplace_back(Direction::DOWN); }
+	if (isFreeLeft) { freePath.emplace_back(Direction::LEFT); }
+	if (isFreeRight) { freePath.emplace_back(Direction::RIGHT); }
 
 	return freePath;
 }
@@ -202,19 +202,19 @@ bool MoveLikeTankBeh::Move(const float deltaTime) const
 	}
 
 	const auto currentDirection = tank->GetDirection();
-	if (currentDirection == UP)
+	if (currentDirection == Direction::UP)
 	{
 		return MoveUp(deltaTime);
 	}
-	if (currentDirection == LEFT)
+	if (currentDirection == Direction::LEFT)
 	{
 		return MoveLeft(deltaTime);
 	}
-	if (currentDirection == DOWN)
+	if (currentDirection == Direction::DOWN)
 	{
 		return MoveDown(deltaTime);
 	}
-	if (currentDirection == RIGHT)
+	if (currentDirection == Direction::RIGHT)
 	{
 		return MoveRight(deltaTime);
 	}

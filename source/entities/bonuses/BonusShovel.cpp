@@ -12,7 +12,7 @@ BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<EventSystem> 
 	        "BonusShovel",
 	        uuid,
 	        gameMode,
-	        Shovel} {}
+	        BonusType::Shovel} {}
 
 BonusShovel::~BonusShovel() = default;
 

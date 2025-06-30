@@ -12,7 +12,7 @@ BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<EventSystem> 
 	        "BonusHelmet",
 	        uuid,
 	        gameMode,
-	        Helmet} {}
+	        BonusType::Helmet} {}
 
 BonusHelmet::~BonusHelmet() = default;
 

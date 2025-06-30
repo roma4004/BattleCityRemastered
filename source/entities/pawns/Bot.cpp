@@ -72,17 +72,17 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::shared_ptr<BaseObj>& ne
 		const std::vector<std::shared_ptr<BaseObj>>& dirSideObstacles =
 				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
-					if (dir == UP)
+					if (dir == Direction::UP)
 					{
 						return bonusLineOfSight.GetUpSideObstacles();
 					}
 
-					if (dir == LEFT)
+					if (dir == Direction::LEFT)
 					{
 						return bonusLineOfSight.GetLeftSideObstacles();
 					}
 
-					if (dir == DOWN)
+					if (dir == Direction::DOWN)
 					{
 						return bonusLineOfSight.GetDownSideObstacles();
 					}
@@ -125,25 +125,25 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	LineOfSight lineOfSight(_rect, _windowSize, _bulletSize, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
-	if (HandleSideObstacles(UP, upSideObstacles))
+	if (HandleSideObstacles(Direction::UP, upSideObstacles))
 	{
 		return {};
 	}
 
 	const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
-	if (HandleSideObstacles(LEFT, leftSideObstacles))
+	if (HandleSideObstacles(Direction::LEFT, leftSideObstacles))
 	{
 		return {};
 	}
 
 	const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
-	if (HandleSideObstacles(DOWN, downSideObstacles))
+	if (HandleSideObstacles(Direction::DOWN, downSideObstacles))
 	{
 		return {};
 	}
 
 	const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
-	if (HandleSideObstacles(RIGHT, rightSideObstacles))
+	if (HandleSideObstacles(Direction::RIGHT, rightSideObstacles))
 	{
 		return {};
 	}
@@ -156,7 +156,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 
 	std::shared_ptr<BaseObj> nearestSeenObstacle{nullptr};
 	// fire on an obstacle if player not found
-	if (dir == UP && !upSideObstacles.empty())
+	if (dir == Direction::UP && !upSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = upSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
@@ -166,7 +166,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 		}
 	}
 
-	if (dir == LEFT && !leftSideObstacles.empty())
+	if (dir == Direction::LEFT && !leftSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = leftSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
@@ -176,7 +176,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 		}
 	}
 
-	if (dir == DOWN && !downSideObstacles.empty())
+	if (dir == Direction::DOWN && !downSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = downSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
@@ -186,7 +186,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 		}
 	}
 
-	if (dir == RIGHT && !rightSideObstacles.empty())
+	if (dir == Direction::RIGHT && !rightSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = rightSideObstacles[0];
 			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)

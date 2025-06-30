@@ -1,6 +1,6 @@
 #pragma once
 
-enum CommandType : char8_t
+enum class CommandType : char8_t
 {
 	COMMAND_BATCH,
 	POSITION_CHANGE,

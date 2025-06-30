@@ -42,7 +42,7 @@ Bullet::~Bullet()
 
 void Bullet::Subscribe()
 {
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
@@ -80,7 +80,7 @@ void Bullet::Unsubscribe() const
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -139,7 +139,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 
 void Bullet::TickUpdate(const float deltaTime)
 {
-	if (GetIsAlive()) //TODO: maybe for all add check isAlive
+	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
 		std::ignore = Pawn::Move(deltaTime);
 	}
@@ -160,7 +160,7 @@ void Bullet::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		//TODO: move this to onHealthChange
 		_events->EmitEvent<const std::string&, const int, const buuid&>(

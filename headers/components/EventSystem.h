@@ -4,17 +4,18 @@
 #include <functional>
 #include <string>
 #include <variant>
+// #include <iostream>
 
 namespace boost::uuids
 {
 	struct uuid;
 }
 
-enum TankType : char8_t;
-enum ObstacleType : char8_t;
-enum BonusType : char8_t;
-enum Direction : char8_t;
-enum GameMode : char8_t;
+enum class TankType : char8_t;
+enum class ObstacleType : char8_t;
+enum class BonusType : char8_t;
+enum class Direction : char8_t;
+enum class GameMode : char8_t;
 struct FPoint;
 struct ObjRectangle;
 class BaseObj;
@@ -24,11 +25,35 @@ struct Event final
 {
 	using listenerCallback = std::function<void(Args...)>;
 
-	void AddListener(const std::string& listenerName, listenerCallback callback);
+	// template<typename... Args>
+	void AddListener(const std::string& listenerName, listenerCallback callback)
+	{
+		_listeners[listenerName] = std::move(callback);
+	}
 
-	void Emit(Args&&... args);
 
-	void RemoveListener(const std::string& listenerName);
+	// template<typename ... TypeArgs>
+	// template<typename ... ParamArgs>
+	// void Event<TypeArgs...>::Emit(ParamArgs&&... args) {
+	// 	for (auto& [_, callback]: _listeners)
+	// 	{
+	// 		callback(static_cast<TypeArgs>(std::forward<ParamArgs>(args)...));
+	// 	}
+	// }
+
+	// template<typename... Args>
+	void Emit(Args&&... args)
+	{
+		for (auto& [_, callback]: _listeners)
+		{
+			//TODO: check proper using forward types should be different event and event args
+			//callback(std::forward<EmitArgs>(args)...);
+			callback(std::forward<Args>(args)...);
+		}
+	}
+
+	// template<typename... Args>
+	void RemoveListener(const std::string& listenerName) { _listeners.erase(listenerName); }
 
 private:
 	std::unordered_map<std::string, listenerCallback> _listeners;
@@ -60,7 +85,7 @@ class EventSystem final
 		Event<const FPoint, const Direction, const buuid&>,// received posChange(pos,dir,uuid)
 		Event<const std::string&, const int, const buuid&>,// send healthChanged(who,val,uuid),
 		Event<const std::string&, const Direction, const buuid&>,// send tankShot(who,dir,uuid)
-		Event<const std::string&, const std::string&, const std::string&>,// send/recieved stat(who,author,fraction)
+		Event<const std::string&, const std::string&, const std::string&>,// send/received stat(who,author,fraction)
 		Event<const std::string&, const std::string&, const milliseconds>,// bonusEffect(author,fraction,duration)
 		Event<const std::string&, const FPoint, const Direction, const buuid&>// send posChange(who,pos,dir,uuid)
 	>;
@@ -69,14 +94,35 @@ class EventSystem final
 
 public:
 	template<typename... Args>
-	void AddListener(const std::string& eventName, const std::string& listenerName, auto callback);
+	void AddListener(const std::string& eventName, const std::string& listenerName, auto callback)
+	{
+		if (!std::holds_alternative<Event<Args...>>(_events[eventName]))
+		{
+			_events[eventName] = Event<Args...>{};
+		}
+
+		std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
+	}
 
 	template<typename... Args>
-	void EmitEvent(const std::string& eventName, Args&... args);
+	void EmitEvent(const std::string& eventName, Args&... args)
+	{
+		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
+		{
+			std::get<Event<Args...>>(_events[eventName]).Emit(std::forward<Args>(args)...);
+		}
+	}
 
 	template<typename... Args>
-	void RemoveListener(const std::string& eventName, const std::string& listenerName);
+	void RemoveListener(const std::string& eventName, const std::string& listenerName)
+	{
+		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
+		{
+			std::get<Event<Args...>>(_events[eventName]).RemoveListener(listenerName);
+			// std::cout << "[" << "EventSystem::RemoveListener" << "] "
+			// 			<< ", eventName=" << eventName
+			// 			<< ", listenerName=" << listenerName
+			// 			<< std::endl;
+		}
+	}
 };
-
-// Include the template implementation
-#include "EventSystem.tpp"

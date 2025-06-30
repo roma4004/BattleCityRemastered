@@ -1,6 +1,6 @@
 #pragma once
 
-enum BonusType : char8_t
+enum class BonusType : char8_t
 {
 	None,
 

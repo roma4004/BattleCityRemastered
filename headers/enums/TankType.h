@@ -1,6 +1,6 @@
 #pragma once
 
-enum TankType : char8_t
+enum class TankType : char8_t
 {
 	ENEMY1,
 	ENEMY2,

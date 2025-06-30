@@ -33,7 +33,7 @@ void Pawn::Subscribe()
 {
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 
-	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
 
 void Pawn::SubscribeAsHost()
@@ -76,7 +76,7 @@ void Pawn::Unsubscribe() const
 	// 			<< std::endl;
 	_events->RemoveListener("Draw", _nameWithUuid);
 
-	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
 }
 
 void Pawn::UnsubscribeAsHost() const
@@ -130,7 +130,7 @@ bool Pawn::Move(const float deltaTime)
 	{
 		_events->EmitEvent<const std::string&>("AnimationUpdate", _name);
 
-		if (_gameMode == PlayAsHost) // NOTE: replication position to the client
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
 			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
 					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);

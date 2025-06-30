@@ -12,6 +12,6 @@ BonusCaliber::BonusCaliber(const ObjRectangle& rect, std::shared_ptr<EventSystem
 	        "BonusCaliber",
 	        uuid,
 	        gameMode,
-	        Caliber} {}
+	        BonusType::Caliber} {}
 
 BonusCaliber::~BonusCaliber() = default;

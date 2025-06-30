@@ -5,8 +5,8 @@
 #include "interfaces/ITickUpdatable.h"
 
 struct PawnProperty;
-enum Direction : char8_t;
-enum GameMode : char8_t;
+enum class Direction : char8_t;
+enum class GameMode : char8_t;
 struct ObjRectangle;
 class IMoveBeh;
 class EventSystem;

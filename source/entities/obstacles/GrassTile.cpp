@@ -11,7 +11,7 @@ GrassTile::GrassTile(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	           std::move(events),
 	           uuid,
 	           gameMode,
-	           Grass}
+	           ObstacleType::Grass}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);

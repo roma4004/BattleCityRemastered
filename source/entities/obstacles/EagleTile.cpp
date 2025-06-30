@@ -11,7 +11,7 @@ EagleTile::EagleTile(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	           std::move(events),
 	           uuid,
 	           gameMode,
-	           Eagle}
+	           ObstacleType::Eagle}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

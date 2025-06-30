@@ -30,7 +30,7 @@ protected:
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
-	GameMode _gameMode{OnePlayer};
+	GameMode _gameMode{GameMode::OnePlayer};
 	buuid _uuid{};
 
 	void SetUp() override
@@ -47,7 +47,7 @@ protected:
 		const std::string fraction{"PlayerTeam"};
 		const std::string author{"Player1"};
 		ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
-		CreateBullet(name, fraction, author, 0.f, _bulletHeight, DOWN);
+		CreateBullet(name, fraction, author, 0.f, _bulletHeight, Direction::DOWN);
 	}
 
 	void TearDown() override
@@ -61,7 +61,8 @@ protected:
 		BaseObjProperty baseObjProperty2{
 				rect2, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize,  UP, _gameMode};
+				std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP,
+				_gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
@@ -74,7 +75,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 	const std::string name{"Bullet2"};
 	const std::string fraction{"EnemyTeam"};
 	const std::string author{"Enemy1"};
-	CreateBullet(name, fraction, author, 0.f, _bulletHeight + 1, UP);
+	CreateBullet(name, fraction, author, 0.f, _bulletHeight + 1, Direction::UP);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
@@ -90,7 +91,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 	const std::string name{"Bullet2"};
 	const std::string fraction{"PlayerTeam"};
 	const std::string author{"Player2"};
-	CreateBullet(name, fraction, author, 0.f, _bulletHeight + 1, UP);
+	CreateBullet(name, fraction, author, 0.f, _bulletHeight + 1, Direction::UP);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);

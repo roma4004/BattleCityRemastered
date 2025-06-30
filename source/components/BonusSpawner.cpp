@@ -28,7 +28,7 @@ BonusSpawner::BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std:
 	  _allObjects{allObjects},
 	  _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize},
 	  _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize},
-	  _distSpawnType{None + 1, lastId - 1},
+	  _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1},
 	  _distRandColor{0, std::numeric_limits<int>::max()},
 	  _lastTimeSpawn{std::chrono::system_clock::now()},
 	  _bonusSize{bonusSize}
@@ -47,7 +47,7 @@ void BonusSpawner::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 
-		if (_gameMode == PlayAsClient)
+		if (_gameMode == GameMode::PlayAsClient)
 		{
 			UnsubscribeAsHost();
 			SubscribeAsClient();
@@ -59,7 +59,7 @@ void BonusSpawner::Subscribe()
 		}
 	});
 
-	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
 void BonusSpawner::SubscribeAsHost()
@@ -86,7 +86,7 @@ void BonusSpawner::Unsubscribe() const
 {
 	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
 
-	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 }
 
 void BonusSpawner::UnsubscribeAsHost() const
@@ -138,25 +138,25 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 
 	switch (type)
 	{
-		case Timer:
+		case BonusType::Timer:
 			bonus = std::make_shared<BonusTimer>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
-		case Helmet:
+		case BonusType::Helmet:
 			bonus = std::make_shared<BonusHelmet>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
-		case Grenade:
+		case BonusType::Grenade:
 			bonus = std::make_shared<BonusGrenade>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
-		case Tank:
+		case BonusType::Tank:
 			bonus = std::make_shared<BonusTank>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
-		case Star:
+		case BonusType::Star:
 			bonus = std::make_shared<BonusStar>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
-		case Shovel:
+		case BonusType::Shovel:
 			bonus = std::make_shared<BonusShovel>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
-		case Caliber:
+		case BonusType::Caliber:
 			bonus = std::make_shared<BonusCaliber>(rect, _events, duration, lifetime, color, uuid, _gameMode);
 			break;
 		default:

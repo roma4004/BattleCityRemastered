@@ -6,8 +6,8 @@
 #include <chrono>
 #include <memory>
 
-enum GameMode : char8_t;
-enum BonusType : char8_t;
+enum class GameMode : char8_t;
+enum class BonusType : char8_t;
 struct BaseObjProperty;
 class EventSystem;
 

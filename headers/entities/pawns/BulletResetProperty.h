@@ -4,7 +4,7 @@
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
-enum Direction : char8_t;
+enum class Direction : char8_t;
 
 struct BulletResetProperty
 {

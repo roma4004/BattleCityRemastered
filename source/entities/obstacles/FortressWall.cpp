@@ -15,16 +15,16 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
 	  _events{events},
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)},
+	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode, false)},
 	  _gameMode{gameMode}
 {
 	Subscribe();
 
 	//disable replication for fortress _obstacle
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
-			"ServerSend_ObstacleSpawn", _rect, Fortress, uuid);
+				"ServerSend_ObstacleSpawn", _rect, ObstacleType::Fortress, uuid);
 	}
 }
 
@@ -35,7 +35,7 @@ FortressWall::~FortressWall()
 
 void FortressWall::Subscribe()
 {
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
@@ -76,7 +76,7 @@ void FortressWall::SubscribeBonus()
 
 void FortressWall::Unsubscribe() const
 {
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -103,7 +103,7 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const int, const buuid&>(
 					"ServerSend_Health", GetName(), GetHealth(), GetUuid());
@@ -112,7 +112,7 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 	else
 	{
 		_events->EmitEvent<const std::string&, const std::string&>("Statistics_SteelWallDied", author, fraction);
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const int, const buuid&>(
 					"ServerSend_Health", GetName(), GetHealth(), GetUuid());
@@ -126,10 +126,10 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 	{
 		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
 		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _events, _uuid, _gameMode);
+			_obstacle = std::make_unique<BrickWall>(_rect, _events, _uuid, _gameMode, false);
 		}
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const buuid&>(
 					"ServerSend_FortressChange", "ToBrick", _uuid);
@@ -158,9 +158,9 @@ void FortressWall::OnPlayerPickupShovel()
 
 	if (isFreeSpawnSpot)//Check if neared tank/bullet/bonus suppressed this spawn
 	{
-		_obstacle = std::make_unique<SteelWall>(_rect, _events, _uuid, _gameMode);
+		_obstacle = std::make_unique<SteelWall>(_rect, _events, _uuid, _gameMode, false);
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const buuid&>(
 					"ServerSend_FortressChange", "ToSteel", _uuid);
@@ -185,7 +185,7 @@ void FortressWall::TakeDamage(const int damage)
 	{
 		_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
 		}
@@ -207,7 +207,7 @@ void FortressWall::OnEnemyPickupShovel()
 {
 	_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
 	}

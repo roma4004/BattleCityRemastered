@@ -165,7 +165,7 @@ BonusStatus BonusEffectManager::GetTimerEnemy() const { return _timerEnemy; }
 
 BonusStatus BonusEffectManager::GetTimerPlayer() const { return _timerPlayer; }
 
-BonusStatus BonusEffectManager::GetHelmet(const int id) const
+BonusStatus BonusEffectManager::GetHelmet(const int id) const//TODO: change to size_t
 {
 	if (id < 0 || id >= _helmetSlots.size())
 		return {};

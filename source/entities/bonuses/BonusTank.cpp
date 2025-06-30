@@ -11,6 +11,6 @@ BonusTank::BonusTank(const ObjRectangle& rect, std::shared_ptr<EventSystem> even
 	        "BonusTank",
 	        uuid,
 	        gameMode,
-	        Tank} {}
+	        BonusType::Tank} {}
 
 BonusTank::~BonusTank() = default;
