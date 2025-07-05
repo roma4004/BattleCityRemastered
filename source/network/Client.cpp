@@ -19,6 +19,8 @@
 #include "utils/NetworkLogger.h"
 #include "utils/UuidUtils.h"
 // #include <fstream>
+#include "enums/AnimationType.h"
+#include "network/commands/AnimationCreate.h"
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
@@ -305,6 +307,15 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 	}
 }
 
+void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
+	{
+		_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
+				"ClientReceived_AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetUuid());
+	}
+}
+
 void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 {
 	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
@@ -384,6 +395,11 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 			case CommandType::OBSTACLE_SPAWN:
 			{
 				OnObstacleSpawn(command);
+				break;
+			}
+			case CommandType::ANIMATION_CREATE:
+			{
+				OnAnimationCreate(command);
 				break;
 			}
 			//TODO: implement other command types

@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
+#include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
 #include "network/commands/CommandBatch.h"
@@ -404,6 +405,15 @@ void Server::Subscribe()
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
 	//TODO: write obstacle dispose
+
+	_events->AddListener<const AnimationType, const ObjRectangle&, const buuid&>(
+			"ServerSend_AnimationCreate", _name,
+			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, uuid));
+			});
+
 	SubscribeBonus();
 }
 
@@ -465,6 +475,9 @@ void Server::Unsubscribe() const
 	_events->RemoveListener<const buuid&>("ServerSend_Dispose", _name);
 	_events->RemoveListener<const std::string&, const Direction, const buuid&>("ServerSend_Shot", _name);
 	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("ServerSend_Statistics", _name);
+
+	_events->RemoveListener<const AnimationType, const ObjRectangle&, const buuid&>(
+			"ServerSend_AnimationCreate", _name);
 
 	UnsubscribeBonus();
 }

@@ -1,6 +1,7 @@
 #include "entities/pawns/Tank.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
+#include "enums/AnimationType.h"
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IShootable.h"
@@ -25,6 +26,10 @@ Tank::~Tank()
 	Tank::Unsubscribe();
 
 	_events->EmitEvent<const buuid&>("TankDied", _uuid);
+
+	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
+			"AnimationCreate", AnimationType::Tank_Explosion, _rect, _uuid);
+
 }
 
 void Tank::Subscribe()

@@ -2,6 +2,7 @@
 #include "components/AnimationManager.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Pawn.h"
+#include "enums/AnimationType.h"
 #include "enums/Direction.h"
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -157,17 +158,17 @@ void TextureManager::Draw(const BaseObj* obj)
 		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
-		textureRect.x += _animationManager.GetAnimFrame(name) * 16;
+		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Animation) * 16;
 	}
 	else if (name == "Player1" || name == "CoopBot1")
 	{
 		textureRect = RectToSdlRect(_offset.playerOne);
-		textureRect.x += _animationManager.GetAnimFrame(name) * 16;
+		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Animation) * 16;
 	}
 	else if (name == "Player2" || name == "CoopBot2")
 	{
 		textureRect = RectToSdlRect(_offset.playerTwo);
-		textureRect.x += _animationManager.GetAnimFrame(name) * 16;
+		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Animation) * 16;
 	}
 	else if (name == "Bullet")
 	{
@@ -196,7 +197,7 @@ void TextureManager::Draw(const BaseObj* obj)
 	else if (name == "Water")
 	{
 		textureRect = RectToSdlRect(_offset.water);
-		textureRect.x -= _animationManager.GetAnimWater();
+		textureRect.x -= _animationManager.GetWaterFrame();
 	}
 	else if (name == "BonusHelmet")
 	{
@@ -226,11 +227,26 @@ void TextureManager::Draw(const BaseObj* obj)
 	{
 		textureRect = RectToSdlRect(_offset.bonusCaliber);
 	}
+	else if (name == "BulletExplosion")
+	{
+		if (int frame = _animationManager.GetFrame(obj->GetUuid(), AnimationType::Bullet_Explosion); frame != -1)
+		{
+			textureRect = RectToSdlRect(_offset.smallExplosion);
+			textureRect.x += frame * 16;
+		}
+		else
+			return;
+	}
+	else if (name == "TankExplosion")
+	{
+		textureRect = RectToSdlRect(_offset.bigExplosion);
+		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Explosion) * 32;
+	}
 	else
 	{
 		RectDraw(obj);
 	}
-
+	
 	//local angle and flip for texture
 	double angle = 0.0;
 	SDL_RendererFlip flip = SDL_FLIP_NONE;

@@ -6,6 +6,8 @@
 #include <variant>
 // #include <iostream>
 
+enum class AnimationType : char8_t;
+
 namespace boost::uuids
 {
 	struct uuid;
@@ -87,7 +89,11 @@ class EventSystem final
 		Event<const std::string&, const Direction, const buuid&>,// send tankShot(who,dir,uuid)
 		Event<const std::string&, const std::string&, const std::string&>,// send/received stat(who,author,fraction)
 		Event<const std::string&, const std::string&, const milliseconds>,// bonusEffect(author,fraction,duration)
-		Event<const std::string&, const FPoint, const Direction, const buuid&>// send posChange(who,pos,dir,uuid)
+		Event<const std::string&, const FPoint, const Direction, const buuid&>,// send posChange(who,pos,dir,uuid)
+		//Separation for Camomile purposes (to track added events)
+		Event<const ObjRectangle>,// animation of bullet explosion
+		Event<const std::string&, const ObjRectangle>,// local Explosion animation
+		Event<const AnimationType, const ObjRectangle&, const buuid&>//local send/recived animCreate(type,rect,uuid)
 	>;
 
 	std::unordered_map<std::string, allEventTypes> _events;

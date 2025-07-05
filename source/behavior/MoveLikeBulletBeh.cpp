@@ -1,9 +1,11 @@
 #include "behavior/MoveLikeBulletBeh.h"
 #include "Circle.h"
+#include "components/EventSystem.h"
 #include "entities/obstacles/GrassTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
+#include "enums/AnimationType.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
 #include <memory>
@@ -264,6 +266,11 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& 
 	const int bulletDamage = thisBullet->GetDamage();
 	if (!objectList.empty())
 	{
+		using buuid = boost::uuids::uuid;
+
+		_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
+				"AnimationCreate", AnimationType::Bullet_Explosion, thisBullet->GetRect(), thisBullet->GetUuid());
+
 		for (const auto& target: objectList)
 		{
 			if (target && !dynamic_cast<WaterTile*>(target.get())

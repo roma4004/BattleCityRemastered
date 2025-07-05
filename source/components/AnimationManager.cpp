@@ -1,6 +1,15 @@
-﻿#include "components/AnimationManager.h"
+﻿#include <algorithm>
 
-AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events): _events(std::move(events))
+#include "components/AnimationManager.h"
+#include "enums/AnimationType.h"
+#include "animations/AnimatedObjects.h"
+#include "entities/ObjRectangle.h"
+#include "network/Client.h"
+#include "utils/RandUtils.h"
+
+AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events):
+	_events(std::move(events)),
+	_gameMode{GameMode::Demo}
 {
 	Subscribe();
 }
@@ -12,72 +21,194 @@ AnimationManager::~AnimationManager()
 
 void AnimationManager::Subscribe()
 {
-	_events->AddListener<const std::string&>(
-			std::string("AnimationUpdate"), _name,
-			[this](const std::string& name)
-			{
-				for (auto& animPassport: _animatedObj)
-				{
-					if (name == animPassport.name)
-					{
-						if (++animPassport.currentFrameCounter > 12)
-						{
-							animPassport.currentFrameCounter = 0;
-							if (++animPassport.animationFrame >= animPassport.animationIdLimit)
-							{
-								animPassport.animationFrame = 0;
-							}
-						}
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
-						return;
-					}
+	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
+
+		_animatedObjects.clear();
+		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	});
+
+	_events->AddListener("AnimationUpdate", _name, [this]() { Update(); });
+	_events->AddListener<const buuid&>("AnimationTankUpdate", _name, [this](const buuid& uuid) { UpdateTank(uuid); });
+
+	//_events->AddListener("AnimationWaterUpdate", _name, [this]() { UpdateWater(); });
+}
+
+void AnimationManager::SubscribeAsHost()
+{
+	_events->AddListener<const AnimationType, const ObjRectangle&, const buuid&>(
+			"AnimationCreate", _name,
+			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
+			{
+				switch (type)
+				{
+					case AnimationType::Spawn_Animation:
+						Create("SpawnAnimation", type, rect, uuid, 3);
+						break;
+					case AnimationType::Bullet_Explosion:
+						Create("BulletExplosion", type, rect, uuid, 3);
+						break;
+					case AnimationType::Tank_Explosion:
+						Create("TankExplosion", type, rect, uuid, 2);
+						break;
+					case AnimationType::Helmet_Animation:
+						Create("HelmetAnimation", type, rect, uuid, 2);
+						break;
+					case AnimationType::Tank_Animation:
+						Create("TankAnimation", type, rect, uuid, 2);
+						break;
+					case AnimationType::Bullet_Animation:
+						Create("BulletAnimation", type, rect, uuid, 2);
+						break;
 				}
-				_animatedObj.emplace_back(AnimationStruct{name, 0, 0, 2});
+			});
+}
+
+void AnimationManager::SubscribeAsClient()
+{
+	_events->AddListener<const AnimationType, const ObjRectangle&, const buuid&>(
+			"ClientReceived_AnimationCreate", _name,
+			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
+			{
+				switch (type)
+				{
+					case AnimationType::Spawn_Animation:
+						Create("SpawnAnimation", type, rect, uuid, 3);
+						break;
+					case AnimationType::Bullet_Explosion:
+						Create("BulletExplosion", type, rect, uuid, 3);
+						break;
+					case AnimationType::Tank_Explosion:
+						Create("TankExplosion", type, rect, uuid, 2);
+						break;
+					case AnimationType::Water_Animation:
+						Create("WaterAnimation", type, rect, uuid, 16);
+						break;
+					case AnimationType::Helmet_Animation:
+						Create("HelmetAnimation", type, rect, uuid, 2);
+						break;
+					case AnimationType::Tank_Animation:
+						Create("TankAnimation", type, rect, uuid, 1);
+						break;
+					case AnimationType::Bullet_Animation:
+						Create("BulletAnimation", type, rect, uuid, 2);
+						break;
+				}
 			});
 }
 
 void AnimationManager::Unsubscribe() const
 {
-	_events->RemoveListener<const std::string&>("AnimationUpdate", _name);
+	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("AnimationUpdate", _name);
+	_events->RemoveListener<const buuid&>("AnimationTankUpdate", _name);
 }
 
-int AnimationManager::GetAnimFrame(const std::string& name) const
+void AnimationManager::UnsubscribeAsClient() const
 {
-	for (auto& animPassport: _animatedObj)
+	_events->RemoveListener<const AnimationType, const ObjRectangle&, const buuid&>(
+			"ClientReceived_AnimationCreate", _name);
+}
+
+void AnimationManager::UnsubscribeAsHost() const
+{
+	_events->RemoveListener<const AnimationType, const ObjRectangle&, const buuid&>("AnimationCreate", _name);
+}
+
+void AnimationManager::Create(const std::string& name, const AnimationType type, const ObjRectangle rect,
+                              const buuid& uuid, const int limitOfFrames)
+{
+	_animatedObjects.emplace_back(name, rect, type, _events, uuid, _gameMode, limitOfFrames);
+}
+
+void AnimationManager::Update()
+{
+	UpdateWaterAnimation();
+	for (auto& passport: _animatedObjects)
 	{
-		if (name == animPassport.name)
+		switch (passport.type)
 		{
-			return animPassport.animationFrame;
+			case AnimationType::Spawn_Animation:
+			case AnimationType::Bullet_Explosion:
+				UpdateFrame(passport, 20);
+				break;
+			case AnimationType::Tank_Explosion:
+				UpdateFrame(passport, 30);
+				break;
+			//case AnimationType::Helmet_Animation:
+			//case AnimationType::Bullet_Animation:
+			default:
+				break;
+		}
+	}
+}
+
+void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed)
+{
+	if (!obj.markToDispose)
+	{
+		if (++obj.elapsedFrames % animationSpeed == 0)
+		{
+			obj.elapsedFrames = 0;
+			if (++obj.animationFrame == obj.limitOfFrames)
+			{
+				obj.animationFrame = 0;
+			}
+		}
+	}
+}
+
+void AnimationManager::UpdateTank(const buuid& uuid)
+{
+	for (auto& passport: _animatedObjects)
+	{
+		if (passport.GetUuid() == uuid && passport.type == AnimationType::Tank_Animation)
+		{
+			UpdateFrame(passport, 20);
+			return ;
+		}
+	}
+}
+
+void AnimationManager::UpdateWaterAnimation()
+{
+	UpdateFrame(_waterAnimationPassport, 20);
+}
+
+int AnimationManager::GetWaterFrame() const
+{
+	return _waterAnimationPassport.animationFrame;
+}
+
+int AnimationManager::GetFrame(const buuid& uuid, const AnimationType type) const
+{
+	for (auto& obj: _animatedObjects)
+	{
+		if (obj.GetUuid() == uuid && obj.type == type)
+		{
+			return obj.animationFrame;
 		}
 	}
 
 	return 0;
 }
 
-int AnimationManager::GetAnimWater()
+void AnimationManager::AnimationSeqDisposer()
 {
-	if (++_animWater.currentFrameCounter % 48 == 0)
+	const auto it = std::ranges::remove_if(_animatedObjects, [](const auto& obj)
 	{
-		_animWater.currentFrameCounter = 0;
-		if (++_animWater.animationFrame == _animWater.animationIdLimit)
-		{
-			_animWater.animationFrame = 0;
-		}
-	}
+		return obj.markToDispose;
+	}).begin();
 
-	return _animWater.animationFrame;
-}
+	//it=	[0]	[1]	[2]	[3]	[4]	[5]	[6]
+	//mark	t	t	f	t	f	t	f
 
-int AnimationManager::GetAnimExplosion()
-{
-	if (++_animExplosion.currentFrameCounter % 12 == 0)
-	{
-		_animExplosion.currentFrameCounter = 0;
-		if (++_animExplosion.animationFrame == _animExplosion.animationIdLimit)
-		{
-			_animExplosion.animationFrame = 0;
-		}
-	}
+	//it = [2][4][6] [0][1][3][5]
+	//  cut here    |
 
-	return _animExplosion.animationFrame;
+	_animatedObjects.erase(it, _animatedObjects.end());
 }

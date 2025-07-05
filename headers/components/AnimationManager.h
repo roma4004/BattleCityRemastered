@@ -1,24 +1,24 @@
 ﻿#pragma once
 
 #include "EventSystem.h"
+#include "animations/AnimatedObjects.h"
+#include "enums/GameMode.h"
+#include "network/commands/UuidSerialization.h"
 #include <memory>
 #include <vector>
 
+enum class AnimationType: char8_t;
+struct ObjRectangle;
+
 class AnimationManager
 {
-	struct AnimationStruct//TODO make normal name
-	{
-		std::string name;
-		int animationFrame{};
-		int currentFrameCounter{};
-		int animationIdLimit{};
-	};
+	using buuid = boost::uuids::uuid;
 
-	AnimationStruct _animWater{"Water", 0, 0, 16};
-	AnimationStruct _animExplosion{"Explosion", 0, 0, 5};
-	std::vector<AnimationStruct> _animatedObj;
-	std::string _name = "AnimationManager";
 	std::shared_ptr<EventSystem> _events{nullptr};
+	AnimatedObject _waterAnimationPassport{16};
+	std::vector<AnimatedObject> _animatedObjects;
+	std::string _name = "AnimationManager";
+	GameMode _gameMode{};
 
 public:
 	explicit AnimationManager(std::shared_ptr<EventSystem> events);
@@ -26,9 +26,21 @@ public:
 	~AnimationManager();
 
 	void Subscribe();
-	void Unsubscribe() const;
+	void SubscribeAsHost();
+	void SubscribeAsClient();
 
-	[[nodiscard]] int GetAnimFrame(const std::string& name) const;
-	[[nodiscard]] int GetAnimWater();
-	[[nodiscard]] int GetAnimExplosion();
+	void Unsubscribe() const;
+	void UnsubscribeAsClient() const;
+	void UnsubscribeAsHost() const;
+
+	[[nodiscard]] int GetFrame(const buuid& uuid, AnimationType type) const;
+	[[nodiscard]] int GetWaterFrame() const;
+
+private:
+	void Create(const std::string& name, AnimationType type, ObjRectangle rect, const buuid& uuid, int limitOfFrames);
+	void Update();
+	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
+	void UpdateTank(const buuid& uuid);
+	void UpdateWaterAnimation();
+	void AnimationSeqDisposer();
 };
