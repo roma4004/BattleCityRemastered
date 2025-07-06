@@ -1,4 +1,4 @@
-#include "components/BonusEffectManager.h"
+#include "components/managers/BonusEffectManager.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
