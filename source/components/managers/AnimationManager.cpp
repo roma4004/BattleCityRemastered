@@ -45,14 +45,21 @@ void AnimationManager::SubscribeAsHost()
 				switch (type)
 				{
 					case AnimationType::Spawn_Animation:
-						Create("SpawnAnimation", type, rect, uuid, 3);
+						Create("SpawnAnimation", type, rect, uuid, 3);//TODO:add is loop flag or separated container for expired explosion
 						break;
 					case AnimationType::Bullet_Explosion:
-						Create("BulletExplosion", type, {rect.x, rect.y, rect.w * 4, rect.h * 4}, uuid, 3);
+					{
+						const ObjRectangle bulletRect = {rect.x - rect.w * 3 / 2, rect.y - rect.w * 3 / 2,
+						                                 rect.w * 3, rect.h * 3};//TODO: recenter properly
+						Create("BulletExplosion", type, bulletRect, uuid, 3);
 						break;
+					}
 					case AnimationType::Tank_Explosion:
-						Create("TankExplosion", type, {rect.x, rect.y, rect.w * 4, rect.h * 4}, uuid, 2);
+					{
+						const ObjRectangle tankRect = {rect.x + rect.w / 2, rect.y + rect.w / 2, rect.w, rect.h};//TODO: recenter properly
+						Create("TankExplosion", type, tankRect, uuid, 2);
 						break;
+					}
 					case AnimationType::Helmet_Animation:
 						Create("HelmetAnimation", type, rect, uuid, 2);
 						break;

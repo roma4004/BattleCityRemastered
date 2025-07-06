@@ -22,7 +22,6 @@
 #include <memory>
 #include <boost/uuid/uuid.hpp>
 
-//TODO: fix respawn on client
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
                          std::shared_ptr<BonusEffectManager> bonusEffectManager)
@@ -579,8 +578,8 @@ std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProper
 void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                             const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
 {
-	/*_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
-			"AnimationCreate", AnimationType::Spawn_Animation, rect, uuid);*/
+	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
+			"AnimationCreate", AnimationType::Spawn_Animation, rect, uuid);
 
 	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
 			"AnimationCreate", AnimationType::Tank_Animation, rect, uuid);

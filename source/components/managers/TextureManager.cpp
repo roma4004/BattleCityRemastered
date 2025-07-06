@@ -242,6 +242,11 @@ void TextureManager::Draw(const BaseObj* obj)
 		textureRect = RectToSdlRect(_offset.bigExplosion);
 		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Explosion) * 32;
 	}
+	else if (name == "SpawnAnimation")
+	{
+		textureRect = RectToSdlRect(_offset.spawnAnim);
+		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Spawn_Animation) * 16;
+	}
 	else
 	{
 		RectDraw(obj);
