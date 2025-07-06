@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "EventSystem.h"
-#include "animations/AnimatedObjects.h"
+#include "../EventSystem.h"
+#include "components/AnimatedObjects.h"
 #include "enums/GameMode.h"
 #include "network/commands/UuidSerialization.h"
 #include <memory>

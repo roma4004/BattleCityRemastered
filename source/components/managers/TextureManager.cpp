@@ -1,6 +1,6 @@
-﻿#include "components/TextureManager.h"
-#include "components/AnimationManager.h"
+﻿#include "components/managers/TextureManager.h"
 #include "components/EventSystem.h"
+#include "components/managers/AnimationManager.h"
 #include "entities/pawns/Pawn.h"
 #include "enums/AnimationType.h"
 #include "enums/Direction.h"

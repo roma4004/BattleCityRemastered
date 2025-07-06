@@ -39,6 +39,7 @@
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;</IncludePath>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
     <ClCompile Include="..\source\network\commands\AnimationCreate.cpp" />
@@ -64,7 +65,6 @@
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\behavior\ShootingBeh.cpp" />
-    <ClCompile Include="..\source\components\BonusEffectManager.cpp" />
     <ClCompile Include="..\source\components\BonusSpawner.cpp" />
     <ClCompile Include="..\source\components\BulletPool.cpp" />
     <ClCompile Include="..\source\components\GameStatistics.cpp" />

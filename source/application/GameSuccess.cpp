@@ -1,6 +1,5 @@
 #include "application/GameSuccess.h"
 #include "application/userInput.h"
-#include "components/BonusEffectManager.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -8,13 +7,14 @@
 #include "components/Menu.h"
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
+#include "components/managers/BonusEffectManager.h"
 #include "entities/BaseObj.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
 //#include <fstream>
-#include "components/TextureManager.h"
+#include "components/managers/TextureManager.h"
 #include <iostream>
 #include <memory>
 #include <boost/uuid/uuid_io.hpp>

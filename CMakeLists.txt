@@ -256,7 +256,6 @@ enable_testing()
 include_directories(headers)
 
 set(SOURCE_FILES
-        source/animations/AnimatedObjects.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
         source/application/GameFailure.cpp
@@ -266,8 +265,7 @@ set(SOURCE_FILES
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
-        source/components/AnimationManager.cpp
-        source/components/BonusEffectManager.cpp
+        source/components/AnimatedObjects.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
@@ -276,12 +274,14 @@ set(SOURCE_FILES
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
-        source/components/TextureManager.cpp
         source/components/input/InputProviderForMenu.cpp
         source/components/input/InputProviderForPlayerOne.cpp
         source/components/input/InputProviderForPlayerOneNet.cpp
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/components/managers/AnimationManager.cpp
+        source/components/managers/BonusEffectManager.cpp
+        source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
         source/entities/ObjRectangle.cpp
         source/entities/Obstacles/EagleTile.cpp
@@ -341,7 +341,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
-        source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
@@ -353,6 +352,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerOneNet.cpp
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/components/managers/BonusEffectManager.cpp
         source/entities/BaseObj.cpp
         source/entities/ObjRectangle.cpp
         source/entities/bonuses/Bonus.cpp

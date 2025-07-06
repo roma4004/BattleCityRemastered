@@ -1,6 +1,6 @@
-﻿#include "animations/AnimatedObjects.h"
-#include "entities/obstacles/Obstacle.h"
+﻿#include "components/AnimatedObjects.h"
 #include "components/EventSystem.h"
+#include "entities/obstacles/Obstacle.h"
 #include "enums/AnimationType.h"
 #include "enums/GameMode.h"
 
@@ -8,9 +8,9 @@
 
 using buuid = boost::uuids::uuid;
 
-AnimatedObject::AnimatedObject(std::string name, ObjRectangle rect, AnimationType type,
-                               std::shared_ptr<EventSystem> events,
-                               buuid uuid, GameMode gameMode, int frameLimit)
+AnimatedObject::AnimatedObject(std::string name, const ObjRectangle rect, const AnimationType type,
+                               std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
+                               const int frameLimit)
 	: BaseObj{rect, 0x0, 1, uuid, std::move(name), "Neutral"},
 	  events(std::move(events)),
 	  limitOfFrames{frameLimit},
@@ -22,6 +22,8 @@ AnimatedObject::AnimatedObject(std::string name, ObjRectangle rect, AnimationTyp
 		this->events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
 				"ServerSend_AnimationCreate", type, _rect, uuid);
 	}
+
+	this->events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
 }
 
 AnimatedObject::AnimatedObject(const int frameLimit)
@@ -38,11 +40,14 @@ AnimatedObject::AnimatedObject(const int frameLimit)
 
 AnimatedObject::AnimatedObject(): BaseObj{{}, 0x0, 1, {}, "Water", "Neutral"} {}
 
-AnimatedObject::~AnimatedObject() = default;
+AnimatedObject::~AnimatedObject()
+{
+	events->RemoveListener("Draw", _nameWithUuid);
+};
 
 void AnimatedObject::Draw(const BaseObj* obj) const
 {
-	//events->EmitEvent<const BaseObj*>("DrawObj", obj);
+	events->EmitEvent<const BaseObj*>("DrawObj", obj);
 }
 
 void AnimatedObject::SendDamageStatistics(const std::string& author, const std::string& fraction) {}

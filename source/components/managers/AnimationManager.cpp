@@ -1,5 +1,5 @@
-﻿#include "components/AnimationManager.h"
-#include "animations/AnimatedObjects.h"
+﻿#include "components/managers/AnimationManager.h"
+#include "components/AnimatedObjects.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
 #include "network/Client.h"
@@ -48,10 +48,10 @@ void AnimationManager::SubscribeAsHost()
 						Create("SpawnAnimation", type, rect, uuid, 3);
 						break;
 					case AnimationType::Bullet_Explosion:
-						Create("BulletExplosion", type, rect, uuid, 3);
+						Create("BulletExplosion", type, {rect.x, rect.y, rect.w * 4, rect.h * 4}, uuid, 3);
 						break;
 					case AnimationType::Tank_Explosion:
-						Create("TankExplosion", type, rect, uuid, 2);
+						Create("TankExplosion", type, {rect.x, rect.y, rect.w * 4, rect.h * 4}, uuid, 2);
 						break;
 					case AnimationType::Helmet_Animation:
 						Create("HelmetAnimation", type, rect, uuid, 2);
