@@ -114,8 +114,9 @@ void TankSpawner::Unsubscribe() const
 
 void TankSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_" + _name + "OnTank", _name);
+	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnTank", _name);
 	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnGrenade", _name);
+	_events->RemoveListener<const TankType, const buuid&>("ClientReceived_RespawnTank", _name);
 }
 
 void TankSpawner::SetEnemyNeedRespawn()
@@ -575,9 +576,9 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std:
 {
 	/*_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
 			"AnimationCreate", AnimationType::Spawn_Animation, rect, uuid);*/
-	
+
 	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
-		"AnimationCreate", AnimationType::Tank_Animation, rect, uuid);
+			"AnimationCreate", AnimationType::Tank_Animation, rect, uuid);
 
 	BaseObjProperty baseObjProperty{rect, color, health, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{

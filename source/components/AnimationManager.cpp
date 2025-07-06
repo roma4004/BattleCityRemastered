@@ -1,15 +1,14 @@
-﻿#include <algorithm>
-
-#include "components/AnimationManager.h"
-#include "enums/AnimationType.h"
+﻿#include "components/AnimationManager.h"
 #include "animations/AnimatedObjects.h"
 #include "entities/ObjRectangle.h"
+#include "enums/AnimationType.h"
 #include "network/Client.h"
 #include "utils/RandUtils.h"
+#include <algorithm>
 
-AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events):
-	_events(std::move(events)),
-	_gameMode{GameMode::Demo}
+AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events)
+	: _events(std::move(events)),
+	  _gameMode{GameMode::Demo}
 {
 	Subscribe();
 }
@@ -62,6 +61,8 @@ void AnimationManager::SubscribeAsHost()
 						break;
 					case AnimationType::Bullet_Animation:
 						Create("BulletAnimation", type, rect, uuid, 2);
+						break;
+					default:
 						break;
 				}
 			});
@@ -169,7 +170,7 @@ void AnimationManager::UpdateTank(const buuid& uuid)
 		if (passport.GetUuid() == uuid && passport.type == AnimationType::Tank_Animation)
 		{
 			UpdateFrame(passport, 20);
-			return ;
+			return;
 		}
 	}
 }

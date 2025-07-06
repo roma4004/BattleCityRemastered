@@ -15,8 +15,8 @@ class BonusSpawn : public Command
 	friend class boost::serialization::access;
 
 	FPoint _pos{};
-	buuid _uuid{};
 	BonusType _bonusType{};
+	buuid _uuid{};
 
 public:
 	//for deserialization

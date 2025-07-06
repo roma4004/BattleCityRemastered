@@ -24,7 +24,7 @@ AnimatedObject::AnimatedObject(std::string name, ObjRectangle rect, AnimationTyp
 	}
 }
 
-AnimatedObject::AnimatedObject(int frameLimit)
+AnimatedObject::AnimatedObject(const int frameLimit)
 	: BaseObj{{}, 0x0, 1, {}, "Water", "Neutral"},
 	  limitOfFrames{frameLimit},
 	  type(AnimationType::Water_Animation)

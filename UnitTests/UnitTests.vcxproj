@@ -41,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
+    <ClCompile Include="..\source\network\commands\AnimationCreate.cpp" />
     <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\Command.cpp" />
@@ -115,6 +116,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="game_log.txt" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

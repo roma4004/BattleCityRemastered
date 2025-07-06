@@ -23,13 +23,13 @@ public:
 
 	void Draw(const BaseObj* obj) const override;
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	
-	AnimatedObject(std::string name, ObjRectangle rect, AnimationType type, std::shared_ptr<EventSystem> events, buuid uuid,
-	               GameMode gameMode, int frameLimit);
 
-	AnimatedObject(int frameLimit);
+	AnimatedObject(std::string name, ObjRectangle rect, AnimationType type, std::shared_ptr<EventSystem> events,
+	               buuid uuid, GameMode gameMode, int frameLimit);
+
+	explicit AnimatedObject(int frameLimit);
 
 	AnimatedObject();
-	
+
 	~AnimatedObject() override;
 };

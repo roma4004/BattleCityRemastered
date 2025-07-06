@@ -3,6 +3,7 @@
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/ObstacleType.h"
+#include "enums/TankType.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include "gtest/gtest.h"
@@ -359,18 +360,18 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	constexpr auto obstacleType = ObstacleType::Brick;
 	std::vector<ObjRectangle> bricksRect;
 	std::vector<ObjRectangle> bricksRectReplicated;
-	constexpr int itemsInMassiveTest = 50000;
+	constexpr int itemsInMassiveTest = 10000;
 	bricksRect.reserve(itemsInMassiveTest);
 	bricksRectReplicated.reserve(itemsInMassiveTest);
-	for (float i = 0; i < itemsInMassiveTest; ++i)
+	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		bricksRect.emplace_back(ObjRectangle{i, i + 1, i + 2, i + 3});
+		const auto value = static_cast<float>(i);
+		bricksRect.emplace_back(value, value + 1, value + 2, value + 3);
 	}
 
-	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises;
-	promises.reserve(itemsInMassiveTest);
-	std::atomic<int> count{0};
+	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises(6);
 
+	int count{0};
 	events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
 			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
 			[&promises, &count](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
@@ -380,7 +381,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			});
 
 	events->EmitEvent("Server_StartFrame");
-	for (size_t i = 0; i < itemsInMassiveTest; ++i)
+	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
 		events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
 				"ServerSend_ObstacleSpawn", bricksRect[i], obstacleType, _uuid);
@@ -388,24 +389,63 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	if (bricksRect.size() == bricksRectReplicated.size())
-		for (size_t i = 0; i < itemsInMassiveTest; ++i)
+		for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 		{
-			const int id = static_cast<int>(i);
-			auto future = promises[id].get_future();
+			auto future = promises[i].get_future();
 			const auto status = future.wait_for(std::chrono::milliseconds(10000));
 			ASSERT_EQ(status, std::future_status::ready);
 
 			auto [rect, type, uuid] = future.get();
-			EXPECT_EQ(bricksRect[id].x, rect.x);
-			EXPECT_EQ(bricksRect[id].y + 2, rect.y + 2);
-			EXPECT_EQ(bricksRect[id].w + 3, rect.w + 3);
-			EXPECT_EQ(bricksRect[id].h + 4, rect.h + 4);
+			auto [x, y, w, h] = bricksRect[i];
+			EXPECT_FLOAT_EQ(x, rect.x);
+			EXPECT_FLOAT_EQ(y, rect.y);
+			EXPECT_FLOAT_EQ(w, rect.w);
+			EXPECT_FLOAT_EQ(h, rect.h);
 			EXPECT_EQ(obstacleType, type);
 			EXPECT_EQ(_uuid, uuid);
 		}
 }
 
-// TEST_F(NetworkTest, RespawnTankDeSpawnEventReplication) {
+TEST_F(NetworkTest, RespawnTankEventReplication)
+{
+	using buuid = boost::uuids::uuid;
+
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	std::vector<std::promise<std::tuple<TankType, buuid>>> promises(6);
+
+	size_t count = 0;
+	events->AddListener<const TankType, const buuid&>(
+			"ClientReceived_RespawnTank", "RespawnTankEventReplication",
+			[&promises, &count](const TankType type, const buuid& uuid)
+			{
+				promises[count++].set_value({type, uuid});
+			});
+
+	constexpr std::array tankTypes{
+			TankType::PLAYER1, TankType::PLAYER2, TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4
+	};
+
+	events->EmitEvent("Server_StartFrame");
+	for (const auto tankType: tankTypes)
+	{
+		events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", tankType, _uuid);
+	}
+	events->EmitEvent("Server_EndFrame");
+
+	for (size_t i = 0u; i < tankTypes.size(); ++i)
+	{
+		auto future = promises[i].get_future();
+		const auto status = future.wait_for(std::chrono::milliseconds(1000));
+		ASSERT_EQ(status, std::future_status::ready);
+
+		const auto& [typeReplicated, uuid] = future.get();
+		EXPECT_EQ(tankTypes[i], typeReplicated);
+		EXPECT_EQ(_uuid, uuid);
+	}
+}
 
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {

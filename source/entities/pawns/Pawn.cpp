@@ -129,7 +129,7 @@ bool Pawn::Move(const float deltaTime)
 	if (isMove)
 	{
 		_events->EmitEvent<const buuid&>("AnimationTankUpdate", _uuid);
-		
+
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
 			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(

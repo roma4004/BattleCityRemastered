@@ -29,7 +29,6 @@ Tank::~Tank()
 
 	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
 			"AnimationCreate", AnimationType::Tank_Explosion, _rect, _uuid);
-
 }
 
 void Tank::Subscribe()

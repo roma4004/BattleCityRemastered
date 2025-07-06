@@ -256,6 +256,7 @@ enable_testing()
 include_directories(headers)
 
 set(SOURCE_FILES
+        source/animations/AnimatedObjects.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
         source/application/GameFailure.cpp
@@ -312,6 +313,7 @@ set(SOURCE_FILES
         source/network/ClientHandler.cpp
         source/network/Server.cpp
         source/network/ServerHandler.cpp
+        source/network/commands/AnimationCreate.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp
@@ -381,6 +383,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/ClientHandler.cpp
         source/network/Server.cpp
         source/network/ServerHandler.cpp
+        source/network/commands/AnimationCreate.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp

@@ -9,7 +9,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BonusSpawn);
 BonusSpawn::BonusSpawn(): Command(CommandType::BONUS_SPAWN) {}
 
 BonusSpawn::BonusSpawn(const FPoint& pos, const BonusType bonusType, const buuid uuid)
-	: Command(CommandType::BONUS_SPAWN), _pos(pos), _uuid(uuid), _bonusType(bonusType) {}
+	: Command(CommandType::BONUS_SPAWN), _pos(pos), _bonusType(bonusType), _uuid(uuid) {}
 
 FPoint BonusSpawn::GetPos() const { return _pos; }
 
