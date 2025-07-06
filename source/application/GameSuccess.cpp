@@ -278,7 +278,7 @@ void GameSuccess::MainLoop()
 			{
 				_events->EmitEvent("Server_StartFrame");
 			}
-			
+
 			_textureManager->ClearFrame();
 
 			_userInput->Update();
@@ -302,7 +302,7 @@ void GameSuccess::MainLoop()
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("AnimationUpdate");
-			
+
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
 
 			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part

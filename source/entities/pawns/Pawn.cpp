@@ -88,7 +88,7 @@ void Pawn::UnsubscribeAsClient() const
 {
 	_events->RemoveListener<const FPoint, const Direction, const buuid&>(
 			"ClientReceived_" + _name + "Pos", _nameWithUuid);
-	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _nameWithUuid);
+	_events->RemoveListener<const int>("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
 void Pawn::SetHealth(const int health)

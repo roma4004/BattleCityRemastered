@@ -93,7 +93,7 @@ void TankSpawner::SubscribeAsClient()
 	_events->AddListener<const TankType, const buuid&>(
 			"ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
 			{
-				this->RespawnClient(type, uuid);
+				this->OnClientRespawn(type, uuid);
 			});
 }
 
@@ -121,7 +121,7 @@ void TankSpawner::UnsubscribeAsClient() const
 
 void TankSpawner::SetEnemyNeedRespawn()
 {
-	for (int i = 0; i < 4; ++i)
+	for (size_t i = 0; i < 4; ++i)
 	{
 		_slots[i].isAvailable = true;
 	}
@@ -372,7 +372,7 @@ void TankSpawner::RespawnTanks()
 	}
 }
 
-void TankSpawner::RespawnClient(const TankType type, const buuid uuid)
+void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid)
 {
 	switch (type)
 	{
@@ -381,10 +381,15 @@ void TankSpawner::RespawnClient(const TankType type, const buuid uuid)
 		case TankType::ENEMY3:
 		case TankType::ENEMY4:
 			RespawnEnemyTanks(type, uuid);
+			DecreaseEnemyRespawnResource();
 			break;
 		case TankType::PLAYER1:
+			RespawnPlayerTeam(type, uuid);
+			DecreasePlayerOneRespawnResource();
+			break;
 		case TankType::PLAYER2:
 			RespawnPlayerTeam(type, uuid);
+			DecreasePlayerTwoRespawnResource();
 			break;
 		default:
 			break;
@@ -478,7 +483,7 @@ void TankSpawner::OnBonusTank(const std::string& author, const std::string& frac
 
 void TankSpawner::OnTankSpawn(const buuid& uuid)
 {
-	for (int i = 0; i < _slots.size(); ++i)
+	for (size_t i = 0u; i < _slots.size(); ++i)
 	{
 		if (_slots[i].id == uuid)
 		{
@@ -508,7 +513,7 @@ void TankSpawner::OnTankSpawn(const buuid& uuid)
 void TankSpawner::OnTankDied(const buuid& uuid)
 {
 	//TODO: replace with std:: algorithm
-	for (int i = 0; i < _slots.size(); ++i)
+	for (size_t i = 0u; i < _slots.size(); ++i)
 	{
 		if (_slots[i].id == uuid)
 		{

@@ -121,7 +121,7 @@ void BonusEffectManager::TickUpdate(const float /*deltaTime*/)
 		OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
 	}
 
-	for (int i = 0; i < _helmetSlots.size(); ++i)
+	for (size_t i = 0u; i < _helmetSlots.size(); ++i)
 	{
 		if (_helmetSlots[i].isActive && TimeUtils::IsCooldownFinish(_helmetSlots[i].activateTime,
 		                                                            _helmetSlots[i].cooldown))

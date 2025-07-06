@@ -74,7 +74,7 @@ class TankSpawner final
 	[[nodiscard]] static std::string GetCurrentTimeString();
 
 	void ResetRespawnStat();
-	void RespawnClient(TankType type, buuid uuid);
+	void OnClientRespawn(TankType type, buuid uuid);
 	void ResetSpawn();
 
 	void IncreaseEnemyRespawnResource();

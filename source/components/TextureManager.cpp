@@ -246,7 +246,7 @@ void TextureManager::Draw(const BaseObj* obj)
 	{
 		RectDraw(obj);
 	}
-	
+
 	//local angle and flip for texture
 	double angle = 0.0;
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
@@ -285,7 +285,7 @@ void TextureManager::GenerateFpsTextures()
 {
 	_fpsTextures.clear();
 
-	for (int i = 0; i <= 1000; ++i)
+	for (size_t i = 0u; i <= 1000u; ++i)
 	{
 		std::string text = std::to_string(i);
 		constexpr SDL_Color textColor = {140, 0, 255, 255};
