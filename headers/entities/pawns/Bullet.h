@@ -13,7 +13,7 @@ class Bullet final : public Pawn
 	using buuid = boost::uuids::uuid;
 
 	std::string _author{};
-	double _bulletDamageRadius{18.f};
+	double _bulletDamageRadius{14.f};
 	std::string _uuidStr{};
 	int _damage{0};
 

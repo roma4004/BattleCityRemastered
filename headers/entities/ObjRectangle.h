@@ -14,6 +14,10 @@ struct ObjRectangle final
 
 	// Get the y-coordinate of the bottom side
 	[[nodiscard]] float Bottom() const;
+
+	[[nodiscard]] ObjRectangle GetCenter() const;
+
+	[[nodiscard]] ObjRectangle GetScale(float scale) const;
 };
 
 // Include the template implementation

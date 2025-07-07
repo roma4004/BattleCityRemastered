@@ -150,7 +150,7 @@ void TextureManager::RectDraw(const BaseObj* obj)
 void TextureManager::Draw(const BaseObj* obj)
 {
 	const ObjRectangle rect = obj->GetRect();
-	const SDL_Rect destRect = RectToSdlRect(rect);
+	SDL_Rect destRect = RectToSdlRect(rect);
 
 	SDL_Rect textureRect{};
 	const auto pawn = dynamic_cast<const Pawn*>(obj);
@@ -232,6 +232,7 @@ void TextureManager::Draw(const BaseObj* obj)
 		if (int frame = _animationManager.GetFrame(obj->GetUuid(), AnimationType::Bullet_Explosion); frame != -1)
 		{
 			textureRect = RectToSdlRect(_offset.smallExplosion);
+			destRect = RectToSdlRect(rect.GetScale(4.f).GetCenter());
 			textureRect.x += frame * 16;
 		}
 		else
