@@ -269,7 +269,7 @@ void GameSuccess::MainLoop()
 	try
 	{
 		float deltaTime{0.f};
-		Uint32 fps{0};
+		size_t fps{0};
 		while (!_userInput->IsGameOver())
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();

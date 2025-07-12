@@ -77,7 +77,6 @@
     <ClCompile Include="..\source\components\input\InputProviderForPlayerTwo.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\entities\BaseObj.cpp" />
-    <ClCompile Include="..\source\entities\ObjRectangle.cpp" />
     <ClCompile Include="..\source\entities\bonuses\Bonus.cpp" />
     <ClCompile Include="..\source\entities\bonuses\BonusCaliber.cpp" />
     <ClCompile Include="..\source\entities\bonuses\BonusGrenade.cpp" />

@@ -263,8 +263,12 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 
 void Menu::DrawText() const
 {
-	//TODO: add skip if outside screen
 	const Point pos = {.x = _pos.x + 180, .y = _pos.y + 180};
+	if (pos.y + 50 > _height)
+	{
+		return;
+	}
+
 	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
 
 	TextToRender({.x = pos.x, .y = pos.y - 50}, color,

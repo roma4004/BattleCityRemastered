@@ -41,7 +41,7 @@ protected:
 	std::string _name{"Player1"};
 	std::string _fraction{"PlayerTeam"};
 	std::string _name2{"Player2"};
-	std::string _fraction2{"PlayerTeam"};
+	// std::string _fraction2{"PlayerTeam"};
 	std::string _name3{"Enemy1"};
 	std::string _fraction3{"EnemyTeam"};
 	GameMode _gameMode{GameMode::OnePlayer};

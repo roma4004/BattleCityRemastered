@@ -22,6 +22,7 @@
 #include <memory>
 #include <boost/uuid/uuid.hpp>
 
+//TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
                          std::shared_ptr<BonusEffectManager> bonusEffectManager)
@@ -141,9 +142,9 @@ void TankSpawner::ResetRespawnStat()
 	_respawnResource[static_cast<int>(RespawnResource::PLAYER_ONE)] = 3;
 	_respawnResource[static_cast<int>(RespawnResource::PLAYER_TWO)] = 3;
 
-	for (SpawnSlot& slot: _slots)
+	for (auto& [_, isAvailable]: _slots)
 	{
-		slot.isAvailable = false;
+		isAvailable = false;
 	}
 }
 

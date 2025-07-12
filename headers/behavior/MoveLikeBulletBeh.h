@@ -13,7 +13,7 @@ class EventSystem;
 class MoveLikeBulletBeh final : public IMoveBeh
 {
 	BaseObj* _selfParent{nullptr};//TODO: replace with weak_ptr
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;

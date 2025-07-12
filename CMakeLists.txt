@@ -283,7 +283,6 @@ set(SOURCE_FILES
         source/components/managers/BonusEffectManager.cpp
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
-        source/entities/ObjRectangle.cpp
         source/entities/Obstacles/EagleTile.cpp
         source/entities/Obstacles/GrassTile.cpp
         source/entities/Obstacles/IceTile.cpp
@@ -354,7 +353,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/BonusEffectManager.cpp
         source/entities/BaseObj.cpp
-        source/entities/ObjRectangle.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
         source/entities/bonuses/BonusGrenade.cpp

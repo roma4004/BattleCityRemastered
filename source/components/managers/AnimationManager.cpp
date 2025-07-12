@@ -85,10 +85,10 @@ void AnimationManager::SubscribeAsClient()
 						Create("SpawnAnimation", type, rect, uuid, 3);
 						break;
 					case AnimationType::Bullet_Explosion:
-						Create("BulletExplosion", type, rect, uuid, 3);
+						Create("BulletExplosion", type, rect, uuid, 3);//TODO: should change to 1?
 						break;
 					case AnimationType::Tank_Explosion:
-						Create("TankExplosion", type, rect, uuid, 2);
+						Create("TankExplosion", type, rect, uuid, 2);//TODO: should change to 1?
 						break;
 					case AnimationType::Water_Animation:
 						Create("WaterAnimation", type, rect, uuid, 16);

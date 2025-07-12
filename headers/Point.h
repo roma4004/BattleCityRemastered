@@ -72,6 +72,27 @@ struct UPoint final
 	[[nodiscard]] bool operator>=(const UPoint& rhs) const { return *this == rhs || *this > rhs; }
 };
 
+template<class Archive>
+void FPoint::serialize(Archive& ar, const unsigned int /*version*/)
+{
+	ar & x;
+	ar & y;
+}
+
+template<class Archive>
+void Point::serialize(Archive& ar, const unsigned int /*version*/)
+{
+	ar & x;
+	ar & y;
+}
+
+template<class Archive>
+void UPoint::serialize(Archive& ar, const unsigned int /*version*/)
+{
+	ar & x;
+	ar & y;
+}
+
 // for Google Test
 inline void PrintTo(const FPoint& point, std::ostream* os)
 {
@@ -89,6 +110,3 @@ inline void PrintTo(const UPoint& point, std::ostream* os)
 {
 	*os << "UPoint(x: " << point.x << ", y: " << point.y << ")";
 }
-
-// Include the template implementation
-#include "Point.tpp"

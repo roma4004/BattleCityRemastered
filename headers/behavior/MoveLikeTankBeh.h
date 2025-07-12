@@ -9,8 +9,8 @@ class Tank;
 
 class MoveLikeTankBeh final : public IMoveBeh
 {
-	BaseObj* _selfParent{nullptr};//TODO: replace with weak_ptr
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects;
+	BaseObj* _selfParent{nullptr};
+	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	static void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank);
 

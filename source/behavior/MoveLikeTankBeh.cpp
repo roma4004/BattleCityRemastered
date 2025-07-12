@@ -13,55 +13,36 @@ MoveLikeTankBeh::MoveLikeTankBeh(BaseObj* selfParent, std::vector<std::shared_pt
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 {
-	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	std::vector<std::shared_ptr<BaseObj>> obstacles{};
-	constexpr int defaultCollisionReserve{5};
-	obstacles.reserve(defaultCollisionReserve);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		// TODO: assert component must be in tank class
 		return obstacles;
 	}
 
+	constexpr int defaultCollisionReserve{5};
+	obstacles.reserve(defaultCollisionReserve);
+
 	const float speed = tank->GetSpeed();
 	const float moveSpeed = speed * deltaTime;
+	const auto [x, y, w, h] = tank->GetRect();
 	ObjRectangle tankNextPosRect;
 	if (const Direction dir = tank->GetDirection();
 		dir == Direction::UP)
 	{
-		tankNextPosRect = ObjRectangle{
-				.x = tank->GetX(),
-				.y = tank->GetY() - moveSpeed,
-				.w = tank->GetWidth(),
-				.h = tank->GetHeight() + moveSpeed
-		};
+		tankNextPosRect = {.x = x, .y = y - moveSpeed, .w = w, .h = h + moveSpeed};
 	}
 	else if (dir == Direction::DOWN)
 	{
-		tankNextPosRect = ObjRectangle{
-				.x = tank->GetX(),
-				.y = tank->GetY(),
-				.w = tank->GetWidth(),
-				.h = tank->GetHeight() + moveSpeed
-		};
+		tankNextPosRect = {.x = x, .y = y, .w = w, .h = h + moveSpeed};
 	}
 	else if (dir == Direction::LEFT)
 	{
-		tankNextPosRect = ObjRectangle{
-				.x = tank->GetX() - moveSpeed,
-				.y = tank->GetY(),
-				.w = tank->GetWidth() + moveSpeed,
-				.h = tank->GetHeight()
-		};
+		tankNextPosRect = {.x = x - moveSpeed, .y = y, .w = w + moveSpeed, .h = h};
 	}
 	else if (dir == Direction::RIGHT)
 	{
-		tankNextPosRect = ObjRectangle{
-				.x = tank->GetX(),
-				.y = tank->GetY(),
-				.w = tank->GetWidth() + moveSpeed,
-				.h = tank->GetHeight()
-		};
+		tankNextPosRect = {.x = x, .y = y, .w = w + moveSpeed, .h = h};
 	}
 
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -85,32 +66,23 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::IsCanMove(const float del
 
 std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const float deltaTime) const
 {
-	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	std::vector<Direction> freePath;
-	constexpr int defaultCollisionReserve{4};
-	freePath.reserve(defaultCollisionReserve);
+	const auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
-		// TODO: assert component must be in tank class
 		return freePath;
 	}
 
+	constexpr int defaultCollisionReserve{4};
+	freePath.reserve(defaultCollisionReserve);
+
 	const float speed = tank->GetSpeed();
 	const float moveSpeed = speed * deltaTime;
-
-	const ObjRectangle tankNextPosRectUP{
-			.x = tank->GetX(), .y = tank->GetY() - moveSpeed, .w = tank->GetWidth(),
-			.h = tank->GetHeight() + moveSpeed};
-
-	const ObjRectangle tankNextPosRectDOWN{
-			.x = tank->GetX(), .y = tank->GetY(), .w = tank->GetWidth(), .h = tank->GetHeight() + moveSpeed};
-
-	const ObjRectangle tankNextPosRectLEFT{
-			.x = tank->GetX() - moveSpeed, .y = tank->GetY(), .w = tank->GetWidth() + moveSpeed,
-			.h = tank->GetHeight()};
-
-	const ObjRectangle tankNextPosRectRIGHT{
-			.x = tank->GetX(), .y = tank->GetY(), .w = tank->GetWidth() + moveSpeed, .h = tank->GetHeight()};
+	const auto [x, y, w, h] = tank->GetRect();
+	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - moveSpeed, .w = w, .h = h + moveSpeed};
+	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + moveSpeed};
+	const ObjRectangle tankNextPosRectLeft{.x = x - moveSpeed, .y = y, .w = w + moveSpeed, .h = h};
+	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + moveSpeed, .h = h};
 
 	bool isFreeUp{true};
 	bool isFreeDown{true};
@@ -124,28 +96,46 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const float deltaTime) 
 			continue;
 		}
 
-		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUP, object->GetRect()))
+		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUp, object->GetRect()))
 		{
 			if (!object->GetIsPassable()) { isFreeUp = false; }
 		}
-		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDOWN, object->GetRect()))
+
+		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDown, object->GetRect()))
 		{
 			if (!object->GetIsPassable()) { isFreeDown = false; }
 		}
-		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLEFT, object->GetRect()))
+
+		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLeft, object->GetRect()))
 		{
 			if (!object->GetIsPassable()) { isFreeLeft = false; }
 		}
-		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRIGHT, object->GetRect()))
+
+		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRight, object->GetRect()))
 		{
 			if (!object->GetIsPassable()) { isFreeRight = false; }
 		}
 	}
 
-	if (isFreeUp) { freePath.emplace_back(Direction::UP); }
-	if (isFreeDown) { freePath.emplace_back(Direction::DOWN); }
-	if (isFreeLeft) { freePath.emplace_back(Direction::LEFT); }
-	if (isFreeRight) { freePath.emplace_back(Direction::RIGHT); }
+	if (isFreeUp)
+	{
+		freePath.emplace_back(Direction::UP);
+	}
+
+	if (isFreeDown)
+	{
+		freePath.emplace_back(Direction::DOWN);
+	}
+
+	if (isFreeLeft)
+	{
+		freePath.emplace_back(Direction::LEFT);
+	}
+
+	if (isFreeRight)
+	{
+		freePath.emplace_back(Direction::RIGHT);
+	}
 
 	return freePath;
 }
@@ -159,13 +149,8 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
                                        const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto* tank = dynamic_cast<Tank*>(_selfParent);
-	if (tank == nullptr)
-	{
-		return 0.f;
-	}
-
-	const UPoint windowSize = tank->GetWindowSize();
-	auto minDist = static_cast<float>(windowSize.x * windowSize.y);
+	const auto [maxX, maxY] = tank->GetWindowSize();
+	auto minDist = static_cast<float>(maxX * maxY);
 	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
@@ -206,14 +191,17 @@ bool MoveLikeTankBeh::Move(const float deltaTime) const
 	{
 		return MoveUp(deltaTime);
 	}
+
 	if (currentDirection == Direction::LEFT)
 	{
 		return MoveLeft(deltaTime);
 	}
+
 	if (currentDirection == Direction::DOWN)
 	{
 		return MoveDown(deltaTime);
 	}
+
 	if (currentDirection == Direction::RIGHT)
 	{
 		return MoveRight(deltaTime);
@@ -224,7 +212,7 @@ bool MoveLikeTankBeh::Move(const float deltaTime) const
 
 bool MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return false;
@@ -240,7 +228,7 @@ bool MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 		}
 		else
 		{
-			// move less than speed to stand next to object
+			// move less than speed to stand next to an object
 			const auto getSideDiff = [thisLeftSide = tank->GetX()](const std::shared_ptr<BaseObj>& object) -> float
 			{
 				return thisLeftSide - object->GetRightSide();
@@ -263,7 +251,7 @@ bool MoveLikeTankBeh::MoveLeft(const float deltaTime) const
 
 bool MoveLikeTankBeh::MoveRight(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return false;
@@ -281,7 +269,7 @@ bool MoveLikeTankBeh::MoveRight(const float deltaTime) const
 		}
 		else
 		{
-			// move less than speed to stand next to object
+			// move less than speed to stand next to an object
 			auto getSideDiff = [thisRightSide = tank->GetRightSide()](const std::shared_ptr<BaseObj>& object) -> float
 			{
 				return object->GetX() - thisRightSide;
@@ -304,7 +292,7 @@ bool MoveLikeTankBeh::MoveRight(const float deltaTime) const
 
 bool MoveLikeTankBeh::MoveUp(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return false;
@@ -320,7 +308,7 @@ bool MoveLikeTankBeh::MoveUp(const float deltaTime) const
 		}
 		else
 		{
-			// move less than speed to stand next to object
+			// move less than speed to stand next to an object
 			const auto& getSideDiff = [thisTopSide = tank->GetY()](const std::shared_ptr<BaseObj>& object) -> float
 			{
 				return object->GetBottomSide() - thisTopSide;
@@ -343,7 +331,7 @@ bool MoveLikeTankBeh::MoveUp(const float deltaTime) const
 
 bool MoveLikeTankBeh::MoveDown(const float deltaTime) const
 {
-	const auto tank = dynamic_cast<Tank*>(_selfParent);
+	auto* tank = dynamic_cast<Tank*>(_selfParent);
 	if (tank == nullptr)
 	{
 		return false;
@@ -360,7 +348,7 @@ bool MoveLikeTankBeh::MoveDown(const float deltaTime) const
 		}
 		else
 		{
-			// move less than speed to stand next to object
+			// move less than speed to stand next to an object
 			const auto getSideDiff =
 					[thisBottomSide = tank->GetBottomSide()](const std::shared_ptr<BaseObj>& object) -> float
 			{

@@ -45,7 +45,7 @@ protected:
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
-		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
+		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 
 		BaseObjProperty baseObjProperty{
 				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};

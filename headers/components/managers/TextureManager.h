@@ -25,7 +25,7 @@ class TextureManager final
 
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 
-	std::unordered_map<int, SDL_Texture*> _fpsTextures;// pregenerated fps texture
+	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
 
 	std::unordered_map<int, SDL_Texture*> _colorTextureCache;
 	SDL_Rect _fpsRectangle{};
@@ -53,5 +53,5 @@ public:
 	~TextureManager();
 
 	void ClearFrame() const;
-	void DisplayFrame(Uint32 fps);
+	void DisplayFrame(size_t fps);
 };

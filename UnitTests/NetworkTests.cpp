@@ -369,15 +369,18 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 		bricksRect.emplace_back(value, value + 1, value + 2, value + 3);
 	}
 
-	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises(6);
+	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises(itemsInMassiveTest);
 
-	int count{0};
+	std::mutex mtx;
+	std::atomic<size_t> count{0};
 	events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
 			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
-			[&promises, &count](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			[&promises, &count, &mtx](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
-				promises[count].set_value({rect, type, uuid});
-				++count;
+				std::lock_guard<std::mutex> lock(mtx);
+
+				const auto current = count.fetch_add(1);
+				promises[current].set_value({rect, type, uuid});
 			});
 
 	events->EmitEvent("Server_StartFrame");

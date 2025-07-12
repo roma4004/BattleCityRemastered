@@ -1,7 +1,7 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
-#include "components/input/InputProviderForPlayerOne.h"
-#include "components/input/InputProviderForPlayerTwo.h"
+// #include "components/input/InputProviderForPlayerOne.h"
+// #include "components/input/InputProviderForPlayerTwo.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -24,7 +24,7 @@ protected:
 	int _bulletColor{0xffffff};
 	int _bulletDamage{1};
 	float _tankSize{0.f};
-	float _tankSpeed{142.f};
+	// float _tankSpeed{142.f};
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
 	float _bulletWidth{6.f};
@@ -40,13 +40,13 @@ protected:
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
 
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
+		// std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		// std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 
 		const std::string name{"Bullet1"};
 		const std::string fraction{"PlayerTeam"};
 		const std::string author{"Player1"};
-		ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
+		// ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
 		CreateBullet(name, fraction, author, 0.f, _bulletHeight, Direction::DOWN);
 	}
 
@@ -61,8 +61,7 @@ protected:
 		BaseObjProperty baseObjProperty2{
 				rect2, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
-				std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP,
-				_gameMode};
+				std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, dir, _gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

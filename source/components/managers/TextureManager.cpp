@@ -322,7 +322,7 @@ void TextureManager::ClearFrame() const
 	SDL_RenderClear(_renderer.get());
 }
 
-void TextureManager::DisplayFrame(const Uint32 fps)
+void TextureManager::DisplayFrame(const size_t fps)
 {
 	if (fps)
 	{

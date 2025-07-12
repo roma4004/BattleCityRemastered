@@ -78,6 +78,7 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 			.windowSize = _windowSize,
 			.gameMode = _gameMode
 	};
+
 	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
 }
 

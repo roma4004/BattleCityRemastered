@@ -38,7 +38,7 @@ protected:
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
-	float _bulletSpeed{300.f};
+	// float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
 	buuid _uuid{};
 
@@ -56,7 +56,7 @@ protected:
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
-		ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
+		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{rect, _yellow, _tankHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::UP,
