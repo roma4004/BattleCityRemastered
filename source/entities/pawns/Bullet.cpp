@@ -62,7 +62,7 @@ const std::string& Bullet::GetUuidStr() const
 
 void Bullet::SubscribeAsClient()
 {
-	_events->AddListener<const buuid&>("ClientReceived_" + _name + "Dispose", _nameWithUuid, [this](const buuid& uuid)
+	_events->AddListener("ClientReceived_" + _name + "Dispose", _nameWithUuid, [this](const buuid& uuid)
 	{
 		if (uuid != _uuid)
 		{
@@ -153,7 +153,7 @@ std::string Bullet::GetAuthor() const { return _author; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>("Statistics_BulletHit", author, fraction);
+	_events->EmitEvent("Statistics_BulletHit", author, fraction);
 }
 
 void Bullet::TakeDamage(const int damage)
@@ -163,8 +163,7 @@ void Bullet::TakeDamage(const int damage)
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		//TODO: move this to onHealthChange
-		_events->EmitEvent<const std::string&, const int, const buuid&>(
-				"ServerSend_Health", GetName(), GetHealth(), _uuid);
+		_events->EmitEvent("ServerSend_Health", GetName(), GetHealth(), _uuid);
 	}
 }
 

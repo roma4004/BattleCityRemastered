@@ -108,7 +108,7 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 1);
 }
@@ -129,7 +129,7 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 1);
 }
@@ -155,7 +155,7 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 1);
 }
@@ -181,7 +181,7 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 1);
 }
@@ -202,7 +202,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 
 	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 1);
 }
@@ -229,7 +229,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
 }
@@ -254,7 +254,7 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
 }
@@ -281,7 +281,7 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 
 	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 1);
 }
@@ -308,7 +308,7 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 
 	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 1);
 }
@@ -330,7 +330,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 1);
 }
@@ -352,7 +352,7 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 1);
 }
@@ -379,7 +379,7 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 1);
 }
@@ -401,7 +401,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 1);
 }
@@ -423,7 +423,7 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 1);
 }
@@ -458,7 +458,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
@@ -485,7 +485,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 1);
 }
@@ -511,7 +511,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 1);
 }
@@ -537,7 +537,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 1);
 }
@@ -563,7 +563,7 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 1);
 }
@@ -589,7 +589,7 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 1);
 }
@@ -615,7 +615,7 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 1);
 }
@@ -649,7 +649,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 2);
 }
@@ -684,7 +684,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
@@ -720,7 +720,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
@@ -756,7 +756,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);

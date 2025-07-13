@@ -19,65 +19,61 @@ void BonusEffectManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _name, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
 
-	_events->AddListener<const std::string&, const milliseconds>(
-			"TimerActive", _name,
-			[this](const std::string& fraction, const milliseconds effectDuration)
-			{
-				if (fraction == "EnemyTeam")
-				{
-					_timerPlayer = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
-				}
-				else if (fraction == "PlayerTeam")
-				{
-					_timerEnemy = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Timer", "EnemyTeam", _timerEnemy.isActive);
-				}
-			});
+	_events->AddListener("TimerActive", _name, [this](const std::string& fraction, const milliseconds effectDuration)
+	{
+		if (fraction == "EnemyTeam")
+		{
+			_timerPlayer = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
+		}
+		else if (fraction == "PlayerTeam")
+		{
+			_timerEnemy = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Timer", "EnemyTeam", _timerEnemy.isActive);
+		}
+	});
 
-	_events->AddListener<const std::string&, const milliseconds>(
-			"HelmetActive", _name,
-			[this](const std::string& name, const milliseconds effectDuration)
-			{
-				if (name == "Enemy1")
-				{
-					_helmetSlots[0] = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", "Enemy1", _helmetSlots[0].isActive);
-				}
-				else if (name == "Enemy2")
-				{
-					_helmetSlots[1] = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", "Enemy2", _helmetSlots[1].isActive);
-				}
-				else if (name == "Enemy3")
-				{
-					_helmetSlots[2] = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", "Enemy3", _helmetSlots[2].isActive);
-				}
-				else if (name == "Enemy4")
-				{
-					_helmetSlots[3] = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", "Enemy4", _helmetSlots[3].isActive);
-				}
-				else if (name == "Player1")
-				{
-					_helmetSlots[4] = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", "Player1", _helmetSlots[4].isActive);
-				}
-				else if (name == "Player2")
-				{
-					_helmetSlots[5] = {true, effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", "Player2", _helmetSlots[5].isActive);
-				}
-			});
+	_events->AddListener("HelmetActive", _name, [this](const std::string& name, const milliseconds effectDuration)
+	{
+		if (name == "Enemy1")
+		{
+			_helmetSlots[0] = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", "Enemy1", _helmetSlots[0].isActive);
+		}
+		else if (name == "Enemy2")
+		{
+			_helmetSlots[1] = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", "Enemy2", _helmetSlots[1].isActive);
+		}
+		else if (name == "Enemy3")
+		{
+			_helmetSlots[2] = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", "Enemy3", _helmetSlots[2].isActive);
+		}
+		else if (name == "Enemy4")
+		{
+			_helmetSlots[3] = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", "Enemy4", _helmetSlots[3].isActive);
+		}
+		else if (name == "Player1")
+		{
+			_helmetSlots[4] = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", "Player1", _helmetSlots[4].isActive);
+		}
+		else if (name == "Player2")
+		{
+			_helmetSlots[5] = {true, effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", "Player2", _helmetSlots[5].isActive);
+		}
+	});
 
-	_events->AddListener<const std::string&, const std::string&, const milliseconds>(
-			//TODO: remove duration for bonuses
+
+	_events->AddListener(//TODO: remove duration for bonuses
 			"BonusShovel", _name,
 			[this](const std::string& /*author*/, const std::string& fraction, const milliseconds effectDuration)
 			{
@@ -88,7 +84,7 @@ void BonusEffectManager::Subscribe()
 void BonusEffectManager::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	_events->RemoveListener("TickUpdate", _name);
 	_events->RemoveListener("TimerActive", _name);
 	_events->RemoveListener("HelmetActive", _name);
 	_events->RemoveListener("BonusShovel", _name);
@@ -104,7 +100,7 @@ void BonusEffectManager::Reset()
 
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool value) const
 {
-	_events->EmitEvent<const std::string&, const bool>("Bonus" + event + "StatusChange", id, value);
+	_events->EmitEvent("Bonus" + event + "StatusChange", id, value);
 }
 
 void BonusEffectManager::TickUpdate(const float /*deltaTime*/)

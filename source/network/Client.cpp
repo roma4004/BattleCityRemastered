@@ -158,12 +158,12 @@ void Client::ReadResponse()
 			// }
 			// else if (data.eventName == "OnTank")
 			// {
-			// 	events->EmitEvent<const std::string&, const std::string&>(
+			// 	events->EmitEvent(
 			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
 			// }
 			// else if (data.eventName == "OnGrenade")
 			// {
-			// 	events->EmitEvent<const std::string&, const std::string&>(
+			// 	events->EmitEvent(
 			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
 			// }
 
@@ -212,8 +212,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const Direction, const buuid&>(
-				"ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
 	}
 }
 
@@ -221,9 +220,7 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
 	{
-		const buuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const Direction, const buuid&>(
-				"ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), uuid);
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), cmd->GetUuid());
 	}
 }
 
@@ -231,9 +228,8 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
-		_events->EmitEvent<const int>(
-				"ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
-				cmd->GetHealth());
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
+		                   cmd->GetHealth());
 	}
 }
 
@@ -241,7 +237,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		_events->EmitEvent<const buuid&>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
 	}
 }
 
@@ -249,8 +245,7 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ClientReceived_Statistics", cmd->GetEventName(), cmd->GetAuthor(), cmd->GetFraction());
+		_events->EmitEvent("ClientReceived_Statistics", cmd->GetEventName(), cmd->GetAuthor(), cmd->GetFraction());
 	}
 }
 
@@ -267,8 +262,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		_events->EmitEvent<const std::string&, const buuid&>(
-				"ClientReceived_FortressChange", cmd->GetState(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_FortressChange", cmd->GetState(), cmd->GetUuid());
 	}
 }
 
@@ -276,8 +270,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
-				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
 	}
 }
 
@@ -285,7 +278,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const buuid&>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_BonusDeSpawn", cmd->GetUuid());
 	}
 }
 
@@ -293,8 +286,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
 	{
-		_events->EmitEvent<const TankType, const buuid&>(
-				"ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
 	}
 }
 
@@ -302,8 +294,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
-				"ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_ObstacleSpawn", cmd->GetRect(),  cmd->GetObstacleType(), cmd->GetUuid());
 	}
 }
 
@@ -311,8 +302,7 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
 	{
-		_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
-				"ClientReceived_AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetUuid());
 	}
 }
 

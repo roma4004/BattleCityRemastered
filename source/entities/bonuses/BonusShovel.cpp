@@ -18,6 +18,5 @@ BonusShovel::~BonusShovel() = default;
 
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, const milliseconds>(
-			_name, author, fraction, _effectDuration);
+	_events->EmitEvent(_name, author, fraction, _effectDuration);
 }

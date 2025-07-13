@@ -87,7 +87,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 	EXPECT_NE(fortressWall->GetHealth(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 	EXPECT_EQ(fortressWall->GetHealth(), 0);
@@ -114,7 +114,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_NE(fortressWall->GetHealth(), 0);
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_TRUE(fortressWall->IsBrickWall());
 		EXPECT_EQ(fortressWall->GetHealth(), 0);

@@ -54,69 +54,66 @@ void TankSpawner::Subscribe()
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_events->AddListener("Reset", _name, [this]() { ResetSpawn(); });
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
-	_events->AddListener<const buuid&>("TankSpawn", _name, [this](const buuid& uuid)
+	_events->AddListener("TankSpawn", _name, [this](const buuid& uuid)
 	{
 		OnTankSpawn(uuid);
 	});
-	_events->AddListener<const buuid&>("TankDied", _name, [this](const buuid& uuid)
+	_events->AddListener("TankDied", _name, [this](const buuid& uuid)
 	{
 		OnTankDied(uuid);
 	});
 
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusTank", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusTank(author, fraction);
-			});
+	_events->AddListener("BonusTank", _name, [this](const std::string& author, const std::string& fraction)
+	{
+		this->OnBonusTank(author, fraction);
+	});
 }
 
 void TankSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&, const std::string&>(
-			"ClientReceived_OnTank", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusTank(author, fraction);
-			});
+	_events->AddListener("ClientReceived_OnTank", _name, [this](const std::string& author, const std::string& fraction)
+	{
+		this->OnBonusTank(author, fraction);
+	});
 
-	_events->AddListener<const std::string&, const std::string&>(
+	_events->AddListener(
 			"ClientReceived_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
 			{
 				this->OnBonusGrenade(author, fraction);
 			});
 
-	_events->AddListener<const TankType, const buuid&>(
-			"ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
-			{
-				this->OnClientRespawn(type, uuid);
-			});
+	_events->AddListener("ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
+	{
+		this->OnClientRespawn(type, uuid);
+	});
 }
 
 void TankSpawner::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
-	_events->RemoveListener<const buuid&>("TankSpawn", _name);
-	_events->RemoveListener<const buuid&>("TankDied", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("TankSpawn", _name);
+	_events->RemoveListener("TankDied", _name);
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
 
-	_events->RemoveListener<const std::string&, const std::string&>("BonusTank", _name);
+	_events->RemoveListener("BonusTank", _name);
 }
 
 void TankSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnTank", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("ClientReceived_OnGrenade", _name);
-	_events->RemoveListener<const TankType, const buuid&>("ClientReceived_RespawnTank", _name);
+	_events->RemoveListener("ClientReceived_OnTank", _name);
+	_events->RemoveListener("ClientReceived_OnGrenade", _name);
+	_events->RemoveListener("ClientReceived_RespawnTank", _name);
 }
 
 void TankSpawner::SetEnemyNeedRespawn()
@@ -312,7 +309,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", type, uuid);
+		_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
 	}
 }
 
@@ -341,7 +338,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const TankType, const buuid&>("ServerSend_RespawnTank", type, uuid);
+		_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
 	}
 }
 
@@ -400,42 +397,42 @@ void TankSpawner::IncreaseEnemyRespawnResource()
 {
 	constexpr auto id = static_cast<size_t>(RespawnResource::ENEMY_ALL);
 	++_respawnResource[id];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy", _respawnResource[id]);
+	_events->EmitEvent("RespawnResourceChangedTo", "Enemy", _respawnResource[id]);
 }
 
 void TankSpawner::IncreasePlayerOneRespawnResource()//TODO: combine increase for both players into one
 {
 	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_ONE);
 	++_respawnResource[id];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1", _respawnResource[id]);
+	_events->EmitEvent("RespawnResourceChangedTo", "Player1", _respawnResource[id]);
 }
 
 void TankSpawner::IncreasePlayerTwoRespawnResource()
 {
 	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_TWO);
 	++_respawnResource[id];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2", _respawnResource[id]);
+	_events->EmitEvent("RespawnResourceChangedTo", "Player2", _respawnResource[id]);
 }
 
 void TankSpawner::DecreaseEnemyRespawnResource()
 {
 	constexpr auto id = static_cast<size_t>(RespawnResource::ENEMY_ALL);
 	--_respawnResource[id];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Enemy", _respawnResource[id]);
+	_events->EmitEvent("RespawnResourceChangedTo", "Enemy", _respawnResource[id]);
 }
 
 void TankSpawner::DecreasePlayerOneRespawnResource()
 {
 	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_ONE);
 	--_respawnResource[id];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player1", _respawnResource[id]);
+	_events->EmitEvent("RespawnResourceChangedTo", "Player1", _respawnResource[id]);
 }
 
 void TankSpawner::DecreasePlayerTwoRespawnResource()
 {
 	constexpr auto id = static_cast<size_t>(RespawnResource::PLAYER_TWO);
 	--_respawnResource[id];
-	_events->EmitEvent<const std::string&, const int>("RespawnResourceChangedTo", "Player2", _respawnResource[id]);
+	_events->EmitEvent("RespawnResourceChangedTo", "Player2", _respawnResource[id]);
 }
 
 void TankSpawner::OnBonusGrenade(const std::string& author, const std::string& fraction)
@@ -477,7 +474,7 @@ void TankSpawner::OnBonusTank(const std::string& author, const std::string& frac
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("ServerSend_OnTank", author, fraction);
+		_events->EmitEvent("ServerSend_OnTank", author, fraction);
 	}
 }
 
@@ -579,11 +576,9 @@ std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProper
 void TankSpawner::SpawnTank(const ObjRectangle rect, int color, int health, std::string name, std::string fraction,
                             const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
 {
-	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
-			"AnimationCreate", AnimationType::Spawn_Animation, rect, uuid);
+	_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, uuid);
 
-	_events->EmitEvent<const AnimationType, const ObjRectangle&, const buuid&>(
-			"AnimationCreate", AnimationType::Tank_Animation, rect, uuid);
+	_events->EmitEvent("AnimationCreate", AnimationType::Tank_Animation, rect, uuid);
 
 	BaseObjProperty baseObjProperty{rect, color, health, uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{

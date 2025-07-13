@@ -71,7 +71,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 			steelWall->SetHealth(1);
 			EXPECT_EQ(steelWall->GetHealth(), 1);
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(steelWall->GetHealth(), 0);
 		}

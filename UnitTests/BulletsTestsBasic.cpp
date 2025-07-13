@@ -94,7 +94,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success bullet moves down test, try to move inside a screen bullet
 			bullet->SetDirection(Direction::DOWN);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_LT(bulletStartPos.y, bulletEndPos.y);
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
@@ -103,7 +103,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success bullet right test, try to move inside a screen bullet
 			bullet->SetDirection(Direction::RIGHT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_LT(bulletStartPos.x, bulletEndPos.x);
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
@@ -117,7 +117,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success shot up test, try to create an inside screen bullet
 			bullet->SetDirection(Direction::UP);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_GT(bulletStartPos.y, bulletEndPos.y);
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
@@ -126,7 +126,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 			//success move left test, try to move inside a screen bullet
 			bullet->SetDirection(Direction::LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_GT(bulletStartPos.x, bulletEndPos.x);
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
@@ -153,7 +153,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
@@ -163,7 +163,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
@@ -174,7 +174,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			bullet->SetDirection(Direction::UP);
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
@@ -183,7 +183,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 			bullet->SetDirection(Direction::LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 
@@ -208,7 +208,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickWallHealth = brickWall->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickWallHealth, brickWall->GetHealth());
@@ -234,7 +234,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickWallHealth = brickWall->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickWallHealth, brickWall->GetHealth());
@@ -260,7 +260,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
@@ -286,7 +286,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
@@ -318,7 +318,7 @@ TEST_F(BulletTest, BulletDamageTank)
 
 	EXPECT_EQ(enemy->GetHealth(), 1);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(enemy->GetHealth(), 0);
 }
@@ -347,7 +347,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 			const int bulletHealth = bullet->GetHealth();
 			const int bullet2Health = bullet2->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(bullet2Health, bullet2->GetHealth());
@@ -373,7 +373,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_EQ(brickHealth, brick->GetHealth());
@@ -399,7 +399,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletHealth, bullet->GetHealth());
 			EXPECT_EQ(brickHealth, brick->GetHealth());
@@ -425,7 +425,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 			fortressWall->SetHealth(1);
 			EXPECT_EQ(fortressWall->GetHealth(), 1);
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(fortressWall->GetHealth(), 0);
 

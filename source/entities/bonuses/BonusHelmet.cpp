@@ -18,5 +18,5 @@ BonusHelmet::~BonusHelmet() = default;
 
 void BonusHelmet::PickUpBonus(const std::string& author, const std::string& /*fraction*/)
 {
-	_events->EmitEvent<const std::string&, const milliseconds>("HelmetActive", author, _effectDuration);
+	_events->EmitEvent("HelmetActive", author, _effectDuration);
 }

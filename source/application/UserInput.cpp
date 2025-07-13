@@ -16,7 +16,7 @@ UserInput::~UserInput()
 
 void UserInput::Subscribe()
 {
-	_events->AddListener<const bool>("Pause_Status", _name, [this](const bool newPauseStatus)
+	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus)
 	{
 		this->_isPause = newPauseStatus;
 	});
@@ -24,7 +24,7 @@ void UserInput::Subscribe()
 
 void UserInput::Unsubscribe() const
 {
-	_events->RemoveListener<const bool>("Pause_Status", _name);
+	_events->RemoveListener("Pause_Status", _name);
 }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)

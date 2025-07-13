@@ -23,8 +23,7 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, cons
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
-				"ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
+		_events->EmitEvent("ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
 	}
 }
 
@@ -34,7 +33,7 @@ Bonus::~Bonus()
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const buuid&>("ServerSend_BonusDeSpawn", _uuid);
+		_events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
 		//TODO: move to pick up moment in tank move beh
 	}
 }
@@ -48,7 +47,7 @@ void Bonus::Subscribe()
 
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -56,7 +55,7 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener<const buuid&>("ClientReceived_BonusDeSpawn", _name, [this](const buuid& uuid)
+	_events->AddListener("ClientReceived_BonusDeSpawn", _name, [this](const buuid& uuid)
 	{
 		if (uuid != this->_uuid)
 		{
@@ -76,15 +75,15 @@ void Bonus::Unsubscribe() const
 
 void Bonus::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
+	_events->RemoveListener("TickUpdate", _nameWithUuid);
 }
 
 void Bonus::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const buuid&>("ClientReceived_BonusDeSpawn", _name);
+	_events->RemoveListener("ClientReceived_BonusDeSpawn", _name);
 }
 
-void Bonus::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
+void Bonus::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
 
 void Bonus::TickUpdate(float /*deltaTime*/)
 {
@@ -96,10 +95,10 @@ void Bonus::TickUpdate(float /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>(_name, author, fraction);
+	_events->EmitEvent(_name, author, fraction);
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>(_name, author, fraction);
+	_events->EmitEvent(_name, author, fraction);
 }

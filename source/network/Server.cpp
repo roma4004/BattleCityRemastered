@@ -337,51 +337,44 @@ void Server::Subscribe()
 		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released"));
 	});
 
-	_events->AddListener<const std::string&, const buuid&>(
-			"ServerSend_FortressChange", _name,
-			[this](const std::string& state, const buuid& uuid)
+	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
+	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
+	});
+
+	_events->AddListener(
+			"ServerSend_Pos", _name,
+			[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
+				// NetworkLogger::WriteLog("Server_positionChange add before:" + std::to_string(_batch->GetSize()));
+				// std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				const auto positionChange = std::make_shared<PositionChange>(who, pos, dir, uuid);
+				// auto classNameW = std::string(positionChange->GetClassNameW());
+				// NetworkLogger::WriteLog("Server_positionChange send:"+classNameW);
+				_batch->AddCommand(positionChange);
+				// NetworkLogger::WriteLog("Server_positionChange add after:" + std::to_string(_batch->GetSize()));
 			});
 
-	_events->AddListener<const std::string&, const FPoint, const Direction, const buuid&>("ServerSend_Pos", _name,
-		[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
-		{
-			// NetworkLogger::WriteLog("Server_positionChange add before:" + std::to_string(_batch->GetSize()));
-			// std::lock_guard<std::mutex> lock(_batchWriteMutex);
-			const auto positionChange = std::make_shared<PositionChange>(who, pos, dir, uuid);
-			// auto classNameW = std::string(positionChange->GetClassNameW());
-			// NetworkLogger::WriteLog("Server_positionChange send:"+classNameW);
-			_batch->AddCommand(positionChange);
-			// NetworkLogger::WriteLog("Server_positionChange add after:" + std::to_string(_batch->GetSize()));
-		});
+	_events->AddListener("ServerSend_Shot", _name, [this](const std::string& who, const Direction dir, const buuid& uuid)
+	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
+	});
 
-	_events->AddListener<const std::string&, const Direction, const buuid&>(
-			"ServerSend_Shot", _name,
-			[this](const std::string& who, const Direction dir, const buuid& uuid)
-			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
-			});
+	_events->AddListener("ServerSend_Health", _name, [this](const std::string& who, const int health, const buuid& uuid)
+	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
+	});
 
-	_events->AddListener<const std::string&, const int, const buuid&>(
-			"ServerSend_Health", _name,
-			[this](const std::string& who, const int health, const buuid& uuid)
-			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
-			});
+	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/const buuid& uuid)
+	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
+	});
 
-	_events->AddListener<const buuid&>(
-			"ServerSend_Dispose", _name,
-			[this](/*TODO: add who,*/const buuid& uuid)
-			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
-			});
-
-	_events->AddListener<const std::string&, const std::string&, const std::string&>(
+	_events->AddListener(
 			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
 			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
 			{
@@ -389,15 +382,13 @@ void Server::Subscribe()
 				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
-	_events->AddListener<const TankType, const buuid&>(
-			"ServerSend_RespawnTank", _name,
-			[this](const TankType type, const buuid& uuid)
-			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
-			});
+	_events->AddListener("ServerSend_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
+	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
+	});
 
-	_events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
+	_events->AddListener(
 			"ServerSend_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
@@ -406,7 +397,7 @@ void Server::Subscribe()
 			});
 	//TODO: write obstacle dispose
 
-	_events->AddListener<const AnimationType, const ObjRectangle&, const buuid&>(
+	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
 			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
 			{
@@ -419,44 +410,42 @@ void Server::Subscribe()
 
 void Server::SubscribeBonus()
 {
-	_events->AddListener<const FPoint, const BonusType, const buuid&>(
-			"ServerSend_BonusSpawn", _name,
-			[this](const FPoint pos, const BonusType type, const buuid& uuid)
-			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
-			});
-	_events->AddListener<const buuid&>("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
+	_events->AddListener("ServerSend_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const buuid& uuid)
+	{
+		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
+	});
+
+	_events->AddListener("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
 	{
 		std::lock_guard<std::mutex> lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 	});
-	//TODO: clien obstacle spawn with uuid
-	//TODO: clien bonus spawn with uuid
+	//TODO: client obstacle spawn with uuid
+	//TODO: client bonus spawn with uuid
 
-	// _events->AddListener<const std::string&>("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
+	// _events->AddListener("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
 	// {
 	// 	this->OnHelmetActivate(who);//TODO: refactor to SendCommand(std::make_shared<
 	// });
-	// _events->AddListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name, [this](const std::string& who)
+	// _events->AddListener("ServerSend_OnHelmetDeactivate", _name, [this](const std::string& who)
 	// {
 	// 	this->OnHelmetDeactivate(who);//TODO: refactor to SendCommand(std::make_shared<
 	// });
-	// _events->AddListener<const std::string&>("ServerSend_OnStar", _name, [this](const std::string& who)
+	// _events->AddListener("ServerSend_OnStar", _name, [this](const std::string& who)
 	// {
 	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
 	// });
-	// _events->AddListener<const std::string&>("ServerSend_OnCaliber", _name, [this](const std::string& who)
+	// _events->AddListener("ServerSend_OnCaliber", _name, [this](const std::string& who)
 	// {
 	// 	this->OnCaliber(who);//TODO: refactor to SendCommand(std::make_shared<
 	// });
-	// _events->AddListener<const std::string&, const std::string&>(
-	// 		"ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
-	// 		{
-	// 			this->OnTank(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
-	// 		});
+	// _events->AddListener("ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
+	// {
+	// 	this->OnTank(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
+	// });
 	//
-	// _events->AddListener<const std::string&, const std::string&>(
+	// _events->AddListener(
 	// 		"ServerSend_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
 	// 		{
 	// 			this->OnGrenade(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
@@ -470,30 +459,29 @@ void Server::Unsubscribe() const
 	_events->RemoveListener("Server_StartFrame", _name);
 	_events->RemoveListener("Server_EndFrame", _name);
 
-	_events->RemoveListener<const std::string&, const FPoint, const Direction, const buuid&>("ServerSend_Pos", _name);
-	_events->RemoveListener<const std::string&, const int, const buuid&>("ServerSend_Health", _name);
-	_events->RemoveListener<const buuid&>("ServerSend_Dispose", _name);
-	_events->RemoveListener<const std::string&, const Direction, const buuid&>("ServerSend_Shot", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("ServerSend_Statistics", _name);
+	_events->RemoveListener("ServerSend_Pos", _name);
+	_events->RemoveListener("ServerSend_Health", _name);
+	_events->RemoveListener("ServerSend_Dispose", _name);
+	_events->RemoveListener("ServerSend_Shot", _name);
+	_events->RemoveListener("ServerSend_Statistics", _name);
 
-	_events->RemoveListener<const AnimationType, const ObjRectangle&, const buuid&>(
-			"ServerSend_AnimationCreate", _name);
+	_events->RemoveListener("ServerSend_AnimationCreate", _name);
 
 	UnsubscribeBonus();
 }
 
 void Server::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const FPoint, const BonusType, const buuid&>("ServerSend_BonusSpawn", _name);
-	_events->RemoveListener<const buuid&>("ServerSend_BonusDeSpawn", _name);
+	_events->RemoveListener("ServerSend_BonusSpawn", _name);
+	_events->RemoveListener("ServerSend_BonusDeSpawn", _name);
 
-	_events->RemoveListener<const std::string&, const buuid&>("ServerSend_FortressChange", _name);
+	_events->RemoveListener("ServerSend_FortressChange", _name);
 
-	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetActivate", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener<const std::string&>("ServerSend_OnHelmetDeactivate", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener<const std::string&>("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener<const std::string&>("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener<const std::string&, const std::string&>("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener("ServerSend_OnHelmetActivate", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener("ServerSend_OnHelmetDeactivate", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
+	// _events->RemoveListener("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
 }
 
 void Server::DoAccept()

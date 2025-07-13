@@ -19,7 +19,7 @@ void InputProviderForMenu::Subscribe()
 
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
@@ -33,7 +33,7 @@ void InputProviderForMenu::SubscribeAsClient()
 	{
 		_keys.pause = !_keys.pause;
 
-		_events->EmitEvent<const bool>("Pause_Status", _keys.pause);
+		_events->EmitEvent("Pause_Status", _keys.pause);
 	});
 }
 
@@ -41,7 +41,7 @@ void InputProviderForMenu::Unsubscribe() const
 {
 	_events->RemoveListener("Menu_Released", _name);
 	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -58,7 +58,7 @@ void InputProviderForMenu::TogglePause()
 {
 	_keys.pause = !_keys.pause;
 
-	_events->EmitEvent<const bool>("Pause_Status", _keys.pause);
+	_events->EmitEvent("Pause_Status", _keys.pause);
 }
 
 void InputProviderForMenu::ToggleMenuInputSubscription()

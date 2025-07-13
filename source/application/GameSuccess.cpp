@@ -80,7 +80,7 @@ void GameSuccess::Subscribe()
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
 
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
@@ -105,7 +105,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
 
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 }
 
 void GameSuccess::LoadMap() const
@@ -151,7 +151,7 @@ void GameSuccess::PrevGameMode()
 	const int newMode = mode < minMode ? maxMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
-	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
+	_events->EmitEvent("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
 void GameSuccess::NextGameMode()
@@ -164,7 +164,7 @@ void GameSuccess::NextGameMode()
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
-	_events->EmitEvent<const GameMode>("SelectedGameModeChangedTo", _selectedGameMode);
+	_events->EmitEvent("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
 Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
@@ -292,7 +292,7 @@ void GameSuccess::MainLoop()
 				if (_gameMode != GameMode::PlayAsClient)
 				{
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
-					_events->EmitEvent<const float>("TickUpdate", deltaTime);
+					_events->EmitEvent("TickUpdate", deltaTime);
 
 					_tankSpawner->RespawnTanks();
 				}
@@ -335,5 +335,5 @@ void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 {
 	_gameMode = selectedGameMode;
 
-	_events->EmitEvent<const GameMode>("GameModeChangedTo", _gameMode);
+	_events->EmitEvent("GameModeChangedTo", _gameMode);
 }

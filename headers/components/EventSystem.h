@@ -3,132 +3,226 @@
 #include <chrono>
 #include <functional>
 #include <string>
-#include <variant>
-// #include <iostream>
+#include <type_traits>
+#include <typeinfo>
+#include <unordered_map>
 
-enum class AnimationType : char8_t;
+// traits for deducing types
+template<typename T>
+struct callable_signature;
 
-namespace boost::uuids
+// Lambda с operator()
+template<typename T> requires requires { &T::operator(); }
+struct callable_signature<T> : callable_signature<decltype(&T::operator())> {};
+
+// Const lambda without arguments
+template<typename Class>
+struct callable_signature<void(Class::*)() const>
 {
-	struct uuid;
-}
+	template<typename CallableT>
+	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
+	                              CallableT&& callback)
+	{
+		eventSystem->template AddListenerImpl<>(eventName, listenerName, std::forward<CallableT>(callback));
+	}
+};
 
-enum class TankType : char8_t;
-enum class ObstacleType : char8_t;
-enum class BonusType : char8_t;
-enum class Direction : char8_t;
-enum class GameMode : char8_t;
-struct FPoint;
-struct ObjRectangle;
-class BaseObj;
+// Mutable lambda without arguments
+template<typename Class>
+struct callable_signature<void(Class::*)()>
+{
+	template<typename CallableT>
+	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
+	                              CallableT&& callback)
+	{
+		eventSystem->template AddListenerImpl<>(eventName, listenerName, std::forward<CallableT>(callback));
+	}
+};
+
+// Const lambda with arguments
+template<typename Class, typename R, typename... Args>
+struct callable_signature<R(Class::*)(Args...) const>
+{
+	template<typename CallableT>
+	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
+	                              CallableT&& callback)
+	{
+		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+	}
+};
+
+// mutable lambda with arguments
+template<typename Class, typename R, typename... Args>
+struct callable_signature<R(Class::*)(Args...)>
+{
+	template<typename CallableT>
+	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
+	                              CallableT&& callback)
+	{
+		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+	}
+};
+
+// function pointers
+template<typename R, typename... Args>
+struct callable_signature<R(*)(Args...)>
+{
+	template<typename CallableT>
+	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
+	                              CallableT&& callback)
+	{
+		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+	}
+};
+
+// std::function
+template<typename R, typename... Args>
+struct callable_signature<std::function<R(Args...)>>
+{
+	template<typename CallableT>
+	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
+	                              CallableT&& callback)
+	{
+		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+	}
+};
+
+// concepts for check a callable object
+template<typename T>
+concept Callable = requires { typename callable_signature<T>; };
+
+class BaseEvent
+{
+public:
+	virtual ~BaseEvent() = default;
+	virtual void RemoveListener(const std::string& listenerName) = 0;
+	virtual bool HasListeners() const = 0;
+};
 
 template<typename... Args>
-struct Event final
+class Event final : public BaseEvent
 {
-	using listenerCallback = std::function<void(Args...)>;
+public:
+	using callbackType = std::function<void(Args...)>;
 
-	// template<typename... Args>
-	void AddListener(const std::string& listenerName, listenerCallback callback)
+	void AddListener(const std::string& listenerName, callbackType callback)
 	{
 		_listeners[listenerName] = std::move(callback);
 	}
 
-
-	// template<typename ... TypeArgs>
-	// template<typename ... ParamArgs>
-	// void Event<TypeArgs...>::Emit(ParamArgs&&... args) {
-	// 	for (auto& [_, callback]: _listeners)
-	// 	{
-	// 		callback(static_cast<TypeArgs>(std::forward<ParamArgs>(args)...));
-	// 	}
-	// }
-
-	// template<typename... Args>
-	void Emit(Args&&... args)
+	template<typename... FwdArgs>
+	void Emit(FwdArgs&&... args)
 	{
-		for (auto& [_, callback]: _listeners)
+		for (const auto& [_, callback]: _listeners)
 		{
-			//TODO: check proper using forward types should be different event and event args
-			//callback(std::forward<EmitArgs>(args)...);
-			callback(std::forward<Args>(args)...);
+			callback(std::forward<FwdArgs>(args)...);
 		}
 	}
 
-	// template<typename... Args>
-	void RemoveListener(const std::string& listenerName) { _listeners.erase(listenerName); }
+	void RemoveListener(const std::string& listenerName) override { _listeners.erase(listenerName); }
+
+	bool HasListeners() const override { return !_listeners.empty(); }
 
 private:
-	std::unordered_map<std::string, listenerCallback> _listeners;
+	std::unordered_map<std::string, callbackType> _listeners;
 };
 
 class EventSystem final
 {
-	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
+	// storing info about an event type
+	struct EventInfo
+	{
+		std::unique_ptr<BaseEvent> event;
+		std::type_info const* type_info;
 
-	using allEventTypes = std::variant<
-		Event<>,// regular events eg method call
-		Event<const float>,// tickUpdate(deltaTime)
-		Event<const int>,// received healthChange(val)
-		Event<const bool>,// pause keyStatus
-		Event<const GameMode>,// gameMode switch
-		Event<const buuid&>,// tankDied, tankSpawn, send/received bonusDeSpawn, send/received bulletDispose
-		Event<const std::string&>,// send bonusEffect, animationUpdate
-		Event<const BaseObj*>,// draw obj
-		Event<const Direction, const buuid&>,// received tankShot(dir,uuid)
-		Event<const TankType, const buuid&>,// send/received respawnTank(type,uuid)
-		Event<const std::string&, const buuid&>,// send fortressChange(state,uuid)
-		Event<const std::string&, const int>,// local respawn resource changed(who,val)
-		Event<const std::string&, const bool>,// bonus status effect changed(name/team,isActive)
-		Event<const std::string&, const milliseconds>,// bonus effect activates (author/fraction,duration)
-		Event<const std::string&, const std::string&>,// (author,fraction) stat, bonusEffect,obstacleDied send/recieved
-		Event<const FPoint, const BonusType, const buuid&>,// send/received bonusSpawn(pos,bonusType,uuid)
-		Event<const ObjRectangle, const ObstacleType, const buuid&>,// send/received obstacleSpawn(rect,obstType,uuid)
-		Event<const FPoint, const Direction, const buuid&>,// received posChange(pos,dir,uuid)
-		Event<const std::string&, const int, const buuid&>,// send healthChanged(who,val,uuid),
-		Event<const std::string&, const Direction, const buuid&>,// send tankShot(who,dir,uuid)
-		Event<const std::string&, const std::string&, const std::string&>,// send/received stat(who,author,fraction)
-		Event<const std::string&, const std::string&, const milliseconds>,// bonusEffect(author,fraction,duration)
-		Event<const std::string&, const FPoint, const Direction, const buuid&>,// send posChange(who,pos,dir,uuid)
-		//Separation for Camomile purposes (to track added events)
-		Event<const ObjRectangle>,// animation of bullet explosion
-		Event<const std::string&, const ObjRectangle>,// local Explosion animation
-		Event<const AnimationType, const ObjRectangle&, const buuid&>//local send/recived animCreate(type,rect,uuid)
-	>;
+		EventInfo(std::unique_ptr<BaseEvent> ev, std::type_info const* ti)
+			: event(std::move(ev)), type_info(ti) {}
+	};
 
-	std::unordered_map<std::string, allEventTypes> _events;
+	std::unordered_map<std::string, EventInfo> _events;
+
+	// Helper for getting a typed event
+	template<typename... Args>
+	Event<Args...>* GetTypedEvent(const std::string& eventName)
+	{
+		if (const auto it = _events.find(eventName);
+			it != _events.end() && *it->second.type_info == typeid(Event<Args...>))
+		{
+			return static_cast<Event<Args...>*>(it->second.event.get());
+		}
+
+		return nullptr;
+	}
 
 public:
-	template<typename... Args>
-	void AddListener(const std::string& eventName, const std::string& listenerName, auto callback)
+	// Main overload for auto-deducing types
+	template<Callable CallableT>
+	void AddListener(const std::string& eventName, const std::string& listenerName, CallableT&& callback)
 	{
-		if (!std::holds_alternative<Event<Args...>>(_events[eventName]))
-		{
-			_events[eventName] = Event<Args...>{};
-		}
-
-		std::get<Event<Args...>>(_events[eventName]).AddListener(listenerName, std::move(callback));
+		callable_signature<std::decay_t<CallableT>>::call_add_listener(this, eventName, listenerName,
+		                                                               std::forward<CallableT>(callback));
 	}
 
-	template<typename... Args>
-	void EmitEvent(const std::string& eventName, Args&... args)
+	// internal implementation for concrete types (used in callable_signature)
+	template<typename... Args, Callable CallableT>
+	void AddListenerImpl(const std::string& eventName, const std::string& listenerName, CallableT&& callback)
 	{
-		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
+		//create new if not exist
+		if (const auto it = _events.find(eventName);
+			it == _events.end())
 		{
-			std::get<Event<Args...>>(_events[eventName]).Emit(std::forward<Args>(args)...);
+			_events.emplace(eventName, EventInfo{std::make_unique<Event<Args...>>(), &typeid(Event<Args...>)});
+		}
+
+		//add subscription
+		if (auto* event = GetTypedEvent<Args...>(eventName))
+		{
+			event->AddListener(listenerName, std::forward<CallableT>(callback));
 		}
 	}
 
+	// Overload for an explicit argument type set std::function
+	// template<typename... Args>
+	// void AddListener(const std::string& eventName, const std::string& listenerName,
+	//                  std::function<void(Args...)> callback)
+	// {
+	// 	AddListenerImpl<Args...>(eventName, listenerName, std::move(callback));
+	// }
+
+	// EmitEvent with auto-deducing types
 	template<typename... Args>
+	void EmitEvent(const std::string& eventName, Args&&... args)
+	{
+		if (auto* event = GetTypedEvent<std::decay_t<Args>...>(eventName))
+		{
+			event->Emit(std::forward<Args>(args)...);
+		}
+	}
+
 	void RemoveListener(const std::string& eventName, const std::string& listenerName)
 	{
-		if (std::holds_alternative<Event<Args...>>(_events[eventName]))
+		if (const auto it = _events.find(eventName);
+			it != _events.end())
 		{
-			std::get<Event<Args...>>(_events[eventName]).RemoveListener(listenerName);
-			// std::cout << "[" << "EventSystem::RemoveListener" << "] "
-			// 			<< ", eventName=" << eventName
-			// 			<< ", listenerName=" << listenerName
-			// 			<< std::endl;
+			it->second.event->RemoveListener(listenerName);
 		}
 	}
+
+	bool HasEvent(const std::string& eventName) const { return _events.contains(eventName); }
+
+	bool HasListeners(const std::string& eventName) const
+	{
+		const auto it = _events.find(eventName);
+		return it != _events.end() && it->second.event->HasListeners();
+	}
+
+	// Get event info
+	// template<typename... Args>
+	// bool IsEventOfType(const std::string& eventName) const
+	// {
+	// 	const auto it = _events.find(eventName);
+	// 	return it != _events.end() && *it->second.type_info == typeid(Event<Args...>);
+	// }
 };
+
+//TODO: how to improve, duplicated code, std::string_view, NRVO, remove std::function, cleanup

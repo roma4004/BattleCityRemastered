@@ -33,8 +33,8 @@ TextureManager::~TextureManager()
 
 void TextureManager::Subscribe()
 {
-	_events->AddListener<const BaseObj*>("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
-	_events->AddListener<const BaseObj*>("DrawHealthBarObj", _name, [this](const BaseObj* baseObj)
+	_events->AddListener("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
+	_events->AddListener("DrawHealthBarObj", _name, [this](const BaseObj* baseObj)
 	{
 		this->DrawHealthBar(baseObj);
 	});
@@ -42,8 +42,8 @@ void TextureManager::Subscribe()
 
 void TextureManager::Unsubscribe() const
 {
-	_events->RemoveListener<const BaseObj*>("DrawObj", _name);
-	_events->RemoveListener<const BaseObj*>("DrawHealthBarObj", _name);
+	_events->RemoveListener("DrawObj", _name);
+	_events->RemoveListener("DrawHealthBarObj", _name);
 }
 
 void TextureManager::ClearColorTextureCache()

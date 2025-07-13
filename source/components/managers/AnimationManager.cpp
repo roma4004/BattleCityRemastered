@@ -22,7 +22,7 @@ void AnimationManager::Subscribe()
 {
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
@@ -31,14 +31,14 @@ void AnimationManager::Subscribe()
 	});
 
 	_events->AddListener("AnimationUpdate", _name, [this]() { Update(); });
-	_events->AddListener<const buuid&>("AnimationTankUpdate", _name, [this](const buuid& uuid) { UpdateTank(uuid); });
+	_events->AddListener("AnimationTankUpdate", _name, [this](const buuid& uuid) { UpdateTank(uuid); });
 
 	//_events->AddListener("AnimationWaterUpdate", _name, [this]() { UpdateWater(); });
 }
 
 void AnimationManager::SubscribeAsHost()
 {
-	_events->AddListener<const AnimationType, const ObjRectangle&, const buuid&>(
+	_events->AddListener(
 			"AnimationCreate", _name,
 			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
 			{
@@ -75,7 +75,7 @@ void AnimationManager::SubscribeAsHost()
 
 void AnimationManager::SubscribeAsClient()
 {
-	_events->AddListener<const AnimationType, const ObjRectangle&, const buuid&>(
+	_events->AddListener(
 			"ClientReceived_AnimationCreate", _name,
 			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
 			{
@@ -109,20 +109,20 @@ void AnimationManager::SubscribeAsClient()
 void AnimationManager::Unsubscribe() const
 {
 	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("AnimationUpdate", _name);
-	_events->RemoveListener<const buuid&>("AnimationTankUpdate", _name);
+	_events->RemoveListener("AnimationTankUpdate", _name);
 }
 
 void AnimationManager::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const AnimationType, const ObjRectangle&, const buuid&>(
+	_events->RemoveListener(
 			"ClientReceived_AnimationCreate", _name);
 }
 
 void AnimationManager::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const AnimationType, const ObjRectangle&, const buuid&>("AnimationCreate", _name);
+	_events->RemoveListener("AnimationCreate", _name);
 }
 
 void AnimationManager::Create(const std::string& name, const AnimationType type, const ObjRectangle rect,

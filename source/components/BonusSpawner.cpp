@@ -43,7 +43,7 @@ BonusSpawner::~BonusSpawner()
 
 void BonusSpawner::Subscribe()
 {
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
@@ -64,7 +64,7 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _name, [this](const float /*deltaTime*/)
+	_events->AddListener("TickUpdate", _name, [this](const float /*deltaTime*/)
 	{
 		this->Update();
 	});
@@ -72,8 +72,9 @@ void BonusSpawner::SubscribeAsHost()
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const BonusType, const buuid&>(
-			"ClientReceived_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const buuid& uuid)
+	_events->AddListener(
+			"ClientReceived_BonusSpawn", _name,
+			[this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
 				const auto size = static_cast<float>(_bonusSize);
 				const int color = RandUtils::GetRandNumber(_distRandColor);
@@ -84,19 +85,19 @@ void BonusSpawner::SubscribeAsClient()
 
 void BonusSpawner::Unsubscribe() const
 {
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 
 	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 }
 
 void BonusSpawner::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _name);
+	_events->RemoveListener("TickUpdate", _name);
 }
 
 void BonusSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const BonusType, const buuid&>("ClientReceived_BonusSpawn", _name);
+	_events->RemoveListener("ClientReceived_BonusSpawn", _name);
 }
 
 void BonusSpawner::Update()

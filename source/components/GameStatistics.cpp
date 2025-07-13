@@ -17,7 +17,7 @@ GameStatistics::~GameStatistics()
 void GameStatistics::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->OnGameModeChangedTo(newGameMode);
 	});
@@ -28,40 +28,41 @@ void GameStatistics::Subscribe()
 void GameStatistics::SubscribeHost()
 {
 	//TODO: replace <std::string> with <Enum::statisticsType>
-	_events->AddListener<const std::string&, const std::string&>(
+	_events->AddListener(
 			"Statistics_BulletHit", _name,
 			[this](const std::string& author, const std::string& fraction) { this->OnBulletHit(author, fraction); });
 
-	_events->AddListener<const std::string&, const std::string&, const std::string&>(
+	_events->AddListener(
 			"Statistics_TankHit", _name,
 			[this](const std::string& whoHit, const std::string& author, const std::string& fraction)
 			{
 				this->OnTankHit(whoHit, author, fraction);
 			});
 
-	_events->AddListener<const std::string&, const std::string&, const std::string&>(
+	_events->AddListener(
 			"Statistics_TankDied", _name,
 			[this](const std::string& whoDied, const std::string& author, const std::string& fraction)
 			{
 				this->OnTankDied(whoDied, author, fraction);
 			});
 
-	_events->AddListener<const std::string&, const std::string&>(
+	_events->AddListener(
 			"Statistics_BrickWallDied", _name,
 			[this](const std::string& author, const std::string& fraction) { OnBrickWallDied(author, fraction); });
 
-	_events->AddListener<const std::string&, const std::string&>(
+	_events->AddListener(
 			"Statistics_SteelWallDied", _name,
 			[this](const std::string& author, const std::string& fraction) { OnSteelWallDied(author, fraction); });
 }
 
 void GameStatistics::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&, const std::string&, const std::string&>("ClientReceived_Statistics", _name,
-		[this](const std::string& type, const std::string& author, const std::string& fraction)
-		{
-			this->OnClientStatisticsChange(type, author, fraction);
-		});
+	_events->AddListener(
+			"ClientReceived_Statistics", _name,
+			[this](const std::string& type, const std::string& author, const std::string& fraction)
+			{
+				this->OnClientStatisticsChange(type, author, fraction);
+			});
 }
 
 void GameStatistics::Unsubscribe() const
@@ -73,18 +74,17 @@ void GameStatistics::Unsubscribe() const
 
 void GameStatistics::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const std::string&, const std::string&>("Statistics_BulletHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("Statistics_TankHit", _name);
-	_events->RemoveListener<const std::string&, const std::string&, const std::string&>("Statistics_TankDied", _name);
+	_events->RemoveListener("Statistics_BulletHit", _name);
+	_events->RemoveListener("Statistics_TankHit", _name);
+	_events->RemoveListener("Statistics_TankDied", _name);
 
-	_events->RemoveListener<const std::string&, const std::string&>("Statistics_BrickWallDied", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("Statistics_SteelWallDied", _name);
+	_events->RemoveListener("Statistics_BrickWallDied", _name);
+	_events->RemoveListener("Statistics_SteelWallDied", _name);
 }
 
 void GameStatistics::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const std::string&, const std::string&>(
-			"ClientReceived_Statistics", _name);
+	_events->RemoveListener("ClientReceived_Statistics", _name);
 }
 
 void GameStatistics::OnGameModeChangedTo(const GameMode newGameMode)
@@ -164,8 +164,7 @@ void GameStatistics::OnBulletHit(const std::string& author, const std::string& f
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "BulletHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "BulletHit", author, fraction);
 	}
 }
 
@@ -189,8 +188,7 @@ void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fr
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "EnemyHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "EnemyHit", author, fraction);
 	}
 }
 
@@ -210,8 +208,7 @@ void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "PlayerOneHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "PlayerOneHit", author, fraction);
 	}
 }
 
@@ -231,8 +228,7 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "PlayerTwoHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "PlayerTwoHit", author, fraction);
 	}
 }
 
@@ -272,8 +268,7 @@ void GameStatistics::OnEnemyDied(const std::string& author, const std::string& f
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "EnemyDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "EnemyDied", author, fraction);
 	}
 }
 
@@ -293,8 +288,7 @@ void GameStatistics::OnPlayerOneDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "PlayerOneDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "PlayerOneDied", author, fraction);
 	}
 }
 
@@ -314,8 +308,7 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "PlayerTwoDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "PlayerTwoDied", author, fraction);
 	}
 }
 
@@ -355,8 +348,7 @@ void GameStatistics::OnBrickWallDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "BrickWallDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "BrickWallDied", author, fraction);
 	}
 }
 
@@ -380,8 +372,7 @@ void GameStatistics::OnSteelWallDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ServerSend_Statistics", "SteelWallDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "SteelWallDied", author, fraction);
 	}
 }
 

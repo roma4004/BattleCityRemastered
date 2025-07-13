@@ -38,7 +38,7 @@ void Pawn::Subscribe()
 
 void Pawn::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const float deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -46,7 +46,7 @@ void Pawn::SubscribeAsHost()
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const Direction, const buuid&>(
+	_events->AddListener(
 			"ClientReceived_" + _name + "Pos", _nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
 			{
@@ -59,12 +59,10 @@ void Pawn::SubscribeAsClient()
 				this->SetPos(newPos);
 			});
 
-	_events->AddListener<const int>(
-			"ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid,
-			[this](const int health)
-			{
-				this->SetHealth(health);
-			});
+	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
+	{
+		this->SetHealth(health);
+	});
 }
 
 void Pawn::Unsubscribe() const
@@ -81,14 +79,13 @@ void Pawn::Unsubscribe() const
 
 void Pawn::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
+	_events->RemoveListener("TickUpdate", _nameWithUuid);
 }
 
 void Pawn::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const Direction, const buuid&>(
-			"ClientReceived_" + _name + "Pos", _nameWithUuid);
-	_events->RemoveListener<const int>("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "Pos", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
 void Pawn::SetHealth(const int health)
@@ -111,7 +108,7 @@ void Pawn::TakeDamage(const int damage)
 	// }
 }
 
-void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
+void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
 
 UPoint Pawn::GetWindowSize() const { return _windowSize; }
 
@@ -128,12 +125,11 @@ bool Pawn::Move(const float deltaTime)
 	const bool isMove = _moveBeh->Move(deltaTime);
 	if (isMove)
 	{
-		_events->EmitEvent<const buuid&>("AnimationTankUpdate", _uuid);
+		_events->EmitEvent("AnimationTankUpdate", _uuid);
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
-					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 		}
 	}
 

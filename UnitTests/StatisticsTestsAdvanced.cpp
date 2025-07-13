@@ -79,7 +79,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
@@ -95,7 +95,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);

@@ -85,7 +85,7 @@ TEST_F(BonusTest, BonusPickUp)
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_FALSE(bonus->GetIsAlive());
 		EXPECT_LT(size, _allObjects.size());
@@ -104,7 +104,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 		const size_t size = _allObjects.size();
 		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 		_events->EmitEvent("W_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
 			EXPECT_NE(bonus->GetIsAlive(), false);
@@ -139,11 +139,11 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{});
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint enemyPos = enemy->GetPos();
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(enemyPos, enemy->GetPos());
 
@@ -173,7 +173,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 
 		const FPoint enemyPos = enemy->GetPos();
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_NE(enemyPos, enemy->GetPos());
 
@@ -192,7 +192,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
 		_events->EmitEvent("S_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
 			EXPECT_EQ(bonus->GetIsAlive(), false);
@@ -217,7 +217,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 
 		if (dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(playerHealth, player->GetHealth());
 
@@ -239,7 +239,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
 		_events->EmitEvent("W_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
 			EXPECT_NE(bonus->GetIsAlive(), false);
@@ -262,7 +262,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 				std::make_shared<Bullet>(
 						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_NE(playerHealth, player->GetHealth());
 
@@ -287,7 +287,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	if (const auto bonus = _allObjects.back().get())
 	{
@@ -316,7 +316,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	if (const auto bonus = _allObjects.back().get())
 	{
@@ -341,7 +341,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	EXPECT_EQ(bonus->GetIsAlive(), true);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(bonus->GetIsAlive(), false);
 
@@ -356,7 +356,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 	const int playerSpawnResource = _tankSpawner->GetPlayerOneRespawnResource();
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	if (const auto bonus = _allObjects.back().get())
 	{
@@ -380,7 +380,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 
 		EXPECT_EQ(player->GetTier(), 1);
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		if (const auto bonus = _allObjects.back().get())
 		{
@@ -409,7 +409,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 
 		EXPECT_EQ(player->GetTier(), 1);
 
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		if (const auto bonus = _allObjects.back().get())
 		{
@@ -441,7 +441,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_TRUE(fortressWall->IsSteelWall());
 }
@@ -459,7 +459,7 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 }

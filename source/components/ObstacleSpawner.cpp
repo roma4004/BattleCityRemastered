@@ -35,7 +35,7 @@ ObstacleSpawner::~ObstacleSpawner()
 
 void ObstacleSpawner::Subscribe()
 {
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
@@ -44,8 +44,7 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
-			"ClientReceived_ObstacleSpawn", _name,
+	_events->AddListener("ClientReceived_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
 				SpawnObstacle(rect, type, uuid);
@@ -54,7 +53,7 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::Unsubscribe() const
 {
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -64,8 +63,7 @@ void ObstacleSpawner::Unsubscribe() const
 
 void ObstacleSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const ObjRectangle, const ObstacleType, const buuid&>(
-			"ClientReceived_ObstacleSpawn", _name);
+	_events->RemoveListener("ClientReceived_ObstacleSpawn", _name);
 }
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
