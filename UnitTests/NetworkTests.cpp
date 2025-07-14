@@ -37,18 +37,19 @@ TEST_F(NetworkTest, PosEventReplication)
 	constexpr FPoint posOrigin{42.f, 42.f};
 	constexpr auto directionOrigin{Direction::UP};
 
-	std::promise<std::tuple<FPoint, Direction, buuid>> promise;
+	std::promise<std::tuple<FPoint, Direction, buuid>> promise{};
 	auto future = promise.get_future();
 
+	const std::string name("TestTank");
 	events->AddListener(
-			"ClientReceived_TestTankPos", "PosEventReplication",
+			"ClientReceived_" + name + "Pos", "PosEventReplication",
 			[&promise](const FPoint newPos, const Direction dir, const buuid& uuid)
 			{
 				promise.set_value({newPos, dir, uuid});
 			});
 
 	events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Pos", "TestTank", posOrigin, directionOrigin, _uuid);
+	events->EmitEvent("ServerSend_Pos", name, posOrigin, directionOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
@@ -59,6 +60,8 @@ TEST_F(NetworkTest, PosEventReplication)
 	EXPECT_EQ(posOrigin, posReplicated);
 	EXPECT_EQ(directionOrigin, dirReplicated);
 	EXPECT_EQ(_uuid, uuidReplicated);
+
+	events->RemoveListener("ClientReceived_" + name + "Pos", "PosEventReplication");
 }
 
 TEST_F(NetworkTest, ShotEventReplication)
@@ -69,16 +72,17 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	constexpr auto direction{Direction::UP};
+	constexpr Direction direction{Direction::UP};
 
-	std::promise<std::pair<Direction, buuid>> promise;
+	std::promise<std::pair<Direction, buuid>> promise{};
 	auto future = promise.get_future();
 
-	events->AddListener("ClientReceived_TestTankShot", "ShotEventReplication",
+	const auto name = std::string("TestTank");
+	events->AddListener("ClientReceived_" + name + "Shot", "ShotEventReplication",
 	                    [&promise](const Direction dir, const buuid& uuid) { promise.set_value({dir, uuid}); });
 
 	events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Shot", "TestTank", direction, _uuid);
+	events->EmitEvent("ServerSend_Shot", name, direction, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
@@ -88,6 +92,8 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	EXPECT_EQ(direction, dirReplicated);
 	EXPECT_EQ(_uuid, uuidReplicated);
+
+	events->RemoveListener("ClientReceived_" + name + "Shot", "ShotEventReplication");
 }
 
 TEST_F(NetworkTest, HealthEventReplication)
@@ -100,7 +106,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	constexpr int healthOrigin{42};
 
-	std::promise<int> promise;
+	std::promise<int> promise{};
 	auto future = promise.get_future();
 
 	const auto name = std::string("TestTank");
@@ -119,6 +125,8 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	const auto healthReplicated = future.get();
 	EXPECT_EQ(healthOrigin, healthReplicated);
+
+	events->RemoveListener("ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication");
 }
 
 TEST_F(NetworkTest, DisposeEventReplication)
@@ -129,7 +137,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	std::promise<buuid> promise;
+	std::promise<buuid> promise{};
 	auto future = promise.get_future();
 
 	const auto name = std::string("Bullet");
@@ -146,6 +154,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
+
+	events->RemoveListener("ClientReceived_" + name + "Dispose", "DisposeEventReplication");
 }
 
 //TODO: cover all statistics items like this
@@ -155,7 +165,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	std::promise<std::tuple<std::string, std::string, std::string>> promise;
+	std::promise<std::tuple<std::string, std::string, std::string>> promise{};
 	auto future = promise.get_future();
 
 	events->AddListener(
@@ -166,8 +176,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 			});
 
 	events->EmitEvent("Server_StartFrame");
-	events->EmitEvent(
-			"ServerSend_Statistics", "BulletHit", "author", "fraction");
+	events->EmitEvent("ServerSend_Statistics", "BulletHit", "author", "fraction");
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
@@ -177,6 +186,8 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	EXPECT_EQ("BulletHit", type);
 	EXPECT_EQ("author", author);
 	EXPECT_EQ("fraction", fraction);
+
+	events->RemoveListener("ClientReceived_Statistics", "StatisticsEventReplication");
 }
 
 //TODO: write retry 3 times logic if failure
@@ -188,13 +199,13 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	std::promise<std::tuple<std::string, buuid>> promiseDied;
+	std::promise<std::tuple<std::string, buuid>> promiseDied{};
 	auto futureDied = promiseDied.get_future();
 
-	std::promise<std::tuple<std::string, buuid>> promiseToBrick;
+	std::promise<std::tuple<std::string, buuid>> promiseToBrick{};
 	auto futureToBrick = promiseToBrick.get_future();
 
-	std::promise<std::tuple<std::string, buuid>> promiseToSteel;
+	std::promise<std::tuple<std::string, buuid>> promiseToSteel{};
 	auto futureToSteel = promiseToSteel.get_future();
 
 	events->AddListener(
@@ -241,6 +252,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	const auto& [stateToSteel, uuidToSteel] = futureToSteel.get();
 	EXPECT_EQ("ToSteel", stateToSteel);
 	EXPECT_EQ(_uuid, uuidToSteel);
+
+	events->RemoveListener("ClientReceived_FortressChange", "FortressChangeEventReplication");
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
@@ -251,7 +264,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	std::promise<std::tuple<FPoint, BonusType, buuid>> promise;
+	std::promise<std::tuple<FPoint, BonusType, buuid>> promise{};
 	auto future = promise.get_future();
 
 	events->AddListener(
@@ -274,6 +287,8 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	EXPECT_EQ(pos, posReplicated);
 	EXPECT_EQ(type, typeReplicated);
 	EXPECT_EQ(_uuid, uuid);
+
+	events->RemoveListener("ClientReceived_BonusSpawn", "BonusSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusDeSpawnEventReplication)
@@ -300,6 +315,8 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
+
+	events->RemoveListener("ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
@@ -313,7 +330,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	constexpr auto obstacleType = ObstacleType::Brick;
 	constexpr ObjRectangle rectOrigin{42.0f, 43.0f, 44.0f, 45.0f};
 
-	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise;
+	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise{};
 	auto future = promise.get_future();
 
 	events->AddListener(
@@ -337,6 +354,8 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	EXPECT_EQ(rectOrigin.h, rect.h);
 	EXPECT_EQ(obstacleType, type);
 	EXPECT_EQ(_uuid, uuid);
+
+	events->RemoveListener("ClientReceived_ObstacleSpawn", "ObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
@@ -396,6 +415,8 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			EXPECT_EQ(obstacleType, type);
 			EXPECT_EQ(_uuid, uuid);
 		}
+
+	events->RemoveListener("ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
@@ -437,6 +458,8 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		EXPECT_EQ(tankTypes[i], typeReplicated);
 		EXPECT_EQ(_uuid, uuid);
 	}
+
+	events->RemoveListener("ClientReceived_RespawnTank", "RespawnTankEventReplication");
 }
 
 //TODO: write test for respawn resource change

@@ -2,10 +2,51 @@
 
 #include <chrono>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
+
+namespace detail
+{
+	// Type adapter for auto conversion const char* to std::string
+	template<typename T>
+	struct type_adapter
+	{
+		using type = T;
+	};
+
+	// specialization for const char*
+	template<>
+	struct type_adapter<const char*>
+	{
+		using type = std::string;
+	};
+
+	// specialization for char*
+	template<>
+	struct type_adapter<char*>
+	{
+		using type = std::string;
+	};
+
+	// specialization for char array
+	template<size_t N>
+	struct type_adapter<char[N]>
+	{
+		using type = std::string;
+	};
+
+	template<size_t N>
+	struct type_adapter<const char[N]>
+	{
+		using type = std::string;
+	};
+
+	template<typename T>
+	using type_adapter_t = typename type_adapter<std::decay_t<T>>::type;
+}
 
 // traits for deducing types
 template<typename T>
@@ -116,7 +157,20 @@ public:
 	{
 		for (const auto& [_, callback]: _listeners)
 		{
-			callback(std::forward<FwdArgs>(args)...);
+			try
+			{
+				callback(std::forward<FwdArgs>(args)...);
+			}
+			catch (const std::exception& e)
+			{
+				std::cerr << "Exception in event callback: " << e.what() << std::endl;
+				// continue listening to other events
+			}
+			catch (...)
+			{
+				std::cerr << "Unknown exception in event callback" << std::endl;
+			}
+
 		}
 	}
 
@@ -160,7 +214,7 @@ class EventSystem final
 	// Helper for getting event by name and argument count
 	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, size_t argCount)
 	{
-		if (const auto it = _events.find(eventName); 
+		if (const auto it = _events.find(eventName);
 			it != _events.end() && it->second.event->GetArgumentCount() == argCount)
 		{
 			return it->second.event.get();
@@ -220,8 +274,8 @@ public:
 		constexpr size_t argCount = sizeof...(Args);
 		if (auto* event = GetEventByNameAndArgCount(eventName, argCount))
 		{
-			// Приводим к нужному типу и вызываем
-			if (auto* typedEvent = static_cast<Event<std::decay_t<Args>...>*>(event))
+			// if (auto* typedEvent = static_cast<Event<std::decay_t<Args>...>*>(event))
+			if (auto* typedEvent = static_cast<Event<detail::type_adapter_t<Args>...>*>(event))
 			{
 				typedEvent->Emit(std::forward<Args>(args)...);
 			}
