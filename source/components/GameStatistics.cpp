@@ -30,7 +30,10 @@ void GameStatistics::SubscribeHost()
 	//TODO: replace <std::string> with <Enum::statisticsType>
 	_events->AddListener(
 			"Statistics_BulletHit", _name,
-			[this](const std::string& author, const std::string& fraction) { this->OnBulletHit(author, fraction); });
+			[this](const std::string& author, const std::string& fraction)
+			{
+				this->OnBulletHit(author, fraction);
+			});
 
 	_events->AddListener(
 			"Statistics_TankHit", _name,
@@ -48,11 +51,17 @@ void GameStatistics::SubscribeHost()
 
 	_events->AddListener(
 			"Statistics_BrickWallDied", _name,
-			[this](const std::string& author, const std::string& fraction) { OnBrickWallDied(author, fraction); });
+			[this](const std::string& author, const std::string& fraction)
+			{
+				OnBrickWallDied(author, fraction);
+			});
 
 	_events->AddListener(
 			"Statistics_SteelWallDied", _name,
-			[this](const std::string& author, const std::string& fraction) { OnSteelWallDied(author, fraction); });
+			[this](const std::string& author, const std::string& fraction)
+			{
+				OnSteelWallDied(author, fraction);
+			});
 }
 
 void GameStatistics::SubscribeAsClient()

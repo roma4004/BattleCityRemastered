@@ -38,7 +38,7 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 
 	tcp::resolver resolver(ioContext);
 	const auto endpointIterator = resolver.resolve(host, port);
-	boost::asio::async_connect(//TODO: extracto to reconect method
+	boost::asio::async_connect(//TODO: extract to reconnect method
 			_socket, endpointIterator,
 			[this](const boost::system::error_code& ec, tcp::endpoint /*endpoint_iterator*/)
 			{
@@ -294,7 +294,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_ObstacleSpawn", cmd->GetRect(),  cmd->GetObstacleType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
 	}
 }
 

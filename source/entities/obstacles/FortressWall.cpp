@@ -354,16 +354,16 @@ void FortressWall::SetIsAlive(const bool isAlive)
 	}, _obstacle);
 }
 
-const std::string& FortressWall::GetName() const
+std::string_view FortressWall::GetName() const
 {
-	return std::visit([&](auto&& obstacle)
+	return std::visit([this](auto&& obstacle) -> std::string_view
 	{
 		if (obstacle)
 		{
 			return obstacle->GetName();
 		}
 
-		return _name;//TODO: use string_view instead
+		return _name;
 	}, _obstacle);
 }
 

@@ -44,7 +44,7 @@ void AnimationManager::SubscribeAsHost()
 			{
 				switch (type)
 				{
-					case AnimationType::Spawn_Animation:
+					case AnimationType::Spawn_Animation: //TODO: maybe uniq id for each explosion for reusing bullet id
 						Create("SpawnAnimation", type, rect, uuid, 3);
 						//TODO:add is loop flag or separated container for expired explosion
 						break;

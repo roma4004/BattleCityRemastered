@@ -49,7 +49,7 @@ public:
 	void OnPlayerPickupShovel();
 	//TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
 
-	[[nodiscard]] const std::string& GetName() const override;
+	[[nodiscard]] std::string_view GetName() const override;
 	[[nodiscard]] buuid GetUuid() const override;
 
 	void TakeDamage(int damage) override;

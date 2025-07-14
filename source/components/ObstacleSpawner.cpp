@@ -44,7 +44,8 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_ObstacleSpawn", _name,
+	_events->AddListener(
+			"ClientReceived_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
 				SpawnObstacle(rect, type, uuid);

@@ -573,8 +573,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	{
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-						_gameMode));
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
+						_events, _uuid, _gameMode));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{

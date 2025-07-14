@@ -97,20 +97,9 @@ public:
 	void RespawnTanks();
 
 	// NOTE: for unit tests only:
-	[[nodiscard]] int GetEnemyRespawnResource() const
-	{
-		return _respawnResource[static_cast<std::size_t>(RespawnResource::ENEMY_ALL)];
-	}
-
-	[[nodiscard]] int GetPlayerOneRespawnResource() const
-	{
-		return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_ONE)];
-	}
-
-	[[nodiscard]] int GetPlayerTwoRespawnResource() const
-	{
-		return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_TWO)];
-	}
+	[[nodiscard]] int GetEnemyRespawnResource() const;
+	[[nodiscard]] int GetPlayerOneRespawnResource() const;
+	[[nodiscard]] int GetPlayerTwoRespawnResource() const;
 
 	void SetSlotNeedRespawn(int slotIndex);
 };

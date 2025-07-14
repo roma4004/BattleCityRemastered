@@ -132,7 +132,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 				.health = 1,
 				.speed = tank->GetBulletSpeed(),
 				.tier = tank->GetTier(),
-				.author = tank->GetName(),
+				.author = std::string(tank->GetName()),
 				.fraction = tank->GetFraction(),//TODO: replace fraction with enum
 				.uuid = uuid
 		};

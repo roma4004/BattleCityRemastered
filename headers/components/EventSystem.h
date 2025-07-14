@@ -97,6 +97,7 @@ public:
 	virtual ~BaseEvent() = default;
 	virtual void RemoveListener(const std::string& listenerName) = 0;
 	virtual bool HasListeners() const = 0;
+	virtual size_t GetArgumentCount() const = 0;
 };
 
 template<typename... Args>
@@ -122,6 +123,8 @@ public:
 	void RemoveListener(const std::string& listenerName) override { _listeners.erase(listenerName); }
 
 	bool HasListeners() const override { return !_listeners.empty(); }
+
+	size_t GetArgumentCount() const override { return sizeof...(Args); }
 
 private:
 	std::unordered_map<std::string, callbackType> _listeners;
@@ -151,6 +154,27 @@ class EventSystem final
 			return static_cast<Event<Args...>*>(it->second.event.get());
 		}
 
+		return nullptr;
+	}
+
+	// Helper for getting event by name and argument count
+	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, size_t argCount)
+	{
+		if (const auto it = _events.find(eventName); 
+			it != _events.end() && it->second.event->GetArgumentCount() == argCount)
+		{
+			return it->second.event.get();
+		}
+		return nullptr;
+	}
+
+	// Helper for getting any event by name without any checking
+	BaseEvent* GetEventByName(const std::string& eventName)
+	{
+		if (const auto it = _events.find(eventName); it != _events.end())
+		{
+			return it->second.event.get();
+		}
 		return nullptr;
 	}
 
@@ -189,22 +213,38 @@ public:
 	// 	AddListenerImpl<Args...>(eventName, listenerName, std::move(callback));
 	// }
 
-	// EmitEvent with auto-deducing types
+	// EmitEvent with auto-deducing types, find by name and argument count
 	template<typename... Args>
 	void EmitEvent(const std::string& eventName, Args&&... args)
 	{
-		if (auto* event = GetTypedEvent<std::decay_t<Args>...>(eventName))
+		constexpr size_t argCount = sizeof...(Args);
+		if (auto* event = GetEventByNameAndArgCount(eventName, argCount))
 		{
-			event->Emit(std::forward<Args>(args)...);
+			// Приводим к нужному типу и вызываем
+			if (auto* typedEvent = static_cast<Event<std::decay_t<Args>...>*>(event))
+			{
+				typedEvent->Emit(std::forward<Args>(args)...);
+			}
+		}
+	}
+
+	// spec with no arguments
+	void EmitEvent(const std::string& eventName)
+	{
+		if (auto* event = GetEventByNameAndArgCount(eventName, 0))
+		{
+			if (auto* typedEvent = static_cast<Event<>*>(event))
+			{
+				typedEvent->Emit();
+			}
 		}
 	}
 
 	void RemoveListener(const std::string& eventName, const std::string& listenerName)
 	{
-		if (const auto it = _events.find(eventName);
-			it != _events.end())
+		if (auto* event = GetEventByName(eventName))
 		{
-			it->second.event->RemoveListener(listenerName);
+			event->RemoveListener(listenerName);
 		}
 	}
 
@@ -216,13 +256,9 @@ public:
 		return it != _events.end() && it->second.event->HasListeners();
 	}
 
-	// Get event info
-	// template<typename... Args>
-	// bool IsEventOfType(const std::string& eventName) const
-	// {
-	// 	const auto it = _events.find(eventName);
-	// 	return it != _events.end() && *it->second.type_info == typeid(Event<Args...>);
-	// }
+	size_t GetEventArgumentCount(const std::string& eventName) const
+	{
+		const auto it = _events.find(eventName);
+		return it != _events.end() ? it->second.event->GetArgumentCount() : 0;
+	}
 };
-
-//TODO: how to improve, duplicated code, std::string_view, NRVO, remove std::function, cleanup

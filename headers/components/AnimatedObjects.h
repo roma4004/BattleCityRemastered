@@ -20,6 +20,7 @@ public:
 	GameMode gameMode{};
 	AnimationType type{};
 	bool markToDispose{false};
+	bool isSelfDraw{false};
 
 	void Draw(const BaseObj* obj) const override;
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;

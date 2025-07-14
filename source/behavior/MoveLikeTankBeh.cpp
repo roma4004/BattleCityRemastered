@@ -376,7 +376,7 @@ void MoveLikeTankBeh::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, 
 	{
 		if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
 		{
-			bonus->PickUpBonus(tank->GetName(), tank->GetFraction());
+			bonus->PickUpBonus(std::string(tank->GetName()), tank->GetFraction());
 			//TODO: destroy bonus on emit in PickUpBonus by subscription
 			target->TakeDamage(1);
 		}

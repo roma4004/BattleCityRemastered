@@ -33,6 +33,7 @@ TextureManager::~TextureManager()
 
 void TextureManager::Subscribe()
 {
+	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
 	_events->AddListener("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
 	_events->AddListener("DrawHealthBarObj", _name, [this](const BaseObj* baseObj)
 	{

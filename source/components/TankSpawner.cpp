@@ -369,6 +369,21 @@ void TankSpawner::RespawnTanks()
 	}
 }
 
+int TankSpawner::GetEnemyRespawnResource() const
+{
+	return _respawnResource[static_cast<std::size_t>(RespawnResource::ENEMY_ALL)];
+}
+
+int TankSpawner::GetPlayerOneRespawnResource() const
+{
+	return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_ONE)];
+}
+
+int TankSpawner::GetPlayerTwoRespawnResource() const
+{
+	return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_TWO)];
+}
+
 void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid)
 {
 	switch (type)

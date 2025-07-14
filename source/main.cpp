@@ -4,6 +4,7 @@
 #include "interfaces/IGame.h"
 #include "utils/NetworkLogger.h"
 
+//TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
 	NetworkLogger::SetConsoleLogging(true);
