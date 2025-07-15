@@ -17,10 +17,10 @@ public:
 	~CommandBatch() override = default;
 
 	void AddCommand(const std::shared_ptr<Command>& command);
-	[[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetCommands() const;
+	[[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetCommands() const noexcept;
 
-	[[nodiscard]] const char* GetClassNameW() const override;
-	[[nodiscard]] size_t GetSize() const;;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
+	[[nodiscard]] size_t GetSize() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);

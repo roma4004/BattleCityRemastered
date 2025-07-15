@@ -23,18 +23,18 @@ public:
 	BonusSpawn();
 
 	//for serialization
-	BonusSpawn(const FPoint& pos, BonusType bonusType, buuid uuid);
+	BonusSpawn(FPoint pos, BonusType bonusType, buuid uuid);
 
 	~BonusSpawn() override = default;
 
-	[[nodiscard]] FPoint GetPos() const;
-	[[nodiscard]] BonusType GetBonusType() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] FPoint GetPos() const noexcept;
+	[[nodiscard]] BonusType GetBonusType() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

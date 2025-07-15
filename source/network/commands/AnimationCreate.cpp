@@ -10,11 +10,11 @@ AnimationCreate::AnimationCreate(): Command(CommandType::ANIMATION_CREATE) {}
 
 using buuid = boost::uuids::uuid;
 
-AnimationCreate::AnimationCreate(const AnimationType type, const ObjRectangle rect, const buuid uuid)
-	: Command(CommandType::ANIMATION_CREATE), _type(type), _rect(rect), _uuid(uuid) {}
+AnimationCreate::AnimationCreate(const AnimationType type, const ObjRectangle rect, buuid uuid)
+	: Command(CommandType::ANIMATION_CREATE), _type(type), _rect(rect), _uuid(std::move(uuid)) {}
 
-AnimationType AnimationCreate::GetAnimationType() const { return _type; }
-ObjRectangle AnimationCreate::GetRect() const { return _rect; }
-buuid AnimationCreate::GetUuid() const { return _uuid; }
+AnimationType AnimationCreate::GetAnimationType() const noexcept { return _type; }
+ObjRectangle AnimationCreate::GetRect() const noexcept { return _rect; }
+buuid AnimationCreate::GetUuid() const noexcept { return _uuid; }
 
-const char* AnimationCreate::GetClassNameW() const { return "AnimationCreate"; }
+const char* AnimationCreate::GetClassNameW() const noexcept { return "AnimationCreate"; }

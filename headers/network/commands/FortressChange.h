@@ -21,17 +21,17 @@ public:
 	FortressChange();
 
 	//for serialization
-	FortressChange(const std::string& state, buuid uuid);
+	FortressChange(std::string state, buuid uuid);
 
 	~FortressChange() override = default;
 
-	[[nodiscard]] const std::string& GetState() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] std::string GetState() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

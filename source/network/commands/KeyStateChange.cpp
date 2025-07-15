@@ -8,9 +8,9 @@ BOOST_CLASS_EXPORT_IMPLEMENT(KeyStateChange);
 
 KeyStateChange::KeyStateChange(): Command(CommandType::KEY_STATE_CHANGE) {}
 
-KeyStateChange::KeyStateChange(const std::string& keyState)
-	: Command(CommandType::KEY_STATE_CHANGE), _keyState(keyState) {}
+KeyStateChange::KeyStateChange(std::string keyState)
+	: Command(CommandType::KEY_STATE_CHANGE), _keyState(std::move(keyState)) {}
 
-const std::string& KeyStateChange::GetKeyState() const { return _keyState; }
+std::string KeyStateChange::GetKeyState() const noexcept { return _keyState; }
 
-const char* KeyStateChange::GetClassNameW() const { return "KeyStateChange"; }
+const char* KeyStateChange::GetClassNameW() const noexcept { return "KeyStateChange"; }

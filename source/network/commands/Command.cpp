@@ -2,9 +2,9 @@
 
 Command::Command(const CommandType type) : _type(type) {}
 
-CommandType Command::GetType() const { return _type; }
+CommandType Command::GetType() const noexcept { return _type; }
 
-const char* Command::GetCommandType() const
+const char* Command::GetCommandType() const noexcept
 {
 	switch (_type)
 	{

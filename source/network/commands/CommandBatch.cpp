@@ -19,11 +19,8 @@ void CommandBatch::AddCommand(const std::shared_ptr<Command>& command)
 	}
 }
 
-const std::vector<std::shared_ptr<Command>>& CommandBatch::GetCommands() const
-{
-	return _commands;
-}
+const std::vector<std::shared_ptr<Command>>& CommandBatch::GetCommands() const noexcept { return _commands; }
 
-const char* CommandBatch::GetClassNameW() const { return "CommandBatch"; }
+const char* CommandBatch::GetClassNameW() const noexcept { return "CommandBatch"; }
 
-size_t CommandBatch::GetSize() const { return _commands.size(); }
+size_t CommandBatch::GetSize() const noexcept { return _commands.size(); }

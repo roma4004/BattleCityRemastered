@@ -14,8 +14,8 @@ class RespawnTank : public Command
 
 	friend class boost::serialization::access;
 
-	buuid _uuid{};
 	TankType _tankType{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
@@ -26,13 +26,13 @@ public:
 
 	~RespawnTank() override = default;
 
-	[[nodiscard]] TankType GetTankType() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] TankType GetTankType() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

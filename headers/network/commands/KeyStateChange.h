@@ -16,16 +16,16 @@ public:
 	KeyStateChange();
 
 	//for serialization
-	KeyStateChange(const std::string& keyState);
+	KeyStateChange(std::string keyState);
 
 	~KeyStateChange() override = default;
 
-	[[nodiscard]] const std::string& GetKeyState() const;
+	[[nodiscard]] std::string GetKeyState() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

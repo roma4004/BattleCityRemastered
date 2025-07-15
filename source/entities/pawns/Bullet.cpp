@@ -163,7 +163,7 @@ void Bullet::TakeDamage(const int damage)
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		//TODO: move this to onHealthChange
-		_events->EmitEvent("ServerSend_Health", GetName(), GetHealth(), _uuid);
+		_events->EmitEvent("ServerSend_Health", std::string(GetName()), GetHealth(), _uuid);
 	}
 }
 

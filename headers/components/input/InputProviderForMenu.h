@@ -39,5 +39,5 @@ public:
 	void ToggleUp();
 	void ToggleDown();
 
-	[[nodiscard]] MenuKeys GetKeysStats() const { return _keys; }
+	[[nodiscard]] MenuKeys GetKeysStats() const noexcept { return _keys; }
 };

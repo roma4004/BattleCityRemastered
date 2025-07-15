@@ -17,27 +17,27 @@ class PositionChange : public Command
 
 	std::string _who{};
 	FPoint _pos{};
-	buuid _uuid{};
 	Direction _dir{};
+	buuid _uuid{};
 
 public:
 	//for deserialization
 	PositionChange();
 
 	//for serialization
-	PositionChange(const std::string& who, const FPoint& pos, Direction dir, buuid uuid);
+	PositionChange(std::string who, FPoint pos, Direction dir, buuid uuid);
 
 	~PositionChange() override = default;
 
-	[[nodiscard]] const std::string& GetWho() const;
-	[[nodiscard]] FPoint GetPos() const;
-	[[nodiscard]] Direction GetDir() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] std::string GetWho() const noexcept;
+	[[nodiscard]] FPoint GetPos() const noexcept;
+	[[nodiscard]] Direction GetDir() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

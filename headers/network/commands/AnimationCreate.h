@@ -27,14 +27,14 @@ public:
 
 	~AnimationCreate() override = default;
 
-	[[nodiscard]] AnimationType GetAnimationType() const;
-	[[nodiscard]] ObjRectangle GetRect() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] AnimationType GetAnimationType() const noexcept;
+	[[nodiscard]] ObjRectangle GetRect() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, const unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

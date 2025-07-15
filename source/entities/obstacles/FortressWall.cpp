@@ -104,7 +104,7 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 		_events->EmitEvent("Statistics_BrickWallDied", author, fraction);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_Health", GetName(), GetHealth(), GetUuid());
+			_events->EmitEvent("ServerSend_Health", std::string(GetName()), GetHealth(), GetUuid());
 		}
 	}
 	else
@@ -112,7 +112,8 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 		_events->EmitEvent("Statistics_SteelWallDied", author, fraction);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_Health", GetName(), GetHealth(), GetUuid());
+			//TODO: add to event system trait for auto conversion from std::string_view to string or working direct with view
+			_events->EmitEvent("ServerSend_Health", std::string(GetName()), GetHealth(), GetUuid());
 		}
 	}
 }
