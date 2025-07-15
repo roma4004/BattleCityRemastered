@@ -33,7 +33,7 @@ public:
 	void UnsubscribeAsClient() const;
 	void UnsubscribeAsHost() const;
 
-	[[nodiscard]] int GetFrame(const buuid& uuid, AnimationType type) const;
+	[[nodiscard]] int GetFrame(buuid uuid, AnimationType type) const;
 	[[nodiscard]] int GetWaterFrame() const;
 
 private:

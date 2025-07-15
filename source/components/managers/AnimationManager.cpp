@@ -116,8 +116,7 @@ void AnimationManager::Unsubscribe() const
 
 void AnimationManager::UnsubscribeAsClient() const
 {
-	_events->RemoveListener(
-			"ClientReceived_AnimationCreate", _name);
+	_events->RemoveListener("ClientReceived_AnimationCreate", _name);
 }
 
 void AnimationManager::UnsubscribeAsHost() const
@@ -190,31 +189,24 @@ int AnimationManager::GetWaterFrame() const
 	return _waterAnimationPassport.animationFrame;
 }
 
-int AnimationManager::GetFrame(const buuid& uuid, const AnimationType type) const
+int AnimationManager::GetFrame(buuid uuid, const AnimationType type) const
 {
-	for (auto& obj: _animatedObjects)
+	auto predicate = [uuid = std::move(uuid), type](const AnimatedObject& obj)
 	{
-		if (obj.GetUuid() == uuid && obj.type == type)
-		{
-			return obj.animationFrame;
-		}
-	}
+		return obj.GetUuid() == uuid && obj.type == type;
+	};
+	const auto it = std::ranges::find_if(_animatedObjects, predicate);
 
-	return 0;
+	return it != _animatedObjects.end() ? it->animationFrame : 0;
 }
 
 void AnimationManager::AnimationSeqDisposer()
 {
-	const auto it = std::ranges::remove_if(_animatedObjects, [](const auto& obj)
-	{
-		return obj.markToDispose;
-	}).begin();
-
 	//it=	[0]	[1]	[2]	[3]	[4]	[5]	[6]
 	//mark	t	t	f	t	f	t	f
 
 	//it = [2][4][6] [0][1][3][5]
 	//  cut here    |
 
-	_animatedObjects.erase(it, _animatedObjects.end());
+	std::erase_if(_animatedObjects, [](const auto& obj) { return obj.markToDispose; });
 }

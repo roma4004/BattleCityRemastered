@@ -225,35 +225,32 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 	return lastDisplayedFps;
 }
 
+// void GameSuccess::DisposeDeadObject()//TODO: run on debug only
+// {
+// 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };
+// 	const auto it = std::ranges::remove_if(_allObjects, predicate).begin();
+//
+// 	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
+// 	{
+// 		if (*itCopy == nullptr)
+// 		{
+// 			std::cout << "Disposing object nullptr " << '\n';
+// 			continue;
+// 		}
+// 		const auto& baseObj = *itCopy;
+// 		std::cout << "[" << "Disposing object" << "] "
+// 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
+// 				<< ", name=" << baseObj->GetName()
+// 				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
+// 				<< '\n';
+// 	}
+//
+// 	_allObjects.erase(it, _allObjects.end());
+// }
+
 void GameSuccess::DisposeDeadObject()
 {
-	const auto it = std::ranges::remove_if(_allObjects, [](const auto& obj)
-	{
-		if (obj.get() == nullptr || obj.use_count() < 1)
-		{
-			return true;
-		}
-
-		return !obj->GetIsAlive();
-	}).begin();
-
-	//TODO: run on debug only
-	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
-	{
-		if (*itCopy == nullptr)
-		{
-			std::cout << "Disposing object nullptr " << '\n';
-			continue;
-		}
-		const auto& baseObj = *itCopy;
-		std::cout << "[" << "Disposing object" << "] "
-				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< ", name=" << baseObj->GetName()
-				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
-				<< '\n';
-	}
-
-	_allObjects.erase(it, _allObjects.end());
+	std::erase_if(_allObjects, [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); });
 }
 
 //TODO: recheck rule of 3/5 for all classes
