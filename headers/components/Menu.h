@@ -13,6 +13,7 @@ class Menu final
 {
 	Point _pos;
 	int _height;
+	int _windowHeight;
 	int _width;
 	int _padding;
 	unsigned int _yOffsetStart{};

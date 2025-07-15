@@ -148,14 +148,10 @@ void TextureManager::RectDraw(const BaseObj* obj)
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
 }
 
-void TextureManager::Draw(const BaseObj* obj)
+SDL_Rect TextureManager::GetTextureRect(const BaseObj* obj, const ObjRectangle rect, SDL_Rect& destRect) const
 {
-	const ObjRectangle rect = obj->GetRect();
-	SDL_Rect destRect = RectToSdlRect(rect);
-
 	SDL_Rect textureRect{};
-	const auto pawn = dynamic_cast<const Pawn*>(obj);
-	if (const auto& name = obj->GetName();//TODO: replace with enum
+	if (std::string_view name = obj->GetName();//TODO: replace with enum
 		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
@@ -230,14 +226,17 @@ void TextureManager::Draw(const BaseObj* obj)
 	}
 	else if (name == "BulletExplosion")
 	{
-		if (int frame = _animationManager.GetFrame(obj->GetUuid(), AnimationType::Bullet_Explosion); frame != -1)
+		if (const int frame = _animationManager.GetFrame(obj->GetUuid(), AnimationType::Bullet_Explosion);
+			frame != -1)
 		{
-			textureRect = RectToSdlRect(_offset.smallExplosion);
 			destRect = RectToSdlRect(rect.GetScale(4.f).GetCenter());
+			textureRect = RectToSdlRect(_offset.smallExplosion);
 			textureRect.x += frame * 16;
 		}
 		else
-			return;
+		{
+			return textureRect;
+		}
 	}
 	else if (name == "TankExplosion")
 	{
@@ -249,40 +248,47 @@ void TextureManager::Draw(const BaseObj* obj)
 		textureRect = RectToSdlRect(_offset.spawnAnim);
 		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Spawn_Animation) * 16;
 	}
-	else
+
+	return textureRect;
+}
+
+std::pair<double, SDL_RendererFlip> TextureManager::GetRotateAndAngleAndFlip(const Direction dir)
+{
+	switch (dir)
 	{
-		RectDraw(obj);
+		case Direction::UP:
+			return std::make_pair(0.0, SDL_FLIP_NONE);
+		case Direction::LEFT:
+			return std::make_pair(-90.0, SDL_FLIP_NONE);
+		case Direction::DOWN:
+			return std::make_pair(0.0, SDL_FLIP_VERTICAL);
+		case Direction::RIGHT:
+			return std::make_pair(90.0, SDL_FLIP_NONE);
+		default:
+			return std::make_pair(0.0, SDL_FLIP_NONE);
+	}
+}
+
+void TextureManager::Draw(const BaseObj* obj)
+{
+	const ObjRectangle rect = obj->GetRect();
+	SDL_Rect destRect = RectToSdlRect(rect);
+	const SDL_Rect textureRect = GetTextureRect(obj, rect, destRect);
+	constexpr SDL_Rect defaultSdlRect{};
+	if (textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
+	{
+		RectDraw(obj); //NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	//local angle and flip for texture
-	double angle = 0.0;
-	SDL_RendererFlip flip = SDL_FLIP_NONE;
-
-	if (pawn != nullptr)
+	auto dir = Direction::UP;
+	if (const auto pawn = dynamic_cast<const Pawn*>(obj))
 	{
-		switch (pawn->GetDirection())
-		{
-			case Direction::UP:
-				angle = 0;
-				flip = SDL_FLIP_NONE;
-				break;
-
-			case Direction::LEFT:
-				angle = -90;
-				flip = SDL_FLIP_NONE;
-				break;
-
-			case Direction::DOWN:
-				angle = 0;
-				flip = SDL_FLIP_VERTICAL;
-				break;
-
-			case Direction::RIGHT:
-				angle = 90;
-				flip = SDL_FLIP_NONE;
-				break;
-		}
+		dir = pawn->GetDirection();
 	}
+
+	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
 
 	//TODO: move work with sdl to utils to reduce dependencies
 	SDL_RenderCopyEx(_renderer.get(), _texture.get(), &textureRect, &destRect, angle, nullptr, flip);

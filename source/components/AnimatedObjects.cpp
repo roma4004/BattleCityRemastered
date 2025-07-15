@@ -7,8 +7,6 @@
 
 #include <boost/uuid/nil_generator.hpp>
 
-using buuid = boost::uuids::uuid;
-
 AnimatedObject::AnimatedObject()
 	: BaseObj{{}, 0x0, 1, UuidUtils::GetRandomUuid(), "Water", "Neutral"} {}
 
@@ -24,6 +22,7 @@ AnimatedObject::AnimatedObject(const int frameLimit)
 	}
 }
 
+using buuid = boost::uuids::uuid;
 AnimatedObject::AnimatedObject(std::string name, const ObjRectangle rect, const AnimationType type,
                                std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
                                const int frameLimit)

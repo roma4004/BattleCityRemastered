@@ -20,7 +20,8 @@ Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> men
 
 	_padding = 25;
 	const auto windowWidth = static_cast<unsigned int>(windowSize.x);
-	_height = static_cast<int>(windowSize.y) - _padding * 3;
+	_windowHeight = static_cast<int>(windowSize.y);
+	_height = _windowHeight - _padding * 3;
 	constexpr int sideBarWidth = 228;
 	_width = windowWidth - sideBarWidth - _padding;
 
@@ -264,8 +265,8 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 
 void Menu::DrawText() const
 {
-	const Point pos = {.x = _pos.x + 180, .y = _pos.y + 180};
-	if (pos.y + 50 > _height)
+	const Point pos{.x = _pos.x + 180, .y = _pos.y + 180};
+	if (pos.y - 50 >= _windowHeight)
 	{
 		return;
 	}

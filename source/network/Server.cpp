@@ -399,7 +399,7 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
+			[this](const AnimationType type, const ObjRectangle rect, const buuid& uuid)
 			{
 				std::lock_guard<std::mutex> lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, uuid));

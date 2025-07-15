@@ -250,7 +250,7 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 
 void GameSuccess::DisposeDeadObject()
 {
-	std::erase_if(_allObjects, [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); });
+	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
 }
 
 //TODO: recheck rule of 3/5 for all classes

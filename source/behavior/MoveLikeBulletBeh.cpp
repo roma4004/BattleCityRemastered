@@ -266,8 +266,9 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& 
 	const int bulletDamage = thisBullet->GetDamage();
 	if (!objectList.empty())
 	{
-		_events->EmitEvent(
-				"AnimationCreate", AnimationType::Bullet_Explosion, thisBullet->GetRect(), thisBullet->GetUuid());
+		auto uuid = thisBullet->GetUuid();
+		auto rect = thisBullet->GetRect();
+		_events->EmitEvent("AnimationCreate", AnimationType::Bullet_Explosion, rect, uuid);
 
 		for (const auto& target: objectList)
 		{

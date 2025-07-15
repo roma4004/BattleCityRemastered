@@ -2,7 +2,6 @@
 #include "components/AnimatedObjects.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
-#include "network/Client.h"
 #include "utils/RandUtils.h"
 #include <algorithm>
 
@@ -22,14 +21,8 @@ void AnimationManager::Subscribe()
 {
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	{
-		this->_gameMode = newGameMode;
-
-		_animatedObjects.clear();
-		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	});
-
+	_events->AddListener("Reset", _name, [this]() { Reset(); });
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("AnimationUpdate", _name, [this]() { Update(); });
 	_events->AddListener("AnimationTankUpdate", _name, [this](const buuid& uuid) { UpdateTank(uuid); });
 
@@ -40,75 +33,26 @@ void AnimationManager::SubscribeAsHost()
 {
 	_events->AddListener(
 			"AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
+			[this](const AnimationType type, const ObjRectangle rect, const buuid& uuid)
 			{
-				switch (type)
-				{
-					case AnimationType::Spawn_Animation: //TODO: maybe uniq id for each explosion for reusing bullet id
-						Create("SpawnAnimation", type, rect, uuid, 3);
-						//TODO:add is loop flag or separated container for expired explosion
-						break;
-					case AnimationType::Bullet_Explosion:
-					{
-						Create("BulletExplosion", type, rect, uuid, 3);
-						break;
-					}
-					case AnimationType::Tank_Explosion:
-					{
-						Create("TankExplosion", type, rect, uuid, 2);
-						break;
-					}
-					case AnimationType::Helmet_Animation:
-						Create("HelmetAnimation", type, rect, uuid, 2);
-						break;
-					case AnimationType::Tank_Animation:
-						Create("TankAnimation", type, rect, uuid, 2);
-						break;
-					case AnimationType::Bullet_Animation:
-						Create("BulletAnimation", type, rect, uuid, 2);
-						break;
-					default:
-						break;
-				}
+				CreateAnimation(type, rect, uuid);
 			});
 }
 
-void AnimationManager::SubscribeAsClient()
+void AnimationManager::SubscribeAsClient()//TODO: merge with host?
 {
 	_events->AddListener(
 			"ClientReceived_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle& rect, const buuid& uuid)
+			[this](const AnimationType type, const ObjRectangle rect, const buuid& uuid)
 			{
-				switch (type)
-				{
-					case AnimationType::Spawn_Animation:
-						Create("SpawnAnimation", type, rect, uuid, 3);
-						break;
-					case AnimationType::Bullet_Explosion:
-						Create("BulletExplosion", type, rect, uuid, 3);//TODO: should change to 1?
-						break;
-					case AnimationType::Tank_Explosion:
-						Create("TankExplosion", type, rect, uuid, 2);//TODO: should change to 1?
-						break;
-					case AnimationType::Water_Animation:
-						Create("WaterAnimation", type, rect, uuid, 16);
-						break;
-					case AnimationType::Helmet_Animation:
-						Create("HelmetAnimation", type, rect, uuid, 2);
-						break;
-					case AnimationType::Tank_Animation:
-						Create("TankAnimation", type, rect, uuid, 1);
-						break;
-					case AnimationType::Bullet_Animation:
-						Create("BulletAnimation", type, rect, uuid, 2);
-						break;
-				}
+				CreateAnimation(type, rect, uuid);
 			});
 }
 
 void AnimationManager::Unsubscribe() const
 {
 	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("AnimationUpdate", _name);
 	_events->RemoveListener("AnimationTankUpdate", _name);
@@ -122,6 +66,48 @@ void AnimationManager::UnsubscribeAsClient() const
 void AnimationManager::UnsubscribeAsHost() const
 {
 	_events->RemoveListener("AnimationCreate", _name);
+}
+
+void AnimationManager::SetGameMode(const GameMode newGameMode)
+{
+	_gameMode = newGameMode;
+	_animatedObjects.clear();
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+}
+
+void AnimationManager::Reset() { _animatedObjects.clear(); }
+
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, buuid uuid)
+{
+	switch (type)
+	{
+		//TODO: investigate
+		// when one players mode we don't see black animation instead of spawn anumation
+		// when two players mode we see spawn animation under first player and above second player
+		// when for coop mode we see spawn animation under first and second player
+		case AnimationType::Spawn_Animation: //TODO: maybe uniq id for each explosion for reusing bullet id
+			Create("SpawnAnimation", type, rect, std::move(uuid), 3);
+			//TODO:add is loop flag or separated container for expired explosion
+			break;
+		case AnimationType::Bullet_Explosion:
+			Create("BulletExplosion", type, rect, std::move(uuid), 3);//TODO: should change to 1?
+			break;
+		case AnimationType::Tank_Explosion:
+			Create("TankExplosion", type, rect, std::move(uuid), 2);//TODO: should change to 1?
+			break;
+		case AnimationType::Water_Animation:
+			Create("WaterAnimation", type, rect, std::move(uuid), 16);
+			break;
+		case AnimationType::Helmet_Animation:
+			Create("HelmetAnimation", type, rect, std::move(uuid), 2);
+			break;
+		case AnimationType::Tank_Animation:
+			Create("TankAnimation", type, rect, std::move(uuid), 1);
+			break;
+		case AnimationType::Bullet_Animation:
+			Create("BulletAnimation", type, rect, std::move(uuid), 2);
+			break;
+	}
 }
 
 void AnimationManager::Create(const std::string& name, const AnimationType type, const ObjRectangle rect,
@@ -154,15 +140,13 @@ void AnimationManager::Update()
 
 void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed)
 {
-	if (!obj.markToDispose)
+	if (obj.markToDispose == false
+	    && ++obj.elapsedFrames % animationSpeed == 0)
 	{
-		if (++obj.elapsedFrames % animationSpeed == 0)
+		obj.elapsedFrames = 0;
+		if (++obj.animationFrame == obj.limitOfFrames)
 		{
-			obj.elapsedFrames = 0;
-			if (++obj.animationFrame == obj.limitOfFrames)
-			{
-				obj.animationFrame = 0;
-			}
+			obj.animationFrame = 0;
 		}
 	}
 }
@@ -200,13 +184,13 @@ int AnimationManager::GetFrame(buuid uuid, const AnimationType type) const
 	return it != _animatedObjects.end() ? it->animationFrame : 0;
 }
 
+// NOTE: how it works
+// it = [0][1][2][3][4][5][6]
+// mark  t  t  f  t  f  t  f
+
+// it = [2][4][6] [0][1][3][5]
+//  cut here     |
 void AnimationManager::AnimationSeqDisposer()
 {
-	//it=	[0]	[1]	[2]	[3]	[4]	[5]	[6]
-	//mark	t	t	f	t	f	t	f
-
-	//it = [2][4][6] [0][1][3][5]
-	//  cut here    |
-
 	std::erase_if(_animatedObjects, [](const auto& obj) { return obj.markToDispose; });
 }

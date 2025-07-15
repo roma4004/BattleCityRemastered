@@ -32,6 +32,9 @@ public:
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 	void UnsubscribeAsHost() const;
+	void SetGameMode(GameMode newGameMode);
+	void Reset();
+	void CreateAnimation(AnimationType type, ObjRectangle rect, buuid uuid);
 
 	[[nodiscard]] int GetFrame(buuid uuid, AnimationType type) const;
 	[[nodiscard]] int GetWaterFrame() const;

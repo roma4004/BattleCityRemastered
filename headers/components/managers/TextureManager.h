@@ -7,6 +7,7 @@
 #include <memory>
 #include <unordered_map>
 
+enum class Direction : char8_t;
 struct SDL_Rect;
 struct SDL_Renderer;
 struct SDL_Texture;
@@ -44,6 +45,8 @@ class TextureManager final
 	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
 	[[nodiscard]] SDL_Texture* CreateColorTexture(int color);
 	void RectDraw(const BaseObj* obj);
+	[[nodiscard]] SDL_Rect GetTextureRect(const BaseObj* obj, ObjRectangle rect, SDL_Rect& destRect) const;
+	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
 	void GenerateFpsTextures();
 
 public:
