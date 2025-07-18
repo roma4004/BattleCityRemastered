@@ -27,7 +27,7 @@ Tank::~Tank()
 
 	_events->EmitEvent("TankDied", _uuid);
 
-	_events->EmitEvent("AnimationCreate", AnimationType::Tank_Explosion, _rect, _uuid);
+	_events->EmitEvent("AnimationCreate", AnimationType::Tank_Explosion, _rect, _name);
 }
 
 void Tank::Subscribe()
@@ -192,7 +192,10 @@ double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
 
-void Tank::DrawHealthBar(const BaseObj* obj) const { _events->EmitEvent("DrawHealthBarObj", obj); }
+void Tank::DrawHealthBar(const BaseObj* obj) const
+{
+	_events->EmitEvent("DrawHealthBarObj", obj->GetRect(), obj->GetHealth(), obj->GetColor());
+}
 
 void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
 {

@@ -31,8 +31,6 @@ Pawn::~Pawn()
 
 void Pawn::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
-
 	_gameMode == GameMode::PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
 
@@ -72,7 +70,6 @@ void Pawn::Unsubscribe() const
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	_events->RemoveListener("Draw", _nameWithUuid);
 
 	_gameMode == GameMode::PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
 }
@@ -108,8 +105,6 @@ void Pawn::TakeDamage(const int damage)
 	// }
 }
 
-void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
-
 UPoint Pawn::GetWindowSize() const { return _windowSize; }
 
 Direction Pawn::GetDirection() const { return _dir; }
@@ -125,7 +120,7 @@ bool Pawn::Move(const float deltaTime)
 	const bool isMove = _moveBeh->Move(deltaTime);
 	if (isMove)
 	{
-		_events->EmitEvent("AnimationTankUpdate", _uuid);
+		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()));
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{

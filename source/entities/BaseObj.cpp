@@ -14,7 +14,27 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
 
-//Deprecated
+//Copy ctor
+BaseObj::BaseObj(const BaseObj& other)
+	: _color(other._color),
+	  _health(other._health),
+	  _uuid(other._uuid),
+	  _name(other._name),
+	  _nameWithUuid(other._nameWithUuid),
+	  _fraction(other._fraction),
+	  _rect(other._rect) {}
+
+//Move ctor
+BaseObj::BaseObj(BaseObj&& other) noexcept
+	: _color(std::exchange(other._color, 0)),
+	  _health(std::exchange(other._health, 0)),
+	  _uuid(std::move(other._uuid)),
+	  _name(std::move(other._name)),
+	  _nameWithUuid(std::move(other._nameWithUuid)),
+	  _fraction(std::move(other._fraction)),
+	  _rect(std::move(other._rect)) {}
+
+//Deprecated //TODO: remove this con overload
 BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
                  std::string fraction)
 	: _color(color),
@@ -28,6 +48,40 @@ BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, con
 }
 
 BaseObj::~BaseObj() = default;
+
+//Copy assignment
+BaseObj& BaseObj::operator=(const BaseObj& other)
+{
+	if (this != &other)
+	{
+		_color = other._color;
+		_health = other._health;
+		_uuid = other._uuid;
+		_name = other._name;
+		_nameWithUuid = other._nameWithUuid;
+		_fraction = other._fraction;
+		_rect = other._rect;
+	}
+
+	return *this;
+}
+
+//Move assignment
+BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
+{
+	if (this != &other)
+	{
+		_color = std::exchange(other._color, 0);
+		_health = std::exchange(other._health, 0);
+		_uuid = std::move(other._uuid);
+		_name = std::move(other._name);
+		_nameWithUuid = std::move(other._nameWithUuid);
+		_fraction = std::move(other._fraction);
+		_rect = std::move(other._rect);
+	}
+
+	return *this;
+}
 
 ObjRectangle BaseObj::GetRect() const { return _rect; }
 

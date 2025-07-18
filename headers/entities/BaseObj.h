@@ -1,7 +1,6 @@
 #pragma once
 
 #include "entities/ObjRectangle.h"
-#include "interfaces/IDrawable.h"
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
@@ -10,7 +9,7 @@
 struct FPoint;
 struct BaseObjProperty;
 
-class BaseObj : public IDrawable, public ISendableDamageStatistics, public IHaveFraction, public IObstacle
+class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public IObstacle
 {
 	using buuid = boost::uuids::uuid;
 
@@ -27,9 +26,15 @@ protected:
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);
 
+	BaseObj(const BaseObj& other);
+	BaseObj(BaseObj&& other) noexcept;
+
 	BaseObj(ObjRectangle rect, int color, int health, buuid uuid, std::string name, std::string fraction);
 
 	~BaseObj() override;
+
+	BaseObj& operator=(const BaseObj& other);
+	BaseObj& operator=(BaseObj&& other) noexcept;
 
 	[[nodiscard]] FPoint GetPos() const;
 	void SetPos(const FPoint& pos);

@@ -1,6 +1,7 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
+#include "enums/ObstacleType.h"
 
 Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, std::string name,
                    std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
@@ -43,7 +44,14 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { Draw(this); });
+	if (_obstacleType == ObstacleType::Water) //TODO: create override for water
+	{
+		_events->EmitEvent("AnimationCreateWater", _rect);
+	}
+	else
+	{
+		_events->AddListener("Draw", _nameWithUuid, [this]() { Draw(this); });
+	}
 
 	if (_isReplicationOn && _gameMode == GameMode::PlayAsClient)
 	{
@@ -65,7 +73,10 @@ void Obstacle::SubscribeAsClient()
 
 void Obstacle::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _nameWithUuid);
+	if (_obstacleType != ObstacleType::Water)
+	{
+		_events->RemoveListener("Draw", _nameWithUuid);
+	}
 
 	if (_isReplicationOn && _gameMode == GameMode::PlayAsClient)
 	{

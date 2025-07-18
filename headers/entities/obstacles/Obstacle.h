@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "interfaces/IDrawable.h"
 #include <memory>
 
 enum class ObstacleType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
 
-class Obstacle : public BaseObj
+class Obstacle : public BaseObj, public IDrawable
 {
 	using buuid = boost::uuids::uuid;
 

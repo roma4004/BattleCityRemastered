@@ -1,14 +1,21 @@
 ﻿#include "components/managers/AnimationManager.h"
 #include "components/AnimatedObjects.h"
 #include "entities/ObjRectangle.h"
+#include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "utils/RandUtils.h"
+#include "utils/UuidUtils.h"
+
 #include <algorithm>
 
 AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events)
 	: _events(std::move(events)),
 	  _gameMode{GameMode::Demo}
 {
+	_animatedObjects.reserve(100);
+	_tankObjects.reserve(6);
+	_waterObjects.reserve(10);
+
 	Subscribe();
 }
 
@@ -24,28 +31,35 @@ void AnimationManager::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("AnimationUpdate", _name, [this]() { Update(); });
-	_events->AddListener("AnimationTankUpdate", _name, [this](const buuid& uuid) { UpdateTank(uuid); });
-
-	//_events->AddListener("AnimationWaterUpdate", _name, [this]() { UpdateWater(); });
+	_events->AddListener("AnimationTankUpdate", _name, [this](const std::string& uuid) { UpdateTank(uuid); });
+	_events->AddListener("DisposeStage", _name, [this]() { this->AnimationSeqDisposer(); });
 }
 
 void AnimationManager::SubscribeAsHost()
 {
-	_events->AddListener(
-			"AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const buuid& uuid)
-			{
-				CreateAnimation(type, rect, uuid);
-			});
+	_events->AddListener("AnimationCreate", _name, [this](const AnimationType type, const ObjRectangle rect, const std::string& name)
+	{
+		this->CreateAnimation(type, rect, name);
+	});
+
+	_events->AddListener("AnimationCreateTank", _name, [this](const BaseObj* obj)
+	{
+		this->CreateAnimationTank(obj->GetRect(), UuidUtils::GetRandomUuid(), std::string(obj->GetName()), obj);
+	});
+	_events->AddListener("AnimationCreateWater", _name, [this](const ObjRectangle rect)
+	{
+		this->CreateAnimationWater(rect);
+	});
 }
 
 void AnimationManager::SubscribeAsClient()//TODO: merge with host?
 {
 	_events->AddListener(
 			"ClientReceived_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const buuid& uuid)
+			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
+			//TODO: change command add field add , const std::string& objName
 			{
-				CreateAnimation(type, rect, uuid);
+				CreateAnimation(type, rect, name);
 			});
 }
 
@@ -56,6 +70,7 @@ void AnimationManager::Unsubscribe() const
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("AnimationUpdate", _name);
 	_events->RemoveListener("AnimationTankUpdate", _name);
+	_events->RemoveListener("DisposeStage", _name);
 }
 
 void AnimationManager::UnsubscribeAsClient() const
@@ -66,6 +81,8 @@ void AnimationManager::UnsubscribeAsClient() const
 void AnimationManager::UnsubscribeAsHost() const
 {
 	_events->RemoveListener("AnimationCreate", _name);
+	_events->RemoveListener("AnimationCreateTank", _name);
+	_events->RemoveListener("AnimationCreateWater", _name);
 }
 
 void AnimationManager::SetGameMode(const GameMode newGameMode)
@@ -75,50 +92,76 @@ void AnimationManager::SetGameMode(const GameMode newGameMode)
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 }
 
-void AnimationManager::Reset() { _animatedObjects.clear(); }
-
-void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, buuid uuid)
+void AnimationManager::Reset()
 {
+	_animatedObjects.clear();
+	// _tankObjects.clear(); //NOTE: all tank_animation will be removed when tank died
+	_waterObjects.clear();
+}
+
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name)
+{
+	const auto uuid = UuidUtils::GetRandomUuid();
 	switch (type)
 	{
 		//TODO: investigate
-		// when one players mode we don't see black animation instead of spawn anumation
+		// when one players mode we don't see black animation instead of spawn animation
 		// when two players mode we see spawn animation under first player and above second player
 		// when for coop mode we see spawn animation under first and second player
 		case AnimationType::Spawn_Animation: //TODO: maybe uniq id for each explosion for reusing bullet id
-			Create("SpawnAnimation", type, rect, std::move(uuid), 3);
+			Create("SpawnAnimation", type, rect, uuid, 3, 16, std::move(name));
+			//TODO: investigate crash when spawn anim end and we dispose this anim or maybe can just hide and reuse
 			//TODO:add is loop flag or separated container for expired explosion
 			break;
 		case AnimationType::Bullet_Explosion:
-			Create("BulletExplosion", type, rect, std::move(uuid), 3);//TODO: should change to 1?
+			Create("BulletExplosion", type, rect, uuid, 3, 16, std::move(name));
 			break;
-		case AnimationType::Tank_Explosion:
-			Create("TankExplosion", type, rect, std::move(uuid), 2);//TODO: should change to 1?
-			break;
-		case AnimationType::Water_Animation:
-			Create("WaterAnimation", type, rect, std::move(uuid), 16);
+		case AnimationType::Tank_Explosion: //TODO: fix tank explosion
+			DeleteAnimation(name);
+			Create("TankExplosion", type, rect, uuid, 2, 32, std::move(name));//TODO: should change limitOfFrame to 5?
 			break;
 		case AnimationType::Helmet_Animation:
-			Create("HelmetAnimation", type, rect, std::move(uuid), 2);
-			break;
-		case AnimationType::Tank_Animation:
-			Create("TankAnimation", type, rect, std::move(uuid), 1);
+			Create("HelmetAnimation", type, rect, uuid, 2, 16, std::move(name));
 			break;
 		case AnimationType::Bullet_Animation:
-			Create("BulletAnimation", type, rect, std::move(uuid), 2);
+			Create("BulletAnimation", type, rect, uuid, 2, 16, std::move(name));
+			break;
+		default:
 			break;
 	}
 }
 
-void AnimationManager::Create(const std::string& name, const AnimationType type, const ObjRectangle rect,
-                              const buuid& uuid, const int limitOfFrames)
+void AnimationManager::DeleteAnimation(const std::string& objName)
 {
-	_animatedObjects.emplace_back(name, rect, type, _events, uuid, _gameMode, limitOfFrames);
+	std::erase_if(_tankObjects, [&objName](const auto& animObj)
+	{
+		return animObj.objName == objName;
+	});
+}
+
+void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
+{
+	_waterObjects.emplace_back(rect, _events, 16);
+}
+
+void AnimationManager::CreateAnimationTank(const ObjRectangle rect, buuid uuid, std::string name, const BaseObj* obj)
+{
+	_tankObjects.emplace_back(rect, _events, std::move(uuid), _gameMode, 2, 16, std::move(name), obj);
+}
+
+void AnimationManager::Create(const std::string& name, const AnimationType type, const ObjRectangle rect,
+                              buuid uuid, const int limitOfFrames, const int scale, std::string objName)
+{
+	_animatedObjects.emplace_back(name, rect, type, _events, std::move(uuid), _gameMode, limitOfFrames, scale, objName);
 }
 
 void AnimationManager::Update()
 {
-	UpdateWaterAnimation();
+	for (auto& passport: _waterObjects)
+	{
+		UpdateFrameInfinite(passport, 20);
+	}
+
 	for (auto& passport: _animatedObjects)
 	{
 		switch (passport.type)
@@ -146,33 +189,53 @@ void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed
 		obj.elapsedFrames = 0;
 		if (++obj.animationFrame == obj.limitOfFrames)
 		{
+			if (obj.isInfinite == false)
+			{
+				obj.markToDispose = true;
+			}
 			obj.animationFrame = 0;
 		}
 	}
 }
 
-void AnimationManager::UpdateTank(const buuid& uuid)
+void AnimationManager::UpdateFrameInfinite(AnimatedObject& obj, const int animationSpeed)
 {
-	for (auto& passport: _animatedObjects)
+	if (obj.markToDispose == false
+	    && ++obj.elapsedFrames % animationSpeed == 0)
 	{
-		if (passport.GetUuid() == uuid && passport.type == AnimationType::Tank_Animation)
+		obj.elapsedFrames = 0;
+		if (++obj.animationFrame == obj.limitOfFrames)
 		{
-			UpdateFrame(passport, 20);
+			obj.animationFrame = 0;
+		}
+	}
+}
+
+void AnimationManager::UpdateTank(const std::string& objName)//TODO: replace uuid with name or filter by parentUuid
+{
+	for (AnimatedObject& animObj: _tankObjects)
+	{
+		if (animObj.objName == objName)
+		{
+			UpdateFrame(animObj, 20);
 			return;
 		}
 	}
 }
 
-void AnimationManager::UpdateWaterAnimation()
+void AnimationManager::DisableTankAnimation(const std::string& objName)
 {
-	UpdateFrame(_waterAnimationPassport, 20);
+	for (AnimatedObject& animObj: _tankObjects)
+	{
+		if (animObj.objName == objName)
+		{
+			animObj.markToDispose = true;
+			return;
+		}
+	}
 }
 
-int AnimationManager::GetWaterFrame() const
-{
-	return _waterAnimationPassport.animationFrame;
-}
-
+//deprecated
 int AnimationManager::GetFrame(buuid uuid, const AnimationType type) const
 {
 	auto predicate = [uuid = std::move(uuid), type](const AnimatedObject& obj)
@@ -190,7 +253,17 @@ int AnimationManager::GetFrame(buuid uuid, const AnimationType type) const
 
 // it = [2][4][6] [0][1][3][5]
 //  cut here     |
-void AnimationManager::AnimationSeqDisposer()
+void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 {
-	std::erase_if(_animatedObjects, [](const auto& obj) { return obj.markToDispose; });
+	std::erase_if(_animatedObjects, [](const auto& obj)
+	{
+		return obj.markToDispose;
+	});
+
+	// for (auto it = _animatedObjects.begin(); it != _animatedObjects.end(); ++it)
+	// {
+	// 	_animatedObjects.erase(it);
+	// }
 }
+
+//TODO: add reuse flow for explosions like bullet pool

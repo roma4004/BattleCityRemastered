@@ -72,6 +72,7 @@ class GameSuccess final : public IGame
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
+	void OnGameModeChangedTo(GameMode newGameMode);
 
 public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,

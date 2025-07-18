@@ -79,24 +79,11 @@ void GameSuccess::Subscribe()
 	});
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
-
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		this->_gameMode = newGameMode;
-
-		if (_gameMode == GameMode::PlayAsHost)
-		{
-			_networkNode = std::make_unique<ServerHandler>(_events);
-		}
-		else if (_gameMode == GameMode::PlayAsClient)
-		{
-			_networkNode = std::make_unique<ClientHandler>(_events);
-		}
-		else
-		{
-			_networkNode = nullptr;
-		}
+		this->OnGameModeChangedTo(newGameMode);
 	});
+	_events->AddListener("DisposeStage", _name, [this]() { this->DisposeDeadObject(); });
 }
 
 void GameSuccess::Unsubscribe() const
@@ -104,8 +91,8 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("PreviousGameMode", _name);
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
-
 	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("DisposeStage", _name);
 }
 
 void GameSuccess::LoadMap() const
@@ -284,7 +271,7 @@ void GameSuccess::MainLoop()
 
 			if (!_userInput->IsPause())
 			{
-				DisposeDeadObject();
+				_events->EmitEvent("DisposeStage");
 
 				if (_gameMode != GameMode::PlayAsClient)
 				{
@@ -333,4 +320,22 @@ void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 	_gameMode = selectedGameMode;
 
 	_events->EmitEvent("GameModeChangedTo", _gameMode);
+}
+
+void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
+{
+	_gameMode = newGameMode;
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_networkNode = std::make_unique<ServerHandler>(_events);
+	}
+	else if (_gameMode == GameMode::PlayAsClient)
+	{
+		_networkNode = std::make_unique<ClientHandler>(_events);
+	}
+	else
+	{
+		_networkNode = nullptr;
+	}
 }

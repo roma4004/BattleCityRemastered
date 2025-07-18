@@ -42,22 +42,12 @@ Bullet::~Bullet()
 
 void Bullet::Subscribe()
 {
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
+
 	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
-}
-
-using buuid = boost::uuids::uuid;
-
-buuid Bullet::GetUuid() const
-{
-	return _uuid;
-}
-
-const std::string& Bullet::GetUuidStr() const
-{
-	return _uuidStr;
 }
 
 void Bullet::SubscribeAsClient()
@@ -75,6 +65,8 @@ void Bullet::SubscribeAsClient()
 
 void Bullet::Unsubscribe() const
 {
+	_events->RemoveListener("Draw", _nameWithUuid);
+
 	// std::cout << "[" << "Bullet::Unsubscribe" << "] "
 	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 			<< ", name=" << _name
@@ -89,6 +81,20 @@ void Bullet::Unsubscribe() const
 void Bullet::UnsubscribeAsClient() const
 {
 	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _nameWithUuid);
+}
+
+void Bullet::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
+
+using buuid = boost::uuids::uuid;
+
+buuid Bullet::GetUuid() const
+{
+	return _uuid;
+}
+
+const std::string& Bullet::GetUuidStr() const
+{
+	return _uuidStr;
 }
 
 void Bullet::Disable() const

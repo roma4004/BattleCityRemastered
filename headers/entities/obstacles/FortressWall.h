@@ -4,6 +4,8 @@
 #include "SteelWall.h"
 #include "../BaseObj.h"
 #include "../bonuses/BonusStatus.h"
+#include "interfaces/IDrawable.h"
+
 #include <chrono>
 #include <memory>
 #include <variant>
@@ -11,7 +13,7 @@
 enum class GameMode : char8_t;
 class EventSystem;
 
-class FortressWall final : public BaseObj
+class FortressWall final : public BaseObj, public IDrawable
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;

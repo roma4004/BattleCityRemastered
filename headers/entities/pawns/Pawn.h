@@ -21,8 +21,6 @@ class Pawn : public BaseObj, public ITickUpdatable
 	virtual void SubscribeAsHost();
 	virtual void SubscribeAsClient();
 
-	void Draw(const BaseObj* obj) const override;
-
 protected:
 	float _speed{0.f};
 	int _tier{1};

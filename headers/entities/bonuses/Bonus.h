@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
 #include "interfaces/ITickUpdatable.h"
 #include <chrono>
@@ -11,7 +12,7 @@ enum class BonusType : char8_t;
 struct BaseObjProperty;
 class EventSystem;
 
-class Bonus : public BaseObj, public ITickUpdatable, public IPickupableBonus
+class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IPickupableBonus
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Pawn.h"
+#include "interfaces/IDrawable.h"
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
@@ -8,7 +9,7 @@ struct BulletResetProperty;
 struct UPoint;
 class EventSystem;
 
-class Bullet final : public Pawn
+class Bullet final : public Pawn, public IDrawable
 {
 	using buuid = boost::uuids::uuid;
 
@@ -23,6 +24,7 @@ class Bullet final : public Pawn
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
 
+	void Draw(const BaseObj* obj) const override;
 	void TickUpdate(float deltaTime) override;
 
 public:

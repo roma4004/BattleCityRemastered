@@ -2,7 +2,6 @@
 #include "components/EventSystem.h"
 #include "components/managers/AnimationManager.h"
 #include "entities/pawns/Pawn.h"
-#include "enums/AnimationType.h"
 #include "enums/Direction.h"
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -35,15 +34,22 @@ void TextureManager::Subscribe()
 {
 	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
 	_events->AddListener("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
-	_events->AddListener("DrawHealthBarObj", _name, [this](const BaseObj* baseObj)
+	_events->AddListener(
+			"DrawAnimation", _name,
+			[this](const BaseObj* baseObj, const int step, const int scale, const std::string& name)
+			{
+				this->DrawAnimation(baseObj, step, scale, name);
+			});
+	_events->AddListener("DrawHealthBarObj", _name, [this](const ObjRectangle rect, const int health, const int color)
 	{
-		this->DrawHealthBar(baseObj);
+		this->DrawHealthBar(rect, health, color);
 	});
 }
 
 void TextureManager::Unsubscribe() const
 {
 	_events->RemoveListener("DrawObj", _name);
+	_events->RemoveListener("DrawAnimation", _name);
 	_events->RemoveListener("DrawHealthBarObj", _name);
 }
 
@@ -83,19 +89,18 @@ void TextureManager::SetRenderDrawColor(const int color, const Uint8 transparenc
 	SDL_SetRenderDrawColor(_renderer.get(), r, g, b, a);
 }
 
-void TextureManager::DrawHealthBar(const BaseObj* obj) const
+void TextureManager::DrawHealthBar(const ObjRectangle rect, const int health, const int color) const
 {
 	//TODO: fix recenter health bar when pickup star bonus
 
-	const ObjRectangle rect = obj->GetRect();
-	const int healthWidth = obj->GetHealth() / 3;
+	const int healthWidth = health / 3;
 
 	if (healthWidth <= 0)
 		return;
 
 	const SDL_Rect healthBarRect = {static_cast<int>(rect.x) + 2, static_cast<int>(rect.y) - 10, healthWidth, 5};
 
-	SetRenderDrawColor(obj->GetColor(), 127);
+	SetRenderDrawColor(color, 127);
 
 	SDL_BlendMode blendMode;
 	SDL_GetRenderDrawBlendMode(_renderer.get(), &blendMode);//backup blendmode type
@@ -151,23 +156,8 @@ void TextureManager::RectDraw(const BaseObj* obj)
 SDL_Rect TextureManager::GetTextureRect(const BaseObj* obj, const ObjRectangle rect, SDL_Rect& destRect) const
 {
 	SDL_Rect textureRect{};
-	if (std::string_view name = obj->GetName();//TODO: replace with enum
-		name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
-	{
-		textureRect = RectToSdlRect(_offset.enemy);
-		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Animation) * 16;
-	}
-	else if (name == "Player1" || name == "CoopBot1")
-	{
-		textureRect = RectToSdlRect(_offset.playerOne);
-		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Animation) * 16;
-	}
-	else if (name == "Player2" || name == "CoopBot2")
-	{
-		textureRect = RectToSdlRect(_offset.playerTwo);
-		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Animation) * 16;
-	}
-	else if (name == "Bullet")
+	if (const std::string_view name = obj->GetName();//TODO: replace with enum
+		name == "Bullet")
 	{
 		textureRect = RectToSdlRect(_offset.bullet);
 	}
@@ -190,11 +180,6 @@ SDL_Rect TextureManager::GetTextureRect(const BaseObj* obj, const ObjRectangle r
 	else if (name == "Ice")
 	{
 		textureRect = RectToSdlRect(_offset.ice);
-	}
-	else if (name == "Water")
-	{
-		textureRect = RectToSdlRect(_offset.water);
-		textureRect.x -= _animationManager.GetWaterFrame();
 	}
 	else if (name == "BonusHelmet")
 	{
@@ -224,29 +209,45 @@ SDL_Rect TextureManager::GetTextureRect(const BaseObj* obj, const ObjRectangle r
 	{
 		textureRect = RectToSdlRect(_offset.bonusCaliber);
 	}
+
+	return textureRect;
+}
+
+SDL_Rect TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect, SDL_Rect& destRect) const
+{
+	SDL_Rect textureRect{};
+	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")//TODO: replace with enum
+	{
+		textureRect = RectToSdlRect(_offset.enemy);
+	}
+	else if (name == "Player1" || name == "CoopBot1")
+	{
+		textureRect = RectToSdlRect(_offset.playerOne);
+	}
+	else if (name == "Player2" || name == "CoopBot2")
+	{
+		textureRect = RectToSdlRect(_offset.playerTwo);
+	}
+	else if (name == "Water")
+	{
+		textureRect = RectToSdlRect(_offset.water);
+	}
+	// else if (name == "Bullet")
+	// {
+	// 	textureRect = RectToSdlRect(_offset.bullet);
+	// }
 	else if (name == "BulletExplosion")
 	{
-		if (const int frame = _animationManager.GetFrame(obj->GetUuid(), AnimationType::Bullet_Explosion);
-			frame != -1)
-		{
-			destRect = RectToSdlRect(rect.GetScale(4.f).GetCenter());
-			textureRect = RectToSdlRect(_offset.smallExplosion);
-			textureRect.x += frame * 16;
-		}
-		else
-		{
-			return textureRect;
-		}
+		destRect = RectToSdlRect(rect.GetScale(4.f).GetCenter());
+		textureRect = RectToSdlRect(_offset.smallExplosion);
 	}
 	else if (name == "TankExplosion")
 	{
 		textureRect = RectToSdlRect(_offset.bigExplosion);
-		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Tank_Explosion) * 32;
 	}
 	else if (name == "SpawnAnimation")
 	{
 		textureRect = RectToSdlRect(_offset.spawnAnim);
-		textureRect.x += _animationManager.GetFrame(obj->GetUuid(), AnimationType::Spawn_Animation) * 16;
 	}
 
 	return textureRect;
@@ -274,11 +275,11 @@ void TextureManager::Draw(const BaseObj* obj)
 	const ObjRectangle rect = obj->GetRect();
 	SDL_Rect destRect = RectToSdlRect(rect);
 	const SDL_Rect textureRect = GetTextureRect(obj, rect, destRect);
-	constexpr SDL_Rect defaultSdlRect{};
-	if (textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+	if (constexpr SDL_Rect defaultSdlRect{};
+		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
 		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
 	{
-		RectDraw(obj); //NOTE: fallback draw to non-texture, rectangle filled by color
+		RectDraw(obj);//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	//local angle and flip for texture
@@ -288,10 +289,38 @@ void TextureManager::Draw(const BaseObj* obj)
 		dir = pawn->GetDirection();
 	}
 
+	DrawTexture(&textureRect, &destRect, dir);
+}
+
+void TextureManager::DrawAnimation(const BaseObj* obj, const int step, const int scale, const std::string& name)
+{
+	const ObjRectangle rect = obj->GetRect();
+	SDL_Rect destRect = RectToSdlRect(rect);
+	SDL_Rect textureRect = GetAnimTextureRect(name, rect, destRect);
+	textureRect.x += step * scale;
+	if (constexpr SDL_Rect defaultSdlRect{};
+		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
+	{
+		RectDraw(obj);//NOTE: fallback draw to non-texture, rectangle filled by color
+	}
+
+	//local angle and flip for texture
+	auto dir = Direction::UP;
+	if (const auto pawn = dynamic_cast<const Pawn*>(obj))
+	{
+		dir = pawn->GetDirection();
+	}
+
+	DrawTexture(&textureRect, &destRect, dir);
+}
+
+void TextureManager::DrawTexture(const SDL_Rect* textureRect, const SDL_Rect* destRect, const Direction dir) const
+{
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
 
 	//TODO: move work with sdl to utils to reduce dependencies
-	SDL_RenderCopyEx(_renderer.get(), _texture.get(), &textureRect, &destRect, angle, nullptr, flip);
+	SDL_RenderCopyEx(_renderer.get(), _texture.get(), textureRect, destRect, angle, nullptr, flip);
 }
 
 void TextureManager::GenerateFpsTextures()

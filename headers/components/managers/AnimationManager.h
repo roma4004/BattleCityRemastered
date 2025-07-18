@@ -15,8 +15,9 @@ class AnimationManager
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	AnimatedObject _waterAnimationPassport{16};
-	std::vector<AnimatedObject> _animatedObjects;
+	std::vector<AnimatedObject> _animatedObjects{};// all other (eg. explosion)
+	std::vector<AnimatedObject> _tankObjects{};//procedural animated (eg tanks )
+	std::vector<AnimatedObject> _waterObjects{};//idle animation
 	std::string _name = "AnimationManager";
 	GameMode _gameMode{};
 
@@ -34,16 +35,20 @@ public:
 	void UnsubscribeAsHost() const;
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
-	void CreateAnimation(AnimationType type, ObjRectangle rect, buuid uuid);
+	void CreateAnimationWater(ObjRectangle rect);
+	void CreateAnimationTank(ObjRectangle rect, buuid uuid, std::string name, const BaseObj* obj);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
+	void DeleteAnimation(const std::string& objName);
 
 	[[nodiscard]] int GetFrame(buuid uuid, AnimationType type) const;
-	[[nodiscard]] int GetWaterFrame() const;
 
 private:
-	void Create(const std::string& name, AnimationType type, ObjRectangle rect, const buuid& uuid, int limitOfFrames);
+	void Create(const std::string& name, AnimationType type, ObjRectangle rect, buuid uuid, int limitOfFrames,
+	            int scale, std::string objName);
 	void Update();
 	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
-	void UpdateTank(const buuid& uuid);
-	void UpdateWaterAnimation();
+	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);
+	void UpdateTank(const std::string& uuid);
+	void DisableTankAnimation(const std::string& name);
 	void AnimationSeqDisposer();
 };
