@@ -5,7 +5,6 @@
 #include "enums/AnimationType.h"
 #include "utils/RandUtils.h"
 #include "utils/UuidUtils.h"
-
 #include <algorithm>
 
 AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events)
@@ -37,10 +36,12 @@ void AnimationManager::Subscribe()
 
 void AnimationManager::SubscribeAsHost()
 {
-	_events->AddListener("AnimationCreate", _name, [this](const AnimationType type, const ObjRectangle rect, const std::string& name)
-	{
-		this->CreateAnimation(type, rect, name);
-	});
+	_events->AddListener(
+			"AnimationCreate", _name,
+			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
+			{
+				this->CreateAnimation(type, rect, name);
+			});
 
 	_events->AddListener("AnimationCreateTank", _name, [this](const BaseObj* obj)
 	{
@@ -104,14 +105,8 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 	const auto uuid = UuidUtils::GetRandomUuid();
 	switch (type)
 	{
-		//TODO: investigate
-		// when one players mode we don't see black animation instead of spawn animation
-		// when two players mode we see spawn animation under first player and above second player
-		// when for coop mode we see spawn animation under first and second player
-		case AnimationType::Spawn_Animation: //TODO: maybe uniq id for each explosion for reusing bullet id
+		case AnimationType::Spawn_Animation:
 			Create("SpawnAnimation", type, rect, uuid, 3, 16, std::move(name));
-			//TODO: investigate crash when spawn anim end and we dispose this anim or maybe can just hide and reuse
-			//TODO:add is loop flag or separated container for expired explosion
 			break;
 		case AnimationType::Bullet_Explosion:
 			Create("BulletExplosion", type, rect, uuid, 3, 16, std::move(name));

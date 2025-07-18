@@ -44,7 +44,7 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	if (_obstacleType == ObstacleType::Water) //TODO: create override for water
+	if (_obstacleType == ObstacleType::Water)//TODO: create override for water
 	{
 		_events->EmitEvent("AnimationCreateWater", _rect);
 	}

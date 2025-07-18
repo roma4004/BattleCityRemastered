@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "entities/BaseObjProperty.h"
 #include "utils/UuidUtils.h"
+#include <utility>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	: _color(baseObjProperty.color),
@@ -9,7 +10,7 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	  _uuid{baseObjProperty.uuid},
 	  _name{std::move(baseObjProperty.name)},
 	  _fraction{std::move(baseObjProperty.fraction)},
-	  _rect{std::move(baseObjProperty.rect)}
+	  _rect{baseObjProperty.rect}
 {
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
@@ -28,11 +29,11 @@ BaseObj::BaseObj(const BaseObj& other)
 BaseObj::BaseObj(BaseObj&& other) noexcept
 	: _color(std::exchange(other._color, 0)),
 	  _health(std::exchange(other._health, 0)),
-	  _uuid(std::move(other._uuid)),
+	  _uuid(other._uuid),
 	  _name(std::move(other._name)),
 	  _nameWithUuid(std::move(other._nameWithUuid)),
 	  _fraction(std::move(other._fraction)),
-	  _rect(std::move(other._rect)) {}
+	  _rect(other._rect) {}
 
 //Deprecated //TODO: remove this con overload
 BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
@@ -73,11 +74,11 @@ BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
 	{
 		_color = std::exchange(other._color, 0);
 		_health = std::exchange(other._health, 0);
-		_uuid = std::move(other._uuid);
+		_uuid = other._uuid;
 		_name = std::move(other._name);
 		_nameWithUuid = std::move(other._nameWithUuid);
 		_fraction = std::move(other._fraction);
-		_rect = std::move(other._rect);
+		_rect = other._rect;
 	}
 
 	return *this;

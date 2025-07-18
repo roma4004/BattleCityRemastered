@@ -9,7 +9,10 @@ BOOST_CLASS_EXPORT_IMPLEMENT(StatisticsChange);
 StatisticsChange::StatisticsChange(): Command(CommandType::STATISTICS_CHANGE) {}
 
 StatisticsChange::StatisticsChange(std::string eventName, std::string author, std::string fraction)
-	: Command(CommandType::STATISTICS_CHANGE), _eventName(std::move(eventName)), _author(std::move(author)), _fraction(std::move(fraction)) {}
+	: Command(CommandType::STATISTICS_CHANGE),
+	  _eventName(std::move(eventName)),
+	  _author(std::move(author)),
+	  _fraction(std::move(fraction)) {}
 
 std::string StatisticsChange::GetEventName() const noexcept { return _eventName; }
 std::string StatisticsChange::GetAuthor() const noexcept { return _author; }

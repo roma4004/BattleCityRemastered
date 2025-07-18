@@ -356,11 +356,13 @@ void Server::Subscribe()
 				// NetworkLogger::WriteLog("Server_positionChange add after:" + std::to_string(_batch->GetSize()));
 			});
 
-	_events->AddListener("ServerSend_Shot", _name, [this](const std::string& who, const Direction dir, const buuid& uuid)
-	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
-	});
+	_events->AddListener(
+			"ServerSend_Shot", _name,
+			[this](const std::string& who, const Direction dir, const buuid& uuid)
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
+			});
 
 	_events->AddListener("ServerSend_Health", _name, [this](const std::string& who, const int health, const buuid& uuid)
 	{
@@ -410,11 +412,13 @@ void Server::Subscribe()
 
 void Server::SubscribeBonus()
 {
-	_events->AddListener("ServerSend_BonusSpawn", _name, [this](const FPoint pos, const BonusType type, const buuid& uuid)
-	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
-	});
+	_events->AddListener(
+			"ServerSend_BonusSpawn", _name,
+			[this](const FPoint pos, const BonusType type, const buuid& uuid)
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
+			});
 
 	_events->AddListener("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
 	{
