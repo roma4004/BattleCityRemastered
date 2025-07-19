@@ -8,5 +8,5 @@ protected:
 	virtual ~IDrawable() = default;
 
 public:
-	virtual void Draw(const BaseObj* obj) const = 0;
+	virtual void Draw() const = 0;
 };

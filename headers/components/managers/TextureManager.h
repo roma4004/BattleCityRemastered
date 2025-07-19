@@ -32,9 +32,9 @@ class TextureManager final
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void Draw(const BaseObj* obj);
+	void Draw(ObjRectangle rect, Direction dir, const std::string& name, int color);
 	void DrawTexture(const SDL_Rect* textureRect, const SDL_Rect* destRect, Direction dir) const;
-	void DrawAnimation(const BaseObj* obj, int step, int scale, const std::string& name);
+	void DrawAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name, int color);
 
 	void SetRenderDrawColor(int color, Uint8 transparency) const;
 
@@ -43,9 +43,9 @@ class TextureManager final
 	void DrawHealthBar(ObjRectangle rect, int health, int color) const;
 	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
 	[[nodiscard]] SDL_Texture* CreateColorTexture(int color);
-	void RectDraw(const BaseObj* obj);
+	void RectDraw(ObjRectangle rect, int color);
 	SDL_Rect GetAnimTextureRect(const std::string& name, ObjRectangle rect, SDL_Rect& destRect) const;
-	[[nodiscard]] SDL_Rect GetTextureRect(const BaseObj* obj, ObjRectangle rect, SDL_Rect& destRect) const;
+	[[nodiscard]] SDL_Rect GetTextureRect(const std::string& name) const;
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
 	void GenerateFpsTextures();
 

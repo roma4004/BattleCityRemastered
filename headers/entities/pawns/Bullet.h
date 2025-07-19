@@ -24,7 +24,7 @@ class Bullet final : public Pawn, public IDrawable
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
 
-	void Draw(const BaseObj* obj) const override;
+	void Draw() const override;
 	void TickUpdate(float deltaTime) override;
 
 public:

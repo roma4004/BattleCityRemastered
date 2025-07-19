@@ -16,6 +16,21 @@ GrassTile::GrassTile(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
+
+	Subscribe();
 }
 
-GrassTile::~GrassTile() = default;
+GrassTile::~GrassTile()
+{
+	Unsubscribe();
+}
+
+void GrassTile::Subscribe()
+{
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+}
+
+void GrassTile::Unsubscribe() const
+{
+	_events->RemoveListener("Draw", _nameWithUuid);
+}

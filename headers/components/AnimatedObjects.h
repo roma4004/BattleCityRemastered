@@ -1,51 +1,51 @@
 ﻿#pragma once
 
 #include "../entities/BaseObj.h"
-#include "interfaces/IDrawable.h"
-
+#include "enums/Direction.h"
 #include <memory>
 
 enum class AnimationType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
+class Tank;
 
-class AnimatedObject : public BaseObj, public IDrawable
+class AnimatedObject
 {
-	using buuid = boost::uuids::uuid;
-
 public:
 	std::shared_ptr<EventSystem> events{nullptr};
+	ObjRectangle rect{};
 	int animationFrame{0};
 	int elapsedFrames{0};
 	int limitOfFrames{};
+	int color{};
 	GameMode gameMode{};
+	Direction dir{};
 	AnimationType type{};
 	bool markToDispose{false};
 	bool isInfinite{false};
 	int scale{};
+	std::string name{};
+	std::string nameWithUuid{};
 	std::string objName{};
-	const BaseObj* parent{nullptr};
+	std::weak_ptr<Tank> parent{};
 
-	void Draw(const BaseObj* obj) const override;
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void Draw() const;
 
 	AnimatedObject(const AnimatedObject& other);
 	AnimatedObject(AnimatedObject&& other) noexcept;
-
-	AnimatedObject();
 
 	//for water
 	AnimatedObject(ObjRectangle rect, std::shared_ptr<EventSystem> events, int frameLimit);
 
 	//for tank
-	AnimatedObject(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode,
-	               int frameLimit, int scale, std::string objName, const BaseObj* obj);
+	AnimatedObject(std::shared_ptr<EventSystem> events, GameMode gameMode, int frameLimit, int scale,
+	               std::weak_ptr<Tank> tank);
 
 	//for other (eg explosion)
-	AnimatedObject(std::string name, ObjRectangle rect, AnimationType type, std::shared_ptr<EventSystem> events,
-	               buuid uuid, GameMode gameMode, int frameLimit, int scale, std::string objName);
+	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, std::shared_ptr<EventSystem> events,
+	               GameMode gameMode, int frameLimit, int scale, std::string objName, int color);
 
-	~AnimatedObject() override;
+	~AnimatedObject();
 
 	void Subscribe();
 	void Unsubscribe() const;

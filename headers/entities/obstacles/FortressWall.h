@@ -4,8 +4,6 @@
 #include "SteelWall.h"
 #include "../BaseObj.h"
 #include "../bonuses/BonusStatus.h"
-#include "interfaces/IDrawable.h"
-
 #include <chrono>
 #include <memory>
 #include <variant>
@@ -13,7 +11,7 @@
 enum class GameMode : char8_t;
 class EventSystem;
 
-class FortressWall final : public BaseObj, public IDrawable
+class FortressWall final : public BaseObj
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
@@ -34,8 +32,6 @@ class FortressWall final : public BaseObj, public IDrawable
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 	void UnsubscribeBonus() const;
-
-	void Draw(const BaseObj* obj) const override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void OnPlayerShovelCooldownEnd();

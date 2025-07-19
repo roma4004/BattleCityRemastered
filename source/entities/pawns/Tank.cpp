@@ -27,7 +27,10 @@ Tank::~Tank()
 
 	_events->EmitEvent("TankDied", _uuid);
 
-	_events->EmitEvent("AnimationCreate", AnimationType::Tank_Explosion, _rect, _name);
+	const std::string& basicString = _name;
+	const ObjRectangle objRectangle = _rect;
+	const int color = _color;
+	_events->EmitEvent("AnimationCreate", AnimationType::Tank_Explosion, objRectangle, basicString, color);
 }
 
 void Tank::Subscribe()

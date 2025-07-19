@@ -30,7 +30,7 @@ void AnimationManager::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("AnimationUpdate", _name, [this]() { Update(); });
-	_events->AddListener("AnimationTankUpdate", _name, [this](const std::string& uuid) { UpdateTank(uuid); });
+	_events->AddListener("AnimationTankUpdate", _name, [this](const std::string& objName) { UpdateTank(objName); });
 	_events->AddListener("DisposeStage", _name, [this]() { this->AnimationSeqDisposer(); });
 }
 
@@ -38,14 +38,14 @@ void AnimationManager::SubscribeAsHost()
 {
 	_events->AddListener(
 			"AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
+			[this](const AnimationType type, const ObjRectangle rect, const std::string& objName, const int color)
 			{
-				this->CreateAnimation(type, rect, name);
+				this->CreateAnimation(type, rect, objName, color);
 			});
 
-	_events->AddListener("AnimationCreateTank", _name, [this](const BaseObj* obj)
+	_events->AddListener("AnimationCreateTank", _name, [this](std::weak_ptr<Tank> tank)
 	{
-		this->CreateAnimationTank(obj->GetRect(), UuidUtils::GetRandomUuid(), std::string(obj->GetName()), obj);
+		this->CreateAnimationTank(tank);
 	});
 	_events->AddListener("AnimationCreateWater", _name, [this](const ObjRectangle rect)
 	{
@@ -57,10 +57,10 @@ void AnimationManager::SubscribeAsClient()//TODO: merge with host?
 {
 	_events->AddListener(
 			"ClientReceived_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
+			[this](const AnimationType type, const ObjRectangle rect, const std::string& objName, const int color)
 			//TODO: change command add field add , const std::string& objName
 			{
-				CreateAnimation(type, rect, name);
+				CreateAnimation(type, rect, objName, color);
 			});
 }
 
@@ -100,26 +100,27 @@ void AnimationManager::Reset()
 	_waterObjects.clear();
 }
 
-void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name)
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& objName,
+                                       const int color)
 {
-	const auto uuid = UuidUtils::GetRandomUuid();
 	switch (type)
 	{
 		case AnimationType::Spawn_Animation:
-			Create("SpawnAnimation", type, rect, uuid, 3, 16, std::move(name));
+			Create("SpawnAnimation", rect, type, 3, 16, objName, color);
 			break;
 		case AnimationType::Bullet_Explosion:
-			Create("BulletExplosion", type, rect, uuid, 3, 16, std::move(name));
+			Create("BulletExplosion", rect, type, 3, 16, objName, color);
 			break;
 		case AnimationType::Tank_Explosion: //TODO: fix tank explosion
-			DeleteAnimation(name);
-			Create("TankExplosion", type, rect, uuid, 2, 32, std::move(name));//TODO: should change limitOfFrame to 5?
+			DeleteAnimation(objName);
+			Create("TankExplosion", rect, type, 2, 32, objName, color);
+			//TODO: should change limitOfFrame to 5?
 			break;
 		case AnimationType::Helmet_Animation:
-			Create("HelmetAnimation", type, rect, uuid, 2, 16, std::move(name));
+			Create("HelmetAnimation", rect, type, 2, 16, objName, color);
 			break;
 		case AnimationType::Bullet_Animation:
-			Create("BulletAnimation", type, rect, uuid, 2, 16, std::move(name));
+			Create("BulletAnimation", rect, type, 2, 16, objName, color);
 			break;
 		default:
 			break;
@@ -139,15 +140,16 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	_waterObjects.emplace_back(rect, _events, 16);
 }
 
-void AnimationManager::CreateAnimationTank(const ObjRectangle rect, buuid uuid, std::string name, const BaseObj* obj)
+void AnimationManager::CreateAnimationTank(std::weak_ptr<Tank> tank)
 {
-	_tankObjects.emplace_back(rect, _events, std::move(uuid), _gameMode, 2, 16, std::move(name), obj);
+	_tankObjects.emplace_back(_events, _gameMode, 2, 16, tank);
 }
 
-void AnimationManager::Create(const std::string& name, const AnimationType type, const ObjRectangle rect,
-                              buuid uuid, const int limitOfFrames, const int scale, std::string objName)
+void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
+                              const int limitOfFrames, const int scale, std::string objName, const int color)
 {
-	_animatedObjects.emplace_back(name, rect, type, _events, std::move(uuid), _gameMode, limitOfFrames, scale, objName);
+	_animatedObjects.emplace_back(
+			name, rect, type, _events, _gameMode, limitOfFrames, scale, std::move(objName), color);
 }
 
 void AnimationManager::Update()
@@ -228,18 +230,6 @@ void AnimationManager::DisableTankAnimation(const std::string& objName)
 			return;
 		}
 	}
-}
-
-//deprecated
-int AnimationManager::GetFrame(buuid uuid, const AnimationType type) const
-{
-	auto predicate = [uuid = std::move(uuid), type](const AnimatedObject& obj)
-	{
-		return obj.GetUuid() == uuid && obj.type == type;
-	};
-	const auto it = std::ranges::find_if(_animatedObjects, predicate);
-
-	return it != _animatedObjects.end() ? it->animationFrame : 0;
 }
 
 // NOTE: how it works

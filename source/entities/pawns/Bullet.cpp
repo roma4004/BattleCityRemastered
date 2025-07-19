@@ -42,7 +42,7 @@ Bullet::~Bullet()
 
 void Bullet::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -83,7 +83,7 @@ void Bullet::UnsubscribeAsClient() const
 	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _nameWithUuid);
 }
 
-void Bullet::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
+void Bullet::Draw() const { _events->EmitEvent("DrawObj", _rect, _dir, _name, _color); }
 
 using buuid = boost::uuids::uuid;
 

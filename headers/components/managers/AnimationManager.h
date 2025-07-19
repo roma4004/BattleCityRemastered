@@ -9,6 +9,7 @@
 
 enum class AnimationType: char8_t;
 struct ObjRectangle;
+class Tank;
 
 class AnimationManager
 {
@@ -36,15 +37,13 @@ public:
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);
-	void CreateAnimationTank(ObjRectangle rect, buuid uuid, std::string name, const BaseObj* obj);
-	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
+	void CreateAnimationTank(std::weak_ptr<Tank> tank);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& objName, int color);
 	void DeleteAnimation(const std::string& objName);
 
-	[[nodiscard]] int GetFrame(buuid uuid, AnimationType type) const;
-
 private:
-	void Create(const std::string& name, AnimationType type, ObjRectangle rect, buuid uuid, int limitOfFrames,
-	            int scale, std::string objName);
+	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames,
+	            int scale, std::string objName, int color);
 	void Update();
 	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
 	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);

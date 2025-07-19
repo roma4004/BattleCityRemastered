@@ -354,11 +354,11 @@ void TankSpawner::RespawnTanks()
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					RespawnEnemyTanks(type, _slots[i].id);
+					RespawnEnemyTanks(type, _slots[i].uuid);
 					break;
 				case TankType::PLAYER1:
 				case TankType::PLAYER2:
-					RespawnPlayerTeam(type, _slots[i].id);
+					RespawnPlayerTeam(type, _slots[i].uuid);
 					break;
 				default:
 					break;
@@ -497,7 +497,7 @@ void TankSpawner::OnTankSpawn(const buuid& uuid)
 {
 	for (size_t i = 0u; i < _slots.size(); ++i)
 	{
-		if (_slots[i].id == uuid)
+		if (_slots[i].uuid == uuid)
 		{
 			switch (static_cast<TankType>(i))
 			{
@@ -527,7 +527,7 @@ void TankSpawner::OnTankDied(const buuid& uuid)
 	//TODO: replace with std:: algorithm
 	for (size_t i = 0u; i < _slots.size(); ++i)
 	{
-		if (_slots[i].id == uuid)
+		if (_slots[i].uuid == uuid)
 		{
 			switch (static_cast<TankType>(i))
 			{
@@ -571,8 +571,8 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 	return std::make_unique<InputProviderForPlayerTwo>(_events);
 }
 
-std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
-                                                 BonusEffectProperty effects)
+std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
+                                              BonusEffectProperty effects)
 {
 	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
 	{
@@ -588,17 +588,17 @@ std::shared_ptr<BaseObj> TankSpawner::CreateTank(const TankType type, PawnProper
 			std::move(pawnProperty), _bulletPool, std::move(GetInputProvider(type)), std::move(effects));
 }
 
-void TankSpawner::SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction,
+void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name, const std::string& fraction,
                             const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
 {
 	BaseObjProperty baseObjProperty{rect, color, health, uuid, name, std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), _allObjects, _events, 1, speed, _windowSize, Direction::UP, _gameMode};
 
-	if (std::shared_ptr<BaseObj> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
+	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
 	{
 		_allObjects->emplace_back(tank);
-		_events->EmitEvent("AnimationCreateTank", tank.get());
-		_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name);
+		_events->EmitEvent("AnimationCreateTank", std::weak_ptr<Tank>(tank));
+		_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name, color);
 	}
 }

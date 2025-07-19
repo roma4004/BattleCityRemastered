@@ -13,11 +13,11 @@ class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public I
 {
 	using buuid = boost::uuids::uuid;
 
-	int _color{0};
-	int _health{0};
+	int _health{0};//TODO: move to protected and replace getHealth for child to direct access
 
 protected:
 	buuid _uuid{};
+	int _color{0};
 	std::string _name{};
 	std::string _nameWithUuid{};
 	std::string _fraction{};

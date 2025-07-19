@@ -2,7 +2,6 @@
 
 #include "Point.h"
 #include "enums/GameMode.h"
-#include "enums/RespawnResource.h"
 #include <memory>
 #include <random>
 #include <boost/uuid/uuid.hpp>
@@ -13,6 +12,7 @@ enum class GameMode : char8_t;
 struct SDL_Renderer;
 struct ObjRectangle;
 struct BonusEffectProperty;
+class Tank;
 class BaseObj;
 class BulletPool;
 class EventSystem;
@@ -40,7 +40,7 @@ class TankSpawner final
 
 	struct SpawnSlot
 	{
-		buuid id{};
+		buuid uuid{};
 		bool isAvailable{false};
 	};
 
@@ -62,11 +62,11 @@ class TankSpawner final
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
 
-	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
+	void SpawnTank(ObjRectangle rect, int color, int health, const std::string& name, const std::string& fraction, float speed,
 	               buuid uuid, BonusEffectProperty effects, TankType type);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
-	[[nodiscard]] std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty,
-	                                                  BonusEffectProperty effects);
+	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty,
+	                                               BonusEffectProperty effects);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid);
 	void RespawnPlayerTeam(TankType type, buuid uuid);

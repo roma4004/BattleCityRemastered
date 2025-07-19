@@ -24,7 +24,7 @@ protected:
 	ObstacleType _obstacleType{};
 	bool _isReplicationOn{};
 
-	void Draw(const BaseObj* obj) const override;
+	void Draw() const override;
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:

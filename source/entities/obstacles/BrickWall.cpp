@@ -16,6 +16,8 @@ BrickWall::BrickWall(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
+
+	Subscribe();
 }
 
 BrickWall::BrickWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
@@ -33,6 +35,21 @@ BrickWall::BrickWall(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
+
+	Subscribe();
 }
 
-BrickWall::~BrickWall() = default;
+BrickWall::~BrickWall()
+{
+	Unsubscribe();
+}
+
+void BrickWall::Subscribe()
+{
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+}
+
+void BrickWall::Unsubscribe() const
+{
+	_events->RemoveListener("Draw", _nameWithUuid);
+}

@@ -16,6 +16,8 @@ SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
+
+	Subscribe();
 }
 
 SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
@@ -33,6 +35,21 @@ SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(false);
+
+	Subscribe();
 }
 
-SteelWall::~SteelWall() = default;
+SteelWall::~SteelWall()
+{
+	Unsubscribe();
+}
+
+void SteelWall::Subscribe()
+{
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+}
+
+void SteelWall::Unsubscribe() const
+{
+	_events->RemoveListener("Draw", _nameWithUuid);
+}

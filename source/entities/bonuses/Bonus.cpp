@@ -1,6 +1,7 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
@@ -40,7 +41,7 @@ Bonus::~Bonus()
 
 void Bonus::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
@@ -83,7 +84,7 @@ void Bonus::UnsubscribeAsClient() const
 	_events->RemoveListener("ClientReceived_BonusDeSpawn", _name);
 }
 
-void Bonus::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
+void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 
 void Bonus::TickUpdate(float /*deltaTime*/)
 {

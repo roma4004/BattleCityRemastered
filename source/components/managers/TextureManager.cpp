@@ -33,12 +33,18 @@ TextureManager::~TextureManager()
 void TextureManager::Subscribe()
 {
 	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
-	_events->AddListener("DrawObj", _name, [this](const BaseObj* baseObj) { this->Draw(baseObj); });
+	_events->AddListener(
+			"DrawObj", _name,
+			[this](const ObjRectangle rect, const Direction dir, const std::string& name, const int color)
+			{
+				this->Draw(rect, dir, name, color);
+			});
 	_events->AddListener(
 			"DrawAnimation", _name,
-			[this](const BaseObj* baseObj, const int step, const int scale, const std::string& name)
+			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
+			       const std::string& name, const int color)
 			{
-				this->DrawAnimation(baseObj, step, scale, name);
+				this->DrawAnimation(rect, dir, step, scale, name, color);
 			});
 	_events->AddListener("DrawHealthBarObj", _name, [this](const ObjRectangle rect, const int health, const int color)
 	{
@@ -142,10 +148,8 @@ SDL_Texture* TextureManager::CreateColorTexture(const int color)
 	return colorTexture;
 }
 
-void TextureManager::RectDraw(const BaseObj* obj)
+void TextureManager::RectDraw(const ObjRectangle rect, const int color)
 {
-	const ObjRectangle rect = obj->GetRect();
-	const int color = obj->GetColor();
 	const SDL_Rect destRect = RectToSdlRect(rect);
 
 	SDL_Texture* colorTexture = CreateColorTexture(color);
@@ -153,11 +157,10 @@ void TextureManager::RectDraw(const BaseObj* obj)
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
 }
 
-SDL_Rect TextureManager::GetTextureRect(const BaseObj* obj, const ObjRectangle rect, SDL_Rect& destRect) const
+SDL_Rect TextureManager::GetTextureRect(const std::string& name) const
 {
 	SDL_Rect textureRect{};
-	if (const std::string_view name = obj->GetName();//TODO: replace with enum
-		name == "Bullet")
+	if (name == "Bullet")//TODO: replace with enum TextureType
 	{
 		textureRect = RectToSdlRect(_offset.bullet);
 	}
@@ -270,31 +273,25 @@ std::pair<double, SDL_RendererFlip> TextureManager::GetRotateAndAngleAndFlip(con
 	}
 }
 
-void TextureManager::Draw(const BaseObj* obj)
+void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name, const int color)
 {
-	const ObjRectangle rect = obj->GetRect();
-	SDL_Rect destRect = RectToSdlRect(rect);
-	const SDL_Rect textureRect = GetTextureRect(obj, rect, destRect);
+	const SDL_Rect destRect = RectToSdlRect(rect);
+	const SDL_Rect textureRect = GetTextureRect(name);
 	if (constexpr SDL_Rect defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
-		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
+		textureRect.x == defaultSdlRect.x
+		&& textureRect.y == defaultSdlRect.y
+		&& textureRect.w == defaultSdlRect.w
+		&& textureRect.h == defaultSdlRect.h)
 	{
-		RectDraw(obj);//NOTE: fallback draw to non-texture, rectangle filled by color
-	}
-
-	//local angle and flip for texture
-	auto dir = Direction::UP;
-	if (const auto pawn = dynamic_cast<const Pawn*>(obj))
-	{
-		dir = pawn->GetDirection();
+		RectDraw(rect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	DrawTexture(&textureRect, &destRect, dir);
 }
 
-void TextureManager::DrawAnimation(const BaseObj* obj, const int step, const int scale, const std::string& name)
+void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
+                                   const std::string& name, const int color)
 {
-	const ObjRectangle rect = obj->GetRect();
 	SDL_Rect destRect = RectToSdlRect(rect);
 	SDL_Rect textureRect = GetAnimTextureRect(name, rect, destRect);
 	textureRect.x += step * scale;
@@ -302,14 +299,7 @@ void TextureManager::DrawAnimation(const BaseObj* obj, const int step, const int
 		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
 		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
 	{
-		RectDraw(obj);//NOTE: fallback draw to non-texture, rectangle filled by color
-	}
-
-	//local angle and flip for texture
-	auto dir = Direction::UP;
-	if (const auto pawn = dynamic_cast<const Pawn*>(obj))
-	{
-		dir = pawn->GetDirection();
+		RectDraw(rect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	DrawTexture(&textureRect, &destRect, dir);
@@ -317,6 +307,7 @@ void TextureManager::DrawAnimation(const BaseObj* obj, const int step, const int
 
 void TextureManager::DrawTexture(const SDL_Rect* textureRect, const SDL_Rect* destRect, const Direction dir) const
 {
+	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
 
 	//TODO: move work with sdl to utils to reduce dependencies

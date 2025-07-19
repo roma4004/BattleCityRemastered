@@ -16,6 +16,8 @@ WaterTile::WaterTile(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
+
+	_events->EmitEvent("AnimationCreateWater", _rect);
 }
 
 WaterTile::~WaterTile() = default;

@@ -30,9 +30,9 @@ BaseObj::BaseObj(BaseObj&& other) noexcept
 	: _color(std::exchange(other._color, 0)),
 	  _health(std::exchange(other._health, 0)),
 	  _uuid(other._uuid),
-	  _name(std::move(other._name)),
-	  _nameWithUuid(std::move(other._nameWithUuid)),
-	  _fraction(std::move(other._fraction)),
+	  _name(other._name),
+	  _nameWithUuid(other._nameWithUuid),
+	  _fraction(other._fraction),
 	  _rect(other._rect) {}
 
 //Deprecated //TODO: remove this con overload
@@ -75,9 +75,9 @@ BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
 		_color = std::exchange(other._color, 0);
 		_health = std::exchange(other._health, 0);
 		_uuid = other._uuid;
-		_name = std::move(other._name);
-		_nameWithUuid = std::move(other._nameWithUuid);
-		_fraction = std::move(other._fraction);
+		_name = other._name;
+		_nameWithUuid = other._nameWithUuid;
+		_fraction = other._fraction;
 		_rect = other._rect;
 	}
 

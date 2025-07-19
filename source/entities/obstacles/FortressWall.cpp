@@ -95,8 +95,6 @@ void FortressWall::UnsubscribeBonus() const
 	_events->RemoveListener("BonusShovelOnEnemyPickup", _nameWithUuid);
 }
 
-void FortressWall::Draw(const BaseObj* /*obj*/) const {}
-
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))

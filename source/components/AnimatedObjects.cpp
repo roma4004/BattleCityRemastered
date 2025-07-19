@@ -1,55 +1,62 @@
 ﻿#include "components/AnimatedObjects.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/Obstacle.h"
+#include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
-
 #include <boost/uuid/nil_generator.hpp>
 
-AnimatedObject::AnimatedObject()//TODO: remove this
-	: BaseObj{{}, 0x0, 1, UuidUtils::GetRandomUuid(), "Water", "Neutral"} {}
+class Tank;
 
 //NOTE: used only for water
 AnimatedObject::AnimatedObject(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const int frameLimit)
-	: BaseObj{rect, 0x0, 1, UuidUtils::GetRandomUuid(), "Water", "Neutral"},
-	  events(std::move(events)),
+	: events(std::move(events)),
+	  rect{rect},
 	  limitOfFrames{frameLimit},
 	  type(AnimationType::Water_Animation),
 	  isInfinite{true},
 	  scale{1},
+	  name{"Water"},
+	  nameWithUuid{"name" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
 	  objName{"Water"}
 {
 	Subscribe();
 }
 
-AnimatedObject::AnimatedObject(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
-                               const GameMode gameMode, const int frameLimit, const int scale,
-                               std::string objName, const BaseObj* obj)
-	: BaseObj{rect, 0x0, 1, uuid, "TankAnimation", "Neutral"},
-	  events(std::move(events)),
+AnimatedObject::AnimatedObject(std::shared_ptr<EventSystem> events, const GameMode gameMode, const int frameLimit,
+                               const int scale, std::weak_ptr<Tank> tank)
+	: events(std::move(events)),
 	  limitOfFrames{frameLimit},
 	  gameMode{gameMode},
 	  type(AnimationType::Tank_Animation),
 	  isInfinite{true},
 	  scale{scale},
-	  objName(std::move(objName)),
-	  parent{obj}
+	  name(std::string("TankAnimation")),
+	  nameWithUuid{"TankAnimation" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
+	  parent{tank}
 {
+	const auto tankLck = tank.lock();
+	rect = tankLck->GetRect();
+	objName = std::string(tankLck->GetName());
+	color = tankLck->GetColor();
 	Subscribe();
 }
 
 using buuid = boost::uuids::uuid;
 
-AnimatedObject::AnimatedObject(std::string name, const ObjRectangle rect, const AnimationType type,
-                               std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
-                               const int frameLimit, const int scale, std::string objName)
-	: BaseObj{rect, 0x0, 1, uuid, std::move(name), "Neutral"},
-	  events(std::move(events)),
+AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
+                               std::shared_ptr<EventSystem> events, const GameMode gameMode, const int frameLimit,
+                               const int scale, std::string objName, const int color)
+	: events(std::move(events)),
+	  rect{rect},
 	  limitOfFrames{frameLimit},
-	  gameMode{gameMode},
-	  type(type),//TODO:remove field
+	  color{color},
+	  gameMode{gameMode},//TODO:remove field
+	  type(type),
 	  scale{scale},
+	  name{name},
+	  nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
 	  objName(std::move(objName))
 {
 	Subscribe();
@@ -64,58 +71,61 @@ void AnimatedObject::Subscribe()
 {
 	if (gameMode == GameMode::PlayAsHost)
 	{
-		this->events->EmitEvent("ServerSend_AnimationCreate", type, _rect, _uuid);
+		this->events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName, color);
 	}
 
-	this->events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
+	this->events->AddListener("Draw", nameWithUuid, [this]() { this->Draw(); });
 }
 
 void AnimatedObject::Unsubscribe() const
 {
-	events->RemoveListener("Draw", _nameWithUuid);
+	events->RemoveListener("Draw", nameWithUuid);
 }
 
-void AnimatedObject::Draw(const BaseObj* obj) const
+void AnimatedObject::Draw() const
 {
 	if (type == AnimationType::Water_Animation)
 	{
-		events->EmitEvent("DrawAnimation", obj, -animationFrame, scale, objName);
+		events->EmitEvent("DrawAnimation", rect, dir, -animationFrame, scale, name, color);
 	}
 	else if (type == AnimationType::Spawn_Animation)
 	{
-		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, _name);
+		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
 	}
 	else if (type == AnimationType::Bullet_Animation)
 	{
-		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, _name);
+		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
 	}
 	else if (type == AnimationType::Bullet_Explosion)
 	{
-		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, _name);
+		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
 	}
 	else if (type == AnimationType::Tank_Explosion)
 	{
-		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, _name);
+		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
 	}
-	else if (parent == nullptr)
+	else if (parent.expired())
 	{
-		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, objName); //TODO: recheck if it needed?
+		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
+		//TODO: recheck if it needed?
 	}
 	else
 	{
 		//for tanks
-		events->EmitEvent("DrawAnimation", parent, animationFrame, scale, objName); //TODO: recheck if it needed?
+		const std::shared_ptr<Tank> tankLck = parent.lock();
+		const ObjRectangle rect = tankLck->GetRect();
+		const Direction direction = tankLck->GetDirection();
+		const int color = tankLck->GetColor();
+		events->EmitEvent("DrawAnimation", rect, direction, animationFrame, scale, objName, color);
+		//TODO: recheck if it needed?
 	}
 }
-
-void AnimatedObject::SendDamageStatistics(const std::string& /*author*/, const std::string& /*fraction*/) {}
 
 void AnimatedObject::Disable() const { Unsubscribe(); };
 void AnimatedObject::Enable() { Subscribe(); };
 
 // copy constructor
 AnimatedObject::AnimatedObject(const AnimatedObject& other)
-	: BaseObj(other)
 {
 	events = other.events;
 	animationFrame = other.animationFrame;
@@ -129,7 +139,7 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	objName = other.objName;
 	parent = other.parent;
 	// if (gameMode == GameMode::PlayAsHost) {
-	// 	events->EmitEvent("ServerSend_AnimationCreate", type, _rect, _uuid);
+	// 	events->EmitEvent("ServerSend_AnimationCreate", type, rect, color);
 	// }
 
 	Subscribe();
@@ -137,7 +147,6 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 
 // move constructor
 AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
-	: BaseObj(std::move(other))
 {
 	// Disable();
 
@@ -164,8 +173,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	if (this == &other)
 		return *this;
 
-	BaseObj::operator=(other);
-
 	// Disable();
 
 	events = other.events;
@@ -181,7 +188,7 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	objName = other.objName;
 	parent = other.parent;
 	// if (gameMode == GameMode::PlayAsHost) {
-	// 	events->EmitEvent("ServerSend_AnimationCreate", type, _rect, _uuid);
+	// 	events->EmitEvent("ServerSend_AnimationCreate", type, rect, color);
 	// }
 
 	Enable();
@@ -197,8 +204,6 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	if (this == &other)
 		return *this;
 
-	BaseObj::operator=(other);
-
 	// Disable();
 
 	events = other.events;
@@ -212,8 +217,8 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
-	objName = std::move(other.objName);
-	parent = std::move(other.parent);
+	objName = other.objName;
+	parent = other.parent;
 
 	Enable();
 

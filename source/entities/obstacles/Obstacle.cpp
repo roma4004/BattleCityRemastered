@@ -1,5 +1,6 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
+#include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 
@@ -44,15 +45,6 @@ Obstacle::~Obstacle()
 
 void Obstacle::Subscribe()
 {
-	if (_obstacleType == ObstacleType::Water)//TODO: create override for water
-	{
-		_events->EmitEvent("AnimationCreateWater", _rect);
-	}
-	else
-	{
-		_events->AddListener("Draw", _nameWithUuid, [this]() { Draw(this); });
-	}
-
 	if (_isReplicationOn && _gameMode == GameMode::PlayAsClient)
 	{
 		Obstacle::SubscribeAsClient();
@@ -73,11 +65,6 @@ void Obstacle::SubscribeAsClient()
 
 void Obstacle::Unsubscribe() const
 {
-	if (_obstacleType != ObstacleType::Water)
-	{
-		_events->RemoveListener("Draw", _nameWithUuid);
-	}
-
 	if (_isReplicationOn && _gameMode == GameMode::PlayAsClient)
 	{
 		Obstacle::UnsubscribeAsClient();
@@ -89,7 +76,7 @@ void Obstacle::UnsubscribeAsClient() const
 	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
-void Obstacle::Draw(const BaseObj* obj) const { _events->EmitEvent("DrawObj", obj); }
+void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
