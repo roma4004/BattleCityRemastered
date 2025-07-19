@@ -8,15 +8,15 @@
 #include <ranges>
 
 TextureManager::TextureManager(const UPoint windowSize, std::shared_ptr<SDL_Texture> texture,
-                               std::shared_ptr<SDL_Renderer> renderer,
-                               std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events)
+                               std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> fpsFont,
+                               std::shared_ptr<EventSystem> events, std::shared_ptr<AnimationManager> animationManager)
 	: _windowSize{windowSize},
-	  _renderer(std::move(renderer)),
-	  _texture(std::move(texture)),
-	  _events(events),
+	  _renderer{std::move(renderer)},
+	  _texture{std::move(texture)},
+	  _events{std::move(events)},
+	  _animationManager{std::move(animationManager)},
 	  _fpsFont{std::move(fpsFont)},
-	  _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40},
-	  _animationManager(events)
+	  _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 {
 	GenerateFpsTextures();
 

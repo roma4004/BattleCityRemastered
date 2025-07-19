@@ -93,14 +93,18 @@ void AnimatedObject::Draw(const BaseObj* obj) const
 	{
 		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, _name);
 	}
+	else if (type == AnimationType::Tank_Explosion)
+	{
+		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, _name);
+	}
 	else if (parent == nullptr)
 	{
-		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, objName);
+		events->EmitEvent("DrawAnimation", obj, animationFrame, scale, objName); //TODO: recheck if it needed?
 	}
 	else
 	{
 		//for tanks
-		events->EmitEvent("DrawAnimation", parent, animationFrame, scale, objName);
+		events->EmitEvent("DrawAnimation", parent, animationFrame, scale, objName); //TODO: recheck if it needed?
 	}
 }
 

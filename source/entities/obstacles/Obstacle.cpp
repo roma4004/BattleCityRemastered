@@ -33,7 +33,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, s
 
 	if (_isReplicationOn && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_ObstacleSpawn", _rect, _obstacleType, uuid);
+		_events->EmitEvent("ServerSend_ObstacleSpawn", _rect, _obstacleType, _uuid);
 	}
 }
 

@@ -23,14 +23,11 @@ class TextureManager final
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _texture{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-
+	std::shared_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
-
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
-
 	std::unordered_map<int, SDL_Texture*> _colorTextureCache;
 	SDL_Rect _fpsRectangle{};
-	AnimationManager _animationManager;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -54,7 +51,8 @@ class TextureManager final
 
 public:
 	TextureManager(UPoint windowSize, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
-	               std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events);
+	               std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
+	               std::shared_ptr<AnimationManager> animationManager);
 
 	~TextureManager();
 

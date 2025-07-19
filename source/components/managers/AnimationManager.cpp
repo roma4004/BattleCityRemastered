@@ -152,21 +152,21 @@ void AnimationManager::Create(const std::string& name, const AnimationType type,
 
 void AnimationManager::Update()
 {
-	for (auto& passport: _waterObjects)
+	for (auto& animatedObj: _waterObjects)
 	{
-		UpdateFrameInfinite(passport, 20);
+		UpdateFrameInfinite(animatedObj, 20);
 	}
 
-	for (auto& passport: _animatedObjects)
+	for (auto& animatedObj: _animatedObjects)
 	{
-		switch (passport.type)
+		switch (animatedObj.type)
 		{
 			case AnimationType::Spawn_Animation:
 			case AnimationType::Bullet_Explosion:
-				UpdateFrame(passport, 20);
+				UpdateFrame(animatedObj, 20);
 				break;
 			case AnimationType::Tank_Explosion:
-				UpdateFrame(passport, 30);
+				UpdateFrame(animatedObj, 30);
 				break;
 			//case AnimationType::Helmet_Animation:
 			//case AnimationType::Bullet_Animation:
