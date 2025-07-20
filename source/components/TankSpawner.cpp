@@ -73,6 +73,13 @@ void TankSpawner::Subscribe()
 	{
 		this->OnBonusTank(author, fraction);
 	});
+
+	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
+	{
+		const auto tankLck = tank.lock();
+		_events->EmitEvent("TankSpawn", tankLck->GetUuid());
+		_events->EmitEvent("AnimationCreateTank", tank);
+	});
 }
 
 void TankSpawner::SubscribeAsClient()
@@ -90,7 +97,8 @@ void TankSpawner::SubscribeAsClient()
 
 	_events->AddListener("ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
 	{
-		this->OnClientRespawn(type, uuid);
+		constexpr bool skipDelay = true;
+		this->OnClientRespawn(type, uuid, skipDelay);
 	});
 }
 
@@ -180,7 +188,8 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
-void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health)
+void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health,
+                             const bool skipDelay)
 {
 	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
 	const float size{gridOffset * 3};
@@ -220,15 +229,18 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			constexpr int gray{0x808080};
 			const bool isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive;
 			const bool isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<int>(type)).isActive;
-			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid),
-			          {isTimerActive, isHelmetActive}, type);
+			const BonusEffectProperty effects = {isTimerActive, isHelmetActive};
+
+			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid), effects, type,
+			          skipDelay);
+
 			return;
 		}
 	}
 }
 
 void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const buuid uuid,
-                              const TankType type)
+                              const TankType type, const bool skipDelay)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -259,13 +271,15 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		const int color = type == TankType::PLAYER1 ? yellow : green;
 		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
 		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::PLAYER1 ? 4 : 5).isActive;
-		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
-		          {isTimerActive, isHelmetActive}, type);
+		const BonusEffectProperty effects = {isTimerActive, isHelmetActive};
+
+		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid), effects, type,
+		          skipDelay);
 	}
 }
 
 void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int health, const buuid uuid,
-                               const TankType type)
+                               const TankType type, const bool skipDelay)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -296,16 +310,18 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		const int color = type == TankType::COOP1 ? yellow : green;
 		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
 		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive;
-		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid),
-		          {isTimerActive, isHelmetActive}, type);
+		const BonusEffectProperty effects = {isTimerActive, isHelmetActive};
+
+		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid), effects, type,
+		          skipDelay);
 	}
 }
 
-void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
+void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const bool skipDelay)
 {
 	constexpr float speed{142};
 	constexpr int health{100};
-	SpawnEnemy(uuid, type, speed, health);
+	SpawnEnemy(uuid, type, speed, health, skipDelay);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -313,7 +329,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid)
 	}
 }
 
-void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
+void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const bool skipDelay)
 {
 	const float windowSizeY{static_cast<float>(_windowSize.y)};
 	const float gridOffset{windowSizeY / 50.f};
@@ -329,11 +345,11 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 	    || _gameMode == GameMode::PlayAsClient
 	    || _gameMode == GameMode::CoopWithBot && isFirst)
 	{
-		SpawnPlayer(rect, speed, health, uuid, type);
+		SpawnPlayer(rect, speed, health, uuid, type, skipDelay);
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
 	{
-		SpawnCoopBot(rect, speed, health, uuid, isFirst ? TankType::COOP1 : TankType::COOP2);
+		SpawnCoopBot(rect, speed, health, uuid, isFirst ? TankType::COOP1 : TankType::COOP2, skipDelay);
 	}
 
 	if (_gameMode == GameMode::PlayAsHost)
@@ -342,7 +358,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid)
 	}
 }
 
-void TankSpawner::RespawnTanks()
+void TankSpawner::RespawnTanks(const bool skipDelay)
 {
 	for (int i = 0; i < _slots.size(); ++i)
 	{
@@ -354,11 +370,11 @@ void TankSpawner::RespawnTanks()
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					RespawnEnemyTanks(type, _slots[i].uuid);
+					RespawnEnemyTanks(type, _slots[i].uuid, skipDelay);
 					break;
 				case TankType::PLAYER1:
 				case TankType::PLAYER2:
-					RespawnPlayerTeam(type, _slots[i].uuid);
+					RespawnPlayerTeam(type, _slots[i].uuid, skipDelay);
 					break;
 				default:
 					break;
@@ -384,7 +400,7 @@ int TankSpawner::GetPlayerTwoRespawnResource() const
 	return _respawnResource[static_cast<std::size_t>(RespawnResource::PLAYER_TWO)];
 }
 
-void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid)
+void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid, const bool skipDelay)
 {
 	switch (type)
 	{
@@ -392,15 +408,15 @@ void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid)
 		case TankType::ENEMY2:
 		case TankType::ENEMY3:
 		case TankType::ENEMY4:
-			RespawnEnemyTanks(type, uuid);
+			RespawnEnemyTanks(type, uuid, skipDelay);
 			DecreaseEnemyRespawnResource();
 			break;
 		case TankType::PLAYER1:
-			RespawnPlayerTeam(type, uuid);
+			RespawnPlayerTeam(type, uuid, skipDelay);
 			DecreasePlayerOneRespawnResource();
 			break;
 		case TankType::PLAYER2:
-			RespawnPlayerTeam(type, uuid);
+			RespawnPlayerTeam(type, uuid, skipDelay);
 			DecreasePlayerTwoRespawnResource();
 			break;
 		default:
@@ -588,8 +604,9 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 			std::move(pawnProperty), _bulletPool, std::move(GetInputProvider(type)), std::move(effects));
 }
 
-void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name, const std::string& fraction,
-                            const float speed, buuid uuid, BonusEffectProperty effects, const TankType type)
+void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name,
+                            const std::string& fraction, const float speed, buuid uuid, BonusEffectProperty effects,
+                            const TankType type, const bool skipDelay)
 {
 	BaseObjProperty baseObjProperty{rect, color, health, uuid, name, std::move(fraction)};
 	PawnProperty pawnProperty{
@@ -598,7 +615,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int 
 	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
 	{
 		_allObjects->emplace_back(tank);
-		_events->EmitEvent("AnimationCreateTank", std::weak_ptr<Tank>(tank));
+		_events->EmitEvent("SpawnDelayStart", tank, milliseconds(skipDelay ? 0 : 1000));
 		_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name, color);
 	}
 }

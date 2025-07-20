@@ -28,46 +28,46 @@ void BonusEffectManager::Subscribe()
 	{
 		if (fraction == "EnemyTeam")
 		{
-			_timerPlayer = {true, effectDuration, std::chrono::system_clock::now()};
+			_timerPlayer = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
 		}
 		else if (fraction == "PlayerTeam")
 		{
-			_timerEnemy = {true, effectDuration, std::chrono::system_clock::now()};
+			_timerEnemy = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Timer", "EnemyTeam", _timerEnemy.isActive);
 		}
 	});
 
 	_events->AddListener("HelmetActive", _name, [this](const std::string& name, const milliseconds effectDuration)
 	{
-		if (name == "Enemy1")
+		if (name == "Enemy1")//TODO: change enemy1 and other to tankType
 		{
-			_helmetSlots[0] = {true, effectDuration, std::chrono::system_clock::now()};
+			_helmetSlots[0] = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Helmet", "Enemy1", _helmetSlots[0].isActive);
 		}
 		else if (name == "Enemy2")
 		{
-			_helmetSlots[1] = {true, effectDuration, std::chrono::system_clock::now()};
+			_helmetSlots[1] = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Helmet", "Enemy2", _helmetSlots[1].isActive);
 		}
 		else if (name == "Enemy3")
 		{
-			_helmetSlots[2] = {true, effectDuration, std::chrono::system_clock::now()};
+			_helmetSlots[2] = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Helmet", "Enemy3", _helmetSlots[2].isActive);
 		}
 		else if (name == "Enemy4")
 		{
-			_helmetSlots[3] = {true, effectDuration, std::chrono::system_clock::now()};
+			_helmetSlots[3] = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Helmet", "Enemy4", _helmetSlots[3].isActive);
 		}
 		else if (name == "Player1")
 		{
-			_helmetSlots[4] = {true, effectDuration, std::chrono::system_clock::now()};
+			_helmetSlots[4] = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Helmet", "Player1", _helmetSlots[4].isActive);
 		}
 		else if (name == "Player2")
 		{
-			_helmetSlots[5] = {true, effectDuration, std::chrono::system_clock::now()};
+			_helmetSlots[5] = {effectDuration, std::chrono::system_clock::now()};
 			OnBonusStatusChange("Helmet", "Player2", _helmetSlots[5].isActive);
 		}
 	});
@@ -125,6 +125,7 @@ void BonusEffectManager::TickUpdate(const float /*deltaTime*/)
 			_helmetSlots[i].isActive = false;
 			if (i == 0)
 			{
+				//TODO: change enemy1 and other to tankType
 				OnBonusStatusChange("Helmet", "Enemy1", _helmetSlots[i].isActive);
 			}
 			else if (i == 1)
@@ -157,11 +158,11 @@ void BonusEffectManager::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-BonusStatus BonusEffectManager::GetTimerEnemy() const { return _timerEnemy; }
+Timer BonusEffectManager::GetTimerEnemy() const { return _timerEnemy; }
 
-BonusStatus BonusEffectManager::GetTimerPlayer() const { return _timerPlayer; }
+Timer BonusEffectManager::GetTimerPlayer() const { return _timerPlayer; }
 
-BonusStatus BonusEffectManager::GetHelmet(const int id) const//TODO: change to size_t
+Timer BonusEffectManager::GetHelmet(const int id) const//TODO: change to size_t
 {
 	if (id < 0 || id >= _helmetSlots.size())
 		return {};

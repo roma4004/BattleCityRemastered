@@ -9,7 +9,8 @@
 
 Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, {18.f}, "") {}
 
-Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author)
+Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
+		  const bool enableByDefault)
 	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)},
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
@@ -18,6 +19,11 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
+
+	if (enableByDefault)
+	{
+		Subscribe();
+	}
 
 	if (_uuid == UuidUtils::GetNilUuid())
 	{
@@ -40,6 +46,8 @@ Bullet::~Bullet()
 
 void Bullet::Subscribe()
 {
+	Pawn::Subscribe();
+
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
 	if (_gameMode == GameMode::PlayAsClient)
@@ -63,6 +71,8 @@ void Bullet::SubscribeAsClient()
 
 void Bullet::Unsubscribe() const
 {
+	Pawn::Unsubscribe();
+
 	_events->RemoveListener("Draw", _nameWithUuid);
 
 	// std::cout << "[" << "Bullet::Unsubscribe" << "] "
@@ -95,6 +105,11 @@ const std::string& Bullet::GetUuidStr() const
 	return _uuidStr;
 }
 
+void Bullet::Enable()
+{
+	Subscribe();
+}
+
 void Bullet::Disable() const
 {
 	// std::cout << "[" << "Bullet::Disable()" << "] "
@@ -102,14 +117,8 @@ void Bullet::Disable() const
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	Pawn::Unsubscribe();
-	Unsubscribe();
-}
 
-void Bullet::Enable()
-{
-	Pawn::Subscribe();
-	Subscribe();
+	Unsubscribe();
 }
 
 void Bullet::Reset(BulletResetProperty resetProperty)

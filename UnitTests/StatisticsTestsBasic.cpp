@@ -76,14 +76,19 @@ protected:
 				std::move(baseObjProperty3), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::DOWN,
 				_gameMode};
 
+		constexpr bool enableByDefault{true};
+
 		_allObjects.reserve(5);
+		BonusEffectProperty bonusEffects{};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), bonusEffects, enableByDefault));
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, BonusEffectProperty{}));
+						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), bonusEffects,
+						enableByDefault));
+		_allObjects.emplace_back(
+				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, bonusEffects, enableByDefault));
 	}
 
 	void TearDown() override
@@ -102,9 +107,11 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
 
@@ -123,9 +130,11 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
+			                         enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
 
@@ -150,8 +159,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
+
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
 
@@ -175,9 +187,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
 
@@ -196,9 +210,11 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
 
@@ -223,9 +239,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
@@ -248,9 +266,11 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
@@ -275,9 +295,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
 
@@ -302,9 +324,11 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
 
@@ -324,9 +348,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
 
@@ -346,9 +372,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
 
@@ -373,9 +401,11 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
 
@@ -395,9 +425,11 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
 
@@ -417,9 +449,11 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 			rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
 
@@ -439,9 +473,11 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"PlayerTeam"};
@@ -453,7 +489,8 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 			std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -479,9 +516,11 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0);
 
@@ -505,9 +544,11 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0);
 
@@ -531,9 +572,11 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0);
 
@@ -557,9 +600,11 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 3, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0);
 
@@ -583,9 +628,11 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 3, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0);
 
@@ -609,9 +656,11 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 3, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0);
 
@@ -631,9 +680,11 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"EnemyTeam"};
@@ -645,7 +696,8 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 			std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
@@ -665,9 +717,11 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"PlayerTeam"};
@@ -679,7 +733,8 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 			std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -701,9 +756,11 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"EnemyTeam"};
@@ -715,7 +772,8 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 			std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
@@ -737,9 +795,11 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 			_gameMode};
+	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+			std::make_shared<Bullet>(
+					std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author), enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"EnemyTeam"};
@@ -751,7 +811,8 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 			std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2)));
+			std::make_shared<Bullet>(
+				std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author2), enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);

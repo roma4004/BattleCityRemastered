@@ -52,11 +52,13 @@ protected:
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
 				_gameMode};
+		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
+						enableByDefault));
 	}
 
 	void TearDown() override
@@ -311,8 +313,10 @@ TEST_F(BulletTest, BulletDamageTank)
 	PawnProperty pawnProperty{
 			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
 
-	_allObjects.emplace_back(std::make_shared<Enemy>(
-			std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}));
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(
+			std::make_shared<Enemy>(
+					std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}, enableByDefault));
 
 	const auto enemy = dynamic_cast<const Enemy*>(_allObjects.back().get());
 

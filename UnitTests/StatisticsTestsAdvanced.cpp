@@ -62,10 +62,12 @@ protected:
 				rect2, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
 		PawnProperty pawnProperty2{
 				std::move(baseObjProperty2), &_allObjects, _events, 1, _bulletSpeed, _windowSize, dir, _gameMode};
+		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
-						std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author)));
+						std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author),
+						enableByDefault));
 	}
 };
 

@@ -3,7 +3,7 @@
 #include "BrickWall.h"
 #include "SteelWall.h"
 #include "../BaseObj.h"
-#include "../bonuses/BonusStatus.h"
+#include "utils/Timer.h"
 #include <variant>
 
 enum class GameMode : char8_t;
@@ -20,7 +20,7 @@ class FortressWall final : public BaseObj
 	std::variant<std::unique_ptr<BrickWall>,
 	             std::unique_ptr<SteelWall>> _obstacle{};
 
-	BonusStatus _shovel{};
+	Timer _shovel{};
 	GameMode _gameMode{};
 
 	void Subscribe();

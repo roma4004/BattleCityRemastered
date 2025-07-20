@@ -40,6 +40,7 @@ AnimatedObject::AnimatedObject(std::shared_ptr<EventSystem> events, const GameMo
 	rect = tankLck->GetRect();
 	objName = std::string(tankLck->GetName());
 	color = tankLck->GetColor();
+
 	Subscribe();
 }
 
@@ -177,7 +178,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 
 	return *this;
 }
-
 
 //TODO: recheck all move flow and dispose flow
 // move assignment

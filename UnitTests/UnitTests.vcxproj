@@ -40,6 +40,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp" />
+    <ClCompile Include="..\source\components\managers\SpawnDelayManager.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
     <ClCompile Include="..\source\network\commands\AnimationCreate.cpp" />
@@ -61,6 +62,7 @@
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\NetworkLogger.cpp" />
     <ClCompile Include="..\source\utils\RandUtils.cpp" />
+    <ClCompile Include="..\source\utils\Timer.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
@@ -83,7 +85,6 @@
     <ClCompile Include="..\source\entities\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="..\source\entities\bonuses\BonusShovel.cpp" />
     <ClCompile Include="..\source\entities\bonuses\BonusStar.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusStatus.cpp" />
     <ClCompile Include="..\source\entities\bonuses\BonusTank.cpp" />
     <ClCompile Include="..\source\entities\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\entities\obstacles\BrickWall.cpp" />

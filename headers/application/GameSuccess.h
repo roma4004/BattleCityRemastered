@@ -5,7 +5,6 @@
 #include <SDL.h>
 #include <chrono>
 
-class AnimationManager;
 enum class GameMode : char8_t;
 class INetworkNode;
 class Menu;
@@ -22,6 +21,7 @@ class BonusSpawner;
 class ObstacleSpawner;
 class TextureManager;
 class BonusEffectManager;
+class SpawnDelayManager;
 
 class GameSuccess final : public IGame
 {
@@ -38,6 +38,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
+	std::shared_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
@@ -76,7 +77,8 @@ class GameSuccess final : public IGame
 public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
 	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
-	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
+	            std::shared_ptr<BonusEffectManager> bonusEffectManager,
+	            std::shared_ptr<SpawnDelayManager> spawnDelayManager);
 
 	~GameSuccess() override;
 };

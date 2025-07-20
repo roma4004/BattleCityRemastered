@@ -7,7 +7,8 @@
 #include "interfaces/IShootable.h"
 
 Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-           const BonusEffectProperty effects)
+           const BonusEffectProperty effects,
+           const bool enableByDefault)
 	: Pawn{std::move(pawnProperty), std::move(moveBeh)},
 	  _shootingBeh{std::move(shootingBeh)},
 	  _effects{effects}
@@ -16,9 +17,10 @@ Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::sh
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	Tank::Subscribe();
-
-	_events->EmitEvent("TankSpawn", _uuid);
+	if (enableByDefault)
+	{
+		Tank::Subscribe();
+	}
 }
 
 Tank::~Tank()
@@ -35,6 +37,8 @@ Tank::~Tank()
 
 void Tank::Subscribe()
 {
+	Pawn::Subscribe();
+
 	_events->AddListener("DrawHealthBar", _nameWithUuid, [this]()
 	{
 		if (!_effects.isHelmetActive)
@@ -120,6 +124,8 @@ void Tank::SubscribeBonus()
 
 void Tank::Unsubscribe() const
 {
+	Pawn::Unsubscribe();
+
 	_events->RemoveListener("DrawHealthBar", _nameWithUuid);
 
 	if (_gameMode == GameMode::PlayAsClient)
@@ -147,6 +153,18 @@ void Tank::UnsubscribeBonus() const
 	_events->RemoveListener("BonusGrenade", _nameWithUuid);
 	_events->RemoveListener("BonusStar", _nameWithUuid);
 	_events->RemoveListener("BonusCaliber", _nameWithUuid);
+}
+
+void Tank::Disable() const
+{
+	Unsubscribe();
+}
+
+void Tank::Enable()
+{
+	Subscribe();
+
+	_events->EmitEvent("TankSpawn", _uuid);
 }
 
 void Tank::TakeDamage(const int damage)

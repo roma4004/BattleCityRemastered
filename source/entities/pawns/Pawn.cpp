@@ -14,20 +14,9 @@ Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
 	  _events{std::move(pawnProperty.events)},
 	  _moveBeh{std::move(moveBeh)},
 	  _dir{pawnProperty.dir},
-	  _gameMode{pawnProperty.gameMode}
-{
-	Pawn::Subscribe();
-}
+	  _gameMode{pawnProperty.gameMode} {}
 
-Pawn::~Pawn()
-{
-	// std::cout << "[" << "Pawn::~Pawn()" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
-	Pawn::Unsubscribe();
-}
+Pawn::~Pawn() = default;
 
 void Pawn::Subscribe()
 {

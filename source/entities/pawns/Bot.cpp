@@ -8,11 +8,13 @@
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
-Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
+Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects,
+         const bool enableByDefault)
 	: Tank{pawnProperty,
 	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
 	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
-	       effects
+	       effects,
+	       enableByDefault
 	  },
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
 	  _lastTimeTurn{std::chrono::system_clock::now()} {}

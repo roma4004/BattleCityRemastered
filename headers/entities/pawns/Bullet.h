@@ -8,9 +8,14 @@
 struct BulletResetProperty;
 struct UPoint;
 class EventSystem;
+class BulletPool;
+class ShootingBeh;
 
 class Bullet final : public Pawn, public IDrawable
 {
+	friend BulletPool;
+	friend ShootingBeh;
+
 	using buuid = boost::uuids::uuid;
 
 	std::string _author{};
@@ -24,19 +29,19 @@ class Bullet final : public Pawn, public IDrawable
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
 
+	void Enable();
+	void Disable() const;
+
 	void Draw() const override;
 	void TickUpdate(float deltaTime) override;
 
-public:
-	explicit Bullet(PawnProperty pawnProperty);
-	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author);
-
-	~Bullet() override;
-
 	void Reset(BulletResetProperty resetProperty);
 
-	void Disable() const;
-	void Enable();
+public:
+	explicit Bullet(PawnProperty pawnProperty);
+	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, bool enableByDefault = false);
+
+	~Bullet() override;
 
 	[[nodiscard]] int GetDamage() const;
 

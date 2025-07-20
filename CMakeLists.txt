@@ -281,6 +281,7 @@ set(SOURCE_FILES
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/AnimationManager.cpp
         source/components/managers/BonusEffectManager.cpp
+        source/components/managers/SpawnDelayManager.cpp
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
         source/entities/Obstacles/EagleTile.cpp
@@ -292,7 +293,6 @@ set(SOURCE_FILES
         source/entities/bonuses/BonusHelmet.cpp
         source/entities/bonuses/BonusShovel.cpp
         source/entities/bonuses/BonusStar.cpp
-        source/entities/bonuses/BonusStatus.cpp
         source/entities/bonuses/BonusTank.cpp
         source/entities/bonuses/BonusTimer.cpp
         source/entities/obstacles/BrickWall.cpp
@@ -330,6 +330,7 @@ set(SOURCE_FILES
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
         source/utils/RandUtils.cpp
+        source/utils/Timer.cpp
         source/utils/TimeUtils.cpp
         source/utils/UuidUtils.cpp
 )
@@ -352,6 +353,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/BonusEffectManager.cpp
+        source/components/managers/SpawnDelayManager.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
@@ -359,7 +361,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/entities/bonuses/BonusHelmet.cpp
         source/entities/bonuses/BonusShovel.cpp
         source/entities/bonuses/BonusStar.cpp
-        source/entities/bonuses/BonusStatus.cpp
         source/entities/bonuses/BonusTank.cpp
         source/entities/bonuses/BonusTimer.cpp
         source/entities/obstacles/BrickWall.cpp
@@ -398,6 +399,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
         source/utils/RandUtils.cpp
+        source/utils/Timer.cpp
         source/utils/UuidUtils.cpp
 )
 

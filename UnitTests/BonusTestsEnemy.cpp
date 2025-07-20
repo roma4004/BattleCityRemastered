@@ -61,8 +61,10 @@ protected:
 		PawnProperty pawnProperty{
 				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::DOWN,
 				_gameMode};
+		constexpr bool enableByDefault{true};
 
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{}));
+		_allObjects.emplace_back(
+				std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{}, enableByDefault));
 	}
 
 	void TearDown() override

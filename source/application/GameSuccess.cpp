@@ -37,7 +37,8 @@ class BaseObj;
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events,
                          std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
                          std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn,
-                         std::shared_ptr<BonusEffectManager> bonusEffectManager)
+                         std::shared_ptr<BonusEffectManager> bonusEffectManager,
+                         std::shared_ptr<SpawnDelayManager> spawnDelayManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
@@ -50,6 +51,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> e
 					  windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager))},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
+	  _spawnDelayManager{std::move(spawnDelayManager)},
 	  _isVsyncOn{isVsyncOn},
 	  _selectedGameMode{GameMode::OnePlayer}
 {
@@ -278,7 +280,7 @@ void GameSuccess::MainLoop()
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 					_events->EmitEvent("TickUpdate", deltaTime);
 
-					_tankSpawner->RespawnTanks();
+					_tankSpawner->RespawnTanks();//TODO:split into two timers
 				}
 			}
 

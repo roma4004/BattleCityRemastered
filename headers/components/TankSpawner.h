@@ -53,25 +53,25 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(buuid uuid, TankType type, float speed, int health);
+	void SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
 	void SetEnemyNeedRespawn();
 
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
 	void SpawnTank(ObjRectangle rect, int color, int health, const std::string& name, const std::string& fraction, float speed,
-	               buuid uuid, BonusEffectProperty effects, TankType type);
+	               buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty,
 	                                               BonusEffectProperty effects);
 
-	void RespawnEnemyTanks(TankType type, buuid uuid);
-	void RespawnPlayerTeam(TankType type, buuid uuid);
+	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
+	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
 	void SetPlayerNeedRespawn();
 	[[nodiscard]] static std::string GetCurrentTimeString();
 
 	void ResetRespawnStat();
-	void OnClientRespawn(TankType type, buuid uuid);
+	void OnClientRespawn(TankType type, buuid uuid, bool skipDelay = false);
 	void ResetSpawn();
 
 	void IncreaseEnemyRespawnResource();
@@ -91,7 +91,7 @@ public:
 
 	~TankSpawner();
 
-	void RespawnTanks();
+	void RespawnTanks(bool skipDelay = false);
 
 	// NOTE: for unit tests only:
 	[[nodiscard]] int GetEnemyRespawnResource() const;

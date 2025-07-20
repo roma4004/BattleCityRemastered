@@ -7,11 +7,13 @@
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool,
-               std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects = {})
+               std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects,
+               const bool enableByDefault)
 	: Tank{pawnProperty,
 	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
 	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
-	       effects
+	       effects,
+	       enableByDefault
 	  },
 	  _inputProvider{std::move(inputProvider)} {}
 

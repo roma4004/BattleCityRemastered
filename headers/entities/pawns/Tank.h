@@ -5,10 +5,14 @@
 #include "interfaces/IHealthBar.h"
 
 struct UPoint;
+class PlayerTest;
 class IShootable;
+class SpawnDelayManager;
 
 class Tank : public Pawn, public IHealthBar
 {
+	friend class SpawnDelayManager;
+
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
@@ -20,6 +24,9 @@ class Tank : public Pawn, public IHealthBar
 	void Subscribe() override;
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
+
+	void Disable() const;
+	void Enable();
 
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
@@ -53,7 +60,7 @@ protected:
 
 public:
 	Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-	     BonusEffectProperty effects);
+	     BonusEffectProperty effects, bool enableByDefault = false);
 
 	~Tank() override;
 
