@@ -1,6 +1,7 @@
 #include "utils/NetworkLogger.h"
-#include <iomanip>
-#include <sstream>
+#include <chrono>
+#include <fstream>
+#include <iostream>
 
 bool NetworkLogger::_fileLoggingEnabled = false;
 bool NetworkLogger::_consoleLoggingEnabled = true;
