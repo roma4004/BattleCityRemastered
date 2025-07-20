@@ -39,7 +39,7 @@ public:
 
 	//for tank
 	AnimatedObject(std::shared_ptr<EventSystem> events, GameMode gameMode, int frameLimit, int scale,
-	               std::weak_ptr<Tank> tank);
+	               const std::weak_ptr<Tank>& tank);
 
 	//for other (eg explosion)
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, std::shared_ptr<EventSystem> events,

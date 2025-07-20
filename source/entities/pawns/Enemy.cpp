@@ -1,10 +1,5 @@
 #include "entities/pawns/Enemy.h"
-#include "components/EventSystem.h"
-#include "entities/obstacles/FortressWall.h"
-#include "entities/pawns/Bot.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
 

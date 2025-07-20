@@ -1,7 +1,6 @@
 #include "entities/pawns/CoopBot.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
-#include "entities/pawns/Bot.h"
 #include "entities/pawns/PawnProperty.h"
 #include "utils/TimeUtils.h"
 

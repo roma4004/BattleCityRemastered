@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Point.h"
-#include "enums/GameMode.h"
-#include <memory>
-#include <random>
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;

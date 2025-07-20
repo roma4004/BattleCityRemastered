@@ -1,10 +1,8 @@
 #pragma once
 
 #include "Pawn.h"
-#include "Point.h"
 #include "../BonusEffectProperty.h"
 #include "interfaces/IHealthBar.h"
-#include <chrono>
 
 struct UPoint;
 class IShootable;

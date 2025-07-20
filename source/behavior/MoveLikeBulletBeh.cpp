@@ -266,11 +266,6 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& 
 	const int bulletDamage = thisBullet->GetDamage();
 	if (!objectList.empty())
 	{
-		const ObjRectangle rect{thisBullet->GetRect()};
-		const std::string name{thisBullet->GetName()};
-		const int color{thisBullet->GetColor()};
-		_events->EmitEvent("AnimationCreate", AnimationType::Bullet_Explosion, rect, name, color);
-
 		for (const auto& target: objectList)
 		{
 			if (target && !dynamic_cast<WaterTile*>(target.get())
@@ -289,4 +284,7 @@ void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& 
 	}
 
 	thisBullet->TakeDamage(bulletDamage);
+
+	_events->EmitEvent("AnimationCreate", AnimationType::Bullet_Explosion, thisBullet->GetRect(),
+	                   std::string{thisBullet->GetName()}, thisBullet->GetColor());
 }

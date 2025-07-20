@@ -25,7 +25,7 @@ AnimatedObject::AnimatedObject(const ObjRectangle rect, std::shared_ptr<EventSys
 }
 
 AnimatedObject::AnimatedObject(std::shared_ptr<EventSystem> events, const GameMode gameMode, const int frameLimit,
-                               const int scale, std::weak_ptr<Tank> tank)
+                               const int scale, const std::weak_ptr<Tank>& tank)
 	: events(std::move(events)),
 	  limitOfFrames{frameLimit},
 	  gameMode{gameMode},
@@ -88,22 +88,6 @@ void AnimatedObject::Draw() const
 	{
 		events->EmitEvent("DrawAnimation", rect, dir, -animationFrame, scale, name, color);
 	}
-	else if (type == AnimationType::Spawn_Animation)
-	{
-		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
-	}
-	else if (type == AnimationType::Bullet_Animation)
-	{
-		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
-	}
-	else if (type == AnimationType::Bullet_Explosion)
-	{
-		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
-	}
-	else if (type == AnimationType::Tank_Explosion)
-	{
-		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
-	}
 	else if (parent.expired())
 	{
 		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
@@ -113,10 +97,8 @@ void AnimatedObject::Draw() const
 	{
 		//for tanks
 		const std::shared_ptr<Tank> tankLck = parent.lock();
-		const ObjRectangle rect = tankLck->GetRect();
-		const Direction direction = tankLck->GetDirection();
-		const int color = tankLck->GetColor();
-		events->EmitEvent("DrawAnimation", rect, direction, animationFrame, scale, objName, color);
+		events->EmitEvent("DrawAnimation", tankLck->GetRect(), tankLck->GetDirection(),
+		                  animationFrame, scale, objName, tankLck->GetColor());
 		//TODO: recheck if it needed?
 	}
 }

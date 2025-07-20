@@ -1,16 +1,12 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
-#include "components/EventSystem.h"
 #include "components/LineOfSight.h"
-#include "entities/BonusEffectProperty.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
-#include <algorithm>
-#include <chrono>
 
 Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
 	: Tank{pawnProperty,

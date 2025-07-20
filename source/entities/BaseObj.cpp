@@ -5,9 +5,9 @@
 #include <utility>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
-	: _color(baseObjProperty.color),
-	  _health(baseObjProperty.health),
+	: _health(baseObjProperty.health),
 	  _uuid{baseObjProperty.uuid},
+	  _color(baseObjProperty.color),
 	  _name{std::move(baseObjProperty.name)},
 	  _fraction{std::move(baseObjProperty.fraction)},
 	  _rect{baseObjProperty.rect}
@@ -17,9 +17,9 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 
 //Copy ctor
 BaseObj::BaseObj(const BaseObj& other)
-	: _color(other._color),
-	  _health(other._health),
+	: _health(other._health),
 	  _uuid(other._uuid),
+	  _color(other._color),
 	  _name(other._name),
 	  _nameWithUuid(other._nameWithUuid),
 	  _fraction(other._fraction),
@@ -27,9 +27,9 @@ BaseObj::BaseObj(const BaseObj& other)
 
 //Move ctor
 BaseObj::BaseObj(BaseObj&& other) noexcept
-	: _color(std::exchange(other._color, 0)),
-	  _health(std::exchange(other._health, 0)),
+	: _health(std::exchange(other._health, 0)),
 	  _uuid(other._uuid),
+	  _color(std::exchange(other._color, 0)),
 	  _name(other._name),
 	  _nameWithUuid(other._nameWithUuid),
 	  _fraction(other._fraction),
@@ -38,9 +38,9 @@ BaseObj::BaseObj(BaseObj&& other) noexcept
 //Deprecated //TODO: remove this con overload
 BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
                  std::string fraction)
-	: _color(color),
-	  _health(health),
+	: _health(health),
 	  _uuid{uuid},
+	  _color(color),
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)},
 	  _rect{rect}

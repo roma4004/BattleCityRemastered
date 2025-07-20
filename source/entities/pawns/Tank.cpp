@@ -154,11 +154,6 @@ void Tank::TakeDamage(const int damage)
 	if (!_effects.isHelmetActive)
 	{
 		Pawn::TakeDamage(damage);
-
-		if (_gameMode == GameMode::PlayAsHost)
-		{
-			_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
-		}
 	}
 }
 

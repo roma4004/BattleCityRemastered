@@ -85,24 +85,14 @@ void Pawn::UnsubscribeAsClient() const
 	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
-void Pawn::SetHealth(const int health)
-{
-	BaseObj::SetHealth(health);
-
-	// if (!GetIsAlive()) //TODO: remove or check if needed
-	// {
-	// 	Unsubscribe();
-	// }
-}
-
 void Pawn::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
 
-	// if (!GetIsAlive()) //TODO: remove or check if needed
-	// {
-	// 	Unsubscribe();
-	// }
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
+	}
 }
 
 UPoint Pawn::GetWindowSize() const { return _windowSize; }

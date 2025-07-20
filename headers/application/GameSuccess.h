@@ -4,7 +4,6 @@
 #include "interfaces/IGame.h"
 #include <SDL.h>
 #include <chrono>
-#include <random>
 
 class AnimationManager;
 enum class GameMode : char8_t;

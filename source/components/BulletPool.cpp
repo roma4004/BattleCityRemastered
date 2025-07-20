@@ -1,15 +1,7 @@
 #include "components/BulletPool.h"
-#include "Point.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/GameMode.h"
-#include <chrono>
-#include <iomanip>
-#include <iostream>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        const UPoint windowSize, const GameMode gameMode)

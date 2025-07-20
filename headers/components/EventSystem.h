@@ -1,13 +1,10 @@
 #pragma once
 
-#include <chrono>
 #include <functional>
 #include <iostream>
-#include <string>
-#include <type_traits>
-#include <typeinfo>
-#include <unordered_map>
+#include <memory>
 
+//TODO: create eventType and derived just like network command to compile time parameter check and replace event name
 namespace detail
 {
 	// Type adapter for auto conversion const char* to std::string
@@ -31,7 +28,7 @@ namespace detail
 		using type = std::string;
 	};
 
-	// specialization for char array
+	// specialization for a char array
 	template<size_t N>
 	struct type_adapter<char[N]>
 	{

@@ -4,8 +4,6 @@
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
 #include "interfaces/ITickUpdatable.h"
-#include <chrono>
-#include <memory>
 
 enum class GameMode : char8_t;
 enum class BonusType : char8_t;

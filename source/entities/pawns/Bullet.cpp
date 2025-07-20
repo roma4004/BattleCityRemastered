@@ -1,5 +1,4 @@
 ﻿#include "entities/pawns/Bullet.h"
-#include "Point.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -7,7 +6,6 @@
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 // #include <iostream>
-#include <string>
 
 Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, {18.f}, "") {}
 
@@ -165,12 +163,6 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 void Bullet::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		//TODO: move this to onHealthChange
-		_events->EmitEvent("ServerSend_Health", std::string(GetName()), GetHealth(), _uuid);
-	}
 }
 
 int Bullet::GetTier() const { return _tier; }

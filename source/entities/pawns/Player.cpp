@@ -1,7 +1,6 @@
 #include "entities/pawns/Player.h"
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
-#include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "interfaces/IInputProvider.h"

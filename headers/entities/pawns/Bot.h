@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Tank.h"
-#include <chrono>
 #include <random>
 
 struct BonusEffectProperty;
@@ -14,7 +13,7 @@ class Bot : public Tank
 	using buuid = boost::uuids::uuid;
 
 protected:
-	std::uniform_int_distribution<> _distTurnRate{};
+	std::uniform_int_distribution<> _distTurnRate{}; //TODO: move to random manager one event on start and then get random by type
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn{};
 	milliseconds _turnDuration{std::chrono::seconds(2)};
 

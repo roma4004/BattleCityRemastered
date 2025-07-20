@@ -4,7 +4,6 @@
 #include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "utils/RandUtils.h"
-#include "utils/UuidUtils.h"
 #include <algorithm>
 
 AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events)
@@ -127,14 +126,6 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 	}
 }
 
-void AnimationManager::DeleteAnimation(const std::string& objName)
-{
-	std::erase_if(_tankObjects, [&objName](const auto& animObj)
-	{
-		return animObj.objName == objName;
-	});
-}
-
 void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 {
 	_waterObjects.emplace_back(rect, _events, 16);
@@ -230,6 +221,14 @@ void AnimationManager::DisableTankAnimation(const std::string& objName)
 			return;
 		}
 	}
+}
+
+void AnimationManager::DeleteAnimation(const std::string& objName)
+{
+	std::erase_if(_tankObjects, [&objName](const auto& animObj)
+	{
+		return animObj.objName == objName;
+	});
 }
 
 // NOTE: how it works

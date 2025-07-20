@@ -2,6 +2,8 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "enums/GameMode.h"
+#include <iomanip>
+#include <sstream>
 
 Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
            std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, const UPoint windowSize,

@@ -1,7 +1,8 @@
-#include "components/managers/BonusEffectManager.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
+#include "components/managers/BonusEffectManager.h"
+#include "enums/GameMode.h"
 #include "enums/TankType.h"
 #include "gtest/gtest.h"
 #include <memory>

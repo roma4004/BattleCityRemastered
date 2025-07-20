@@ -56,10 +56,6 @@ void Obstacle::SubscribeAsClient()
 	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
 	{
 		this->SetHealth(health);
-		if (this->GetHealth() < 1)
-		{
-			this->SetIsAlive(false);
-		}
 	});
 }
 
@@ -80,7 +76,7 @@ void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	if (auto health = GetHealth();
+	if (const auto health = GetHealth();
 		health < 1)
 	{
 		_events->EmitEvent("Statistics_" + _name + "Died", author, fraction);

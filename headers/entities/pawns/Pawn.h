@@ -42,7 +42,6 @@ public:
 
 	~Pawn() override;
 
-	void SetHealth(int health) override;
 	void TakeDamage(int damage) override;
 
 	[[nodiscard]] UPoint GetWindowSize() const;
