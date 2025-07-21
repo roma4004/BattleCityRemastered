@@ -21,5 +21,5 @@ BonusTimer::~BonusTimer() = default;
 
 void BonusTimer::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
 {
-	_events->EmitEvent("TimerActive", fraction, _effectDuration);
+	_events->EmitEvent(_name, fraction, _effectDuration);
 }

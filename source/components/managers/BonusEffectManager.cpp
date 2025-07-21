@@ -24,7 +24,7 @@ void BonusEffectManager::Subscribe()
 		this->TickUpdate(deltaTime);
 	});
 
-	_events->AddListener("TimerActive", _name, [this](const std::string& fraction, const milliseconds effectDuration)
+	_events->AddListener("BonusTimer", _name, [this](const std::string& fraction, const milliseconds effectDuration)
 	{
 		if (fraction == "EnemyTeam")
 		{
@@ -38,7 +38,7 @@ void BonusEffectManager::Subscribe()
 		}
 	});
 
-	_events->AddListener("HelmetActive", _name, [this](const std::string& name, const milliseconds effectDuration)
+	_events->AddListener("BonusHelmet", _name, [this](const std::string& name, const milliseconds effectDuration)
 	{
 		if (name == "Enemy1")//TODO: change enemy1 and other to tankType
 		{
@@ -72,21 +72,19 @@ void BonusEffectManager::Subscribe()
 		}
 	});
 
-
-	_events->AddListener(//TODO: remove duration for bonuses
-			"BonusShovel", _name,
-			[this](const std::string& /*author*/, const std::string& fraction, const milliseconds effectDuration)
-			{
-				this->OnBonusShovelPickup(fraction, effectDuration);
-			});
+	//TODO: remove duration for bonuses
+	_events->AddListener("BonusShovel", _name, [this](const std::string& fraction, const milliseconds effectDuration)
+	{
+		this->OnBonusShovelPickup(fraction, effectDuration);
+	});
 }
 
 void BonusEffectManager::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("TickUpdate", _name);
-	_events->RemoveListener("TimerActive", _name);
-	_events->RemoveListener("HelmetActive", _name);
+	_events->RemoveListener("BonusTimer", _name);
+	_events->RemoveListener("BonusHelmet", _name);
 	_events->RemoveListener("BonusShovel", _name);
 }
 

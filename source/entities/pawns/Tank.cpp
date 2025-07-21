@@ -21,6 +21,8 @@ Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::sh
 	{
 		Tank::Subscribe();
 	}
+
+	_events->EmitEvent("TankSpawn", _uuid);
 }
 
 Tank::~Tank()
@@ -163,8 +165,6 @@ void Tank::Disable() const
 void Tank::Enable()
 {
 	Subscribe();
-
-	_events->EmitEvent("TankSpawn", _uuid);
 }
 
 void Tank::TakeDamage(const int damage)

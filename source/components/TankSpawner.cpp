@@ -76,8 +76,6 @@ void TankSpawner::Subscribe()
 
 	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
 	{
-		const auto tankLck = tank.lock();
-		_events->EmitEvent("TankSpawn", tankLck->GetUuid());
 		_events->EmitEvent("AnimationCreateTank", tank);
 	});
 }
