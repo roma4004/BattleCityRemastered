@@ -36,7 +36,6 @@ class Menu final
 	int _playerTwoRespawnResource{3};
 	GameMode _selectedGameMode{};
 
-
 	void Subscribe();
 	void Unsubscribe() const;
 

@@ -113,18 +113,22 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
 	}
 
-	const std::shared_ptr<SDL_Surface> atlasSurface{IMG_Load(textureAtlasPath), SDL_FreeSurface};
+	std::shared_ptr<SDL_Surface> atlasSurface{IMG_Load(textureAtlasPath), SDL_FreeSurface};
 	if (atlasSurface == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Surface Loading Error", IMG_GetError());
 	}
 
-	const std::shared_ptr<SDL_Texture> atlasTexture{SDL_CreateTextureFromSurface(renderer.get(), atlasSurface.get()),
-	                                                SDL_DestroyTexture};
+	std::ignore = SDL_SetColorKey(atlasSurface.get(), SDL_TRUE, SDL_MapRGB(atlasSurface.get()->format, 0, 0, 1));
+
+	std::shared_ptr<SDL_Texture> atlasTexture{SDL_CreateTextureFromSurface(renderer.get(), atlasSurface.get()),
+	                                          SDL_DestroyTexture};
 	if (atlasTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
+
+	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }
