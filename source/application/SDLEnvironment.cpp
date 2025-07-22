@@ -67,6 +67,8 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
+
+	// font loading
 	if (TTF_Init() == -1)
 	{
 		return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
@@ -78,6 +80,8 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 	}
 
+
+	// texture logo loading
 	if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
 	{
 		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
@@ -90,45 +94,55 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	const std::shared_ptr<SDL_Texture> logoTexture{SDL_CreateTextureFromSurface(renderer.get(), logoSurface.get()),
-	                                               SDL_DestroyTexture};//TODO: replace to logo from texture atlas
+	                                               SDL_DestroyTexture};
 	if (logoTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
 	}
 
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
-	{
-		return std::make_unique<ConfigFailure>("Mix_OpenAudio Error", Mix_GetError());
-	}
 
-	if (levelStartedSound = {Mix_LoadWAV(introMusicPathName), Mix_FreeChunk}; levelStartedSound)
-	{
-		if (Mix_PlayChannel(-1, levelStartedSound.get(), 0) == -1)
-		{
-			return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
-		}
-	}
-	else
-	{
-		return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
-	}
-
-	std::shared_ptr<SDL_Surface> atlasSurface{IMG_Load(textureAtlasPath), SDL_FreeSurface};
+	// texture atlas loading
+	const std::shared_ptr<SDL_Surface> atlasSurface{IMG_Load(textureAtlasPath), SDL_FreeSurface};
 	if (atlasSurface == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Surface Loading Error", IMG_GetError());
 	}
 
-	std::ignore = SDL_SetColorKey(atlasSurface.get(), SDL_TRUE, SDL_MapRGB(atlasSurface.get()->format, 0, 0, 1));
+	const auto rawSurface = atlasSurface.get();
+	if (const int result = SDL_SetColorKey(rawSurface, SDL_TRUE, SDL_MapRGB(rawSurface->format, 0, 0, 1));
+		result != 0)
+	{
+		return std::make_unique<ConfigFailure>("IMG atlas SetColorKey Error", SDL_GetError());
+	}
 
-	std::shared_ptr<SDL_Texture> atlasTexture{SDL_CreateTextureFromSurface(renderer.get(), atlasSurface.get()),
-	                                          SDL_DestroyTexture};
+	const std::shared_ptr<SDL_Texture> atlasTexture{SDL_CreateTextureFromSurface(renderer.get(), rawSurface),
+	                                                SDL_DestroyTexture};
 	if (atlasTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
 
 	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
+
+
+	// Audio loading
+	if (const int result = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+		result < 0)
+	{
+		return std::make_unique<ConfigFailure>("Mix_OpenAudio Error", Mix_GetError());
+	}
+
+	if (levelStartedSound = {Mix_LoadWAV(introMusicPathName), Mix_FreeChunk};
+		levelStartedSound == nullptr)
+	{
+		return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
+	}
+
+	if (const int result = Mix_PlayChannel(-1, levelStartedSound.get(), 0);
+		result == -1)
+	{
+		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
+	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }
