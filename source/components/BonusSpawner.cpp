@@ -137,25 +137,25 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 	switch (type)
 	{
 		case BonusType::Timer:
-			bonus = std::make_shared<BonusTimer>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusTimer>(rect, _events, lifetime, color, uuid, _gameMode, duration);
 			break;
 		case BonusType::Helmet:
-			bonus = std::make_shared<BonusHelmet>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusHelmet>(rect, _events, lifetime, color, uuid, _gameMode, duration);
 			break;
 		case BonusType::Grenade:
-			bonus = std::make_shared<BonusGrenade>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusGrenade>(rect, _events, lifetime, color, uuid, _gameMode);
 			break;
 		case BonusType::Tank:
-			bonus = std::make_shared<BonusTank>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusTank>(rect, _events, lifetime, color, uuid, _gameMode);
 			break;
 		case BonusType::Star:
-			bonus = std::make_shared<BonusStar>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusStar>(rect, _events, lifetime, color, uuid, _gameMode);
 			break;
 		case BonusType::Shovel:
-			bonus = std::make_shared<BonusShovel>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusShovel>(rect, _events, lifetime, color, uuid, _gameMode, duration);
 			break;
 		case BonusType::Caliber:
-			bonus = std::make_shared<BonusCaliber>(rect, _events, duration, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusCaliber>(rect, _events, lifetime, color, uuid, _gameMode);
 			break;
 		default:
 			break;

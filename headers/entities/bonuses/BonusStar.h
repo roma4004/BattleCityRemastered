@@ -13,8 +13,8 @@ class BonusStar final : public Bonus
 	using buuid = boost::uuids::uuid;
 
 public:
-	BonusStar(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, milliseconds duration,
-	          milliseconds lifeTime, int color, buuid uuid, GameMode gameMode);
+	BonusStar(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, milliseconds lifeTime, int color,
+	          buuid uuid, GameMode gameMode);
 
 	~BonusStar() override;
 };

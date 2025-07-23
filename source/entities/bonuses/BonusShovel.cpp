@@ -2,17 +2,17 @@
 #include "components/EventSystem.h"
 #include "enums/BonusType.h"
 
-BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-                         const milliseconds lifeTime, const int color, const buuid uuid, const GameMode gameMode)
+BonusShovel::BonusShovel(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds lifeTime,
+                         const int color, const buuid uuid, const GameMode gameMode, const milliseconds duration)
 	: Bonus{rect,
 	        std::move(events),
-	        duration,
 	        lifeTime,
 	        color,
 	        "BonusShovel",
 	        uuid,
 	        gameMode,
-	        BonusType::Shovel} {}
+	        BonusType::Shovel},
+	  _effectDuration{duration} {}
 
 BonusShovel::~BonusShovel() = default;
 

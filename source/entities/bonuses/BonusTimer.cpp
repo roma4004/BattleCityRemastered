@@ -5,17 +5,17 @@
 //TODO: replicate timer bonus effect end
 //TODO: on timer bonus effect enemy team should not shoot
 
-BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-                       const milliseconds lifeTime, const int color, const buuid uuid, const GameMode gameMode)
+BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds lifeTime,
+                       const int color, const buuid uuid, const GameMode gameMode, const milliseconds duration)
 	: Bonus{rect,
 	        std::move(events),
-	        duration,
 	        lifeTime,
 	        color,
 	        "BonusTimer",
 	        uuid,
 	        gameMode,
-	        BonusType::Timer} {}
+	        BonusType::Timer},
+	  _effectDuration{duration} {}
 
 BonusTimer::~BonusTimer() = default;
 

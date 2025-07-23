@@ -2,17 +2,17 @@
 #include "components/EventSystem.h"
 #include "enums/BonusType.h"
 
-BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-                         const milliseconds lifeTime, const int color, const buuid uuid, const GameMode gameMode)
+BonusHelmet::BonusHelmet(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds lifeTime,
+                         const int color, const buuid uuid, const GameMode gameMode, const milliseconds duration)
 	: Bonus{rect,
 	        std::move(events),
-	        duration,
 	        lifeTime,
 	        color,
 	        "BonusHelmet",
 	        uuid,
 	        gameMode,
-	        BonusType::Helmet} {}
+	        BonusType::Helmet},
+	  _effectDuration{duration} {}
 
 BonusHelmet::~BonusHelmet() = default;
 
