@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "../entities/BaseObj.h"
-#include "enums/Direction.h"
 #include <memory>
 
 enum class AnimationType : char8_t;
@@ -14,15 +13,14 @@ class AnimatedObject
 public:
 	std::shared_ptr<EventSystem> events{nullptr};
 	ObjRectangle rect{};
-	int animationFrame{0};
-	int elapsedFrames{0};
+	int animationFrame{};
+	int elapsedFrames{};
 	int limitOfFrames{};
 	int color{};
 	GameMode gameMode{};
-	Direction dir{};
 	AnimationType type{};
-	bool markToDispose{false};
-	bool isInfinite{false};
+	bool markToDispose{};
+	bool isInfinite{};
 	int scale{};
 	std::string name{};
 	std::string nameWithUuid{};

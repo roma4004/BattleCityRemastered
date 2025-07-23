@@ -15,6 +15,7 @@ SpawnDelayManager::~SpawnDelayManager()
 }
 
 using milliseconds = std::chrono::milliseconds;
+
 void SpawnDelayManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
@@ -23,7 +24,7 @@ void SpawnDelayManager::Subscribe()
 	{
 		if (delay == milliseconds(0))
 		{
-			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank)); // NOTE: immediate call, for tests
+			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));// NOTE: immediate call, for tests
 		}
 		else
 		{

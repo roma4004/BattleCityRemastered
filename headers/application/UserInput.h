@@ -21,7 +21,7 @@ class UserInput final
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::chrono::system_clock::time_point _lastMoveEventTime{}; //TODO: move to time utils, save to timer item
+	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
 	milliseconds _moveEndDelay{150};
 
 	void MouseEvents(const SDL_Event& event);

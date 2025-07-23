@@ -10,7 +10,7 @@
 Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, {18.f}, "") {}
 
 Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
-		  const bool enableByDefault)
+               const bool enableByDefault)
 	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)},
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},

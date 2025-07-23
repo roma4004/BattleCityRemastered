@@ -35,6 +35,7 @@ class TextureManager final
 	void Draw(ObjRectangle rect, Direction dir, const std::string& name, int color);
 	void DrawTexture(const SDL_Rect* textureRect, const SDL_Rect* destRect, Direction dir) const;
 	void DrawAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name, int color);
+	void DrawTankAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name, int color);
 
 	void SetRenderDrawColor(int color, Uint8 transparency) const;
 
@@ -46,6 +47,7 @@ class TextureManager final
 	void RectDraw(ObjRectangle rect, int color);
 	SDL_Rect GetAnimTextureRect(const std::string& name, ObjRectangle rect, SDL_Rect& destRect) const;
 	[[nodiscard]] SDL_Rect GetTextureRect(const std::string& name) const;
+	SDL_Rect GetTankTextureRect(const std::string& name) const;
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
 	void GenerateFpsTextures();
 

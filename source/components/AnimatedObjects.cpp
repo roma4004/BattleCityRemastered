@@ -3,6 +3,7 @@
 #include "entities/obstacles/Obstacle.h"
 #include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
+#include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 #include <boost/uuid/nil_generator.hpp>
@@ -18,7 +19,7 @@ AnimatedObject::AnimatedObject(const ObjRectangle rect, std::shared_ptr<EventSys
 	  isInfinite{true},
 	  scale{1},
 	  name{"Water"},
-	  nameWithUuid{"name" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
+	  nameWithUuid{"Water" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
 	  objName{"Water"}
 {
 	Subscribe();
@@ -36,10 +37,12 @@ AnimatedObject::AnimatedObject(std::shared_ptr<EventSystem> events, const GameMo
 	  nameWithUuid{"TankAnimation" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
 	  parent{tank}
 {
-	const auto tankLck = tank.lock();
-	rect = tankLck->GetRect();
-	objName = std::string(tankLck->GetName());
-	color = tankLck->GetColor();
+	if (const auto tankLck = tank.lock())
+	{
+		rect = tankLck->GetRect();
+		objName = std::string(tankLck->GetName());
+		color = tankLck->GetColor();
+	}
 
 	Subscribe();
 }
@@ -53,7 +56,7 @@ AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect,
 	  rect{rect},
 	  limitOfFrames{frameLimit},
 	  color{color},
-	  gameMode{gameMode},//TODO:remove field
+	  gameMode{gameMode},
 	  type(type),
 	  scale{scale},
 	  name{name},
@@ -87,20 +90,21 @@ void AnimatedObject::Draw() const
 {
 	if (type == AnimationType::Water_Animation)
 	{
-		events->EmitEvent("DrawAnimation", rect, dir, -animationFrame, scale, name, color);
+		events->EmitEvent("DrawAnimation", rect, Direction::UP, -animationFrame, scale, name, color);
+		//TODO: -animationFrame -> +animationFrame
 	}
 	else if (parent.expired())
 	{
-		events->EmitEvent("DrawAnimation", rect, dir, animationFrame, scale, name, color);
-		//TODO: recheck if it needed?
+		events->EmitEvent("DrawAnimation", rect, Direction::UP, animationFrame, scale, name, color);
 	}
 	else
 	{
 		//for tanks
-		const std::shared_ptr<Tank> tankLck = parent.lock();
-		events->EmitEvent("DrawAnimation", tankLck->GetRect(), tankLck->GetDirection(),
-		                  animationFrame, scale, objName, tankLck->GetColor());
-		//TODO: recheck if it needed?
+		if (const auto tankLck = parent.lock())
+		{
+			events->EmitEvent("DrawTankAnimation", tankLck->GetRect(), tankLck->GetDirection(),
+			                  animationFrame, scale, objName, tankLck->GetColor());
+		}
 	}
 }
 

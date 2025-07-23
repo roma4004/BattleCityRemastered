@@ -46,6 +46,13 @@ void TextureManager::Subscribe()
 			{
 				this->DrawAnimation(rect, dir, step, scale, name, color);
 			});
+	_events->AddListener(
+			"DrawTankAnimation", _name,
+			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
+			       const std::string& name, const int color)
+			{
+				this->DrawTankAnimation(rect, dir, step, scale, name, color);
+			});
 	_events->AddListener("DrawHealthBarObj", _name, [this](const ObjRectangle rect, const int health, const int color)
 	{
 		this->DrawHealthBar(rect, health, color);
@@ -216,10 +223,10 @@ SDL_Rect TextureManager::GetTextureRect(const std::string& name) const
 	return textureRect;
 }
 
-SDL_Rect TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect, SDL_Rect& destRect) const
+SDL_Rect TextureManager::GetTankTextureRect(const std::string& name) const
 {
 	SDL_Rect textureRect{};
-	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")//TODO: replace with enum
+	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
 	{
 		textureRect = RectToSdlRect(_offset.enemy);
 	}
@@ -231,7 +238,14 @@ SDL_Rect TextureManager::GetAnimTextureRect(const std::string& name, const ObjRe
 	{
 		textureRect = RectToSdlRect(_offset.playerTwo);
 	}
-	else if (name == "Water")
+
+	return textureRect;
+}
+
+SDL_Rect TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect, SDL_Rect& destRect) const
+{
+	SDL_Rect textureRect{};
+	if (name == "Water")
 	{
 		textureRect = RectToSdlRect(_offset.water);
 	}
@@ -246,6 +260,7 @@ SDL_Rect TextureManager::GetAnimTextureRect(const std::string& name, const ObjRe
 	}
 	else if (name == "TankExplosion")
 	{
+		destRect = RectToSdlRect(rect.GetScale(1.2f).GetCenter());
 		textureRect = RectToSdlRect(_offset.bigExplosion);
 	}
 	else if (name == "SpawnAnimation")
@@ -302,6 +317,22 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 		RectDraw(rect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
+	DrawTexture(&textureRect, &destRect, dir);
+}
+
+void TextureManager::DrawTankAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
+                                       const std::string& name, const int color)
+{
+	SDL_Rect textureRect = GetTankTextureRect(name);
+	textureRect.x += step * scale;
+	if (constexpr SDL_Rect defaultSdlRect{};
+		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
+	{
+		RectDraw(rect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
+	}
+
+	const SDL_Rect destRect = RectToSdlRect(rect);
 	DrawTexture(&textureRect, &destRect, dir);
 }
 

@@ -59,8 +59,8 @@ class TankSpawner final
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
-	void SpawnTank(ObjRectangle rect, int color, int health, const std::string& name, const std::string& fraction, float speed,
-	               buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
+	void SpawnTank(ObjRectangle rect, int color, int health, const std::string& name, const std::string& fraction,
+	               float speed, buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty,
 	                                               BonusEffectProperty effects);

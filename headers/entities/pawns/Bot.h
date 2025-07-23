@@ -13,7 +13,8 @@ class Bot : public Tank
 	using buuid = boost::uuids::uuid;
 
 protected:
-	std::uniform_int_distribution<> _distTurnRate{}; //TODO: move to random manager one event on start and then get random by type
+	std::uniform_int_distribution<> _distTurnRate{};
+	//TODO: move to random manager one event on start and then get random by type
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn{};
 	milliseconds _turnDuration{std::chrono::seconds(2)};
 
@@ -35,7 +36,7 @@ protected:
 
 public:
 	Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, BonusEffectProperty effects = {},
-		  bool enableByDefault = false);
+	    bool enableByDefault = false);
 
 	~Bot() override;
 };
