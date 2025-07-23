@@ -126,25 +126,24 @@ void AnimatedObject::Enable() { Subscribe(); };
 // copy constructor
 AnimatedObject::AnimatedObject(const AnimatedObject& other)
 {
-	other.Disable();
 	Disable();
 
 	events = other.events;
 
-	nameWithUuid = other.nameWithUuid;
+	rect = other.rect;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
+	color = other.color;
 	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
-	objName = other.objName;
+	name = std::move(other.name);
+	nameWithUuid = std::move(other.nameWithUuid);
+	objName = std::move(other.objName);
 	parent = other.parent;
-	// if (gameMode == GameMode::PlayAsHost) {
-	// 	events->EmitEvent("ServerSend_AnimationCreate", type, rect, color);
-	// }
 
 	Enable();
 }
@@ -154,21 +153,24 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 {
 	other.Disable();
 	Disable();
-	
+
 	events = other.events;
 	other.events = nullptr;
 
-	nameWithUuid = std::move(other.nameWithUuid);
+	rect = other.rect;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
+	color = other.color;
 	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
+	name = std::move(other.name);
+	nameWithUuid = std::move(other.nameWithUuid);
 	objName = std::move(other.objName);
-	parent = std::move(other.parent);
+	parent = other.parent;
 
 	Enable();
 }
@@ -179,25 +181,24 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	if (this == &other)
 		return *this;
 
-	other.Disable();
 	Disable();
 
 	events = other.events;
 
-	nameWithUuid = other.nameWithUuid;
+	rect = other.rect;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
+	color = other.color;
 	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
+	name = other.name;
+	nameWithUuid = other.nameWithUuid;
 	objName = other.objName;
 	parent = other.parent;
-	// if (gameMode == GameMode::PlayAsHost) {
-	// 	events->EmitEvent("ServerSend_AnimationCreate", type, rect, color);
-	// }
 
 	Enable();
 
@@ -217,17 +218,20 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	events = other.events;
 	other.events = nullptr;
 
-	nameWithUuid = std::move(other.nameWithUuid);
+	rect = other.rect;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
+	color = other.color;
 	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
+	name = std::move(other.name);
+	nameWithUuid = std::move(other.nameWithUuid);
 	objName = std::move(other.objName);
-	parent = std::move(other.parent);
+	parent = other.parent;
 
 	Enable();
 
