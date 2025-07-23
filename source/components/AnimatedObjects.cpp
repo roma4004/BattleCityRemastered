@@ -68,7 +68,10 @@ AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect,
 
 AnimatedObject::~AnimatedObject()
 {
-	Unsubscribe();
+	if (events != nullptr)
+	{
+		Unsubscribe();
+	}
 }
 
 void AnimatedObject::Subscribe()
@@ -83,7 +86,10 @@ void AnimatedObject::Subscribe()
 
 void AnimatedObject::Unsubscribe() const
 {
-	events->RemoveListener("Draw", nameWithUuid);
+	if (events != nullptr)
+	{
+		events->RemoveListener("Draw", nameWithUuid);
+	}
 }
 
 void AnimatedObject::Draw() const
@@ -95,15 +101,21 @@ void AnimatedObject::Draw() const
 	}
 	else if (parent.expired())
 	{
-		events->EmitEvent("DrawAnimation", rect, Direction::UP, animationFrame, scale, name, color);
+		if (events != nullptr)
+		{
+			events->EmitEvent("DrawAnimation", rect, Direction::UP, animationFrame, scale, name, color);
+		}
 	}
 	else
 	{
 		//for tanks
 		if (const auto tankLck = parent.lock())
 		{
-			events->EmitEvent("DrawTankAnimation", tankLck->GetRect(), tankLck->GetDirection(),
-			                  animationFrame, scale, objName, tankLck->GetColor());
+			if (events != nullptr)
+			{
+				events->EmitEvent("DrawTankAnimation", tankLck->GetRect(), tankLck->GetDirection(),
+				                  animationFrame, scale, objName, tankLck->GetColor());
+			}
 		}
 	}
 }
@@ -114,7 +126,12 @@ void AnimatedObject::Enable() { Subscribe(); };
 // copy constructor
 AnimatedObject::AnimatedObject(const AnimatedObject& other)
 {
+	other.Disable();
+	Disable();
+
 	events = other.events;
+
+	nameWithUuid = other.nameWithUuid;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -129,17 +146,19 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	// 	events->EmitEvent("ServerSend_AnimationCreate", type, rect, color);
 	// }
 
-	Subscribe();
+	Enable();
 }
 
 // move constructor
 AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 {
-	// Disable();
-
+	other.Disable();
+	Disable();
+	
 	events = other.events;
-	// other.events = nullptr;
+	other.events = nullptr;
 
+	nameWithUuid = std::move(other.nameWithUuid);
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -160,10 +179,12 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	if (this == &other)
 		return *this;
 
-	// Disable();
+	other.Disable();
+	Disable();
 
 	events = other.events;
 
+	nameWithUuid = other.nameWithUuid;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -190,11 +211,13 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	if (this == &other)
 		return *this;
 
-	// Disable();
+	other.Disable();
+	Disable();
 
 	events = other.events;
-	// other.events = nullptr;
+	other.events = nullptr;
 
+	nameWithUuid = std::move(other.nameWithUuid);
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -203,8 +226,8 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
-	objName = other.objName;
-	parent = other.parent;
+	objName = std::move(other.objName);
+	parent = std::move(other.parent);
 
 	Enable();
 

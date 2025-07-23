@@ -260,7 +260,7 @@ SDL_Rect TextureManager::GetAnimTextureRect(const std::string& name, const ObjRe
 	}
 	else if (name == "TankExplosion")
 	{
-		destRect = RectToSdlRect(rect.GetScale(1.2f).GetCenter());
+		destRect = RectToSdlRect(rect);
 		textureRect = RectToSdlRect(_offset.bigExplosion);
 	}
 	else if (name == "SpawnAnimation")

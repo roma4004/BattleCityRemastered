@@ -111,7 +111,7 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 			Create("BulletExplosion", rect, type, 3, 16, objName, color);
 			break;
 		case AnimationType::Tank_Explosion: //TODO: fix tank explosion
-			DeleteAnimation(objName);
+			DeleteTankAnimation(objName);
 			Create("TankExplosion", rect, type, 2, 32, objName, color);
 			//TODO: should change limitOfFrame to 5?
 			break;
@@ -175,7 +175,7 @@ void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed
 	    && ++obj.elapsedFrames % animationSpeed == 0)
 	{
 		obj.elapsedFrames = 0;
-		if (++obj.animationFrame == obj.limitOfFrames)
+		if (++obj.animationFrame >= obj.limitOfFrames)
 		{
 			if (obj.isInfinite == false)
 			{
@@ -223,7 +223,7 @@ void AnimationManager::DisableTankAnimation(const std::string& objName)
 	}
 }
 
-void AnimationManager::DeleteAnimation(const std::string& objName)
+void AnimationManager::DeleteTankAnimation(const std::string& objName)
 {
 	std::erase_if(_tankObjects, [&objName](const auto& animObj)
 	{
@@ -243,11 +243,6 @@ void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 	{
 		return obj.markToDispose;
 	});
-
-	// for (auto it = _animatedObjects.begin(); it != _animatedObjects.end(); ++it)
-	// {
-	// 	_animatedObjects.erase(it);
-	// }
 }
 
 //TODO: add reuse flow for explosions like bullet pool

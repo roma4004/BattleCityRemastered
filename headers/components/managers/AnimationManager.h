@@ -39,7 +39,7 @@ public:
 	void CreateAnimationWater(ObjRectangle rect);
 	void CreateAnimationTank(std::weak_ptr<Tank> tank);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& objName, int color);
-	void DeleteAnimation(const std::string& objName);
+	void DeleteTankAnimation(const std::string& objName);
 
 private:
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames,
