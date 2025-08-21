@@ -4,6 +4,10 @@
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_gamecontroller.h>
+#include <map>
+#include <iostream>
 #include <memory>
 
 class IConfig;
@@ -121,6 +125,8 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
+	
+	// Add controller/s if any 	
 
 	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
 
@@ -144,5 +150,24 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
+	
+	std::cout<< SDL_NumJoysticks() << " gamepad/s connected"<< std::endl;
+	if (SDL_IsGameController(0))
+	{
+		GameControllerOne = SDL_GameControllerOpen(0);
+		if (GameControllerOne)
+		{
+			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));			
+		} 
+	}
+	if (SDL_IsGameController(1))
+	{
+		GameControllerTwo = SDL_GameControllerOpen(1);
+		if (GameControllerTwo)
+		{
+			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));			
+		} 
+	}	
+	
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }
