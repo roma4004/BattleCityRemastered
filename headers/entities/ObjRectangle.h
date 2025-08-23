@@ -15,9 +15,7 @@ struct ObjRectangle final
 	// Get the y-coordinate of the bottom side
 	[[nodiscard]] float Bottom() const;
 
-	[[nodiscard]] ObjRectangle GetCenter() const;
-
-	[[nodiscard]] ObjRectangle GetScale(float scale) const;
+	[[nodiscard]] ObjRectangle GetScaledBy(float scale) const;
 };
 
 inline float ObjRectangle::Area() const { return w * h; }
@@ -26,9 +24,14 @@ inline float ObjRectangle::Right() const { return x + w; }
 
 inline float ObjRectangle::Bottom() const { return y + h; }
 
-inline ObjRectangle ObjRectangle::GetCenter() const { return {x - w / 2, y - w / 2, w, h}; }
+inline ObjRectangle ObjRectangle::GetScaledBy(const float scale) const
+{
+	ObjRectangle rectAfterScale = { x, y, w * scale, h * scale };
+	rectAfterScale.x -= (rectAfterScale.w - w) / 2;
+	rectAfterScale.y -= (rectAfterScale.h - h) / 2;
 
-inline ObjRectangle ObjRectangle::GetScale(const float scale) const { return {x, y, w * scale, h * scale}; }
+	return rectAfterScale;
+}; 
 
 template<class Archive>
 void ObjRectangle::serialize(Archive& ar, const unsigned int /*version*/)
