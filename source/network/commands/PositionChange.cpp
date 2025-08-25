@@ -6,14 +6,17 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(PositionChange);
 
-PositionChange::PositionChange(): Command(CommandType::POSITION_CHANGE) {}
+PositionChange::PositionChange() : Command{CommandType::POSITION_CHANGE} {}
 
 PositionChange::PositionChange(std::string who, const FPoint pos, const Direction dir, buuid uuid)
-	: Command(CommandType::POSITION_CHANGE), _who(std::move(who)), _pos(pos), _dir(dir), _uuid(std::move(uuid)) {}
+	: Command{CommandType::POSITION_CHANGE}, _who{std::move(who)}, _pos{pos}, _dir{dir}, _uuid{std::move(uuid)} {}
 
 std::string PositionChange::GetWho() const noexcept { return _who; }
+
 FPoint PositionChange::GetPos() const noexcept { return _pos; }
+
 Direction PositionChange::GetDir() const noexcept { return _dir; }
+
 using buuid = boost::uuids::uuid;
 buuid PositionChange::GetUuid() const noexcept { return _uuid; }
 

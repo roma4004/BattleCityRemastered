@@ -20,7 +20,7 @@ public:
 	[[nodiscard]] const char* GetCommandType() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 };
 
 template<class Archive>

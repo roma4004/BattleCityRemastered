@@ -6,7 +6,7 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(CommandBatch)
 
-CommandBatch::CommandBatch() : Command(CommandType::COMMAND_BATCH)
+CommandBatch::CommandBatch() : Command{CommandType::COMMAND_BATCH}
 {
 	//_commands.reserve(1000);
 }

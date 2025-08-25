@@ -465,3 +465,4 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 //TODO: write test for respawn resource change
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
+//TODO: check animation create replication

@@ -3,6 +3,7 @@
 #include "components/EventSystem.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
+#include "enums/AnimationType.h"
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 // #include <iostream>

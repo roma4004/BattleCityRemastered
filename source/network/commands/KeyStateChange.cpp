@@ -6,10 +6,10 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(KeyStateChange);
 
-KeyStateChange::KeyStateChange(): Command(CommandType::KEY_STATE_CHANGE) {}
+KeyStateChange::KeyStateChange() : Command{CommandType::KEY_STATE_CHANGE} {}
 
 KeyStateChange::KeyStateChange(std::string keyState)
-	: Command(CommandType::KEY_STATE_CHANGE), _keyState(std::move(keyState)) {}
+	: Command{CommandType::KEY_STATE_CHANGE}, _keyState{std::move(keyState)} {}
 
 std::string KeyStateChange::GetKeyState() const noexcept { return _keyState; }
 

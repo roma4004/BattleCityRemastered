@@ -26,12 +26,12 @@ inline float ObjRectangle::Bottom() const { return y + h; }
 
 inline ObjRectangle ObjRectangle::GetScaledBy(const float scale) const
 {
-	ObjRectangle rectAfterScale = { x, y, w * scale, h * scale };
+	ObjRectangle rectAfterScale = {.x = x, .y = y, .w = w * scale, .h = h * scale};
 	rectAfterScale.x -= (rectAfterScale.w - w) / 2;
 	rectAfterScale.y -= (rectAfterScale.h - h) / 2;
 
 	return rectAfterScale;
-}; 
+}
 
 template<class Archive>
 void ObjRectangle::serialize(Archive& ar, const unsigned int /*version*/)

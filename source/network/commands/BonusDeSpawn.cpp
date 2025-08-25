@@ -6,10 +6,10 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(BonusDeSpawn);
 
-BonusDeSpawn::BonusDeSpawn(): Command(CommandType::BONUS_DESPAWN) {}
+BonusDeSpawn::BonusDeSpawn() : Command{CommandType::BONUS_DESPAWN} {}
 
 BonusDeSpawn::BonusDeSpawn(buuid uuid)
-	: Command(CommandType::BONUS_DESPAWN), _uuid(std::move(uuid)) {}
+	: Command{CommandType::BONUS_DESPAWN}, _uuid{std::move(uuid)} {}
 
 using buuid = boost::uuids::uuid;
 buuid BonusDeSpawn::GetUuid() const noexcept { return _uuid; }

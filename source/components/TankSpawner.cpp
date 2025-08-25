@@ -33,12 +33,12 @@ TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<Ba
 	  _bonusEffectManager{std::move(bonusEffectManager)}
 {
 	_slots = {
-			{UuidUtils::GetRandomUuid(), false},
-			{UuidUtils::GetRandomUuid(), false},
-			{UuidUtils::GetRandomUuid(), false},
-			{UuidUtils::GetRandomUuid(), false},
-			{UuidUtils::GetRandomUuid(), false},
-			{UuidUtils::GetRandomUuid(), false},
+			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},
+			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},
+			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},
+			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},
+			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},
+			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},
 	};
 
 	Subscribe();

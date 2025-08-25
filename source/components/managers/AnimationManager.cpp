@@ -44,7 +44,7 @@ void AnimationManager::SubscribeAsHost()
 
 	_events->AddListener("AnimationCreateTank", _name, [this](std::weak_ptr<Tank> tank)
 	{
-		this->CreateAnimationTank(tank);
+		this->CreateAnimationTank(std::move(tank));
 	});
 	_events->AddListener("AnimationCreateWater", _name, [this](const ObjRectangle rect)
 	{

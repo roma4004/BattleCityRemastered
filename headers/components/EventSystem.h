@@ -43,7 +43,7 @@ namespace detail
 	};
 
 	template<typename T>
-	using type_adapter_t = typename type_adapter<std::decay_t<T>>::type;
+	using type_adapter_t = type_adapter<std::decay_t<T>>::type;
 }
 
 // traits for deducing types
@@ -188,9 +188,9 @@ class EventSystem final
 	struct EventInfo
 	{
 		std::unique_ptr<BaseEvent> event;
-		std::type_info const* type_info;
+		const std::type_info* type_info;
 
-		EventInfo(std::unique_ptr<BaseEvent> ev, std::type_info const* ti)
+		EventInfo(std::unique_ptr<BaseEvent> ev, const std::type_info* ti)
 			: event(std::move(ev)), type_info(ti) {}
 	};
 
