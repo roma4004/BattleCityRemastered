@@ -228,7 +228,7 @@ void Server::StartSendThread()
 				_sendQueue.pop();
 			}
 
-			if (batch && batch->GetCommands().size() > 0)
+			if (batch && !batch->IsEmpty())
 			{
 				try
 				{

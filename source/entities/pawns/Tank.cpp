@@ -7,8 +7,7 @@
 #include "interfaces/IShootable.h"
 
 Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-           const BonusEffectProperty effects,
-           const bool enableByDefault)
+           const BonusEffectProperty effects, const bool enableByDefault)
 	: Pawn{std::move(pawnProperty), std::move(moveBeh)},
 	  _shootingBeh{std::move(shootingBeh)},
 	  _effects{effects}

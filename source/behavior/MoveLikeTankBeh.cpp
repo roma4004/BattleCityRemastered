@@ -372,13 +372,10 @@ bool MoveLikeTankBeh::MoveDown(const float deltaTime) const
 
 void MoveLikeTankBeh::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object, const Tank* tank)
 {
-	if (const auto target = object)
+	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
 	{
-		if (const auto bonus = dynamic_cast<IPickupableBonus*>(target.get()))
-		{
-			bonus->PickUpBonus(std::string(tank->GetName()), tank->GetFraction());
-			//TODO: destroy bonus on emit in PickUpBonus by subscription
-			target->TakeDamage(1);
-		}
+		bonus->PickUpBonus(std::string(tank->GetName()), tank->GetFraction());
+		//TODO: destroy bonus on emit in PickUpBonus by subscription
+		object->TakeDamage(1);
 	}
 }

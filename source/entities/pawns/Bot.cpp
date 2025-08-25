@@ -40,7 +40,7 @@ bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 
 bool Bot::IsFreePathToBonus(const std::vector<std::shared_ptr<BaseObj>>& sideObstacles)
 {
-	if (const auto nearestObstacleBonus = sideObstacles.front();
+	if (const auto& nearestObstacleBonus = sideObstacles.front();
 		IsBonus(nearestObstacleBonus))
 	{
 		return true;

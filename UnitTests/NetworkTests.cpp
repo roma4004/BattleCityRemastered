@@ -34,7 +34,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	constexpr FPoint posOrigin{42.f, 42.f};
+	constexpr FPoint posOrigin{.x = 42.f, .y = 42.f};
 	constexpr auto directionOrigin{Direction::UP};
 
 	std::promise<std::tuple<FPoint, Direction, buuid>> promise{};

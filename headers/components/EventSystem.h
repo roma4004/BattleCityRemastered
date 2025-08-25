@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 
+//TODO: template for deducing lambda parameters type can be constexpr?
 //TODO: create eventType and derived just like network command to compile time parameter check and replace event name
 namespace detail
 {

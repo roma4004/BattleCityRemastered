@@ -202,7 +202,7 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 	{
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			if (object.get() == nullptr)
+			if (object == nullptr)
 			{
 				return false;
 			}
@@ -588,27 +588,43 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
                                               BonusEffectProperty effects)
 {
+	constexpr bool enableByDefault = true;
+
 	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
 	{
-		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, std::move(effects));
+		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, std::move(effects), enableByDefault);
 	}
 
 	if (type == TankType::COOP1 || type == TankType::COOP2)
 	{
-		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, std::move(effects));
+		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, std::move(effects), enableByDefault);
 	}
 
 	return std::make_shared<Player>(
-			std::move(pawnProperty), _bulletPool, std::move(GetInputProvider(type)), std::move(effects));
+			std::move(pawnProperty), _bulletPool, GetInputProvider(type), std::move(effects), enableByDefault);
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name,
                             const std::string& fraction, const float speed, buuid uuid, BonusEffectProperty effects,
                             const TankType type, const bool skipDelay)
 {
-	BaseObjProperty baseObjProperty{rect, color, health, uuid, name, std::move(fraction)};
+	BaseObjProperty baseObjProperty{
+			.rect = rect,
+			.color = color,
+			.health = health,
+			.uuid = uuid,
+			.name = name,//TODO:move
+			.fraction = std::move(fraction)};//TODO:move
+
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), _allObjects, _events, 1, speed, _windowSize, Direction::UP, _gameMode};
+			.baseObjProperty = std::move(baseObjProperty),
+			.allObjects = _allObjects,
+			.events = _events,
+			.tier = 1,
+			.speed = speed,
+			.windowSize = _windowSize,
+			.dir = Direction::UP,
+			.gameMode = _gameMode};
 
 	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
 	{
