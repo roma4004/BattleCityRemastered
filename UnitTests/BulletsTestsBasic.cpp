@@ -48,10 +48,11 @@ protected:
 		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
+				.rect = rect, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::DOWN,
-				_gameMode};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
@@ -309,9 +310,11 @@ TEST_F(BulletTest, BulletDamageTank)
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
-	BaseObjProperty baseObjProperty{rect, gray, tankHealth, _uuid, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{.rect = rect, .color = gray, .health = tankHealth, .uuid = _uuid, .name = "Enemy1",
+	                                .fraction = "EnemyTeam"};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP, _gameMode};
+			.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+			.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
 	_allObjects.emplace_back(
@@ -337,10 +340,11 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		std::string author{"Player2"};
 		ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, _uuid, std::move(name), std::move(fraction)};
+				.rect = rect, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _bulletSpeed, _windowSize, Direction::UP,
-				_gameMode};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(

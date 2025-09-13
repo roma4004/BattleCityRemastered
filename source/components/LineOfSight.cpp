@@ -15,9 +15,9 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, 
 	const FPoint tankCenter = {.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankHalf.y};
 	const float tankDownY = {tankRect.y + tankRect.h};
 	const float tankRightX = {tankRect.x + tankRect.w};
-	const FPoint bulletSpawnPos = {tankCenter.x - bulletSize.x, tankCenter.y - bulletSize.y};
-	const FPoint bulletHalfSize = {bulletSize.x / 2, bulletSize.y / 2};
-	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
+	const FPoint bulletSpawnPos = {.x = tankCenter.x - bulletSize.x, .y = tankCenter.y - bulletSize.y};
+	const FPoint bulletHalfSize = {.x = bulletSize.x / 2, .y = bulletSize.y / 2};
+	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{
 			/*up, left, down, right*///TODO: align to not needed exclude self
@@ -38,7 +38,7 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
 	const float tankDownY = {tankRect.y + tankRect.h};
 	const float tankRightX = {tankRect.x + tankRect.w};
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
+	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{
 			/*up, left, down, right*/
@@ -58,7 +58,7 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object.get() == nullptr || excludeSelf == object.get())//TODO: investigate empty object adding
+		if (object == nullptr || excludeSelf == object.get())
 		{
 			continue;
 		}

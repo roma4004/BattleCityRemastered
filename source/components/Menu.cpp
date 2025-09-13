@@ -248,7 +248,7 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 		textStream << std::setw(4) << enemy;
 	}
 
-	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+	TextToRender(Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
 void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text,
@@ -262,7 +262,7 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 			<< std::setw(4) << text2
 			<< std::setw(4) << text3;
 
-	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+	TextToRender(Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
 void Menu::DrawText() const

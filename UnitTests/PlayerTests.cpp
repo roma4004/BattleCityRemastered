@@ -47,10 +47,11 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, yellow, _tankHealth, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{.rect = rect, .color = yellow, .health = _tankHealth, .uuid = _uuid,
+		                                .name = _name, .fraction = _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::UP,
-				_gameMode};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
@@ -491,10 +492,11 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		constexpr int green = 0x408000;
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, green, _tankHealth, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{.rect = rect, .color = green, .health = _tankHealth, .uuid = _uuid,
+		                                .name = _name, .fraction = _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::UP,
-				_gameMode};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));

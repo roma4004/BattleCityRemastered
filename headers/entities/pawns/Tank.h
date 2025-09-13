@@ -41,7 +41,7 @@ class Tank : public Pawn, public IHealthBar
 	void OnBonusCaliber(const std::string& author, const std::string& fraction);
 
 protected:
-	FPoint _bulletSize{9.f, 9.f};
+	FPoint _bulletSize{.x = 9.f, .y = 9.f};
 	double _bulletDamageRadius{18.f};
 	milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire{};

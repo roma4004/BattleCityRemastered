@@ -47,8 +47,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> e
 	  _textureManager(std::move(textureManager)),
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
 	  _tankSpawner{
-			  std::make_shared<TankSpawner>(
-					  windowSize, &_allObjects, events, _bulletPool, std::move(bonusEffectManager))},
+			  std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool,
+			                                std::move(bonusEffectManager),
+			                                std::make_shared<RespawnResourceManager>(events))},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _spawnDelayManager{std::move(spawnDelayManager)},

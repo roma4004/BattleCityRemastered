@@ -275,7 +275,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 			});
 
 	events->EmitEvent("Server_StartFrame");
-	constexpr FPoint pos{42.f, 42.f};
+	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
 	events->EmitEvent("ServerSend_BonusSpawn", pos, type, _uuid);
 	events->EmitEvent("Server_EndFrame");
@@ -328,7 +328,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	auto client = std::make_unique<ClientHandler>(events);
 
 	constexpr auto obstacleType = ObstacleType::Brick;
-	constexpr ObjRectangle rectOrigin{42.0f, 43.0f, 44.0f, 45.0f};
+	constexpr ObjRectangle rectOrigin{.x = 42.0f, .y = 43.0f, .w = 44.0f, .h = 45.0f};
 
 	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise{};
 	auto future = promise.get_future();

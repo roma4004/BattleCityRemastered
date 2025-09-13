@@ -87,7 +87,7 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 	_bullets.pop();
 
 	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get());
-		bulletAsBase.get() != nullptr && bullet != nullptr)
+		bulletAsBase != nullptr && bullet != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
 		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "

@@ -146,7 +146,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		// 			<< std::endl;
 	}
 
-	if (bulletAsBase.get() != nullptr)
+	if (bulletAsBase != nullptr)
 	{
 		_allObjects->emplace_back(bulletAsBase);
 	}
