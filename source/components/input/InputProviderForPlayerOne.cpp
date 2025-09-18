@@ -24,7 +24,7 @@ InputProviderForPlayerOne::InputProviderForPlayerOne(std::shared_ptr<EventSystem
 	_events->AddListener("CB_DPAD_RIGHT_Pressed", _name, [&btn = _playerKeys]() { btn.right = true; });
 	_events->AddListener("CB_DPAD_RIGHT_Released", _name, [&btn = _playerKeys]() { btn.right = false; });
 	_events->AddListener("CB_DPAD_LEFT_Pressed", _name, [&btn = _playerKeys]() { btn.left = true; });
-	_events->AddListener("CB_DPAD_LEFT_Released", _name, [&btn = _playerKeys]() { btn.left = false; });	
+	_events->AddListener("CB_DPAD_LEFT_Released", _name, [&btn = _playerKeys]() { btn.left = false; });		
 }
 
 InputProviderForPlayerOne::~InputProviderForPlayerOne()

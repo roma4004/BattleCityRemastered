@@ -2,10 +2,7 @@
 
 #include "../Point.h"
 #include "../components/input/MouseButton.h"
-//#include "SDLEnvironment.h"
-//#include <map>
-#include <SDL_gamecontroller.h>
-#include <SDL_joystick.h>
+#include "SDLEnvironment.h"
 #include <chrono>
 #include <map>
 
@@ -30,39 +27,23 @@ class UserInput final
 	milliseconds _moveEndDelay{150};
 
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;		
-	
-	
 
 	void MouseEvents(const SDL_Event& event);
 	void KeyPressed(const SDL_Event& event) const;
 	void KeyReleased(const SDL_Event& event) const;
-	void KeyboardEvents(const SDL_Event& event) const;
-	
+	void KeyboardEvents(const SDL_Event& event) const;	
 	void GamepadKeyPressed(const SDL_Event& event) const;
-	void GamepadKeyReleased(const SDL_Event& event) const;
-	
-	void Gamepad2_KeyPressed(const SDL_Event& event) const;
-	void Gamepad2_KeyReleased(const SDL_Event& event) const;
-	
+	void GamepadKeyReleased(const SDL_Event& event) const;	
 	void GamepadEvents(const SDL_Event& event) const;
-	void Gamepad2_Events(const SDL_Event& event) const;
-	
-	void OnWindowMoveStop();
-	
+	void OnWindowMoveStop();	
 	void Subscribe();
 	void Unsubscribe() const;
-
 	void WindowsMoveEvents(const SDL_Event& event);
-
 	void GamepadInit(SDL_Event &event);
-
-	
-
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
-
 	~UserInput();
-
+	static int GetDeviceIndex(const SDL_Event &event);
 	void Update();
 
 	[[nodiscard]] bool IsGameOver() const;

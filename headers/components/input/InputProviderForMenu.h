@@ -13,6 +13,7 @@ struct MenuKeys final
 	bool reset{false};
 	bool menuShow{false};
 	bool pause{false};
+	bool controllersSwap{false};
 };
 
 class InputProviderForMenu final
@@ -35,6 +36,7 @@ public:
 	void TogglePause();
 
 	void ToggleMenuInputSubscription();
+	void ToggleControllersSwap();
 
 	void ToggleUp();
 	void ToggleDown();

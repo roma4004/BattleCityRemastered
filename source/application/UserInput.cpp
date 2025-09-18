@@ -1,4 +1,5 @@
 #include "application/UserInput.h"
+#include "application/GameSuccess.h"
 #include "components/EventSystem.h"
 #include <SDL_events.h>
 #include <SDL_log.h>
@@ -13,6 +14,13 @@ UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> event
 UserInput::~UserInput()
 {
 	Unsubscribe();
+}
+
+int UserInput::GetDeviceIndex(const SDL_Event &event)
+{
+	int device_index = event.cdevice.which;
+	//std::cout<<"UserInput::DeviceIndex = "<< device_index<<"\n"; /* left for debug purpose */
+	return device_index;
 }
 
 void UserInput::Subscribe()
@@ -50,29 +58,25 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 
 void UserInput::GamepadInit(SDL_Event &event)
 {
-	int device_index = event.cdevice.which;
+	int device_index = GetDeviceIndex(event);
 	SDL_GameController* gc = SDL_GameControllerOpen(device_index);
-	SDL_Joystick* joy = SDL_GameControllerGetJoystick(gc);
-	SDL_JoystickID instance_id = SDL_JoystickInstanceID(joy);
+	SDL_JoystickID instance_id = device_index;
 	controllers[instance_id] = gc;
 					
 	switch (event.type)
 	{
 		case SDL_CONTROLLERDEVICEADDED:
-		{
-					
-					
+		{					
 			if (SDL_IsGameController(device_index))
 			{
-				std::cout << "Controller " << std::to_string(instance_id) << " added" << std::endl;
-				SDL_Log("Controller connected: %s (instance %d)",SDL_GameControllerName(gc), instance_id);														
-						
+				std::cout << "Controller " << std::to_string(instance_id) << " added\n";				
+				SDL_Log("Controller connected: %s (instance %d)",SDL_GameControllerName(gc), instance_id);						
 			}
 			break;
-		}
+		}		
 		case SDL_CONTROLLERDEVICEREMOVED:
 		{
-			auto it = controllers.find(instance_id);
+			auto it = controllers.find(device_index);
 			if (it != controllers.end())
 			{
 				SDL_GameControllerClose(it->second);
@@ -183,6 +187,9 @@ void UserInput::KeyPressed(const SDL_Event& event) const
 		case SDLK_r:
 			_events->EmitEvent("Reset_Pressed");
 			break;
+		case SDLK_TAB:
+			_events->EmitEvent("Tab_Pressed");
+			break;
 		default:
 			break;
 	}
@@ -234,6 +241,9 @@ void UserInput::KeyReleased(const SDL_Event& event) const
 		case SDLK_r:
 			_events->EmitEvent("Reset_Released");
 			break;
+		case SDLK_TAB:
+			_events->EmitEvent("Tab_Released");
+			break;
 		default:
 			break;
 	}
@@ -253,37 +263,53 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 
 void UserInput::GamepadKeyPressed(const SDL_Event& event) const
 {	
+	std::string controllerTag{};
+	
+	if (GameSuccess::_getControllersSwapState() == false)
+	{
+		if (GetDeviceIndex(event)==1)
+			controllerTag= "CB";
+		else if (GetDeviceIndex(event)==0)
+			controllerTag= "C2B";
+	}
+	if (GameSuccess::_getControllersSwapState() == true)
+	{
+		if (GetDeviceIndex(event)==1)
+			controllerTag= "C2B";
+		else if (GetDeviceIndex(event)==0)
+			controllerTag= "CB";
+	}	
 	switch (event.cbutton.button)
 	{
 			case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent("CB_A_Pressed"); 
+			_events->EmitEvent(controllerTag + "_A_Pressed");
 			break;
 			case SDL_CONTROLLER_BUTTON_B:
-			_events->EmitEvent("CB_B_Pressed");
+			_events->EmitEvent(controllerTag + "_B_Pressed");
 			break;
 			case SDL_CONTROLLER_BUTTON_X:
-			_events->EmitEvent("CB_X_Pressed");
+			_events->EmitEvent(controllerTag + "_X_Pressed");
 			break;
 			case SDL_CONTROLLER_BUTTON_Y:
-			_events->EmitEvent("CB_Y_Pressed");
+			_events->EmitEvent(controllerTag + "_Y_Pressed");
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
-			_events->EmitEvent("CB_DPAD_UP_Pressed"); 
+			_events->EmitEvent(controllerTag + "_DPAD_UP_Pressed"); 
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-			_events->EmitEvent("CB_DPAD_DOWN_Pressed"); 
+			_events->EmitEvent(controllerTag + "_DPAD_DOWN_Pressed"); 
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-			_events->EmitEvent("CB_DPAD_LEFT_Pressed"); 
+			_events->EmitEvent(controllerTag + "_DPAD_LEFT_Pressed"); 
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			_events->EmitEvent("CB_DPAD_RIGHT_Pressed"); 
+			_events->EmitEvent(controllerTag + "_DPAD_RIGHT_Pressed"); 
 			break;
 			case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent("Start_Pressed");
+			_events->EmitEvent(controllerTag + "_Start_Pressed");
 			break;
 			case SDL_CONTROLLER_BUTTON_GUIDE:
-			_events->EmitEvent("GUIDE_Pressed");
+			_events->EmitEvent(controllerTag + "_GUIDE_Pressed");
 			break;
 			
 			default:
@@ -293,168 +319,78 @@ void UserInput::GamepadKeyPressed(const SDL_Event& event) const
 
 void UserInput::GamepadKeyReleased(const SDL_Event& event) const
 {
+	std::string controllerTag{};	
+	if (GameSuccess::_getControllersSwapState() == false)
+	{
+		if (GetDeviceIndex(event)==1)
+			controllerTag= "CB";
+		else if (GetDeviceIndex(event)==0)
+			controllerTag= "C2B";
+	}
+	if (GameSuccess::_getControllersSwapState() == true)
+	{
+		if (GetDeviceIndex(event)==1)
+			controllerTag= "C2B";
+		else if (GetDeviceIndex(event)==0)
+			controllerTag= "CB";
+	}
 	switch(event.cbutton.button)
 	{
 			case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent("CB_A_Released");
+			_events->EmitEvent(controllerTag + "_A_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_B:
-			_events->EmitEvent("CB_B_Released");
+			_events->EmitEvent(controllerTag + "_B_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_X:
-			_events->EmitEvent("CB_X_Released");
+			_events->EmitEvent(controllerTag + "_X_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_Y:
-			_events->EmitEvent("CB_Y_Released");
+			_events->EmitEvent(controllerTag + "_Y_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
-			_events->EmitEvent("CB_DPAD_UP_Released");
+			_events->EmitEvent(controllerTag + "_DPAD_UP_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-			_events->EmitEvent("CB_DPAD_DOWN_Released");
+			_events->EmitEvent(controllerTag + "_DPAD_DOWN_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-			_events->EmitEvent("CB_DPAD_LEFT_Released");
+			_events->EmitEvent(controllerTag + "_DPAD_LEFT_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			_events->EmitEvent("CB_DPAD_RIGHT_Released");
+			_events->EmitEvent(controllerTag + "_DPAD_RIGHT_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent("Start_Pressed");
+			_events->EmitEvent(controllerTag + "_Start_Released");
 			break;
 			case SDL_CONTROLLER_BUTTON_GUIDE:
-			_events->EmitEvent("GUIDE_Pressed");
+			_events->EmitEvent(controllerTag + "_GUIDE_Released");
 			break;
-
+						
 			default:
 			break;
 	}
 }
-
-void UserInput::Gamepad2_KeyPressed(const SDL_Event& event) const
-{
-	switch (event.cbutton.button)
-	{
-		case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent("C2B_A_Pressed"); 
-			break;
-		case SDL_CONTROLLER_BUTTON_B:
-			_events->EmitEvent("C2B_B_Pressed");
-			break;
-		case SDL_CONTROLLER_BUTTON_X:
-			_events->EmitEvent("C2B_X_Pressed");
-			break;
-		case SDL_CONTROLLER_BUTTON_Y:
-			_events->EmitEvent("C2B_Y_Pressed");
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
-			_events->EmitEvent("C2B_DPAD_UP_Pressed"); 
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-			_events->EmitEvent("C2B_DPAD_DOWN_Pressed"); 
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-			_events->EmitEvent("C2B_DPAD_LEFT_Pressed"); 
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			_events->EmitEvent("C2B_DPAD_RIGHT_Pressed"); 
-			break;
-		case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent("Start_Pressed");
-			break;
-		case SDL_CONTROLLER_BUTTON_GUIDE:
-			_events->EmitEvent("GUIDE_Pressed");
-			break;
-			
-		default:
-			break;
-	}
-}
-
-void UserInput::Gamepad2_KeyReleased(const SDL_Event& event) const
-{
-	switch(event.cbutton.button)
-	{
-		case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent("C2B_A_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_B:
-			_events->EmitEvent("C2B_B_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_X:
-			_events->EmitEvent("C2B_X_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_Y:
-			_events->EmitEvent("C2B_Y_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
-			_events->EmitEvent("C2B_DPAD_UP_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-			_events->EmitEvent("C2B_DPAD_DOWN_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-			_events->EmitEvent("C2B_DPAD_LEFT_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			_events->EmitEvent("C2B_DPAD_RIGHT_Released");
-			break;
-		case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent("Start_Pressed");
-			break;
-		case SDL_CONTROLLER_BUTTON_GUIDE:
-			_events->EmitEvent("GUIDE_Pressed");
-			break;
-
-		default:
-			break;
-	}
-}
-
-
 void UserInput::GamepadEvents(const SDL_Event& event) const
 {
 	if (event.type == SDL_CONTROLLERBUTTONDOWN)
-	{
-		GamepadKeyPressed(event);
-	}
+	{		GamepadKeyPressed(event);	}
 	else if (event.type == SDL_CONTROLLERBUTTONUP)
-	{		
-		GamepadKeyReleased(event);
-	}
+	{		GamepadKeyReleased(event);	}
 }
-
-void UserInput::Gamepad2_Events(const SDL_Event& event) const
-{
-	if (event.type == SDL_CONTROLLERBUTTONDOWN)
-	{
-		Gamepad2_KeyPressed(event);
-	}
-	else if (event.type == SDL_CONTROLLERBUTTONUP)
-	{		
-		Gamepad2_KeyReleased(event);
-	}
-}
-
 void UserInput::Update()
 {
 	SDL_Event event;	
-	
 	while (SDL_PollEvent(&event))
-	{
-		
+	{		
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
-		{
-			_isGameOver = true;
-		}
+		{			_isGameOver = true;		}
 
 		WindowsMoveEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);
-		GamepadEvents(event);  		 
-		
+		GamepadEvents(event);		
 	}
-
 	OnWindowMoveStop();
 }
 

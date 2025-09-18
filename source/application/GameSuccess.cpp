@@ -8,16 +8,13 @@
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
 #include "components/managers/BonusEffectManager.h"
-#include "entities/BaseObj.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
-//#include <fstream>
 #include "components/managers/TextureManager.h"
 #include <iostream>
 #include <memory>
-#include <boost/uuid/uuid_io.hpp>
 
 //#ifdef _WIN32
 //#define _WIN32_WINNT 0x0A00
@@ -28,12 +25,11 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 {
 	const auto frameReady = static_cast<bool*>(param);
 	*frameReady = true;
-
 	return 0;
 }
 
 class BaseObj;
-// std::ofstream error_log_server("error_log_Server.txt");
+
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events,
                          std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
                          std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn,
@@ -53,7 +49,8 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> e
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _spawnDelayManager{std::move(spawnDelayManager)},
 	  _isVsyncOn{isVsyncOn},
-	  _selectedGameMode{GameMode::OnePlayer}
+		_selectedGameMode{GameMode::OnePlayer},
+		_areControllersSwapped{_getControllersSwapState()}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 	Subscribe();
@@ -85,6 +82,7 @@ void GameSuccess::Subscribe()
 	{
 		this->OnGameModeChangedTo(newGameMode);
 	});
+	_events->AddListener("ControllersSwapState", _name, [this]() { GameSuccess::_setControllersSwapState(_areControllersSwapped); });
 	_events->AddListener("DisposeStage", _name, [this]() { this->DisposeDeadObject(); });
 }
 
@@ -95,6 +93,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("ResetBattlefield", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("DisposeStage", _name);
+	_events->RemoveListener("ControllersSwapState", _name);
 }
 
 void GameSuccess::LoadMap() const
@@ -129,7 +128,17 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 		_events->EmitEvent("ClientReadyToPlay");
 	}
 }
+bool GameSuccess::_getControllersSwapState()
+{	
+	if (areControllersSwaped)
+		return true;
+	return false;
+}
 
+void GameSuccess::_setControllersSwapState(bool swapValue)
+{
+	areControllersSwaped = swapValue;
+}
 void GameSuccess::PrevGameMode()
 {
 	int mode = static_cast<int>(_selectedGameMode);
@@ -215,28 +224,6 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 }
 
 // void GameSuccess::DisposeDeadObject()//TODO: run on debug only
-// {
-// 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };
-// 	const auto it = std::ranges::remove_if(_allObjects, predicate).begin();
-//
-// 	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
-// 	{
-// 		if (*itCopy == nullptr)
-// 		{
-// 			std::cout << "Disposing object nullptr " << '\n';
-// 			continue;
-// 		}
-// 		const auto& baseObj = *itCopy;
-// 		std::cout << "[" << "Disposing object" << "] "
-// 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-// 				<< ", name=" << baseObj->GetName()
-// 				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
-// 				<< '\n';
-// 	}
-//
-// 	_allObjects.erase(it, _allObjects.end());
-// }
-
 void GameSuccess::DisposeDeadObject()
 {
 	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });

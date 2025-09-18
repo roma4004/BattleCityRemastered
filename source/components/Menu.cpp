@@ -86,6 +86,12 @@ void Menu::MenuUpdate() const
 		_events->EmitEvent("ResetBattlefield");
 		_input->ToggleMenuInputSubscription();
 	}
+
+	if (menuKeysStats.controllersSwap)
+	{
+		_events->EmitEvent("ControllersSwap");
+		_input->ToggleControllersSwap();
+	}
 }
 
 void Menu::PregenerateMenuBackground()

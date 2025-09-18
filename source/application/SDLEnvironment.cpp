@@ -1,12 +1,12 @@
 #include "application/SDLEnvironment.h"
 #include "application/ConfigFailure.h"
 #include "application/ConfigSuccess.h"
+#include "application/UserInput.h"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <SDL.h>
 #include <SDL_gamecontroller.h>
-#include <map>
 #include <iostream>
 #include <memory>
 
@@ -71,7 +71,6 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
-
 	// font loading
 	if (TTF_Init() == -1)
 	{
@@ -83,7 +82,6 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 	}
-
 
 	// texture logo loading
 	if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
@@ -103,7 +101,6 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
 	}
-
 
 	// texture atlas loading
 	const std::shared_ptr<SDL_Surface> atlasSurface{IMG_Load(textureAtlasPath), SDL_FreeSurface};
@@ -126,10 +123,7 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
 	
-	// Add controller/s if any 	
-
 	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
-
 
 	// Audio loading
 	if (const int result = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
@@ -150,24 +144,26 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
 	}
 
+	// Gamepads initialization
+	std::cout<< SDL_NumJoysticks() << " gamepad/s connected\n";
 	
-	std::cout<< SDL_NumJoysticks() << " gamepad/s connected"<< std::endl;
-	if (SDL_IsGameController(0))
-	{
-		GameControllerOne = SDL_GameControllerOpen(0);
-		if (GameControllerOne)
-		{
-			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));			
-		} 
-	}
-	if (SDL_IsGameController(1))
-	{
-		GameControllerTwo = SDL_GameControllerOpen(1);
-		if (GameControllerTwo)
-		{
-			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));			
-		} 
-	}	
+		int device_index = 0;
 	
+		SDL_JoystickOpen(device_index);
+		if (SDL_GameControllerOpen(device_index))  
+		{
+			GameControllerOne = SDL_GameControllerOpen(device_index);
+			if (GameControllerOne)
+			{SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));} 
+		}
+		++device_index;
+		SDL_JoystickOpen(device_index);
+		if (SDL_GameControllerOpen(device_index))
+		{
+			GameControllerTwo = SDL_GameControllerOpen(device_index);
+			if (GameControllerTwo)
+			{SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));} 
+		}
+		
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }
