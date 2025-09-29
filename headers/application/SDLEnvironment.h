@@ -29,6 +29,8 @@ struct SDLEnvironment final
 	
 	SDL_GameController* GameControllerOne{nullptr};	
 	SDL_GameController* GameControllerTwo{nullptr};
+	SDL_GameController* AddedGameController{nullptr};
+	SDL_GameController* openController(int deviceID);
 
 	~SDLEnvironment();
 

@@ -20,6 +20,16 @@ SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName,
 	  introMusicPathName{introMusicName},
 	  textureAtlasPath{textureCollection} {}
 
+SDL_GameController* SDLEnvironment::openController(int deviceID)
+{
+	SDL_JoystickOpen(deviceID);
+	if (SDL_GameControllerOpen(deviceID))  
+	{
+		AddedGameController = SDL_GameControllerOpen(deviceID);		 
+	}
+	return AddedGameController;
+}
+
 SDLEnvironment::~SDLEnvironment()
 {
 	Mix_CloseAudio();
@@ -121,8 +131,7 @@ SDLEnvironment::~SDLEnvironment()
 	if (atlasTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
-	}
-	
+	}	
 	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
 
 	// Audio loading
@@ -149,21 +158,13 @@ SDLEnvironment::~SDLEnvironment()
 	
 		int device_index = 0;
 	
-		SDL_JoystickOpen(device_index);
-		if (SDL_GameControllerOpen(device_index))  
-		{
-			GameControllerOne = SDL_GameControllerOpen(device_index);
-			if (GameControllerOne)
-			{SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));} 
-		}
+		GameControllerOne = openController(device_index);
+		if (GameControllerOne)
+		{SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));} 
 		++device_index;
-		SDL_JoystickOpen(device_index);
-		if (SDL_GameControllerOpen(device_index))
-		{
-			GameControllerTwo = SDL_GameControllerOpen(device_index);
-			if (GameControllerTwo)
-			{SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));} 
-		}
+		GameControllerTwo = openController(device_index);
+		if (GameControllerTwo)
+		{SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));} 
 		
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }

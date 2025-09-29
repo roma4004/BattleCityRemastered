@@ -49,8 +49,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> e
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
 	  _spawnDelayManager{std::move(spawnDelayManager)},
 	  _isVsyncOn{isVsyncOn},
-		_selectedGameMode{GameMode::OnePlayer},
-		_areControllersSwapped{_getControllersSwapState()}
+	  _selectedGameMode{GameMode::OnePlayer}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 	Subscribe();
@@ -81,8 +80,7 @@ void GameSuccess::Subscribe()
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->OnGameModeChangedTo(newGameMode);
-	});
-	_events->AddListener("ControllersSwapState", _name, [this]() { GameSuccess::_setControllersSwapState(_areControllersSwapped); });
+	});	
 	_events->AddListener("DisposeStage", _name, [this]() { this->DisposeDeadObject(); });
 }
 
@@ -92,8 +90,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("DisposeStage", _name);
-	_events->RemoveListener("ControllersSwapState", _name);
+	_events->RemoveListener("DisposeStage", _name);	
 }
 
 void GameSuccess::LoadMap() const
@@ -127,17 +124,6 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 	{
 		_events->EmitEvent("ClientReadyToPlay");
 	}
-}
-bool GameSuccess::_getControllersSwapState()
-{	
-	if (areControllersSwaped)
-		return true;
-	return false;
-}
-
-void GameSuccess::_setControllersSwapState(bool swapValue)
-{
-	areControllersSwaped = swapValue;
 }
 void GameSuccess::PrevGameMode()
 {

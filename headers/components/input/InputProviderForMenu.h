@@ -13,7 +13,6 @@ struct MenuKeys final
 	bool reset{false};
 	bool menuShow{false};
 	bool pause{false};
-	bool controllersSwap{false};
 };
 
 class InputProviderForMenu final
@@ -21,9 +20,10 @@ class InputProviderForMenu final
 	std::string _name{"InputProviderForMenu"};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameMode _gameMode{};
-	MenuKeys _keys{};
+	
 
 public:
+	MenuKeys _keys{};
 	explicit InputProviderForMenu(std::shared_ptr<EventSystem> events);
 
 	~InputProviderForMenu();
@@ -35,8 +35,7 @@ public:
 	void UnsubscribeAsClient() const;
 	void TogglePause();
 
-	void ToggleMenuInputSubscription();
-	void ToggleControllersSwap();
+	void ToggleMenuInputSubscription();	
 
 	void ToggleUp();
 	void ToggleDown();

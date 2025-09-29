@@ -7,4 +7,5 @@ struct PlayerKeys final
 	bool down{false};
 	bool right{false};
 	bool shot{false};
+	bool controllerSwap{false};
 };

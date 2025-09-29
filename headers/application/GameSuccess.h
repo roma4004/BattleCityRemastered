@@ -72,13 +72,8 @@ class GameSuccess final : public IGame
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
-	void OnGameModeChangedTo(GameMode newGameMode);
-	
+	void OnGameModeChangedTo(GameMode newGameMode);	
 public:
-	bool _areControllersSwapped{false};
-	static bool _getControllersSwapState();
-	static void _setControllersSwapState(bool swapValue);
-	
 	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events,std::shared_ptr<GameStatistics> statistics,
 	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
 	            std::shared_ptr<BonusEffectManager> bonusEffectManager,
@@ -86,4 +81,3 @@ public:
 
 	~GameSuccess() override;
 };
-static bool areControllersSwaped{false};

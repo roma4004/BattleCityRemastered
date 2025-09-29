@@ -3,6 +3,8 @@
 #include "../Point.h"
 #include "../components/input/MouseButton.h"
 #include "SDLEnvironment.h"
+#include "components/input/InputProviderForMenu.h"
+
 #include <chrono>
 #include <map>
 
@@ -19,10 +21,9 @@ class UserInput final
 	bool _isPauseBeforeDragNDrop{false};
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
-
+	mutable bool _areControllersSwapped{false};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-
 	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
 	milliseconds _moveEndDelay{150};
 
@@ -39,7 +40,7 @@ class UserInput final
 	void Subscribe();
 	void Unsubscribe() const;
 	void WindowsMoveEvents(const SDL_Event& event);
-	void GamepadInit(SDL_Event &event);
+	void GamepadInit(SDL_Event &event);	
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 	~UserInput();

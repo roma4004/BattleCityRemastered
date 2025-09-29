@@ -1,4 +1,5 @@
 #include "components/Menu.h"
+#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "enums/GameMode.h"
@@ -85,12 +86,6 @@ void Menu::MenuUpdate() const
 	{
 		_events->EmitEvent("ResetBattlefield");
 		_input->ToggleMenuInputSubscription();
-	}
-
-	if (menuKeysStats.controllersSwap)
-	{
-		_events->EmitEvent("ControllersSwap");
-		_input->ToggleControllersSwap();
 	}
 }
 

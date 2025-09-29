@@ -1,9 +1,7 @@
 #include "components/input/InputProviderForMenu.h"
-
-#include "application/GameSuccess.h"
+#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
-
 
 InputProviderForMenu::InputProviderForMenu(std::shared_ptr<EventSystem> events)
 	: _events{std::move(events)}
@@ -25,7 +23,6 @@ void InputProviderForMenu::Subscribe()
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
-
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});	
 }
@@ -64,19 +61,6 @@ void InputProviderForMenu::TogglePause()
 	_events->EmitEvent("Pause_Status", _keys.pause);
 }
 
-void InputProviderForMenu::ToggleControllersSwap()
-{
-	_keys.controllersSwap = !_keys.controllersSwap;
-	_events->EmitEvent("ControllersSwap", _keys.controllersSwap);
-
-	if (GameSuccess::_getControllersSwapState())
-	GameSuccess::_setControllersSwapState(false);
-	else
-	GameSuccess::_setControllersSwapState(true);
-
-	std::cout << "Controllers Swap State: " << GameSuccess::_getControllersSwapState() << "\n"; // left while visual label is absent
-}
-
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
 	_keys.menuShow = !_keys.menuShow;
@@ -86,8 +70,6 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		_events->AddListener("ArrowDown_Released", _name, [&btn = _keys]() { btn.down = true; });
 		_events->AddListener("Enter_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
 		_events->AddListener("Enter_Released", _name, [&btn = _keys]() { btn.reset = false; });
-		_events->AddListener("Tab_Pressed", _name,[&btn = _keys](){btn.controllersSwap = true;});
-		_events->AddListener("Tab_Released", _name,[&btn = _keys](){btn.controllersSwap = false;});
 		// for gamepads
 		_events->AddListener("CB_DPAD_UP_Released",	_name, [&btn = _keys]() { btn.up = true;});
 		_events->AddListener("CB_DPAD_DOWN_Released",	_name, [&btn = _keys]() { btn.down = true; });		
@@ -105,9 +87,7 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		_events->RemoveListener("ArrowDown_Released", _name);
 		_events->RemoveListener("Enter_Pressed", _name);
 		_events->RemoveListener("Enter_Released", _name);
-		_events->RemoveListener("Tab_Pressed", _name);
-		_events->RemoveListener("Tab_Released", _name);
-
+		
 		_events->RemoveListener("CB_DPAD_UP_Released", _name);
 		_events->RemoveListener("CB_DPAD_DOWN_Released", _name);
 		_events->RemoveListener("CB_A_Pressed", _name);
@@ -121,8 +101,6 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 
 	_keys.reset = false;
 }
-
-//void InputProviderForMenu::ToggleControllersSwap() {_keys.controllersSwap = false;}
 
 void InputProviderForMenu::ToggleUp() { _keys.up = false; }
 void InputProviderForMenu::ToggleDown() { _keys.down = false; }
