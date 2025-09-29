@@ -1,0 +1,11 @@
+21:42:40.929 - Logger initialized
+21:42:40.929 - Spawned tank: Enemy1, Fraction: EnemyTeam, UUID: de85b4c9-395f-4ad3-9da5-c8fc004d41c2
+21:42:40.930 - Spawned tank: Enemy2, Fraction: EnemyTeam, UUID: 6d872f09-b3f1-4db7-ba3e-ce9b0f1457b4
+21:42:40.930 - Spawned tank: Enemy3, Fraction: EnemyTeam, UUID: f6a644a5-c878-4024-b9f3-10d3b1999648
+21:42:40.930 - Spawned tank: Enemy4, Fraction: EnemyTeam, UUID: e0300b70-91cb-4575-a735-af71781a063a
+21:42:40.930 - Spawned tank: CoopBot1, Fraction: PlayerTeam, UUID: db74be11-cd15-4fc9-b738-75202ae9df28
+21:42:40.931 - Spawned tank: CoopBot2, Fraction: PlayerTeam, UUID: 8c0369fd-0b6d-48be-aa80-13f3695ea2d3
+21:42:40.931 - Spawned tank: Enemy2, Fraction: EnemyTeam, UUID: c78b7850-fb34-4d03-919e-6563c408f4a7
+21:42:40.931 - Spawned tank: CoopBot1, Fraction: PlayerTeam, UUID: 89104c4e-e1f1-4a4b-b3a0-451d23de3e96
+21:42:40.932 - Spawned tank: CoopBot2, Fraction: PlayerTeam, UUID: b1837bfa-fce7-419d-af58-a194cde05ac9
+21:42:40.942 - Logger shutdown
