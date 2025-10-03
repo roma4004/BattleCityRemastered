@@ -1,0 +1,9 @@
+diff a/source/application/GameSuccess.cpp b/source/application/GameSuccess.cpp	(rejected hunks)
+@@ -224,7 +224,6 @@
+ }
+ 
+ // void GameSuccess::DisposeDeadObject()//TODO: run on debug only
+-// {
+ void GameSuccess::DisposeDeadObject()
+ {
+ 	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });

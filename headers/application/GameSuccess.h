@@ -49,7 +49,7 @@ class GameSuccess final : public IGame
 	bool _isVsyncOn{};//TODO: add settings inGame for tweak this in real time
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
-	bool _frameReady{true};	
+	bool _frameReady{true};
 
 	void Subscribe();
 	void Unsubscribe() const;

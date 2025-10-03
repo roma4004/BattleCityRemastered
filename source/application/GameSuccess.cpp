@@ -9,12 +9,15 @@
 #include "components/TankSpawner.h"
 #include "components/managers/BonusEffectManager.h"
 #include "enums/GameMode.h"
+#include "entities/BaseObj.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
+//#include <fstream>
 #include "components/managers/TextureManager.h"
 #include <iostream>
 #include <memory>
+#include <boost/uuid/uuid_io.hpp>
 
 //#ifdef _WIN32
 //#define _WIN32_WINNT 0x0A00
@@ -25,6 +28,7 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 {
 	const auto frameReady = static_cast<bool*>(param);
 	*frameReady = true;
+	
 	return 0;
 }
 
@@ -80,7 +84,7 @@ void GameSuccess::Subscribe()
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->OnGameModeChangedTo(newGameMode);
-	});	
+	});
 	_events->AddListener("DisposeStage", _name, [this]() { this->DisposeDeadObject(); });
 }
 

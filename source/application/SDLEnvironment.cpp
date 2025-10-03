@@ -25,8 +25,9 @@ SDL_GameController* SDLEnvironment::openController(int deviceID)
 	SDL_JoystickOpen(deviceID);
 	if (SDL_GameControllerOpen(deviceID))  
 	{
-		AddedGameController = SDL_GameControllerOpen(deviceID);		 
+		AddedGameController = SDL_GameControllerOpen(deviceID);
 	}
+
 	return AddedGameController;
 }
 
@@ -131,7 +132,7 @@ SDLEnvironment::~SDLEnvironment()
 	if (atlasTexture == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
-	}	
+	}
 	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
 
 	// Audio loading
@@ -155,16 +156,19 @@ SDLEnvironment::~SDLEnvironment()
 
 	// Gamepads initialization
 	std::cout<< SDL_NumJoysticks() << " gamepad/s connected\n";
-	
+
 		int device_index = 0;
-	
-		GameControllerOne = openController(device_index);
-		if (GameControllerOne)
-		{SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));} 
+
+		if ((GameControllerOne = openController(device_index)))
+		{
+			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
+		}
+
 		++device_index;
-		GameControllerTwo = openController(device_index);
-		if (GameControllerTwo)
-		{SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));} 
-		
+		if ((GameControllerTwo = openController(device_index)))
+		{
+			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
+		}
+
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }

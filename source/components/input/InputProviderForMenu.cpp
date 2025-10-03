@@ -24,7 +24,7 @@ void InputProviderForMenu::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	});	
+	});
 }
 
 void InputProviderForMenu::SubscribeAsClient()

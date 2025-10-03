@@ -5,8 +5,8 @@
 #include <SDL_log.h>
 #include <iostream>
 
-UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events):
-	_windowSize{windowSize}, _events{std::move(events)},_areControllersSwapped{_areControllersSwapped=false}
+UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events)
+	: _windowSize{windowSize}, _events{std::move(events)}
 {
 	Subscribe();
 }
@@ -67,14 +67,14 @@ void UserInput::GamepadInit(SDL_Event &event)
 	switch (event.type)
 	{
 		case SDL_CONTROLLERDEVICEADDED:
-		{					
+		{
 			if (SDL_IsGameController(device_index))
 			{
-				std::cout << "Controller " << std::to_string(instance_id) << " added\n";				
-				SDL_Log("Controller connected: %s (instance %d)",SDL_GameControllerName(gameController), instance_id);						
+				std::cout << "Controller " << std::to_string(instance_id) << " added\n";
+				SDL_Log("Controller connected: %s (instance %d)",SDL_GameControllerName(gameController), instance_id);
 			}
 			break;
-		}		
+		}
 		case SDL_CONTROLLERDEVICEREMOVED:  //TODO: find out why this case doesn't work
 		{
 			auto it = controllers.find(device_index);
@@ -86,9 +86,9 @@ void UserInput::GamepadInit(SDL_Event &event)
 			}
 			break;
 		}
-				
+
 		default: break;
-	}		
+	}
 }
 
 void UserInput::OnWindowMoveStop()
@@ -270,11 +270,11 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 	else if (event.type == SDL_KEYUP)
 	{
 		KeyReleased(event);
-	}	
+	}
 }
 
 void UserInput::GamepadKeyPressed(const SDL_Event& event) const
-{	
+{
 	std::string controllerTag{};
 
 	if (SDL_NumJoysticks()>1)
@@ -330,7 +330,7 @@ void UserInput::GamepadKeyPressed(const SDL_Event& event) const
 			case SDL_CONTROLLER_BUTTON_GUIDE:
 			_events->EmitEvent(controllerTag + "_GUIDE_Pressed");
 			break;
-			
+
 			default:
 			break;
 	}
@@ -390,7 +390,7 @@ void UserInput::GamepadKeyReleased(const SDL_Event& event) const
 			case SDL_CONTROLLER_BUTTON_GUIDE:
 			_events->EmitEvent(controllerTag + "_GUIDE_Released");
 			break;
-						
+
 			default:
 			break;
 	}
@@ -398,15 +398,19 @@ void UserInput::GamepadKeyReleased(const SDL_Event& event) const
 void UserInput::GamepadEvents(const SDL_Event& event) const
 {
 	if (event.type == SDL_CONTROLLERBUTTONDOWN)
-	{		GamepadKeyPressed(event);	}
+	{
+		GamepadKeyPressed(event);
+	}
 	else if (event.type == SDL_CONTROLLERBUTTONUP)
-	{		GamepadKeyReleased(event);	}
+	{
+		GamepadKeyReleased(event);
+	}
 }
 void UserInput::Update()
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
-	{		
+	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{
 			_isGameOver = true;

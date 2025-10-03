@@ -27,20 +27,20 @@ class UserInput final
 	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
 	milliseconds _moveEndDelay{150};
 
-	std::map<SDL_JoystickID, SDL_GameController*> controllers;		
+	std::map<SDL_JoystickID, SDL_GameController*> controllers;
 
 	void MouseEvents(const SDL_Event& event);
 	void KeyPressed(const SDL_Event& event) const;
 	void KeyReleased(const SDL_Event& event) const;
-	void KeyboardEvents(const SDL_Event& event) const;	
+	void KeyboardEvents(const SDL_Event& event) const;
 	void GamepadKeyPressed(const SDL_Event& event) const;
-	void GamepadKeyReleased(const SDL_Event& event) const;	
+	void GamepadKeyReleased(const SDL_Event& event) const;
 	void GamepadEvents(const SDL_Event& event) const;
-	void OnWindowMoveStop();	
+	void OnWindowMoveStop();
 	void Subscribe();
 	void Unsubscribe() const;
 	void WindowsMoveEvents(const SDL_Event& event);
-	void GamepadInit(SDL_Event &event);	
+	void GamepadInit(SDL_Event &event);
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 	~UserInput();
