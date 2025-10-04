@@ -1,9 +1,10 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/EventSystem.h"
 
-InputProviderForPlayerTwo::InputProviderForPlayerTwo(std::shared_ptr<EventSystem> events) 
+InputProviderForPlayerTwo::InputProviderForPlayerTwo(std::shared_ptr<EventSystem> events)
 	: _events{std::move(events)}
-{	// for keybord
+{
+	// for keybord
 	_events->AddListener("ArrowUp_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
 	_events->AddListener("ArrowUp_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
 	_events->AddListener("ArrowLeft_Pressed", _name, [&btn = _playerKeys]() { btn.left = true; });

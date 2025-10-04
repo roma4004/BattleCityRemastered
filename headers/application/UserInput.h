@@ -40,11 +40,12 @@ class UserInput final
 	void Subscribe();
 	void Unsubscribe() const;
 	void WindowsMoveEvents(const SDL_Event& event);
-	void GamepadInit(SDL_Event &event);
+	void GamepadInit(SDL_Event& event);
+
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 	~UserInput();
-	static int GetDeviceIndex(const SDL_Event &event);
+	static int GetDeviceIndex(const SDL_Event& event);
 	void Update();
 
 	[[nodiscard]] bool IsGameOver() const;

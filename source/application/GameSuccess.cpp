@@ -28,7 +28,7 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 {
 	const auto frameReady = static_cast<bool*>(param);
 	*frameReady = true;
-	
+
 	return 0;
 }
 
@@ -94,7 +94,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("DisposeStage", _name);	
+	_events->RemoveListener("DisposeStage", _name);
 }
 
 void GameSuccess::LoadMap() const
@@ -129,6 +129,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 		_events->EmitEvent("ClientReadyToPlay");
 	}
 }
+
 void GameSuccess::PrevGameMode()
 {
 	int mode = static_cast<int>(_selectedGameMode);
@@ -212,6 +213,7 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 
 	return lastDisplayedFps;
 }
+
 // void GameSuccess::DisposeDeadObject()//TODO: run on debug only
 // {
 // 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };

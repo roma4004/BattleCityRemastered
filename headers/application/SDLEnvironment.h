@@ -25,9 +25,9 @@ struct SDLEnvironment final
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
 	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
-		const char* introMusicName,const char* textureCollection);
-	
-	SDL_GameController* GameControllerOne{nullptr};	
+	               const char* introMusicName, const char* textureCollection);
+
+	SDL_GameController* GameControllerOne{nullptr};
 	SDL_GameController* GameControllerTwo{nullptr};
 	SDL_GameController* AddedGameController{nullptr};
 	SDL_GameController* openController(int deviceID);

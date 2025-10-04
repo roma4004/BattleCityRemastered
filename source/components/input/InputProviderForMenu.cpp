@@ -65,19 +65,20 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 {
 	_keys.menuShow = !_keys.menuShow;
 	if (_keys.menuShow)
-	{	// for keybord
+	{
+		// for keybord
 		_events->AddListener("ArrowUp_Released", _name, [&btn = _keys]() { btn.up = true; });
 		_events->AddListener("ArrowDown_Released", _name, [&btn = _keys]() { btn.down = true; });
 		_events->AddListener("Enter_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
 		_events->AddListener("Enter_Released", _name, [&btn = _keys]() { btn.reset = false; });
 		// for gamepads
-		_events->AddListener("CB_DPAD_UP_Released",	_name, [&btn = _keys]() { btn.up = true;});
-		_events->AddListener("CB_DPAD_DOWN_Released",	_name, [&btn = _keys]() { btn.down = true; });		
+		_events->AddListener("CB_DPAD_UP_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("CB_DPAD_DOWN_Released", _name, [&btn = _keys]() { btn.down = true; });
 		_events->AddListener("CB_A_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
 		_events->AddListener("CB_A_Released", _name, [&btn = _keys]() { btn.reset = false; });
 
-		_events->AddListener("C2B_DPAD_UP_Released",	_name, [&btn = _keys]() { btn.up = true;});
-		_events->AddListener("C2B_DPAD_DOWN_Released",	_name, [&btn = _keys]() { btn.down = true; });		
+		_events->AddListener("C2B_DPAD_UP_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("C2B_DPAD_DOWN_Released", _name, [&btn = _keys]() { btn.down = true; });
 		_events->AddListener("C2B_A_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
 		_events->AddListener("C2B_A_Released", _name, [&btn = _keys]() { btn.reset = false; });
 	}
@@ -87,7 +88,7 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		_events->RemoveListener("ArrowDown_Released", _name);
 		_events->RemoveListener("Enter_Pressed", _name);
 		_events->RemoveListener("Enter_Released", _name);
-		
+
 		_events->RemoveListener("CB_DPAD_UP_Released", _name);
 		_events->RemoveListener("CB_DPAD_DOWN_Released", _name);
 		_events->RemoveListener("CB_A_Pressed", _name);

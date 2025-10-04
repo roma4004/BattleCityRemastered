@@ -3,7 +3,8 @@
 
 InputProviderForPlayerOne::InputProviderForPlayerOne(std::shared_ptr<EventSystem> events)
 	: _events{std::move(events)}
-{	// for keybord
+{
+	// for keybord
 	_events->AddListener("W_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
 	_events->AddListener("W_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
 	_events->AddListener("A_Pressed", _name, [&btn = _playerKeys]() { btn.left = true; });
@@ -14,7 +15,8 @@ InputProviderForPlayerOne::InputProviderForPlayerOne(std::shared_ptr<EventSystem
 	_events->AddListener("D_Released", _name, [&btn = _playerKeys]() { btn.right = false; });
 	_events->AddListener("Space_Pressed", _name, [&btn = _playerKeys]() { btn.shot = true; });
 	_events->AddListener("Space_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
-	_events->AddListener("Tab_Released", _name, [&btn = _playerKeys](){btn.controllerSwap = true;});
+	_events->AddListener("Tab_Released", _name, [&btn = _playerKeys]() { btn.controllerSwap = true; });
+
 	// for gamepad
 	_events->AddListener("CB_A_Pressed", _name, [&btn = _playerKeys]() { btn.shot = true; });
 	_events->AddListener("CB_A_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
