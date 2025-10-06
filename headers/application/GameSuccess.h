@@ -72,9 +72,10 @@ class GameSuccess final : public IGame
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
-	void OnGameModeChangedTo(GameMode newGameMode);	
+	void OnGameModeChangedTo(GameMode newGameMode);
+
 public:
-	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events,std::shared_ptr<GameStatistics> statistics,
+	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
 	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
 	            std::shared_ptr<BonusEffectManager> bonusEffectManager,
 	            std::shared_ptr<SpawnDelayManager> spawnDelayManager);

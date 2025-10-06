@@ -23,7 +23,7 @@ SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName,
 SDL_GameController* SDLEnvironment::openController(int deviceID)
 {
 	SDL_JoystickOpen(deviceID);
-	if (SDL_GameControllerOpen(deviceID))  
+	if (SDL_GameControllerOpen(deviceID))
 	{
 		AddedGameController = SDL_GameControllerOpen(deviceID);
 	}
@@ -155,20 +155,20 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	// Gamepads initialization
-	std::cout<< SDL_NumJoysticks() << " gamepad/s connected\n";
+	std::cout << SDL_NumJoysticks() << " gamepad/s connected\n";
 
-		int device_index = 0;
+	int device_index = 0;
 
-		if ((GameControllerOne = openController(device_index)))
-		{
-			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
-		}
+	if ((GameControllerOne = openController(device_index)))
+	{
+		SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
+	}
 
-		++device_index;
-		if ((GameControllerTwo = openController(device_index)))
-		{
-			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
-		}
+	++device_index;
+	if ((GameControllerTwo = openController(device_index)))
+	{
+		SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
+	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }
