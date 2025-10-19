@@ -26,7 +26,7 @@ void Player::TickUpdate(const float deltaTime)
 		return;
 	}
 
-	const auto [up, left, down, right, shot, controllerSwap] = _inputProvider->GetKeysStats();
+	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 	// move
 	if (up)
 	{

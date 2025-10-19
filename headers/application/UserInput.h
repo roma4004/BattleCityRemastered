@@ -21,12 +21,12 @@ class UserInput final
 	bool _isPauseBeforeDragNDrop{false};
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
-	mutable bool _areControllersSwapped{false};
+	bool _areControllersSwapped{false};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
 	milliseconds _moveEndDelay{150};
-
+	int deviceIndex{0};
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;
 
 	void MouseEvents(const SDL_Event& event);
@@ -36,11 +36,14 @@ class UserInput final
 	void GamepadKeyPressed(const SDL_Event& event) const;
 	void GamepadKeyReleased(const SDL_Event& event) const;
 	void GamepadEvents(const SDL_Event& event) const;
+	void GamepadsPlugAndPlay(const SDL_Event& event);
 	void OnWindowMoveStop();
 	void Subscribe();
 	void Unsubscribe() const;
 	void WindowsMoveEvents(const SDL_Event& event);
 	void GamepadInit(SDL_Event& event);
+	void SwapControllers();
+	std::string ControllerTagDefiner(const SDL_Event& event) const; 
 
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
