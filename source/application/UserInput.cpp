@@ -151,111 +151,89 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	}
 }
 
-void UserInput::KeyPressed(const SDL_Event& event) const
-{
-	std::string controllerTag = ControllerTagDefiner(event);
-	switch (event.key.keysym.sym)
-	{
-		case SDLK_w:
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_UP:
-			_events->EmitEvent(controllerTag + "_Move_Up_Pressed");
-			break;
-		case SDLK_a:
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_LEFT:
-			_events->EmitEvent(controllerTag + "_Move_Left_Pressed");
-			break;
-		case SDLK_s:
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_DOWN:
-			_events->EmitEvent(controllerTag + "_Move_Down_Pressed");
-			break;
-		case SDLK_d:
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_RIGHT:
-			_events->EmitEvent(controllerTag + "_Move_Right_Pressed");
-			break;
-		case SDLK_SPACE:
-		case SDLK_RCTRL:
-		case SDL_CONTROLLER_BUTTON_PS_CROSS:
-		case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent(controllerTag + "_Fire_Pressed");
-			break;
-		case SDLK_m:
-			_events->EmitEvent("Menu_Pressed");
-			break;
-		case SDLK_p:
-			_events->EmitEvent("Pause_Pressed");
-			break;
-		case SDLK_r:
-			_events->EmitEvent("Reset_Pressed");
-			break;
-		case SDLK_TAB:
-			_events->EmitEvent("Tab_Pressed");
-			break;
-		default:
-			break;
-	}
-}
-
-void UserInput::KeyReleased(const SDL_Event& event) const
-{
-	std::string controllerTag = ControllerTagDefiner(event);
-	switch (event.key.keysym.sym)
-	{
-		case SDLK_w:
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_UP:
-			_events->EmitEvent(controllerTag + "_Move_Up_Released");
-			break;
-		case SDLK_a:
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_LEFT:
-			_events->EmitEvent(controllerTag + "_Move_Left_Released");
-			break;
-		case SDLK_s:
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_DOWN:
-			_events->EmitEvent(controllerTag + "_Move_Down_Released");
-			break;
-		case SDLK_d:
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-		case SDL_CONTROLLER_BUTTON_PS_DPAD_RIGHT:
-			_events->EmitEvent(controllerTag + "_Move_Right_Released");
-			break;
-		case SDLK_SPACE:
-		case SDLK_RCTRL:
-		case SDL_CONTROLLER_BUTTON_A:
-		case SDL_CONTROLLER_BUTTON_PS_CROSS:
-			_events->EmitEvent(controllerTag + "_Fire_Released");
-			break;
-		case SDLK_m:
-			_events->EmitEvent("Menu_Released");
-			break;
-		case SDLK_p:
-			_events->EmitEvent("Pause_Released");
-			break;
-		case SDLK_r:
-			_events->EmitEvent("Reset_Released");
-			break;
-		case SDLK_TAB:
-			_events->EmitEvent("Tab_Released");
-		break;
-		default:
-	break;
-	}
-}
-
 void UserInput::KeyboardEvents(const SDL_Event& event) const
 {
+	std::string keyState{};
 	if (event.type == SDL_KEYDOWN)
 	{
-		KeyPressed(event);
+		keyState = "Pressed";
 	}
 	else if (event.type == SDL_KEYUP)
 	{
-		KeyReleased(event);
+		keyState = "Released";
+	}
+
+	if (keyState.empty())
+		return;
+
+	std::string controllerTag = ControllerTagDefiner(event);
+
+	// Handle keyboard events
+	switch (event.key.keysym.sym)
+	{
+		case SDLK_w:
+		case SDLK_UP:
+			_events->EmitEvent(controllerTag + "_Move_Up_" + keyState);
+			break;
+		case SDLK_a:
+		case SDLK_LEFT:
+			_events->EmitEvent(controllerTag + "_Move_Left_ " + keyState);
+			break;
+		case SDLK_s:
+		case SDLK_DOWN:
+			_events->EmitEvent(controllerTag + "_Move_Down_ " + keyState);
+			break;
+		case SDLK_d:
+		case SDLK_RIGHT:
+			_events->EmitEvent(controllerTag + "_Move_Right_ " + keyState);
+			break;
+		case SDLK_SPACE:
+		case SDLK_RCTRL:
+			_events->EmitEvent(controllerTag + "_Fire_ " + keyState);
+			break;
+		case SDLK_RETURN:
+			_events->EmitEvent("Enter_" + keyState);
+			break;
+		case SDLK_m:
+			_events->EmitEvent("Menu_ " + keyState);
+			break;
+		case SDLK_p:
+			_events->EmitEvent("Pause_ " + keyState);
+			break;
+		case SDLK_r:
+			_events->EmitEvent("Reset_ " + keyState);
+			break;
+		case SDLK_TAB:
+			_events->EmitEvent("Tab_ " + keyState);
+			break;
+		default:
+			break;
+	}
+
+	switch (event.key.keysym.sym)
+	{		
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:
+		// case SDL_CONTROLLER_BUTTON_PS_DPAD_UP:
+			_events->EmitEvent(controllerTag + "_Move_Up_" + keyState);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+		// case SDL_CONTROLLER_BUTTON_PS_DPAD_LEFT:
+			_events->EmitEvent(controllerTag + "_Move_Left_ " + keyState);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+		// case SDL_CONTROLLER_BUTTON_PS_DPAD_DOWN:
+			_events->EmitEvent(controllerTag + "_Move_Down_ " + keyState);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+		// case SDL_CONTROLLER_BUTTON_PS_DPAD_RIGHT:
+			_events->EmitEvent(controllerTag + "_Move_Right_ " + keyState);
+			break;
+		case SDL_CONTROLLER_BUTTON_A:
+		// case SDL_CONTROLLER_BUTTON_PS_CROSS:
+			_events->EmitEvent(controllerTag + "_Fire_ " + keyState);
+			break;
+		default:
+			break;
 	}
 }
 
@@ -445,6 +423,7 @@ void UserInput::Update()
 		KeyboardEvents(event);
 		GamepadEvents(event);
 	}
+
 	OnWindowMoveStop();
 }
 

@@ -1,5 +1,4 @@
 #include "components/input/InputProviderForPlayerOne.h"
-
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 
@@ -16,7 +15,7 @@ InputProviderForPlayerOne::InputProviderForPlayerOne(std::shared_ptr<EventSystem
 	_events->AddListener("P1_Move_Right_Released", _name, [&btn = _playerKeys]() { btn.right = false; });
 	_events->AddListener("P1_Fire_Pressed", _name, [&btn = _playerKeys]() { btn.shot = true; });
 	_events->AddListener("P1_Fire_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
-} 
+}
 
 InputProviderForPlayerOne::~InputProviderForPlayerOne()
 {

@@ -82,6 +82,7 @@ SDLEnvironment::~SDLEnvironment()
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
+
 	// font loading
 	if (TTF_Init() == -1)
 	{
@@ -93,6 +94,7 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 	}
+
 
 	// texture logo loading
 	if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
@@ -112,6 +114,7 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
 	}
+
 
 	// texture atlas loading
 	const std::shared_ptr<SDL_Surface> atlasSurface{IMG_Load(textureAtlasPath), SDL_FreeSurface};
@@ -133,7 +136,9 @@ SDLEnvironment::~SDLEnvironment()
 	{
 		return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 	}
+
 	SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
+
 
 	// Audio loading
 	if (const int result = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
