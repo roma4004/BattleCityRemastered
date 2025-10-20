@@ -4,7 +4,6 @@
 #include "../components/input/MouseButton.h"
 #include "SDLEnvironment.h"
 #include "components/input/InputProviderForMenu.h"
-
 #include <chrono>
 #include <map>
 
@@ -46,12 +45,11 @@ class UserInput final
 	std::string ControllerTagDefiner(const SDL_Event& event) const; 
 
 public:
-
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 	~UserInput();
 
-	static int GetDeviceIndex(const SDL_Event& event);
 	void Update();
+	static int GetDeviceIndex(const SDL_Event& event);
 
 	[[nodiscard]] bool IsGameOver() const;
 	[[nodiscard]] bool IsPause() const;
