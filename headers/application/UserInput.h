@@ -43,12 +43,13 @@ class UserInput final
 	void WindowsMoveEvents(const SDL_Event& event);
 	void GamepadInit(SDL_Event& event);
 	void SwapControllers();
-	std::string ControllerTagDefiner(const SDL_Event& event) const; 
+	std::string ControllerTagDefiner(const SDL_Event& event) const;
 
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 	~UserInput();
 	static int GetDeviceIndex(const SDL_Event& event);
+	bool _removedID{false};
 	void Update();
 
 	[[nodiscard]] bool IsGameOver() const;
