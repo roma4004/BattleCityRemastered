@@ -22,6 +22,7 @@ class UserInput final
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
+	bool _removedID{};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
@@ -43,7 +44,7 @@ class UserInput final
 	void WindowsMoveEvents(const SDL_Event& event);
 	void GamepadInit(SDL_Event& event);
 	void SwapControllers();
-	std::string ControllerTagDefiner(const SDL_Event& event) const; 
+	std::string ControllerTagDefiner(const SDL_Event& event) const;
 
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);

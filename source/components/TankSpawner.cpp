@@ -229,8 +229,8 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			const bool isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<int>(type)).isActive;
 			const BonusEffectProperty effects = {isTimerActive, isHelmetActive};
 
-			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid), effects, type,
-			          skipDelay);
+			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid),
+				effects, type, skipDelay);
 
 			return;
 		}
