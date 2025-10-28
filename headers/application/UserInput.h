@@ -4,7 +4,6 @@
 #include "../components/input/MouseButton.h"
 #include "SDLEnvironment.h"
 #include "components/input/InputProviderForMenu.h"
-
 #include <chrono>
 #include <map>
 
@@ -31,16 +30,16 @@ class UserInput final
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;
 
 	void MouseEvents(const SDL_Event& event);
-	void KeyPressed(const SDL_Event& event) const;
-	void KeyReleased(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
 	void GamepadKeyPressed(const SDL_Event& event) const;
 	void GamepadKeyReleased(const SDL_Event& event) const;
 	void GamepadEvents(const SDL_Event& event) const;
 	void GamepadsPlugAndPlay(const SDL_Event& event);
 	void OnWindowMoveStop();
+
 	void Subscribe();
 	void Unsubscribe() const;
+
 	void WindowsMoveEvents(const SDL_Event& event);
 	void GamepadInit(SDL_Event& event);
 	void SwapControllers();
@@ -49,8 +48,9 @@ class UserInput final
 public:
 	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
 	~UserInput();
-	static int GetDeviceIndex(const SDL_Event& event);
+
 	void Update();
+	static int GetDeviceIndex(const SDL_Event& event);
 
 	[[nodiscard]] bool IsGameOver() const;
 	[[nodiscard]] bool IsPause() const;

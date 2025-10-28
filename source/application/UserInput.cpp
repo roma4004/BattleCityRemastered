@@ -202,12 +202,14 @@ void UserInput::KeyPressed(const SDL_Event& event) const
 	{
 		case SDLK_w:
 	 		_events->EmitEvent(KeyboardLeftSideTag + "_Move_Up_Pressed");
-	 		break;case SDLK_UP:
+	 		break;
+		case SDLK_UP:
 			_events->EmitEvent(KeyboardRightSideTag + "_Move_Up_Pressed");
 			break;
 		case SDLK_a:
 	 		_events->EmitEvent(KeyboardLeftSideTag + "_Move_Left_Pressed");
-	 		break;case SDLK_LEFT:
+	 		break;
+		case SDLK_LEFT:
 			_events->EmitEvent(KeyboardRightSideTag + "_Move_Left_Pressed");
 			break;
 		case SDLK_s:
@@ -295,16 +297,7 @@ void UserInput::KeyReleased(const SDL_Event& event) const
 		case SDLK_m:
 			_events->EmitEvent("Menu_Released");
 			break;
-		case SDLK_p:
-			_events->EmitEvent("Pause_Released");
-			break;
-		case SDLK_r:
-			_events->EmitEvent("Reset_Released");
-			break;
-		case SDLK_TAB:
-			_events->EmitEvent("Tab_Released");
-		break;
-		default:
+			default:
 	break;
 	}
 }
@@ -496,6 +489,7 @@ void UserInput::Update()
 		KeyboardEvents(event);
 		GamepadEvents(event);
 	}
+
 	OnWindowMoveStop();
 }
 
