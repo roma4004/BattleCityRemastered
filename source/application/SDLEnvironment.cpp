@@ -1,9 +1,13 @@
 #include "application/SDLEnvironment.h"
 #include "application/ConfigFailure.h"
 #include "application/ConfigSuccess.h"
+#include "application/UserInput.h"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_gamecontroller.h>
+#include <iostream>
 #include <memory>
 
 class IConfig;
@@ -15,6 +19,17 @@ SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName,
 	  logoPathName{logoName},
 	  introMusicPathName{introMusicName},
 	  textureAtlasPath{textureCollection} {}
+
+SDL_GameController* SDLEnvironment::openController(int deviceID)
+{
+	SDL_JoystickOpen(deviceID);
+	if (SDL_GameControllerOpen(deviceID))
+	{
+		AddedGameController = SDL_GameControllerOpen(deviceID);
+	}
+
+	return AddedGameController;
+}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -142,6 +157,22 @@ SDLEnvironment::~SDLEnvironment()
 		result == -1)
 	{
 		return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
+	}
+
+	// Gamepads initialization
+	std::cout << SDL_NumJoysticks() << " gamepad/s connected\n";
+
+	int device_index = 0;
+
+	if ((GameControllerOne = openController(device_index)))
+	{
+		SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
+	}
+
+	++device_index;
+	if ((GameControllerTwo = openController(device_index)))
+	{
+		SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
 	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);

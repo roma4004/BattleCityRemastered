@@ -1,4 +1,5 @@
 #include "components/input/InputProviderForMenu.h"
+#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 
@@ -66,17 +67,29 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 	_keys.menuShow = !_keys.menuShow;
 	if (_keys.menuShow)
 	{
-		_events->AddListener("ArrowUp_Released", _name, [&btn = _keys]() { btn.up = true; });
-		_events->AddListener("ArrowDown_Released", _name, [&btn = _keys]() { btn.down = true; });
+		_events->AddListener("P1_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("P1_Move_Down_Released", _name, [&btn = _keys]() { btn.down = true; });
+		_events->AddListener("P2_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("P2_Move_Down_Released", _name, [&btn = _keys]() { btn.down = true; });
 		_events->AddListener("Enter_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
 		_events->AddListener("Enter_Released", _name, [&btn = _keys]() { btn.reset = false; });
+		_events->AddListener("P1_Fire_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
+		_events->AddListener("P1_Fire_Released", _name, [&btn = _keys]() { btn.reset = false; });
+		_events->AddListener("P2_Fire_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
+		_events->AddListener("P2_Fire_Released", _name, [&btn = _keys]() { btn.reset = false; });
 	}
 	else
 	{
-		_events->RemoveListener("ArrowUp_Released", _name);
-		_events->RemoveListener("ArrowDown_Released", _name);
+		_events->RemoveListener("P1_Move_Up_Released", _name);
+		_events->RemoveListener("P1_Move_Down_Released", _name);
+		_events->RemoveListener("P2_Move_Up_Released", _name);
+		_events->RemoveListener("P2_Move_Down_Released", _name);
 		_events->RemoveListener("Enter_Pressed", _name);
 		_events->RemoveListener("Enter_Released", _name);
+		_events->RemoveListener("P1_Fire_Pressed", _name);
+		_events->RemoveListener("P1_Fire_Released", _name);
+		_events->RemoveListener("P2_Fire_Pressed", _name);
+		_events->RemoveListener("P2_Fire_Released", _name);
 	}
 
 	_keys.reset = false;
