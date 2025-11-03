@@ -9,6 +9,8 @@
 #include "components/TankSpawner.h"
 #include "components/managers/BonusEffectManager.h"
 #include "entities/BaseObj.h"
+#include "components/managers/BonusEffectManager.h"
+#include "components/managers/SpawnDelayManager.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
@@ -36,9 +38,7 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events,
                          std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
-                         std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn,
-                         std::shared_ptr<BonusEffectManager> bonusEffectManager,
-                         std::shared_ptr<SpawnDelayManager> spawnDelayManager)
+                         std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{std::move(statistics)},
@@ -46,17 +46,18 @@ GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> e
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
 	  _textureManager(std::move(textureManager)),
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
-	  _tankSpawner{
-			  std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool,
-			                                std::move(bonusEffectManager),
-			                                std::make_shared<RespawnResourceManager>(events))},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
-	  _spawnDelayManager{std::move(spawnDelayManager)},
+	  _spawnDelayManager{std::make_shared<SpawnDelayManager>(events)},
 	  _isVsyncOn{isVsyncOn},
 	  _selectedGameMode{GameMode::OnePlayer}
 {
+	const auto bonusEffectManager = std::make_shared<BonusEffectManager>(events);
+	const auto respawnResourceManager = std::make_shared<RespawnResourceManager>(events);
+	_tankSpawner = std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool, bonusEffectManager,
+	                                             respawnResourceManager);
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
+
 	Subscribe();
 
 	ResetBattlefield(GameMode::Demo);

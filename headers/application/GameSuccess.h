@@ -76,9 +76,7 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
-	            std::shared_ptr<BonusEffectManager> bonusEffectManager,
-	            std::shared_ptr<SpawnDelayManager> spawnDelayManager);
+	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

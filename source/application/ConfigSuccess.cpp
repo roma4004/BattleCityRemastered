@@ -3,8 +3,6 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/Menu.h"
-#include "components/managers/BonusEffectManager.h"
-#include "components/managers/SpawnDelayManager.h"
 #include "components/managers/TextureManager.h"
 #include <SDL_ttf.h>
 
@@ -26,9 +24,6 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto animationManager = std::make_shared<AnimationManager>(events);
 	auto textureManager = std::make_shared<TextureManager>(
 			_windowSize, _atlasTexture, _renderer, _fpsFont, events, animationManager);
-	auto bonusEffectManager = std::make_shared<BonusEffectManager>(events);
-	auto spawnDelayManager = std::make_shared<SpawnDelayManager>(events);
 
-	return std::make_unique<GameSuccess>(_windowSize, events, statistics, std::move(menu), textureManager, _isVsyncOn,
-	                                     bonusEffectManager, spawnDelayManager);
+	return std::make_unique<GameSuccess>(_windowSize, events, statistics, std::move(menu), textureManager, _isVsyncOn);
 }

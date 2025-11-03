@@ -28,6 +28,7 @@ void SpawnDelayManager::Subscribe()
 		}
 		else
 		{
+			//TODO: fix delay managers to work with on client side
 			this->_spawnDelays.emplace_back(tank, Timer{delay, std::chrono::system_clock::now()});
 		}
 	});
