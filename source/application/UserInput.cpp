@@ -498,6 +498,7 @@ void UserInput::Update()
 		KeyboardEvents(event);
 		GamepadEvents(event);
 	}
+
 	OnWindowMoveStop();
 }
 

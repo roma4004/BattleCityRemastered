@@ -8,8 +8,8 @@
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
 #include "components/managers/BonusEffectManager.h"
-#include "enums/GameMode.h"
 #include "entities/BaseObj.h"
+#include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
@@ -33,7 +33,7 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 }
 
 class BaseObj;
-
+// std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events,
                          std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
                          std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn,
@@ -236,6 +236,7 @@ Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
 //
 // 	_allObjects.erase(it, _allObjects.end());
 // }
+
 void GameSuccess::DisposeDeadObject()
 {
 	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
