@@ -1,5 +1,4 @@
 #include "components/input/InputProviderForPlayerOne.h"
-#include "application/UserInput.h"
 #include "components/EventSystem.h"
 
 InputProviderForPlayerOne::InputProviderForPlayerOne(std::shared_ptr<EventSystem> events)

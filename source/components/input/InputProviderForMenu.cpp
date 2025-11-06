@@ -1,5 +1,4 @@
 #include "components/input/InputProviderForMenu.h"
-#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 

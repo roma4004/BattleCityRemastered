@@ -84,7 +84,7 @@ TEST_F(BonusTest, BonusPickUp)
 {
 	const size_t size = _allObjects.size();
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-	_events->EmitEvent("S_Pressed");
+	_events->EmitEvent("P1_Move_Down_Pressed");
 
 	if (const auto bonus = _allObjects.back().get())
 	{
@@ -134,7 +134,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	{
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Timer);
-		_events->EmitEvent("S_Pressed");
+		_events->EmitEvent("P1_Move_Down_Pressed");
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid,
@@ -202,7 +202,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
-		_events->EmitEvent("S_Pressed");
+		_events->EmitEvent("P1_Move_Down_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
@@ -291,7 +291,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 	                          BonusType::Grenade);
-	_events->EmitEvent("S_Pressed");
+	_events->EmitEvent("P1_Move_Down_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid, .name = "Enemy1",
@@ -357,7 +357,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 	                          BonusType::Tank);
-	_events->EmitEvent("S_Pressed");
+	_events->EmitEvent("P1_Move_Down_Pressed");
 
 	const int playerSpawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
 	const auto bonus = _allObjects.back().get();
@@ -399,7 +399,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	{
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 		                          BonusType::Star);
-		_events->EmitEvent("S_Pressed");
+		_events->EmitEvent("P1_Move_Down_Pressed");
 
 		EXPECT_EQ(player->GetTier(), 1);
 
@@ -456,7 +456,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 	                          BonusType::Shovel);
-	_events->EmitEvent("S_Pressed");
+	_events->EmitEvent("P1_Move_Down_Pressed");
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},

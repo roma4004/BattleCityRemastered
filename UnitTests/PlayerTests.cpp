@@ -75,7 +75,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 		player->SetPos({.x = 0.f, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("W_Pressed");
+		_events->EmitEvent("P1_Move_Up_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -99,7 +99,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 		player->SetPos({.x = windowWidth - _tankSize, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("A_Pressed");
+		_events->EmitEvent("P1_Move_Left_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -122,7 +122,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("S_Pressed");
+		_events->EmitEvent("P1_Move_Down_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -145,7 +145,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("D_Pressed");
+		_events->EmitEvent("P1_Move_Right_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -352,7 +352,7 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 		player->SetDirection(Direction::DOWN);
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("Space_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -372,8 +372,8 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 		//success shot right test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("D_Pressed");
-		_events->EmitEvent("Space_Pressed");
+		_events->EmitEvent("P1_Move_Right_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -394,8 +394,8 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 		//success shot up test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("W_Pressed");
-		_events->EmitEvent("Space_Pressed");
+		_events->EmitEvent("P1_Move_Up_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -416,8 +416,8 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 		//success shot left test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("A_Pressed");
-		_events->EmitEvent("Space_Pressed");
+		_events->EmitEvent("P1_Move_Left_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
