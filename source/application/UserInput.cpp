@@ -252,6 +252,9 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 		case SDLK_TAB:
 			_events->EmitEvent("Tab_" + KeyStateTag);
 			break;
+		case SDLK_RETURN:
+			_events->EmitEvent("Enter_" + KeyStateTag);
+			break;
 
 		default:
 			break;
