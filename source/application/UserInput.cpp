@@ -90,15 +90,25 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 {
 	std::string controllerTag{};
 	//std::cout << "Num of pads: " << SDL_NumJoysticks() << "\n"; // Debug
-	if (SDL_NumJoysticks() > 1)
+	
+	if (SDL_NumJoysticks() == 1)
+	{
+		controllerTag = "P1";
+	}
+	else if (SDL_NumJoysticks() > 1)
 	{
 		int controllerIndex = GetDeviceIndex(event);
 		if (controllerIndex > 1)
 		{
-			std::cout<<"Pad reconnected with WRONG ID = " << GetDeviceIndex(event)<<" \n";
-			controllerIndex = static_cast<int>(_removedID);
+			std::cout << "Pad reconnected with WRONG ID = " << controllerIndex << " \n";
+			controllerIndex = _removedID; //TODO: rewrite
 		}
-		if (!_areControllersSwapped)
+
+		if (_areControllersSwapped)
+		{
+			controllerTag = controllerIndex == 1 ? "P2" : "P1";
+		}
+		else
 		{
 			if (controllerIndex == 1)
 			{
@@ -110,27 +120,11 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 			}
 			else if (controllerIndex > 1)
 			{
-				_removedID? controllerTag = "P1" : controllerTag = "P2"; 
-				//TODO: need to define which from 2 controllers is active to distinguish them 
-				//std::cout<<"Pad reconnected with NEW ID = " << GetDeviceIndex(event)<<" \n"; //Debug
-			}
-		}
-		else
-		{
-			if (GetDeviceIndex(event) == 1)
-			{
-				controllerTag = "P2";
-			}
-			else
-			{
-				controllerTag = "P1";
+				controllerTag = _removedID == 1 ? "P1" : "P2"; //std::cout << "Pad reconnected with NEW ID = " << GetDeviceIndex(event) << " \n"; //Debug
 			}
 		}
 	}
-	else if (SDL_NumJoysticks() == 1)
-	{
-		controllerTag = "P1";
-	}
+
 	//std::cout << "Controller Tag: " << controllerTag << " \n"; //Debug
 	return controllerTag;
 }
@@ -346,51 +340,46 @@ void UserInput::GamepadsPlugAndPlay(const SDL_Event& event)
 
 	switch (event.type)
 	{
-	case SDL_CONTROLLERDEVICEADDED:
-	{
-		if (SDL_IsGameController(deviceIndex))
+		case SDL_CONTROLLERDEVICEADDED:
 		{
-			if (deviceIndex <=1)
+			if (SDL_IsGameController(deviceIndex))
 			{
-				std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-				SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
-			}
-			else
-			{
-				if (controllers[0] != nullptr)
+				if (deviceIndex <= 1)
 				{
-					instanceID = 1;
 					std::cout << "Controller " << std::to_string(instanceID) << " added\n";
 					SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
 				}
 				else
 				{
-					instanceID = 0;
-					std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-					SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
+					if (controllers[0] != nullptr)
+					{
+						instanceID = 1;
+						std::cout << "Controller " << std::to_string(instanceID) << " added\n";
+						SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
+					}
+					else
+					{
+						instanceID = 0;
+						std::cout << "Controller " << std::to_string(instanceID) << " added\n";
+						SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
+					}
 				}
 			}
-		}
-		break;
+
+			break;
 		}
 		case SDL_CONTROLLERDEVICEREMOVED: 
 		{
-			if (instanceID == 1)
-			{
-				_removedID = true;
-			}
-			else
-			{
-				_removedID = false;
-			}
+			_removedID = instanceID == 1 ? 1 : 0;
 			SDL_Log("Controller %s disconnected! (instance %d) ", SDL_GameControllerName(gameController), instanceID);
-			
-			auto it = controllers.find(deviceIndex);
+
+			const auto it = controllers.find(deviceIndex);
 			if (it != controllers.end())
 			{
 				SDL_GameControllerClose(it->second);
 				controllers.erase(it);
 			}
+
 			break;
 		}
 

@@ -21,7 +21,7 @@ class UserInput final
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
-	bool _removedID{false};
+	int _removedID{0};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
