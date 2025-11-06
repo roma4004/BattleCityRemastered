@@ -30,9 +30,9 @@ class UserInput final
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;
 
 	void MouseEvents(const SDL_Event& event);
+	void KeyboardKeyPressRelease(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
-	void GamepadKeyPressed(const SDL_Event& event) const;
-	void GamepadKeyReleased(const SDL_Event& event) const;
+	void GamepadKeyPressRelease(const SDL_Event& event) const;
 	void GamepadEvents(const SDL_Event& event) const;
 	void GamepadsPlugAndPlay(const SDL_Event& event);
 	void OnWindowMoveStop();
