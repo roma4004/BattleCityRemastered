@@ -21,7 +21,7 @@ class UserInput final
 	bool _isMoving{false};
 	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
-	bool _removedID{};
+	bool _removedID{false};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
@@ -30,9 +30,9 @@ class UserInput final
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;
 
 	void MouseEvents(const SDL_Event& event);
+	void KeyboardKeyPressRelease(const SDL_Event& event) const;
 	void KeyboardEvents(const SDL_Event& event) const;
-	void GamepadKeyPressed(const SDL_Event& event) const;
-	void GamepadKeyReleased(const SDL_Event& event) const;
+	void GamepadKeyPressRelease(const SDL_Event& event) const;
 	void GamepadEvents(const SDL_Event& event) const;
 	void GamepadsPlugAndPlay(const SDL_Event& event);
 	void OnWindowMoveStop();
