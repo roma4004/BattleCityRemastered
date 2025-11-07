@@ -41,7 +41,6 @@ class UserInput final
 	void Unsubscribe() const;
 
 	void WindowsMoveEvents(const SDL_Event& event);
-	void GamepadInit(SDL_Event& event);
 	void SwapControllers();
 	std::string ControllerTagDefiner(const SDL_Event& event) const;
 

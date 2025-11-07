@@ -58,28 +58,6 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 	}
 }
 
-void UserInput::GamepadInit(SDL_Event& event)
-{
-	int deviceIndexLocal = GetDeviceIndex(event);
-	SDL_GameController* gameController = SDL_GameControllerOpen(deviceIndexLocal);
-	SDL_JoystickID instanceID = deviceIndexLocal;
-	controllers[instanceID] = gameController;
-	switch (event.type)
-	{
-		case SDL_CONTROLLERDEVICEADDED:
-		{
-			if (SDL_IsGameController(deviceIndex))
-			{
-				std::cout << "Init->Controller " << std::to_string(instanceID) << " added\n";
-				SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
-			}
-			break;
-		}
-		default:
-			break;
-	}
-}
-
 void UserInput::SwapControllers()
 {
 	_areControllersSwapped = !_areControllersSwapped;
@@ -185,27 +163,21 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 {
-	std::string KeyboardLeftSideTag {};
-	std::string KeyboardRightSideTag {};
+	std::string KeyboardLeftSideTag (_areControllersSwapped? "P2" : "P1");
+	std::string KeyboardRightSideTag (_areControllersSwapped? "P1" : "P2");
 	std::string KeyStateTag {};
-	if (!_areControllersSwapped)
-	{
-		KeyboardLeftSideTag = "P1";
-		KeyboardRightSideTag = "P2";
-	}
-	else
-	{
-		KeyboardLeftSideTag = "P2";
-		KeyboardRightSideTag = "P1";
-	}
 
 	if (event.key.type == SDL_KEYDOWN)
 	{
 		KeyStateTag = "Pressed";
 	}
-	else
+	else if (event.key.type == SDL_KEYUP)
 	{
 		KeyStateTag = "Released";
+	}
+	else
+	{
+		return;
 	}
 
 	switch (event.key.keysym.sym)
@@ -263,33 +235,36 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 
 void UserInput::KeyboardEvents(const SDL_Event& event) const
 {
-	if (event.type == SDL_KEYDOWN)
+	if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
 	{
 		KeyboardKeyPressRelease(event);
 	}
-	else if (event.type == SDL_KEYUP)
-	{
-		KeyboardKeyPressRelease(event);
-	}
+
 }
 
 void UserInput::GamepadKeyPressRelease(const SDL_Event& event) const
 {
-	std::string controllerTag{};
-	std::string KeyStateTag {};
-	controllerTag = ControllerTagDefiner(event);
-	std::cout << "Pressed Tag: " << controllerTag << "\n";
-	if (event.cbutton.type == SDL_CONTROLLERBUTTONDOWN)
+	if (SDL_NumJoysticks()>0)
 	{
-		KeyStateTag = "Pressed";
-	}
-	else
-	{
-		KeyStateTag = "Released";
-	}
+		std::string controllerTag{};
+		std::string KeyStateTag {};
+		controllerTag = ControllerTagDefiner(event);
+		//std::cout << "Pressed Tag: " << controllerTag << "\n"; // Debug
+		if (event.cbutton.type == SDL_CONTROLLERBUTTONDOWN)
+		{
+			KeyStateTag = "Pressed";
+		}
+		else if (event.cbutton.type == SDL_CONTROLLERBUTTONUP)
+		{
+			KeyStateTag = "Released";
+		}
+		else
+		{
+			return;
+		}
 
-	switch (event.cbutton.button)
-	{
+		switch (event.cbutton.button)
+		{
 		case SDL_CONTROLLER_BUTTON_A:
 			_events->EmitEvent(controllerTag + "_Fire_" + KeyStateTag);
 			break;
@@ -323,19 +298,17 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event) const
 
 		default:
 			break;
+		}
 	}
 }
 
 void UserInput::GamepadEvents(const SDL_Event& event) const
 {
-	if (event.type == SDL_CONTROLLERBUTTONDOWN)
+	if (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_CONTROLLERBUTTONUP)
 	{
 		GamepadKeyPressRelease(event);
 	}
-	else if (event.type == SDL_CONTROLLERBUTTONUP)
-	{
-		GamepadKeyPressRelease(event);
-	}
+
 }
 
 void UserInput::GamepadsPlugAndPlay(const SDL_Event& event) 
