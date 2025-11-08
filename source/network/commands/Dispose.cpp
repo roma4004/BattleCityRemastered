@@ -9,7 +9,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(Dispose);
 Dispose::Dispose() : Command{CommandType::DISPOSE} {}
 
 Dispose::Dispose(std::string who, buuid uuid)
-	: Command{CommandType::DISPOSE}, _who{std::move(who)}, _uuid{std::move(uuid)} {}
+	: Command{CommandType::DISPOSE}, _who{std::move(who)}, _uuid{uuid} {}
 
 std::string Dispose::GetWho() const noexcept { return _who; }
 

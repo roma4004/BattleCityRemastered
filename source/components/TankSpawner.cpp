@@ -144,7 +144,7 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			const bool isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<int>(type)).isActive;
 			const BonusEffectProperty effects = {.isTimerActive = isTimerActive, .isHelmetActive = isHelmetActive};
 
-			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, std::move(uuid),
+			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, uuid,
 				effects, type, skipDelay);
 
 			return;
@@ -187,7 +187,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		const bool isHelmetActive = _bonusEffectManager->GetHelmet(isFirst ? 4 : 5).isActive;
 		const BonusEffectProperty effects = {.isTimerActive = isTimerActive, .isHelmetActive = isHelmetActive};
 
-		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid), effects, type,
+		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, uuid, effects, type,
 		          skipDelay);
 	}
 }
@@ -226,7 +226,7 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive;
 		const BonusEffectProperty effects = {.isTimerActive = isTimerActive, .isHelmetActive = isHelmetActive};
 
-		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, std::move(uuid), effects, type,
+		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, uuid, effects, type,
 		          skipDelay);
 	}
 }
@@ -345,16 +345,16 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 
 	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
 	{
-		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, std::move(effects), enableByDefault);
+		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, effects, enableByDefault);
 	}
 
 	if (type == TankType::COOP1 || type == TankType::COOP2)
 	{
-		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, std::move(effects), enableByDefault);
+		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, effects, enableByDefault);
 	}
 
 	return std::make_shared<Player>(
-			std::move(pawnProperty), _bulletPool, GetInputProvider(type), std::move(effects), enableByDefault);
+			std::move(pawnProperty), _bulletPool, GetInputProvider(type), effects, enableByDefault);
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, std::string name,
@@ -379,7 +379,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int 
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
-	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty), std::move(effects))})
+	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty), effects)})
 	{
 		_allObjects->emplace_back(tank);
 		_events->EmitEvent("SpawnDelayStart", tank, milliseconds(skipDelay ? 0 : 1000));

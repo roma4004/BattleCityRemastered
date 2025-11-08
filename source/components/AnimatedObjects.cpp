@@ -140,9 +140,9 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
-	name = std::move(other.name);
-	nameWithUuid = std::move(other.nameWithUuid);
-	objName = std::move(other.objName);
+	name = other.name;
+	nameWithUuid = other.nameWithUuid;
+	objName = other.objName;
 	parent = other.parent;
 
 	Enable();
