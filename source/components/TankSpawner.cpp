@@ -24,15 +24,15 @@
 
 //TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-                         std::shared_ptr<BonusEffectManager> bonusEffectManager,
-                         std::shared_ptr<RespawnResourceManager> respawnResourceManager)
+                         const std::shared_ptr<EventSystem>& events, const std::shared_ptr<BulletPool>& bulletPool,
+                         const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
+                         const std::shared_ptr<RespawnResourceManager>& respawnResourceManager)
 	: _windowSize{windowSize},
 	  _allObjects{allObjects},
-	  _events{std::move(events)},
-	  _bulletPool{std::move(bulletPool)},
-	  _bonusEffectManager{std::move(bonusEffectManager)},
-	  _respawnResourceManager{std::move(respawnResourceManager)}
+	  _events{events},
+	  _bulletPool{bulletPool},
+	  _bonusEffectManager{bonusEffectManager},
+	  _respawnResourceManager{respawnResourceManager}
 {
 	Subscribe();
 }
@@ -53,7 +53,7 @@ void TankSpawner::Subscribe()
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 
-	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
+	_events->AddListener("SpawnEnabled", _name, [this](const std::weak_ptr<Tank>& tank)
 	{
 		_events->EmitEvent("AnimationCreateTank", tank);
 	});
@@ -117,18 +117,13 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 	{
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
-			if (object == nullptr)
-			{
-				return false;
-			}
-
 			return ColliderUtils::IsCollide(rect, object->GetRect());
 		});
 
 		if (isFreeSpawnSpot)
 		{
+			const std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
 			std::string fraction{"EnemyTeam"};
-			std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
 
 			// Log enemy tank spawn
 			const std::string uuidString = UuidUtils::GetStringUuid(uuid);
@@ -137,15 +132,15 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 					<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 					<< "SpawnEnemy  UUID = " << uuidString
 					<< ", Name = " << name
-					<< std::endl;
+					<< '\n';
 
 			constexpr int gray{0x808080};
-			const bool isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive;
-			const bool isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<int>(type)).isActive;
-			const BonusEffectProperty effects = {.isTimerActive = isTimerActive, .isHelmetActive = isHelmetActive};
+			const BonusEffectProperty effects = {
+					.isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive,
+					.isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<int>(type)).isActive
+			};
 
-			SpawnTank(rect, gray, health, std::move(name), std::move(fraction), speed, uuid,
-				effects, type, skipDelay);
+			SpawnTank(rect, gray, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
 
 			return;
 		}
@@ -157,18 +152,13 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (object == nullptr)
-		{
-			return false;
-		}
-
 		return ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 
 	if (isFreeSpawnSpot)
 	{
 		const bool isFirst = type == TankType::PLAYER1;
-		std::string name{isFirst ? "Player1" : "Player2"};
+		const std::string name{isFirst ? "Player1" : "Player2"};
 		std::string fraction{"PlayerTeam"};
 
 		// Log tank spawn
@@ -178,17 +168,17 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnPlayer UUID = " << uuidString
 				<< ", Name = " << name
-				<< std::endl;
+				<< '\n';
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
 		const int color = isFirst ? yellow : green;
-		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
-		const bool isHelmetActive = _bonusEffectManager->GetHelmet(isFirst ? 4 : 5).isActive;
-		const BonusEffectProperty effects = {.isTimerActive = isTimerActive, .isHelmetActive = isHelmetActive};
+		const BonusEffectProperty effects = {
+				.isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive,
+				.isHelmetActive = _bonusEffectManager->GetHelmet(isFirst ? 4 : 5).isActive
+		};
 
-		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, uuid, effects, type,
-		          skipDelay);
+		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
 	}
 }
 
@@ -197,17 +187,12 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (object == nullptr)
-		{
-			return false;
-		}
-
 		return ColliderUtils::IsCollide(rect, object->GetRect());
 	});
 
 	if (isFreeSpawnSpot)
 	{
-		std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
+		const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
 		std::string fraction{"PlayerTeam"};
 
 		// Log coop bot spawn
@@ -217,17 +202,17 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnEnemy  UUID = " << uuidString
 				<< ", Name = " << name
-				<< std::endl;
+				<< '\n';
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
 		const int color = type == TankType::COOP1 ? yellow : green;
-		const bool isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive;
-		const bool isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive;
-		const BonusEffectProperty effects = {.isTimerActive = isTimerActive, .isHelmetActive = isHelmetActive};
+		const BonusEffectProperty effects = {
+				.isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive,
+				.isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive
+		};
 
-		SpawnTank(rect, color, health, std::move(name), std::move(fraction), speed, uuid, effects, type,
-		          skipDelay);
+		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
 	}
 }
 
@@ -357,7 +342,7 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 			std::move(pawnProperty), _bulletPool, GetInputProvider(type), effects, enableByDefault);
 }
 
-void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, std::string name,
+void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name,
                             std::string fraction, const float speed, buuid uuid, BonusEffectProperty effects,
                             const TankType type, const bool skipDelay)
 {

@@ -1,225 +1,179 @@
 #include "behavior/MoveLikeBulletBeh.h"
 #include "Circle.h"
 #include "components/EventSystem.h"
-#include "entities/obstacles/GrassTile.h"
-#include "entities/obstacles/IceTile.h"
-#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
-#include "enums/AnimationType.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
 #include <memory>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                     std::shared_ptr<EventSystem> events)
-	: _selfParent{parent},
-	  _allObjects{allObjects},
-	  _events{std::move(events)} {}
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir,
+                                     float& speed, buuid& uuid, double& damageRadius, UPoint& windowSize,
+                                     std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
+                                     std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	: _uuid{uuid},
+	  _rect{rect},
+	  _direction{dir},
+	  _speed{speed},
+	  _bulletDamageRadius{damageRadius},
+	  _windowSize{windowSize},
+	  _bulletTargets{bulletTargets},
+	  _allObjects{allObjects} {}
 
 //NOTE: Never user for bullets
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(float /*deltaTime*/) const { return {}; }
 
-ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const Bullet* bullet, const float deltaTime)
+ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const float deltaTime) const
 {
-	const auto dir = bullet->GetDirection();
-	const float speed = bullet->GetSpeed() * deltaTime;
-	const auto [x, y, w, h] = bullet->GetRect();
-	if (dir == Direction::UP)
+	const float speed = _speed * deltaTime;
+	const auto [x, y, w, h] = _rect;
+	if (_direction == Direction::UP)
 	{
 		return {.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
-	if (dir == Direction::DOWN)
+	if (_direction == Direction::DOWN)
 	{
 		return {.x = x, .y = y, .w = w, .h = h + speed};
 	}
 
-	if (dir == Direction::LEFT)
+	if (_direction == Direction::LEFT)
 	{
 		//TODO: write bullet test that can damage tank from all sides
 		return {.x = x - speed, .y = y, .w = w + speed, .h = h};
 	}
 
-	//dir == RIGHT
+	//_direction == RIGHT
 	return {.x = x, .y = y, .w = w + speed, .h = h};
 }
 
-FPoint MoveLikeBulletBeh::GetBulletNextPoint(const Bullet* bullet, const float deltaTime)
+FPoint MoveLikeBulletBeh::GetBulletNextPoint(const float deltaTime) const
 {
-	const auto dir = bullet->GetDirection();
-	const float speed = bullet->GetSpeed() * deltaTime;
-	const auto [x, y, w, h] = bullet->GetRect();
-	if (dir == Direction::UP)
+	const float speed = _speed * deltaTime;
+	const auto [x, y, w, h] = _rect;
+	if (_direction == Direction::UP)
 	{
 		return {.x = x, .y = y - speed};
 	}
 
-	if (dir == Direction::DOWN)
+	if (_direction == Direction::DOWN)
 	{
 		return {.x = x, .y = y + speed};
 	}
 
-	if (dir == Direction::LEFT)
+	if (_direction == Direction::LEFT)
 	{
 		return {.x = x - speed, .y = y};//TODO: write bullet test that can damage tank from all sides
 	}
 
-	//dir == Direction::RIGHT
+	//_direction == Direction::RIGHT
 	return {.x = x + speed, .y = y};
 }
 
-std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
+bool MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 {
-	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
-	{
-		return {};
-	}
-
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object == nullptr || bullet == object.get())
+		if (_uuid == object->GetUuid())
 		{
 			continue;
 		}
 
-		if (ColliderUtils::IsCollide(GetBulletPathRect(bullet, deltaTime), object->GetRect()))
+		if (ColliderUtils::IsCollide(GetBulletPathRect(deltaTime), object->GetRect()))
 		{
 			if (!object->GetIsPenetrable())
 			{
-				return GetCircleCollisionObjects(GetBulletNextPoint(bullet, deltaTime));
+				return false;
 				//TODO: fix move to a bonus though water
 			}
 		}
 	}
 
-	return {};
+	return true;
 }
 
-bool MoveLikeBulletBeh::Move(const float deltaTime) const
+bool MoveLikeBulletBeh::Move(const float deltaTime)
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
-	{
-		return false;
-	}
-
-	const float speed = bullet->GetSpeed() * deltaTime;
-	const Direction direction = bullet->GetDirection();
-	if (direction == Direction::UP && bullet->GetY() - speed >= 0.0f)
+	const float speed = _speed * deltaTime;
+	const Direction direction = _direction;
+	if (direction == Direction::UP && _rect.y - speed >= 0.0f)
 	{
 		return MoveUp(deltaTime);
 	}
 
-	if (direction == Direction::DOWN && bullet->GetBottomSide() + speed <= static_cast<float>(bullet->GetWindowSize().
-		    y))
-	//TODO: pass _window to movelikeBullet instead of bullet
+	if (direction == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_windowSize.y))
 	{
 		return MoveDown(deltaTime);
 	}
 
-	if (direction == Direction::LEFT && bullet->GetX() - speed >= 0.0f)
+	if (direction == Direction::LEFT && _rect.x - speed >= 0.0f)
 	{
 		return MoveLeft(deltaTime);
 	}
 
 	if (constexpr int sideBarWidth = 175;//TODO: move sidebar width to params
-		direction == Direction::RIGHT
-		&& bullet->GetRightSide() + speed <= static_cast<float>(bullet->GetWindowSize().x) - sideBarWidth)
+		direction == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_windowSize.x) - sideBarWidth)
 	{
 		return MoveRight(deltaTime);
 	}
 
 	// Self-destroy with deal damage when the edge of windows is reached
-	DealDamage(GetCircleCollisionObjects(GetBulletNextPoint(bullet, deltaTime)));
+	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveLeft(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveLeft(const float deltaTime)
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
+	if (IsCanMove(deltaTime))
 	{
-		return false;
-	}
-
-	if (const auto objects = IsCanMove(deltaTime); objects.empty())
-	{
-		bullet->MoveX(-bullet->GetSpeed() * deltaTime);
+		_rect.x += -_speed * deltaTime;
 
 		return true;
 	}
-	else
-	{
-		DealDamage(objects);
-	}
+
+	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveRight(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveRight(const float deltaTime)
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
+	if (IsCanMove(deltaTime))
 	{
-		return false;
-	}
-
-	if (const auto objects = IsCanMove(deltaTime); objects.empty())
-	{
-		bullet->MoveX(bullet->GetSpeed() * deltaTime);
+		_rect.x += _speed * deltaTime;
 
 		return true;
 	}
-	else
-	{
-		DealDamage(objects);
-	}
+
+	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveUp(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveUp(const float deltaTime)
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
+	if (IsCanMove(deltaTime))
 	{
-		return false;
-	}
-
-	if (const auto objects = IsCanMove(deltaTime); objects.empty())
-	{
-		bullet->MoveY(-bullet->GetSpeed() * deltaTime);
+		_rect.y += -_speed * deltaTime;
 
 		return true;
 	}
-	else
-	{
-		DealDamage(objects);
-	}
+
+	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveDown(const float deltaTime) const
+bool MoveLikeBulletBeh::MoveDown(const float deltaTime)
 {
-	const auto bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
+	if (IsCanMove(deltaTime))
 	{
-		return false;
-	}
-
-	if (const auto objects = IsCanMove(deltaTime); objects.empty())
-	{
-		bullet->MoveY(bullet->GetSpeed() * deltaTime);
+		_rect.y += _speed * deltaTime;
 
 		return true;
 	}
-	else
-	{
-		DealDamage(objects);
-	}
+
+	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
@@ -227,20 +181,14 @@ bool MoveLikeBulletBeh::MoveDown(const float deltaTime) const
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(const FPoint blowCenter) const
 {
-	const auto* bullet = dynamic_cast<Bullet*>(_selfParent);
-	if (bullet == nullptr)
-	{
-		return {};
-	}
-
 	std::vector<std::shared_ptr<BaseObj>> aoeCollisions{};
 	constexpr int defaultCollisionReserve{5};
 	aoeCollisions.reserve(defaultCollisionReserve);
 
-	const Circle circle{.center = blowCenter, .radius = bullet->GetBulletDamageRadius()};
+	const Circle circle{.center = blowCenter, .radius = _bulletDamageRadius};
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object == nullptr || _selfParent == object.get())
+		if (_uuid == object->GetUuid())
 		{
 			continue;
 		}
@@ -252,39 +200,4 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 	}
 
 	return aoeCollisions;
-}
-
-void MoveLikeBulletBeh::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList) const
-//TODO: change to shared_ptr
-{
-	const auto thisBullet = dynamic_cast<Bullet*>(_selfParent);
-	if (thisBullet == nullptr)
-	{
-		return;
-	}
-
-	const int bulletDamage = thisBullet->GetDamage();
-	if (!objectList.empty())
-	{
-		for (const auto& target: objectList)
-		{
-			if (target && !dynamic_cast<WaterTile*>(target.get())
-			    && !dynamic_cast<GrassTile*>(target.get())
-			    && !dynamic_cast<IceTile*>(target.get())
-			    && (target->GetIsDestructible() || thisBullet->GetTier() > 2))
-			{
-				target->TakeDamage(bulletDamage);
-				target->SendDamageStatistics(thisBullet->GetAuthor(), thisBullet->GetFraction());
-				if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
-				{
-					thisBullet->SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
-				}
-			}
-		}
-	}
-
-	thisBullet->TakeDamage(bulletDamage);
-
-	_events->EmitEvent("AnimationCreate", AnimationType::Bullet_Explosion, thisBullet->GetRect(),
-	                   std::string{thisBullet->GetName()}, thisBullet->GetColor());
 }

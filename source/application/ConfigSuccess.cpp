@@ -6,14 +6,14 @@
 #include "components/managers/TextureManager.h"
 #include <SDL_ttf.h>
 
-ConfigSuccess::ConfigSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
-                             std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<SDL_Texture> logoTexture,
-                             std::shared_ptr<SDL_Texture> atlasTexture, const bool isVsyncOn)
+ConfigSuccess::ConfigSuccess(const UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
+                             const std::shared_ptr<TTF_Font>& fpsFont, const std::shared_ptr<SDL_Texture>& logoTexture,
+                             const std::shared_ptr<SDL_Texture>& atlasTexture, const bool isVsyncOn)
 	: _windowSize{windowSize},
-	  _renderer{std::move(renderer)},
-	  _fpsFont{std::move(fpsFont)},
-	  _logoTexture{std::move(logoTexture)},
-	  _atlasTexture{std::move(atlasTexture)},
+	  _renderer{renderer},
+	  _fpsFont{fpsFont},
+	  _logoTexture{logoTexture},
+	  _atlasTexture{atlasTexture},
 	  _isVsyncOn{isVsyncOn} {}
 
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()

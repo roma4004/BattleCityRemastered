@@ -9,7 +9,7 @@
 #include <boost/uuid/uuid.hpp>
 
 //TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
-RespawnResourceManager::RespawnResourceManager(std::shared_ptr<EventSystem> events) : _events{std::move(events)}
+RespawnResourceManager::RespawnResourceManager(const std::shared_ptr<EventSystem>& events) : _events{events}
 {
 	_slots = {
 			{.uuid = UuidUtils::GetRandomUuid(), .isAvailable = false},

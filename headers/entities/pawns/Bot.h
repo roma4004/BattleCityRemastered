@@ -35,7 +35,7 @@ protected:
 	void TickUpdate(float deltaTime) override;
 
 public:
-	Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, BonusEffectProperty effects = {},
+	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},
 	    bool enableByDefault = false);
 
 	~Bot() override;

@@ -12,7 +12,7 @@ class Map final
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{};
 
 public:
-	explicit Map(std::shared_ptr<ObstacleSpawner> obstacleSpawner);
+	explicit Map(const std::shared_ptr<ObstacleSpawner>& obstacleSpawner);
 
 	~Map();
 

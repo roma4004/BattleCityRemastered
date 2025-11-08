@@ -20,7 +20,7 @@ class SpawnDelayManager
 	std::vector<SpawnDelay> _spawnDelays{};
 
 public:
-	explicit SpawnDelayManager(std::shared_ptr<EventSystem> events);
+	explicit SpawnDelayManager(const std::shared_ptr<EventSystem>& events);
 
 	~SpawnDelayManager();
 

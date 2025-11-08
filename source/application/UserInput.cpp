@@ -5,8 +5,8 @@
 #include <SDL_log.h>
 #include <iostream>
 
-UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: _windowSize{windowSize}, _events{std::move(events)}
+UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+	: _windowSize{windowSize}, _events{events}
 {
 	Subscribe();
 }
@@ -90,7 +90,7 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 {
 	std::string controllerTag{};
 	//std::cout << "Num of pads: " << SDL_NumJoysticks() << "\n"; // Debug
-	
+
 	if (SDL_NumJoysticks() == 1)
 	{
 		controllerTag = "P1";
@@ -101,7 +101,7 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 		if (controllerIndex > 1)
 		{
 			std::cout << "Pad reconnected with WRONG ID = " << controllerIndex << " \n";
-			controllerIndex = _removedID; //TODO: rewrite
+			controllerIndex = _removedID;//TODO: rewrite
 		}
 
 		if (_areControllersSwapped)
@@ -120,7 +120,8 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 			}
 			else if (controllerIndex > 1)
 			{
-				controllerTag = _removedID == 1 ? "P1" : "P2"; //std::cout << "Pad reconnected with NEW ID = " << GetDeviceIndex(event) << " \n"; //Debug
+				controllerTag = _removedID == 1 ? "P1" : "P2";
+				//std::cout << "Pad reconnected with NEW ID = " << GetDeviceIndex(event) << " \n"; //Debug
 			}
 		}
 	}
@@ -179,9 +180,9 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 {
-	std::string KeyboardLeftSideTag {};
-	std::string KeyboardRightSideTag {};
-	std::string KeyStateTag {};
+	std::string KeyboardLeftSideTag{};
+	std::string KeyboardRightSideTag{};
+	std::string KeyStateTag{};
 	if (!_areControllersSwapped)
 	{
 		KeyboardLeftSideTag = "P1";
@@ -252,7 +253,7 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 
 		default:
 			break;
-	} 
+	}
 }
 
 void UserInput::KeyboardEvents(const SDL_Event& event) const
@@ -270,7 +271,7 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 void UserInput::GamepadKeyPressRelease(const SDL_Event& event) const
 {
 	std::string controllerTag{};
-	std::string KeyStateTag {};
+	std::string KeyStateTag{};
 	controllerTag = ControllerTagDefiner(event);
 	std::cout << "Pressed Tag: " << controllerTag << "\n";
 	if (event.cbutton.type == SDL_CONTROLLERBUTTONDOWN)
@@ -332,7 +333,7 @@ void UserInput::GamepadEvents(const SDL_Event& event) const
 	}
 }
 
-void UserInput::GamepadsPlugAndPlay(const SDL_Event& event) 
+void UserInput::GamepadsPlugAndPlay(const SDL_Event& event)
 {
 	deviceIndex = GetDeviceIndex(event);
 	SDL_GameController* gameController = SDL_GameControllerOpen(deviceIndex);
@@ -347,7 +348,8 @@ void UserInput::GamepadsPlugAndPlay(const SDL_Event& event)
 				if (deviceIndex <= 1)
 				{
 					std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-					SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
+					SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController),
+					        instanceID);
 				}
 				else
 				{
@@ -355,20 +357,22 @@ void UserInput::GamepadsPlugAndPlay(const SDL_Event& event)
 					{
 						instanceID = 1;
 						std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-						SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
+						SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController),
+						        instanceID);
 					}
 					else
 					{
 						instanceID = 0;
 						std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-						SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
+						SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController),
+						        instanceID);
 					}
 				}
 			}
 
 			break;
 		}
-		case SDL_CONTROLLERDEVICEREMOVED: 
+		case SDL_CONTROLLERDEVICEREMOVED:
 		{
 			_removedID = instanceID == 1 ? 1 : 0;
 			SDL_Log("Controller %s disconnected! (instance %d) ", SDL_GameControllerName(gameController), instanceID);
@@ -384,7 +388,7 @@ void UserInput::GamepadsPlugAndPlay(const SDL_Event& event)
 		}
 
 		default:
-		break;
+			break;
 	}
 }
 

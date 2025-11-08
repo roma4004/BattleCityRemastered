@@ -2,8 +2,8 @@
 #include "components/EventSystem.h"
 #include "utils/TimeUtils.h"
 
-BonusEffectManager::BonusEffectManager(std::shared_ptr<EventSystem> events)
-	: _name{"BonusEffectManager"}, _events{std::move(events)}
+BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& events)
+	: _name{"BonusEffectManager"}, _events{events}
 {
 	Reset();
 

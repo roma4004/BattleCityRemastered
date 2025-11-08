@@ -52,9 +52,10 @@ class TextureManager final
 	void GenerateFpsTextures();
 
 public:
-	TextureManager(UPoint windowSize, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
-	               std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
-	               std::shared_ptr<AnimationManager> animationManager);
+	TextureManager(UPoint windowSize, const std::shared_ptr<SDL_Texture>& texture,
+	               const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& fpsFont,
+	               const std::shared_ptr<EventSystem>& events,
+	               const std::shared_ptr<AnimationManager>& animationManager);
 
 	~TextureManager();
 

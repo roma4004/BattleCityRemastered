@@ -29,9 +29,9 @@
 using buuid = boost::uuids::uuid;
 
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               std::shared_ptr<EventSystem> events)
+               const std::shared_ptr<EventSystem>& events)
 	: _socket(ioContext),
-	  _events{std::move(events)},
+	  _events{events},
 	  _name{"Client"}
 {
 	Subscribe();
@@ -40,7 +40,7 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 	const auto endpointIterator = resolver.resolve(host, port);
 	boost::asio::async_connect(//TODO: extract to reconnect method
 			_socket, endpointIterator,
-			[this](const boost::system::error_code& ec, tcp::endpoint /*endpoint_iterator*/)
+			[this](const boost::system::error_code& ec, const tcp::endpoint& /*endpoint_iterator*/)
 			{
 				if (!ec)
 				{
@@ -63,13 +63,13 @@ Client::~Client()
 			_socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << std::endl;
+				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
 			_socket.close(ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket close: " << ec.message() << std::endl;
+				std::cerr << "Error during socket close: " << ec.message() << '\n';
 			}
 		}
 	}
@@ -430,7 +430,7 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
 		}
 
-		std::cerr << "Deserialization error: " << e.what() << std::endl;
-		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << std::endl;
+		std::cerr << "Deserialization error: " << e.what() << '\n';
+		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
 	}
 }

@@ -46,7 +46,7 @@ class UserInput final
 	std::string ControllerTagDefiner(const SDL_Event& event) const;
 
 public:
-	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
+	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 	~UserInput();
 
 	void Update();

@@ -42,7 +42,7 @@ class BonusSpawner final
 	void Update();
 
 public:
-	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be in bonus.h
 
 	~BonusSpawner();

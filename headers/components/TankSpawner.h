@@ -43,7 +43,7 @@ class TankSpawner final
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
-	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
+	void SpawnTank(ObjRectangle rect, int color, int health, const std::string& name, std::string fraction, float speed,
 	               buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty,
@@ -59,9 +59,9 @@ public:
 	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
 
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-	            std::shared_ptr<BonusEffectManager> bonusEffectManager,
-	            std::shared_ptr<RespawnResourceManager> respawnResourceManager);
+	            const std::shared_ptr<EventSystem>& events, const std::shared_ptr<BulletPool>& bulletPool,
+	            const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
+	            const std::shared_ptr<RespawnResourceManager>& respawnResourceManager);
 
 	~TankSpawner();
 

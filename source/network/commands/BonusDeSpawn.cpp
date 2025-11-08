@@ -8,7 +8,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BonusDeSpawn);
 
 BonusDeSpawn::BonusDeSpawn() : Command{CommandType::BONUS_DESPAWN} {}
 
-BonusDeSpawn::BonusDeSpawn(buuid uuid)
+BonusDeSpawn::BonusDeSpawn(const buuid uuid)
 	: Command{CommandType::BONUS_DESPAWN}, _uuid{uuid} {}
 
 using buuid = boost::uuids::uuid;

@@ -6,8 +6,8 @@
 #include "utils/RandUtils.h"
 #include <algorithm>
 
-AnimationManager::AnimationManager(std::shared_ptr<EventSystem> events)
-	: _events(std::move(events)),
+AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
+	: _events(events),
 	  _gameMode{GameMode::Demo}
 {
 	_animatedObjects.reserve(100);
@@ -42,9 +42,9 @@ void AnimationManager::SubscribeAsHost()
 				this->CreateAnimation(type, rect, objName, color);
 			});
 
-	_events->AddListener("AnimationCreateTank", _name, [this](std::weak_ptr<Tank> tank)
+	_events->AddListener("AnimationCreateTank", _name, [this](const std::weak_ptr<Tank>& tank)
 	{
-		this->CreateAnimationTank(std::move(tank));
+		this->CreateAnimationTank(tank);
 	});
 	_events->AddListener("AnimationCreateWater", _name, [this](const ObjRectangle rect)
 	{
@@ -131,7 +131,7 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	_waterObjects.emplace_back(rect, _events, 16);
 }
 
-void AnimationManager::CreateAnimationTank(std::weak_ptr<Tank> tank)
+void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 {
 	_tankObjects.emplace_back(_events, _gameMode, 2, 16, tank);
 }

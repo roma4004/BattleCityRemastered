@@ -8,7 +8,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(HealthChange);
 
 HealthChange::HealthChange() : Command{CommandType::HEALTH_CHANGE} {}
 
-HealthChange::HealthChange(std::string who, const int health, buuid uuid)
+HealthChange::HealthChange(std::string who, const int health, const buuid uuid)
 	: Command{CommandType::HEALTH_CHANGE}, _who{std::move(who)}, _health{health}, _uuid{uuid} {}
 
 std::string HealthChange::GetWho() const noexcept { return _who; }

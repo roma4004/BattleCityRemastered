@@ -2,8 +2,8 @@
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 
-InputProviderForMenu::InputProviderForMenu(std::shared_ptr<EventSystem> events)
-	: _events{std::move(events)}
+InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events)
+	: _events{events}
 {
 	Subscribe();
 }

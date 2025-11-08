@@ -27,8 +27,8 @@
 
 using buuid = boost::uuids::uuid;
 
-Session::Session(tcp::socket sock, std::shared_ptr<EventSystem> events)
-	: _socket(std::move(sock)), _events(std::move(events)) {}
+Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
+	: _socket(std::move(sock)), _events(events) {}
 
 Session::~Session()
 {
@@ -41,13 +41,13 @@ Session::~Session()
 			_socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << std::endl;
+				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
 			_socket.close(ec);
 			if (ec)
 			{
-				std::cerr << "Error closing socket socket: " << ec.message() << std::endl;
+				std::cerr << "Error closing socket socket: " << ec.message() << '\n';
 			}
 		}
 	}
@@ -164,7 +164,7 @@ void Session::DoWrite(const std::string& message)
 			{
 				if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
 				{
-					std::cout << "Connection closed normally" << std::endl;
+					std::cout << "Connection closed normally" << '\n';
 				}
 				else
 				{
@@ -190,10 +190,10 @@ void Session::DoWrite(const std::string& message)
 }
 
 Server::Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               std::shared_ptr<EventSystem> events)
+               const std::shared_ptr<EventSystem>& events)
 	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
 	                                     static_cast<unsigned short>(std::stoul(port)))),
-	  _events{std::move(events)},
+	  _events{events},
 	  _name{"Server"},
 	  _isRunning{true}
 {

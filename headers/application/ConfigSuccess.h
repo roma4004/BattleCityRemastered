@@ -22,8 +22,9 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> fpsFont,
-	              std::shared_ptr<SDL_Texture> logoTexture, std::shared_ptr<SDL_Texture> atlasTexture, bool isVsyncOn);
+	ConfigSuccess(UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
+	              const std::shared_ptr<TTF_Font>& fpsFont, const std::shared_ptr<SDL_Texture>& logoTexture,
+	              const std::shared_ptr<SDL_Texture>& atlasTexture, bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

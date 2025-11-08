@@ -1,13 +1,14 @@
 #include "components/BulletPool.h"
+#include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 
-BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        const UPoint windowSize, const GameMode gameMode)
 	: _name{"BulletPool"},
 	  _windowSize{windowSize},
-	  _events{std::move(events)},
+	  _events{events},
 	  _allObjects{allObjects},
 	  _gameMode{gameMode}
 {
@@ -71,7 +72,7 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 			.gameMode = _gameMode
 	};
 
-	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
+	return {new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); }};
 }
 
 std::shared_ptr<BaseObj> BulletPool::SpawnBullet()

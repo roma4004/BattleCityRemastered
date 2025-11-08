@@ -5,10 +5,10 @@
 #include "enums/ObstacleType.h"
 
 Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, std::string name,
-                   std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
+                   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
                    const ObstacleType obstacleType)
 	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
-	  _events(std::move(events)),
+	  _events(events),
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _isReplicationOn(true)
@@ -22,10 +22,10 @@ Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, s
 }
 
 Obstacle::Obstacle(const ObjRectangle rect, const int color, const int health, std::string name,
-                   std::shared_ptr<EventSystem> events, const buuid uuid, const GameMode gameMode,
+                   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
                    const ObstacleType obstacleType, const bool isReplicationOn)
 	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
-	  _events(std::move(events)),
+	  _events(events),
 	  _gameMode{gameMode},
 	  _obstacleType(obstacleType),
 	  _isReplicationOn(isReplicationOn)

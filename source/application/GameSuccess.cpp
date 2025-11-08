@@ -36,15 +36,15 @@ Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(const UPoint windowSize, std::shared_ptr<EventSystem> events,
-                         std::shared_ptr<GameStatistics> statistics, std::unique_ptr<Menu> menu,
-                         std::shared_ptr<TextureManager> textureManager, const bool isVsyncOn)
+GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
+                         const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
+                         const std::shared_ptr<TextureManager>& textureManager, const bool isVsyncOn)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
-	  _statistics{std::move(statistics)},
+	  _statistics{statistics},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
-	  _textureManager(std::move(textureManager)),
+	  _textureManager(textureManager),
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},

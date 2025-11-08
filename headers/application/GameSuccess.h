@@ -75,8 +75,9 @@ class GameSuccess final : public IGame
 	void OnGameModeChangedTo(GameMode newGameMode);
 
 public:
-	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn);
+	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events,
+	            const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
+	            const std::shared_ptr<TextureManager>& textureManager, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

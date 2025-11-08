@@ -4,6 +4,9 @@
 #include <functional>
 #include <memory>
 
+enum class Direction : char8_t;
+struct FPoint;
+struct UPoint;
 struct ObjRectangle;
 class BaseObj;
 class EventSystem;
@@ -13,9 +16,21 @@ class ShootingBeh final : public IShootable
 {
 	using buuid = boost::uuids::uuid;
 
-	BaseObj* _selfParent{nullptr};//TODO: replace with shared ptr
+	buuid& _uuid;
+	ObjRectangle& _rect;
+	Direction& _direction;
+	float& _speed;
+	float& _bulletSpeed;
+	int& _bulletDamage;
+	double& _bulletDamageRadius;
+	int& _tier;
+	FPoint& _bulletSize;
+	UPoint& _windowSize;
+	std::string& _name;
+	std::string& _fraction;
+
+	// BaseObj* _selfParent{nullptr};//TODO: replace with shared ptr
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
@@ -25,8 +40,10 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
-	ShootingBeh(BaseObj* selfParent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool);
+	ShootingBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, float& bulletSpeed, int& bulletDamage,
+	            int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize, std::string& name,
+	            std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	            const std::shared_ptr<BulletPool>& bulletPool);
 
 	~ShootingBeh() override;
 

@@ -45,7 +45,7 @@ void NetworkLogger::LogClientSend(const std::string& commandName)
 	}
 }
 
-void NetworkLogger::SetFileLogging(bool enabled, const std::string& filename)
+void NetworkLogger::SetFileLogging(const bool enabled, const std::string& filename)
 {
 	std::lock_guard<std::mutex> lock(_logMutex);
 	_fileLoggingEnabled = enabled;
@@ -66,13 +66,13 @@ void NetworkLogger::SetFileLogging(bool enabled, const std::string& filename)
 	}
 }
 
-void NetworkLogger::SetConsoleLogging(bool enabled)
+void NetworkLogger::SetConsoleLogging(const bool enabled)
 {
 	std::lock_guard<std::mutex> lock(_logMutex);
 	_consoleLoggingEnabled = enabled;
 }
 
-void NetworkLogger::SetVerbosityLevel(int level)
+void NetworkLogger::SetVerbosityLevel(const int level)
 {
 	std::lock_guard<std::mutex> lock(_logMutex);
 	_verbosityLevel = level;
@@ -93,7 +93,7 @@ void NetworkLogger::WriteLog(const std::string& message, const bool skipEndl)
 		}
 		else
 		{
-			std::cout << fullMessage << std::endl;
+			std::cout << fullMessage << '\n';
 		}
 	}
 
@@ -103,7 +103,7 @@ void NetworkLogger::WriteLog(const std::string& message, const bool skipEndl)
 		std::ofstream logFile(_logFilename, std::ios::app);
 		if (logFile.is_open())
 		{
-			logFile << fullMessage << std::endl;
+			logFile << fullMessage << '\n';
 			logFile.close();
 		}
 	}

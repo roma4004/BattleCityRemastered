@@ -23,7 +23,7 @@ class AnimationManager
 	GameMode _gameMode{};
 
 public:
-	explicit AnimationManager(std::shared_ptr<EventSystem> events);
+	explicit AnimationManager(const std::shared_ptr<EventSystem>& events);
 
 	~AnimationManager();
 
@@ -37,7 +37,7 @@ public:
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);
-	void CreateAnimationTank(std::weak_ptr<Tank> tank);
+	void CreateAnimationTank(const std::weak_ptr<Tank>& tank);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& objName, int color);
 	void DeleteTankAnimation(const std::string& objName);
 

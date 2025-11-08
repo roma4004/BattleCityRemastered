@@ -161,12 +161,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				std::cerr << "Exception in event callback: " << e.what() << std::endl;
+				std::cerr << "Exception in event callback: " << e.what() << '\n';
 				// continue listening to other events
 			}
 			catch (...)
 			{
-				std::cerr << "Unknown exception in event callback" << std::endl;
+				std::cerr << "Unknown exception in event callback" << '\n';
 			}
 
 		}
@@ -210,7 +210,7 @@ class EventSystem final
 	}
 
 	// Helper for getting event by name and argument count
-	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, size_t argCount)
+	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, const size_t argCount)
 	{
 		if (const auto it = _events.find(eventName);
 			it != _events.end() && it->second.event->GetArgumentCount() == argCount)

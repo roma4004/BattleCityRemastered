@@ -32,7 +32,7 @@ class ObstacleSpawner final
 	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:
-	ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	ObstacleSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	                /*, int sideBarWidth = 175*/ int obstacleSize = 36);//TODO: obstacle size should be in obstacle.h
 
 	~ObstacleSpawner();

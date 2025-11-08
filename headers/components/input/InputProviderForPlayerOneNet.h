@@ -12,7 +12,7 @@ class InputProviderForPlayerOneNet final : public IInputProvider
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	explicit InputProviderForPlayerOneNet(std::shared_ptr<EventSystem> events);
+	explicit InputProviderForPlayerOneNet(const std::shared_ptr<EventSystem>& events);
 
 	~InputProviderForPlayerOneNet();
 };

@@ -23,7 +23,7 @@ class InputProviderForMenu final
 	MenuKeys _keys{};
 
 public:
-	explicit InputProviderForMenu(std::shared_ptr<EventSystem> events);
+	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);
 
 	~InputProviderForMenu();
 

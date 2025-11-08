@@ -14,8 +14,8 @@ class BrickWall final : public Obstacle
 	void Unsubscribe() const override;
 
 public:
-	BrickWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
-	BrickWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode,
+	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
+	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode,
 	          bool isReplicationOn);
 
 	~BrickWall() override;

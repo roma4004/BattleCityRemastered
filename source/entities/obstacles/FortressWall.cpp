@@ -138,11 +138,6 @@ void FortressWall::OnPlayerPickupShovel()
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [this](const std::shared_ptr<BaseObj>& object)
 	{
-		if (object == nullptr)
-		{
-			return false;
-		}
-
 		if (dynamic_cast<Pawn*>(object.get()))
 		{
 			return ColliderUtils::IsCollide(_rect, object->GetRect());

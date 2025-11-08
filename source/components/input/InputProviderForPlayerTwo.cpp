@@ -1,8 +1,8 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/EventSystem.h"
 
-InputProviderForPlayerTwo::InputProviderForPlayerTwo(std::shared_ptr<EventSystem> events)
-	: _events{std::move(events)}
+InputProviderForPlayerTwo::InputProviderForPlayerTwo(const std::shared_ptr<EventSystem>& events)
+	: _events{events}
 {
 	_events->AddListener("P2_Move_Up_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
 	_events->AddListener("P2_Move_Up_Released", _name, [&btn = _playerKeys]() { btn.up = false; });

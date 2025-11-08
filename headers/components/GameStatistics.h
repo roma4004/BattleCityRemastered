@@ -68,7 +68,7 @@ class GameStatistics final
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
 
 public:
-	explicit GameStatistics(std::shared_ptr<EventSystem> events);
+	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
 
 	~GameStatistics();
 

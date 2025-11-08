@@ -2,13 +2,13 @@
 #include "components/EventSystem.h"
 #include "enums/ObstacleType.h"
 
-SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
                      const GameMode gameMode)
 	: Obstacle{rect,
 	           0xaaaaaa,
 	           1,
 	           "SteelWall",
-	           std::move(events),
+	           events,
 	           uuid,
 	           gameMode,
 	           ObstacleType::Steel}
@@ -20,13 +20,13 @@ SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> event
 	Subscribe();
 }
 
-SteelWall::SteelWall(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
                      const GameMode gameMode, const bool isReplicationOn)
 	: Obstacle{rect,
 	           0xaaaaaa,
 	           1,
 	           "SteelWall",
-	           std::move(events),
+	           events,
 	           uuid,
 	           gameMode,
 	           ObstacleType::Steel,

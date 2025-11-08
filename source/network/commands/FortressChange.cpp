@@ -8,7 +8,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(FortressChange);
 
 FortressChange::FortressChange() : Command{CommandType::FORTRESS_CHANGE} {}
 
-FortressChange::FortressChange(std::string state, buuid uuid)
+FortressChange::FortressChange(std::string state, const buuid uuid)
 	: Command{CommandType::FORTRESS_CHANGE}, _state{std::move(state)}, _uuid{uuid} {}
 
 std::string FortressChange::GetState() const noexcept { return _state; }

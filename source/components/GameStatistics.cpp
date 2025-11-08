@@ -3,8 +3,7 @@
 #include "enums/GameMode.h"
 
 //TODO: write statistics for pickuped bonuses
-GameStatistics::GameStatistics(std::shared_ptr<EventSystem> events)
-	: _name{"Statistics"}, _events{std::move(events)}
+GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events) : _name{"Statistics"}, _events{events}
 {
 	Subscribe();
 }

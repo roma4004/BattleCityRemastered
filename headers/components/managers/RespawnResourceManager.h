@@ -52,7 +52,7 @@ class RespawnResourceManager final
 public:
 	std::vector<SpawnSlot> _slots{};
 
-	explicit RespawnResourceManager(std::shared_ptr<EventSystem> events);
+	explicit RespawnResourceManager(const std::shared_ptr<EventSystem>& events);
 
 	~RespawnResourceManager();
 

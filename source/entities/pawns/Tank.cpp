@@ -1,20 +1,28 @@
 #include "entities/pawns/Tank.h"
+#include "behavior/MoveLikeTankBeh.h"
+#include "behavior/ShootingBeh.h"
+#include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/AnimationType.h"
 #include "enums/GameMode.h"
-#include "interfaces/IMoveBeh.h"
 #include "interfaces/IShootable.h"
 
-Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-           const BonusEffectProperty effects, const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), std::move(moveBeh)},
-	  _shootingBeh{std::move(shootingBeh)},
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
+           const bool enableByDefault)
+	: Pawn{std::move(pawnProperty)},
 	  _effects{effects}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
+
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(
+			_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction, _touchedObstacles, _allObjects);
+
+	_shootingBeh = std::make_shared<ShootingBeh>(
+			_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier, _bulletDamageRadius, _bulletSize,
+			_windowSize, _name, _fraction, _allObjects, bulletPool);
 
 	if (enableByDefault)
 	{

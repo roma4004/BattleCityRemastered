@@ -3,8 +3,8 @@
 #include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
-SpawnDelayManager::SpawnDelayManager(std::shared_ptr<EventSystem> events)
-	: _name{"SpawnDelayManager"}, _events{std::move(events)}
+SpawnDelayManager::SpawnDelayManager(const std::shared_ptr<EventSystem>& events)
+	: _name{"SpawnDelayManager"}, _events{events}
 {
 	Subscribe();
 }
@@ -20,7 +20,7 @@ void SpawnDelayManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
-	_events->AddListener("SpawnDelayStart", _name, [this](std::shared_ptr<Tank> tank, const milliseconds delay)
+	_events->AddListener("SpawnDelayStart", _name, [this](const std::shared_ptr<Tank>& tank, const milliseconds delay)
 	{
 		if (delay == milliseconds(0))
 		{

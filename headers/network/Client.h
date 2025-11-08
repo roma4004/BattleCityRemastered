@@ -38,7 +38,7 @@ class Client final//: public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       std::shared_ptr<EventSystem> events);
+	       const std::shared_ptr<EventSystem>& events);
 
 	~Client();
 

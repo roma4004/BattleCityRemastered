@@ -8,6 +8,7 @@ struct UPoint;
 class PlayerTest;
 class IShootable;
 class SpawnDelayManager;
+class BulletPool;
 
 class Tank : public Pawn, public IHealthBar
 {
@@ -18,6 +19,7 @@ class Tank : public Pawn, public IHealthBar
 
 	int _bulletDamage{15};
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet caliber stats class and DI into constructor
+	std::vector<std::shared_ptr<BaseObj>> _touchedObstacles;
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
@@ -59,8 +61,8 @@ protected:
 	void TakeDamage(int damage) override;
 
 public:
-	Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-	     BonusEffectProperty effects, bool enableByDefault = false);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects,
+	     bool enableByDefault = false);
 
 	~Tank() override;
 

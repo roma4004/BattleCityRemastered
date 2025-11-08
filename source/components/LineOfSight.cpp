@@ -58,7 +58,7 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object == nullptr || excludeSelf == object.get())
+		if (excludeSelf->GetUuid() == object->GetUuid())
 		{
 			continue;
 		}
