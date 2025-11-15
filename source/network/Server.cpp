@@ -38,13 +38,13 @@ Session::~Session()
 		{
 			boost::system::error_code ec;
 
-			_socket.shutdown(tcp::socket::shutdown_both, ec);
+			boost::system::error_code shutdownResut = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
 				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			_socket.close(ec);
+			boost::system::error_code closeResut = _socket.close(ec);
 			if (ec)
 			{
 				std::cerr << "Error closing socket socket: " << ec.message() << '\n';

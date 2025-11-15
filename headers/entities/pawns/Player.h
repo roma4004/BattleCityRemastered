@@ -19,4 +19,7 @@ public:
 	       bool enableByDefault = false);
 
 	~Player() override;
+
+	void Enable() override;
+	void Disable() const override;
 };

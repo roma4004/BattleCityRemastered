@@ -326,20 +326,17 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
                                               BonusEffectProperty effects)
 {
-	constexpr bool enableByDefault = true;
-
 	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
 	{
-		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, effects, enableByDefault);
+		return std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, effects);
 	}
 
 	if (type == TankType::COOP1 || type == TankType::COOP2)
 	{
-		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, effects, enableByDefault);
+		return std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, effects);
 	}
 
-	return std::make_shared<Player>(
-			std::move(pawnProperty), _bulletPool, GetInputProvider(type), effects, enableByDefault);
+	return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type), effects);
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name,

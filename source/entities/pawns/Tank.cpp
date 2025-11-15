@@ -164,14 +164,14 @@ void Tank::UnsubscribeBonus() const
 	_events->RemoveListener("BonusCaliber", _nameWithUuid);
 }
 
-void Tank::Disable() const
-{
-	Unsubscribe();
-}
-
 void Tank::Enable()
 {
 	Subscribe();
+}
+
+void Tank::Disable() const
+{
+	Unsubscribe();
 }
 
 void Tank::TakeDamage(const int damage)

@@ -2,7 +2,14 @@
 #include "components/EventSystem.h"
 
 InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
+	: _events{events} {}
+
+InputProviderForPlayerOneNet::~InputProviderForPlayerOneNet()
+{
+	Unsubscribe();
+}
+
+void InputProviderForPlayerOneNet::Subscribe()
 {
 	_events->AddListener("ServerReceive_W_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
 	_events->AddListener("ServerReceive_W_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
@@ -16,7 +23,7 @@ InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(const std::shared_ptr
 	_events->AddListener("ServerReceive_Space_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
 }
 
-InputProviderForPlayerOneNet::~InputProviderForPlayerOneNet()
+void InputProviderForPlayerOneNet::Unsubscribe() const
 {
 	_events->RemoveListener("ServerReceive_W_Pressed", _name);
 	_events->RemoveListener("ServerReceive_W_Released", _name);
@@ -28,4 +35,14 @@ InputProviderForPlayerOneNet::~InputProviderForPlayerOneNet()
 	_events->RemoveListener("ServerReceive_D_Released", _name);
 	_events->RemoveListener("ServerReceive_Space_Pressed", _name);
 	_events->RemoveListener("ServerReceive_Space_Released", _name);
+}
+
+void InputProviderForPlayerOneNet::Enable()
+{
+	Subscribe();
+}
+
+void InputProviderForPlayerOneNet::Disable() const
+{
+	Unsubscribe();
 }

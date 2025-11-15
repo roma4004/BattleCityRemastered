@@ -27,9 +27,6 @@ class Tank : public Pawn, public IHealthBar
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
 
-	void Disable() const;
-	void Enable();
-
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
 	void UnsubscribeBonus() const;
@@ -59,6 +56,9 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 	void TakeDamage(int damage) override;
+
+	virtual void Enable();
+	virtual void Disable() const;
 
 public:
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects,

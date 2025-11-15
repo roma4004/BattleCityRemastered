@@ -2,7 +2,14 @@
 #include "components/EventSystem.h"
 
 InputProviderForPlayerOne::InputProviderForPlayerOne(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
+	: _events{events} {}
+
+InputProviderForPlayerOne::~InputProviderForPlayerOne()
+{
+	Unsubscribe();
+}
+
+void InputProviderForPlayerOne::Subscribe()
 {
 	_events->AddListener("P1_Move_Up_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
 	_events->AddListener("P1_Move_Up_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
@@ -16,7 +23,7 @@ InputProviderForPlayerOne::InputProviderForPlayerOne(const std::shared_ptr<Event
 	_events->AddListener("P1_Fire_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
 }
 
-InputProviderForPlayerOne::~InputProviderForPlayerOne()
+void InputProviderForPlayerOne::Unsubscribe() const
 {
 	_events->RemoveListener("P1_Move_Up_Pressed", _name);
 	_events->RemoveListener("P1_Move_Up_Released", _name);
@@ -28,4 +35,14 @@ InputProviderForPlayerOne::~InputProviderForPlayerOne()
 	_events->RemoveListener("P1_Move_Right_Released", _name);
 	_events->RemoveListener("P1_Fire_Pressed", _name);
 	_events->RemoveListener("P1_Fire_Released", _name);
+}
+
+void InputProviderForPlayerOne::Enable()
+{
+	Subscribe();
+}
+
+void InputProviderForPlayerOne::Disable() const
+{
+	Unsubscribe();
 }

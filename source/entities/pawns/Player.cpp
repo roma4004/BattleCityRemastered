@@ -8,9 +8,29 @@ Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bul
                std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects,
                const bool enableByDefault)
 	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault},
-	  _inputProvider{std::move(inputProvider)} {}
+	  _inputProvider{std::move(inputProvider)}
+{
+	if (enableByDefault)
+	{
+		Enable();
+	}
+}
 
 Player::~Player() = default;
+
+void Player::Enable()
+{
+	Tank::Enable();
+
+	_inputProvider->Enable();
+}
+
+void Player::Disable() const
+{
+	Tank::Disable();
+
+	_inputProvider->Disable();
+}
 
 void Player::TickUpdate(const float deltaTime)
 {

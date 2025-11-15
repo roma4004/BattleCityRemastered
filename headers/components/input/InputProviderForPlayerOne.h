@@ -14,5 +14,11 @@ class InputProviderForPlayerOne final : public IInputProvider
 public:
 	explicit InputProviderForPlayerOne(const std::shared_ptr<EventSystem>& events);
 
-	~InputProviderForPlayerOne();
+	~InputProviderForPlayerOne() override;
+
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void Enable() override;
+	void Disable() const override;
 };
