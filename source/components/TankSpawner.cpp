@@ -63,6 +63,7 @@ void TankSpawner::SubscribeAsClient()
 {
 	_events->AddListener("ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
 	{
+		//TODO: if true we see tanks on client until they first die, refactor whole spawn flow on client
 		constexpr bool skipDelay = true;
 		this->OnClientRespawn(type, uuid, skipDelay);
 	});

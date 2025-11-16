@@ -60,6 +60,7 @@ public:
 	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
 	void OnObstacleSpawn(const std::shared_ptr<Command>& command) const;
 	void OnAnimationCreate(const std::shared_ptr<Command>& command) const;
+	void OnTankOnOff(const std::shared_ptr<Command>& command) const;
 	void OnCommandBatch(const std::shared_ptr<Command>& commands) const;
 	void ProcessClientCommand(const std::shared_ptr<Command>& command) const;
 	void ProcessReceivedData(const std::string& archiveData) const;

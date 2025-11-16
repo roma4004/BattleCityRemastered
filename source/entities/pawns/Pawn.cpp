@@ -35,7 +35,7 @@ void Pawn::SubscribeAsClient()
 	_events->AddListener(
 			"ClientReceived_" + _name + "Pos", _nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
-			{
+			{//TODO: move lambda body to separated method
 				if (uuid != this->_uuid)//TODO: check maybe never true
 				{
 					return;

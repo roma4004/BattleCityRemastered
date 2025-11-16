@@ -21,6 +21,7 @@
 // #include <fstream>
 #include "enums/AnimationType.h"
 #include "network/commands/AnimationCreate.h"
+#include "network/commands/TankOnOff.h"
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
@@ -85,58 +86,58 @@ Client::~Client()
 
 void Client::Subscribe()
 {
-    // Player 1
-    // _events->AddListener("P1_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Up_Pressed"); });
-    // _events->AddListener("P1_Move_Up_Released", _name, [this]() { this->SendKeyState("P1_Move_Up_Released"); });
-    // _events->AddListener("P1_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Left_Pressed"); });
-    // _events->AddListener("P1_Move_Left_Released", _name, [this]() { this->SendKeyState("P1_Move_Left_Released"); });
-    // _events->AddListener("P1_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Down_Pressed"); });
-    // _events->AddListener("P1_Move_Down_Released", _name, [this]() { this->SendKeyState("P1_Move_Down_Released"); });
-    // _events->AddListener("P1_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Right_Pressed"); });
-    // _events->AddListener("P1_Move_Right_Released", _name, [this]() { this->SendKeyState("P1_Move_Right_Released"); });
-    // _events->AddListener("P1_Fire_Pressed", _name, [this]() { this->SendKeyState("P1_Fire_Pressed"); });
-    // _events->AddListener("P1_Fire_Released", _name, [this]() { this->SendKeyState("P1_Fire_Released"); });
+	// Player 1
+	// _events->AddListener("P1_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Up_Pressed"); });
+	// _events->AddListener("P1_Move_Up_Released", _name, [this]() { this->SendKeyState("P1_Move_Up_Released"); });
+	// _events->AddListener("P1_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Left_Pressed"); });
+	// _events->AddListener("P1_Move_Left_Released", _name, [this]() { this->SendKeyState("P1_Move_Left_Released"); });
+	// _events->AddListener("P1_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Down_Pressed"); });
+	// _events->AddListener("P1_Move_Down_Released", _name, [this]() { this->SendKeyState("P1_Move_Down_Released"); });
+	// _events->AddListener("P1_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Right_Pressed"); });
+	// _events->AddListener("P1_Move_Right_Released", _name, [this]() { this->SendKeyState("P1_Move_Right_Released"); });
+	// _events->AddListener("P1_Fire_Pressed", _name, [this]() { this->SendKeyState("P1_Fire_Pressed"); });
+	// _events->AddListener("P1_Fire_Released", _name, [this]() { this->SendKeyState("P1_Fire_Released"); });
 
-    // Player 2
-    _events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
-    _events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
-    _events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
-    _events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left_Released"); });
-    _events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down_Pressed"); });
-    _events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down_Released"); });
-    _events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right_Pressed"); });
-    _events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right_Released"); });
-    _events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
-    _events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
+	// Player 2
+	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
+	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
+	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
+	_events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left_Released"); });
+	_events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down_Pressed"); });
+	_events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down_Released"); });
+	_events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right_Pressed"); });
+	_events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right_Released"); });
+	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
+	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
 
-    _events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
+	_events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
 }
 
 void Client::Unsubscribe() const
 {
-    // Player 1
-    // _events->RemoveListener("P1_Move_Up_Pressed", _name);
-    // _events->RemoveListener("P1_Move_Up_Released", _name);
-    // _events->RemoveListener("P1_Move_Left_Pressed", _name);
-    // _events->RemoveListener("P1_Move_Left_Released", _name);
-    // _events->RemoveListener("P1_Move_Down_Pressed", _name);
-    // _events->RemoveListener("P1_Move_Down_Released", _name);
-    // _events->RemoveListener("P1_Move_Right_Pressed", _name);
-    // _events->RemoveListener("P1_Move_Right_Released", _name);
-    // _events->RemoveListener("P1_Fire_Pressed", _name);
-    // _events->RemoveListener("P1_Fire_Released", _name);
+	// Player 1
+	// _events->RemoveListener("P1_Move_Up_Pressed", _name);
+	// _events->RemoveListener("P1_Move_Up_Released", _name);
+	// _events->RemoveListener("P1_Move_Left_Pressed", _name);
+	// _events->RemoveListener("P1_Move_Left_Released", _name);
+	// _events->RemoveListener("P1_Move_Down_Pressed", _name);
+	// _events->RemoveListener("P1_Move_Down_Released", _name);
+	// _events->RemoveListener("P1_Move_Right_Pressed", _name);
+	// _events->RemoveListener("P1_Move_Right_Released", _name);
+	// _events->RemoveListener("P1_Fire_Pressed", _name);
+	// _events->RemoveListener("P1_Fire_Released", _name);
 
-    // Player 2
-    _events->RemoveListener("P2_Move_Up_Pressed", _name);
-    _events->RemoveListener("P2_Move_Up_Released", _name);
-    _events->RemoveListener("P2_Move_Left_Pressed", _name);
-    _events->RemoveListener("P2_Move_Left_Released", _name);
-    _events->RemoveListener("P2_Move_Down_Pressed", _name);
-    _events->RemoveListener("P2_Move_Down_Released", _name);
-    _events->RemoveListener("P2_Move_Right_Pressed", _name);
-    _events->RemoveListener("P2_Move_Right_Released", _name);
-    _events->RemoveListener("P2_Fire_Pressed", _name);
-    _events->RemoveListener("P2_Fire_Released", _name);
+	// Player 2
+	_events->RemoveListener("P2_Move_Up_Pressed", _name);
+	_events->RemoveListener("P2_Move_Up_Released", _name);
+	_events->RemoveListener("P2_Move_Left_Pressed", _name);
+	_events->RemoveListener("P2_Move_Left_Released", _name);
+	_events->RemoveListener("P2_Move_Down_Pressed", _name);
+	_events->RemoveListener("P2_Move_Down_Released", _name);
+	_events->RemoveListener("P2_Move_Right_Pressed", _name);
+	_events->RemoveListener("P2_Move_Right_Released", _name);
+	_events->RemoveListener("P2_Fire_Pressed", _name);
+	_events->RemoveListener("P2_Fire_Released", _name);
 }
 
 void Client::ReadResponse()
@@ -334,6 +335,14 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
 	}
 }
 
+void Client::OnTankOnOff(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
+	{//TODO: don't need uuid or name in this case
+		_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnTankOnOff", cmd->GetUuid(), cmd->GetIsEnable());
+	}
+}
+
 void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 {
 	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
@@ -418,6 +427,11 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 			case CommandType::ANIMATION_CREATE:
 			{
 				OnAnimationCreate(command);
+				break;
+			}
+			case CommandType::TANK_ON_OFF:
+			{
+				OnTankOnOff(command);
 				break;
 			}
 			//TODO: implement other command types

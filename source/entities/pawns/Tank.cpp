@@ -29,6 +29,15 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 		Tank::Subscribe();
 	}
 
+	// NOTE: should be in constructor to be able to enable by replication
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		_events->AddListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid, [this](const buuid uuid, const bool isEnable)
+		{
+			this->OnTankOnOff(uuid, isEnable);
+		});
+	}
+	
 	_events->EmitEvent("TankSpawn", _uuid);
 }
 
@@ -143,6 +152,12 @@ void Tank::Unsubscribe() const
 	}
 
 	UnsubscribeBonus();
+
+	// NOTE: should be in destructor to be able to unsubscribe in this case
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		_events->RemoveListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid);
+	}
 }
 
 void Tank::UnsubscribeAsClient() const
@@ -167,11 +182,23 @@ void Tank::UnsubscribeBonus() const
 void Tank::Enable()
 {
 	Subscribe();
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		constexpr bool isEnable = true;
+		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+	}
 }
 
 void Tank::Disable() const
 {
 	Unsubscribe();
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		constexpr bool isEnable = false;
+		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+	}
 }
 
 void Tank::TakeDamage(const int damage)
@@ -291,6 +318,14 @@ void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction
 		{
 			_events->EmitEvent("ServerSend_OnCaliber", author);
 		}
+	}
+}
+
+void Tank::OnTankOnOff(const buuid uuid, const bool isEnable)
+{
+	if (uuid == _uuid)
+	{
+		isEnable ? Enable() : Disable();
 	}
 }
 

@@ -314,6 +314,7 @@ set(SOURCE_FILES
         source/network/Server.cpp
         source/network/ServerHandler.cpp
         source/network/commands/AnimationCreate.cpp
+        source/network/commands/TankOnOff.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp
@@ -385,6 +386,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/Server.cpp
         source/network/ServerHandler.cpp
         source/network/commands/AnimationCreate.cpp
+        source/network/commands/TankOnOff.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp

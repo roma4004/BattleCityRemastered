@@ -194,6 +194,7 @@
     <ClCompile Include="source\network\Client.cpp" />
     <ClCompile Include="source\network\ClientHandler.cpp" />
     <ClCompile Include="source\network\commands\AnimationCreate.cpp" />
+    <ClCompile Include="source\network\commands\TankOnOff.cpp" />
     <ClCompile Include="source\network\Server.cpp" />
     <ClCompile Include="source\network\ServerHandler.cpp" />
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="headers\components\managers\TextureManager.h" />
     <ClInclude Include="headers\enums\AnimationType.h" />
     <ClInclude Include="headers\network\commands\AnimationCreate.h" />
+    <ClInclude Include="headers\network\commands\TankOnOff.h" />
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\application\ConfigFailure.h" />
     <ClInclude Include="headers\application\ConfigSuccess.h" />

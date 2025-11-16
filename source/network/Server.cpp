@@ -14,6 +14,7 @@
 #include "network/commands/PositionChange.h"
 #include "network/commands/RespawnTank.h"
 #include "network/commands/StatisticsChange.h"
+#include "network/commands/TankOnOff.h"
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 #include <fstream>
@@ -408,6 +409,14 @@ void Server::Subscribe()
 				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name, color));
 			});
 
+	_events->AddListener(
+			"ServerSend_OnTankOnOff", _name,
+			[this](const buuid& uuid, const bool isEnabled, std::string name)
+			{
+				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<TankOnOff>(uuid, isEnabled, std::move(name)));
+			});
+
 	SubscribeBonus();
 }
 
@@ -471,6 +480,8 @@ void Server::Unsubscribe() const
 	_events->RemoveListener("ServerSend_Statistics", _name);
 
 	_events->RemoveListener("ServerSend_AnimationCreate", _name);
+
+	_events->RemoveListener("ServerSend_OnTankOnOff", _name);
 
 	UnsubscribeBonus();
 }
