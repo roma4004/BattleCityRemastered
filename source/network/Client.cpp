@@ -85,34 +85,58 @@ Client::~Client()
 
 void Client::Subscribe()
 {
-	_events->AddListener("ArrowUp_Pressed", _name, [this]() { this->SendKeyState("ArrowUp_Pressed"); });
-	_events->AddListener("ArrowLeft_Pressed", _name, [this]() { this->SendKeyState("ArrowLeft_Pressed"); });
-	_events->AddListener("ArrowDown_Pressed", _name, [this]() { this->SendKeyState("ArrowDown_Pressed"); });
-	_events->AddListener("ArrowRight_Pressed", _name, [this]() { this->SendKeyState("ArrowRight_Pressed"); });
-	_events->AddListener("RCTRL_Pressed", _name, [this]() { this->SendKeyState("RCTRL_Pressed"); });
+    // Player 1
+    // _events->AddListener("P1_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Up_Pressed"); });
+    // _events->AddListener("P1_Move_Up_Released", _name, [this]() { this->SendKeyState("P1_Move_Up_Released"); });
+    // _events->AddListener("P1_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Left_Pressed"); });
+    // _events->AddListener("P1_Move_Left_Released", _name, [this]() { this->SendKeyState("P1_Move_Left_Released"); });
+    // _events->AddListener("P1_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Down_Pressed"); });
+    // _events->AddListener("P1_Move_Down_Released", _name, [this]() { this->SendKeyState("P1_Move_Down_Released"); });
+    // _events->AddListener("P1_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Right_Pressed"); });
+    // _events->AddListener("P1_Move_Right_Released", _name, [this]() { this->SendKeyState("P1_Move_Right_Released"); });
+    // _events->AddListener("P1_Fire_Pressed", _name, [this]() { this->SendKeyState("P1_Fire_Pressed"); });
+    // _events->AddListener("P1_Fire_Released", _name, [this]() { this->SendKeyState("P1_Fire_Released"); });
 
-	_events->AddListener("ArrowUp_Released", _name, [this]() { this->SendKeyState("ArrowUp_Released"); });
-	_events->AddListener("ArrowLeft_Released", _name, [this]() { this->SendKeyState("ArrowLeft_Released"); });
-	_events->AddListener("ArrowDown_Released", _name, [this]() { this->SendKeyState("ArrowDown_Released"); });
-	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
-	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
+    // Player 2
+    _events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
+    _events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
+    _events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
+    _events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left_Released"); });
+    _events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down_Pressed"); });
+    _events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down_Released"); });
+    _events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right_Pressed"); });
+    _events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right_Released"); });
+    _events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
+    _events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
 
-	_events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
+    _events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
 }
 
 void Client::Unsubscribe() const
 {
-	_events->RemoveListener("ArrowUp_Pressed", _name);
-	_events->RemoveListener("ArrowLeft_Pressed", _name);
-	_events->RemoveListener("ArrowDown_Pressed", _name);
-	_events->RemoveListener("ArrowRight_Pressed", _name);
-	_events->RemoveListener("RCTRL_Pressed", _name);
+    // Player 1
+    // _events->RemoveListener("P1_Move_Up_Pressed", _name);
+    // _events->RemoveListener("P1_Move_Up_Released", _name);
+    // _events->RemoveListener("P1_Move_Left_Pressed", _name);
+    // _events->RemoveListener("P1_Move_Left_Released", _name);
+    // _events->RemoveListener("P1_Move_Down_Pressed", _name);
+    // _events->RemoveListener("P1_Move_Down_Released", _name);
+    // _events->RemoveListener("P1_Move_Right_Pressed", _name);
+    // _events->RemoveListener("P1_Move_Right_Released", _name);
+    // _events->RemoveListener("P1_Fire_Pressed", _name);
+    // _events->RemoveListener("P1_Fire_Released", _name);
 
-	_events->RemoveListener("ArrowUp_Released", _name);
-	_events->RemoveListener("ArrowLeft_Released", _name);
-	_events->RemoveListener("ArrowDown_Released", _name);
-	_events->RemoveListener("ArrowRight_Released", _name);
-	_events->RemoveListener("RCTRL_Released", _name);
+    // Player 2
+    _events->RemoveListener("P2_Move_Up_Pressed", _name);
+    _events->RemoveListener("P2_Move_Up_Released", _name);
+    _events->RemoveListener("P2_Move_Left_Pressed", _name);
+    _events->RemoveListener("P2_Move_Left_Released", _name);
+    _events->RemoveListener("P2_Move_Down_Pressed", _name);
+    _events->RemoveListener("P2_Move_Down_Released", _name);
+    _events->RemoveListener("P2_Move_Right_Pressed", _name);
+    _events->RemoveListener("P2_Move_Right_Released", _name);
+    _events->RemoveListener("P2_Fire_Pressed", _name);
+    _events->RemoveListener("P2_Fire_Released", _name);
 }
 
 void Client::ReadResponse()
