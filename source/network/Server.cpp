@@ -200,7 +200,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 {
 	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
-	// StartSendThread();
+	StartSendThread();
 	Subscribe();
 }
 
@@ -240,11 +240,8 @@ void Server::StartSendThread()
 					std::cerr << "Exception in send thread: " << e.what() << '\n';
 
 					// retry send
-					std::this_thread::sleep_for(std::chrono::milliseconds(1));
-					{
-						std::lock_guard<std::mutex> lock(_sendQueueMutex);
-						_sendQueue.push(batch);
-					}
+					std::scoped_lock lock(_sendQueueMutex);
+					_sendQueue.push(batch);
 				}
 			}
 		}
@@ -254,7 +251,7 @@ void Server::StartSendThread()
 void Server::StopSendThread()
 {
 	{
-		std::lock_guard<std::mutex> lock(_sendQueueMutex);
+		std::scoped_lock lock(_sendQueueMutex);
 		_isRunning = false;
 	}
 
@@ -281,23 +278,22 @@ Server::~Server()
 
 void Server::Subscribe()
 {
-	_events->AddListener("Server_StartFrame", _name, [this]()
-	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		// NetworkLogger::WriteLog("===Server_StartFrame");
-		_batch = std::make_shared<CommandBatch>();
-		// NetworkLogger::WriteLog("Server_StartFrame===");
-	});
+	// _events->AddListener("Server_StartFrame", _name, [this](){});
 
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex, _sendQueueMutex);
 
 		// NetworkLogger::WriteLog("===Server_EndFrame");
-		std::shared_ptr<CommandBatch> toSend{nullptr};
+		// std::shared_ptr<CommandBatch> toSend{nullptr};
+		// toSend = _batch;
+		// _batch = std::make_shared<CommandBatch>();
+		// SendCommand(toSend);
 
-		toSend = _batch;
-		SendCommand(toSend);
+		//TODO: queue sending work fine but need recheck before release 
+		_sendQueue.emplace(_batch);
+		_sendCondition.notify_one();
+		_batch = std::make_shared<CommandBatch>();
 
 		// int i = 0;
 		// for (auto& commands = toSend->GetCommands();
@@ -312,14 +308,14 @@ void Server::Subscribe()
 		// if (toSend && toSend->GetCommands().size() > 0)
 		// {
 		// 	{
-		// 		std::lock_guard<std::mutex> lock(_sendQueueMutex);
+		// 		std::scoped_lock lock(_sendQueueMutex);
 		// 		_sendQueue.push(toSend);
 		// 	}
 		// 	_sendCondition.notify_one();// Повідомляємо потік відправки
 		// }
 
 		//Mark that one batch need to be sent (or send immediately)
-		// std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		// std::scoped_lock lock(_batchWriteMutex);
 		// if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
 		// {
 		// 	SendCommand(_batch);
@@ -328,19 +324,19 @@ void Server::Subscribe()
 
 	_events->AddListener("Pause_Pressed", _name, [this]()
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed"));
 	});
 
 	_events->AddListener("Pause_Released", _name, [this]()
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released"));
 	});
 
 	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
 	});
 
@@ -349,7 +345,7 @@ void Server::Subscribe()
 			[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
 			{
 				// NetworkLogger::WriteLog("Server_positionChange add before:" + std::to_string(_batch->GetSize()));
-				// std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				// std::scoped_lock lock(_batchWriteMutex);
 				const auto positionChange = std::make_shared<PositionChange>(who, pos, dir, uuid);
 				// auto classNameW = std::string(positionChange->GetClassNameW());
 				// NetworkLogger::WriteLog("Server_positionChange send:"+classNameW);
@@ -361,19 +357,19 @@ void Server::Subscribe()
 			"ServerSend_Shot", _name,
 			[this](const std::string& who, const Direction dir, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
 			});
 
 	_events->AddListener("ServerSend_Health", _name, [this](const std::string& who, const int health, const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
 	});
 
 	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
 	});
 
@@ -381,13 +377,13 @@ void Server::Subscribe()
 			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
 			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
 	_events->AddListener("ServerSend_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
 	});
 
@@ -395,7 +391,7 @@ void Server::Subscribe()
 			"ServerSend_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
 	//TODO: write obstacle dispose
@@ -405,7 +401,7 @@ void Server::Subscribe()
 			[this](const AnimationType type, const ObjRectangle rect, const std::string& name, const int color)
 			{
 				//TODO: fix multiple spawn bullet explosion animation
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name, color));
 			});
 
@@ -413,7 +409,7 @@ void Server::Subscribe()
 			"ServerSend_OnTankOnOff", _name,
 			[this](const buuid& uuid, const bool isEnabled, std::string name)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<TankOnOff>(uuid, isEnabled, std::move(name)));
 			});
 
@@ -426,13 +422,13 @@ void Server::SubscribeBonus()
 			"ServerSend_BonusSpawn", _name,
 			[this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
 			});
 
 	_events->AddListener("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 	});
 	//TODO: client obstacle spawn with uuid
@@ -470,7 +466,7 @@ void Server::Unsubscribe() const
 {
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener("Server_StartFrame", _name);
+	// _events->RemoveListener("Server_StartFrame", _name);
 	_events->RemoveListener("Server_EndFrame", _name);
 
 	_events->RemoveListener("ServerSend_Pos", _name);

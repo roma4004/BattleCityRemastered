@@ -47,7 +47,7 @@ void NetworkLogger::LogClientSend(const std::string& commandName)
 
 void NetworkLogger::SetFileLogging(const bool enabled, const std::string& filename)
 {
-	std::lock_guard<std::mutex> lock(_logMutex);
+	std::scoped_lock lock(_logMutex);
 	_fileLoggingEnabled = enabled;
 	if (!filename.empty())
 	{
@@ -68,19 +68,19 @@ void NetworkLogger::SetFileLogging(const bool enabled, const std::string& filena
 
 void NetworkLogger::SetConsoleLogging(const bool enabled)
 {
-	std::lock_guard<std::mutex> lock(_logMutex);
+	std::scoped_lock lock(_logMutex);
 	_consoleLoggingEnabled = enabled;
 }
 
 void NetworkLogger::SetVerbosityLevel(const int level)
 {
-	std::lock_guard<std::mutex> lock(_logMutex);
+	std::scoped_lock lock(_logMutex);
 	_verbosityLevel = level;
 }
 
 void NetworkLogger::WriteLog(const std::string& message, const bool skipEndl)
 {
-	std::lock_guard<std::mutex> lock(_logMutex);
+	std::scoped_lock lock(_logMutex);
 
 	const std::string fullMessage = GetCurrentTimeStamp() + " " + message;
 

@@ -262,10 +262,10 @@ void GameSuccess::MainLoop()
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();
 
-			if (_gameMode == GameMode::PlayAsHost)
-			{
-				_events->EmitEvent("Server_StartFrame");
-			}
+			// if (_gameMode == GameMode::PlayAsHost)
+			// {
+			// 	_events->EmitEvent("Server_StartFrame");
+			// }
 
 			_textureManager->ClearFrame();
 
@@ -279,6 +279,7 @@ void GameSuccess::MainLoop()
 
 				if (_gameMode != GameMode::PlayAsClient)
 				{
+					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 					_events->EmitEvent("TickUpdate", deltaTime);
 

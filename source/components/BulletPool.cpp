@@ -77,7 +77,7 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 
 std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 {
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 
 	if (_bullets.empty())
 	{
@@ -112,7 +112,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 		return;
 	}
 
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
@@ -134,7 +134,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 
 void BulletPool::Clear()
 {
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 	_isClearing = true;
 
 	// std::cout << "[" << GetCurrentTimeString() << "] "
