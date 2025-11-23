@@ -40,36 +40,37 @@ void BonusEffectManager::Subscribe()
 
 	_events->AddListener("BonusHelmet", _name, [this](const std::string& name, const milliseconds effectDuration)
 	{
+		size_t id{_helmetSlots.size()};
 		if (name == "Enemy1")//TODO: change enemy1 and other to tankType
 		{
-			_helmetSlots[0] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", "Enemy1", _helmetSlots[0].isActive);
+			id = 0; //TODO: extract to separated method like enum tankType::{id} to std::string
 		}
 		else if (name == "Enemy2")
 		{
-			_helmetSlots[1] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", "Enemy2", _helmetSlots[1].isActive);
+			id = 1;
 		}
 		else if (name == "Enemy3")
 		{
-			_helmetSlots[2] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", "Enemy3", _helmetSlots[2].isActive);
+			id = 2;
 		}
 		else if (name == "Enemy4")
 		{
-			_helmetSlots[3] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", "Enemy4", _helmetSlots[3].isActive);
+			id = 3;
 		}
 		else if (name == "Player1")
 		{
-			_helmetSlots[4] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", "Player1", _helmetSlots[4].isActive);
+			id = 4;
 		}
 		else if (name == "Player2")
 		{
-			_helmetSlots[5] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", "Player2", _helmetSlots[5].isActive);
+			id = 5;
 		}
+
+		if (id < 0 || id >= _helmetSlots.size())
+			return;
+
+		_helmetSlots[id] = {effectDuration, std::chrono::system_clock::now()};
+		OnBonusStatusChange("Helmet", name, _helmetSlots[id].isActive);
 	});
 
 	//TODO: remove duration for bonuses
@@ -99,6 +100,12 @@ void BonusEffectManager::Reset()
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool value) const
 {
 	_events->EmitEvent("Bonus" + event + "StatusChange", id, value);
+	
+	//TODO: move replication to bonusEffectManager from tank subscription
+	// if (_gameMode == GameMode::PlayAsHost)
+	// {
+	// 	_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
+	// }
 }
 
 void BonusEffectManager::TickUpdate(const float /*deltaTime*/)

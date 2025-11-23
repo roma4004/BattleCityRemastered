@@ -5,6 +5,7 @@
 #include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
+#include "network/commands/BonusStatus.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Dispose.h"
 #include "network/commands/FortressChange.h"
@@ -431,17 +432,17 @@ void Server::SubscribeBonus()
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 	});
+
+	_events->AddListener("ServerSend_OnBonusHelmet", _name, [this](const std::string& name, const bool isActive)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Helmet, isActive));
+		//TODO: rewrite other bonus status effect changes just like this OnBonusHelmet
+	});
+
 	//TODO: client obstacle spawn with uuid
 	//TODO: client bonus spawn with uuid
 
-	// _events->AddListener("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
-	// {
-	// 	this->OnHelmetActivate(who);//TODO: refactor to SendCommand(std::make_shared<
-	// });
-	// _events->AddListener("ServerSend_OnHelmetDeactivate", _name, [this](const std::string& who)
-	// {
-	// 	this->OnHelmetDeactivate(who);//TODO: refactor to SendCommand(std::make_shared<
-	// });
 	// _events->AddListener("ServerSend_OnStar", _name, [this](const std::string& who)
 	// {
 	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
@@ -489,8 +490,7 @@ void Server::UnsubscribeBonus() const
 
 	_events->RemoveListener("ServerSend_FortressChange", _name);
 
-	// _events->RemoveListener("ServerSend_OnHelmetActivate", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener("ServerSend_OnHelmetDeactivate", _name);//TODO: refactor to SendCommand(std::make_shared<
+	_events->RemoveListener("ServerSend_OnBonusHelmet", _name);
 	// _events->RemoveListener("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<

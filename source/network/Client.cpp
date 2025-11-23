@@ -21,6 +21,7 @@
 // #include <fstream>
 #include "enums/AnimationType.h"
 #include "network/commands/AnimationCreate.h"
+#include "network/commands/BonusStatus.h"
 #include "network/commands/TankOnOff.h"
 #include <iostream>
 #include <string>
@@ -165,15 +166,7 @@ void Client::ReadResponse()
 			// 	isFirstRead = false;
 			// }
 
-			// if (data.eventName == "OnHelmetActivate")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnHelmetDeactivate")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnStar")
+			// if (data.eventName == "OnStar")
 			// {
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
@@ -355,6 +348,19 @@ void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 	}
 }
 
+void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
+	{
+		if (cmd->GetBonusType() == BonusType::Helmet)
+		{
+			const bool isActive = cmd->GetIsEnable();
+			const std::string name = cmd->GetName();
+			_events->EmitEvent("ClientReceived_" + name + "OnBonusHelmet", isActive);
+		}
+	}
+}
+
 void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 {
 	if (command)
@@ -433,6 +439,11 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 			case CommandType::TANK_ON_OFF:
 			{
 				OnTankOnOff(command);
+				break;
+			}
+			case CommandType::BONUS_STATUS:
+			{
+				OnBonusStatus(command);
 				break;
 			}
 			//TODO: implement other command types

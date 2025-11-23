@@ -82,14 +82,9 @@ void Tank::SubscribeAsClient()
 				this->Shot(uuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid, [this](const bool isActive)
 	{
-		this->_effects.isHelmetActive = true;
-	});
-
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetDeactivate", _nameWithUuid, [this]()
-	{
-		this->_effects.isHelmetActive = false;
+		this->_effects.isHelmetActive = isActive;
 	});
 
 	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
@@ -117,11 +112,6 @@ void Tank::SubscribeBonus()
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
-				if (_gameMode == GameMode::PlayAsHost)
-				{
-					_events->EmitEvent(isActive ? "ServerSend_OnHelmetActivate" : "ServerSend_OnHelmetDeactivate",
-					                   _nameWithUuid);
-				}
 			});
 
 	_events->AddListener("BonusGrenade", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
@@ -163,9 +153,7 @@ void Tank::Unsubscribe() const
 void Tank::UnsubscribeAsClient() const
 {
 	_events->RemoveListener("ClientReceived_" + _name + "Shot", _nameWithUuid);
-
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid);
 	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _nameWithUuid);
 	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid);
 }
@@ -260,6 +248,12 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	if (_name == name)
 	{
 		_effects.isHelmetActive = isActive;
+
+		//TODO: move replication to bonusEffectManager
+		if (_gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
+		}
 	}
 }
 
