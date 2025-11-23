@@ -47,6 +47,7 @@
     <ClCompile Include="..\source\network\commands\AnimationCreate.cpp" />
     <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusSpawn.cpp" />
+    <ClCompile Include="..\source\network\commands\BonusStatus.cpp" />
     <ClCompile Include="..\source\network\commands\Command.cpp" />
     <ClCompile Include="..\source\network\commands\CommandBatch.cpp" />
     <ClCompile Include="..\source\network\commands\Dispose.cpp" />
@@ -57,6 +58,7 @@
     <ClCompile Include="..\source\network\commands\PositionChange.cpp" />
     <ClCompile Include="..\source\network\commands\RespawnTank.cpp" />
     <ClCompile Include="..\source\network\commands\StatisticsChange.cpp" />
+    <ClCompile Include="..\source\network\commands\TankOnOff.cpp" />
     <ClCompile Include="..\source\network\commands\TankShot.cpp" />
     <ClCompile Include="..\source\network\Server.cpp" />
     <ClCompile Include="..\source\network\ServerHandler.cpp" />

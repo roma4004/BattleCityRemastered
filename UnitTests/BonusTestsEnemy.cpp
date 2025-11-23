@@ -95,7 +95,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
-	EXPECT_EQ(fortressWall->GetHealth(), 0);
+	EXPECT_EQ(fortressWall->GetHealth(), -1);
 }
 
 // NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch),
@@ -122,7 +122,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_TRUE(fortressWall->IsBrickWall());
-		EXPECT_EQ(fortressWall->GetHealth(), 0);
+		EXPECT_EQ(fortressWall->GetHealth(), -1);
 
 		return;
 	}

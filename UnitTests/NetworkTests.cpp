@@ -319,6 +319,38 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	events->RemoveListener("ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication");
 }
 
+TEST_F(NetworkTest, BonusStatusEventReplication)
+{
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	const std::string nameOrigin = "Player1";
+	constexpr bool isActiveOrigin = true;
+
+	std::promise<bool> promise;
+	auto future = promise.get_future();
+
+	events->AddListener(
+			"ClientReceived_" + nameOrigin + "OnBonusHelmet", "BonusStatusEventReplication",
+			[&promise](const bool isEnable)
+			{
+				promise.set_value(isEnable);
+			});
+
+	// events->EmitEvent("Server_StartFrame");
+	events->EmitEvent("ServerSend_OnBonusHelmet", nameOrigin, isActiveOrigin);
+	events->EmitEvent("Server_EndFrame");
+
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(status, std::future_status::ready);
+
+	const auto isEnable = future.get();
+	EXPECT_EQ(isActiveOrigin, isEnable);
+
+	events->RemoveListener("ClientReceived_" + nameOrigin + "OnBonusHelmet", "BonusStatusEventReplication");
+}
+
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
 	using buuid = boost::uuids::uuid;

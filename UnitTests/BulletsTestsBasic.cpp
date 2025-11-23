@@ -435,7 +435,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(fortressWall->GetHealth(), 0);
+			EXPECT_EQ(fortressWall->GetHealth(), -1);
 
 			return;
 		}
