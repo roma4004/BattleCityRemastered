@@ -40,6 +40,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
 
+	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
 	std::chrono::duration<double> _targetFrameDuration{};

@@ -15,8 +15,6 @@ class BrickWall final : public Obstacle
 
 public:
 	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
-	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode,
-	          bool isReplicationOn);
 
 	~BrickWall() override;
 };

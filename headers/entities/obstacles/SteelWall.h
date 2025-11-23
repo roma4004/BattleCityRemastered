@@ -12,8 +12,6 @@ class SteelWall final : public Obstacle
 
 public:
 	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
-	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode,
-	          bool isReplicationOn);
 
 	~SteelWall() override;
 };

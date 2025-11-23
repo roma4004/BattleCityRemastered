@@ -57,10 +57,9 @@ void SpawnDelayManager::Reset()
 
 void SpawnDelayManager::TickUpdate(const float /*deltaTime*/)
 {
-	for (size_t i = 0u; i < _spawnDelays.size(); ++i)
+	for (auto& [tank, timer]: _spawnDelays)
 	{
-		if (auto& [tank, timer] = _spawnDelays[i];
-			timer.isActive && timer.IsCooldownFinish())
+		if (timer.isActive && timer.IsCooldownFinish())
 		{
 			tank->Enable();
 			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));

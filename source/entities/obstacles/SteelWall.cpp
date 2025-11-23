@@ -20,25 +20,6 @@ SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 	Subscribe();
 }
 
-SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
-                     const GameMode gameMode, const bool isReplicationOn)
-	: Obstacle{rect,
-	           0xaaaaaa,
-	           1,
-	           "SteelWall",
-	           events,
-	           uuid,
-	           gameMode,
-	           ObstacleType::Steel,
-	           isReplicationOn}
-{
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(false);
-
-	Subscribe();
-}
-
 SteelWall::~SteelWall()
 {
 	Unsubscribe();
