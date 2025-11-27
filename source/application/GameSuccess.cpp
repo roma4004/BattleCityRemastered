@@ -262,11 +262,6 @@ void GameSuccess::MainLoop()
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();
 
-			// if (_gameMode == GameMode::PlayAsHost)
-			// {
-			// 	_events->EmitEvent("Server_StartFrame");
-			// }
-
 			_textureManager->ClearFrame();
 
 			_userInput->Update();
@@ -286,8 +281,9 @@ void GameSuccess::MainLoop()
 					_tankSpawner->RespawnTanks();//TODO:split into two timers
 				}
 			}
-
-			_events->EmitEvent("Draw");
+			
+			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
+			_events->EmitEvent("Draw"); 
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("AnimationUpdate");

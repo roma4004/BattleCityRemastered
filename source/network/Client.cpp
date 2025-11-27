@@ -62,13 +62,13 @@ Client::~Client()
 		if (_socket.is_open())
 		{
 			boost::system::error_code ec;
-			_socket.shutdown(tcp::socket::shutdown_both, ec);
+			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
 				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			_socket.close(ec);
+			std::ignore = _socket.close(ec);
 			if (ec)
 			{
 				std::cerr << "Error during socket close: " << ec.message() << '\n';
@@ -87,19 +87,7 @@ Client::~Client()
 
 void Client::Subscribe()
 {
-	// Player 1
-	// _events->AddListener("P1_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Up_Pressed"); });
-	// _events->AddListener("P1_Move_Up_Released", _name, [this]() { this->SendKeyState("P1_Move_Up_Released"); });
-	// _events->AddListener("P1_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Left_Pressed"); });
-	// _events->AddListener("P1_Move_Left_Released", _name, [this]() { this->SendKeyState("P1_Move_Left_Released"); });
-	// _events->AddListener("P1_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Down_Pressed"); });
-	// _events->AddListener("P1_Move_Down_Released", _name, [this]() { this->SendKeyState("P1_Move_Down_Released"); });
-	// _events->AddListener("P1_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P1_Move_Right_Pressed"); });
-	// _events->AddListener("P1_Move_Right_Released", _name, [this]() { this->SendKeyState("P1_Move_Right_Released"); });
-	// _events->AddListener("P1_Fire_Pressed", _name, [this]() { this->SendKeyState("P1_Fire_Pressed"); });
-	// _events->AddListener("P1_Fire_Released", _name, [this]() { this->SendKeyState("P1_Fire_Released"); });
-
-	// Player 2
+	//TODO: write batch sending on client and sending queue
 	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
 	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
 	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
@@ -116,19 +104,6 @@ void Client::Subscribe()
 
 void Client::Unsubscribe() const
 {
-	// Player 1
-	// _events->RemoveListener("P1_Move_Up_Pressed", _name);
-	// _events->RemoveListener("P1_Move_Up_Released", _name);
-	// _events->RemoveListener("P1_Move_Left_Pressed", _name);
-	// _events->RemoveListener("P1_Move_Left_Released", _name);
-	// _events->RemoveListener("P1_Move_Down_Pressed", _name);
-	// _events->RemoveListener("P1_Move_Down_Released", _name);
-	// _events->RemoveListener("P1_Move_Right_Pressed", _name);
-	// _events->RemoveListener("P1_Move_Right_Released", _name);
-	// _events->RemoveListener("P1_Fire_Pressed", _name);
-	// _events->RemoveListener("P1_Fire_Released", _name);
-
-	// Player 2
 	_events->RemoveListener("P2_Move_Up_Pressed", _name);
 	_events->RemoveListener("P2_Move_Up_Released", _name);
 	_events->RemoveListener("P2_Move_Left_Pressed", _name);
@@ -193,6 +168,12 @@ void Client::ReadResponse()
 	boost::asio::async_read_until(_socket, _read_buffer, "\n\n", std::move(lambda));
 }
 
+//TODO: rewrite old style SendKeyState to batch command
+// _events->AddListener("Pause_Pressed", _name, [this]()
+// {
+// 	std::scoped_lock lock(_batchWriteMutex);
+// 	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
+// });
 void Client::SendKeyState(const std::string& state)
 {
 	// auto self(shared_from_this());
@@ -272,7 +253,7 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetKeyState());
+		_events->EmitEvent(cmd->GetKeyState()/*, cmd->GetIsEnable()*/);
 	}
 }
 

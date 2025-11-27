@@ -146,3 +146,5 @@ buuid ShootingBeh::Shot(const buuid uuid)
 
 	return bulletAsBase->GetUuid();
 }
+
+//TODO: create scheduled spawner manager to postpone or separate spawn to prevent change of subscription in event system

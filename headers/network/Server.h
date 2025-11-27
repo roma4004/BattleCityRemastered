@@ -79,8 +79,6 @@ class Server final
 
 	void DoAccept();
 
-	void OnHelmetActivate(const std::string& who) const;
-	void OnHelmetDeactivate(const std::string& who) const;
 	void OnStar(const std::string& who) const;
 	void OnCaliber(const std::string& who) const;
 	void OnTank(const std::string& who, const std::string& fraction) const;

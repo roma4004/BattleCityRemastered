@@ -212,7 +212,6 @@ void Server::StartSendThread()
 		while (_isRunning)
 		{
 			std::shared_ptr<CommandBatch> batch;
-
 			{
 				std::unique_lock<std::mutex> lock(_sendQueueMutex);
 				_sendCondition.wait(lock, [this]
@@ -279,60 +278,24 @@ Server::~Server()
 
 void Server::Subscribe()
 {
-	// _events->AddListener("Server_StartFrame", _name, [this](){});
-
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
 		std::scoped_lock lock(_batchWriteMutex, _sendQueueMutex);
-
-		// NetworkLogger::WriteLog("===Server_EndFrame");
-		// std::shared_ptr<CommandBatch> toSend{nullptr};
-		// toSend = _batch;
-		// _batch = std::make_shared<CommandBatch>();
-		// SendCommand(toSend);
-
-		//TODO: queue sending work fine but need recheck before release 
 		_sendQueue.emplace(_batch);
 		_sendCondition.notify_one();
 		_batch = std::make_shared<CommandBatch>();
-
-		// int i = 0;
-		// for (auto& commands = toSend->GetCommands();
-		// 	auto command: commands)
-		// {
-		// 	auto classNameW = std::string(command->GetClassNameW());
-		// 	// NetworkLogger::WriteLog("Server_bach_command i=" + std::to_string(i++) + " " + classNameW);
-		// 	SendCommand(command);
-		// }
-		// NetworkLogger::WriteLog("Server_EndFrame===");
-
-		// if (toSend && toSend->GetCommands().size() > 0)
-		// {
-		// 	{
-		// 		std::scoped_lock lock(_sendQueueMutex);
-		// 		_sendQueue.push(toSend);
-		// 	}
-		// 	_sendCondition.notify_one();// Повідомляємо потік відправки
-		// }
-
-		//Mark that one batch need to be sent (or send immediately)
-		// std::scoped_lock lock(_batchWriteMutex);
-		// if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
-		// {
-		// 	SendCommand(_batch);
-		// }
 	});
 
 	_events->AddListener("Pause_Pressed", _name, [this]()
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed"));
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
 	});
 
 	_events->AddListener("Pause_Released", _name, [this]()
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released"));
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", false));
 	});
 
 	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
@@ -345,13 +308,8 @@ void Server::Subscribe()
 			"ServerSend_Pos", _name,
 			[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
 			{
-				// NetworkLogger::WriteLog("Server_positionChange add before:" + std::to_string(_batch->GetSize()));
-				// std::scoped_lock lock(_batchWriteMutex);
-				const auto positionChange = std::make_shared<PositionChange>(who, pos, dir, uuid);
-				// auto classNameW = std::string(positionChange->GetClassNameW());
-				// NetworkLogger::WriteLog("Server_positionChange send:"+classNameW);
-				_batch->AddCommand(positionChange);
-				// NetworkLogger::WriteLog("Server_positionChange add after:" + std::to_string(_batch->GetSize()));
+				std::scoped_lock lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<PositionChange>(who, pos, dir, uuid));
 			});
 
 	_events->AddListener(
@@ -440,9 +398,6 @@ void Server::SubscribeBonus()
 		//TODO: rewrite other bonus status effect changes just like this OnBonusHelmet
 	});
 
-	//TODO: client obstacle spawn with uuid
-	//TODO: client bonus spawn with uuid
-
 	// _events->AddListener("ServerSend_OnStar", _name, [this](const std::string& who)
 	// {
 	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
@@ -467,7 +422,6 @@ void Server::Unsubscribe() const
 {
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
-	// _events->RemoveListener("Server_StartFrame", _name);
 	_events->RemoveListener("Server_EndFrame", _name);
 
 	_events->RemoveListener("ServerSend_Pos", _name);
@@ -491,6 +445,7 @@ void Server::UnsubscribeBonus() const
 	_events->RemoveListener("ServerSend_FortressChange", _name);
 
 	_events->RemoveListener("ServerSend_OnBonusHelmet", _name);
+
 	// _events->RemoveListener("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
@@ -546,32 +501,6 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 	const auto& basicString = archiveStream.str();
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
 	this->SendToAll(basicString + "\n\n");
-}
-
-void Server::OnHelmetActivate(const std::string& who) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnHelmetActivate";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::OnHelmetDeactivate(const std::string& who) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnHelmetDeactivate";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
 }
 
 void Server::OnStar(const std::string& who) const

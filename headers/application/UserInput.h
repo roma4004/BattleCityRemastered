@@ -24,7 +24,7 @@ class UserInput final
 	int _removedID{0};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
+	std::chrono::system_clock::time_point _lastMoveEventTime{};
 	milliseconds _moveEndDelay{150};
 	int deviceIndex{0};
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;
