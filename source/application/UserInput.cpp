@@ -2,7 +2,9 @@
 #include "application/GameSuccess.h"
 #include "components/EventSystem.h"
 #include <SDL_events.h>
-#include <SDL_log.h>
+#include <SDL_gamecontroller.h>
+#include <algorithm>
+#include <ranges>
 #include <iostream>
 
 UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events)
@@ -14,13 +16,6 @@ UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> event
 UserInput::~UserInput()
 {
 	Unsubscribe();
-}
-
-inline int UserInput::GetDeviceIndex(const SDL_Event& event)
-{
-	int deviceIndex = event.cdevice.which;
-	//std::cout<<"UserInput::DeviceIndex = "<< device_index<<"\n"; /* left for debug purpose */
-	return deviceIndex;
 }
 
 void UserInput::Subscribe()
@@ -66,51 +61,23 @@ void UserInput::SwapControllers()
 
 std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 {
-	std::string controllerTag{};
-	//std::cout << "Num of pads: " << SDL_NumJoysticks() << "\n"; // Debug
+	std::string player1Tag{_areControllersSwapped ? "P2" : "P1"};
+	std::string player2Tag{_areControllersSwapped ? "P1" : "P2"};
+
 	if (SDL_NumJoysticks() > 1)
 	{
-		int controllerIndex = GetDeviceIndex(event);
-		if (controllerIndex > 1)
+		const SDL_JoystickID instanceId = event.cdevice.which;
+		const auto it = std::ranges::find_if(_slotsForController, [instanceId](const std::shared_ptr<SDL_GameController>& n) 
+				{ return n && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(n.get())) == instanceId; });
+
+		if (it != _slotsForController.end())
 		{
-			std::cout<<"Pad reconnected with WRONG ID = " << GetDeviceIndex(event)<<" \n";
-			controllerIndex = static_cast<int>(_removedID);
-		}
-		if (!_areControllersSwapped)
-		{
-			if (controllerIndex == 1)
-			{
-				controllerTag = "P1";
-			}
-			else if (controllerIndex == 0)
-			{
-				controllerTag = "P2";
-			}
-			else if (controllerIndex > 1)
-			{
-				_removedID? controllerTag = "P1" : controllerTag = "P2"; 
-				//TODO: need to define which from 2 controllers is active to distinguish them 
-				//std::cout<<"Pad reconnected with NEW ID = " << GetDeviceIndex(event)<<" \n"; //Debug
-			}
-		}
-		else
-		{
-			if (GetDeviceIndex(event) == 1)
-			{
-				controllerTag = "P2";
-			}
-			else
-			{
-				controllerTag = "P1";
-			}
+			const auto distance = std::distance(_slotsForController.begin(), it);
+			return distance == 1 ? player1Tag : player2Tag;
 		}
 	}
-	else if (SDL_NumJoysticks() == 1)
-	{
-		controllerTag = "P1";
-	}
-	//std::cout << "Controller Tag: " << controllerTag << " \n"; //Debug
-	return controllerTag;
+
+	return player1Tag;
 }
 
 void UserInput::OnWindowMoveStop()
@@ -242,26 +209,11 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 
 }
 
-void UserInput::GamepadKeyPressRelease(const SDL_Event& event) const
+void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag) const
 {
 	if (SDL_NumJoysticks()>0)
 	{
-		std::string controllerTag{};
-		std::string KeyStateTag {};
-		controllerTag = ControllerTagDefiner(event);
-		//std::cout << "Pressed Tag: " << controllerTag << "\n"; // Debug
-		if (event.cbutton.type == SDL_CONTROLLERBUTTONDOWN)
-		{
-			KeyStateTag = "Pressed";
-		}
-		else if (event.cbutton.type == SDL_CONTROLLERBUTTONUP)
-		{
-			KeyStateTag = "Released";
-		}
-		else
-		{
-			return;
-		}
+		std::string controllerTag{ControllerTagDefiner(event)};
 
 		switch (event.cbutton.button)
 		{
@@ -302,72 +254,54 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event) const
 	}
 }
 
-void UserInput::GamepadEvents(const SDL_Event& event) const
+void UserInput::GamepadEvents(const SDL_Event& event)
 {
-	if (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_CONTROLLERBUTTONUP)
-	{
-		GamepadKeyPressRelease(event);
-	}
-
-}
-
-void UserInput::GamepadsPlugAndPlay(const SDL_Event& event) 
-{
-	deviceIndex = GetDeviceIndex(event);
-	SDL_GameController* gameController = SDL_GameControllerOpen(deviceIndex);
-	SDL_JoystickID instanceID = deviceIndex;
-
 	switch (event.type)
 	{
+	case SDL_CONTROLLERBUTTONDOWN:
+	{
+		GamepadKeyPressRelease(event, "Pressed");
+		break;
+	}
+	case SDL_CONTROLLERBUTTONUP:
+	{
+		GamepadKeyPressRelease(event, "Released");
+		break;
+	}
 	case SDL_CONTROLLERDEVICEADDED:
 	{
-		if (SDL_IsGameController(deviceIndex))
+		std::cout << "NumJoysticks " << SDL_NumJoysticks() << " \n";
+		std::shared_ptr<SDL_GameController> newController{SDL_GameControllerOpen(event.cdevice.which), SDL_GameControllerClose};
+		const auto it = std::ranges::find_if(_slotsForController,
+				[](const auto& n){return n == nullptr;});
+		if (it != _slotsForController.end())
 		{
-			if (deviceIndex <=1)
-			{
-				std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-				SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
-			}
-			else
-			{
-				if (controllers[0] != nullptr)
-				{
-					instanceID = 1;
-					std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-					SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
-				}
-				else
-				{
-					instanceID = 0;
-					std::cout << "Controller " << std::to_string(instanceID) << " added\n";
-					SDL_Log("Controller connected: %s (instance %d)", SDL_GameControllerName(gameController), instanceID);
-				}
-			}
+			*it = newController;
 		}
-		break;
-		}
-		case SDL_CONTROLLERDEVICEREMOVED: 
+		else
 		{
-			if (instanceID == 1)
-			{
-				_removedID = true;
-			}
-			else
-			{
-				_removedID = false;
-			}
-			SDL_Log("Controller %s disconnected! (instance %d) ", SDL_GameControllerName(gameController), instanceID);
-			
-			auto it = controllers.find(deviceIndex);
-			if (it != controllers.end())
-			{
-				SDL_GameControllerClose(it->second);
-				controllers.erase(it);
-			}
-			break;
+			_slotsForController.push_back(newController);
 		}
 
-		default:
+		break;
+	}
+	case SDL_CONTROLLERDEVICEREMOVED: 
+	{
+		SDL_JoystickID instanceId = event.cdevice.which;
+		SDL_Log("Controller removed! (instance %d) ", event.cdevice.which);
+
+		const auto it = std::ranges::find_if(_slotsForController, [instanceId](const auto& n) 
+			{ return n && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(n.get())) == instanceId; });
+
+		if (it != _slotsForController.end())
+		{
+			it->reset();
+		}
+
+		break;
+	}
+
+	default:
 		break;
 	}
 }
@@ -382,7 +316,6 @@ void UserInput::Update()
 			_isGameOver = true;
 		}
 
-		GamepadsPlugAndPlay(event);
 		WindowsMoveEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);
