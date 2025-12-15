@@ -24,6 +24,7 @@ protected:
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -46,8 +47,9 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
+		_respawnResourceManager = std::make_shared<RespawnResourceManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager);
+				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnResourceManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -57,10 +59,11 @@ protected:
 
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, _gray, _tankHealth, _uuid, "Enemy1", "EnemyTeam"};
+		BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid,
+		                                .name = "Enemy1", .fraction = "EnemyTeam"};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, 1, _tankSpeed, _windowSize, Direction::DOWN,
-				_gameMode};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(
@@ -92,7 +95,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
-	EXPECT_EQ(fortressWall->GetHealth(), 0);
+	EXPECT_EQ(fortressWall->GetHealth(), -1);
 }
 
 // NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch),
@@ -119,7 +122,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_TRUE(fortressWall->IsBrickWall());
-		EXPECT_EQ(fortressWall->GetHealth(), 0);
+		EXPECT_EQ(fortressWall->GetHealth(), -1);
 
 		return;
 	}

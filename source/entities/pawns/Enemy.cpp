@@ -3,10 +3,11 @@
 #include "utils/TimeUtils.h"
 #include <algorithm>
 
+//TODO: fix enemy stuck in bricks(local game)
 //TODO: if enemy see bullets they should try or prioritize move aside
-Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects,
-             const bool enableByDefault)
-	: Bot{std::move(pawnProperty), std::move(bulletPool), effects, enableByDefault} {}
+Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
+             const BonusEffectProperty effects, const bool enableByDefault)
+	: Bot{std::move(pawnProperty), bulletPool, effects, enableByDefault} {}
 
 Enemy::~Enemy() = default;
 

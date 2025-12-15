@@ -17,7 +17,7 @@ class BonusEffectManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	explicit BonusEffectManager(std::shared_ptr<EventSystem> events);
+	explicit BonusEffectManager(const std::shared_ptr<EventSystem>& events);
 
 	~BonusEffectManager();
 

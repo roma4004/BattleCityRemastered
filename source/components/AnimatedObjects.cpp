@@ -11,8 +11,9 @@
 class Tank;
 
 //NOTE: used only for water
-AnimatedObject::AnimatedObject(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const int frameLimit)
-	: events(std::move(events)),
+AnimatedObject::AnimatedObject(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
+                               const int frameLimit)
+	: events(events),
 	  rect{rect},
 	  limitOfFrames{frameLimit},
 	  type(AnimationType::Water_Animation),
@@ -25,9 +26,9 @@ AnimatedObject::AnimatedObject(const ObjRectangle rect, std::shared_ptr<EventSys
 	Subscribe();
 }
 
-AnimatedObject::AnimatedObject(std::shared_ptr<EventSystem> events, const GameMode gameMode, const int frameLimit,
-                               const int scale, const std::weak_ptr<Tank>& tank)
-	: events(std::move(events)),
+AnimatedObject::AnimatedObject(const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
+                               const int frameLimit, const int scale, const std::weak_ptr<Tank>& tank)
+	: events(events),
 	  limitOfFrames{frameLimit},
 	  gameMode{gameMode},
 	  type(AnimationType::Tank_Animation),
@@ -50,9 +51,9 @@ AnimatedObject::AnimatedObject(std::shared_ptr<EventSystem> events, const GameMo
 using buuid = boost::uuids::uuid;
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-                               std::shared_ptr<EventSystem> events, const GameMode gameMode, const int frameLimit,
-                               const int scale, std::string objName, const int color)
-	: events(std::move(events)),
+                               const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
+                               const int frameLimit, const int scale, std::string objName, const int color)
+	: events(events),
 	  rect{rect},
 	  limitOfFrames{frameLimit},
 	  color{color},
@@ -140,9 +141,9 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
 	scale = other.scale;
-	name = std::move(other.name);
-	nameWithUuid = std::move(other.nameWithUuid);
-	objName = std::move(other.objName);
+	name = other.name;
+	nameWithUuid = other.nameWithUuid;
+	objName = other.objName;
 	parent = other.parent;
 
 	Enable();

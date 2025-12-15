@@ -5,14 +5,13 @@
 #include "interfaces/IMoveBeh.h"
 // #include <iostream>
 
-Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
+Pawn::Pawn(PawnProperty pawnProperty)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
 	  _windowSize{pawnProperty.windowSize},
 	  _allObjects{pawnProperty.allObjects},
 	  _events{std::move(pawnProperty.events)},
-	  _moveBeh{std::move(moveBeh)},
 	  _dir{pawnProperty.dir},
 	  _gameMode{pawnProperty.gameMode} {}
 
@@ -36,7 +35,7 @@ void Pawn::SubscribeAsClient()
 	_events->AddListener(
 			"ClientReceived_" + _name + "Pos", _nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
-			{
+			{//TODO: move lambda body to separated method
 				if (uuid != this->_uuid)//TODO: check maybe never true
 				{
 					return;

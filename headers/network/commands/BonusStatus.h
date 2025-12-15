@@ -1,35 +1,30 @@
 #pragma once
 
 #include "Command.h"
-#include "Point.h"
-#include "UuidSerialization.h"
 #include "enums/BonusType.h"
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/uuid/uuid.hpp>
 
-class BonusSpawn : public Command
+class BonusStatus : public Command
 {
-	using buuid = boost::uuids::uuid;
-
 	friend class boost::serialization::access;
 
-	FPoint _pos{};
+	std::string _name{};
 	BonusType _bonusType{};
-	buuid _uuid{};
+	bool _isEnable{};
 
 public:
 	//for deserialization
-	BonusSpawn();
+	BonusStatus();
 
 	//for serialization
-	BonusSpawn(FPoint pos, BonusType bonusType, buuid uuid);
+	BonusStatus(std::string name, BonusType bonusType, bool isEnable);
 
-	~BonusSpawn() override = default;
+	~BonusStatus() override = default;
 
-	[[nodiscard]] FPoint GetPos() const noexcept;
+	[[nodiscard]] std::string GetName() const noexcept;
 	[[nodiscard]] BonusType GetBonusType() const noexcept;
-	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] bool GetIsEnable() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
@@ -38,12 +33,12 @@ public:
 };
 
 template<class Archive>
-void BonusSpawn::serialize(Archive& ar, const unsigned int)
+void BonusStatus::serialize(Archive& ar, const unsigned int)
 {
 	ar & boost::serialization::base_object<Command>(*this);
-	ar & _pos;
+	ar & _name;
 	ar & _bonusType;
-	ar & _uuid;
+	ar & _isEnable;
 }
 
-BOOST_CLASS_EXPORT_KEY(BonusSpawn);
+BOOST_CLASS_EXPORT_KEY(BonusStatus);

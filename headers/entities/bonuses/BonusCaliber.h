@@ -13,7 +13,7 @@ class BonusCaliber final : public Bonus
 	using buuid = boost::uuids::uuid;
 
 public:
-	BonusCaliber(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, milliseconds lifeTime, int color,
+	BonusCaliber(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime, int color,
 	             buuid uuid, GameMode gameMode);
 
 	~BonusCaliber() override;

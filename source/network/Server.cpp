@@ -5,6 +5,7 @@
 #include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
+#include "network/commands/BonusStatus.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Dispose.h"
 #include "network/commands/FortressChange.h"
@@ -14,6 +15,7 @@
 #include "network/commands/PositionChange.h"
 #include "network/commands/RespawnTank.h"
 #include "network/commands/StatisticsChange.h"
+#include "network/commands/TankOnOff.h"
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 #include <fstream>
@@ -27,8 +29,8 @@
 
 using buuid = boost::uuids::uuid;
 
-Session::Session(tcp::socket sock, std::shared_ptr<EventSystem> events)
-	: _socket(std::move(sock)), _events(std::move(events)) {}
+Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
+	: _socket(std::move(sock)), _events(events) {}
 
 Session::~Session()
 {
@@ -38,16 +40,16 @@ Session::~Session()
 		{
 			boost::system::error_code ec;
 
-			_socket.shutdown(tcp::socket::shutdown_both, ec);
+			boost::system::error_code shutdownResut = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << std::endl;
+				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			_socket.close(ec);
+			boost::system::error_code closeResut = _socket.close(ec);
 			if (ec)
 			{
-				std::cerr << "Error closing socket socket: " << ec.message() << std::endl;
+				std::cerr << "Error closing socket socket: " << ec.message() << '\n';
 			}
 		}
 	}
@@ -164,7 +166,7 @@ void Session::DoWrite(const std::string& message)
 			{
 				if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
 				{
-					std::cout << "Connection closed normally" << std::endl;
+					std::cout << "Connection closed normally" << '\n';
 				}
 				else
 				{
@@ -190,16 +192,16 @@ void Session::DoWrite(const std::string& message)
 }
 
 Server::Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               std::shared_ptr<EventSystem> events)
+               const std::shared_ptr<EventSystem>& events)
 	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
 	                                     static_cast<unsigned short>(std::stoul(port)))),
-	  _events{std::move(events)},
+	  _events{events},
 	  _name{"Server"},
 	  _isRunning{true}
 {
 	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
-	// StartSendThread();
+	StartSendThread();
 	Subscribe();
 }
 
@@ -210,7 +212,6 @@ void Server::StartSendThread()
 		while (_isRunning)
 		{
 			std::shared_ptr<CommandBatch> batch;
-
 			{
 				std::unique_lock<std::mutex> lock(_sendQueueMutex);
 				_sendCondition.wait(lock, [this]
@@ -228,7 +229,7 @@ void Server::StartSendThread()
 				_sendQueue.pop();
 			}
 
-			if (batch && batch->GetCommands().size() > 0)
+			if (batch && !batch->IsEmpty())
 			{
 				try
 				{
@@ -239,11 +240,8 @@ void Server::StartSendThread()
 					std::cerr << "Exception in send thread: " << e.what() << '\n';
 
 					// retry send
-					std::this_thread::sleep_for(std::chrono::milliseconds(1));
-					{
-						std::lock_guard<std::mutex> lock(_sendQueueMutex);
-						_sendQueue.push(batch);
-					}
+					std::scoped_lock lock(_sendQueueMutex);
+					_sendQueue.push(batch);
 				}
 			}
 		}
@@ -253,7 +251,7 @@ void Server::StartSendThread()
 void Server::StopSendThread()
 {
 	{
-		std::lock_guard<std::mutex> lock(_sendQueueMutex);
+		std::scoped_lock lock(_sendQueueMutex);
 		_isRunning = false;
 	}
 
@@ -280,66 +278,29 @@ Server::~Server()
 
 void Server::Subscribe()
 {
-	_events->AddListener("Server_StartFrame", _name, [this]()
-	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		// NetworkLogger::WriteLog("===Server_StartFrame");
-		_batch = std::make_shared<CommandBatch>();
-		// NetworkLogger::WriteLog("Server_StartFrame===");
-	});
-
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-
-		// NetworkLogger::WriteLog("===Server_EndFrame");
-		std::shared_ptr<CommandBatch> toSend{nullptr};
-
-		toSend = _batch;
-		SendCommand(toSend);
-
-		// int i = 0;
-		// for (auto& commands = toSend->GetCommands();
-		// 	auto command: commands)
-		// {
-		// 	auto classNameW = std::string(command->GetClassNameW());
-		// 	// NetworkLogger::WriteLog("Server_bach_command i=" + std::to_string(i++) + " " + classNameW);
-		// 	SendCommand(command);
-		// }
-		// NetworkLogger::WriteLog("Server_EndFrame===");
-
-		// if (toSend && toSend->GetCommands().size() > 0)
-		// {
-		// 	{
-		// 		std::lock_guard<std::mutex> lock(_sendQueueMutex);
-		// 		_sendQueue.push(toSend);
-		// 	}
-		// 	_sendCondition.notify_one();// Повідомляємо потік відправки
-		// }
-
-		//Mark that one batch need to be sent (or send immediately)
-		// std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		// if (_batch.get() != nullptr && _batch->GetCommands().size() > 0)
-		// {
-		// 	SendCommand(_batch);
-		// }
+		std::scoped_lock lock(_batchWriteMutex, _sendQueueMutex);
+		_sendQueue.emplace(_batch);
+		_sendCondition.notify_one();
+		_batch = std::make_shared<CommandBatch>();
 	});
 
 	_events->AddListener("Pause_Pressed", _name, [this]()
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed"));
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
 	});
 
 	_events->AddListener("Pause_Released", _name, [this]()
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released"));
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", false));
 	});
 
 	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
 	});
 
@@ -347,32 +308,27 @@ void Server::Subscribe()
 			"ServerSend_Pos", _name,
 			[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
 			{
-				// NetworkLogger::WriteLog("Server_positionChange add before:" + std::to_string(_batch->GetSize()));
-				// std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				const auto positionChange = std::make_shared<PositionChange>(who, pos, dir, uuid);
-				// auto classNameW = std::string(positionChange->GetClassNameW());
-				// NetworkLogger::WriteLog("Server_positionChange send:"+classNameW);
-				_batch->AddCommand(positionChange);
-				// NetworkLogger::WriteLog("Server_positionChange add after:" + std::to_string(_batch->GetSize()));
+				std::scoped_lock lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<PositionChange>(who, pos, dir, uuid));
 			});
 
 	_events->AddListener(
 			"ServerSend_Shot", _name,
 			[this](const std::string& who, const Direction dir, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
 			});
 
 	_events->AddListener("ServerSend_Health", _name, [this](const std::string& who, const int health, const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
 	});
 
 	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
 	});
 
@@ -380,13 +336,13 @@ void Server::Subscribe()
 			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
 			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
 	_events->AddListener("ServerSend_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
 	});
 
@@ -394,17 +350,26 @@ void Server::Subscribe()
 			"ServerSend_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
 	//TODO: write obstacle dispose
 
 	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const buuid& uuid)
+			[this](const AnimationType type, const ObjRectangle rect, const std::string& name, const int color)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, uuid));
+				//TODO: fix multiple spawn bullet explosion animation
+				std::scoped_lock lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name, color));
+			});
+
+	_events->AddListener(
+			"ServerSend_OnTankOnOff", _name,
+			[this](const buuid& uuid, const bool isEnabled, std::string name)
+			{
+				std::scoped_lock lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<TankOnOff>(uuid, isEnabled, std::move(name)));
 			});
 
 	SubscribeBonus();
@@ -416,26 +381,23 @@ void Server::SubscribeBonus()
 			"ServerSend_BonusSpawn", _name,
 			[this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(_batchWriteMutex);
+				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
 			});
 
 	_events->AddListener("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
 	{
-		std::lock_guard<std::mutex> lock(_batchWriteMutex);
+		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 	});
-	//TODO: client obstacle spawn with uuid
-	//TODO: client bonus spawn with uuid
 
-	// _events->AddListener("ServerSend_OnHelmetActivate", _name, [this](const std::string& who)
-	// {
-	// 	this->OnHelmetActivate(who);//TODO: refactor to SendCommand(std::make_shared<
-	// });
-	// _events->AddListener("ServerSend_OnHelmetDeactivate", _name, [this](const std::string& who)
-	// {
-	// 	this->OnHelmetDeactivate(who);//TODO: refactor to SendCommand(std::make_shared<
-	// });
+	_events->AddListener("ServerSend_OnBonusHelmet", _name, [this](const std::string& name, const bool isActive)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Helmet, isActive));
+		//TODO: rewrite other bonus status effect changes just like this OnBonusHelmet
+	});
+
 	// _events->AddListener("ServerSend_OnStar", _name, [this](const std::string& who)
 	// {
 	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
@@ -460,7 +422,6 @@ void Server::Unsubscribe() const
 {
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener("Server_StartFrame", _name);
 	_events->RemoveListener("Server_EndFrame", _name);
 
 	_events->RemoveListener("ServerSend_Pos", _name);
@@ -470,6 +431,8 @@ void Server::Unsubscribe() const
 	_events->RemoveListener("ServerSend_Statistics", _name);
 
 	_events->RemoveListener("ServerSend_AnimationCreate", _name);
+
+	_events->RemoveListener("ServerSend_OnTankOnOff", _name);
 
 	UnsubscribeBonus();
 }
@@ -481,8 +444,8 @@ void Server::UnsubscribeBonus() const
 
 	_events->RemoveListener("ServerSend_FortressChange", _name);
 
-	// _events->RemoveListener("ServerSend_OnHelmetActivate", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener("ServerSend_OnHelmetDeactivate", _name);//TODO: refactor to SendCommand(std::make_shared<
+	_events->RemoveListener("ServerSend_OnBonusHelmet", _name);
+
 	// _events->RemoveListener("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
 	// _events->RemoveListener("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
@@ -538,32 +501,6 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 	const auto& basicString = archiveStream.str();
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
 	this->SendToAll(basicString + "\n\n");
-}
-
-void Server::OnHelmetActivate(const std::string& who) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnHelmetActivate";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::OnHelmetDeactivate(const std::string& who) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnHelmetDeactivate";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
 }
 
 void Server::OnStar(const std::string& who) const

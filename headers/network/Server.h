@@ -50,7 +50,7 @@ class Session final : public std::enable_shared_from_this<Session>
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	Session(tcp::socket sock, std::shared_ptr<EventSystem> events);
+	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events);
 
 	~Session();
 
@@ -79,8 +79,6 @@ class Server final
 
 	void DoAccept();
 
-	void OnHelmetActivate(const std::string& who) const;
-	void OnHelmetDeactivate(const std::string& who) const;
 	void OnStar(const std::string& who) const;
 	void OnCaliber(const std::string& who) const;
 	void OnTank(const std::string& who, const std::string& fraction) const;
@@ -88,7 +86,7 @@ class Server final
 
 public:
 	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       std::shared_ptr<EventSystem> events);
+	       const std::shared_ptr<EventSystem>& events);
 
 	~Server();
 

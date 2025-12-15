@@ -40,6 +40,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
 
+	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
 	std::chrono::duration<double> _targetFrameDuration{};
@@ -75,10 +76,9 @@ class GameSuccess final : public IGame
 	void OnGameModeChangedTo(GameMode newGameMode);
 
 public:
-	GameSuccess(UPoint windowSize, std::shared_ptr<EventSystem> events, std::shared_ptr<GameStatistics> statistics,
-	            std::unique_ptr<Menu> menu, std::shared_ptr<TextureManager> textureManager, bool isVsyncOn,
-	            std::shared_ptr<BonusEffectManager> bonusEffectManager,
-	            std::shared_ptr<SpawnDelayManager> spawnDelayManager);
+	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events,
+	            const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
+	            const std::shared_ptr<TextureManager>& textureManager, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

@@ -1,8 +1,15 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/EventSystem.h"
 
-InputProviderForPlayerTwo::InputProviderForPlayerTwo(std::shared_ptr<EventSystem> events)
-	: _events{std::move(events)}
+InputProviderForPlayerTwo::InputProviderForPlayerTwo(const std::shared_ptr<EventSystem>& events)
+	: _events{events} {}
+
+InputProviderForPlayerTwo::~InputProviderForPlayerTwo()
+{
+	Unsubscribe();
+}
+
+void InputProviderForPlayerTwo::Subscribe()
 {
 	_events->AddListener("P2_Move_Up_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
 	_events->AddListener("P2_Move_Up_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
@@ -16,7 +23,7 @@ InputProviderForPlayerTwo::InputProviderForPlayerTwo(std::shared_ptr<EventSystem
 	_events->AddListener("P2_Fire_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
 }
 
-InputProviderForPlayerTwo::~InputProviderForPlayerTwo()
+void InputProviderForPlayerTwo::Unsubscribe() const
 {
 	_events->RemoveListener("P2_Move_Up_Pressed", _name);
 	_events->RemoveListener("P2_Move_Up_Released", _name);
@@ -28,4 +35,14 @@ InputProviderForPlayerTwo::~InputProviderForPlayerTwo()
 	_events->RemoveListener("P2_Move_Right_Released", _name);
 	_events->RemoveListener("P2_Fire_Pressed", _name);
 	_events->RemoveListener("P2_Fire_Released", _name);
+}
+
+void InputProviderForPlayerTwo::Enable()
+{
+	Subscribe();
+}
+
+void InputProviderForPlayerTwo::Disable() const
+{
+	Unsubscribe();
 }

@@ -28,7 +28,7 @@ class BulletPool final
 	bool _isClearing{false};
 
 public:
-	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	           UPoint windowSize, GameMode gameMode);
 
 	~BulletPool();

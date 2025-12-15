@@ -11,7 +11,7 @@ enum class Direction : char8_t;
 struct SDL_Rect;
 struct SDL_Renderer;
 struct SDL_Texture;
-typedef uint8_t Uint8;
+using Uint8 = uint8_t;
 class BaseObj;
 class EventSystem;
 
@@ -45,16 +45,17 @@ class TextureManager final
 	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
 	[[nodiscard]] SDL_Texture* CreateColorTexture(int color);
 	void RectDraw(ObjRectangle rect, int color);
-	SDL_Rect GetAnimTextureRect(const std::string& name, ObjRectangle rect, SDL_Rect& destRect) const;
+	[[nodiscard]] SDL_Rect GetAnimTextureRect(const std::string& name, ObjRectangle rect, SDL_Rect& destRect) const;
 	[[nodiscard]] SDL_Rect GetTextureRect(const std::string& name) const;
-	SDL_Rect GetTankTextureRect(const std::string& name) const;
+	[[nodiscard]] SDL_Rect GetTankTextureRect(const std::string& name) const;
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
 	void GenerateFpsTextures();
 
 public:
-	TextureManager(UPoint windowSize, std::shared_ptr<SDL_Texture> texture, std::shared_ptr<SDL_Renderer> renderer,
-	               std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<EventSystem> events,
-	               std::shared_ptr<AnimationManager> animationManager);
+	TextureManager(UPoint windowSize, const std::shared_ptr<SDL_Texture>& texture,
+	               const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& fpsFont,
+	               const std::shared_ptr<EventSystem>& events,
+	               const std::shared_ptr<AnimationManager>& animationManager);
 
 	~TextureManager();
 

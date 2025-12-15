@@ -33,15 +33,16 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	//for water
-	AnimatedObject(ObjRectangle rect, std::shared_ptr<EventSystem> events, int frameLimit);
+	AnimatedObject(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, int frameLimit);
 
 	//for tank
-	AnimatedObject(std::shared_ptr<EventSystem> events, GameMode gameMode, int frameLimit, int scale,
+	AnimatedObject(const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
 	               const std::weak_ptr<Tank>& tank);
 
 	//for other (eg explosion)
-	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, std::shared_ptr<EventSystem> events,
-	               GameMode gameMode, int frameLimit, int scale, std::string objName, int color);
+	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
+	               const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
+	               std::string objName, int color);
 
 	~AnimatedObject();
 

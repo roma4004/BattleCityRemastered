@@ -14,7 +14,7 @@ class EagleTile final : public Obstacle
 	void Unsubscribe() const override;
 
 public:
-	EagleTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
+	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~EagleTile() override;
 };

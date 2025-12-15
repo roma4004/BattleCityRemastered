@@ -21,9 +21,10 @@ public:
 
 	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 	[[nodiscard]] size_t GetSize() const noexcept;
+	[[nodiscard]] bool IsEmpty() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 };
 
 template<class Archive>

@@ -34,7 +34,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto server = std::make_unique<ServerHandler>(events);
 	auto client = std::make_unique<ClientHandler>(events);
 
-	constexpr FPoint posOrigin{42.f, 42.f};
+	constexpr FPoint posOrigin{.x = 42.f, .y = 42.f};
 	constexpr auto directionOrigin{Direction::UP};
 
 	std::promise<std::tuple<FPoint, Direction, buuid>> promise{};
@@ -48,7 +48,7 @@ TEST_F(NetworkTest, PosEventReplication)
 				promise.set_value({newPos, dir, uuid});
 			});
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Pos", name, posOrigin, directionOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -81,7 +81,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	events->AddListener("ClientReceived_" + name + "Shot", "ShotEventReplication",
 	                    [&promise](const Direction dir, const buuid& uuid) { promise.set_value({dir, uuid}); });
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Shot", name, direction, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -116,7 +116,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	events->AddListener("ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication",
 	                    [&promise](const int health) { promise.set_value(health); });
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Health", name, healthOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -145,7 +145,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	events->AddListener("ClientReceived_" + name + "Dispose", "DisposeEventReplication",
 	                    [&promise](const buuid& uuid) { promise.set_value(uuid); });
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Dispose", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -175,7 +175,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 				promise.set_value({type, author, fraction});
 			});
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Statistics", "BulletHit", "author", "fraction");
 	events->EmitEvent("Server_EndFrame");
 
@@ -229,7 +229,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 				}
 			});
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
 	events->EmitEvent("ServerSend_FortressChange", "ToBrick", _uuid);
 	events->EmitEvent("ServerSend_FortressChange", "ToSteel", _uuid);
@@ -274,8 +274,8 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 				promise.set_value({pos, bonusType, uuid});
 			});
 
-	events->EmitEvent("Server_StartFrame");
-	constexpr FPoint pos{42.f, 42.f};
+	// events->EmitEvent("Server_StartFrame");
+	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
 	events->EmitEvent("ServerSend_BonusSpawn", pos, type, _uuid);
 	events->EmitEvent("Server_EndFrame");
@@ -306,7 +306,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 			"ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication",
 			[&promise](const buuid& uuid) { promise.set_value(uuid); });
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -319,6 +319,38 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	events->RemoveListener("ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication");
 }
 
+TEST_F(NetworkTest, BonusStatusEventReplication)
+{
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<ServerHandler>(events);
+	auto client = std::make_unique<ClientHandler>(events);
+
+	const std::string nameOrigin = "Player1";
+	constexpr bool isActiveOrigin = true;
+
+	std::promise<bool> promise;
+	auto future = promise.get_future();
+
+	events->AddListener(
+			"ClientReceived_" + nameOrigin + "OnBonusHelmet", "BonusStatusEventReplication",
+			[&promise](const bool isEnable)
+			{
+				promise.set_value(isEnable);
+			});
+
+	// events->EmitEvent("Server_StartFrame");
+	events->EmitEvent("ServerSend_OnBonusHelmet", nameOrigin, isActiveOrigin);
+	events->EmitEvent("Server_EndFrame");
+
+	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	ASSERT_EQ(status, std::future_status::ready);
+
+	const auto isEnable = future.get();
+	EXPECT_EQ(isActiveOrigin, isEnable);
+
+	events->RemoveListener("ClientReceived_" + nameOrigin + "OnBonusHelmet", "BonusStatusEventReplication");
+}
+
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
 	using buuid = boost::uuids::uuid;
@@ -328,7 +360,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	auto client = std::make_unique<ClientHandler>(events);
 
 	constexpr auto obstacleType = ObstacleType::Brick;
-	constexpr ObjRectangle rectOrigin{42.0f, 43.0f, 44.0f, 45.0f};
+	constexpr ObjRectangle rectOrigin{.x = 42.0f, .y = 43.0f, .w = 44.0f, .h = 45.0f};
 
 	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise{};
 	auto future = promise.get_future();
@@ -340,7 +372,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 				promise.set_value({rect, type, uuid});
 			});
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_ObstacleSpawn", rectOrigin, obstacleType, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
@@ -386,13 +418,16 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
 			[&promises, &count, &mtx](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
-				std::lock_guard<std::mutex> lock(mtx);
+				std::scoped_lock lock(mtx);
 
 				const auto current = count.fetch_add(1);
-				promises[current].set_value({rect, type, uuid});
+				if (current < promises.size())
+				{
+					promises[current].set_value({rect, type, uuid});
+				}
 			});
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
 		events->EmitEvent("ServerSend_ObstacleSpawn", bricksRect[i], obstacleType, _uuid);
@@ -441,7 +476,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 			TankType::PLAYER1, TankType::PLAYER2, TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4
 	};
 
-	events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent("Server_StartFrame");
 	for (const auto tankType: tankTypes)
 	{
 		events->EmitEvent("ServerSend_RespawnTank", tankType, _uuid);
@@ -465,3 +500,4 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 //TODO: write test for respawn resource change
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
+//TODO: check animation create replication

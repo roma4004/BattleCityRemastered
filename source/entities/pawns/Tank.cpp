@@ -1,27 +1,43 @@
 #include "entities/pawns/Tank.h"
+#include "behavior/MoveLikeTankBeh.h"
+#include "behavior/ShootingBeh.h"
+#include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/AnimationType.h"
 #include "enums/GameMode.h"
-#include "interfaces/IMoveBeh.h"
 #include "interfaces/IShootable.h"
 
-Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-           const BonusEffectProperty effects,
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
            const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), std::move(moveBeh)},
-	  _shootingBeh{std::move(shootingBeh)},
+	: Pawn{std::move(pawnProperty)},
 	  _effects{effects}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(
+			_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction, _touchedObstacles, _allObjects);
+
+	_shootingBeh = std::make_shared<ShootingBeh>(
+			_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier, _bulletDamageRadius, _bulletSize,
+			_windowSize, _name, _fraction, _allObjects, bulletPool);
+
 	if (enableByDefault)
 	{
 		Tank::Subscribe();
 	}
 
+	// NOTE: should be in constructor to be able to enable by replication
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		_events->AddListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid, [this](const buuid uuid, const bool isEnable)
+		{
+			this->OnTankOnOff(uuid, isEnable);
+		});
+	}
+	
 	_events->EmitEvent("TankSpawn", _uuid);
 }
 
@@ -66,14 +82,9 @@ void Tank::SubscribeAsClient()
 				this->Shot(uuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid, [this](const bool isActive)
 	{
-		this->_effects.isHelmetActive = true;
-	});
-
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetDeactivate", _nameWithUuid, [this]()
-	{
-		this->_effects.isHelmetActive = false;
+		this->_effects.isHelmetActive = isActive;
 	});
 
 	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
@@ -101,11 +112,6 @@ void Tank::SubscribeBonus()
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
-				if (_gameMode == GameMode::PlayAsHost)
-				{
-					_events->EmitEvent(isActive ? "ServerSend_OnHelmetActivate" : "ServerSend_OnHelmetDeactivate",
-					                   _nameWithUuid);
-				}
 			});
 
 	_events->AddListener("BonusGrenade", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
@@ -136,14 +142,18 @@ void Tank::Unsubscribe() const
 	}
 
 	UnsubscribeBonus();
+
+	// NOTE: should be in destructor to be able to unsubscribe in this case
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		_events->RemoveListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid);
+	}
 }
 
 void Tank::UnsubscribeAsClient() const
 {
 	_events->RemoveListener("ClientReceived_" + _name + "Shot", _nameWithUuid);
-
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid);
 	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _nameWithUuid);
 	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid);
 }
@@ -157,14 +167,26 @@ void Tank::UnsubscribeBonus() const
 	_events->RemoveListener("BonusCaliber", _nameWithUuid);
 }
 
-void Tank::Disable() const
-{
-	Unsubscribe();
-}
-
 void Tank::Enable()
 {
 	Subscribe();
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		constexpr bool isEnable = true;
+		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+	}
+}
+
+void Tank::Disable() const
+{
+	Unsubscribe();
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		constexpr bool isEnable = false;
+		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+	}
 }
 
 void Tank::TakeDamage(const int damage)
@@ -226,6 +248,12 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	if (_name == name)
 	{
 		_effects.isHelmetActive = isActive;
+
+		//TODO: move replication to bonusEffectManager
+		if (_gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
+		}
 	}
 }
 
@@ -284,6 +312,14 @@ void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction
 		{
 			_events->EmitEvent("ServerSend_OnCaliber", author);
 		}
+	}
+}
+
+void Tank::OnTankOnOff(const buuid uuid, const bool isEnable)
+{
+	if (uuid == _uuid)
+	{
+		isEnable ? Enable() : Disable();
 	}
 }
 

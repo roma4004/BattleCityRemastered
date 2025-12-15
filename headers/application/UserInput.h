@@ -23,7 +23,7 @@ class UserInput final
 	bool _areControllersSwapped{false};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::chrono::system_clock::time_point _lastMoveEventTime{};//TODO: move to time utils, save to timer item
+	std::chrono::system_clock::time_point _lastMoveEventTime{};
 	milliseconds _moveEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 
@@ -42,7 +42,7 @@ class UserInput final
 	std::string ControllerTagDefiner(const SDL_Event& event) const;
 
 public:
-	UserInput(UPoint windowSize, std::shared_ptr<EventSystem> events);
+	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 	~UserInput();
 
 	void Update();

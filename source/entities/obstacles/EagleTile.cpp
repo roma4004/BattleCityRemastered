@@ -2,13 +2,13 @@
 #include "components/EventSystem.h"
 #include "enums/ObstacleType.h"
 
-EagleTile::EagleTile(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
                      const GameMode gameMode)
 	: Obstacle{rect,
 	           0x1e90ff,
 	           1,
 	           "Eagle",
-	           std::move(events),
+	           events,
 	           uuid,
 	           gameMode,
 	           ObstacleType::Eagle}

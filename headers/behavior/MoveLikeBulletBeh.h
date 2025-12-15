@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Point.h"
 #include "interfaces/IMoveBeh.h"
 #include <functional>
 #include <memory>
+#include <boost/uuid/uuid.hpp>
 
 // enum class Direction : char8_t;
 class Bullet;
@@ -12,26 +14,35 @@ class EventSystem;
 
 class MoveLikeBulletBeh final : public IMoveBeh
 {
-	BaseObj* _selfParent{nullptr};//TODO: replace with weak_ptr
+	using buuid = boost::uuids::uuid;
+
+	buuid& _uuid;
+	ObjRectangle& _rect;
+	Direction& _direction;
+	float& _speed;
+	double& _bulletDamageRadius;
+	UPoint& _windowSize;
+	std::vector<std::shared_ptr<BaseObj>>& _bulletTargets;
+
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-	std::shared_ptr<EventSystem> _events{nullptr};
+
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
-	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList) const;
-	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> IsCanMove(float deltaTime) const override;
+	[[nodiscard]] bool IsCanMove(float deltaTime) const override;
 
-	[[nodiscard]] bool Move(float deltaTime) const override;
-	[[nodiscard]] bool MoveLeft(float deltaTime) const override;
-	[[nodiscard]] bool MoveRight(float deltaTime) const override;
-	[[nodiscard]] bool MoveUp(float deltaTime) const override;
-	[[nodiscard]] bool MoveDown(float deltaTime) const override;
+	[[nodiscard]] bool Move(float deltaTime) override;
+	[[nodiscard]] bool MoveLeft(float deltaTime) override;
+	[[nodiscard]] bool MoveRight(float deltaTime) override;
+	[[nodiscard]] bool MoveUp(float deltaTime) override;
+	[[nodiscard]] bool MoveDown(float deltaTime) override;
 
-	[[nodiscard]] static ObjRectangle GetBulletPathRect(const Bullet* bullet, float deltaTime);
-	[[nodiscard]] static FPoint GetBulletNextPoint(const Bullet* bullet, float deltaTime);
+	[[nodiscard]] ObjRectangle GetBulletPathRect(float deltaTime) const;
+	[[nodiscard]] FPoint GetBulletNextPoint(float deltaTime) const;
 
 public:
-	MoveLikeBulletBeh(BaseObj* parent, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                  std::shared_ptr<EventSystem> events);
+	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
+	                  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
+	                  std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;
 

@@ -3,19 +3,17 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/Menu.h"
-#include "components/managers/BonusEffectManager.h"
-#include "components/managers/SpawnDelayManager.h"
 #include "components/managers/TextureManager.h"
 #include <SDL_ttf.h>
 
-ConfigSuccess::ConfigSuccess(const UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer,
-                             std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<SDL_Texture> logoTexture,
-                             std::shared_ptr<SDL_Texture> atlasTexture, const bool isVsyncOn)
+ConfigSuccess::ConfigSuccess(const UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
+                             const std::shared_ptr<TTF_Font>& fpsFont, const std::shared_ptr<SDL_Texture>& logoTexture,
+                             const std::shared_ptr<SDL_Texture>& atlasTexture, const bool isVsyncOn)
 	: _windowSize{windowSize},
-	  _renderer{std::move(renderer)},
-	  _fpsFont{std::move(fpsFont)},
-	  _logoTexture{std::move(logoTexture)},
-	  _atlasTexture{std::move(atlasTexture)},
+	  _renderer{renderer},
+	  _fpsFont{fpsFont},
+	  _logoTexture{logoTexture},
+	  _atlasTexture{atlasTexture},
 	  _isVsyncOn{isVsyncOn} {}
 
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
@@ -26,9 +24,6 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto animationManager = std::make_shared<AnimationManager>(events);
 	auto textureManager = std::make_shared<TextureManager>(
 			_windowSize, _atlasTexture, _renderer, _fpsFont, events, animationManager);
-	auto bonusEffectManager = std::make_shared<BonusEffectManager>(events);
-	auto spawnDelayManager = std::make_shared<SpawnDelayManager>(events);
 
-	return std::make_unique<GameSuccess>(_windowSize, events, statistics, std::move(menu), textureManager, _isVsyncOn,
-	                                     bonusEffectManager, spawnDelayManager);
+	return std::make_unique<GameSuccess>(_windowSize, events, statistics, std::move(menu), textureManager, _isVsyncOn);
 }

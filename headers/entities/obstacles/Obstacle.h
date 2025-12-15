@@ -22,16 +22,13 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameMode _gameMode{};
 	ObstacleType _obstacleType{};
-	bool _isReplicationOn{};
 
 	void Draw() const override;
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
-	Obstacle(ObjRectangle rect, int color, int health, std::string name, std::shared_ptr<EventSystem> events,
+	Obstacle(ObjRectangle rect, int color, int health, std::string name, const std::shared_ptr<EventSystem>& events,
 	         buuid uuid, GameMode gameMode, ObstacleType obstacleType);
-	Obstacle(ObjRectangle rect, int color, int health, std::string name, std::shared_ptr<EventSystem> events,
-	         buuid uuid, GameMode gameMode, ObstacleType obstacleType, bool isReplicationOn);
 
 	~Obstacle() override;
 };

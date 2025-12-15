@@ -14,7 +14,7 @@ class IceTile final : public Obstacle
 	void Unsubscribe() const override;
 
 public:
-	IceTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
+	IceTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~IceTile() override;
 };

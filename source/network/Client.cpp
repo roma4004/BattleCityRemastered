@@ -21,6 +21,8 @@
 // #include <fstream>
 #include "enums/AnimationType.h"
 #include "network/commands/AnimationCreate.h"
+#include "network/commands/BonusStatus.h"
+#include "network/commands/TankOnOff.h"
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
@@ -29,9 +31,9 @@
 using buuid = boost::uuids::uuid;
 
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               std::shared_ptr<EventSystem> events)
+               const std::shared_ptr<EventSystem>& events)
 	: _socket(ioContext),
-	  _events{std::move(events)},
+	  _events{events},
 	  _name{"Client"}
 {
 	Subscribe();
@@ -40,7 +42,7 @@ Client::Client(boost::asio::io_context& ioContext, const std::string& host, cons
 	const auto endpointIterator = resolver.resolve(host, port);
 	boost::asio::async_connect(//TODO: extract to reconnect method
 			_socket, endpointIterator,
-			[this](const boost::system::error_code& ec, tcp::endpoint /*endpoint_iterator*/)
+			[this](const boost::system::error_code& ec, const tcp::endpoint& /*endpoint_iterator*/)
 			{
 				if (!ec)
 				{
@@ -60,16 +62,16 @@ Client::~Client()
 		if (_socket.is_open())
 		{
 			boost::system::error_code ec;
-			_socket.shutdown(tcp::socket::shutdown_both, ec);
+			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << std::endl;
+				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			_socket.close(ec);
+			std::ignore = _socket.close(ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket close: " << ec.message() << std::endl;
+				std::cerr << "Error during socket close: " << ec.message() << '\n';
 			}
 		}
 	}
@@ -85,34 +87,33 @@ Client::~Client()
 
 void Client::Subscribe()
 {
-	_events->AddListener("ArrowUp_Pressed", _name, [this]() { this->SendKeyState("ArrowUp_Pressed"); });
-	_events->AddListener("ArrowLeft_Pressed", _name, [this]() { this->SendKeyState("ArrowLeft_Pressed"); });
-	_events->AddListener("ArrowDown_Pressed", _name, [this]() { this->SendKeyState("ArrowDown_Pressed"); });
-	_events->AddListener("ArrowRight_Pressed", _name, [this]() { this->SendKeyState("ArrowRight_Pressed"); });
-	_events->AddListener("RCTRL_Pressed", _name, [this]() { this->SendKeyState("RCTRL_Pressed"); });
-
-	_events->AddListener("ArrowUp_Released", _name, [this]() { this->SendKeyState("ArrowUp_Released"); });
-	_events->AddListener("ArrowLeft_Released", _name, [this]() { this->SendKeyState("ArrowLeft_Released"); });
-	_events->AddListener("ArrowDown_Released", _name, [this]() { this->SendKeyState("ArrowDown_Released"); });
-	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
-	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
+	//TODO: write batch sending on client and sending queue
+	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
+	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
+	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
+	_events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left_Released"); });
+	_events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down_Pressed"); });
+	_events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down_Released"); });
+	_events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right_Pressed"); });
+	_events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right_Released"); });
+	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
+	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
 
 	_events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
 }
 
 void Client::Unsubscribe() const
 {
-	_events->RemoveListener("ArrowUp_Pressed", _name);
-	_events->RemoveListener("ArrowLeft_Pressed", _name);
-	_events->RemoveListener("ArrowDown_Pressed", _name);
-	_events->RemoveListener("ArrowRight_Pressed", _name);
-	_events->RemoveListener("RCTRL_Pressed", _name);
-
-	_events->RemoveListener("ArrowUp_Released", _name);
-	_events->RemoveListener("ArrowLeft_Released", _name);
-	_events->RemoveListener("ArrowDown_Released", _name);
-	_events->RemoveListener("ArrowRight_Released", _name);
-	_events->RemoveListener("RCTRL_Released", _name);
+	_events->RemoveListener("P2_Move_Up_Pressed", _name);
+	_events->RemoveListener("P2_Move_Up_Released", _name);
+	_events->RemoveListener("P2_Move_Left_Pressed", _name);
+	_events->RemoveListener("P2_Move_Left_Released", _name);
+	_events->RemoveListener("P2_Move_Down_Pressed", _name);
+	_events->RemoveListener("P2_Move_Down_Released", _name);
+	_events->RemoveListener("P2_Move_Right_Pressed", _name);
+	_events->RemoveListener("P2_Move_Right_Released", _name);
+	_events->RemoveListener("P2_Fire_Pressed", _name);
+	_events->RemoveListener("P2_Fire_Released", _name);
 }
 
 void Client::ReadResponse()
@@ -140,15 +141,7 @@ void Client::ReadResponse()
 			// 	isFirstRead = false;
 			// }
 
-			// if (data.eventName == "OnHelmetActivate")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnHelmetDeactivate")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnStar")
+			// if (data.eventName == "OnStar")
 			// {
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
@@ -175,6 +168,12 @@ void Client::ReadResponse()
 	boost::asio::async_read_until(_socket, _read_buffer, "\n\n", std::move(lambda));
 }
 
+//TODO: rewrite old style SendKeyState to batch command
+// _events->AddListener("Pause_Pressed", _name, [this]()
+// {
+// 	std::scoped_lock lock(_batchWriteMutex);
+// 	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
+// });
 void Client::SendKeyState(const std::string& state)
 {
 	// auto self(shared_from_this());
@@ -254,7 +253,7 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetKeyState());
+		_events->EmitEvent(cmd->GetKeyState()/*, cmd->GetIsEnable()*/);
 	}
 }
 
@@ -262,7 +261,8 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_FortressChange", cmd->GetState(), cmd->GetUuid());
+		const std::string state = cmd->GetState(); //NOTE: const required
+		_events->EmitEvent("ClientReceived_FortressChange", state, cmd->GetUuid());
 	}
 }
 
@@ -302,7 +302,19 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_AnimationCreate",
+		                   cmd->GetAnimationType(),
+		                   cmd->GetRect(),
+		                   cmd->GetName(),
+		                   cmd->GetColor());
+	}
+}
+
+void Client::OnTankOnOff(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
+	{//TODO: don't need uuid or name in this case
+		_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnTankOnOff", cmd->GetUuid(), cmd->GetIsEnable());
 	}
 }
 
@@ -313,6 +325,19 @@ void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 		for (const auto& command: cmd->GetCommands())
 		{
 			ProcessClientCommand(command);
+		}
+	}
+}
+
+void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
+	{
+		if (cmd->GetBonusType() == BonusType::Helmet)
+		{
+			const bool isActive = cmd->GetIsEnable();
+			const std::string name = cmd->GetName();
+			_events->EmitEvent("ClientReceived_" + name + "OnBonusHelmet", isActive);
 		}
 	}
 }
@@ -392,6 +417,16 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 				OnAnimationCreate(command);
 				break;
 			}
+			case CommandType::TANK_ON_OFF:
+			{
+				OnTankOnOff(command);
+				break;
+			}
+			case CommandType::BONUS_STATUS:
+			{
+				OnBonusStatus(command);
+				break;
+			}
 			//TODO: implement other command types
 			default:
 				break;
@@ -426,7 +461,7 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
 		}
 
-		std::cerr << "Deserialization error: " << e.what() << std::endl;
-		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << std::endl;
+		std::cerr << "Deserialization error: " << e.what() << '\n';
+		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
 	}
 }

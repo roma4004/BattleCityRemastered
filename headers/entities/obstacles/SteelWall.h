@@ -11,9 +11,7 @@ class SteelWall final : public Obstacle
 	void Unsubscribe() const override;
 
 public:
-	SteelWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
-	SteelWall(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode,
-	          bool isReplicationOn);
+	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~SteelWall() override;
 };

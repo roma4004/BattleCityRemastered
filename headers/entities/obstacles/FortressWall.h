@@ -9,7 +9,7 @@
 enum class GameMode : char8_t;
 class EventSystem;
 
-class FortressWall final : public BaseObj
+class FortressWall final : public BaseObj //TODO: remove baseObj after changing to baseObj interface in allObjects
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;

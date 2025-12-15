@@ -20,7 +20,7 @@ SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName,
 	  introMusicPathName{introMusicName},
 	  textureAtlasPath{textureCollection} {}
 
-SDL_GameController* SDLEnvironment::openController(int deviceID)
+SDL_GameController* SDLEnvironment::OpenController(const int deviceID)
 {
 	SDL_JoystickOpen(deviceID);
 	if (SDL_GameControllerOpen(deviceID))
@@ -164,13 +164,13 @@ SDLEnvironment::~SDLEnvironment()
 
 	int device_index = 0;
 
-	if ((GameControllerOne = openController(device_index)))
+	if ((GameControllerOne = OpenController(device_index)))
 	{
 		SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
 	}
 
 	++device_index;
-	if ((GameControllerTwo = openController(device_index)))
+	if ((GameControllerTwo = OpenController(device_index)))
 	{
 		SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
 	}

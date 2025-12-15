@@ -1,13 +1,14 @@
 #include "components/BulletPool.h"
+#include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 
-BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        const UPoint windowSize, const GameMode gameMode)
 	: _name{"BulletPool"},
 	  _windowSize{windowSize},
-	  _events{std::move(events)},
+	  _events{events},
 	  _allObjects{allObjects},
 	  _gameMode{gameMode}
 {
@@ -71,12 +72,12 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 			.gameMode = _gameMode
 	};
 
-	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
+	return {new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); }};
 }
 
 std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 {
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 
 	if (_bullets.empty())
 	{
@@ -87,7 +88,7 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 	_bullets.pop();
 
 	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get());
-		bulletAsBase.get() != nullptr && bullet != nullptr)
+		bulletAsBase != nullptr && bullet != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
 		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
@@ -111,7 +112,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 		return;
 	}
 
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
@@ -133,7 +134,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 
 void BulletPool::Clear()
 {
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 	_isClearing = true;
 
 	// std::cout << "[" << GetCurrentTimeString() << "] "

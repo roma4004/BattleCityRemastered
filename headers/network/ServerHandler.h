@@ -12,8 +12,8 @@ class ServerHandler : public INetworkNode
 	std::thread _serverThread{};
 
 public:
-	explicit ServerHandler(std::shared_ptr<EventSystem> events);
-	ServerHandler(const std::string& host, const std::string& port, std::shared_ptr<EventSystem> events);
+	explicit ServerHandler(const std::shared_ptr<EventSystem>& events);
+	ServerHandler(const std::string& host, const std::string& port, const std::shared_ptr<EventSystem>& events);
 
 	~ServerHandler();
 };

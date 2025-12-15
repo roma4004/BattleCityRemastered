@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 
+//TODO: template for deducing lambda parameters type can be constexpr?
 //TODO: create eventType and derived just like network command to compile time parameter check and replace event name
 namespace detail
 {
@@ -42,7 +43,7 @@ namespace detail
 	};
 
 	template<typename T>
-	using type_adapter_t = typename type_adapter<std::decay_t<T>>::type;
+	using type_adapter_t = type_adapter<std::decay_t<T>>::type;
 }
 
 // traits for deducing types
@@ -160,12 +161,12 @@ public:
 			}
 			catch (const std::exception& e)
 			{
-				std::cerr << "Exception in event callback: " << e.what() << std::endl;
+				std::cerr << "Exception in event callback: " << e.what() << '\n';
 				// continue listening to other events
 			}
 			catch (...)
 			{
-				std::cerr << "Unknown exception in event callback" << std::endl;
+				std::cerr << "Unknown exception in event callback" << '\n';
 			}
 
 		}
@@ -187,9 +188,9 @@ class EventSystem final
 	struct EventInfo
 	{
 		std::unique_ptr<BaseEvent> event;
-		std::type_info const* type_info;
+		const std::type_info* type_info;
 
-		EventInfo(std::unique_ptr<BaseEvent> ev, std::type_info const* ti)
+		EventInfo(std::unique_ptr<BaseEvent> ev, const std::type_info* ti)
 			: event(std::move(ev)), type_info(ti) {}
 	};
 
@@ -209,7 +210,7 @@ class EventSystem final
 	}
 
 	// Helper for getting event by name and argument count
-	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, size_t argCount)
+	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, const size_t argCount)
 	{
 		if (const auto it = _events.find(eventName);
 			it != _events.end() && it->second.event->GetArgumentCount() == argCount)

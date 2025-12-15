@@ -5,11 +5,11 @@
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
-Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds lifeTime,
+Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
              const int color, std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _creationTime{std::chrono::system_clock::now()},
-	  _events{std::move(events)},
+	  _events{events},
 	  _lifetime{lifeTime},
 	  _gameMode{gameMode},
 	  _bonusType{bonusType}
@@ -22,7 +22,7 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, cons
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
+		_events->EmitEvent("ServerSend_BonusSpawn", FPoint{.x = rect.x, .y = rect.y}, _bonusType, uuid);
 	}
 }
 

@@ -1,17 +1,21 @@
 ﻿#include "entities/pawns/Bullet.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
+#include "entities/obstacles/GrassTile.h"
+#include "entities/obstacles/IceTile.h"
+#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
+#include "enums/AnimationType.h"
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, {18.f}, "") {}
+Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, 18.f, "") {}
 
 Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
                const bool enableByDefault)
-	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)},
+	: Pawn{std::move(pawnProperty)},
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage}
@@ -20,9 +24,11 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
+	                                               _bulletTargets, _allObjects);
 	if (enableByDefault)
 	{
-		Subscribe();
+		Bullet::Subscribe();
 	}
 
 	if (_uuid == UuidUtils::GetNilUuid())
@@ -41,7 +47,7 @@ Bullet::~Bullet()
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	Unsubscribe();
+	Bullet::Unsubscribe();
 }
 
 void Bullet::Subscribe()
@@ -130,7 +136,10 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
 
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
+	//TODO: write reset for MoveLikeBulletBeh
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
+	                                               _bulletTargets, _allObjects);
+	_bulletTargets.clear();
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_damage = resetProperty.damage;
@@ -154,7 +163,11 @@ void Bullet::TickUpdate(const float deltaTime)
 {
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
-		std::ignore = Pawn::Move(deltaTime);
+		if (!Pawn::Move(deltaTime))
+		{
+			DealDamage(_bulletTargets);
+			_bulletTargets.clear();
+		}
 	}
 }
 
@@ -171,7 +184,33 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 
 void Bullet::TakeDamage(const int damage)
 {
-	BaseObj::TakeDamage(damage);
+	Pawn::TakeDamage(damage);
 }
 
 int Bullet::GetTier() const { return _tier; }
+
+void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
+{
+	if (!objectList.empty())
+	{
+		for (const auto& target: objectList)
+		{
+			if (target && !dynamic_cast<WaterTile*>(target.get())
+			    && !dynamic_cast<GrassTile*>(target.get())
+			    && !dynamic_cast<IceTile*>(target.get())
+			    && (target->GetIsDestructible() || _tier > 2))
+			{
+				target->TakeDamage(_damage);
+				target->SendDamageStatistics(GetAuthor(), GetFraction());
+				if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
+				{
+					SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
+				}
+			}
+		}
+	}
+
+	TakeDamage(_damage);
+
+	_events->EmitEvent("AnimationCreate", AnimationType::Bullet_Explosion, _rect, _name, _color);
+}

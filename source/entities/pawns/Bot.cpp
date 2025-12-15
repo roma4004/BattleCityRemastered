@@ -1,5 +1,4 @@
 #include "behavior/MoveLikeTankBeh.h"
-#include "behavior/ShootingBeh.h"
 #include "components/LineOfSight.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -8,14 +7,9 @@
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
-Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects,
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
          const bool enableByDefault)
-	: Tank{pawnProperty,
-	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
-	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
-	       effects,
-	       enableByDefault
-	  },
+	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault},
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
 	  _lastTimeTurn{std::chrono::system_clock::now()} {}
 
@@ -40,7 +34,7 @@ bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 
 bool Bot::IsFreePathToBonus(const std::vector<std::shared_ptr<BaseObj>>& sideObstacles)
 {
-	if (const auto nearestObstacleBonus = sideObstacles.front();
+	if (const auto& nearestObstacleBonus = sideObstacles.front();
 		IsBonus(nearestObstacleBonus))
 	{
 		return true;
@@ -157,7 +151,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	if (dir == Direction::UP && !upSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = upSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.y - (nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight());
 			_bulletOffset = _bulletSize.y;
@@ -167,7 +161,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	if (dir == Direction::LEFT && !leftSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = leftSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.x - (nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth());
 			_bulletOffset = _bulletSize.x;
@@ -177,7 +171,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	if (dir == Direction::DOWN && !downSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = downSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
 			_bulletOffset = _bulletSize.y;
@@ -187,7 +181,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	if (dir == Direction::RIGHT && !rightSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = rightSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
 			_bulletOffset = _bulletSize.x;

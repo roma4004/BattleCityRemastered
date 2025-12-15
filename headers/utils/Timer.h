@@ -1,7 +1,5 @@
 #pragma once
 
-#include "utils/TimeUtils.h"
-
 #include <chrono>
 
 struct Timer
@@ -18,5 +16,5 @@ struct Timer
 
 	~Timer();
 
-	bool IsCooldownFinish() const { return TimeUtils::IsCooldownFinish(activateTime, cooldown); }
+	bool IsCooldownFinish() const;
 };

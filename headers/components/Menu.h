@@ -56,9 +56,9 @@ class Menu final
 	void OnRespawnResourceChanged(const std::string& objectName, int respawnResource);
 
 public:
-	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
-	     std::shared_ptr<EventSystem> events);
+	Menu(const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& menuFont,
+	     const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<GameStatistics>& statistics,
+	     UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 
 	~Menu();
 

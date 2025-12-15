@@ -22,6 +22,7 @@ class Bullet final : public Pawn, public IDrawable
 	double _bulletDamageRadius{14.f};
 	std::string _uuidStr{};
 	int _damage{0};
+	std::vector<std::shared_ptr<BaseObj>> _bulletTargets{};
 
 	void Subscribe() override;
 	void SubscribeAsClient() override;
@@ -57,4 +58,6 @@ public:
 	void TakeDamage(int damage) override;
 
 	[[nodiscard]] int GetTier() const;
+
+	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
 };

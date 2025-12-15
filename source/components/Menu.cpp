@@ -6,15 +6,15 @@
 #include <iomanip>
 #include <sstream>
 
-Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-           std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, const UPoint windowSize,
-           std::shared_ptr<EventSystem> events)
+Menu::Menu(const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& menuFont,
+           const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<GameStatistics>& statistics,
+           const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)},
-	  _renderer{std::move(renderer)},
+	  _renderer{renderer},
 	  _events{events},
-	  _menuFont{std::move(menuFont)},
-	  _menuLogo{std::move(menuLogo)},
-	  _statistics{std::move(statistics)},
+	  _menuFont{menuFont},
+	  _menuLogo{menuLogo},
+	  _statistics{statistics},
 	  _input{std::make_unique<InputProviderForMenu>(events)},
 	  _name{std::string("Menu")},
 	  _selectedGameMode{GameMode::OnePlayer}
@@ -249,7 +249,7 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 		textStream << std::setw(4) << enemy;
 	}
 
-	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+	TextToRender(Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
 void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text,
@@ -263,7 +263,7 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 			<< std::setw(4) << text2
 			<< std::setw(4) << text3;
 
-	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+	TextToRender(Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
 void Menu::DrawText() const

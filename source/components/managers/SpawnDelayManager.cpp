@@ -3,8 +3,8 @@
 #include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
-SpawnDelayManager::SpawnDelayManager(std::shared_ptr<EventSystem> events)
-	: _name{"SpawnDelayManager"}, _events{std::move(events)}
+SpawnDelayManager::SpawnDelayManager(const std::shared_ptr<EventSystem>& events)
+	: _name{"SpawnDelayManager"}, _events{events}
 {
 	Subscribe();
 }
@@ -20,7 +20,8 @@ void SpawnDelayManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
-	_events->AddListener("SpawnDelayStart", _name, [this](std::shared_ptr<Tank> tank, const milliseconds delay)
+	//TODO: create flow to enable replicated pawn on client after delay end, replicate enable signal
+	_events->AddListener("SpawnDelayStart", _name, [this](const std::shared_ptr<Tank>& tank, const milliseconds delay)
 	{
 		if (delay == milliseconds(0))
 		{
@@ -28,6 +29,7 @@ void SpawnDelayManager::Subscribe()
 		}
 		else
 		{
+			//TODO: fix delay managers to work with on client side
 			this->_spawnDelays.emplace_back(tank, Timer{delay, std::chrono::system_clock::now()});
 		}
 	});
@@ -55,10 +57,9 @@ void SpawnDelayManager::Reset()
 
 void SpawnDelayManager::TickUpdate(const float /*deltaTime*/)
 {
-	for (size_t i = 0u; i < _spawnDelays.size(); ++i)
+	for (auto& [tank, timer]: _spawnDelays)
 	{
-		if (auto& [tank, timer] = _spawnDelays[i];
-			timer.isActive && timer.IsCooldownFinish())
+		if (timer.isActive && timer.IsCooldownFinish())
 		{
 			tank->Enable();
 			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));

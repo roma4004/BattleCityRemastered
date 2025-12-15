@@ -14,7 +14,7 @@ class GrassTile final : public Obstacle
 	void Unsubscribe() const override;
 
 public:
-	GrassTile(ObjRectangle rect, std::shared_ptr<EventSystem> events, buuid uuid, GameMode gameMode);
+	GrassTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~GrassTile() override;
 };

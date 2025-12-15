@@ -30,7 +30,7 @@ struct SDLEnvironment final
 	SDL_GameController* GameControllerOne{nullptr};
 	SDL_GameController* GameControllerTwo{nullptr};
 	SDL_GameController* AddedGameController{nullptr};
-	SDL_GameController* openController(int deviceID);
+	SDL_GameController* OpenController(int deviceID);//TODO: sort method and fields
 
 	~SDLEnvironment();
 

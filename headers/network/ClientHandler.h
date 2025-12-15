@@ -13,8 +13,8 @@ class ClientHandler : public INetworkNode
 	std::thread _clientThread{};
 
 public:
-	explicit ClientHandler(std::shared_ptr<EventSystem> events);
-	ClientHandler(const std::string& host, const std::string& port, std::shared_ptr<EventSystem> events);
+	explicit ClientHandler(const std::shared_ptr<EventSystem>& events);
+	ClientHandler(const std::string& host, const std::string& port, const std::shared_ptr<EventSystem>& events);
 
 	~ClientHandler();
 };

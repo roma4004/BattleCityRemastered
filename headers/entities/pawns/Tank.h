@@ -8,6 +8,7 @@ struct UPoint;
 class PlayerTest;
 class IShootable;
 class SpawnDelayManager;
+class BulletPool;
 
 class Tank : public Pawn, public IHealthBar
 {
@@ -18,15 +19,13 @@ class Tank : public Pawn, public IHealthBar
 
 	int _bulletDamage{15};
 	float _bulletSpeed{300.f};//TODO: move outside this class to bullet caliber stats class and DI into constructor
+	std::vector<std::shared_ptr<BaseObj>> _touchedObstacles;
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
 	void Subscribe() override;
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
-
-	void Disable() const;
-	void Enable();
 
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
@@ -39,9 +38,10 @@ class Tank : public Pawn, public IHealthBar
 	void OnBonusGrenade(const std::string& author, const std::string& fraction);
 	void OnBonusStar(const std::string& author, const std::string& fraction);
 	void OnBonusCaliber(const std::string& author, const std::string& fraction);
+	void OnTankOnOff(buuid uuid, bool isEnable);
 
 protected:
-	FPoint _bulletSize{9.f, 9.f};
+	FPoint _bulletSize{.x = 9.f, .y = 9.f};
 	double _bulletDamageRadius{18.f};
 	milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire{};
@@ -58,9 +58,12 @@ protected:
 
 	void TakeDamage(int damage) override;
 
+	virtual void Enable();
+	virtual void Disable() const;
+
 public:
-	Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-	     BonusEffectProperty effects, bool enableByDefault = false);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects,
+	     bool enableByDefault = false);
 
 	~Tank() override;
 

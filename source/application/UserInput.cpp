@@ -7,8 +7,8 @@
 #include <ranges>
 #include <iostream>
 
-UserInput::UserInput(const UPoint windowSize, std::shared_ptr<EventSystem> events)
-	: _windowSize{windowSize}, _events{std::move(events)}
+UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+	: _windowSize{windowSize}, _events{events}
 {
 	Subscribe();
 }

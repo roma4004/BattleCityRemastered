@@ -38,7 +38,7 @@ protected:
 	void TickUpdate(float deltaTime) override = 0;
 
 public:
-	Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh);
+	Pawn(PawnProperty pawnProperty);
 
 	~Pawn() override;
 

@@ -38,7 +38,7 @@ class Client final//: public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       std::shared_ptr<EventSystem> events);
+	       const std::shared_ptr<EventSystem>& events);
 
 	~Client();
 
@@ -60,7 +60,9 @@ public:
 	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
 	void OnObstacleSpawn(const std::shared_ptr<Command>& command) const;
 	void OnAnimationCreate(const std::shared_ptr<Command>& command) const;
+	void OnTankOnOff(const std::shared_ptr<Command>& command) const;
 	void OnCommandBatch(const std::shared_ptr<Command>& commands) const;
+	void OnBonusStatus(const std::shared_ptr<Command>& command) const;
 	void ProcessClientCommand(const std::shared_ptr<Command>& command) const;
 	void ProcessReceivedData(const std::string& archiveData) const;
 

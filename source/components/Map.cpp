@@ -3,9 +3,9 @@
 #include "entities/ObjRectangle.h"
 #include "enums/ObstacleType.h"
 
-Map::Map(std::shared_ptr<ObstacleSpawner> obstacleSpawner) : _obstacleSpawner{std::move(obstacleSpawner)} {}
+Map::Map(const std::shared_ptr<ObstacleSpawner>& obstacleSpawner) : _obstacleSpawner{obstacleSpawner} {}
 
-Map::~Map() {}
+Map::~Map() = default;
 
 void Map::MapCreation(const float gridSize) const
 {

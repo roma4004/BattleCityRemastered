@@ -1,23 +1,36 @@
 #include "entities/pawns/Player.h"
-#include "behavior/MoveLikeTankBeh.h"
-#include "behavior/ShootingBeh.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "interfaces/IInputProvider.h"
 #include "utils/TimeUtils.h"
 
-Player::Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool,
+Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
                std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects,
                const bool enableByDefault)
-	: Tank{pawnProperty,
-	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
-	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
-	       effects,
-	       enableByDefault
-	  },
-	  _inputProvider{std::move(inputProvider)} {}
+	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault},
+	  _inputProvider{std::move(inputProvider)}
+{
+	if (enableByDefault)
+	{
+		Enable();
+	}
+}
 
 Player::~Player() = default;
+
+void Player::Enable()
+{
+	Tank::Enable();
+
+	_inputProvider->Enable();
+}
+
+void Player::Disable() const
+{
+	Tank::Disable();
+
+	_inputProvider->Disable();
+}
 
 void Player::TickUpdate(const float deltaTime)
 {
