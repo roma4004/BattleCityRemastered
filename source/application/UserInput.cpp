@@ -197,7 +197,7 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 
 		default:
 			break;
-	} 
+	}
 }
 
 void UserInput::KeyboardEvents(const SDL_Event& event) const
@@ -206,7 +206,6 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 	{
 		KeyboardKeyPressRelease(event);
 	}
-
 }
 
 void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag) const
