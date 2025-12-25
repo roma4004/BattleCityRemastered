@@ -18,18 +18,18 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
+	int _bulletDamage{1};
+	int _bulletHealth{1};
+	int _bulletColor{0xffffff};
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
 	float _deltaTimeOneFrame{1.f / 60.f};
-	GameMode _gameMode{GameMode::OnePlayer};
-	int _bulletDamage{1};
-	int _bulletHealth{1};
-	int _bulletColor{0xffffff};
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
 	double _bulletDamageRadius{12.0};
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{

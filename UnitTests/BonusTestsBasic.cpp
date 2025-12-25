@@ -31,17 +31,17 @@ protected:
 	int _tankHealth{100};
 	int _yellow{0xeaea00};
 	int _gray{0x808080};
-	GameMode _gameMode{GameMode::OnePlayer};
 	int _bulletColor{0xffffff};
 	int _bulletHealth{1};
 	int _bulletDamage{1};
-	double _bulletDamageRadius{12.0};
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
 	// float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
+	double _bulletDamageRadius{12.0};
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{

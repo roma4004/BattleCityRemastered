@@ -29,11 +29,11 @@ protected:
 	float _bulletSpeed{300.f};
 	float _deltaTimeOneFrame{1.f / 60.f};
 	float _gridSize{0.f};
-	GameMode _gameMode{GameMode::OnePlayer};
 	std::string _name = "Player1";
 	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{

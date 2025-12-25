@@ -58,7 +58,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 void UserInput::SwapControllers()
 {
 	_areControllersSwapped = !_areControllersSwapped;
-	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent
+	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";//TODO: remove after add visual label
 }
 
 std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) const
@@ -79,7 +79,9 @@ std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) con
 	}
 
 	if (isFirst)
+	{
 		return _areControllersSwapped ? "P2" : "P1";
+	}
 
 	return _areControllersSwapped ? "P1" : "P2";
 }
