@@ -56,7 +56,7 @@ SDLEnvironment::~SDLEnvironment()
 		{
 			return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
 		}
-		
+
 		if (fpsFont = {TTF_OpenFont(fpsFontPathName, 14), TTF_CloseFont};
 			fpsFont == nullptr)
 		{
@@ -102,7 +102,7 @@ SDLEnvironment::~SDLEnvironment()
 		{
 			return std::make_unique<ConfigFailure>("IMG atlas SetColorKey Error", SDL_GetError());
 		}
-		
+
 		if (atlasTexture = {SDL_CreateTextureFromSurface(renderer.get(), rawSurface), SDL_DestroyTexture};
 			atlasTexture == nullptr)
 		{
@@ -136,7 +136,8 @@ SDLEnvironment::~SDLEnvironment()
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
 }
 
-[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(UPoint& windowSizeHalf) const
+[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(
+		UPoint& windowSizeHalf) const
 {
 	const auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_SHOWN;
@@ -164,8 +165,8 @@ SDLEnvironment::~SDLEnvironment()
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
-							  static_cast<int>(bounds.x + bounds.w / 2 - windowSizeHalf.x / 2),
-							  static_cast<int>(bounds.y + bounds.h / 2 - windowSizeHalf.y / 2 - bordersSize.y));
+		                      static_cast<int>(bounds.x + bounds.w / 2 - windowSizeHalf.x / 2),
+		                      static_cast<int>(bounds.y + bounds.h / 2 - windowSizeHalf.y / 2 - bordersSize.y));
 	}
 
 	return {SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags), SDL_DestroyRenderer};

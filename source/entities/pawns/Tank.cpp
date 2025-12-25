@@ -32,12 +32,11 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	// NOTE: should be in constructor to be able to enable by replication
 	if (_gameMode == GameMode::PlayAsClient)
 	{
-		_events->AddListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid, [this](const buuid uuid, const bool isEnable)
-		{
-			this->OnTankOnOff(uuid, isEnable);
-		});
+		_events->AddListener("ClientReceived_" + _name + "OnTankOnOff",
+		                     _nameWithUuid,
+		                     [this](const buuid uuid, const bool isEnable) { this->OnTankOnOff(uuid, isEnable); });
 	}
-	
+
 	_events->EmitEvent("TankSpawn", _uuid);
 }
 

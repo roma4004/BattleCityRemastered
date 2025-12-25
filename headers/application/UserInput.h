@@ -42,7 +42,7 @@ class UserInput final
 	void ConnectController(const std::shared_ptr<SDL_GameController>& newController);
 	void DisconnectController(SDL_JoystickID instanceId);
 	void SwapControllers();
-	std::string ControllerTagDefiner(const SDL_Event& event) const;
+	std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
 	static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId);
 
 public:

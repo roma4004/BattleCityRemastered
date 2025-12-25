@@ -61,14 +61,11 @@ void UserInput::SwapControllers()
 	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent
 }
 
-std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
+std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) const
 {
-	std::string player1Tag{_areControllersSwapped ? "P2" : "P1"};
-	std::string player2Tag{_areControllersSwapped ? "P1" : "P2"};
-
+	bool isFirst{true};
 	if (SDL_NumJoysticks() > 1)
 	{
-		const SDL_JoystickID instanceId = event.cdevice.which;
 		const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
 		{
 			return IsSameController(controller, instanceId);
@@ -77,12 +74,14 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 		if (const auto it = std::ranges::find_if(_slotsForController, isSameId);
 			it != _slotsForController.end())
 		{
-			const auto distance = std::distance(_slotsForController.begin(), it);
-			return distance == 1 ? player1Tag : player2Tag;
+			isFirst = 1 == std::distance(_slotsForController.begin(), it);
 		}
 	}
 
-	return player1Tag;
+	if (isFirst)
+		return _areControllersSwapped ? "P2" : "P1";
+
+	return _areControllersSwapped ? "P1" : "P2";
 }
 
 void UserInput::OnWindowMoveStop()
@@ -217,7 +216,7 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string
 {
 	if (SDL_NumJoysticks() > 0)
 	{
-		std::string controllerTag{ControllerTagDefiner(event)};
+		std::string controllerTag{ControllerTagDefiner(event.cdevice.which)};
 
 		switch (event.cbutton.button)
 		{
