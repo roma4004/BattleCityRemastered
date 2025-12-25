@@ -75,7 +75,7 @@ class Server final
 	std::mutex _sendQueueMutex;
 	std::condition_variable _sendCondition;
 	std::thread _sendThread;
-	bool _isRunning{true};
+	bool _isRunning{false};
 
 	void DoAccept();
 

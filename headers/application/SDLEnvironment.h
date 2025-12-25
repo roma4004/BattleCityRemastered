@@ -11,7 +11,7 @@ class IConfig;
 
 struct SDLEnvironment final
 {
-	std::shared_ptr<SDL_Window> sdlWindow{nullptr};
+	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::shared_ptr<Mix_Chunk> levelStartedSound{nullptr};
 
@@ -27,12 +27,10 @@ struct SDLEnvironment final
 	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
 	               const char* introMusicName, const char* textureCollection);
 
-	SDL_GameController* GameControllerOne{nullptr};
-	SDL_GameController* GameControllerTwo{nullptr};
-	SDL_GameController* AddedGameController{nullptr};
-	SDL_GameController* OpenController(int deviceID);//TODO: sort method and fields
-
 	~SDLEnvironment();
 
 	[[nodiscard]] std::unique_ptr<IConfig> Init();
+
+	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow(UPoint& windowSizeHalf) const;
+	std::shared_ptr<SDL_Renderer> InitRender(UPoint& windowSizeHalf) const;
 };

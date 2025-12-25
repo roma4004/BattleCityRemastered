@@ -11,6 +11,8 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 	: _windowSize{windowSize}, _events{events}
 {
 	Subscribe();
+
+	InitControllers();
 }
 
 UserInput::~UserInput()
@@ -67,10 +69,13 @@ std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
 	if (SDL_NumJoysticks() > 1)
 	{
 		const SDL_JoystickID instanceId = event.cdevice.which;
-		const auto it = std::ranges::find_if(_slotsForController, [instanceId](const std::shared_ptr<SDL_GameController>& n) 
-				{ return n && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(n.get())) == instanceId; });
+		const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
+		{
+			return IsSameController(controller, instanceId);
+		};
 
-		if (it != _slotsForController.end())
+		if (const auto it = std::ranges::find_if(_slotsForController, isSameId);
+			it != _slotsForController.end())
 		{
 			const auto distance = std::distance(_slotsForController.begin(), it);
 			return distance == 1 ? player1Tag : player2Tag;
@@ -130,9 +135,9 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 {
-	std::string KeyboardLeftSideTag (_areControllersSwapped? "P2" : "P1");
-	std::string KeyboardRightSideTag (_areControllersSwapped? "P1" : "P2");
-	std::string KeyStateTag {};
+	std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
+	std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
+	std::string KeyStateTag{};
 
 	if (event.key.type == SDL_KEYDOWN)
 	{
@@ -210,45 +215,45 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 
 void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag) const
 {
-	if (SDL_NumJoysticks()>0)
+	if (SDL_NumJoysticks() > 0)
 	{
 		std::string controllerTag{ControllerTagDefiner(event)};
 
 		switch (event.cbutton.button)
 		{
-		case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent(controllerTag + "_Fire_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_B:
-			_events->EmitEvent(controllerTag + "_B_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_X:
-			_events->EmitEvent(controllerTag + "_X_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_Y:
-			_events->EmitEvent(controllerTag + "_Y_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
-			_events->EmitEvent(controllerTag + "_Move_Up_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-			_events->EmitEvent(controllerTag + "_Move_Down_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-			_events->EmitEvent(controllerTag + "_Move_Left_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			_events->EmitEvent(controllerTag + "_Move_Right_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent(controllerTag + "_Start_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_GUIDE:
-			_events->EmitEvent(controllerTag + "_GUIDE_" + KeyStateTag);
-			break;
+			case SDL_CONTROLLER_BUTTON_A:
+				_events->EmitEvent(controllerTag + "_Fire_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_B:
+				_events->EmitEvent(controllerTag + "_B_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_X:
+				_events->EmitEvent(controllerTag + "_X_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_Y:
+				_events->EmitEvent(controllerTag + "_Y_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_UP:
+				_events->EmitEvent(controllerTag + "_Move_Up_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+				_events->EmitEvent(controllerTag + "_Move_Down_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+				_events->EmitEvent(controllerTag + "_Move_Left_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+				_events->EmitEvent(controllerTag + "_Move_Right_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_START:
+				_events->EmitEvent(controllerTag + "_Start_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_GUIDE:
+				_events->EmitEvent(controllerTag + "_GUIDE_" + KeyStateTag);
+				break;
 
-		default:
-			break;
+			default:
+				break;
 		}
 	}
 }
@@ -257,51 +262,32 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 {
 	switch (event.type)
 	{
-	case SDL_CONTROLLERBUTTONDOWN:
-	{
-		GamepadKeyPressRelease(event, "Pressed");
-		break;
-	}
-	case SDL_CONTROLLERBUTTONUP:
-	{
-		GamepadKeyPressRelease(event, "Released");
-		break;
-	}
-	case SDL_CONTROLLERDEVICEADDED:
-	{
-		std::cout << "NumJoysticks " << SDL_NumJoysticks() << " \n";
-		std::shared_ptr<SDL_GameController> newController{SDL_GameControllerOpen(event.cdevice.which), SDL_GameControllerClose};
-		const auto it = std::ranges::find_if(_slotsForController,
-				[](const auto& n){return n == nullptr;});
-		if (it != _slotsForController.end())
+		case SDL_CONTROLLERBUTTONDOWN:
 		{
-			*it = newController;
+			GamepadKeyPressRelease(event, "Pressed");
+			break;
 		}
-		else
+		case SDL_CONTROLLERBUTTONUP:
 		{
-			_slotsForController.push_back(newController);
+			GamepadKeyPressRelease(event, "Released");
+			break;
 		}
-
-		break;
-	}
-	case SDL_CONTROLLERDEVICEREMOVED: 
-	{
-		SDL_JoystickID instanceId = event.cdevice.which;
-		SDL_Log("Controller removed! (instance %d) ", event.cdevice.which);
-
-		const auto it = std::ranges::find_if(_slotsForController, [instanceId](const auto& n) 
-			{ return n && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(n.get())) == instanceId; });
-
-		if (it != _slotsForController.end())
+		case SDL_CONTROLLERDEVICEADDED:
 		{
-			it->reset();
+			std::cout << "NumJoysticks " << SDL_NumJoysticks() << " \n";
+			ConnectController({SDL_GameControllerOpen(event.cdevice.which), SDL_GameControllerClose});
+			break;
+		}
+		case SDL_CONTROLLERDEVICEREMOVED:
+		{
+			SDL_JoystickID instanceId = event.cdevice.which;
+			SDL_Log("Controller removed! (instance %d) ", instanceId);
+			DisconnectController(instanceId);
+			break;
 		}
 
-		break;
-	}
-
-	default:
-		break;
+		default:
+			break;
 	}
 }
 
@@ -327,3 +313,74 @@ void UserInput::Update()
 bool UserInput::IsGameOver() const { return _isGameOver; }
 
 bool UserInput::IsPause() const { return _isPause; }
+
+void UserInput::ConnectController(const std::shared_ptr<SDL_GameController>& newController)
+{
+	const auto isEmpty = [](const std::shared_ptr<SDL_GameController>& controller) { return controller == nullptr; };
+
+	if (const auto it = std::ranges::find_if(_slotsForController, isEmpty);
+		it != _slotsForController.end())
+	{
+		*it = newController;
+	}
+	else
+	{
+		_slotsForController.push_back(newController);
+	}
+}
+
+void UserInput::DisconnectController(SDL_JoystickID instanceId)
+{
+	const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
+	{
+		return IsSameController(controller, instanceId);
+	};
+
+	if (const auto it = std::ranges::find_if(_slotsForController, isSameId);
+		it != _slotsForController.end())
+	{
+		it->reset();
+	}
+}
+
+void UserInput::InitControllers()
+{
+	const int numConnectedJoysticks = SDL_NumJoysticks();
+	std::cout << numConnectedJoysticks << " gamepad/s connected\n";
+
+	if (numConnectedJoysticks > 0)
+	{
+		if (SDL_GameController* GameControllerOne = SDL_GameControllerOpen(0);
+			GameControllerOne != nullptr)
+		{
+			ConnectController({GameControllerOne, SDL_GameControllerClose});
+			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
+		}
+	}
+
+	if (numConnectedJoysticks > 1)
+	{
+		if (SDL_GameController* GameControllerTwo = SDL_GameControllerOpen(1);
+			GameControllerTwo != nullptr)
+		{
+			ConnectController({GameControllerTwo, SDL_GameControllerClose});
+			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
+		}
+	}
+}
+
+bool UserInput::IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId)
+{
+	if (controller == nullptr)
+	{
+		return false;
+	}
+
+	if (SDL_Joystick* joystick = SDL_GameControllerGetJoystick(controller.get());
+		joystick != nullptr)
+	{
+		return SDL_JoystickInstanceID(joystick) == instanceId;
+	}
+
+	return false;
+}

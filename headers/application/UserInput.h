@@ -33,13 +33,17 @@ class UserInput final
 	void GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag) const;
 	void GamepadEvents(const SDL_Event& event);
 	void OnWindowMoveStop();
+	void WindowsMoveEvents(const SDL_Event& event);
 
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void WindowsMoveEvents(const SDL_Event& event);
+	void InitControllers();
+	void ConnectController(const std::shared_ptr<SDL_GameController>& newController);
+	void DisconnectController(SDL_JoystickID instanceId);
 	void SwapControllers();
 	std::string ControllerTagDefiner(const SDL_Event& event) const;
+	static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId);
 
 public:
 	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
