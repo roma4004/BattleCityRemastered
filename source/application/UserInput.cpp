@@ -18,6 +18,8 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 UserInput::~UserInput()
 {
 	Unsubscribe();
+
+	_slotsForController.clear();
 }
 
 void UserInput::Subscribe()

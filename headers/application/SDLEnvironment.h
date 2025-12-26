@@ -2,18 +2,18 @@
 
 #include "Point.h"
 #include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
+#include <SDL_mixer.h>
 #include <memory>
 
 struct UPoint;
-struct Mix_Chunk;
 
 class IConfig;
 
 struct SDLEnvironment final
 {
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
+	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelStartedSound{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
-	std::shared_ptr<Mix_Chunk> levelStartedSound{nullptr};
 
 	UPoint windowSize{};
 
