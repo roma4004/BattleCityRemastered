@@ -25,7 +25,8 @@ void SpawnDelayManager::Subscribe()
 	{
 		if (delay == milliseconds(0))
 		{
-			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));// NOTE: immediate call, for tests
+			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));
+			// NOTE: immediate call, for tests
 		}
 		else
 		{
@@ -61,7 +62,6 @@ void SpawnDelayManager::TickUpdate(const float /*deltaTime*/)
 	{
 		if (timer.isActive && timer.IsCooldownFinish())
 		{
-			tank->Enable();
 			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));
 			timer.isActive = false;
 		}

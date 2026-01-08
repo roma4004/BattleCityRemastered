@@ -42,7 +42,7 @@ class TextureManager final
 	void ClearColorTextureCache();
 	void ClearFpsTextureCache();
 	void DrawHealthBar(ObjRectangle rect, int health, int color) const;
-	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
+	[[nodiscard]] inline static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
 	[[nodiscard]] SDL_Texture* CreateColorTexture(int color);
 	void RectDraw(ObjRectangle rect, int color);
 	[[nodiscard]] SDL_Rect GetAnimTextureRect(const std::string& name, ObjRectangle rect, SDL_Rect& destRect) const;

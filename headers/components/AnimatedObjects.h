@@ -32,21 +32,13 @@ public:
 	AnimatedObject(const AnimatedObject& other);
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
-	//for water
-	AnimatedObject(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, int frameLimit);
-
-	//for tank
-	AnimatedObject(const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
-	               const std::weak_ptr<Tank>& tank);
-
-	//for other (eg explosion)
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
 	               const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
-	               std::string objName, int color);
+	               std::string objName, int color, bool isInfinite = {}, std::weak_ptr<Tank> tank = {});
 
 	~AnimatedObject();
 
-	void Subscribe();
+	void Subscribe() const;
 	void Unsubscribe() const;
 
 	void Disable() const;

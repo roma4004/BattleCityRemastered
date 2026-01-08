@@ -42,10 +42,12 @@ void AnimationManager::SubscribeAsHost()
 				this->CreateAnimation(type, rect, objName, color);
 			});
 
+	//TODO: create client like subscription
 	_events->AddListener("AnimationCreateTank", _name, [this](const std::weak_ptr<Tank>& tank)
 	{
 		this->CreateAnimationTank(tank);
 	});
+
 	_events->AddListener("AnimationCreateWater", _name, [this](const ObjRectangle rect)
 	{
 		this->CreateAnimationWater(rect);
@@ -128,19 +130,50 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 
 void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 {
-	_waterObjects.emplace_back(rect, _events, 16);
+	constexpr int color{0};
+	constexpr auto type = AnimationType::Water_Animation;
+	constexpr bool isInfinite{true};
+	const std::string name = "Water";
+	_waterObjects.emplace_back(name, rect, type, _events, _gameMode, 16, 1, name, color, isInfinite);
+
+	//TODO: extract to higher layer
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		this->_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Water_Animation, rect, "Water", 0);
+	}
 }
 
 void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 {
-	_tankObjects.emplace_back(_events, _gameMode, 2, 16, tank);
+	const auto tankLck = tank.lock();
+	if (!tankLck)
+		return; //TODO: add assert in this case
+
+	const ObjRectangle rect = tankLck->GetRect();
+	const std::string objName(tankLck->GetName());
+	const int color = tankLck->GetColor();
+	constexpr auto type = AnimationType::Tank_Animation;
+	const std::string name = "TankAnimation";
+	constexpr bool isInfinite{true};
+	_tankObjects.emplace_back(name, rect, type, _events, _gameMode, 2, 16, objName, color, isInfinite, tank);
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name, color);
+	}
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
-                              const int limitOfFrames, const int scale, std::string objName, const int color)
+                              const int limitOfFrames, const int scale, const std::string& objName, const int color,
+                              const bool isInfinite)
 {
 	_animatedObjects.emplace_back(
-			name, rect, type, _events, _gameMode, limitOfFrames, scale, std::move(objName), color);
+			name, rect, type, _events, _gameMode, limitOfFrames, scale, objName, color, isInfinite);
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName, color);
+	}
 }
 
 void AnimationManager::Update()

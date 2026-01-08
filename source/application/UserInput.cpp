@@ -48,7 +48,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 
 			if (!_isPause)
 			{
-				_isPauseBeforeDragNDrop = _isPause;//Backup to let pause status the same as it was before dragging
+				_isPauseBeforeDragNDrop = true;
 				_events->EmitEvent("Pause_Released");
 			}
 		}
@@ -96,8 +96,9 @@ void UserInput::OnWindowMoveStop()
 		{
 			_isMoving = false;
 
-			if (!_isPauseBeforeDragNDrop)
+			if (_isPauseBeforeDragNDrop)
 			{
+				_isPauseBeforeDragNDrop = false;
 				_events->EmitEvent("Pause_Released");
 			}
 		}

@@ -122,7 +122,7 @@ void TextureManager::DrawHealthBar(const ObjRectangle rect, const int health, co
 	SDL_SetRenderDrawBlendMode(_renderer.get(), blendMode);//restore blendmode type
 }
 
-SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
+inline SDL_Rect TextureManager::RectToSdlRect(const ObjRectangle& rect)
 {
 	return SDL_Rect{
 			static_cast<int>(rect.x),
