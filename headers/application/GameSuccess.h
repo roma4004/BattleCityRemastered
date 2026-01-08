@@ -30,10 +30,10 @@ class GameSuccess final : public IGame
 
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
+	std::unique_ptr<TextureManager> _textureManager{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	std::shared_ptr<TextureManager> _textureManager{nullptr};
 	std::shared_ptr<UserInput> _userInput{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
@@ -78,7 +78,7 @@ class GameSuccess final : public IGame
 public:
 	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 	            const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
-	            const std::shared_ptr<TextureManager>& textureManager, bool isVsyncOn);
+	            std::unique_ptr<TextureManager> textureManager, bool isVsyncOn);
 
 	~GameSuccess() override;
 };

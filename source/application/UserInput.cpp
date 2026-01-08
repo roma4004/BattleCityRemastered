@@ -138,8 +138,8 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event) const
 {
-	std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
-	std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
+	const std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
+	const std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
 	std::string KeyStateTag{};
 
 	if (event.key.type == SDL_KEYDOWN)
@@ -220,7 +220,7 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string
 {
 	if (SDL_NumJoysticks() > 0)
 	{
-		std::string controllerTag{ControllerTagDefiner(event.cdevice.which)};
+		const std::string controllerTag{ControllerTagDefiner(event.cdevice.which)};
 
 		switch (event.cbutton.button)
 		{
@@ -283,7 +283,7 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 		}
 		case SDL_CONTROLLERDEVICEREMOVED:
 		{
-			SDL_JoystickID instanceId = event.cdevice.which;
+			const SDL_JoystickID instanceId = event.cdevice.which;
 			SDL_Log("Controller removed! (instance %d) ", instanceId);
 			DisconnectController(instanceId);
 			break;
@@ -332,7 +332,7 @@ void UserInput::ConnectController(const std::shared_ptr<SDL_GameController>& new
 	}
 }
 
-void UserInput::DisconnectController(SDL_JoystickID instanceId)
+void UserInput::DisconnectController(const SDL_JoystickID instanceId)
 {
 	const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
 	{
@@ -372,7 +372,7 @@ void UserInput::InitControllers()
 	}
 }
 
-bool UserInput::IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId)
+bool UserInput::IsSameController(const std::shared_ptr<SDL_GameController>& controller, const SDL_JoystickID instanceId)
 {
 	if (controller == nullptr)
 	{

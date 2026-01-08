@@ -38,13 +38,13 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
                          const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
-                         const std::shared_ptr<TextureManager>& textureManager, const bool isVsyncOn)
+                         std::unique_ptr<TextureManager> textureManager, const bool isVsyncOn)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
+	  _textureManager(std::move(textureManager)),
 	  _statistics{statistics},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
-	  _textureManager(textureManager),
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
@@ -340,3 +340,5 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 		_networkNode = nullptr;
 	}
 }
+
+// TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)
