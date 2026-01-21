@@ -18,10 +18,6 @@ void InputProviderForMenu::Subscribe()
 	this->ToggleMenuInputSubscription();
 
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
-	_events->AddListener("P1_Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
-	_events->AddListener("P2_Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
-	_events->AddListener("P1_Pause_Released", _name, [this]() { this->TogglePause(); });
-	_events->AddListener("P2_Pause_Released", _name, [this]() { this->TogglePause(); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
@@ -44,10 +40,6 @@ void InputProviderForMenu::SubscribeAsClient()
 void InputProviderForMenu::Unsubscribe() const
 {
 	_events->RemoveListener("Menu_Released", _name);
-	_events->RemoveListener("P1_Menu_Released", _name);
-	_events->RemoveListener("P2_Menu_Released", _name);
-	_events->RemoveListener("P1_Pause_Released", _name);
-	_events->RemoveListener("P2_Pause_Released", _name);
 	_events->RemoveListener("Pause_Released", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 
