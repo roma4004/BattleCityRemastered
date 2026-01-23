@@ -241,10 +241,10 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string
 			_events->EmitEvent(controllerTag + "_Move_Right_" + KeyStateTag);
 			break;
 		case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent("Menu_" + KeyStateTag);
+			_events->EmitEvent(controllerTag + "_Menu_" + KeyStateTag);
 			break;
 		case SDL_CONTROLLER_BUTTON_BACK:
-			_events->EmitEvent("Pause_" + KeyStateTag);
+			_events->EmitEvent(controllerTag + "_Pause_" + KeyStateTag);
 			break;
 
 		default:

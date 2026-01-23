@@ -2,17 +2,10 @@
 #include "components/EventSystem.h"
 
 InputProviderForPlayerOne::InputProviderForPlayerOne(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
-{
-	_events->AddListener("Menu_Released", _name, [this]()
-	{
-		_isEnabled ? Disable() : Enable();
-	});
-}
+	: _events{events} {}
 
 InputProviderForPlayerOne::~InputProviderForPlayerOne()
 {
-	_events->RemoveListener("Menu_Released", _name);
 	Unsubscribe();
 }
 
@@ -46,12 +39,10 @@ void InputProviderForPlayerOne::Unsubscribe() const
 
 void InputProviderForPlayerOne::Enable()
 {
-	_isEnabled = true; 
 	Subscribe();
 }
 
 void InputProviderForPlayerOne::Disable() const
 {
-	_isEnabled = false;
 	Unsubscribe();
 }
