@@ -16,6 +16,7 @@
 #include "network/ServerHandler.h"
 #include <algorithm>
 //#include <fstream>
+#include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include <iostream>
 #include <memory>
@@ -38,13 +39,15 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
                          const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
-                         const std::shared_ptr<TextureManager>& textureManager, const bool isVsyncOn)
+                         const std::shared_ptr<TextureManager>& textureManager, const bool isVsyncOn,
+                         const std::shared_ptr<StateManager>& stateManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _statistics{statistics},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
-	  _textureManager(textureManager),
+	  _textureManager{textureManager},
+	  _stateManager{stateManager},
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
 	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
@@ -289,6 +292,11 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent("AnimationUpdate");
 
 			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
+
+			if (_userInput->IsPause())
+			{
+				_stateManager->DrawPauseText();
+			}
 
 			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part
 

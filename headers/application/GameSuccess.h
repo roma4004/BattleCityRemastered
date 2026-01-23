@@ -20,6 +20,7 @@ class TankSpawner;
 class BonusSpawner;
 class ObstacleSpawner;
 class TextureManager;
+class StateManager;
 class BonusEffectManager;
 class SpawnDelayManager;
 
@@ -34,6 +35,7 @@ class GameSuccess final : public IGame
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<TextureManager> _textureManager{nullptr};
+	std::shared_ptr<StateManager> _stateManager{nullptr};
 	std::shared_ptr<UserInput> _userInput{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
@@ -78,7 +80,8 @@ class GameSuccess final : public IGame
 public:
 	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 	            const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
-	            const std::shared_ptr<TextureManager>& textureManager, bool isVsyncOn);
+	            const std::shared_ptr<TextureManager>& textureManager, bool isVsyncOn,
+	            const std::shared_ptr<StateManager>& stateManager);
 
 	~GameSuccess() override;
 };

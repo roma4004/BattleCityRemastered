@@ -65,4 +65,8 @@ struct TextureOffset
 	ObjRectangle bonusTank{.x = 336, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusCaliber{.x = 352, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusShip{.x = 352, .y = 80, .w = 16, .h = 16};//TODO implement bonus (make logic\code)
+
+	//Text
+	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};//TODO implement bonus (make logic\code)
+	// ObjRectangle GameOverText{.x = 288, .y = 175, .w = 40, .h = 8};//TODO: Kayfor
 };
