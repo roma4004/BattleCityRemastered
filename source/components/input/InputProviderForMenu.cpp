@@ -63,6 +63,7 @@ void InputProviderForMenu::TogglePause()
 
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
+	TogglePause();
 	_keys.menuShow = !_keys.menuShow; //TODO: block input from player while menu is activem
 	if (_keys.menuShow)
 	{
