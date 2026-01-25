@@ -225,39 +225,39 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string
 
 		switch (event.cbutton.button)
 		{
-		case SDL_CONTROLLER_BUTTON_A:
-			_events->EmitEvent(controllerTag + "_Fire_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_B:
-			_events->EmitEvent(controllerTag + "_B_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_X:
-			_events->EmitEvent(controllerTag + "_X_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_Y:
-			_events->EmitEvent(controllerTag + "_Y_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
-			_events->EmitEvent(controllerTag + "_Move_Up_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-			_events->EmitEvent(controllerTag + "_Move_Down_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-			_events->EmitEvent(controllerTag + "_Move_Left_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-			_events->EmitEvent(controllerTag + "_Move_Right_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_START:
-			_events->EmitEvent("Menu_" + KeyStateTag);
-			break;
-		case SDL_CONTROLLER_BUTTON_BACK:
-			_events->EmitEvent("Pause_" + KeyStateTag);
-			break;
+			case SDL_CONTROLLER_BUTTON_A:
+				_events->EmitEvent(controllerTag + "_Fire_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_B:
+				_events->EmitEvent(controllerTag + "_B_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_X:
+				_events->EmitEvent(controllerTag + "_X_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_Y:
+				_events->EmitEvent(controllerTag + "_Y_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_UP:
+				_events->EmitEvent(controllerTag + "_Move_Up_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+				_events->EmitEvent(controllerTag + "_Move_Down_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+				_events->EmitEvent(controllerTag + "_Move_Left_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+				_events->EmitEvent(controllerTag + "_Move_Right_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_START:
+				_events->EmitEvent("Menu_" + KeyStateTag);
+				break;
+			case SDL_CONTROLLER_BUTTON_BACK:
+				_events->EmitEvent("Pause_" + KeyStateTag);
+				break;
 
-		default:
-			break;
+			default:
+				break;
 		}
 	}
 }
@@ -290,8 +290,8 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 			break;
 		}
 
-	default:
-		break;
+		default:
+			break;
 	}
 }
 

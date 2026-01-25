@@ -8,8 +8,6 @@
 #include "components/ObstacleSpawner.h"
 #include "components/TankSpawner.h"
 #include "components/managers/BonusEffectManager.h"
-#include "entities/BaseObj.h"
-#include "components/managers/BonusEffectManager.h"
 #include "components/managers/SpawnDelayManager.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"

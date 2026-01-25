@@ -57,8 +57,8 @@ class Menu final
 
 public:
 	Menu(const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& menuFont,
-	     const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<GameStatistics>& statistics, UPoint windowSize,
-	     const std::shared_ptr<EventSystem>& events);
+	     const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<GameStatistics>& statistics,
+	     UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 
 	~Menu();
 

@@ -147,7 +147,7 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 {
 	const auto tankLck = tank.lock();
 	if (!tankLck)
-		return; //TODO: add assert in this case
+		return;//TODO: add assert in this case
 
 	const ObjRectangle rect = tankLck->GetRect();
 	const std::string objName(tankLck->GetName());

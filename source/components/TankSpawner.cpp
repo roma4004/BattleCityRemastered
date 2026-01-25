@@ -57,7 +57,7 @@ void TankSpawner::Subscribe()
 	{
 		std::shared_ptr<Tank> tankLck = tank.lock();
 		if (!tankLck)
-			return; //TODO: add assert for this case
+			return;//TODO: add assert for this case
 
 		tankLck->Enable();
 		_events->EmitEvent("AnimationCreateTank", tank);
