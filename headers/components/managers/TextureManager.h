@@ -20,10 +20,10 @@ class TextureManager final
 	std::string _name{"TextureManager"};
 	UPoint _windowSize{};
 	TextureOffset _offset{};
+	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _texture{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
 	std::unordered_map<int, SDL_Texture*> _colorTextureCache;

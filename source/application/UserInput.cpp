@@ -11,11 +11,15 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 	: _windowSize{windowSize}, _events{events}
 {
 	Subscribe();
+
+	InitControllers();
 }
 
 UserInput::~UserInput()
 {
 	Unsubscribe();
+
+	_slotsForController.clear();
 }
 
 void UserInput::Subscribe()
@@ -59,25 +63,29 @@ void UserInput::SwapControllers()
 	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent
 }
 
-std::string UserInput::ControllerTagDefiner(const SDL_Event& event) const
+std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) const
 {
-	std::string player1Tag{_areControllersSwapped ? "P2" : "P1"};
-	std::string player2Tag{_areControllersSwapped ? "P1" : "P2"};
-
+	bool isFirst{true};
 	if (SDL_NumJoysticks() > 1)
 	{
-		const SDL_JoystickID instanceId = event.cdevice.which;
-		const auto it = std::ranges::find_if(_slotsForController, [instanceId](const std::shared_ptr<SDL_GameController>& n) 
-				{ return n && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(n.get())) == instanceId; });
-
-		if (it != _slotsForController.end())
+		const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
 		{
-			const auto distance = std::distance(_slotsForController.begin(), it);
-			return distance == 1 ? player1Tag : player2Tag;
+			return IsSameController(controller, instanceId);
+		};
+
+		if (const auto it = std::ranges::find_if(_slotsForController, isSameId);
+			it != _slotsForController.end())
+		{
+			isFirst = 1 == std::distance(_slotsForController.begin(), it);
 		}
 	}
 
-	return player1Tag;
+	if (isFirst)
+	{
+		return _areControllersSwapped ? "P2" : "P1";
+	}
+
+	return _areControllersSwapped ? "P1" : "P2";
 }
 
 void UserInput::OnWindowMoveStop()

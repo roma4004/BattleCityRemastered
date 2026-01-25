@@ -11,10 +11,10 @@ TextureManager::TextureManager(const UPoint windowSize, const std::shared_ptr<SD
                                const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& fpsFont,
                                const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize},
+	  _animationManager{std::make_unique<AnimationManager>(events)},
 	  _renderer{renderer},
 	  _texture{texture},
 	  _events{events},
-	  _animationManager{std::make_unique<AnimationManager>(events)},
 	  _fpsFont{fpsFont},
 	  _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 {
