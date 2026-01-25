@@ -50,11 +50,16 @@ void TankSpawner::Subscribe()
 	{
 		this->_gameMode = newGameMode;
 
-		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 
-	_events->AddListener("SpawnEnabled", _name, [this](const std::weak_ptr<Tank>& tank)
+	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
 	{
+		std::shared_ptr<Tank> tankLck = tank.lock();
+		if (!tankLck)
+			return; //TODO: add assert for this case
+
+		tankLck->Enable();
 		_events->EmitEvent("AnimationCreateTank", tank);
 	});
 }

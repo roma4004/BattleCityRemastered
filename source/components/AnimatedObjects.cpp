@@ -10,59 +10,24 @@
 
 class Tank;
 
-//NOTE: used only for water
-AnimatedObject::AnimatedObject(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
-                               const int frameLimit)
-	: events(events),
-	  rect{rect},
-	  limitOfFrames{frameLimit},
-	  type(AnimationType::Water_Animation),
-	  isInfinite{true},
-	  scale{1},
-	  name{"Water"},
-	  nameWithUuid{"Water" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
-	  objName{"Water"}
-{
-	Subscribe();
-}
-
-AnimatedObject::AnimatedObject(const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
-                               const int frameLimit, const int scale, const std::weak_ptr<Tank>& tank)
-	: events(events),
-	  limitOfFrames{frameLimit},
-	  gameMode{gameMode},
-	  type(AnimationType::Tank_Animation),
-	  isInfinite{true},
-	  scale{scale},
-	  name(std::string("TankAnimation")),
-	  nameWithUuid{"TankAnimation" + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
-	  parent{tank}
-{
-	if (const auto tankLck = tank.lock())
-	{
-		rect = tankLck->GetRect();
-		objName = std::string(tankLck->GetName());
-		color = tankLck->GetColor();
-	}
-
-	Subscribe();
-}
-
 using buuid = boost::uuids::uuid;
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
                                const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
-                               const int frameLimit, const int scale, std::string objName, const int color)
+                               const int frameLimit, const int scale, std::string objName, const int color,
+                               const bool isInfinite, const std::weak_ptr<Tank> tank)
 	: events(events),
 	  rect{rect},
 	  limitOfFrames{frameLimit},
 	  color{color},
 	  gameMode{gameMode},
 	  type(type),
+	  isInfinite{isInfinite},
 	  scale{scale},
 	  name{name},
 	  nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
-	  objName(std::move(objName))
+	  objName(std::move(objName)),
+	  parent{tank}
 {
 	Subscribe();
 }
@@ -75,13 +40,8 @@ AnimatedObject::~AnimatedObject()
 	}
 }
 
-void AnimatedObject::Subscribe()
+void AnimatedObject::Subscribe() const
 {
-	if (gameMode == GameMode::PlayAsHost)
-	{
-		this->events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName, color);
-	}
-
 	this->events->AddListener("Draw", nameWithUuid, [this]() { this->Draw(); });
 }
 

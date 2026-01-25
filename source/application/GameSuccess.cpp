@@ -39,14 +39,14 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
                          const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
-                         const std::shared_ptr<TextureManager>& textureManager, const bool isVsyncOn,
+                         std::unique_ptr<TextureManager> textureManager, const bool isVsyncOn,
                          const std::shared_ptr<StateManager>& stateManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
+	  _textureManager(std::move(textureManager)),
 	  _statistics{statistics},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
-	  _textureManager{textureManager},
 	  _stateManager{stateManager},
 	  _userInput{std::make_shared<UserInput>(windowSize, events)},
 	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
@@ -284,9 +284,9 @@ void GameSuccess::MainLoop()
 					_tankSpawner->RespawnTanks();//TODO:split into two timers
 				}
 			}
-			
+
 			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
-			_events->EmitEvent("Draw"); 
+			_events->EmitEvent("Draw");
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("AnimationUpdate");
@@ -348,3 +348,5 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 		_networkNode = nullptr;
 	}
 }
+
+// TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)

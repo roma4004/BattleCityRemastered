@@ -33,11 +33,11 @@ class UserInput final
 	void GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag) const;
 	void GamepadEvents(const SDL_Event& event);
 	void OnWindowMoveStop();
+	void WindowsMoveEvents(const SDL_Event& event);
 
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void WindowsMoveEvents(const SDL_Event& event);
 	void SwapControllers();
 	std::string ControllerTagDefiner(const SDL_Event& event) const;
 

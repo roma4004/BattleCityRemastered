@@ -196,8 +196,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
 	                                     static_cast<unsigned short>(std::stoul(port)))),
 	  _events{events},
-	  _name{"Server"},
-	  _isRunning{true}
+	  _name{"Server"}
 {
 	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
@@ -207,6 +206,7 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 
 void Server::StartSendThread()
 {
+	_isRunning = true;
 	_sendThread = std::thread([this]()
 	{
 		while (_isRunning)

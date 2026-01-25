@@ -44,8 +44,8 @@ protected:
 	// std::string _fraction2{"PlayerTeam"};
 	std::string _name3{"Enemy1"};
 	std::string _fraction3{"EnemyTeam"};
-	GameMode _gameMode{GameMode::OnePlayer};
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{

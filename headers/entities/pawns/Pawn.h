@@ -53,4 +53,5 @@ public:
 	void SetSpeed(float speed);
 
 	[[nodiscard]] virtual bool Move(float deltaTime);
+	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 };

@@ -261,7 +261,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		const std::string state = cmd->GetState(); //NOTE: const required
+		const std::string state = cmd->GetState();//NOTE: const required
 		_events->EmitEvent("ClientReceived_FortressChange", state, cmd->GetUuid());
 	}
 }
@@ -313,7 +313,8 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
 void Client::OnTankOnOff(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
-	{//TODO: don't need uuid or name in this case
+	{
+		//TODO: don't need uuid or name in this case
 		_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnTankOnOff", cmd->GetUuid(), cmd->GetIsEnable());
 	}
 }

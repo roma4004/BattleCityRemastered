@@ -43,7 +43,7 @@ void BonusEffectManager::Subscribe()
 		size_t id{_helmetSlots.size()};
 		if (name == "Enemy1")//TODO: change enemy1 and other to tankType
 		{
-			id = 0; //TODO: extract to separated method like enum tankType::{id} to std::string
+			id = 0;//TODO: extract to separated method like enum tankType::{id} to std::string
 		}
 		else if (name == "Enemy2")
 		{
@@ -100,7 +100,7 @@ void BonusEffectManager::Reset()
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool value) const
 {
 	_events->EmitEvent("Bonus" + event + "StatusChange", id, value);
-	
+
 	//TODO: move replication to bonusEffectManager from tank subscription
 	// if (_gameMode == GameMode::PlayAsHost)
 	// {

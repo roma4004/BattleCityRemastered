@@ -33,16 +33,11 @@ void Pawn::SubscribeAsHost()
 void Pawn::SubscribeAsClient()
 {
 	_events->AddListener(
-			"ClientReceived_" + _name + "Pos", _nameWithUuid,
+			"ClientReceived_" + _name + "Pos",
+			_nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
-			{//TODO: move lambda body to separated method
-				if (uuid != this->_uuid)//TODO: check maybe never true
-				{
-					return;
-				}
-
-				this->SetDirection(dir);
-				this->SetPos(newPos);
+			{
+				OnClientChangePos(newPos, dir, uuid);
 			});
 
 	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
@@ -107,4 +102,15 @@ bool Pawn::Move(const float deltaTime)
 	}
 
 	return isMove;
+}
+
+void Pawn::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
+{
+	if (uuid != _uuid)//TODO: check maybe never true
+	{
+		return;
+	}
+
+	SetDirection(dir);
+	SetPos(newPos);
 }

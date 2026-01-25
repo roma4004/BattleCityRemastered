@@ -7,12 +7,11 @@
 struct UPoint;
 class PlayerTest;
 class IShootable;
-class SpawnDelayManager;
 class BulletPool;
 
 class Tank : public Pawn, public IHealthBar
 {
-	friend class SpawnDelayManager;
+	friend class TankSpawner;
 
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;

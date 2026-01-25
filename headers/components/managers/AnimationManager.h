@@ -43,7 +43,7 @@ public:
 
 private:
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames,
-	            int scale, std::string objName, int color);
+	            int scale, const std::string& objName, int color, bool isInfinite = {});
 	void Update();
 	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
 	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);
