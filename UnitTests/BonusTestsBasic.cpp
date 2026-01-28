@@ -23,7 +23,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
-	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -48,9 +48,9 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
-		_respawnResourceManager = std::make_shared<RespawnResourceManager>(_events);
+		_respawnManager = std::make_shared<RespawnManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnResourceManager);
+				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -359,7 +359,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	                          BonusType::Tank);
 	_events->EmitEvent("P1_Move_Down_Pressed");
 
-	const int playerSpawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
+	const int playerSpawnCount = _respawnManager->GetPlayerOneRespawnCount();
 	const auto bonus = _allObjects.back().get();
 
 	EXPECT_EQ(bonus->GetIsAlive(), true);
@@ -368,7 +368,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	EXPECT_EQ(bonus->GetIsAlive(), false);
 
-	EXPECT_LT(playerSpawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_LT(playerSpawnCount, _respawnManager->GetPlayerOneRespawnCount());
 }
 
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
@@ -377,7 +377,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 	                          BonusType::Tank);
 	_events->EmitEvent("W_Pressed");
 
-	const int playerSpawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
+	const int playerSpawnCount = _respawnManager->GetPlayerOneRespawnCount();
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -390,7 +390,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 		EXPECT_TRUE(false);
 	}
 
-	EXPECT_EQ(playerSpawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_EQ(playerSpawnCount, _respawnManager->GetPlayerOneRespawnCount());
 }
 
 TEST_F(BonusTest, StarPickUpTierIncrease)

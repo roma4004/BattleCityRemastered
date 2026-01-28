@@ -35,7 +35,7 @@ struct ServerData final
 	std::string fraction{};
 	std::vector<std::string> names{};
 	FPoint pos{};
-	int respawnResource{-1};
+	int respawnCount{-1};
 	int id{-1};
 	int health{-1};
 	BonusType type{};

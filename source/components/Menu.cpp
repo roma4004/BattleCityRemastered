@@ -54,17 +54,17 @@ void Menu::Subscribe()
 	});
 
 	_events->AddListener(
-			"RespawnResourceChangedTo", _name,
-			[this](const std::string& objectName, const int respawnResource)
+			"RespawnCountChangedTo", _name,
+			[this](const std::string& objectName, const int respawnCount)
 			{
-				this->OnRespawnResourceChanged(objectName, respawnResource);
+				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
 }
 
 void Menu::Unsubscribe() const
 {
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
-	_events->RemoveListener("RespawnResourceChangedTo", _name);
+	_events->RemoveListener("RespawnCountChangedTo", _name);
 }
 
 void Menu::MenuUpdate() const
@@ -104,7 +104,7 @@ void Menu::PregenerateMenuBackground()
 
 void Menu::DrawMenu()
 {
-	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)
+	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)//TODO: split input and local menu state is shown
 	{
 		return;
 	}
@@ -180,14 +180,14 @@ void Menu::RenderStatistics(const Point pos) const
 	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
-	                        _playerOneRespawnResource,
-	                        _playerTwoRespawnResource,
-	                        _enemyRespawnResource);
+	                        _playerOneRepawnCount,
+	                        _playerTwoRespawnCount,
+	                        _enemyRespawnCount);
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
-	                        _playerOneRespawnResource,
-	                        _playerTwoRespawnResource,
-	                        _enemyRespawnResource);
+	                        _playerOneRepawnCount,
+	                        _playerTwoRespawnCount,
+	                        _enemyRespawnCount);
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET",
 	                        _statistics->GetBulletHitByPlayerOne(),
@@ -290,18 +290,18 @@ void Menu::DrawText() const
 	RenderStatistics(pos);
 }
 
-void Menu::OnRespawnResourceChanged(const std::string& objectName, const int respawnResource)
+void Menu::OnRespawnCountChanged(const std::string& objectName, const int respawnCount)
 {
 	if (objectName == "Enemy")
 	{
-		_enemyRespawnResource = respawnResource;
+		_enemyRespawnCount = respawnCount;
 	}
 	else if (objectName == "Player1")
 	{
-		_playerOneRespawnResource = respawnResource;
+		_playerOneRepawnCount = respawnCount;
 	}
 	else if (objectName == "Player2")
 	{
-		_playerTwoRespawnResource = respawnResource;
+		_playerTwoRespawnCount = respawnCount;
 	}
 }

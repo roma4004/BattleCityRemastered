@@ -5,7 +5,7 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
 #include "components/managers/BonusEffectManager.h"
-#include "components/managers/RespawnResourceManager.h"
+#include "components/managers/RespawnManager.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -26,13 +26,13 @@
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                          const std::shared_ptr<EventSystem>& events, const std::shared_ptr<BulletPool>& bulletPool,
                          const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
-                         const std::shared_ptr<RespawnResourceManager>& respawnResourceManager)
+                         const std::shared_ptr<RespawnManager>& respawnManager)
 	: _windowSize{windowSize},
 	  _allObjects{allObjects},
 	  _events{events},
 	  _bulletPool{bulletPool},
 	  _bonusEffectManager{bonusEffectManager},
-	  _respawnResourceManager{respawnResourceManager}
+	  _respawnManager{respawnManager}//TODO: extract tank spawner to respawn manager as sub component
 {
 	Subscribe();
 }
@@ -265,9 +265,9 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 
 void TankSpawner::RespawnTanks(const bool skipDelay)
 {
-	for (size_t i = 0; i < _respawnResourceManager->_slots.size(); ++i)
+	for (size_t i = 0; i < _respawnManager->_slots.size(); ++i)
 	{
-		if (_respawnResourceManager->_slots[i].isAvailable)
+		if (_respawnManager->_slots[i].isAvailable)
 		{
 			switch (const auto type = static_cast<TankType>(i))
 			{
@@ -275,16 +275,16 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					RespawnEnemyTanks(type, _respawnResourceManager->_slots[i].uuid, skipDelay);
+					RespawnEnemyTanks(type, _respawnManager->_slots[i].uuid, skipDelay);
 					break;
 				case TankType::PLAYER1:
 				case TankType::PLAYER2:
-					RespawnPlayerTeam(type, _respawnResourceManager->_slots[i].uuid, skipDelay);
+					RespawnPlayerTeam(type, _respawnManager->_slots[i].uuid, skipDelay);
 					break;
 				default:
 					break;
 			}
-			_respawnResourceManager->_slots[i].isAvailable = false;
+			_respawnManager->_slots[i].isAvailable = false;
 			break;
 		}
 	}

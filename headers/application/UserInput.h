@@ -15,7 +15,7 @@ class UserInput final
 	using milliseconds = std::chrono::milliseconds;
 
 	MouseButtons _mouseButtons{};
-	bool _isGameOver{false};
+	bool _isShutdown{false};
 	bool _isPause{false};
 	bool _isPauseBeforeDragNDrop{false};
 	bool _isMoving{false};
@@ -51,6 +51,6 @@ public:
 
 	void Update();
 
-	[[nodiscard]] bool IsGameOver() const;
+	[[nodiscard]] bool IsShutdown() const;
 	[[nodiscard]] bool IsPause() const;
 };

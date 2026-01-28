@@ -154,7 +154,7 @@
     <ClCompile Include="source\components\LineOfSight.cpp" />
     <ClCompile Include="source\components\managers\AnimationManager.cpp" />
     <ClCompile Include="source\components\managers\BonusEffectManager.cpp" />
-    <ClCompile Include="source\components\managers\RespawnResourceManager.cpp" />
+    <ClCompile Include="source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="source\components\managers\SpawnDelayManager.cpp" />
     <ClCompile Include="source\components\managers\StateManager.cpp" />
     <ClCompile Include="source\components\managers\TextureManager.cpp" />
@@ -225,7 +225,7 @@
     <ClInclude Include="headers\components\AnimatedObjects.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
     <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
-    <ClInclude Include="headers\components\managers\RespawnResourceManager.h" />
+    <ClInclude Include="headers\components\managers\RespawnManager.h" />
     <ClInclude Include="headers\components\managers\SpawnDelayManager.h" />
     <ClInclude Include="headers\components\managers\StateManager.h" />
     <ClInclude Include="headers\components\managers\TextureManager.h" />
@@ -290,11 +290,11 @@
     <ClInclude Include="headers\entities\pawns\Player.h" />
     <ClInclude Include="headers\entities\pawns\Tank.h" />
     <ClInclude Include="headers\enums\BonusType.h" />
-    <ClInclude Include="headers\enums\ComandType.h" />
+    <ClInclude Include="headers\enums\CommandType.h" />
     <ClInclude Include="headers\enums\Direction.h" />
     <ClInclude Include="headers\enums\GameMode.h" />
     <ClInclude Include="headers\enums\ObstacleType.h" />
-    <ClInclude Include="headers\enums\RespawnResource.h" />
+    <ClInclude Include="headers\enums\RespawnCount.h" />
     <ClInclude Include="headers\enums\TankType.h" />
     <ClInclude Include="headers\enums\TextureOffset.h" />
     <ClInclude Include="headers\interfaces\IConfig.h" />

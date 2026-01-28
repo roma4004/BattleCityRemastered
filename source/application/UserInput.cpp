@@ -302,7 +302,7 @@ void UserInput::Update()
 	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{
-			_isGameOver = true;
+			_isShutdown = true;
 		}
 
 		WindowsMoveEvents(event);
@@ -314,7 +314,7 @@ void UserInput::Update()
 	OnWindowMoveStop();
 }
 
-bool UserInput::IsGameOver() const { return _isGameOver; }
+bool UserInput::IsShutdown() const { return _isShutdown; }
 
 bool UserInput::IsPause() const { return _isPause; }
 

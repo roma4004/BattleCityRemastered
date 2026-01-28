@@ -1,7 +1,7 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
 #include "entities/ObjRectangle.h"
-#include "enums/ComandType.h"
+#include "enums/CommandType.h"
 #include "enums/TankType.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"

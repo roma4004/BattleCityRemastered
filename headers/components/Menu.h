@@ -31,9 +31,9 @@ class Menu final
 	std::string _name{};
 
 	//TODO: extract to separate sidebar class
-	int _enemyRespawnResource{20};
-	int _playerOneRespawnResource{3};
-	int _playerTwoRespawnResource{3};
+	int _enemyRespawnCount{20};
+	int _playerOneRepawnCount{3};
+	int _playerTwoRespawnCount{3};
 	GameMode _selectedGameMode{};
 
 	void Subscribe();
@@ -53,7 +53,7 @@ class Menu final
 	void DrawMenuLogo() const;
 	void DrawText() const;
 
-	void OnRespawnResourceChanged(const std::string& objectName, int respawnResource);
+	void OnRespawnCountChanged(const std::string& objectName, int respawnCount);
 
 public:
 	Menu(const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& menuFont,

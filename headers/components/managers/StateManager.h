@@ -14,14 +14,22 @@ class StateManager
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
-public:
-	explicit StateManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-	                      const std::shared_ptr<SDL_Texture>& atlasTexture);
+	bool _isPause{false};
+	bool _isGameOver{false};
 
-	~StateManager();
-
-	void Subscribe() const;
+	void Subscribe();
 	void Unsubscribe() const;
 
 	void DrawPauseText() const;
+	void DrawGameOverText() const;
+
+	void Draw() const;
+
+	void Reset();
+
+public:
+	StateManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
+	             const std::shared_ptr<SDL_Texture>& atlasTexture);
+
+	~StateManager();
 };

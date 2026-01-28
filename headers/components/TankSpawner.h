@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Point.h"
-#include "managers/RespawnResourceManager.h"
+#include "managers/RespawnManager.h"
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
@@ -56,12 +56,12 @@ class TankSpawner final
 	void OnClientRespawn(TankType type, buuid uuid, bool skipDelay = false);
 
 public:
-	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	            const std::shared_ptr<EventSystem>& events, const std::shared_ptr<BulletPool>& bulletPool,
 	            const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
-	            const std::shared_ptr<RespawnResourceManager>& respawnResourceManager);
+	            const std::shared_ptr<RespawnManager>& respawnManager);
 
 	~TankSpawner();
 

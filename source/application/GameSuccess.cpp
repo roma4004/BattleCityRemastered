@@ -54,9 +54,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	  _selectedGameMode{GameMode::OnePlayer}
 {
 	const auto bonusEffectManager = std::make_shared<BonusEffectManager>(events);
-	const auto respawnResourceManager = std::make_shared<RespawnResourceManager>(events);
+	const auto respawnManager = std::make_shared<RespawnManager>(events);
 	_tankSpawner = std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool, bonusEffectManager,
-	                                             respawnResourceManager);
+	                                             respawnManager);
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 
 	Subscribe();
@@ -259,7 +259,7 @@ void GameSuccess::MainLoop()
 	{
 		float deltaTime{0.f};
 		size_t fps{0};
-		while (!_userInput->IsGameOver())
+		while (!_userInput->IsShutdown())
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();
 
@@ -284,17 +284,14 @@ void GameSuccess::MainLoop()
 			}
 
 			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
-			_events->EmitEvent("Draw");
+			_events->EmitEvent("Draw"); //TODO: preDraw for ice/water and postDraw for bush
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("AnimationUpdate");
 
-			_events->EmitEvent("DrawHealthBar");// TODO: blend separate buff layers(objects, effect, interface)
+			_events->EmitEvent("DrawHealthBar"); //TODO: extract from game success
 
-			if (_userInput->IsPause())
-			{
-				_stateManager->DrawPauseText();
-			}
+			_events->EmitEvent("DrawUserInterface");//TODO: blend separate buff layers(objects, effect, interface)
 
 			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part
 

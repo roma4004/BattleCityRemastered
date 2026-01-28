@@ -1,6 +1,6 @@
 #pragma once
 
-#include "enums/ComandType.h"
+#include "enums/CommandType.h"
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>

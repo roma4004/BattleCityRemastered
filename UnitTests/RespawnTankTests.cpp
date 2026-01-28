@@ -11,7 +11,7 @@
 class TankSpawnerTest : public testing::Test
 {
 protected:
-	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -23,9 +23,9 @@ protected:
 		const auto events = std::make_shared<EventSystem>();
 		const auto bulletPool = std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::OnePlayer);
 		const auto effectsManager = std::make_shared<BonusEffectManager>(events);
-		_respawnResourceManager = std::make_shared<RespawnResourceManager>(events);
+		_respawnManager = std::make_shared<RespawnManager>(events);
 		_tankSpawner = std::make_shared<TankSpawner>(
-				windowSize, &_allObjects, events, bulletPool, effectsManager, _respawnResourceManager);
+				windowSize, &_allObjects, events, bulletPool, effectsManager, _respawnManager);
 		_spawnDelayManager = std::make_shared<SpawnDelayManager>(events);
 	}
 
@@ -41,7 +41,7 @@ TEST_F(TankSpawnerTest, EnemyOneRespawn)
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0);
 
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY1));
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY1));
 
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 1);
@@ -53,7 +53,7 @@ TEST_F(TankSpawnerTest, EnemyTwoRespawn)
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0);
 
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
 
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 1);
@@ -65,7 +65,7 @@ TEST_F(TankSpawnerTest, EnemyThreeRespawn)
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0);
 
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY3));
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY3));
 
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 1);
@@ -77,7 +77,7 @@ TEST_F(TankSpawnerTest, EnemyFourRespawn)
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0);
 
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY4));
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY4));
 
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 1);
@@ -89,7 +89,7 @@ TEST_F(TankSpawnerTest, PlayerOneDiedRespawn)
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0);
 
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
 
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 1);
@@ -101,7 +101,7 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawn)
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0);
 
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
 
 	_tankSpawner->RespawnTanks(skipDelay);
 	EXPECT_EQ(_allObjects.size(), 1);
@@ -109,41 +109,41 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawn)
 
 TEST_F(TankSpawnerTest, EnemyDiedRespawnCount)
 {
-	const int respawnResource = _respawnResourceManager->GetEnemyRespawnResource();//TODO: move to separated test group
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
+	const int respawnCount = _respawnManager->GetEnemyRespawnCount();//TODO: move to separated test group
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
 	constexpr bool skipDelay = true;
 	_tankSpawner->RespawnTanks(skipDelay);
 	_allObjects.pop_back();
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetEnemyRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetEnemyRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, PlayerOneDiedRespawnCount)
 {
-	const int respawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
+	const int respawnCount = _respawnManager->GetPlayerOneRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
 	constexpr bool skipDelay = true;
 	_tankSpawner->RespawnTanks(skipDelay);
 	_allObjects.pop_back();
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetPlayerOneRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnCount)
 {
-	const int respawnResource = _respawnResourceManager->GetPlayerTwoRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
+	const int respawnCount = _respawnManager->GetPlayerTwoRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
 	constexpr bool skipDelay = true;
 	_tankSpawner->RespawnTanks(skipDelay);
 	_allObjects.pop_back();
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetPlayerTwoRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetPlayerTwoRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, EnemyRunOutRespawnPoints)
 {
-	const int respawnResource = _respawnResourceManager->GetEnemyRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
+	const int respawnCount = _respawnManager->GetEnemyRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
 
 	for (int i = 0; i < 20; ++i)
 	{
@@ -152,14 +152,14 @@ TEST_F(TankSpawnerTest, EnemyRunOutRespawnPoints)
 		_allObjects.pop_back();
 	}
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetEnemyRespawnResource());
-	EXPECT_EQ(0, _respawnResourceManager->GetEnemyRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetEnemyRespawnCount());
+	EXPECT_EQ(0, _respawnManager->GetEnemyRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, PlayerOneRunOutRespawnPoints)
 {
-	const int respawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
+	const int respawnCount = _respawnManager->GetPlayerOneRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
 
 	for (int i = 0; i < 3; ++i)
 	{
@@ -168,14 +168,14 @@ TEST_F(TankSpawnerTest, PlayerOneRunOutRespawnPoints)
 		_allObjects.pop_back();
 	}
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
-	EXPECT_EQ(0, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetPlayerOneRespawnCount());
+	EXPECT_EQ(0, _respawnManager->GetPlayerOneRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, PlayerTwoRunOutRespawnPoints)
 {
-	const int respawnResource = _respawnResourceManager->GetPlayerTwoRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
+	const int respawnCount = _respawnManager->GetPlayerTwoRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
 
 	for (int i = 0; i < 3; ++i)
 	{
@@ -184,14 +184,14 @@ TEST_F(TankSpawnerTest, PlayerTwoRunOutRespawnPoints)
 		_allObjects.pop_back();
 	}
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetPlayerTwoRespawnResource());
-	EXPECT_EQ(0, _respawnResourceManager->GetPlayerTwoRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetPlayerTwoRespawnCount());
+	EXPECT_EQ(0, _respawnManager->GetPlayerTwoRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, EnemyRunOutRespawnPointsAndTryMore)
 {
-	const int respawnResource = _respawnResourceManager->GetEnemyRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
+	const int respawnCount = _respawnManager->GetEnemyRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::ENEMY2));
 
 	for (int i = 0; i < 21; ++i)
 	{
@@ -203,14 +203,14 @@ TEST_F(TankSpawnerTest, EnemyRunOutRespawnPointsAndTryMore)
 		}
 	}
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetEnemyRespawnResource());
-	EXPECT_EQ(0, _respawnResourceManager->GetEnemyRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetEnemyRespawnCount());
+	EXPECT_EQ(0, _respawnManager->GetEnemyRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 {
-	const int respawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
+	const int respawnCount = _respawnManager->GetPlayerOneRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER1));
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -222,14 +222,14 @@ TEST_F(TankSpawnerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 		}
 	}
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
-	EXPECT_EQ(0, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetPlayerOneRespawnCount());
+	EXPECT_EQ(0, _respawnManager->GetPlayerOneRespawnCount());
 }
 
 TEST_F(TankSpawnerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 {
-	const int respawnResource = _respawnResourceManager->GetPlayerTwoRespawnResource();
-	_respawnResourceManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
+	const int respawnCount = _respawnManager->GetPlayerTwoRespawnCount();
+	_respawnManager->SetSlotNeedRespawn(static_cast<int>(TankType::PLAYER2));
 
 	for (int i = 0; i < 4; ++i)
 	{
@@ -241,6 +241,6 @@ TEST_F(TankSpawnerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 		}
 	}
 
-	EXPECT_GT(respawnResource, _respawnResourceManager->GetPlayerTwoRespawnResource());
-	EXPECT_EQ(0, _respawnResourceManager->GetPlayerTwoRespawnResource());
+	EXPECT_GT(respawnCount, _respawnManager->GetPlayerTwoRespawnCount());
+	EXPECT_EQ(0, _respawnManager->GetPlayerTwoRespawnCount());
 }

@@ -68,5 +68,5 @@ struct TextureOffset
 
 	//Text
 	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};//TODO implement bonus (make logic\code)
-	// ObjRectangle GameOverText{.x = 288, .y = 175, .w = 40, .h = 8};//TODO: Kayfor
+	ObjRectangle gameOverText{.x = 288, .y = 183, .w = 32, .h = 18};
 };

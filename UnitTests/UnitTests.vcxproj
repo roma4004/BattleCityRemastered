@@ -40,7 +40,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp" />
-    <ClCompile Include="..\source\components\managers\RespawnResourceManager.cpp" />
+    <ClCompile Include="..\source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="..\source\components\managers\SpawnDelayManager.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />

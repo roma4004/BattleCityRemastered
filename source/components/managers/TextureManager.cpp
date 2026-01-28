@@ -223,10 +223,10 @@ SDL_Rect TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = RectToSdlRect(_offset.pauseText);
 	}
-	// else if (name == "GameOverText") //TODO: Kayfor
-	// {
-	// 	textureRect = RectToSdlRect(_offset.gameOverText);
-	// }
+	else if (name == "GameOverText")
+	{
+		textureRect = RectToSdlRect(_offset.gameOverText);
+	}
 
 	return textureRect;
 }
