@@ -24,7 +24,7 @@ EagleTile::~EagleTile()
 {
 	Unsubscribe();
 
-	_events->EmitEvent("SetGameOverText");
+	_events->EmitEvent("PlayersBaseFinished");
 }
 
 void EagleTile::Subscribe()

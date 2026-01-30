@@ -1,5 +1,6 @@
 #include "components/managers/StateManager.h"
 #include "components/EventSystem.h"
+#include "enums/GameMode.h"
 #include "enums/TextureOffset.h"
 
 #include <SDL_rect.h>
@@ -26,6 +27,13 @@ void StateManager::Subscribe()
 	_events->AddListener("SetGameOverText", _name, [this]() { this->_isGameOver = true; });
 	_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
+	_events->AddListener("PlayerOneFinished", _name, [this]() { _playerOneFailState = true; _isGameOver = IsGameoverReached(); });
+	_events->AddListener("PlayerTwoFinished", _name, [this]() { _playerTwoFailState = true; _isGameOver = IsGameoverReached(); }); 
+	_events->AddListener("PlayersBaseFinished", _name, [this]() {_playersBaseFailState = true; _isGameOver = IsGameoverReached(); });
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
+	});
 }
 
 void StateManager::Unsubscribe() const
@@ -34,6 +42,10 @@ void StateManager::Unsubscribe() const
 	_events->RemoveListener("SetGameOverText", _name);
 	_events->RemoveListener("DrawUserInterface", _name);
 	_events->RemoveListener("Reset", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("PlayerOneFinished", _name);
+	_events->RemoveListener("PlayerTwoFinished", _name);
+	_events->RemoveListener("PlayersBaseFinished", _name);
 }
 
 void StateManager::DrawPauseText() const
@@ -77,4 +89,11 @@ void StateManager::Reset()
 {
 	_isPause = false;
 	_isGameOver = false;
+}
+
+bool StateManager::IsGameoverReached() const
+{
+	return (_gameMode == GameMode::OnePlayer && _playerOneFailState && _playersBaseFailState)
+		|| (_gameMode == GameMode::TwoPlayers && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
+		|| (_gameMode == GameMode::Demo && _playerOneFailState && _playerTwoFailState && _playersBaseFailState);
 }

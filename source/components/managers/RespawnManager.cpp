@@ -293,9 +293,19 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 					break;
 				case TankType::PLAYER1:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_ONE)] > 0;
+					if (_slots[i].isAvailable == false)
+					{
+						_events->EmitEvent("PlayerOneFinished");
+					}
+
 					break;
 				case TankType::PLAYER2:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_TWO)] > 0;
+					if (_slots[i].isAvailable == false)
+					{
+						_events->EmitEvent("PlayerTwoFinished");
+					}
+
 					break;
 				default:
 					break;

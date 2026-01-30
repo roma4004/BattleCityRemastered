@@ -5,6 +5,7 @@
 #include <string>
 
 class EventSystem;
+enum class GameMode : char8_t;
 
 class StateManager
 {
@@ -14,8 +15,13 @@ class StateManager
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
+	GameMode _gameMode{};
 	bool _isPause{false};
 	bool _isGameOver{false};
+
+	bool _playerOneFailState{false};
+	bool _playerTwoFailState{false};
+	bool _playersBaseFailState{false};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -26,6 +32,7 @@ class StateManager
 	void Draw() const;
 
 	void Reset();
+	bool IsGameoverReached() const;
 
 public:
 	StateManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
