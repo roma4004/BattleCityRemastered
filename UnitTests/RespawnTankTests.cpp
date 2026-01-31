@@ -24,8 +24,7 @@ protected:
 		const auto bulletPool = std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::OnePlayer);
 		const auto effectsManager = std::make_shared<BonusEffectManager>(events);
 		_respawnManager = std::make_shared<RespawnManager>(events);
-		_tankSpawner = std::make_shared<TankSpawner>(
-				windowSize, &_allObjects, events, bulletPool, effectsManager, _respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(windowSize, &_allObjects, events, effectsManager, _respawnManager);
 		_spawnDelayManager = std::make_shared<SpawnDelayManager>(events);
 	}
 

@@ -1,7 +1,6 @@
 #include "application/GameSuccess.h"
-#include "application/userInput.h"
+#include "application/UserInput.h"
 #include "components/BonusSpawner.h"
-#include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/Map.h"
 #include "components/Menu.h"

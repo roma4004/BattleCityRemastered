@@ -49,8 +49,8 @@ protected:
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events, _bonusEffectManager,
+		                                             _respawnManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -294,8 +294,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	_events->EmitEvent("P1_Move_Down_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid, .name = "Enemy1",
-	                                .fraction = "EnemyTeam"};
+	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid,
+	                                .name = "Enemy1", .fraction = "EnemyTeam"};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
 			.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
@@ -327,8 +327,8 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	_events->EmitEvent("W_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid, .name = "Enemy1",
-	                                .fraction = "EnemyTeam"};
+	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid,
+	                                .name = "Enemy1", .fraction = "EnemyTeam"};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
 			.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};

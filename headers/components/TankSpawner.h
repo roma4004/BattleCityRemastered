@@ -7,7 +7,6 @@
 struct PawnProperty;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
-struct SDL_Renderer;
 struct ObjRectangle;
 struct BonusEffectProperty;
 class Tank;

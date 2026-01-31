@@ -31,7 +31,7 @@ TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<Ba
 	: _windowSize{windowSize},
 	  _allObjects{allObjects},
 	  _events{events},
-	  _bulletPool{std::make_unique<BulletPool>(events, allObjects, windowSize, GameMode::Demo)},
+	  _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)},
 	  _bonusEffectManager{bonusEffectManager},
 	  _respawnManager{respawnManager}//TODO: extract tank spawner to respawn manager as sub component
 {

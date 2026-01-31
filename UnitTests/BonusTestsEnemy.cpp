@@ -48,8 +48,8 @@ protected:
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events, _bonusEffectManager,
+		                                             _respawnManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns

@@ -29,7 +29,7 @@ void FramePerSecondManager::Subscribe()
 		_events->EmitEvent("ActualFPS", CountFpsAndDeltaTime());
 	});
 
-	_events->AddListener("FrameStart", _name, [this](const std::chrono::time_point<std::chrono::steady_clock> timePoint)
+	_events->AddListener("FrameStart", _name, [this](const std::chrono::high_resolution_clock::time_point timePoint)
 	{
 		this->_startFrameTime = timePoint;
 	});
