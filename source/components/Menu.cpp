@@ -60,6 +60,7 @@ void Menu::Subscribe()
 				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
 	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->MenuUpdate(); });
+	_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
 }
 
 void Menu::Unsubscribe() const
@@ -67,6 +68,7 @@ void Menu::Unsubscribe() const
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener("RespawnCountChangedTo", _name);
 	_events->RemoveListener("PreTickUpdate", _name);
+	_events->RemoveListener("DrawUserInterface", _name);
 }
 
 void Menu::MenuUpdate() const
@@ -104,6 +106,7 @@ void Menu::PregenerateMenuBackground()
 	}
 }
 
+//TODO: optimize draw call with cache non changed text part
 void Menu::DrawMenu()
 {
 	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)//TODO: split input and local menu state is shown

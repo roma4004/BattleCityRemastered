@@ -58,6 +58,8 @@ void TextureManager::Subscribe()
 		this->DrawHealthBar(rect, health, color);
 	});
 	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->ClearFrame(); });
+	_events->AddListener("PostDrawUserInterface", _name, [this]() { this->DisplayFrame(_fps); });
+	_events->AddListener("ActualFps", _name, [this](const Uint32 fps) { this->_fps = fps; });
 }
 
 void TextureManager::Unsubscribe() const
@@ -66,6 +68,8 @@ void TextureManager::Unsubscribe() const
 	_events->RemoveListener("DrawAnimation", _name);
 	_events->RemoveListener("DrawHealthBarObj", _name);
 	_events->RemoveListener("PreTickUpdate", _name);
+	_events->RemoveListener("PostDrawUserInterface", _name);
+	_events->RemoveListener("ActualFps", _name);
 }
 
 void TextureManager::ClearColorTextureCache()

@@ -28,6 +28,7 @@ class TextureManager final
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
 	std::unordered_map<int, SDL_Texture*> _colorTextureCache;
 	SDL_Rect _fpsRectangle{};
+	Uint32 _fps{0};
 
 	void Subscribe();
 	void Unsubscribe() const;

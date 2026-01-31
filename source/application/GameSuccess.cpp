@@ -258,7 +258,6 @@ void GameSuccess::MainLoop()
 	try
 	{
 		float deltaTime{0.f};
-		size_t fps{0};
 		while (!_userInput->IsShutdown())
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();
@@ -280,25 +279,21 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent("PostTickUpdate", deltaTime);
 
 			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
-			_events->EmitEvent("Draw");//TODO: preDraw for ice/water and postDraw for bush
+			_events->EmitEvent("PreDraw");
+			_events->EmitEvent("Draw");
+			_events->EmitEvent("PostDraw");
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
-			_events->EmitEvent("AnimationUpdate");
-
-			_events->EmitEvent("DrawHealthBar");//TODO: extract from game success
-
-			_events->EmitEvent("DrawUserInterface");//TODO: blend separate buff layers(objects, effect, interface)
-
-			_menu->DrawMenu();//TODO: optimize draw call with cache non changed text part
-
-			_textureManager->DisplayFrame(fps);
+			_events->EmitEvent("PreDrawUserInterface");
+			_events->EmitEvent("DrawUserInterface");
+			_events->EmitEvent("PostDrawUserInterface");
 
 			if (_gameMode == GameMode::PlayAsHost)
 			{
 				_events->EmitEvent("Server_EndFrame");
 			}
 
-			fps = CountFpsAndDeltaTime(deltaTime, startFrameTime);
+			_events->EmitEvent("ActualFps", CountFpsAndDeltaTime(deltaTime, startFrameTime));
 		}
 	}
 	catch (std::exception& e)

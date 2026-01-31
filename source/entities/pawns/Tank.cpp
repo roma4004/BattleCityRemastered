@@ -56,7 +56,7 @@ void Tank::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_events->AddListener("DrawHealthBar", _nameWithUuid, [this]()
+	_events->AddListener("PostDraw", _nameWithUuid, [this]()
 	{
 		if (!_effects.isHelmetActive)
 		{
@@ -133,7 +133,7 @@ void Tank::Unsubscribe() const
 {
 	Pawn::Unsubscribe();
 
-	_events->RemoveListener("DrawHealthBar", _nameWithUuid);
+	_events->RemoveListener("PostDraw", _nameWithUuid);
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
