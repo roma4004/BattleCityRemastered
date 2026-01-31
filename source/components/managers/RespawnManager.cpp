@@ -54,6 +54,12 @@ void RespawnManager::Subscribe()
 	{
 		this->OnBonusTank(author, fraction);
 	});
+
+	//NOTE: for unit tests
+	_events->AddListener("SetSlotNeedRespawn", _name, [this](const int slotIndex)
+	{
+		this->SetSlotNeedRespawn(slotIndex);
+	});
 }
 
 void RespawnManager::SubscribeAsClient()
@@ -88,6 +94,7 @@ void RespawnManager::Unsubscribe() const
 	}
 
 	_events->RemoveListener("BonusTank", _name);
+	_events->RemoveListener("SetSlotNeedRespawn", _name);
 }
 
 void RespawnManager::UnsubscribeAsClient() const

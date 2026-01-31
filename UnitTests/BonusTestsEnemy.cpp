@@ -23,8 +23,6 @@ protected:
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
-	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -46,10 +44,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
-		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events, _bonusEffectManager,
-		                                             _respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns

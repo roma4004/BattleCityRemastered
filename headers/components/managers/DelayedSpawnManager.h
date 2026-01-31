@@ -5,7 +5,7 @@
 class Tank;
 class EventSystem;
 
-class SpawnDelayManager
+class DelayedSpawnManager
 {
 	using milliseconds = std::chrono::milliseconds;
 
@@ -20,9 +20,9 @@ class SpawnDelayManager
 	std::vector<SpawnDelay> _spawnDelays{};
 
 public:
-	explicit SpawnDelayManager(const std::shared_ptr<EventSystem>& events);
+	explicit DelayedSpawnManager(const std::shared_ptr<EventSystem>& events);
 
-	~SpawnDelayManager();
+	~DelayedSpawnManager();
 
 	void Subscribe();
 	void Unsubscribe() const;

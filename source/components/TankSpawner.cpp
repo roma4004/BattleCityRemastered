@@ -25,15 +25,14 @@
 
 //TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         const std::shared_ptr<EventSystem>& events,
-                         const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
-                         const std::shared_ptr<RespawnManager>& respawnManager)
+                         const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize},
 	  _allObjects{allObjects},
 	  _events{events},
 	  _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)},
-	  _bonusEffectManager{bonusEffectManager},
-	  _respawnManager{respawnManager}//TODO: extract tank spawner to respawn manager as sub component
+	  _bonusEffectManager{std::make_shared<BonusEffectManager>(events)},
+	  _respawnManager{std::make_shared<RespawnManager>(events)}
+//TODO: extract tank spawner to respawn manager as sub component
 {
 	Subscribe();
 }
@@ -63,6 +62,8 @@ void TankSpawner::Subscribe()
 		tankLck->Enable();
 		_events->EmitEvent("AnimationCreateTank", tank);
 	});
+
+	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->RespawnTanks(); });
 }
 
 void TankSpawner::SubscribeAsClient()
@@ -85,6 +86,7 @@ void TankSpawner::Unsubscribe() const
 	}
 
 	_events->RemoveListener("SpawnEnabled", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 }
 
 void TankSpawner::UnsubscribeAsClient() const
@@ -290,6 +292,12 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 		}
 	}
 }
+
+int TankSpawner::GetEnemyRespawnCount() const { return _respawnManager->GetEnemyRespawnCount(); }
+
+int TankSpawner::GetPlayerOneRespawnCount() const { return _respawnManager->GetPlayerOneRespawnCount(); }
+
+int TankSpawner::GetPlayerTwoRespawnCount() const { return _respawnManager->GetPlayerTwoRespawnCount(); }
 
 void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid, const bool skipDelay)
 {

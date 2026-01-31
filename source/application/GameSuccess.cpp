@@ -1,19 +1,14 @@
 #include "application/GameSuccess.h"
 #include "application/UserInput.h"
-#include "components/BonusSpawner.h"
 #include "components/EventSystem.h"
-#include "components/Map.h"
 #include "components/Menu.h"
-#include "components/ObstacleSpawner.h"
-#include "components/TankSpawner.h"
-#include "components/managers/BonusEffectManager.h"
-#include "components/managers/SpawnDelayManager.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
 //#include <fstream>
 #include "components/managers/FramePerSecondManager.h"
+#include "components/managers/SpawnManager.h"
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include <iostream>
@@ -28,25 +23,18 @@
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-                         std::unique_ptr<Menu> menu,
-                         std::unique_ptr<TextureManager> textureManager, const bool isVsyncOn,
-                         std::unique_ptr<StateManager>& stateManager)
+                         std::unique_ptr<Menu> menu, std::unique_ptr<TextureManager> textureManager,
+                         const bool isVsyncOn, std::unique_ptr<StateManager>& stateManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _textureManager(std::move(textureManager)),
 	  _stateManager{std::move(stateManager)},
 	  _userInput{std::make_unique<UserInput>(windowSize, events)},
-	  _bonusSpawner{std::make_unique<BonusSpawner>(events, &_allObjects, windowSize)},
-	  _spawnDelayManager{std::make_unique<SpawnDelayManager>(events)},
 	  _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)},
+	  _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)},
 	  _events{events},
-	  _obstacleSpawner{std::make_unique<ObstacleSpawner>(events, &_allObjects)},
 	  _selectedGameMode{GameMode::OnePlayer}
 {
-	const auto bonusEffectManager = std::make_shared<BonusEffectManager>(events);
-	const auto respawnManager = std::make_shared<RespawnManager>(events);
-	_tankSpawner = std::make_unique<TankSpawner>(windowSize, &_allObjects, events, bonusEffectManager, respawnManager);
-
 	Subscribe();
 
 	ResetBattlefield(GameMode::Demo);
@@ -60,10 +48,7 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
-	_events->AddListener("ClientReadyToStartGame", _name, [this]()
-	{
-		this->OnClientReady();
-	});
+	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -77,19 +62,12 @@ void GameSuccess::Subscribe()
 void GameSuccess::Unsubscribe() const
 {
 	_events->RemoveListener("PreviousGameMode", _name);
+	_events->RemoveListener("ClientReadyToStartGame", _name);
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);//TODO: add host\client branch subscription
 	_events->RemoveListener("PostTickUpdate", _name);
 	_events->RemoveListener("DeltaTime", _name);
-}
-
-void GameSuccess::LoadMap() const
-{
-	//Map creation
-	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	const Map field{_obstacleSpawner};//TODO: replace with obstacleSpawner->mapLoad(map)
-	field.MapCreation(gridOffset);
 }
 
 void GameSuccess::ResetBattlefield(const GameMode gameMode)
@@ -108,7 +86,7 @@ void GameSuccess::ResetBattlefield(const GameMode gameMode)
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
-		LoadMap();
+		_events->EmitEvent("LoadMap");
 	}
 
 	if (gameMode == GameMode::PlayAsClient)
@@ -143,7 +121,6 @@ void GameSuccess::NextGameMode()
 	_events->EmitEvent("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
-
 // void GameSuccess::DisposeDeadObject()//TODO: run on debug only
 // {
 // 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };
@@ -176,8 +153,8 @@ void GameSuccess::DisposeDeadObject()
 
 void GameSuccess::OnClientReady() const
 {
-	LoadMap();
-	this->_events->EmitEvent("Pause_Released");
+	_events->EmitEvent("LoadMap");
+	_events->EmitEvent("Pause_Released");
 }
 
 void GameSuccess::MainLoop()
@@ -196,8 +173,6 @@ void GameSuccess::MainLoop()
 					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 					_events->EmitEvent("TickUpdate", _deltaTime);
-
-					_tankSpawner->RespawnTanks();
 				}
 			}
 

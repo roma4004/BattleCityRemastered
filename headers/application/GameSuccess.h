@@ -13,14 +13,10 @@ class EventSystem;
 class Server;
 class IDrawable;
 class UserInput;
-class TankSpawner;
-class BonusSpawner;
-class ObstacleSpawner;
 class TextureManager;
 class StateManager;
-class BonusEffectManager;
-class SpawnDelayManager;
 class FramePerSecondManager;
+class SpawnManager;
 
 class GameSuccess final : public IGame
 {
@@ -32,13 +28,10 @@ class GameSuccess final : public IGame
 	std::unique_ptr<TextureManager> _textureManager{nullptr};
 	std::unique_ptr<StateManager> _stateManager{nullptr};
 	std::unique_ptr<UserInput> _userInput{nullptr};
-	std::unique_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
-	std::unique_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
+	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
@@ -48,7 +41,6 @@ class GameSuccess final : public IGame
 
 	void Subscribe();
 	void Unsubscribe() const;
-	void LoadMap() const;
 
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();

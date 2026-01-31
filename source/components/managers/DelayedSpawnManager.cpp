@@ -1,22 +1,22 @@
-#include "components/managers/SpawnDelayManager.h"
+#include "components/managers/DelayedSpawnManager.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
-SpawnDelayManager::SpawnDelayManager(const std::shared_ptr<EventSystem>& events)
+DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events)
 	: _name{"SpawnDelayManager"}, _events{events}
 {
 	Subscribe();
 }
 
-SpawnDelayManager::~SpawnDelayManager()
+DelayedSpawnManager::~DelayedSpawnManager()
 {
 	Unsubscribe();
 }
 
 using milliseconds = std::chrono::milliseconds;
 
-void SpawnDelayManager::Subscribe()
+void DelayedSpawnManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
@@ -43,7 +43,7 @@ void SpawnDelayManager::Subscribe()
 	_events->AddListener("PostTickUpdate", _name, [this](const float /*deltaTime*/) { this->Disposer(); });
 }
 
-void SpawnDelayManager::Unsubscribe() const
+void DelayedSpawnManager::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("SpawnDelayStart", _name);
@@ -51,12 +51,12 @@ void SpawnDelayManager::Unsubscribe() const
 	_events->RemoveListener("PostTickUpdate", _name);
 }
 
-void SpawnDelayManager::Reset()
+void DelayedSpawnManager::Reset()
 {
 	_spawnDelays.clear();
 }
 
-void SpawnDelayManager::TickUpdate(const float /*deltaTime*/)
+void DelayedSpawnManager::TickUpdate(const float /*deltaTime*/)
 {
 	for (auto& [tank, timer]: _spawnDelays)
 	{
@@ -68,7 +68,7 @@ void SpawnDelayManager::TickUpdate(const float /*deltaTime*/)
 	}
 }
 
-void SpawnDelayManager::Disposer()
+void DelayedSpawnManager::Disposer()
 {
 	std::erase_if(_spawnDelays, [](const SpawnDelay& delay)
 	{

@@ -29,6 +29,7 @@ class TankSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 
 	GameMode _gameMode{};
 
@@ -55,14 +56,13 @@ class TankSpawner final
 	void OnClientRespawn(TankType type, buuid uuid, bool skipDelay = false);
 
 public:
-	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
-
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<EventSystem>& events,
-	            const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
-	            const std::shared_ptr<RespawnManager>& respawnManager);
+	            const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner();
 
-	void RespawnTanks(bool skipDelay = false);
+	void RespawnTanks(bool skipDelay = false); //TODO: still public for unit test
+	[[nodiscard]] int GetEnemyRespawnCount() const; //TODO: still public for unit test
+	[[nodiscard]] int GetPlayerOneRespawnCount() const; //TODO: still public for unit test
+	[[nodiscard]] int GetPlayerTwoRespawnCount() const; //TODO: still public for unit test
 };
