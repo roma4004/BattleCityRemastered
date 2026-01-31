@@ -2,17 +2,14 @@
 
 #include "Point.h"
 #include "interfaces/IGame.h"
-#include <SDL.h>
 #include <chrono>
 
 enum class GameMode : char8_t;
 class INetworkNode;
 class Menu;
 class BaseObj;
-class BulletPool;
 class Client;
 class EventSystem;
-class GameStatistics;
 class Server;
 class IDrawable;
 class UserInput;
@@ -23,6 +20,7 @@ class TextureManager;
 class StateManager;
 class BonusEffectManager;
 class SpawnDelayManager;
+class FramePerSecondManager;
 
 class GameSuccess final : public IGame
 {
@@ -32,27 +30,21 @@ class GameSuccess final : public IGame
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::unique_ptr<TextureManager> _textureManager{nullptr};
-	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	std::shared_ptr<StateManager> _stateManager{nullptr};
-	std::shared_ptr<UserInput> _userInput{nullptr};
-	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
-	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
-	std::shared_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
+	std::unique_ptr<StateManager> _stateManager{nullptr};
+	std::unique_ptr<UserInput> _userInput{nullptr};
+	std::unique_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
+	std::unique_ptr<SpawnDelayManager> _spawnDelayManager{nullptr};
+	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 
-	std::chrono::duration<double> _targetFrameDuration{};
-	SDL_TimerID _frameTimer{};
-	const int _targetFps{60};
-
-	bool _isVsyncOn{};//TODO: add settings inGame for tweak this in real time
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
-	bool _frameReady{true};
+	float _deltaTime{};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -61,9 +53,6 @@ class GameSuccess final : public IGame
 	void ResetBattlefield(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
-
-	[[nodiscard]] Uint32 CountFpsAndDeltaTime(float& deltaTime,
-	                                          const std::chrono::high_resolution_clock::time_point& startFrameTime);
 
 	void DisposeDeadObject();
 
@@ -78,10 +67,9 @@ class GameSuccess final : public IGame
 	void OnGameModeChangedTo(GameMode newGameMode);
 
 public:
-	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-	            const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
+	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu> menu,
 	            std::unique_ptr<TextureManager> textureManager, bool isVsyncOn,
-	            const std::shared_ptr<StateManager>& stateManager);
+	            std::unique_ptr<StateManager>& stateManager);
 
 	~GameSuccess() override;
 };

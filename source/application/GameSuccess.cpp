@@ -14,6 +14,7 @@
 #include "network/ServerHandler.h"
 #include <algorithm>
 //#include <fstream>
+#include "components/managers/FramePerSecondManager.h"
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include <iostream>
@@ -25,39 +26,27 @@
 //#endif
 #define ASIO_STANDALONE
 
-Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
-{
-	const auto frameReady = static_cast<bool*>(param);
-	*frameReady = true;
-
-	return 0;
-}
-
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-                         const std::shared_ptr<GameStatistics>& statistics, std::unique_ptr<Menu> menu,
+                         std::unique_ptr<Menu> menu,
                          std::unique_ptr<TextureManager> textureManager, const bool isVsyncOn,
-                         const std::shared_ptr<StateManager>& stateManager)
+                         std::unique_ptr<StateManager>& stateManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
 	  _textureManager(std::move(textureManager)),
-	  _statistics{statistics},
+	  _stateManager{std::move(stateManager)},
+	  _userInput{std::make_unique<UserInput>(windowSize, events)},
+	  _bonusSpawner{std::make_unique<BonusSpawner>(events, &_allObjects, windowSize)},
+	  _spawnDelayManager{std::make_unique<SpawnDelayManager>(events)},
+	  _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)},
 	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, &_allObjects, windowSize, GameMode::Demo)},
-	  _stateManager{stateManager},
-	  _userInput{std::make_shared<UserInput>(windowSize, events)},
-	  _bonusSpawner{std::make_shared<BonusSpawner>(events, &_allObjects, windowSize)},
-	  _obstacleSpawner{std::make_shared<ObstacleSpawner>(events, &_allObjects)},
-	  _spawnDelayManager{std::make_shared<SpawnDelayManager>(events)},
-	  _isVsyncOn{isVsyncOn},
+	  _obstacleSpawner{std::make_unique<ObstacleSpawner>(events, &_allObjects)},
 	  _selectedGameMode{GameMode::OnePlayer}
 {
 	const auto bonusEffectManager = std::make_shared<BonusEffectManager>(events);
 	const auto respawnManager = std::make_shared<RespawnManager>(events);
-	_tankSpawner = std::make_shared<TankSpawner>(windowSize, &_allObjects, events, _bulletPool, bonusEffectManager,
-	                                             respawnManager);
-	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
+	_tankSpawner = std::make_unique<TankSpawner>(windowSize, &_allObjects, events, bonusEffectManager, respawnManager);
 
 	Subscribe();
 
@@ -66,12 +55,6 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 
 GameSuccess::~GameSuccess()
 {
-	if (_frameTimer)
-	{
-		SDL_RemoveTimer(_frameTimer);
-		_frameTimer = 0;
-	}
-
 	Unsubscribe();
 }
 
@@ -89,6 +72,7 @@ void GameSuccess::Subscribe()
 		this->OnGameModeChangedTo(newGameMode);
 	});
 	_events->AddListener("PostTickUpdate", _name, [this](const float /*deltaTime*/) { this->DisposeDeadObject(); });
+	_events->AddListener("DeltaTime", _name, [this](const float& deltaTime) { this->_deltaTime = deltaTime; });
 }
 
 void GameSuccess::Unsubscribe() const
@@ -98,6 +82,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("ResetBattlefield", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("PostTickUpdate", _name);
+	_events->RemoveListener("DeltaTime", _name);
 }
 
 void GameSuccess::LoadMap() const
@@ -159,63 +144,6 @@ void GameSuccess::NextGameMode()
 	_events->EmitEvent("SelectedGameModeChangedTo", _selectedGameMode);
 }
 
-Uint32 GameSuccess::CountFpsAndDeltaTime(float& deltaTime,
-                                         const std::chrono::high_resolution_clock::time_point& startFrameTime)
-{
-	static auto lastFpsUpdate = std::chrono::high_resolution_clock::now();
-	static Uint32 lastDisplayedFps{0};
-	static Uint32 frameCounter{0};
-
-	std::chrono::high_resolution_clock::time_point endFrameTime = std::chrono::high_resolution_clock::now();
-	auto frameDuration = std::chrono::duration<double>(endFrameTime - startFrameTime);
-	deltaTime = static_cast<float>(frameDuration.count());
-
-	if (!_isVsyncOn)
-	{
-		if (const auto timeToWait = _targetFrameDuration - frameDuration;
-			timeToWait.count() > 0)
-		{
-			_frameReady = false;
-			const auto waitMs = static_cast<Uint32>(timeToWait.count() * 1000.0);
-			_frameTimer = SDL_AddTimer(waitMs, FrameTimerCallback, &_frameReady);
-			if (waitMs > 5)
-			{
-				SDL_Delay(waitMs - 5);
-			}
-
-			while (!_frameReady)
-			{
-				SDL_PumpEvents();
-			}
-
-			if (_frameTimer)
-			{
-				SDL_RemoveTimer(_frameTimer);
-				_frameTimer = 0;
-			}
-
-			endFrameTime = std::chrono::high_resolution_clock::now();
-			frameDuration = std::chrono::duration<double>(endFrameTime - startFrameTime);
-			deltaTime = static_cast<float>(frameDuration.count());
-		}
-	}
-
-	frameCounter++;
-	if (const auto timeSinceLastFpsUpdate = std::chrono::duration<double>(endFrameTime - lastFpsUpdate);
-		timeSinceLastFpsUpdate.count() >= 1.0)
-	{
-		const auto fps = static_cast<Uint32>(std::round(frameCounter / timeSinceLastFpsUpdate.count()));
-		frameCounter = 0;
-		lastFpsUpdate = endFrameTime;
-
-		if (fps != lastDisplayedFps)
-		{
-			lastDisplayedFps = std::min(fps, 1000u);
-		}
-	}
-
-	return lastDisplayedFps;
-}
 
 // void GameSuccess::DisposeDeadObject()//TODO: run on debug only
 // {
@@ -257,12 +185,10 @@ void GameSuccess::MainLoop()
 {
 	try
 	{
-		float deltaTime{0.f};
 		while (!_userInput->IsShutdown())
 		{
-			const auto startFrameTime = std::chrono::high_resolution_clock::now();
-
-			_events->EmitEvent("PreTickUpdate", deltaTime);
+			_events->EmitEvent("FrameStart", std::chrono::high_resolution_clock::now());
+			_events->EmitEvent("PreTickUpdate", _deltaTime);
 
 			if (!_userInput->IsPause())
 			{
@@ -270,13 +196,13 @@ void GameSuccess::MainLoop()
 				{
 					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
-					_events->EmitEvent("TickUpdate", deltaTime);
+					_events->EmitEvent("TickUpdate", _deltaTime);
 
 					_tankSpawner->RespawnTanks();
 				}
 			}
 
-			_events->EmitEvent("PostTickUpdate", deltaTime);
+			_events->EmitEvent("PostTickUpdate", _deltaTime);
 
 			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
 			_events->EmitEvent("PreDraw");
@@ -293,7 +219,7 @@ void GameSuccess::MainLoop()
 				_events->EmitEvent("Server_EndFrame");
 			}
 
-			_events->EmitEvent("ActualFps", CountFpsAndDeltaTime(deltaTime, startFrameTime));
+			_events->EmitEvent("CalculateActualFps");
 		}
 	}
 	catch (std::exception& e)

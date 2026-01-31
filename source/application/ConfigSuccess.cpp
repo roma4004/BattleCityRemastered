@@ -20,11 +20,10 @@ ConfigSuccess::ConfigSuccess(const UPoint windowSize, const std::shared_ptr<SDL_
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
-	auto statistics = std::make_shared<GameStatistics>(events);
-	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, statistics, _windowSize, events);
-	auto stateManager = std::make_shared<StateManager>(events, _renderer, _atlasTexture);
+	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, _windowSize, events);
+	auto stateManager = std::make_unique<StateManager>(events, _renderer, _atlasTexture);
 	auto textureManager = std::make_unique<TextureManager>(_windowSize, _atlasTexture, _renderer, _fpsFont, events);
 
 	return std::make_unique<GameSuccess>(
-			_windowSize, events, statistics, std::move(menu), std::move(textureManager), _isVsyncOn, stateManager);
+			_windowSize, events, std::move(menu), std::move(textureManager), _isVsyncOn, stateManager);
 }

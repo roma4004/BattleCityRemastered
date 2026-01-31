@@ -59,7 +59,7 @@ public:
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<EventSystem>& events, const std::shared_ptr<BulletPool>& bulletPool,
+	            const std::shared_ptr<EventSystem>& events,
 	            const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
 	            const std::shared_ptr<RespawnManager>& respawnManager);
 

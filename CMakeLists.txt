@@ -357,6 +357,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/BonusEffectManager.cpp
+        source/components/managers/FramePerSecondManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnDelayManager.cpp
         source/entities/BaseObj.cpp

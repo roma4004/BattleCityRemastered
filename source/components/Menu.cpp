@@ -7,14 +7,14 @@
 #include <sstream>
 
 Menu::Menu(const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& menuFont,
-           const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<GameStatistics>& statistics,
-           const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+           const std::shared_ptr<SDL_Texture>& menuLogo, const UPoint windowSize,
+           const std::shared_ptr<EventSystem>& events)
 	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)},
 	  _renderer{renderer},
 	  _events{events},
 	  _menuFont{menuFont},
 	  _menuLogo{menuLogo},
-	  _statistics{statistics},
+	  _statistics{std::make_unique<GameStatistics>(events)},
 	  _input{std::make_unique<InputProviderForMenu>(events)},
 	  _name{std::string("Menu")},
 	  _selectedGameMode{GameMode::OnePlayer}
@@ -109,7 +109,8 @@ void Menu::PregenerateMenuBackground()
 //TODO: optimize draw call with cache non changed text part
 void Menu::DrawMenu()
 {
-	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)//TODO: split input and local menu state is shown
+	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)
+	//TODO: split input and local menu state is shown
 	{
 		return;
 	}

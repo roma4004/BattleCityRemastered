@@ -1,4 +1,5 @@
 #include "components/TankSpawner.h"
+#include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerOneNet.h"
@@ -24,13 +25,13 @@
 
 //TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         const std::shared_ptr<EventSystem>& events, const std::shared_ptr<BulletPool>& bulletPool,
+                         const std::shared_ptr<EventSystem>& events,
                          const std::shared_ptr<BonusEffectManager>& bonusEffectManager,
                          const std::shared_ptr<RespawnManager>& respawnManager)
 	: _windowSize{windowSize},
 	  _allObjects{allObjects},
 	  _events{events},
-	  _bulletPool{bulletPool},
+	  _bulletPool{std::make_unique<BulletPool>(events, allObjects, windowSize, GameMode::Demo)},
 	  _bonusEffectManager{bonusEffectManager},
 	  _respawnManager{respawnManager}//TODO: extract tank spawner to respawn manager as sub component
 {

@@ -154,6 +154,7 @@
     <ClCompile Include="source\components\LineOfSight.cpp" />
     <ClCompile Include="source\components\managers\AnimationManager.cpp" />
     <ClCompile Include="source\components\managers\BonusEffectManager.cpp" />
+    <ClCompile Include="source\components\managers\FramePerSecondManager.cpp" />
     <ClCompile Include="source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="source\components\managers\SpawnDelayManager.cpp" />
     <ClCompile Include="source\components\managers\StateManager.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="headers\components\AnimatedObjects.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
     <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
+    <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />
     <ClInclude Include="headers\components\managers\RespawnManager.h" />
     <ClInclude Include="headers\components\managers\SpawnDelayManager.h" />
     <ClInclude Include="headers\components\managers\StateManager.h" />

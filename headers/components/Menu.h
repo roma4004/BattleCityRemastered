@@ -22,7 +22,7 @@ class Menu final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<TTF_Font> _menuFont{nullptr};
 	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
-	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::unique_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 	std::shared_ptr<int[]> _menuBackground{nullptr};
 	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
@@ -57,8 +57,7 @@ class Menu final
 
 public:
 	Menu(const std::shared_ptr<SDL_Renderer>& renderer, const std::shared_ptr<TTF_Font>& menuFont,
-	     const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<GameStatistics>& statistics,
-	     UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+	     const std::shared_ptr<SDL_Texture>& menuLogo, UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 
 	~Menu();
 
