@@ -142,7 +142,7 @@ void Menu::DrawMenuLogo() const
 {
 	const SDL_Rect rect{.x = _pos.x + 135, .y = _pos.y + 42, .w = 300, .h = 75};
 
-	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
+	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect); //TODO: extract render to renderManager
 }
 
 void Menu::TextToRender(const Point& pos, const SDL_Color& color, const int value) const

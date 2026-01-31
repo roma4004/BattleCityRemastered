@@ -372,6 +372,6 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int 
 	{
 		_allObjects->emplace_back(tank);
 		_events->EmitEvent("SpawnDelayStart", tank, milliseconds(skipDelay ? 0 : 1000));
-		_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name, color);
+		_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name);
 	}
 }

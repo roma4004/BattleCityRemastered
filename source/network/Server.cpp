@@ -357,11 +357,11 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const std::string& name, const int color)
+			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
 			{
 				//TODO: fix multiple spawn bullet explosion animation
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name, color));
+				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name));
 			});
 
 	_events->AddListener(

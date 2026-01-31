@@ -302,11 +302,7 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_AnimationCreate",
-		                   cmd->GetAnimationType(),
-		                   cmd->GetRect(),
-		                   cmd->GetName(),
-		                   cmd->GetColor());
+		_events->EmitEvent("AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetName());
 	}
 }
 

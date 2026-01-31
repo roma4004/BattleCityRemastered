@@ -2,8 +2,8 @@
 
 #include "../Point.h"
 #include "../components/input/MouseButton.h"
-#include "SDLEnvironment.h"
 #include "components/input/InputProviderForMenu.h"
+#include <SDL_gamecontroller.h>
 #include <chrono>
 #include <vector>
 

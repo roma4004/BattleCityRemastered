@@ -4,9 +4,7 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/AnimationType.h"
 #include "enums/GameMode.h"
-#include "interfaces/IShootable.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
            const bool enableByDefault)
@@ -46,10 +44,7 @@ Tank::~Tank()
 
 	_events->EmitEvent("TankDied", _uuid);
 
-	const std::string& basicString = _name;
-	const ObjRectangle objRectangle = _rect;
-	const int color = _color;
-	_events->EmitEvent("AnimationCreate", AnimationType::Tank_Explosion, objRectangle, basicString, color);
+	_events->EmitEvent("AnimationCreateTankExplosion", _rect, _name);
 }
 
 void Tank::Subscribe()

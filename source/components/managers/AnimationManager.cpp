@@ -24,8 +24,21 @@ AnimationManager::~AnimationManager()
 
 void AnimationManager::Subscribe()
 {
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		//SubscribeAsClient();
+	}
+	else
+	{
+		SubscribeAsHost();
+	}
 
+	_events->AddListener(
+			"AnimationCreate", _name,
+			[this](const AnimationType& type, const ObjRectangle& rect, const std::string& objName)
+			{
+				this->CreateAnimation(type, rect, objName);
+			});
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("PostDraw", _name, [this]() { Update(); });
@@ -36,10 +49,17 @@ void AnimationManager::Subscribe()
 void AnimationManager::SubscribeAsHost()
 {
 	_events->AddListener(
-			"AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const std::string& objName, const int color)
+			"AnimationCreateTankExplosion", _name,
+			[this](const ObjRectangle rect, const std::string& objName)
 			{
-				this->CreateAnimation(type, rect, objName, color);
+				this->CreateAnimation(AnimationType::Tank_Explosion, rect, objName);
+			});
+
+	_events->AddListener(
+			"AnimationCreateBulletExplosion", _name,
+			[this](const ObjRectangle rect, const std::string& objName)
+			{
+				this->CreateAnimation(AnimationType::Bullet_Explosion, rect, objName);
 			});
 
 	//TODO: create client like subscription
@@ -54,20 +74,19 @@ void AnimationManager::SubscribeAsHost()
 	});
 }
 
-void AnimationManager::SubscribeAsClient()//TODO: merge with host?
-{
-	_events->AddListener(
-			"ClientReceived_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const std::string& objName, const int color)
-			//TODO: change command add field add , const std::string& objName
-			{
-				CreateAnimation(type, rect, objName, color);
-			});
-}
+// void AnimationManager::SubscribeAsClient() {}
 
 void AnimationManager::Unsubscribe() const
 {
-	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		// SubscribeAsClient();
+	}
+	else
+	{
+		UnsubscribeAsHost();
+	}
+
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("PostDraw", _name);
@@ -75,23 +94,29 @@ void AnimationManager::Unsubscribe() const
 	_events->RemoveListener("PostTickUpdate", _name);
 }
 
-void AnimationManager::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_AnimationCreate", _name);
-}
+// void AnimationManager::UnsubscribeAsClient() const {}
 
 void AnimationManager::UnsubscribeAsHost() const
 {
 	_events->RemoveListener("AnimationCreate", _name);
 	_events->RemoveListener("AnimationCreateTank", _name);
 	_events->RemoveListener("AnimationCreateWater", _name);
+	_events->RemoveListener("AnimationCreateTankExplosion", _name);
+	_events->RemoveListener("AnimationCreateBulletExplosion", _name);
 }
 
 void AnimationManager::SetGameMode(const GameMode newGameMode)
 {
 	_gameMode = newGameMode;
 	_animatedObjects.clear();
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	// if (_gameMode == GameMode::PlayAsClient)
+	// {
+	// 	SubscribeAsClient();
+	// }
+	// else
+	// {
+	// 	UnsubscribeAsClient();
+	// }
 }
 
 void AnimationManager::Reset()
@@ -101,27 +126,26 @@ void AnimationManager::Reset()
 	_waterObjects.clear();
 }
 
-void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& objName,
-                                       const int color)
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& objName)
 {
 	switch (type)
 	{
 		case AnimationType::Spawn_Animation:
-			Create("SpawnAnimation", rect, type, 3, 16, objName, color);
+			Create("SpawnAnimation", rect, type, 3, 16, objName);
 			break;
 		case AnimationType::Bullet_Explosion:
-			Create("BulletExplosion", rect, type, 3, 16, objName, color);
+			Create("BulletExplosion", rect, type, 3, 16, objName);
 			break;
 		case AnimationType::Tank_Explosion: //TODO: fix tank explosion
 			DeleteTankAnimation(objName);
-			Create("TankExplosion", rect, type, 2, 32, objName, color);
+			Create("TankExplosion", rect, type, 2, 32, objName);
 			//TODO: should change limitOfFrame to 5?
 			break;
 		case AnimationType::Helmet_Animation:
-			Create("HelmetAnimation", rect, type, 2, 16, objName, color);
+			Create("HelmetAnimation", rect, type, 2, 16, objName);
 			break;
 		case AnimationType::Bullet_Animation:
-			Create("BulletAnimation", rect, type, 2, 16, objName, color);
+			Create("BulletAnimation", rect, type, 2, 16, objName);
 			break;
 		default:
 			break;
@@ -164,15 +188,16 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
-                              const int limitOfFrames, const int scale, const std::string& objName, const int color,
+                              const int limitOfFrames, const int scale, const std::string& objName,
                               const bool isInfinite)
 {
+	constexpr int placeholderWhiteColor = 0xffffff;
 	_animatedObjects.emplace_back(
-			name, rect, type, _events, _gameMode, limitOfFrames, scale, objName, color, isInfinite);
+			name, rect, type, _events, _gameMode, limitOfFrames, scale, objName, placeholderWhiteColor, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName, color);
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName, placeholderWhiteColor);
 	}
 }
 

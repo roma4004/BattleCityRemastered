@@ -17,21 +17,19 @@ class AnimationCreate : public Command
 	AnimationType _type{};
 	ObjRectangle _rect{};
 	std::string _name{};
-	int _color{};
 
 public:
 	//for deserialization
 	AnimationCreate();
 
 	//for serialization
-	explicit AnimationCreate(AnimationType type, ObjRectangle rect, std::string name, int color);
+	explicit AnimationCreate(AnimationType type, ObjRectangle rect, std::string name);
 
 	~AnimationCreate() override = default;
 
 	[[nodiscard]] AnimationType GetAnimationType() const noexcept;
 	[[nodiscard]] ObjRectangle GetRect() const noexcept;
 	[[nodiscard]] std::string GetName() const noexcept;
-	[[nodiscard]] int GetColor() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
@@ -46,7 +44,6 @@ void AnimationCreate::serialize(Archive& ar, const unsigned int)
 	ar & _type;
 	ar & _rect;
 	ar & _name;
-	ar & _color;
 }
 
 BOOST_CLASS_EXPORT_KEY(AnimationCreate);

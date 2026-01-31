@@ -6,7 +6,6 @@
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/AnimationType.h"
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 // #include <iostream>
@@ -212,5 +211,5 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 
 	TakeDamage(_damage);
 
-	_events->EmitEvent("AnimationCreate", AnimationType::Bullet_Explosion, _rect, _name, _color);
+	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
 }
