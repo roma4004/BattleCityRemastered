@@ -59,12 +59,14 @@ void Menu::Subscribe()
 			{
 				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
+	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->MenuUpdate(); });
 }
 
 void Menu::Unsubscribe() const
 {
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
 	_events->RemoveListener("RespawnCountChangedTo", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 }
 
 void Menu::MenuUpdate() const

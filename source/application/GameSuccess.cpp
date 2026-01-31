@@ -88,7 +88,7 @@ void GameSuccess::Subscribe()
 	{
 		this->OnGameModeChangedTo(newGameMode);
 	});
-	_events->AddListener("DisposeStage", _name, [this]() { this->DisposeDeadObject(); });
+	_events->AddListener("PostTickUpdate", _name, [this](const float /*deltaTime*/) { this->DisposeDeadObject(); });
 }
 
 void GameSuccess::Unsubscribe() const
@@ -97,7 +97,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("NextGameMode", _name);
 	_events->RemoveListener("ResetBattlefield", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("DisposeStage", _name);
+	_events->RemoveListener("PostTickUpdate", _name);
 }
 
 void GameSuccess::LoadMap() const
@@ -263,33 +263,29 @@ void GameSuccess::MainLoop()
 		{
 			const auto startFrameTime = std::chrono::high_resolution_clock::now();
 
-			_textureManager->ClearFrame();
-
-			_userInput->Update();
-
-			_menu->MenuUpdate();
+			_events->EmitEvent("PreTickUpdate", deltaTime);
 
 			if (!_userInput->IsPause())
 			{
-				_events->EmitEvent("DisposeStage");
-
 				if (_gameMode != GameMode::PlayAsClient)
 				{
 					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 					_events->EmitEvent("TickUpdate", deltaTime);
 
-					_tankSpawner->RespawnTanks();//TODO:split into two timers
+					_tankSpawner->RespawnTanks();
 				}
 			}
 
+			_events->EmitEvent("PostTickUpdate", deltaTime);
+
 			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
-			_events->EmitEvent("Draw"); //TODO: preDraw for ice/water and postDraw for bush
+			_events->EmitEvent("Draw");//TODO: preDraw for ice/water and postDraw for bush
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("AnimationUpdate");
 
-			_events->EmitEvent("DrawHealthBar"); //TODO: extract from game success
+			_events->EmitEvent("DrawHealthBar");//TODO: extract from game success
 
 			_events->EmitEvent("DrawUserInterface");//TODO: blend separate buff layers(objects, effect, interface)
 

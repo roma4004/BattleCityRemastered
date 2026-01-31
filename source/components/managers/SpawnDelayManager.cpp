@@ -40,7 +40,7 @@ void SpawnDelayManager::Subscribe()
 		this->TickUpdate(deltaTime);
 	});
 
-	_events->AddListener("DisposeStage", _name, [this]() { this->Disposer(); });
+	_events->AddListener("PostTickUpdate", _name, [this](const float /*deltaTime*/) { this->Disposer(); });
 }
 
 void SpawnDelayManager::Unsubscribe() const
@@ -48,7 +48,7 @@ void SpawnDelayManager::Unsubscribe() const
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("SpawnDelayStart", _name);
 	_events->RemoveListener("TickUpdate", _name);
-	_events->RemoveListener("DisposeStage", _name);
+	_events->RemoveListener("PostTickUpdate", _name);
 }
 
 void SpawnDelayManager::Reset()

@@ -29,12 +29,14 @@ void UserInput::Subscribe()
 		this->_isPause = newPauseStatus;
 	});
 	_events->AddListener("Tab_Released", _name, [this]() { SwapControllers(); });
+	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->Update(); });
 }
 
 void UserInput::Unsubscribe() const
 {
 	_events->RemoveListener("Pause_Status", _name);
 	_events->RemoveListener("Tab_Released", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)

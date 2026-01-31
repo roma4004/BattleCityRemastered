@@ -30,7 +30,7 @@ void AnimationManager::Subscribe()
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("AnimationUpdate", _name, [this]() { Update(); });
 	_events->AddListener("AnimationTankUpdate", _name, [this](const std::string& objName) { UpdateTank(objName); });
-	_events->AddListener("DisposeStage", _name, [this]() { this->AnimationSeqDisposer(); });
+	_events->AddListener("PostTickUpdate", _name, [this](const float /*deltaTime*/) { this->AnimationSeqDisposer(); });
 }
 
 void AnimationManager::SubscribeAsHost()
@@ -72,7 +72,7 @@ void AnimationManager::Unsubscribe() const
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("AnimationUpdate", _name);
 	_events->RemoveListener("AnimationTankUpdate", _name);
-	_events->RemoveListener("DisposeStage", _name);
+	_events->RemoveListener("PostTickUpdate", _name);
 }
 
 void AnimationManager::UnsubscribeAsClient() const

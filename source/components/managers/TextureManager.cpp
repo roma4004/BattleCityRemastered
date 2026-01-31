@@ -57,6 +57,7 @@ void TextureManager::Subscribe()
 	{
 		this->DrawHealthBar(rect, health, color);
 	});
+	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->ClearFrame(); });
 }
 
 void TextureManager::Unsubscribe() const
@@ -64,6 +65,7 @@ void TextureManager::Unsubscribe() const
 	_events->RemoveListener("DrawObj", _name);
 	_events->RemoveListener("DrawAnimation", _name);
 	_events->RemoveListener("DrawHealthBarObj", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 }
 
 void TextureManager::ClearColorTextureCache()
