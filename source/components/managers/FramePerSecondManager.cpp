@@ -1,6 +1,5 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "components/EventSystem.h"
-
 #include <SDL_events.h>
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, bool isVsyncOn)
@@ -29,9 +28,9 @@ void FramePerSecondManager::Subscribe()
 		_events->EmitEvent("ActualFPS", CountFpsAndDeltaTime());
 	});
 
-	_events->AddListener("FrameStart", _name, [this](const std::chrono::high_resolution_clock::time_point timePoint)
+	_events->AddListener("FrameStart", _name, [this]()
 	{
-		this->_startFrameTime = timePoint;
+		this->_startFrameTime = std::chrono::high_resolution_clock::now();
 	});
 }
 

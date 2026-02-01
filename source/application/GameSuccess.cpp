@@ -163,7 +163,7 @@ void GameSuccess::MainLoop()
 	{
 		while (!_userInput->IsShutdown())
 		{
-			_events->EmitEvent("FrameStart", std::chrono::high_resolution_clock::now());
+			_events->EmitEvent("FrameStart");
 			_events->EmitEvent("PreTickUpdate", _deltaTime);
 
 			if (!_userInput->IsPause())

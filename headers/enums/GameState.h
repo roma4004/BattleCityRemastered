@@ -6,5 +6,5 @@ enum class GameState : char8_t
 	gamePause,
 	gameMenu,
 	gameOver,
-	highScore
+	gameScore
 };

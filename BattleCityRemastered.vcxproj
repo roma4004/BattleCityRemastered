@@ -230,6 +230,7 @@
     <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />
     <ClInclude Include="headers\components\managers\RespawnManager.h" />
     <ClInclude Include="headers\components\managers\DelayedSpawnManager.h" />
+    <ClInclude Include="headers\components\managers\SpawnManager.h" />
     <ClInclude Include="headers\components\managers\StateManager.h" />
     <ClInclude Include="headers\components\managers\TextureManager.h" />
     <ClInclude Include="headers\enums\AnimationType.h" />

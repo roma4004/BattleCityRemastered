@@ -80,7 +80,7 @@ void AnimationManager::Unsubscribe() const
 {
 	if (_gameMode == GameMode::PlayAsClient)
 	{
-		// SubscribeAsClient();
+		// UnsubscribeAsClient();
 	}
 	else
 	{
