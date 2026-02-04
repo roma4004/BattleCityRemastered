@@ -22,21 +22,21 @@ void TextureManager::Subscribe() const
 	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
 	_events->AddListener(
 			"DrawObj", _name,
-			[this](const ObjRectangle rect, const Direction dir, const std::string& name, const int color)
+			[this](const ObjRectangle rect, const Direction dir, const std::string& name, const unsigned int color)
 			{
 				this->Draw(rect, dir, name, color);
 			});
 	_events->AddListener(
 			"DrawAnimation", _name,
 			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-			       const std::string& name, const int color)
+			       const std::string& name, const unsigned int color)
 			{
 				this->DrawAnimation(rect, dir, step, scale, name, color);
 			});
 	_events->AddListener(
 			"DrawTankAnimation", _name,
 			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-			       const std::string& name, const int color)
+			       const std::string& name, const unsigned int color)
 			{
 				this->DrawTankAnimation(rect, dir, step, scale, name, color);
 			});
@@ -134,7 +134,8 @@ ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
 	return textureRect;
 }
 
-ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect, ObjRectangle& destRect) const
+ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect,
+                                                ObjRectangle& destRect) const
 {
 	ObjRectangle textureRect{};
 	if (name == "Water")
@@ -164,7 +165,8 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 }
 
 
-void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name, const int color) const
+void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name,
+                          const unsigned int color) const
 {
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
@@ -174,30 +176,33 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 		&& textureRect.w == defaultSdlRect.w
 		&& textureRect.h == defaultSdlRect.h)
 	{
-		_events->EmitEvent("RenderColorTexture", rect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent("RenderColorTexture", rect, color);
+		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
 }
 
 void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
-                                   const std::string& name, const int color) const
+                                   const std::string& name, const unsigned int color) const
 {
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
 	textureRect.x += step * scale;
 	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y//TODO: incorrect float comparison in whole class
+		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+		//TODO: incorrect float comparison in whole class
 		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
 	{
-		_events->EmitEvent("RenderColorTexture", rect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent("RenderColorTexture", rect, color);
+		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
 }
 
-void TextureManager::DrawTankAnimation(const ObjRectangle destRect, const Direction dir, const int step, const int scale,
-                                       const std::string& name, const int color) const
+void TextureManager::DrawTankAnimation(const ObjRectangle destRect, const Direction dir, const int step,
+                                       const int scale, const std::string& name, const unsigned int color) const
 {
 	ObjRectangle textureRect = GetTankTextureRect(name);
 	textureRect.x += step * scale;
@@ -205,7 +210,8 @@ void TextureManager::DrawTankAnimation(const ObjRectangle destRect, const Direct
 		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
 		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
 	{
-		_events->EmitEvent("RenderColorTexture", destRect, color);//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent("RenderColorTexture", destRect, color);
+		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
 	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);

@@ -33,7 +33,7 @@ class RenderManager
 
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
-	std::unordered_map<int, SDL_Texture*> _colorTextureCache;
+	std::unordered_map<unsigned int, SDL_Texture*> _colorTextureCache;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -42,11 +42,11 @@ class RenderManager
 	void DrawGameOverText() const;
 
 	void PregenerateMenuBackgroundPixels();
-	[[nodiscard]] static int ColorToInt(const SDL_Color& color);
-	[[nodiscard]] static SDL_Color IntToColor(unsigned int colorInt);
-	[[nodiscard]] static int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
+	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
+	[[nodiscard]] static unsigned int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 	[[nodiscard]] SDL_Rect RectToSdlRect(const ObjRectangle& rect);
-	void SetRenderDrawColor(int color, Uint8 transparency) const;
+	void SetRenderDrawColor(unsigned int color, Uint8 transparency) const;
 
 	void DrawBackground(Point pos) const;
 	void DrawMenuLogo(Point pos) const;
@@ -58,14 +58,14 @@ class RenderManager
 	void ClearColorTextureCache();
 	void ClearFpsTextureCache();
 
-	[[nodiscard]] SDL_Texture* CreateColorTexture(int color);
+	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
 	void DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect, Direction dir);
 
 	void GenerateFpsTextures();
 	void RenderFPS(size_t fps);
 
-	void DrawHealthBar(ObjRectangle rect, int health, int color) const;
+	void DrawHealthBar(ObjRectangle rect, int health, unsigned int color) const;
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,

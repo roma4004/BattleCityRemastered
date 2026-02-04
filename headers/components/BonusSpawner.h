@@ -49,5 +49,5 @@ public:
 
 	void SpawnRandomBonus(ObjRectangle rect);
 
-	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {});//NOTE: for unit tests
+	void SpawnBonus(ObjRectangle rect, unsigned int color, BonusType type, buuid uuid = {});//NOTE: for unit tests
 };

@@ -14,7 +14,7 @@ using buuid = boost::uuids::uuid;
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
                                const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
-                               const int frameLimit, const int scale, std::string objName, const int color,
+                               const int frameLimit, const int scale, std::string objName, const unsigned int color,
                                const bool isInfinite, const std::weak_ptr<Tank> tank)
 	: events(events),
 	  rect{rect},

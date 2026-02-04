@@ -246,8 +246,8 @@ void RespawnManager::OnClientRespawn(const TankType type)
 		case TankType::PLAYER1:
 		case TankType::PLAYER2:
 			ChangeRespawnCount(-1, type == TankType::PLAYER1
-				                          ? RespawnCount::PLAYER_ONE
-				                          : RespawnCount::PLAYER_TWO);
+				                       ? RespawnCount::PLAYER_ONE
+				                       : RespawnCount::PLAYER_TWO);
 			break;
 		default:
 			break;

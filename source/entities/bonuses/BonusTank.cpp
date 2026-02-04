@@ -2,7 +2,7 @@
 #include "enums/BonusType.h"
 
 BonusTank::BonusTank(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-                     const int color, const buuid uuid, const GameMode gameMode)
+                     const unsigned int color, const buuid uuid, const GameMode gameMode)
 	: Bonus{rect,
 	        events,
 	        lifeTime,

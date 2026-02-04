@@ -109,7 +109,7 @@ void RenderManager::Subscribe()
 		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
 	});
 
-	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect, const int color)
+	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect, const unsigned int color)
 	{
 		const SDL_Rect destRect = RectToSdlRect(rect);
 
@@ -129,10 +129,12 @@ void RenderManager::Subscribe()
 		RenderFPS(fps);
 	});
 
-	_events->AddListener("RenderHealthBar", _name, [this](const ObjRectangle rect, const int health, const int color)
-	{
-		DrawHealthBar(rect, health, color);
-	});
+	_events->AddListener(
+			"RenderHealthBar", _name,
+			[this](const ObjRectangle rect, const int health, const unsigned int color)
+			{
+				DrawHealthBar(rect, health, color);
+			});
 }
 
 void RenderManager::Unsubscribe() const
@@ -187,22 +189,22 @@ void RenderManager::PregenerateMenuBackgroundPixels()
 	}
 }
 
-int RenderManager::ColorToInt(const SDL_Color& color)
+unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 {
 	return (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
 }
 
-SDL_Color RenderManager::IntToColor(const unsigned int colorInt)
+SDL_Color RenderManager::IntToColor(const unsigned int color)
 {
 	return {
-			static_cast<Uint8>((colorInt >> 16) & 0xFF),
-			static_cast<Uint8>((colorInt >> 8) & 0xFF),
-			static_cast<Uint8>(colorInt & 0xFF),
-			static_cast<Uint8>((colorInt >> 24) & 0xFF)
+			static_cast<Uint8>((color >> 16) & 0xFF),
+			static_cast<Uint8>((color >> 8) & 0xFF),
+			static_cast<Uint8>(color & 0xFF),
+			static_cast<Uint8>((color >> 24) & 0xFF)
 	};
 }
 
-int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
+unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
 {
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
@@ -277,7 +279,7 @@ inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
 			static_cast<int>(rect.h)};
 }
 
-void RenderManager::SetRenderDrawColor(const int color, const Uint8 transparency = 255) const
+void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency = 255) const
 {
 	const Uint8 r = (color >> 16) & 0xFF;
 	const Uint8 g = (color >> 8) & 0xFF;
@@ -287,7 +289,7 @@ void RenderManager::SetRenderDrawColor(const int color, const Uint8 transparency
 	SDL_SetRenderDrawColor(_renderer.get(), r, g, b, a);
 }
 
-SDL_Texture* RenderManager::CreateColorTexture(const int color)
+SDL_Texture* RenderManager::CreateColorTexture(const unsigned int color)
 {
 	if (const auto it = _colorTextureCache.find(color);
 		it != _colorTextureCache.end())
@@ -340,7 +342,7 @@ void RenderManager::DrawTexture(const ObjRectangle& textureRect, const ObjRectan
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
 
 	//TODO: move work with sdl to utils to reduce dependencies
-	
+
 	const SDL_Rect sdlTextureRect = RectToSdlRect(textureRect);
 	const SDL_Rect sldDestRect = RectToSdlRect(destRect);
 	SDL_RenderCopyEx(_renderer.get(), _atlasTexture.get(), &sdlTextureRect, &sldDestRect, angle, nullptr, flip);
@@ -387,7 +389,7 @@ void RenderManager::RenderFPS(const size_t fps)//TODO: move to framePerSecondMan
 	SDL_RenderPresent(_renderer.get());
 }
 
-void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, const int color) const
+void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, const unsigned int color) const
 {
 	//TODO: fix recenter health bar when pickup star bonus
 

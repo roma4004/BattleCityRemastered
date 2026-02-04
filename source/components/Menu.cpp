@@ -97,7 +97,7 @@ void Menu::DrawMenu()
 
 void Menu::RenderStatistics(const Point pos) const
 {
-	constexpr unsigned int color = {0x00ffffff};
+	constexpr unsigned int color = {0xff00ffff};
 
 	_events->EmitEvent("RenderText", Point{.x = pos.x - 60, .y = pos.y + 100}, color, "GAME STATISTICS");
 

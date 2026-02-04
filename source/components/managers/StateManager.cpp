@@ -16,13 +16,26 @@ StateManager::~StateManager()
 
 void StateManager::Subscribe()
 {
-	_events->AddListener("Pause_Status", _name, [this](const bool value) { this->_isPause = value; });// TODO: investigate why on demo after start we have skip one pause input
+	_events->AddListener("Pause_Status", _name, [this](const bool value) { this->_isPause = value; });
+	// TODO: investigate why on demo after start we have skip one pause input
 	_events->AddListener("SetGameOverText", _name, [this]() { this->_isGameOver = true; });
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
-	_events->AddListener("PlayerOneFinished", _name, [this]() { _playerOneFailState = true; _isGameOver = IsGameOverReached(); });
-	_events->AddListener("PlayerTwoFinished", _name, [this]() { _playerTwoFailState = true; _isGameOver = IsGameOverReached(); }); 
-	_events->AddListener("PlayersBaseFinished", _name, [this]() {_playersBaseFailState = true; _isGameOver = IsGameOverReached(); });
+	_events->AddListener("PlayerOneFinished", _name, [this]()
+	{
+		_playerOneFailState = true;
+		_isGameOver = IsGameOverReached();
+	});
+	_events->AddListener("PlayerTwoFinished", _name, [this]()
+	{
+		_playerTwoFailState = true;
+		_isGameOver = IsGameOverReached();
+	});
+	_events->AddListener("PlayersBaseFinished", _name, [this]()
+	{
+		_playersBaseFailState = true;
+		_isGameOver = IsGameOverReached();
+	});
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -63,6 +76,6 @@ void StateManager::Reset()
 bool StateManager::IsGameOverReached() const
 {
 	return (_gameMode == GameMode::OnePlayer && _playerOneFailState && _playersBaseFailState)
-		|| (_gameMode == GameMode::TwoPlayers && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
-		|| (_gameMode == GameMode::Demo && _playerOneFailState && _playerTwoFailState && _playersBaseFailState);
+	       || (_gameMode == GameMode::TwoPlayers && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
+	       || (_gameMode == GameMode::Demo && _playerOneFailState && _playerTwoFailState && _playersBaseFailState);
 }
