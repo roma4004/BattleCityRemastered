@@ -1,10 +1,8 @@
 #include "application/ConfigSuccess.h"
 #include "application/GameSuccess.h"
 #include "components/EventSystem.h"
-#include "components/GameStatistics.h"
 #include "components/Menu.h"
-#include "components/managers/StateManager.h"
-#include "components/managers/TextureManager.h"
+#include "components/managers/RenderManager.h"
 #include <SDL_ttf.h>
 
 ConfigSuccess::ConfigSuccess(const UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
@@ -20,10 +18,9 @@ ConfigSuccess::ConfigSuccess(const UPoint windowSize, const std::shared_ptr<SDL_
 std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
-	auto menu = std::make_unique<Menu>(_renderer, _fpsFont, _logoTexture, _windowSize, events);
-	auto stateManager = std::make_unique<StateManager>(events, _renderer, _atlasTexture);
-	auto textureManager = std::make_unique<TextureManager>(_windowSize, _atlasTexture, _renderer, _fpsFont, events);
+	auto menu = std::make_unique<Menu>(_windowSize, events);
+	auto renderManager = std::make_unique<RenderManager>(events, _renderer, _fpsFont, _logoTexture, _atlasTexture,
+	                                                     _windowSize);
 
-	return std::make_unique<GameSuccess>(
-			_windowSize, events, std::move(menu), std::move(textureManager), _isVsyncOn, stateManager);
+	return std::make_unique<GameSuccess>(_windowSize, events, menu, _isVsyncOn, renderManager);
 }

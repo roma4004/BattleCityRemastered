@@ -2,14 +2,13 @@
 
 #include "Pawn.h"
 #include "../BonusEffectProperty.h"
-#include "interfaces/IHealthBar.h"
 
 struct UPoint;
 class PlayerTest;
 class IShootable;
 class BulletPool;
 
-class Tank : public Pawn, public IHealthBar
+class Tank : public Pawn
 {
 	friend class TankSpawner;
 
@@ -30,7 +29,6 @@ class Tank : public Pawn, public IHealthBar
 	void UnsubscribeAsClient() const override;
 	void UnsubscribeBonus() const;
 
-	void DrawHealthBar(const BaseObj* obj) const override;
 	void OnBonusTimer(const std::string& fraction, bool isActive);
 	void OnBonusHelmet(const std::string& name, bool isActive);
 

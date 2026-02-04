@@ -25,12 +25,17 @@ void FramePerSecondManager::Subscribe()
 {
 	_events->AddListener("CalculateActualFps", _name, [this]()
 	{
-		_events->EmitEvent("ActualFPS", CountFpsAndDeltaTime());
+		this->CountFpsAndDeltaTime();
 	});
 
 	_events->AddListener("FrameStart", _name, [this]()
 	{
 		this->_startFrameTime = std::chrono::high_resolution_clock::now();
+	});
+
+	_events->AddListener("PostDrawUserInterface", _name, [this]()
+	{
+		this->_events->EmitEvent("RenderFPS", _lastDisplayedFps);
 	});
 }
 
@@ -38,6 +43,7 @@ void FramePerSecondManager::Unsubscribe() const
 {
 	_events->RemoveListener("CalculateActualFps", _name);
 	_events->RemoveListener("FrameStart", _name);
+	_events->RemoveListener("PostDrawUserInterface", _name);
 }
 
 static Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
@@ -48,10 +54,9 @@ static Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
 	return 0;
 }
 
-unsigned int FramePerSecondManager::CountFpsAndDeltaTime()
+void FramePerSecondManager::CountFpsAndDeltaTime()
 {
 	static auto lastFpsUpdate = std::chrono::high_resolution_clock::now();
-	static unsigned int lastDisplayedFps{0};
 	static unsigned int frameCounter{0};
 
 	std::chrono::high_resolution_clock::time_point endFrameTime = std::chrono::high_resolution_clock::now();
@@ -98,11 +103,9 @@ unsigned int FramePerSecondManager::CountFpsAndDeltaTime()
 		frameCounter = 0;
 		lastFpsUpdate = endFrameTime;
 
-		if (fps != lastDisplayedFps)
+		if (fps != _lastDisplayedFps)
 		{
-			lastDisplayedFps = std::min(fps, 1000u);
+			_lastDisplayedFps = std::min(fps, 1000u);
 		}
 	}
-
-	return lastDisplayedFps;
 }

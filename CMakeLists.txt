@@ -282,6 +282,7 @@ set(SOURCE_FILES
         source/components/managers/AnimationManager.cpp
         source/components/managers/BonusEffectManager.cpp
         source/components/managers/FramePerSecondManager.cpp
+        source/components/managers/RenderManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnManager.cpp
         source/components/managers/DelayedSpawnManager.cpp

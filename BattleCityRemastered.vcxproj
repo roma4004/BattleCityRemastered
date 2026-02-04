@@ -156,6 +156,7 @@
     <ClCompile Include="source\components\managers\BonusEffectManager.cpp" />
     <ClCompile Include="source\components\managers\DelayedSpawnManager.cpp" />
     <ClCompile Include="source\components\managers\FramePerSecondManager.cpp" />
+    <ClCompile Include="source\components\managers\RenderManager.cpp" />
     <ClCompile Include="source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="source\components\managers\SpawnManager.cpp" />
     <ClCompile Include="source\components\managers\StateManager.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
     <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
     <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />
+    <ClInclude Include="headers\components\managers\RenderManager.h" />
     <ClInclude Include="headers\components\managers\RespawnManager.h" />
     <ClInclude Include="headers\components\managers\DelayedSpawnManager.h" />
     <ClInclude Include="headers\components\managers\SpawnManager.h" />
@@ -305,7 +307,6 @@
     <ClInclude Include="headers\interfaces\IDrawable.h" />
     <ClInclude Include="headers\interfaces\IGame.h" />
     <ClInclude Include="headers\interfaces\IHaveFraction.h" />
-    <ClInclude Include="headers\interfaces\IHealthBar.h" />
     <ClInclude Include="headers\interfaces\IInputProvider.h" />
     <ClInclude Include="headers\interfaces\IMoveBeh.h" />
     <ClInclude Include="headers\interfaces\INetworkNode.h" />

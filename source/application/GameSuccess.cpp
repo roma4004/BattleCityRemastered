@@ -5,14 +5,15 @@
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
-#include <algorithm>
-//#include <fstream>
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/SpawnManager.h"
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
+#include "components/managers/RenderManager.h"
 #include <iostream>
 #include <memory>
+#include <algorithm>
+//#include <fstream>
 #include <boost/uuid/uuid_io.hpp>
 
 //#ifdef _WIN32
@@ -23,21 +24,22 @@
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-                         std::unique_ptr<Menu> menu, std::unique_ptr<TextureManager> textureManager,
-                         const bool isVsyncOn, std::unique_ptr<StateManager>& stateManager)
+                         std::unique_ptr<Menu>& menu, const bool isVsyncOn,
+                         std::unique_ptr<RenderManager>& renderManager)
 	: _windowSize{windowSize},
 	  _menu{std::move(menu)},
-	  _textureManager(std::move(textureManager)),
-	  _stateManager{std::move(stateManager)},
+	  _textureManager(std::make_unique<TextureManager>(windowSize, events)),
+	  _stateManager{std::make_unique<StateManager>(events)},
 	  _userInput{std::make_unique<UserInput>(windowSize, events)},
 	  _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)},
 	  _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)},
+	  _renderManager{std::move(renderManager)},
 	  _events{events},
 	  _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
-	ResetBattlefield(GameMode::Demo);
+	ResetBattlefieldTo(GameMode::Demo);
 }
 
 GameSuccess::~GameSuccess()
@@ -50,7 +52,7 @@ void GameSuccess::Subscribe()
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
 	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
-	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefield(this->_selectedGameMode); });
+	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->OnGameModeChangedTo(newGameMode);
@@ -70,7 +72,7 @@ void GameSuccess::Unsubscribe() const
 	_events->RemoveListener("DeltaTime", _name);
 }
 
-void GameSuccess::ResetBattlefield(const GameMode gameMode)
+void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {
 	if (gameMode == GameMode::PlayAsClient || gameMode == GameMode::PlayAsHost)
 	{
