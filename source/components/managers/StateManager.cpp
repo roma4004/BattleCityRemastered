@@ -30,6 +30,9 @@ void StateManager::Subscribe()
 	_events->AddListener("PlayerOneFinished", _name, [this]() { _playerOneFailState = true; _isGameOver = IsGameoverReached(); });
 	_events->AddListener("PlayerTwoFinished", _name, [this]() { _playerTwoFailState = true; _isGameOver = IsGameoverReached(); }); 
 	_events->AddListener("PlayersBaseFinished", _name, [this]() {_playersBaseFailState = true; _isGameOver = IsGameoverReached(); });
+	_events->AddListener("PlayersTeamIsWon", _name, [this](){_isGameWon = true; _isGameWon = IsGameWon(); });
+	_events->AddListener("EnemyDestroyed", _name, [this]() {_destroyedEnemiesCount++; });
+	_events->AddListener("EnemySpawned", _name, [this]() { _dynamicEnemiesRespawnCount++; });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -46,6 +49,9 @@ void StateManager::Unsubscribe() const
 	_events->RemoveListener("PlayerOneFinished", _name);
 	_events->RemoveListener("PlayerTwoFinished", _name);
 	_events->RemoveListener("PlayersBaseFinished", _name);
+	_events->RemoveListener("PlayersTeamIsWon", _name);
+	_events->RemoveListener("EnemyDestroyed", _name);
+	_events->RemoveListener("EnemySpawned", _name);
 }
 
 void StateManager::DrawPauseText() const
@@ -72,6 +78,17 @@ void StateManager::DrawGameOverText() const
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
 }
 
+void StateManager::DrawGameWonText() const
+{
+	constexpr TextureOffset offset{};
+	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
+	SDL_Rect srcrect{static_cast<int>(offset.gameWonText.x),
+					 static_cast<int>(offset.gameOverText.y),
+					 static_cast<int>(offset.gameOverText.w),
+					 static_cast<int>(offset.gameOverText.h)};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
+}
+
 void StateManager::Draw() const
 {
 	if (_isPause)
@@ -82,6 +99,11 @@ void StateManager::Draw() const
 	if (_isGameOver)
 	{
 		DrawGameOverText();
+	}
+
+	if (_isGameWon)
+	{
+		DrawGameWonText();
 	}
 }
 
@@ -95,5 +117,13 @@ bool StateManager::IsGameoverReached() const
 {
 	return (_gameMode == GameMode::OnePlayer && _playerOneFailState && _playersBaseFailState)
 		|| (_gameMode == GameMode::TwoPlayers && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
+		|| (_gameMode == GameMode::CoopWithBot && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
 		|| (_gameMode == GameMode::Demo && _playerOneFailState && _playerTwoFailState && _playersBaseFailState);
+}
+
+bool StateManager::IsGameWon()
+{
+	return (_gameMode == GameMode::OnePlayer && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount)
+		|| (_gameMode == GameMode::TwoPlayers && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount)
+		|| (_gameMode == GameMode::CoopWithBot && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount);
 }

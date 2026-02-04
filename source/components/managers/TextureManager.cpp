@@ -239,6 +239,10 @@ SDL_Rect TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = RectToSdlRect(_offset.gameOverText);
 	}
+	else if (name == "GameWonText")
+	{
+		textureRect = RectToSdlRect(_offset.gameWonText);
+	}
 
 	return textureRect;
 }

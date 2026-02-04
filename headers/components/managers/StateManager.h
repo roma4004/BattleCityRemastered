@@ -18,6 +18,9 @@ class StateManager
 	GameMode _gameMode{};
 	bool _isPause{false};
 	bool _isGameOver{false};
+	bool _isGameWon{false};
+	int _dynamicEnemiesRespawnCount{0};
+	int _destroyedEnemiesCount{0};
 
 	bool _playerOneFailState{false};
 	bool _playerTwoFailState{false};
@@ -28,11 +31,13 @@ class StateManager
 
 	void DrawPauseText() const;
 	void DrawGameOverText() const;
+	void DrawGameWonText() const;
 
 	void Draw() const;
 
 	void Reset();
 	bool IsGameoverReached() const;
+	bool IsGameWon();
 
 public:
 	StateManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,

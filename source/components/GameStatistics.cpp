@@ -325,6 +325,7 @@ void GameStatistics::OnTankDied(const std::string& who, const std::string& autho
 	if (who == "Enemy1" || who == "Enemy2" || who == "Enemy3" || who == "Enemy4")
 	{
 		OnEnemyDied(author, fraction);
+		_events->EmitEvent("EnemyDestroyed");
 	}
 	else if (who == "Player1" || who == "CoopBot1")
 	{

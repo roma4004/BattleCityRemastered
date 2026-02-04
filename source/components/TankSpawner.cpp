@@ -184,7 +184,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		const int color = isFirst ? yellow : green;
 		const BonusEffectProperty effects = {
 				.isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive,
-				.isHelmetActive = _bonusEffectManager->GetHelmet(isFirst ? 4 : 5).isActive
+				.isHelmetActive =_bonusEffectManager->GetHelmet(isFirst ? 4 : 5).isActive // Set as "true" to activate invincibility
 		};
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
