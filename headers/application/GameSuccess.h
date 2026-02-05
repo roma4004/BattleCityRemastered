@@ -6,17 +6,16 @@
 
 enum class GameMode : char8_t;
 class INetworkNode;
-class Menu;
-class BaseObj;
-class Client;
-class EventSystem;
-class Server;
 class IDrawable;
+class BaseObj;
+class Menu;
 class UserInput;
 class TextureManager;
 class StateManager;
 class FramePerSecondManager;
 class SpawnManager;
+class RenderManager;
+class EventSystem;
 
 class GameSuccess final : public IGame
 {
@@ -30,6 +29,7 @@ class GameSuccess final : public IGame
 	std::unique_ptr<UserInput> _userInput{nullptr};
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
+	std::unique_ptr<RenderManager> _renderManager{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
@@ -42,7 +42,7 @@ class GameSuccess final : public IGame
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void ResetBattlefield(GameMode gameMode);
+	void ResetBattlefieldTo(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
 
@@ -59,9 +59,8 @@ class GameSuccess final : public IGame
 	void OnGameModeChangedTo(GameMode newGameMode);
 
 public:
-	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu> menu,
-	            std::unique_ptr<TextureManager> textureManager, bool isVsyncOn,
-	            std::unique_ptr<StateManager>& stateManager);
+	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
+	            bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
 
 	~GameSuccess() override;
 };

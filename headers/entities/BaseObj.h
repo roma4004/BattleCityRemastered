@@ -17,7 +17,7 @@ class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public I
 
 protected:
 	buuid _uuid{};
-	int _color{0};
+	unsigned int _color{0};
 	std::string _name{};
 	std::string _nameWithUuid{};
 	std::string _fraction{};
@@ -29,7 +29,7 @@ public:
 	BaseObj(const BaseObj& other);
 	BaseObj(BaseObj&& other) noexcept;
 
-	BaseObj(ObjRectangle rect, int color, int health, buuid uuid, std::string name, std::string fraction);
+	BaseObj(ObjRectangle rect, unsigned int color, int health, buuid uuid, std::string name, std::string fraction);
 
 	~BaseObj() override;
 
@@ -56,8 +56,8 @@ public:
 	void MoveX(float i);
 	void MoveY(float i);
 
-	[[nodiscard]] int GetColor() const;
-	void SetColor(int color);
+	[[nodiscard]] unsigned int GetColor() const;
+	void SetColor(unsigned int color);
 
 	[[nodiscard]] virtual int GetHealth() const;
 	virtual void SetHealth(int health);

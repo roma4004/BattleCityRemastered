@@ -181,7 +181,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
-		const int color = isFirst ? yellow : green;
+		const unsigned int color = isFirst ? yellow : green;
 		const BonusEffectProperty effects = {
 				.isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive,
 				.isHelmetActive =_bonusEffectManager->GetHelmet(isFirst ? 4 : 5).isActive // Set as "true" to activate invincibility
@@ -215,7 +215,7 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
-		const int color = type == TankType::COOP1 ? yellow : green;
+		const unsigned int color = type == TankType::COOP1 ? yellow : green;
 		const BonusEffectProperty effects = {
 				.isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive,
 				.isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive
@@ -354,9 +354,9 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 	return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type), effects);
 }
 
-void TankSpawner::SpawnTank(const ObjRectangle rect, const int color, const int health, const std::string& name,
-                            std::string fraction, const float speed, buuid uuid, BonusEffectProperty effects,
-                            const TankType type, const bool skipDelay)
+void TankSpawner::SpawnTank(const ObjRectangle rect, const unsigned int color, const int health,
+                            const std::string& name, std::string fraction, const float speed, buuid uuid,
+                            BonusEffectProperty effects, const TankType type, const bool skipDelay)
 {
 	BaseObjProperty baseObjProperty{
 			.rect = rect,

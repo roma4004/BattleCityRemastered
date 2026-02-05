@@ -36,8 +36,8 @@ BaseObj::BaseObj(BaseObj&& other) noexcept
 	  _rect(other._rect) {}
 
 //Deprecated //TODO: remove this con overload
-BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
-                 std::string fraction)
+BaseObj::BaseObj(const ObjRectangle rect, const unsigned int color, const int health, const buuid uuid,
+                 std::string name, std::string fraction)
 	: _health(health),
 	  _uuid{uuid},
 	  _color(color),
@@ -129,9 +129,9 @@ void BaseObj::MoveX(const float i) { _rect.x += i; }
 
 void BaseObj::MoveY(const float i) { _rect.y += i; }
 
-int BaseObj::GetColor() const { return _color; }
+unsigned int BaseObj::GetColor() const { return _color; }
 
-void BaseObj::SetColor(const int color) { _color = color; }
+void BaseObj::SetColor(const unsigned int color) { _color = color; }
 
 int BaseObj::GetHealth() const { return _health; }
 

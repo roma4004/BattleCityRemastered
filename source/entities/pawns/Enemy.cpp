@@ -3,7 +3,7 @@
 #include "utils/TimeUtils.h"
 #include <algorithm>
 
-//TODO: fix enemy stuck in bricks(local game)
+//TODO: fix enemy stuck in bricks(local game) looks like 1 pixel issue when finding free path
 //TODO: if enemy see bullets they should try or prioritize move aside
 Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
              const BonusEffectProperty effects, const bool enableByDefault)

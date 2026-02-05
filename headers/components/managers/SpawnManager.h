@@ -23,7 +23,7 @@ class SpawnManager
 
 public:
 	SpawnManager(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				 UPoint windowSize);
+	             UPoint windowSize);
 
 	~SpawnManager();
 };

@@ -11,7 +11,7 @@ AnimationCreate::AnimationCreate() : Command{CommandType::ANIMATION_CREATE} {}
 using buuid = boost::uuids::uuid;
 
 AnimationCreate::AnimationCreate(const AnimationType type, const ObjRectangle rect, std::string name)
-	: Command{CommandType::ANIMATION_CREATE}, _type{type}, _rect{rect}, _name{std::move(name)}{}
+	: Command{CommandType::ANIMATION_CREATE}, _type{type}, _rect{rect}, _name{std::move(name)} {}
 
 AnimationType AnimationCreate::GetAnimationType() const noexcept { return _type; }
 

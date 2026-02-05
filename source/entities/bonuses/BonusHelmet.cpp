@@ -3,8 +3,8 @@
 #include "enums/BonusType.h"
 
 BonusHelmet::BonusHelmet(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events,
-                         const milliseconds lifeTime, const int color, const buuid uuid, const GameMode gameMode,
-                         const milliseconds duration)
+                         const milliseconds lifeTime, const unsigned int color, const buuid uuid,
+                         const GameMode gameMode, const milliseconds duration)
 	: Bonus{rect,
 	        events,
 	        lifeTime,

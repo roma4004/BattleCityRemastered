@@ -55,7 +55,7 @@ void Tank::Subscribe()
 	{
 		if (!_effects.isHelmetActive)
 		{
-			this->DrawHealthBar(this);
+			this->_events->EmitEvent("RenderHealthBar", GetRect(), GetHealth(), GetColor());
 		}
 	});
 
@@ -223,11 +223,6 @@ void Tank::SetBulletDamage(const int bulletDamage) { _bulletDamage = bulletDamag
 double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
-
-void Tank::DrawHealthBar(const BaseObj* obj) const
-{
-	_events->EmitEvent("DrawHealthBarObj", obj->GetRect(), obj->GetHealth(), obj->GetColor());
-}
 
 void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
 {

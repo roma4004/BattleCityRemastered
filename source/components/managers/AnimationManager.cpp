@@ -154,7 +154,7 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 
 void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 {
-	constexpr int color{0};
+	constexpr unsigned int color{0};
 	constexpr auto type = AnimationType::Water_Animation;
 	constexpr bool isInfinite{true};
 	const std::string name = "Water";
@@ -175,7 +175,7 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 
 	const ObjRectangle rect = tankLck->GetRect();
 	const std::string objName(tankLck->GetName());
-	const int color = tankLck->GetColor();
+	const unsigned int color = tankLck->GetColor();
 	constexpr auto type = AnimationType::Tank_Animation;
 	const std::string name = "TankAnimation";
 	constexpr bool isInfinite{true};

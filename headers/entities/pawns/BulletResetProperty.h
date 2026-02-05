@@ -14,7 +14,7 @@ struct BulletResetProperty
 	int damage{};
 	Direction dir{};
 	double aoeRadius{};
-	int color{};
+	unsigned int color{};
 	int health{};
 	float speed{};
 	int tier{};

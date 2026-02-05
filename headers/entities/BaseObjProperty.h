@@ -9,7 +9,7 @@ struct BaseObjProperty
 	using buuid = boost::uuids::uuid;
 
 	ObjRectangle rect{};
-	int color{0};
+	unsigned int color{0};
 	int health{0};
 	buuid uuid{};
 	std::string name{};
