@@ -46,7 +46,7 @@ class RenderManager
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
 	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
 	[[nodiscard]] static unsigned int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-	[[nodiscard]] SDL_Rect RectToSdlRect(const ObjRectangle& rect);
+	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
 	void SetRenderDrawColor(unsigned int color, Uint8 transparency) const;
 
 	void DrawBackground(Point pos) const;
@@ -61,7 +61,7 @@ class RenderManager
 
 	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
-	void DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect, Direction dir);
+	void DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect, Direction dir) const;
 
 	void GenerateFpsTextures();
 	void RenderFPS(size_t fps);

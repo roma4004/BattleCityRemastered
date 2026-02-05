@@ -162,11 +162,11 @@ void RenderManager::DrawPauseText() const
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect rect{.x = 135, .y = 142, .w = 300, .h = 75};
 
-	SDL_Rect srcrect{static_cast<int>(offset.pauseText.x),
-	                 static_cast<int>(offset.pauseText.y),
-	                 static_cast<int>(offset.pauseText.w),
-	                 static_cast<int>(offset.pauseText.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.pauseText.x),
+	                           .y = static_cast<int>(offset.pauseText.y),
+	                           .w = static_cast<int>(offset.pauseText.w),
+	                           .h = static_cast<int>(offset.pauseText.h)};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
 void RenderManager::DrawGameOverText() const
@@ -174,10 +174,10 @@ void RenderManager::DrawGameOverText() const
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
 
-	SDL_Rect srcRect{static_cast<int>(offset.gameOverText.x),
-	                 static_cast<int>(offset.gameOverText.y),
-	                 static_cast<int>(offset.gameOverText.w),
-	                 static_cast<int>(offset.gameOverText.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameOverText.x),
+	                           .y = static_cast<int>(offset.gameOverText.y),
+	                           .w = static_cast<int>(offset.gameOverText.w),
+	                           .h = static_cast<int>(offset.gameOverText.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
@@ -185,16 +185,16 @@ void RenderManager::DrawGameWonText() const
 {
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
-	SDL_Rect srcrect{static_cast<int>(offset.gameWonText.x),
-					 static_cast<int>(offset.gameOverText.y),
-					 static_cast<int>(offset.gameOverText.w),
-					 static_cast<int>(offset.gameOverText.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameWonText.x),
+	                           .y = static_cast<int>(offset.gameOverText.y),
+	                           .w = static_cast<int>(offset.gameOverText.w),
+	                           .h = static_cast<int>(offset.gameOverText.h)};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()
 {
-	_menuBackground = std::make_shared<unsigned int[]>(_height * _width);
+	_menuBackground = std::make_shared<unsigned int[]>(static_cast<size_t>(_height) * static_cast<size_t>(_width));
 	for (int y = 0; y < _height; ++y)
 	{
 		for (int x = 0; x < _width; ++x)
@@ -212,11 +212,11 @@ unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 
 SDL_Color RenderManager::IntToColor(const unsigned int color)
 {
-	return {
-			static_cast<Uint8>((color >> 16) & 0xFF),
-			static_cast<Uint8>((color >> 8) & 0xFF),
-			static_cast<Uint8>(color & 0xFF),
-			static_cast<Uint8>((color >> 24) & 0xFF)
+	return SDL_Color{
+			.r = static_cast<Uint8>((color >> 16) & 0xFF),
+			.g = static_cast<Uint8>((color >> 8) & 0xFF),
+			.b = static_cast<Uint8>(color & 0xFF),
+			.a = static_cast<Uint8>((color >> 24) & 0xFF)
 	};
 }
 
@@ -352,7 +352,8 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 	}
 }
 
-void RenderManager::DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir)
+void RenderManager::DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect,
+                                const Direction dir) const
 {
 	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
@@ -407,20 +408,22 @@ void RenderManager::RenderFPS(const size_t fps)//TODO: move to framePerSecondMan
 
 void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, const unsigned int color) const
 {
-	//TODO: fix recenter health bar when pickup star bonus
-
 	const int healthWidth = health / 3;
-
 	if (healthWidth <= 0)
 		return;
 
-	const SDL_Rect healthBarRect = {static_cast<int>(rect.x) + 2, static_cast<int>(rect.y) - 10, healthWidth, 5};
+	const int offset = health > 100 ? (health - 100) / 2 : 0;
+	const SDL_Rect healthBarRect = {.x = static_cast<int>(rect.x) + 2 - offset / 3,
+	                                .y = static_cast<int>(rect.y) - 10,
+	                                .w = healthWidth,
+	                                .h = 5
+	};
 
 	SetRenderDrawColor(color, 127);
 
 	SDL_BlendMode blendMode;
-	SDL_GetRenderDrawBlendMode(_renderer.get(), &blendMode);//backup blendmode type
-	SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);//set blendmode type
+	SDL_GetRenderDrawBlendMode(_renderer.get(), &blendMode);//backup blendMode type
+	SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);//set new blendMode type
 	SDL_RenderFillRect(_renderer.get(), &healthBarRect);
-	SDL_SetRenderDrawBlendMode(_renderer.get(), blendMode);//restore blendmode type
+	SDL_SetRenderDrawBlendMode(_renderer.get(), blendMode);//restore blendMode type
 }

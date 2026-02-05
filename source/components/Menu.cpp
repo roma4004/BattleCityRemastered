@@ -88,7 +88,7 @@ void Menu::DrawMenu()
 	}
 
 	_pos.x = _padding;
-	_pos.y = _padding + _yOffsetStart;
+	_pos.y = static_cast<int>(_padding + _yOffsetStart);
 
 	_events->EmitEvent("RenderMenuBackground", _pos);
 	_events->EmitEvent("RenderMenuLogo", _pos);
