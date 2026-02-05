@@ -113,7 +113,7 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	}
 	else if (name == "GameWonText")
 	{
-		textureRect = RectToSdlRect(_offset.gameWonText);
+		textureRect = _offset.gameWonText;
 	}
 
 	return textureRect;

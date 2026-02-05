@@ -40,6 +40,7 @@ class RenderManager
 
 	void DrawPauseText() const;
 	void DrawGameOverText() const;
+	void DrawGameWonText() const;
 
 	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);

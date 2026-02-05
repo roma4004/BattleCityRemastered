@@ -109,6 +109,11 @@ void RenderManager::Subscribe()
 		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
 	});
 
+	_events->AddListener("RenderGameWonText", _name, [this]()
+	{
+		DrawGameWonText();
+	});
+
 	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect, const unsigned int color)
 	{
 		const SDL_Rect destRect = RectToSdlRect(rect);
@@ -149,6 +154,7 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("RenderTexture", _name);
 	_events->RemoveListener("RenderFPS", _name);
 	_events->RemoveListener("RenderHealthBar", _name);
+	_events->RemoveListener("RenderGameWonText", _name);
 }
 
 void RenderManager::DrawPauseText() const
@@ -173,7 +179,17 @@ void RenderManager::DrawGameOverText() const
 	                 static_cast<int>(offset.gameOverText.w),
 	                 static_cast<int>(offset.gameOverText.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+}
 
+void RenderManager::DrawGameWonText() const
+{
+	constexpr TextureOffset offset{};
+	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
+	SDL_Rect srcrect{static_cast<int>(offset.gameWonText.x),
+					 static_cast<int>(offset.gameOverText.y),
+					 static_cast<int>(offset.gameOverText.w),
+					 static_cast<int>(offset.gameOverText.h)};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()

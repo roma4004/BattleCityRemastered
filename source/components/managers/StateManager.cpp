@@ -60,19 +60,6 @@ void StateManager::Unsubscribe() const
 	_events->RemoveListener("EnemySpawned", _name);
 }
 
-
-//TODO: Transfer to render manager
-void StateManager::DrawGameWonText() const
-{
-	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
-	SDL_Rect srcrect{static_cast<int>(offset.gameWonText.x),
-					 static_cast<int>(offset.gameOverText.y),
-					 static_cast<int>(offset.gameOverText.w),
-					 static_cast<int>(offset.gameOverText.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
-}
-
 void StateManager::Draw() const
 {
 	if (_isPause)
@@ -87,7 +74,7 @@ void StateManager::Draw() const
 
 	if (_isGameWon)
 	{
-		DrawGameWonText();
+		_events->EmitEvent("RenderGameWonText");
 	}
 }
 
@@ -105,7 +92,7 @@ bool StateManager::IsGameOverReached() const
 	       || (_gameMode == GameMode::Demo && _playerOneFailState && _playerTwoFailState && _playersBaseFailState);
 }
 
-bool StateManager::IsGameWon()
+bool StateManager::IsGameWon() const
 {
 	return (_gameMode == GameMode::OnePlayer && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount)
 		|| (_gameMode == GameMode::TwoPlayers && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount)

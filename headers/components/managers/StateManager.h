@@ -26,13 +26,12 @@ class StateManager
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void DrawGameWonText() const;
 
 	void Draw() const;
 
 	void Reset();
 	bool IsGameOverReached() const;
-	bool IsGameWon();
+	bool IsGameWon() const;
 
 public:
 	StateManager(const std::shared_ptr<EventSystem>& events);
