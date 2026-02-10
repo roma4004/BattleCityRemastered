@@ -1,6 +1,6 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "components/EventSystem.h"
-#include <SDL_events.h>
+#include <thread>
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, bool isVsyncOn)
 	: _name{"FramePerSecondManager"}, _events{events}, _isVsyncOn{isVsyncOn}
@@ -12,12 +12,6 @@ FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>&
 
 FramePerSecondManager::~FramePerSecondManager()
 {
-	if (_frameTimer)
-	{
-		SDL_RemoveTimer(_frameTimer);
-		_frameTimer = 0;
-	}
-
 	Unsubscribe();
 }
 
@@ -46,19 +40,8 @@ void FramePerSecondManager::Unsubscribe() const
 	_events->RemoveListener("PostDrawUserInterface", _name);
 }
 
-static Uint32 FrameTimerCallback(Uint32 /*interval*/, void* param)
-{
-	const auto frameReady = static_cast<bool*>(param);
-	*frameReady = true;
-
-	return 0;
-}
-
 void FramePerSecondManager::CountFpsAndDeltaTime()
 {
-	static auto lastFpsUpdate = std::chrono::high_resolution_clock::now();
-	static unsigned int frameCounter{0};
-
 	std::chrono::high_resolution_clock::time_point endFrameTime = std::chrono::high_resolution_clock::now();
 	auto frameDuration = std::chrono::duration<double>(endFrameTime - _startFrameTime);
 	_deltaTime = static_cast<float>(frameDuration.count());
@@ -68,23 +51,12 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 		if (const auto timeToWait = _targetFrameDuration - frameDuration;
 			timeToWait.count() > 0)
 		{
-			_frameReady = false;
-			const auto waitMs = static_cast<unsigned int>(timeToWait.count() * 1000.0);
-			_frameTimer = SDL_AddTimer(waitMs, FrameTimerCallback, &_frameReady);
-			if (waitMs > 5)
-			{
-				SDL_Delay(waitMs - 5);
+			if (timeToWait.count() > 0.002) { // 2ms
+				std::this_thread::sleep_for(timeToWait - std::chrono::milliseconds(1));
 			}
 
-			while (!_frameReady)
-			{
-				SDL_PumpEvents();
-			}
-
-			if (_frameTimer)
-			{
-				SDL_RemoveTimer(_frameTimer);
-				_frameTimer = 0;
+			while ((std::chrono::high_resolution_clock::now() - _startFrameTime) < _targetFrameDuration) {
+				std::this_thread::yield();
 			}
 
 			endFrameTime = std::chrono::high_resolution_clock::now();
@@ -95,17 +67,15 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 
 	_events->EmitEvent("DeltaTime", _deltaTime);
 
-	frameCounter++;
-	if (const auto timeSinceLastFpsUpdate = std::chrono::duration<double>(endFrameTime - lastFpsUpdate);
-		timeSinceLastFpsUpdate.count() >= 1.0)
-	{
-		const auto fps = static_cast<unsigned int>(std::round(frameCounter / timeSinceLastFpsUpdate.count()));
-		frameCounter = 0;
-		lastFpsUpdate = endFrameTime;
+	_frameCounter++;
+	_fpsAccumulatedTime += _deltaTime;
 
-		if (fps != _lastDisplayedFps)
-		{
-			_lastDisplayedFps = std::min(fps, 1000u);
-		}
+	if (_fpsAccumulatedTime >= 1.0)
+	{
+		const auto fps = static_cast<unsigned int>(std::round(static_cast<float>(_frameCounter) / _fpsAccumulatedTime));
+		_frameCounter = 0;
+		_fpsAccumulatedTime = 0.0;
+
+		_lastDisplayedFps = std::min(fps, 1000u);
 	}
 }

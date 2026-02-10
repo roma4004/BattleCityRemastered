@@ -28,7 +28,7 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const s
 	_windowHeight = static_cast<int>(windowSize.y);
 	_height = _windowHeight - _padding * 3;
 	constexpr int sideBarWidth = 228;
-	_width = windowWidth - sideBarWidth - _padding;
+	_width = static_cast<int>(windowWidth) - sideBarWidth - _padding;
 
 	PregenerateMenuBackgroundPixels();
 	PregenerateMenuBackgroundTexture();
@@ -129,7 +129,7 @@ void RenderManager::Subscribe()
 		                     DrawTexture(textureRect, destRect, dir);
 	                     });
 
-	_events->AddListener("RenderFPS", _name, [this](const size_t fps)
+	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps)
 	{
 		RenderFPS(fps);
 	});
@@ -238,7 +238,7 @@ void RenderManager::DrawMenuLogo(Point pos) const
 {
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
 
-	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);//TODO: extract render to renderManager
+	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value) const
@@ -358,8 +358,6 @@ void RenderManager::DrawTexture(const ObjRectangle& textureRect, const ObjRectan
 	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
 
-	//TODO: move work with sdl to utils to reduce dependencies
-
 	const SDL_Rect sdlTextureRect = RectToSdlRect(textureRect);
 	const SDL_Rect sldDestRect = RectToSdlRect(destRect);
 	SDL_RenderCopyEx(_renderer.get(), _atlasTexture.get(), &sdlTextureRect, &sldDestRect, angle, nullptr, flip);
@@ -395,7 +393,7 @@ void RenderManager::GenerateFpsTextures()
 }
 
 
-void RenderManager::RenderFPS(const size_t fps)//TODO: move to framePerSecondManager
+void RenderManager::RenderFPS(const size_t fps)
 {
 	if (fps)
 	{
