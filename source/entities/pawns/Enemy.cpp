@@ -11,7 +11,7 @@ Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulle
 
 Enemy::~Enemy() = default;
 
-void Enemy::TickUpdate(const float deltaTime)
+void Enemy::TickUpdate(const double deltaTime)
 {
 	if (_effects.isTimerActive)
 	{

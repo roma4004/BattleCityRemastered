@@ -37,7 +37,7 @@ class GameSuccess final : public IGame
 
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
-	float _deltaTime{};
+	double _deltaTime{};
 
 	void Subscribe();
 	void Unsubscribe() const;

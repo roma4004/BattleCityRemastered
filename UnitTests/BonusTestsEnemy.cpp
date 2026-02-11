@@ -26,9 +26,9 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
-	// int _yellow{0xeaea00};
-	int _gray{0x808080};
-	// int _bulletColor{0xffffff};
+	// unsigned int _yellow{0xeaea00};
+	unsigned int _gray{0x808080};
+	// unsigned int _bulletColor{0xffffff};
 	// int _bulletHealth{1};
 	// int _bulletDamage{1};
 	// double _bulletDamageRadius{12.0};
@@ -36,7 +36,7 @@ protected:
 	float _gridSize{};
 	float _tankSpeed{142};
 	// float _bulletSpeed{300.f};
-	float _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 

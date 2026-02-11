@@ -158,7 +158,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	Enable();
 }
 
-void Bullet::TickUpdate(const float deltaTime)
+void Bullet::TickUpdate(const double deltaTime)
 {
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{

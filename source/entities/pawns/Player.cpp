@@ -32,7 +32,7 @@ void Player::Disable() const
 	_inputProvider->Disable();
 }
 
-void Player::TickUpdate(const float deltaTime)
+void Player::TickUpdate(const double deltaTime)
 {
 	if (_effects.isTimerActive)
 	{

@@ -10,7 +10,7 @@ CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& b
 
 CoopBot::~CoopBot() = default;
 
-void CoopBot::TickUpdate(const float deltaTime)
+void CoopBot::TickUpdate(const double deltaTime)
 {
 	if (_effects.isTimerActive)
 	{

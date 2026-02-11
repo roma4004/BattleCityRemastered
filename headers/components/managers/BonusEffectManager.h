@@ -29,7 +29,7 @@ public:
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool value) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
 
-	void TickUpdate(float);
+	void TickUpdate(double deltaTime);
 
 	[[nodiscard]] Timer GetTimerEnemy() const;
 	[[nodiscard]] Timer GetTimerPlayer() const;

@@ -63,7 +63,7 @@ void TankSpawner::Subscribe()
 		_events->EmitEvent("AnimationCreateTank", tank);
 	});
 
-	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->RespawnTanks(); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->RespawnTanks(); });
 }
 
 void TankSpawner::SubscribeAsClient()

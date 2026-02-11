@@ -191,7 +191,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	return nearestSeenObstacle;
 }
 
-void Bot::SetRandomDirection(const float deltaTime)
+void Bot::SetRandomDirection(const double deltaTime)
 {
 	if (const std::vector<Direction> freePath = _moveBeh->GetFreePathSides(deltaTime);
 		!freePath.empty())
@@ -202,7 +202,7 @@ void Bot::SetRandomDirection(const float deltaTime)
 	}
 }
 
-void Bot::TickUpdate(const float deltaTime)
+void Bot::TickUpdate(const double deltaTime)
 {
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot auto change dir
 	{

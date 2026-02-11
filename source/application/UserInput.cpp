@@ -30,7 +30,7 @@ void UserInput::Subscribe()
 		this->_isPause = newPauseStatus;
 	});
 	_events->AddListener("Tab_Released", _name, [this]() { SwapControllers(); });
-	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->Update(); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
 
 void UserInput::Unsubscribe() const

@@ -57,8 +57,8 @@ void GameSuccess::Subscribe()
 	{
 		this->OnGameModeChangedTo(newGameMode);
 	});
-	_events->AddListener("PostTickUpdate", _name, [this](const float /*deltaTime*/) { this->DisposeDeadObject(); });
-	_events->AddListener("DeltaTime", _name, [this](const float& deltaTime) { this->_deltaTime = deltaTime; });
+	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->DisposeDeadObject(); });
+	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
 }
 
 void GameSuccess::Unsubscribe() const

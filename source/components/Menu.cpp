@@ -38,7 +38,7 @@ void Menu::Subscribe()
 			{
 				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
-	_events->AddListener("PreTickUpdate", _name, [this](const float /*deltaTime*/) { this->MenuUpdate(); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
 	_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
 }
 

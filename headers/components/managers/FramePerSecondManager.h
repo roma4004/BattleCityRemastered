@@ -11,11 +11,11 @@ class FramePerSecondManager
 
 	std::chrono::duration<double> _targetFrameDuration{};
 	std::chrono::high_resolution_clock::time_point _startFrameTime{};
-	float _deltaTime{0.f};
-	float _fpsAccumulatedTime;
+	double _deltaTime{};
+	double _fpsAccumulatedTime{};
 	unsigned int _targetFps{60};
-	unsigned int _frameCounter{0};
-	unsigned int _lastDisplayedFps{0};
+	unsigned int _frameCounter{};
+	unsigned int _lastDisplayedFps{};
 	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time via subscribe
 
 	void Subscribe();

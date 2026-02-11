@@ -47,7 +47,7 @@ void Bonus::Subscribe()
 
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -85,7 +85,7 @@ void Bonus::UnsubscribeAsClient() const
 
 void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 
-void Bonus::TickUpdate(float /*deltaTime*/)
+void Bonus::TickUpdate(double /*deltaTime*/)
 {
 	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
 	{

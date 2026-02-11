@@ -19,7 +19,7 @@ void BonusEffectManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
-	_events->AddListener("TickUpdate", _name, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _name, [this](const double deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -108,7 +108,7 @@ void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std
 	// }
 }
 
-void BonusEffectManager::TickUpdate(const float /*deltaTime*/)
+void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 {
 	if (_timerEnemy.isActive && TimeUtils::IsCooldownFinish(_timerEnemy.activateTime, _timerEnemy.cooldown))
 	{

@@ -23,7 +23,7 @@ protected:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 	void Draw() const override;
 

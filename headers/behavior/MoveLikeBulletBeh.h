@@ -28,16 +28,16 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
-	[[nodiscard]] bool IsCanMove(float deltaTime) const override;
+	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
 
-	[[nodiscard]] bool Move(float deltaTime) override;
-	[[nodiscard]] bool MoveLeft(float deltaTime) override;
-	[[nodiscard]] bool MoveRight(float deltaTime) override;
-	[[nodiscard]] bool MoveUp(float deltaTime) override;
-	[[nodiscard]] bool MoveDown(float deltaTime) override;
+	[[nodiscard]] bool Move(double deltaTime) override;
+	[[nodiscard]] bool MoveLeft(double deltaTime) override;
+	[[nodiscard]] bool MoveRight(double deltaTime) override;
+	[[nodiscard]] bool MoveUp(double deltaTime) override;
+	[[nodiscard]] bool MoveDown(double deltaTime) override;
 
-	[[nodiscard]] ObjRectangle GetBulletPathRect(float deltaTime) const;
-	[[nodiscard]] FPoint GetBulletNextPoint(float deltaTime) const;
+	[[nodiscard]] ObjRectangle GetBulletPathRect(double deltaTime) const;
+	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
@@ -46,5 +46,5 @@ public:
 
 	~MoveLikeBulletBeh() override = default;
 
-	[[nodiscard]] std::vector<Direction> GetFreePathSides(float deltaTime) const override;
+	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
 };

@@ -29,7 +29,7 @@ public:
 
 	void Reset();
 
-	void TickUpdate(float);
+	void TickUpdate(double deltaTime);
 	void Disposer();
 
 };

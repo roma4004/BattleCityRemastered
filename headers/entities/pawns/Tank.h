@@ -51,7 +51,7 @@ protected:
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	void TickUpdate(float deltaTime) override = 0;
+	void TickUpdate(double deltaTime) override = 0;
 
 	void TakeDamage(int damage) override;
 

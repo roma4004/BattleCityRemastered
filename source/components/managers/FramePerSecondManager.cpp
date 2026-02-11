@@ -1,8 +1,9 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "components/EventSystem.h"
+#include <cmath> //NOTE: need for cmake build
 #include <thread>
 
-FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, bool isVsyncOn)
+FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const bool isVsyncOn)
 	: _name{"FramePerSecondManager"}, _events{events}, _isVsyncOn{isVsyncOn}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
@@ -42,29 +43,26 @@ void FramePerSecondManager::Unsubscribe() const
 
 void FramePerSecondManager::CountFpsAndDeltaTime()
 {
-	std::chrono::high_resolution_clock::time_point endFrameTime = std::chrono::high_resolution_clock::now();
-	auto frameDuration = std::chrono::duration<double>(endFrameTime - _startFrameTime);
-	_deltaTime = static_cast<float>(frameDuration.count());
-
 	if (!_isVsyncOn)
 	{
-		if (const auto timeToWait = _targetFrameDuration - frameDuration;
+		const auto currentFrameDuration = std::chrono::duration<double>(
+				std::chrono::high_resolution_clock::now() - _startFrameTime);
+		if (const auto timeToWait = _targetFrameDuration - currentFrameDuration;
 			timeToWait.count() > 0)
 		{
-			if (timeToWait.count() > 0.002) { // 2ms
+			if (timeToWait.count() > 0.002)
+			{
 				std::this_thread::sleep_for(timeToWait - std::chrono::milliseconds(1));
 			}
 
-			while ((std::chrono::high_resolution_clock::now() - _startFrameTime) < _targetFrameDuration) {
+			while ((std::chrono::high_resolution_clock::now() - _startFrameTime) < _targetFrameDuration)
+			{
 				std::this_thread::yield();
 			}
-
-			endFrameTime = std::chrono::high_resolution_clock::now();
-			frameDuration = std::chrono::duration<double>(endFrameTime - _startFrameTime);
-			_deltaTime = static_cast<float>(frameDuration.count());
 		}
 	}
 
+	_deltaTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
 	_events->EmitEvent("DeltaTime", _deltaTime);
 
 	_frameCounter++;
@@ -72,10 +70,9 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 
 	if (_fpsAccumulatedTime >= 1.0)
 	{
-		const auto fps = static_cast<unsigned int>(std::round(static_cast<float>(_frameCounter) / _fpsAccumulatedTime));
-		_frameCounter = 0;
+		_lastDisplayedFps = std::min(
+				static_cast<unsigned int>(std::round(static_cast<double>(_frameCounter) / _fpsAccumulatedTime)), 1000u);
+		_frameCounter = 0u;
 		_fpsAccumulatedTime = 0.0;
-
-		_lastDisplayedFps = std::min(fps, 1000u);
 	}
 }

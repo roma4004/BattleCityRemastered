@@ -62,7 +62,7 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _name, [this](const float /*deltaTime*/)
+	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/)
 	{
 		this->Update();
 	});
