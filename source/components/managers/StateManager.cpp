@@ -37,8 +37,14 @@ void StateManager::Subscribe()
 		_isGameOver = IsGameOverReached();
 	});
 	_events->AddListener("PlayersTeamIsWon", _name, [this](){_isGameWon = true; _isGameWon = IsGameWon(); });
-	_events->AddListener("EnemyDestroyed", _name, [this]() {_destroyedEnemiesCount++; });
-	_events->AddListener("EnemySpawned", _name, [this]() { _dynamicEnemiesRespawnCount++; });
+	_events->AddListener("EnemyDestroyed", _name, [this]()
+	{
+		_destroyedEnemiesCount++;
+	});
+	_events->AddListener("EnemySpawned", _name, [this]()
+	{
+		_dynamicEnemiesRespawnCount++;
+	});
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -82,6 +88,8 @@ void StateManager::Reset()
 {
 	_isPause = false;
 	_isGameOver = false;
+	_destroyedEnemiesCount = 0;
+	_dynamicEnemiesRespawnCount = 0;
 }
 
 bool StateManager::IsGameOverReached() const

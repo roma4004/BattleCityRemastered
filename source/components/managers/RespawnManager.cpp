@@ -293,26 +293,11 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 			switch (static_cast<TankType>(i))
 			{
 				case TankType::ENEMY1:
-					if (_slots[i].isAvailable == true)
-					{
-						_events->EmitEvent("EnemySpawned");
-					}
 				case TankType::ENEMY2:
-					if (_slots[i].isAvailable == true)
-					{
-						_events->EmitEvent("EnemySpawned");
-					}
 				case TankType::ENEMY3:
-					if (_slots[i].isAvailable == true)
-					{
-						_events->EmitEvent("EnemySpawned");
-					}
 				case TankType::ENEMY4:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::ENEMY_ALL)] > 0;
-					if (_slots[i].isAvailable == true)
-					{
-						_events->EmitEvent("EnemySpawned");
-					}
+					_events->EmitEvent("EnemyDestroyed");
 					if (_slots[i].isAvailable == false)
 					{
 						_events->EmitEvent("PlayersTeamIsWon");
