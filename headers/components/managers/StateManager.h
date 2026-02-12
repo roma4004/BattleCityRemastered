@@ -13,15 +13,14 @@ class StateManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	GameMode _gameMode{};
+	int _enemiesSpawnCount{0};
+	int _enemiesKillCount{0};
 	bool _isPause{false};
 	bool _isGameOver{false};
 	bool _isGameWon{false};
-	int _dynamicEnemiesRespawnCount{0};
-	int _destroyedEnemiesCount{0};
-
-	bool _playerOneFailState{false};
-	bool _playerTwoFailState{false};
-	bool _playersBaseFailState{false};
+	bool _playerOneLose{false};
+	bool _playerTwoLose{false};
+	bool _playersBaseLose{false};
 
 	void Subscribe();
 	void Unsubscribe() const;

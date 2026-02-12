@@ -23,28 +23,26 @@ void StateManager::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("PlayerOneFinished", _name, [this]()
 	{
-		_playerOneFailState = true;
+		_playerOneLose = true;
 		_isGameOver = IsGameOverReached();
 	});
 	_events->AddListener("PlayerTwoFinished", _name, [this]()
 	{
-		_playerTwoFailState = true;
+		_playerTwoLose = true;
 		_isGameOver = IsGameOverReached();
 	});
 	_events->AddListener("PlayersBaseFinished", _name, [this]()
 	{
-		_playersBaseFailState = true;
+		_playersBaseLose = true;
 		_isGameOver = IsGameOverReached();
 	});
-	_events->AddListener("PlayersTeamIsWon", _name, [this](){_isGameWon = true; _isGameWon = IsGameWon(); });
-	_events->AddListener("EnemyDestroyed", _name, [this]()
+	_events->AddListener("PlayersTeamIsWon", _name, [this]()
 	{
-		_destroyedEnemiesCount++;
+		_isGameWon = true;
+		_isGameWon = IsGameWon();
 	});
-	_events->AddListener("EnemySpawned", _name, [this]()
-	{
-		_dynamicEnemiesRespawnCount++;
-	});
+	_events->AddListener("EnemyDestroyed", _name, [this]() { _enemiesKillCount++; });
+	_events->AddListener("EnemySpawned", _name, [this]() { _enemiesSpawnCount++; });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -88,21 +86,21 @@ void StateManager::Reset()
 {
 	_isPause = false;
 	_isGameOver = false;
-	_destroyedEnemiesCount = 0;
-	_dynamicEnemiesRespawnCount = 0;
+	_enemiesKillCount = 0;
+	_enemiesSpawnCount = 0;
 }
 
 bool StateManager::IsGameOverReached() const
 {
-	return (_gameMode == GameMode::OnePlayer && _playerOneFailState && _playersBaseFailState)
-	       || (_gameMode == GameMode::TwoPlayers && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
-	       || (_gameMode == GameMode::CoopWithBot && _playerOneFailState && _playerTwoFailState && _playersBaseFailState)
-	       || (_gameMode == GameMode::Demo && _playerOneFailState && _playerTwoFailState && _playersBaseFailState);
+	return (_gameMode == GameMode::OnePlayer && _playerOneLose && _playersBaseLose)
+	       || (_gameMode == GameMode::TwoPlayers && _playerOneLose && _playerTwoLose && _playersBaseLose)
+	       || (_gameMode == GameMode::CoopWithBot && _playerOneLose && _playerTwoLose && _playersBaseLose)
+	       || (_gameMode == GameMode::Demo && _playerOneLose && _playerTwoLose && _playersBaseLose);
 }
 
 bool StateManager::IsGameWon() const
 {
-	return (_gameMode == GameMode::OnePlayer && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount)
-		|| (_gameMode == GameMode::TwoPlayers && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount)
-		|| (_gameMode == GameMode::CoopWithBot && _dynamicEnemiesRespawnCount == _destroyedEnemiesCount);
+	return (_gameMode == GameMode::OnePlayer && _enemiesSpawnCount == _enemiesKillCount)
+	       || (_gameMode == GameMode::TwoPlayers && _enemiesSpawnCount == _enemiesKillCount)
+	       || (_gameMode == GameMode::CoopWithBot && _enemiesSpawnCount == _enemiesKillCount);
 }
