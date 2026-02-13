@@ -17,7 +17,6 @@ class ObstacleSpawner final
 	std::string _name{"ObstacleSpawner"};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	int _obstacleSize{0};
 	GameMode _gameMode{};
 	UPoint _windowSize;
 	// std::uniform_int_distribution<> _distSpawnPosY;
@@ -36,8 +35,7 @@ class ObstacleSpawner final
 
 public:
 	ObstacleSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                UPoint windowSize,/*, int sideBarWidth = 175*/
-	                int obstacleSize = 36);//TODO: obstacle size should be in obstacle.h
+	                UPoint windowSize/*, int sideBarWidth = 175*/);
 
 	~ObstacleSpawner();
 };

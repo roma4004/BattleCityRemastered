@@ -50,9 +50,9 @@ void RespawnManager::Subscribe()
 		OnTankDied(uuid);
 	});
 
-	_events->AddListener("BonusTank", _name, [this](const std::string& author, const std::string& fraction)
+	_events->AddListener("BonusTank", _name, [this](const std::string& author, const std::string& /*fraction*/)
 	{
-		this->OnBonusTank(author, fraction);
+		this->OnBonusTank(author);
 	});
 
 	//NOTE: for unit tests
@@ -64,16 +64,10 @@ void RespawnManager::Subscribe()
 
 void RespawnManager::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_OnTank", _name, [this](const std::string& author, const std::string& fraction)
+	_events->AddListener("ClientReceived_OnTank", _name, [this](const std::string& author)
 	{
-		this->OnBonusTank(author, fraction);
+		this->OnBonusTank(author);
 	});
-
-	_events->AddListener(
-			"ClientReceived_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusGrenade(author, fraction);
-			});
 
 	_events->AddListener("ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& /*uuid*/)
 	{
@@ -100,7 +94,6 @@ void RespawnManager::Unsubscribe() const
 void RespawnManager::UnsubscribeAsClient() const
 {
 	_events->RemoveListener("ClientReceived_OnTank", _name);
-	_events->RemoveListener("ClientReceived_OnGrenade", _name);
 	_events->RemoveListener("ClientReceived_RespawnTank", _name);
 }
 
@@ -190,46 +183,24 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 	_events->EmitEvent("RespawnCountChangedTo", RespawnCountEnumToString(type), _respawnCount[id]);
 }
 
-void RespawnManager::OnBonusGrenade(const std::string& author, const std::string& fraction)
+void RespawnManager::OnBonusTank(const std::string& author)
 {
-	if (fraction == "PlayerTeam")
-	{
-		if (author == "Player1")
-		{
-			ChangeRespawnCount(-1, RespawnCount::PLAYER_ONE);
-		}
-		else if (author == "Player2")
-		{
-			ChangeRespawnCount(-1, RespawnCount::PLAYER_TWO);
-		}
-	}
-	else if (fraction == "EnemyTeam")
-	{
-		ChangeRespawnCount(-1, RespawnCount::ENEMY_ALL);
-	}
-}
-
-void RespawnManager::OnBonusTank(const std::string& author, const std::string& fraction)
-{
-	if (fraction == "EnemyTeam")
+	if (author.starts_with("Enemy"))//TODO: do the same C++20 starts/ends_with for statistics handling
 	{
 		ChangeRespawnCount(1, RespawnCount::ENEMY_ALL);
 	}
-	else if (fraction == "PlayerTeam")
+	else if (author.ends_with("1"))
 	{
-		if (author == "Player1" || author == "CoopBot1")
-		{
-			ChangeRespawnCount(1, RespawnCount::PLAYER_ONE);
-		}
-		else if (author == "Player2" || author == "CoopBot2")
-		{
-			ChangeRespawnCount(1, RespawnCount::PLAYER_TWO);
-		}
+		ChangeRespawnCount(1, RespawnCount::PLAYER_ONE);
+	}
+	else if (author.ends_with("2"))
+	{
+		ChangeRespawnCount(1, RespawnCount::PLAYER_TWO);
 	}
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_OnTank", author, fraction);
+		_events->EmitEvent("ServerSend_OnTank", author);
 	}
 }
 

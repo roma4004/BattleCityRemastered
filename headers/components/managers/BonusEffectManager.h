@@ -28,11 +28,12 @@ public:
 
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool value) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
+	[[nodiscard]] static size_t TankNameToId(const std::string& name);
 
 	void TickUpdate(double deltaTime);
 
 	[[nodiscard]] Timer GetTimerEnemy() const;
 	[[nodiscard]] Timer GetTimerPlayer() const;
 
-	[[nodiscard]] Timer GetHelmet(int id) const;
+	[[nodiscard]] Timer GetHelmet(size_t id) const;
 };

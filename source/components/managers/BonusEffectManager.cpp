@@ -40,37 +40,12 @@ void BonusEffectManager::Subscribe()
 
 	_events->AddListener("BonusHelmet", _name, [this](const std::string& name, const milliseconds effectDuration)
 	{
-		size_t id{_helmetSlots.size()};
-		if (name == "Enemy1")//TODO: change enemy1 and other to tankType
+		if (const size_t id{TankNameToId(name)};
+			id < _helmetSlots.size())
 		{
-			id = 0;//TODO: extract to separated method like enum tankType::{id} to std::string
+			_helmetSlots[id] = {effectDuration, std::chrono::system_clock::now()};
+			OnBonusStatusChange("Helmet", name, _helmetSlots[id].isActive);
 		}
-		else if (name == "Enemy2")
-		{
-			id = 1;
-		}
-		else if (name == "Enemy3")
-		{
-			id = 2;
-		}
-		else if (name == "Enemy4")
-		{
-			id = 3;
-		}
-		else if (name == "Player1")
-		{
-			id = 4;
-		}
-		else if (name == "Player2")
-		{
-			id = 5;
-		}
-
-		if (id < 0 || id >= _helmetSlots.size())
-			return;
-
-		_helmetSlots[id] = {effectDuration, std::chrono::system_clock::now()};
-		OnBonusStatusChange("Helmet", name, _helmetSlots[id].isActive);
 	});
 
 	//TODO: remove duration for bonuses
@@ -167,7 +142,7 @@ Timer BonusEffectManager::GetTimerEnemy() const { return _timerEnemy; }
 
 Timer BonusEffectManager::GetTimerPlayer() const { return _timerPlayer; }
 
-Timer BonusEffectManager::GetHelmet(const int id) const//TODO: change to size_t
+Timer BonusEffectManager::GetHelmet(const size_t id) const
 {
 	if (id < 0 || id >= _helmetSlots.size())
 		return {};
@@ -197,4 +172,39 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 	}
 
 	_shovelPlayer.activateTime = std::chrono::system_clock::now();
+}
+
+size_t BonusEffectManager::TankNameToId(const std::string& name)
+{
+	if (name == "Enemy1")//TODO: change enemy1 and other to tankType
+	{
+		return 0;
+	}
+
+	if (name == "Enemy2")
+	{
+		return 1;
+	}
+
+	if (name == "Enemy3")
+	{
+		return 2;
+	}
+
+	if (name == "Enemy4")
+	{
+		return 3;
+	}
+
+	if (name == "Player1")
+	{
+		return 4;
+	}
+
+	if (name == "Player2")
+	{
+		return 5;
+	}
+
+	return -1;
 }

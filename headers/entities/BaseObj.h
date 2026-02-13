@@ -13,7 +13,7 @@ class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public I
 {
 	using buuid = boost::uuids::uuid;
 
-	int _health{0};//TODO: move to protected and replace getHealth for child to direct access
+	int _health{0};
 
 protected:
 	buuid _uuid{};

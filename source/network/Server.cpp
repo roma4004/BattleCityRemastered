@@ -102,25 +102,15 @@ void Session::DoRead()
 				ia >> data;
 
 				// NetworkLogger::LogServerReceive(data.eventName);
-
-				// std::cout << "Received data:\n";
-				// std::cout << "Id: " << data.id << "\n";
-				// std::cout << "Name: " << data.name << "\n";
-
-				if (data.eventName == "ClientReadyToPlay")
+				if (data.eventName == "ClientReadyToPlay") //TODO: refactor this to command pattern
 				{
 					events->EmitEvent("ClientReadyToStartGame");
 				}
 				else
 				{
 					//TODO: check if key allowed to receive from client and strong validating net input
-					events->EmitEvent("ServerReceive_" + data.eventName);
+					events->EmitEvent("ServerReceive_" + data.eventName); //TODO: refactor this to command pattern
 				}
-
-				// std::cout << "Names: ";
-				// for (auto& name: data.names)
-				// 	std::cout << name << " ";
-				// std::cout << "\n";
 
 				// // Respond back to a client
 				// self->DoWrite({123, "Test", {"Name1", "Name2"}});
@@ -398,24 +388,23 @@ void Server::SubscribeBonus()
 		//TODO: rewrite other bonus status effect changes just like this OnBonusHelmet
 	});
 
-	// _events->AddListener("ServerSend_OnStar", _name, [this](const std::string& who)
-	// {
-	// 	this->OnStar(who);//TODO: refactor to SendCommand(std::make_shared<
-	// });
-	// _events->AddListener("ServerSend_OnCaliber", _name, [this](const std::string& who)
-	// {
-	// 	this->OnCaliber(who);//TODO: refactor to SendCommand(std::make_shared<
-	// });
-	// _events->AddListener("ServerSend_OnTank", _name, [this](const std::string& author, const std::string& fraction)
-	// {
-	// 	this->OnTank(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
-	// });
-	//
-	// _events->AddListener(
-	// 		"ServerSend_OnGrenade", _name, [this](const std::string& author, const std::string& fraction)
-	// 		{
-	// 			this->OnGrenade(author, fraction);//TODO: refactor to SendCommand(std::make_shared<
-	// 		});
+	_events->AddListener("ServerSend_OnStar", _name, [this](const std::string& name)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Star));
+	});
+
+	_events->AddListener("ServerSend_OnCaliber", _name, [this](const std::string& name)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Caliber));
+	});
+
+	_events->AddListener("ServerSend_OnTank", _name, [this](const std::string& name)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Tank));
+	});
 }
 
 void Server::Unsubscribe() const
@@ -501,58 +490,4 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 	const auto& basicString = archiveStream.str();
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
 	this->SendToAll(basicString + "\n\n");
-}
-
-void Server::OnStar(const std::string& who) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnStar";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::OnCaliber(const std::string& who) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnCaliber";
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::OnTank(const std::string& who, const std::string& fraction) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnTank";
-	data.fraction = fraction;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
-}
-
-void Server::OnGrenade(const std::string& who, const std::string& fraction) const
-{
-	ServerData data;
-	data.who = who;
-	data.eventName = "OnGrenade";
-	data.fraction = fraction;
-
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	SendToAll(archiveStream.str() + "\n\n");
 }

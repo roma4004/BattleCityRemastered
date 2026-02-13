@@ -34,7 +34,6 @@ Bonus::~Bonus()
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
-		//TODO: move to pick up moment in tank move beh
 	}
 }
 

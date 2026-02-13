@@ -330,11 +330,22 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
 	{
-		if (cmd->GetBonusType() == BonusType::Helmet)
+		switch (cmd->GetBonusType())
 		{
-			const bool isActive = cmd->GetIsEnable();
-			const std::string name = cmd->GetName();
-			_events->EmitEvent("ClientReceived_" + name + "OnBonusHelmet", isActive);
+			case BonusType::Helmet:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnBonusHelmet", cmd->GetIsEnable());
+				break;
+			case BonusType::Star:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnStar");
+				break;
+			case BonusType::Caliber:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnCaliber");
+				break;
+			case BonusType::Tank:
+				_events->EmitEvent("ClientReceived_OnTank", cmd->GetName());
+				break;
+			default://TODO: add assert
+				break;
 		}
 	}
 }

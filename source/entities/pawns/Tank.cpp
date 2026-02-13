@@ -83,12 +83,12 @@ void Tank::SubscribeAsClient()
 
 	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
 	{
-		this->OnBonusStar(_name, _fraction);
+		this->OnBonusStar(_name);
 	});
 
 	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid, [this]()
 	{
-		this->OnBonusCaliber(_name, _fraction);
+		this->OnBonusCaliber(_name);
 	});
 }
 
@@ -108,19 +108,19 @@ void Tank::SubscribeBonus()
 				this->OnBonusHelmet(name, isActive);
 			});
 
-	_events->AddListener("BonusGrenade", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
+	_events->AddListener("BonusGrenade", _nameWithUuid, [this](const std::string& /*author*/, const std::string& fraction)
 	{
-		this->OnBonusGrenade(author, fraction);
+		this->OnBonusGrenade(fraction);
 	});
 
-	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
+	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
 	{
-		this->OnBonusStar(author, fraction);
+		this->OnBonusStar(author);
 	});
 
-	_events->AddListener("BonusCaliber", _nameWithUuid, [this](const std::string& author, const std::string& fraction)
+	_events->AddListener("BonusCaliber", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
 	{
-		this->OnBonusCaliber(author, fraction);
+		this->OnBonusCaliber(author);
 	});
 }
 
@@ -246,7 +246,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	}
 }
 
-void Tank::OnBonusGrenade(const std::string& /*author*/, const std::string& fraction)
+void Tank::OnBonusGrenade(const std::string& fraction)
 {
 	if (fraction != _fraction)
 	{
@@ -254,9 +254,9 @@ void Tank::OnBonusGrenade(const std::string& /*author*/, const std::string& frac
 	}
 }
 
-void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
+void Tank::OnBonusStar(const std::string& author)
 {
-	if (fraction == _fraction && author == _name)
+	if (author == _name)
 	{
 		SetHealth(GetHealth() + 50);
 		if (_tier > 4)
@@ -279,9 +279,9 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 	}
 }
 
-void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction)
+void Tank::OnBonusCaliber(const std::string& author)
 {
-	if (fraction == _fraction && author == _name)
+	if (author == _name)
 	{
 		SetHealth(GetHealth() + 50);
 		if (_tier > 3)

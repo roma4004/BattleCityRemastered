@@ -27,8 +27,7 @@ class RespawnManager final
 
 	GameMode _gameMode{};
 
-	void OnBonusGrenade(const std::string& author, const std::string& fraction);
-	void OnBonusTank(const std::string& author, const std::string& fraction);
+	void OnBonusTank(const std::string& author);
 	void OnClientRespawn(TankType type);
 
 	void Subscribe();

@@ -32,9 +32,9 @@ class Tank : public Pawn
 	void OnBonusTimer(const std::string& fraction, bool isActive);
 	void OnBonusHelmet(const std::string& name, bool isActive);
 
-	void OnBonusGrenade(const std::string& author, const std::string& fraction);
-	void OnBonusStar(const std::string& author, const std::string& fraction);
-	void OnBonusCaliber(const std::string& author, const std::string& fraction);
+	void OnBonusGrenade(const std::string& fraction);
+	void OnBonusStar(const std::string& author);
+	void OnBonusCaliber(const std::string& author);
 	void OnTankOnOff(buuid uuid, bool isEnable);
 
 protected:

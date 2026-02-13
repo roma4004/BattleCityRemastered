@@ -19,6 +19,7 @@ public:
 
 	//for serialization
 	BonusStatus(std::string name, BonusType bonusType, bool isEnable);
+	BonusStatus(std::string name, BonusType bonusType);
 
 	~BonusStatus() override = default;
 
