@@ -185,7 +185,7 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 
 void RespawnManager::OnBonusTank(const std::string& author)
 {
-	if (author.starts_with("Enemy"))//TODO: do the same C++20 starts/ends_with for statistics handling
+	if (author.starts_with("Enemy"))
 	{
 		ChangeRespawnCount(1, RespawnCount::ENEMY_ALL);
 	}
