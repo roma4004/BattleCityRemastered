@@ -287,7 +287,7 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 		case SDL_CONTROLLERDEVICEREMOVED:
 		{
 			const SDL_JoystickID instanceId = event.cdevice.which;
-			SDL_Log("Controller removed! (instance %d) ", instanceId);
+			std::cout << "Controller removed! (instance " << instanceId << ")\n";
 			DisconnectController(instanceId);
 			break;
 		}
@@ -360,7 +360,7 @@ void UserInput::InitControllers()
 			GameControllerOne != nullptr)
 		{
 			ConnectController({GameControllerOne, SDL_GameControllerClose});
-			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
+			std::cout << "Opened controller one: " << SDL_GameControllerName(GameControllerOne) << "\n";
 		}
 	}
 
@@ -370,7 +370,7 @@ void UserInput::InitControllers()
 			GameControllerTwo != nullptr)
 		{
 			ConnectController({GameControllerTwo, SDL_GameControllerClose});
-			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
+			std::cout << "Opened controller two: " << SDL_GameControllerName(GameControllerTwo) << "\n";
 		}
 	}
 }
