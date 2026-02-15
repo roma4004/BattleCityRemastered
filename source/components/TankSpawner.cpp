@@ -45,7 +45,6 @@ TankSpawner::~TankSpawner()
 void TankSpawner::Subscribe()
 {
 	//TODO: reuse existing tanks when game mode changed
-	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;

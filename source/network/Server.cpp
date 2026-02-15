@@ -288,12 +288,6 @@ void Server::Subscribe()
 		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", false));
 	});
 
-	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
-	{
-		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
-	});
-
 	_events->AddListener(
 			"ServerSend_Pos", _name,
 			[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
@@ -381,6 +375,12 @@ void Server::SubscribeBonus()
 		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 	});
 
+	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
+	});
+
 	_events->AddListener("ServerSend_OnBonusHelmet", _name, [this](const std::string& name, const bool isActive)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
@@ -409,15 +409,18 @@ void Server::SubscribeBonus()
 
 void Server::Unsubscribe() const
 {
+	_events->RemoveListener("Server_EndFrame", _name);
 	_events->RemoveListener("Pause_Pressed", _name);
 	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener("Server_EndFrame", _name);
 
 	_events->RemoveListener("ServerSend_Pos", _name);
+	_events->RemoveListener("ServerSend_Shot", _name);
 	_events->RemoveListener("ServerSend_Health", _name);
 	_events->RemoveListener("ServerSend_Dispose", _name);
-	_events->RemoveListener("ServerSend_Shot", _name);
+
 	_events->RemoveListener("ServerSend_Statistics", _name);
+	_events->RemoveListener("ServerSend_RespawnTank", _name);
+	_events->RemoveListener("ServerSend_ObstacleSpawn", _name);
 
 	_events->RemoveListener("ServerSend_AnimationCreate", _name);
 
@@ -435,9 +438,9 @@ void Server::UnsubscribeBonus() const
 
 	_events->RemoveListener("ServerSend_OnBonusHelmet", _name);
 
-	// _events->RemoveListener("ServerSend_OnStar", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener("ServerSend_OnCaliber", _name);//TODO: refactor to SendCommand(std::make_shared<
-	// _events->RemoveListener("ServerSend_OnTank", _name);//TODO: refactor to SendCommand(std::make_shared<
+	_events->RemoveListener("ServerSend_OnStar", _name);
+	_events->RemoveListener("ServerSend_OnCaliber", _name);
+	_events->RemoveListener("ServerSend_OnTank", _name);
 }
 
 void Server::DoAccept()

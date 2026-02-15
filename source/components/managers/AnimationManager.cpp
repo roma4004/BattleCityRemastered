@@ -87,6 +87,7 @@ void AnimationManager::Unsubscribe() const
 		UnsubscribeAsHost();
 	}
 
+	_events->RemoveListener("AnimationCreate", _name);
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("PostDraw", _name);
@@ -98,11 +99,10 @@ void AnimationManager::Unsubscribe() const
 
 void AnimationManager::UnsubscribeAsHost() const
 {
-	_events->RemoveListener("AnimationCreate", _name);
-	_events->RemoveListener("AnimationCreateTank", _name);
-	_events->RemoveListener("AnimationCreateWater", _name);
 	_events->RemoveListener("AnimationCreateTankExplosion", _name);
 	_events->RemoveListener("AnimationCreateBulletExplosion", _name);
+	_events->RemoveListener("AnimationCreateTank", _name);
+	_events->RemoveListener("AnimationCreateWater", _name);
 }
 
 void AnimationManager::SetGameMode(const GameMode newGameMode)

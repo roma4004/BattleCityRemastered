@@ -27,7 +27,7 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
 	constexpr int defaultCollisionReserve{5};
 	_touchedObstacles.reserve(defaultCollisionReserve);
 
-	const float speed = _speed * static_cast<float>(deltaTime);
+	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
 	const auto [x, y, w, h] = _rect;
 	ObjRectangle tankNextPosRect;
 	if (_direction == Direction::UP)

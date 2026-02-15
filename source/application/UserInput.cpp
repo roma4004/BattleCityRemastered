@@ -3,7 +3,6 @@
 #include "components/EventSystem.h"
 #include <SDL_events.h>
 #include <SDL_gamecontroller.h>
-#include <SDL_log.h>
 #include <algorithm>
 #include <ranges>
 #include <iostream>

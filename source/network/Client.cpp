@@ -114,6 +114,8 @@ void Client::Unsubscribe() const
 	_events->RemoveListener("P2_Move_Right_Released", _name);
 	_events->RemoveListener("P2_Fire_Pressed", _name);
 	_events->RemoveListener("P2_Fire_Released", _name);
+
+	_events->RemoveListener("ClientReadyToPlay", _name);
 }
 
 void Client::ReadResponse()
