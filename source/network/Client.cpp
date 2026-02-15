@@ -346,7 +346,7 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
 			case BonusType::Tank:
 				_events->EmitEvent("ClientReceived_OnTank", cmd->GetName());
 				break;
-			default://TODO: add assert
+			default: //TODO: add assert
 				break;
 		}
 	}

@@ -102,14 +102,14 @@ void Session::DoRead()
 				ia >> data;
 
 				// NetworkLogger::LogServerReceive(data.eventName);
-				if (data.eventName == "ClientReadyToPlay") //TODO: refactor this to command pattern
+				if (data.eventName == "ClientReadyToPlay")//TODO: refactor this to command pattern
 				{
 					events->EmitEvent("ClientReadyToStartGame");
 				}
 				else
 				{
 					//TODO: check if key allowed to receive from client and strong validating net input
-					events->EmitEvent("ServerReceive_" + data.eventName); //TODO: refactor this to command pattern
+					events->EmitEvent("ServerReceive_" + data.eventName);//TODO: refactor this to command pattern
 				}
 
 				// // Respond back to a client

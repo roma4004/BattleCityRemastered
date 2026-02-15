@@ -108,20 +108,22 @@ void Tank::SubscribeBonus()
 				this->OnBonusHelmet(name, isActive);
 			});
 
-	_events->AddListener("BonusGrenade", _nameWithUuid, [this](const std::string& /*author*/, const std::string& fraction)
-	{
-		this->OnBonusGrenade(fraction);
-	});
+	_events->AddListener("BonusGrenade", _nameWithUuid,
+	                     [this](const std::string& /*author*/, const std::string& fraction)
+	                     {
+		                     this->OnBonusGrenade(fraction);
+	                     });
 
 	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusStar(author);
 	});
 
-	_events->AddListener("BonusCaliber", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
-	{
-		this->OnBonusCaliber(author);
-	});
+	_events->AddListener("BonusCaliber", _nameWithUuid,
+	                     [this](const std::string& author, const std::string& /*fraction*/)
+	                     {
+		                     this->OnBonusCaliber(author);
+	                     });
 }
 
 void Tank::Unsubscribe() const
