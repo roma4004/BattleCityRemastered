@@ -44,6 +44,7 @@ class RespawnManager final
 
 	static std::string RespawnCountEnumToString(RespawnCount type);
 	void ChangeRespawnCount(int delta, RespawnCount type);
+	void TriggerLastPlayersLife(bool PlayersBaseFinished);
 
 	void OnTankSpawn(const buuid& uuid);
 	void OnTankDied(const buuid& uuid);

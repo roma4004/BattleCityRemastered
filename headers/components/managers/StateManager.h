@@ -2,8 +2,11 @@
 
 #include <memory>
 #include <string>
+#include "RespawnManager.h"
 
 class EventSystem;
+class StateManager;
+
 enum class GameMode : char8_t;
 
 class StateManager
@@ -14,12 +17,12 @@ class StateManager
 
 	GameMode _gameMode{};
 	int _enemiesSpawnCount{0};
-	int _enemiesKillCount{0};
+	int _enemiesDeathCount{0};
+	int _playersDeathCount{0};
+	int _playersSpawnCount{0};
 	bool _isPause{false};
 	bool _isGameOver{false};
 	bool _isGameWon{false};
-	bool _playerOneLose{false};
-	bool _playerTwoLose{false};
 	bool _playersBaseLose{false};
 
 	void Subscribe();
@@ -29,6 +32,7 @@ class StateManager
 	void Draw() const;
 
 	void Reset();
+	void PlayersBaseFinished();
 	bool IsGameOverReached() const;
 	bool IsGameWon() const;
 

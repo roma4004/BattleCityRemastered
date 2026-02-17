@@ -60,6 +60,11 @@ void RespawnManager::Subscribe()
 	{
 		this->SetSlotNeedRespawn(slotIndex);
 	});
+	
+	_events->AddListener("PlayersBaseFinished", _name, [this]()
+	{
+		TriggerLastPlayersLife(true);
+	});
 }
 
 void RespawnManager::SubscribeAsClient()
@@ -89,6 +94,7 @@ void RespawnManager::Unsubscribe() const
 
 	_events->RemoveListener("BonusTank", _name);
 	_events->RemoveListener("SetSlotNeedRespawn", _name);
+	_events->RemoveListener("PlayersBaseFinished", _name);
 }
 
 void RespawnManager::UnsubscribeAsClient() const
@@ -181,6 +187,15 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 	_respawnCount[id] += delta;
 
 	_events->EmitEvent("RespawnCountChangedTo", RespawnCountEnumToString(type), _respawnCount[id]);
+}
+
+void RespawnManager::TriggerLastPlayersLife(bool PlayersBaseFinished)
+{
+	if (PlayersBaseFinished)
+	{
+		_respawnCount[1] = 0;
+		_respawnCount[2] = 0;
+	}
 }
 
 void RespawnManager::OnBonusTank(const std::string& author)
@@ -276,17 +291,27 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 					break;
 				case TankType::PLAYER1:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_ONE)] > 0;
-					if (_slots[i].isAvailable == false)
+					_events->EmitEvent("PlayerDestroyed");
+					if (_gameMode == GameMode::OnePlayer && _slots[i].isAvailable == false  )
 					{
-						_events->EmitEvent("PlayerOneFinished");
+ 						_events->EmitEvent("EnemiesTeamIsWon");
 					}
 
 					break;
 				case TankType::PLAYER2:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_TWO)] > 0;
-					if (_slots[i].isAvailable == false)
+					_events->EmitEvent("PlayerDestroyed");
+					if (_slots[i].isAvailable == false && _gameMode == GameMode::Demo)
 					{
-						_events->EmitEvent("PlayerTwoFinished");
+						_events->EmitEvent("EnemiesTeamIsWon");
+					}
+					if (_slots[i].isAvailable == false && _gameMode == GameMode::TwoPlayers)
+					{
+						_events->EmitEvent("EnemiesTeamIsWon");
+					}
+					if (_slots[i].isAvailable == false && _gameMode == GameMode::CoopWithBot)
+					{
+						_events->EmitEvent("EnemiesTeamIsWon");
 					}
 
 					break;
