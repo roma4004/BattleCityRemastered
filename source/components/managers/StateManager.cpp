@@ -23,7 +23,7 @@ void StateManager::Subscribe()
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("PlayerDestroyed", _name, [this](){ _playersDeathCount++; });
-	_events->AddListener("PlayerSpawned", _name, [this](){ _playersSpawnCount++;	});
+	_events->AddListener("PlayerSpawned", _name, [this](){ _playersSpawnCount++; });
 	_events->AddListener("PlayersBaseFinished", _name, [this]()
 	{
 		PlayersBaseFinished();
@@ -94,17 +94,6 @@ void StateManager::Reset()
 void StateManager::PlayersBaseFinished()
 {
 	_playersBaseLose = true;
-	if (_gameMode == GameMode::OnePlayer)
-	{
-		_playersDeathCount = 0;
-		_playersSpawnCount = 1;
-	}
-	
-	if (_gameMode == GameMode::TwoPlayers || _gameMode == GameMode::CoopWithBot || _gameMode == GameMode::Demo)
-	{
-		_playersDeathCount = 0;
-		_playersSpawnCount = 2;
-	}
 	_isGameOver = IsGameOverReached();
 }
 
