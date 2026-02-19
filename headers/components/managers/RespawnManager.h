@@ -28,8 +28,8 @@ class RespawnManager final
 	GameMode _gameMode{};
 	int _enemiesSpawnCount{0};
 	int _enemiesDeathCount{0};
-	int _playersDeathCount{0};
 	int _playersSpawnCount{0};
+	int _playersDeathCount{0};
 
 	void OnBonusTank(const std::string& author);
 	void OnClientRespawn(TankType type);
