@@ -26,6 +26,10 @@ class RespawnManager final
 	};
 
 	GameMode _gameMode{};
+	int _enemiesSpawnCount{0};
+	int _enemiesDeathCount{0};
+	int _playersDeathCount{0};
+	int _playersSpawnCount{0};
 
 	void OnBonusTank(const std::string& author);
 	void OnClientRespawn(TankType type);
@@ -44,7 +48,7 @@ class RespawnManager final
 
 	static std::string RespawnCountEnumToString(RespawnCount type);
 	void ChangeRespawnCount(int delta, RespawnCount type);
-	void TriggerLastPlayersLife(bool PlayersBaseFinished);
+	void TriggerLastPlayersLife();
 
 	void OnTankSpawn(const buuid& uuid);
 	void OnTankDied(const buuid& uuid);

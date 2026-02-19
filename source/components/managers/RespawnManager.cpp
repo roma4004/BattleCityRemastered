@@ -32,7 +32,7 @@ void RespawnManager::Subscribe()
 {
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
-	_events->AddListener("Reset", _name, [this]() { ResetSpawn(); });
+	_events->AddListener("Reset", _name, [this]() { this->ResetSpawn(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -63,8 +63,12 @@ void RespawnManager::Subscribe()
 	
 	_events->AddListener("PlayersBaseFinished", _name, [this]()
 	{
-		TriggerLastPlayersLife(true);
+		this->TriggerLastPlayersLife();
 	});
+	_events->AddListener("PlayerDestroyed", _name, [this](){ this->_playersDeathCount++; });
+	_events->AddListener("PlayerSpawned", _name, [this](){ this->_playersSpawnCount++; });
+	_events->AddListener("EnemyDestroyed", _name, [this]() { this->_enemiesDeathCount++; });
+	_events->AddListener("EnemySpawned", _name, [this]() { this->_enemiesSpawnCount++; });
 }
 
 void RespawnManager::SubscribeAsClient()
@@ -95,6 +99,10 @@ void RespawnManager::Unsubscribe() const
 	_events->RemoveListener("BonusTank", _name);
 	_events->RemoveListener("SetSlotNeedRespawn", _name);
 	_events->RemoveListener("PlayersBaseFinished", _name);
+	_events->RemoveListener("PlayerDestroyed", _name);
+	_events->RemoveListener("PlayerSpawned", _name);
+	_events->RemoveListener("EnemyDestroyed", _name);
+	_events->RemoveListener("EnemySpawned", _name);
 }
 
 void RespawnManager::UnsubscribeAsClient() const
@@ -189,13 +197,10 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 	_events->EmitEvent("RespawnCountChangedTo", RespawnCountEnumToString(type), _respawnCount[id]);
 }
 
-void RespawnManager::TriggerLastPlayersLife(bool PlayersBaseFinished)
+void RespawnManager::TriggerLastPlayersLife()
 {
-	if (PlayersBaseFinished)
-	{
-		_respawnCount[1] = 0;
-		_respawnCount[2] = 0;
-	}
+	_respawnCount[1] = 0;
+	_respawnCount[2] = 0;
 }
 
 void RespawnManager::OnBonusTank(const std::string& author)
@@ -284,15 +289,16 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 				case TankType::ENEMY4:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::ENEMY_ALL)] > 0;
 					_events->EmitEvent("EnemyDestroyed");
-					if (_slots[i].isAvailable == false)
+					if (_slots[i].isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
 					{
 						_events->EmitEvent("PlayersTeamIsWon");
 					}
+
 					break;
 				case TankType::PLAYER1:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_ONE)] > 0;
 					_events->EmitEvent("PlayerDestroyed");
-					if (_gameMode == GameMode::OnePlayer && _slots[i].isAvailable == false  )
+					if (_slots[i].isAvailable == false && _playersSpawnCount == _playersDeathCount)
 					{
  						_events->EmitEvent("EnemiesTeamIsWon");
 					}
@@ -301,15 +307,7 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 				case TankType::PLAYER2:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_TWO)] > 0;
 					_events->EmitEvent("PlayerDestroyed");
-					if (_slots[i].isAvailable == false && _gameMode == GameMode::Demo)
-					{
-						_events->EmitEvent("EnemiesTeamIsWon");
-					}
-					if (_slots[i].isAvailable == false && _gameMode == GameMode::TwoPlayers)
-					{
-						_events->EmitEvent("EnemiesTeamIsWon");
-					}
-					if (_slots[i].isAvailable == false && _gameMode == GameMode::CoopWithBot)
+					if (_slots[i].isAvailable == false && _playersSpawnCount == _playersDeathCount)
 					{
 						_events->EmitEvent("EnemiesTeamIsWon");
 					}

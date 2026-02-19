@@ -1,7 +1,6 @@
 #include "components/managers/StateManager.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
-#include "enums/RespawnCount.h"
 
 StateManager::StateManager(const std::shared_ptr<EventSystem>& events)
 	: _name{"StateManager"},
@@ -21,25 +20,26 @@ void StateManager::Subscribe()
 	// TODO: investigate why on demo after start we have skip one pause input
 	_events->AddListener("SetGameOverText", _name, [this]() { this->_isGameOver = true; });
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
-	_events->AddListener("Reset", _name, [this]() { Reset(); });
-	_events->AddListener("PlayerDestroyed", _name, [this](){ _playersDeathCount++; });
-	_events->AddListener("PlayerSpawned", _name, [this](){ _playersSpawnCount++; });
-	_events->AddListener("PlayersBaseFinished", _name, [this]()
-	{
-		PlayersBaseFinished();
-	});
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+	_events->AddListener("PlayerDestroyed", _name, [this](){ this->_playersDeathCount++; });
+	_events->AddListener("PlayerSpawned", _name, [this](){ this->_playersSpawnCount++; });
+	_events->AddListener("PlayersBaseFinished", _name, [this](){ this->PlayersBaseFinished(); });
 	_events->AddListener("PlayersTeamIsWon", _name, [this]()
 	{
-		_isGameWon = true;
-		_isGameWon = IsGameWon();
+		if(_enemiesSpawnCount == _enemiesDeathCount)
+		{
+			this->_isGameWon = true;
+			this->IsGameWon();
+		}
+		 
 	});
 	_events->AddListener("EnemiesTeamIsWon", _name, [this]()
 	{
-			_isGameOver = true;
-			_isGameOver = IsGameOverReached();
+			this->_isGameOver = true;
+			this->IsGameOverReached();
 	});
-	_events->AddListener("EnemyDestroyed", _name, [this]() { _enemiesDeathCount++; });
-	_events->AddListener("EnemySpawned", _name, [this]() { _enemiesSpawnCount++; });
+	_events->AddListener("EnemyDestroyed", _name, [this]() { this->_enemiesDeathCount++; });
+	_events->AddListener("EnemySpawned", _name, [this]() { this->_enemiesSpawnCount++; });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -99,19 +99,10 @@ void StateManager::PlayersBaseFinished()
 
 bool StateManager::IsGameOverReached() const
 {
-	return (_gameMode == GameMode::OnePlayer && _isGameOver)
-	       || (_gameMode == GameMode::OnePlayer && _isGameOver && _playersBaseLose)
-	       || (_gameMode == GameMode::TwoPlayers && _isGameOver)
-	       || (_gameMode == GameMode::TwoPlayers && _isGameOver && _playersBaseLose)
-	       || (_gameMode == GameMode::CoopWithBot && _isGameOver)
-	       || (_gameMode == GameMode::CoopWithBot && _isGameOver && _playersBaseLose)
-	       || (_gameMode == GameMode::Demo && _isGameOver)
-	       || (_gameMode == GameMode::Demo && _isGameOver && _playersBaseLose);       
+	return (_isGameOver && _playersBaseLose) || _isGameOver;
 }
 
 bool StateManager::IsGameWon() const
 {
-	return (_gameMode == GameMode::OnePlayer && _enemiesSpawnCount == _enemiesDeathCount)
-	       || (_gameMode == GameMode::TwoPlayers && _enemiesSpawnCount == _enemiesDeathCount)
-	       || (_gameMode == GameMode::CoopWithBot && _enemiesSpawnCount == _enemiesDeathCount);
+	return (_isGameWon);
 }
