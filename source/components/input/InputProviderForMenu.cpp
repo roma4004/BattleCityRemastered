@@ -61,9 +61,17 @@ void InputProviderForMenu::TogglePause()
 	_events->EmitEvent("Pause_Status", _keys.pause);
 }
 
+void InputProviderForMenu::SwitchPause(bool switchTo)
+{
+	_keys.pause = switchTo;
+
+	_events->EmitEvent("Pause_Status", _keys.pause);
+}
+
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
 	_keys.menuShow = !_keys.menuShow;
+	SwitchPause(_keys.menuShow);
 	if (_keys.menuShow)
 	{
 		_events->AddListener("P1_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });

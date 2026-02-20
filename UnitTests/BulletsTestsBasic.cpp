@@ -23,15 +23,15 @@ protected:
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _bulletDamage{1};
 	int _bulletHealth{1};
-	int _bulletColor{0xffffff}; 
+	unsigned int _bulletColor{0xffffff}; 
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
-	float _deltaTimeOneFrame{1.f / 60.f};
-	float _tankSize{0.f};
+	float _tankSize{};
 	float _tankSpeed{142.f};
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	double _bulletDamageRadius{12.0};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};

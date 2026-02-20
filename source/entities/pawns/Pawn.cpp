@@ -24,7 +24,7 @@ void Pawn::Subscribe()
 
 void Pawn::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -88,7 +88,7 @@ float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
 
-bool Pawn::Move(const float deltaTime)
+bool Pawn::Move(const double deltaTime)
 {
 	const bool isMove = _moveBeh->Move(deltaTime);
 	if (isMove)

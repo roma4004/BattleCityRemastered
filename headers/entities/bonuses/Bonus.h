@@ -23,7 +23,7 @@ protected:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 	void Draw() const override;
 
@@ -31,8 +31,8 @@ protected:
 	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 
 public:
-	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime, int color,
-	      std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
+	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
+	      unsigned int color, std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 

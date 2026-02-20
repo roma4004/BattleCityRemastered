@@ -29,12 +29,14 @@ void UserInput::Subscribe()
 		this->_isPause = newPauseStatus;
 	});
 	_events->AddListener("Tab_Released", _name, [this]() { SwapControllers(); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
 
 void UserInput::Unsubscribe() const
 {
 	_events->RemoveListener("Pause_Status", _name);
 	_events->RemoveListener("Tab_Released", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
@@ -60,7 +62,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 void UserInput::SwapControllers()
 {
 	_areControllersSwapped = !_areControllersSwapped;
-	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";//TODO: remove after add visual label
+	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent
 }
 
 std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) const
@@ -250,10 +252,10 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const std::string
 				_events->EmitEvent(controllerTag + "_Move_Right_" + KeyStateTag);
 				break;
 			case SDL_CONTROLLER_BUTTON_START:
-				_events->EmitEvent(controllerTag + "_Start_" + KeyStateTag);
+				_events->EmitEvent("Menu_" + KeyStateTag);
 				break;
-			case SDL_CONTROLLER_BUTTON_GUIDE:
-				_events->EmitEvent(controllerTag + "_GUIDE_" + KeyStateTag);
+			case SDL_CONTROLLER_BUTTON_BACK:
+				_events->EmitEvent("Pause_" + KeyStateTag);
 				break;
 
 			default:
@@ -285,7 +287,7 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 		case SDL_CONTROLLERDEVICEREMOVED:
 		{
 			const SDL_JoystickID instanceId = event.cdevice.which;
-			SDL_Log("Controller removed! (instance %d) ", instanceId);
+			std::cout << "Controller removed! (instance " << instanceId << ")\n";
 			DisconnectController(instanceId);
 			break;
 		}
@@ -302,7 +304,7 @@ void UserInput::Update()
 	{
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
 		{
-			_isGameOver = true;
+			_isShutdown = true;
 		}
 
 		WindowsMoveEvents(event);
@@ -314,7 +316,7 @@ void UserInput::Update()
 	OnWindowMoveStop();
 }
 
-bool UserInput::IsGameOver() const { return _isGameOver; }
+bool UserInput::IsShutdown() const { return _isShutdown; }
 
 bool UserInput::IsPause() const { return _isPause; }
 
@@ -358,7 +360,7 @@ void UserInput::InitControllers()
 			GameControllerOne != nullptr)
 		{
 			ConnectController({GameControllerOne, SDL_GameControllerClose});
-			SDL_Log("Opened controller one: %s", SDL_GameControllerName(GameControllerOne));
+			std::cout << "Opened controller one: " << SDL_GameControllerName(GameControllerOne) << "\n";
 		}
 	}
 
@@ -368,7 +370,7 @@ void UserInput::InitControllers()
 			GameControllerTwo != nullptr)
 		{
 			ConnectController({GameControllerTwo, SDL_GameControllerClose});
-			SDL_Log("Opened controller two: %s", SDL_GameControllerName(GameControllerTwo));
+			std::cout << "Opened controller two: " << SDL_GameControllerName(GameControllerTwo) << "\n";
 		}
 	}
 }

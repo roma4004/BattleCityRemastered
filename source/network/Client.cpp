@@ -1,7 +1,7 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
 #include "entities/ObjRectangle.h"
-#include "enums/ComandType.h"
+#include "enums/CommandType.h"
 #include "enums/TankType.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
@@ -114,6 +114,8 @@ void Client::Unsubscribe() const
 	_events->RemoveListener("P2_Move_Right_Released", _name);
 	_events->RemoveListener("P2_Fire_Pressed", _name);
 	_events->RemoveListener("P2_Fire_Released", _name);
+
+	_events->RemoveListener("ClientReadyToPlay", _name);
 }
 
 void Client::ReadResponse()
@@ -302,11 +304,7 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_AnimationCreate",
-		                   cmd->GetAnimationType(),
-		                   cmd->GetRect(),
-		                   cmd->GetName(),
-		                   cmd->GetColor());
+		_events->EmitEvent("AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetName());
 	}
 }
 
@@ -334,11 +332,22 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
 	{
-		if (cmd->GetBonusType() == BonusType::Helmet)
+		switch (cmd->GetBonusType())
 		{
-			const bool isActive = cmd->GetIsEnable();
-			const std::string name = cmd->GetName();
-			_events->EmitEvent("ClientReceived_" + name + "OnBonusHelmet", isActive);
+			case BonusType::Helmet:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnBonusHelmet", cmd->GetIsEnable());
+				break;
+			case BonusType::Star:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnStar");
+				break;
+			case BonusType::Caliber:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnCaliber");
+				break;
+			case BonusType::Tank:
+				_events->EmitEvent("ClientReceived_OnTank", cmd->GetName());
+				break;
+			default: //TODO: add assert
+				break;
 		}
 	}
 }

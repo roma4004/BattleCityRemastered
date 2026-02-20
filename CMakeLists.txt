@@ -281,8 +281,12 @@ set(SOURCE_FILES
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/AnimationManager.cpp
         source/components/managers/BonusEffectManager.cpp
-        source/components/managers/RespawnResourceManager.cpp
-        source/components/managers/SpawnDelayManager.cpp
+        source/components/managers/FramePerSecondManager.cpp
+        source/components/managers/RenderManager.cpp
+        source/components/managers/RespawnManager.cpp
+        source/components/managers/SpawnManager.cpp
+        source/components/managers/DelayedSpawnManager.cpp
+        source/components/managers/StateManager.cpp
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
         source/entities/Obstacles/EagleTile.cpp
@@ -356,8 +360,9 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/BonusEffectManager.cpp
-        source/components/managers/RespawnResourceManager.cpp
-        source/components/managers/SpawnDelayManager.cpp
+        source/components/managers/RespawnManager.cpp
+        source/components/managers/DelayedSpawnManager.cpp
+        source/components/Map.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp

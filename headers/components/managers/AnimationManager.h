@@ -29,21 +29,21 @@ public:
 
 	void Subscribe();
 	void SubscribeAsHost();
-	void SubscribeAsClient();
+	// void SubscribeAsClient();
 
 	void Unsubscribe() const;
-	void UnsubscribeAsClient() const;
+	// void UnsubscribeAsClient() const;
 	void UnsubscribeAsHost() const;
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);
 	void CreateAnimationTank(const std::weak_ptr<Tank>& tank);
-	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& objName, int color);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& objName);
 	void DeleteTankAnimation(const std::string& objName);
 
 private:
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames,
-	            int scale, const std::string& objName, int color, bool isInfinite = {});
+	            int scale, const std::string& objName, bool isInfinite = {});
 	void Update();
 	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
 	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);

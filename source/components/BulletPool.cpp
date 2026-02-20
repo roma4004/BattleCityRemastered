@@ -1,5 +1,4 @@
 #include "components/BulletPool.h"
-#include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"

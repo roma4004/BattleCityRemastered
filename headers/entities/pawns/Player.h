@@ -11,7 +11,7 @@ class Player final : public Tank
 
 	std::unique_ptr<IInputProvider> _inputProvider{};
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 public:
 	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Point.h"
 #include <boost/uuid/uuid.hpp>
 
 enum class GameMode : char8_t;
 enum class ObstacleType : char8_t;
 enum class BonusType : char8_t;
-struct UPoint;
 struct ObjRectangle;
 class BaseObj;
 class EventSystem;
@@ -17,8 +17,8 @@ class ObstacleSpawner final
 	std::string _name{"ObstacleSpawner"};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	int _obstacleSize{0};
 	GameMode _gameMode{};
+	UPoint _windowSize;
 	// std::uniform_int_distribution<> _distSpawnPosY;
 	// std::uniform_int_distribution<> _distSpawnPosX;
 	// std::uniform_int_distribution<> _distSpawnType;
@@ -29,13 +29,13 @@ class ObstacleSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
+	void LoadMap() const;
+	void SpawnObstacle(ObjRectangle rect, ObstacleType type, buuid uuid = {});
 	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:
 	ObstacleSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	                /*, int sideBarWidth = 175*/ int obstacleSize = 36);//TODO: obstacle size should be in obstacle.h
+	                UPoint windowSize/*, int sideBarWidth = 175*/);
 
 	~ObstacleSpawner();
-
-	void SpawnObstacle(ObjRectangle rect, ObstacleType type, buuid uuid = {});
 };

@@ -27,14 +27,14 @@ class MoveLikeTankBeh final : public IMoveBeh
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 
-	[[nodiscard]] bool IsCanMove(float deltaTime) const override;
+	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
-	[[nodiscard]] bool MoveLeft(float deltaTime) override;
-	[[nodiscard]] bool MoveRight(float deltaTime) override;
-	[[nodiscard]] bool MoveUp(float deltaTime) override;
-	[[nodiscard]] bool MoveDown(float deltaTime) override;
+	[[nodiscard]] bool MoveLeft(double deltaTime) override;
+	[[nodiscard]] bool MoveRight(double deltaTime) override;
+	[[nodiscard]] bool MoveUp(double deltaTime) override;
+	[[nodiscard]] bool MoveDown(double deltaTime) override;
 
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
@@ -43,7 +43,7 @@ public:
 
 	~MoveLikeTankBeh() override = default;
 
-	[[nodiscard]] bool Move(float deltaTime) override;
+	[[nodiscard]] bool Move(double deltaTime) override;
 
-	[[nodiscard]] std::vector<Direction> GetFreePathSides(float deltaTime) const override;
+	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
 };

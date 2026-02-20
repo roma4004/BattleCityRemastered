@@ -23,22 +23,20 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
-	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
-	int _yellow{0xeaea00};
-	int _gray{0x808080};
-	int _bulletColor{0xffffff};
+	unsigned int _yellow{0xeaea00};
+	unsigned int _gray{0x808080};
+	unsigned int _bulletColor{0xffffff};
 	int _bulletHealth{1};
 	int _bulletDamage{1};
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
 	// float _bulletSpeed{300.f};
-	float _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	double _bulletDamageRadius{12.0};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
@@ -47,10 +45,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
-		_respawnResourceManager = std::make_shared<RespawnResourceManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnResourceManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -294,8 +289,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	_events->EmitEvent("P1_Move_Down_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid, .name = "Enemy1",
-	                                .fraction = "EnemyTeam"};
+	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid,
+	                                .name = "Enemy1", .fraction = "EnemyTeam"};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
 			.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
@@ -327,8 +322,8 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	_events->EmitEvent("W_Pressed");
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid, .name = "Enemy1",
-	                                .fraction = "EnemyTeam"};
+	BaseObjProperty baseObjProperty{.rect = rect, .color = _gray, .health = _tankHealth, .uuid = _uuid,
+	                                .name = "Enemy1", .fraction = "EnemyTeam"};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
 			.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
@@ -359,7 +354,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	                          BonusType::Tank);
 	_events->EmitEvent("P1_Move_Down_Pressed");
 
-	const int playerSpawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
+	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
 	const auto bonus = _allObjects.back().get();
 
 	EXPECT_EQ(bonus->GetIsAlive(), true);
@@ -368,7 +363,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	EXPECT_EQ(bonus->GetIsAlive(), false);
 
-	EXPECT_LT(playerSpawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_LT(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
 }
 
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
@@ -377,7 +372,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 	                          BonusType::Tank);
 	_events->EmitEvent("W_Pressed");
 
-	const int playerSpawnResource = _respawnResourceManager->GetPlayerOneRespawnResource();
+	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -390,7 +385,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 		EXPECT_TRUE(false);
 	}
 
-	EXPECT_EQ(playerSpawnResource, _respawnResourceManager->GetPlayerOneRespawnResource());
+	EXPECT_EQ(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
 }
 
 TEST_F(BonusTest, StarPickUpTierIncrease)

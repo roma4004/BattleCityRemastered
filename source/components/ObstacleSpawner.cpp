@@ -1,5 +1,7 @@
 #include "components/ObstacleSpawner.h"
+#include "Point.h"
 #include "components/EventSystem.h"
+#include "components/Map.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
@@ -13,14 +15,13 @@
 #include <memory>
 
 class BaseObj;
-class EventSystem;
 
 ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
                                  std::vector<std::shared_ptr<BaseObj>>* allObjects,/*, const int sideBarWidth*/
-                                 const int obstacleSize)
+                                 UPoint windowSize)
 	: _allObjects{allObjects},
 	  _events{events},
-	  _obstacleSize{obstacleSize}
+	  _windowSize{windowSize}
 
 // _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
 // _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
@@ -41,6 +42,12 @@ void ObstacleSpawner::Subscribe()
 		_gameMode = newGameMode;
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
+
+	_events->AddListener("LoadMap", _name, [this]() { LoadMap(); });
+	_events->AddListener("SpawnObstacle", _name, [this](const ObjRectangle rect, const ObstacleType type)
+	{
+		SpawnObstacle(rect, type);
+	});
 }
 
 void ObstacleSpawner::SubscribeAsClient()
@@ -56,6 +63,8 @@ void ObstacleSpawner::SubscribeAsClient()
 void ObstacleSpawner::Unsubscribe() const
 {
 	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("LoadMap", _name);
+	_events->RemoveListener("SpawnObstacle", _name);
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -115,3 +124,12 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 	const auto obstacleType = static_cast<ObstacleType>(RandUtils::GetRandNumber(_distSpawnType));
 	SpawnObstacle(rect, obstacleType);
 }*/
+
+void ObstacleSpawner::LoadMap() const
+{
+	//Map creation
+	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
+	//TODO: update window size via subscription onChange
+	const Map field{_events};
+	field.MapCreation(gridOffset);
+}

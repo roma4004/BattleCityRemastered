@@ -1,23 +1,23 @@
 #pragma once
 
-#include "enums/RespawnResource.h"
+#include "enums/RespawnCount.h"
 #include <boost/uuid/uuid.hpp>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
 
-class RespawnResourceManager final
+class RespawnManager final
 {
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-	std::string _name{"RespawnResourceManager"};
+	std::string _name{"RespawnManager"};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
-	std::vector<int> _respawnResource{20, 3, 3};
+	std::vector<int> _respawnCount{20, 3, 3};
 
 	struct SpawnSlot
 	{
@@ -26,9 +26,12 @@ class RespawnResourceManager final
 	};
 
 	GameMode _gameMode{};
+	int _enemiesSpawnCount{0};
+	int _enemiesDeathCount{0};
+	int _playersSpawnCount{0};
+	int _playersDeathCount{0};
 
-	void OnBonusGrenade(const std::string& author, const std::string& fraction);
-	void OnBonusTank(const std::string& author, const std::string& fraction);
+	void OnBonusTank(const std::string& author);
 	void OnClientRespawn(TankType type);
 
 	void Subscribe();
@@ -43,8 +46,9 @@ class RespawnResourceManager final
 	void ResetRespawnStat();
 	void ResetSpawn();
 
-	static std::string RespawnResourceEnumToString(RespawnResource type);
-	void ChangeRespawnResource(int delta, RespawnResource type);
+	static std::string RespawnCountEnumToString(RespawnCount type);
+	void ChangeRespawnCount(int delta, RespawnCount type);
+	void TriggerLastPlayersLife();
 
 	void OnTankSpawn(const buuid& uuid);
 	void OnTankDied(const buuid& uuid);
@@ -52,14 +56,14 @@ class RespawnResourceManager final
 public:
 	std::vector<SpawnSlot> _slots{};
 
-	explicit RespawnResourceManager(const std::shared_ptr<EventSystem>& events);
+	explicit RespawnManager(const std::shared_ptr<EventSystem>& events);
 
-	~RespawnResourceManager();
+	~RespawnManager();
 
 	// NOTE: for unit tests only:
-	[[nodiscard]] int GetEnemyRespawnResource() const;
-	[[nodiscard]] int GetPlayerOneRespawnResource() const;
-	[[nodiscard]] int GetPlayerTwoRespawnResource() const;
+	[[nodiscard]] int GetEnemyRespawnCount() const;
+	[[nodiscard]] int GetPlayerOneRespawnCount() const;
+	[[nodiscard]] int GetPlayerTwoRespawnCount() const;
 
 	void SetSlotNeedRespawn(int slotIndex);
 };

@@ -9,7 +9,7 @@ public:
 		color &= 0x00FFFFFF;
 
 		// Set the new alpha channel
-		color |= (static_cast<int>(alpha) << 24);
+		color |= (static_cast<unsigned int>(alpha) << 24);
 
 		return color;
 	}

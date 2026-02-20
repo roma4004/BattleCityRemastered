@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Point.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
 #include <condition_variable>
@@ -13,15 +12,11 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
-//TODO: remove vector.hpp include after refactoring to command pattern
 
-enum class Direction : char8_t;
-enum class BonusType : char8_t;
 class EventSystem;
 
 using boost::asio::ip::tcp;
 
-//TODO: unpause when client connected(done sync stage)
 struct ServerData final
 {
 	friend class boost::serialization::access;
@@ -29,17 +24,7 @@ struct ServerData final
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
 
-	std::string who{};
-	std::string eventType{};
 	std::string eventName{};
-	std::string fraction{};
-	std::vector<std::string> names{};
-	FPoint pos{};
-	int respawnResource{-1};
-	int id{-1};
-	int health{-1};
-	BonusType type{};
-	Direction dir{};
 };
 
 class Session final : public std::enable_shared_from_this<Session>
@@ -78,11 +63,6 @@ class Server final
 	bool _isRunning{false};
 
 	void DoAccept();
-
-	void OnStar(const std::string& who) const;
-	void OnCaliber(const std::string& who) const;
-	void OnTank(const std::string& who, const std::string& fraction) const;
-	void OnGrenade(const std::string& who, const std::string& fraction) const;
 
 public:
 	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,

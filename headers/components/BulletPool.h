@@ -7,9 +7,6 @@
 #include <string>
 
 enum class GameMode : char8_t;
-enum class Direction : char8_t;
-struct ObjRectangle;
-struct SDL_Renderer;
 class Bullet;
 class BaseObj;
 class EventSystem;
@@ -45,5 +42,4 @@ public:
 	void Clear();
 
 	[[nodiscard]] static std::string GetCurrentTimeString();
-
 };

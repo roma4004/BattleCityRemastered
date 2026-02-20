@@ -23,14 +23,12 @@ protected:
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
-	std::shared_ptr<RespawnResourceManager> _respawnResourceManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
-	// int _yellow{0xeaea00};
-	int _gray{0x808080};
-	// int _bulletColor{0xffffff};
+	// unsigned int _yellow{0xeaea00};
+	unsigned int _gray{0x808080};
+	// unsigned int _bulletColor{0xffffff};
 	// int _bulletHealth{1};
 	// int _bulletDamage{1};
 	// double _bulletDamageRadius{12.0};
@@ -38,7 +36,7 @@ protected:
 	float _gridSize{};
 	float _tankSpeed{142};
 	// float _bulletSpeed{300.f};
-	float _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -46,10 +44,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_bonusEffectManager = std::make_shared<BonusEffectManager>(_events);
-		_respawnResourceManager = std::make_shared<RespawnResourceManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(
-				_windowSize, &_allObjects, _events, _bulletPool, _bonusEffectManager, _respawnResourceManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns

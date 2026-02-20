@@ -64,5 +64,10 @@ struct TextureOffset
 	ObjRectangle bonusGrenade{.x = 320, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusTank{.x = 336, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusCaliber{.x = 352, .y = 112, .w = 16, .h = 16};
-	ObjRectangle bonusShip{.x = 352, .y = 80, .w = 16, .h = 16};//TODO implement bonus (make logic\code)
+	ObjRectangle bonusShip{.x = 352, .y = 80, .w = 16, .h = 16};//TODO implement new bonus (make logic\code)
+
+	//Text
+	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};
+	ObjRectangle gameOverText{.x = 288, .y = 183, .w = 32, .h = 18};
+	ObjRectangle gameWonText{.x = 370, .y = 180, .w = 15, .h = 15};
 };

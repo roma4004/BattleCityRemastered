@@ -6,7 +6,8 @@
 #include "utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-             const int color, std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
+             const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
+             const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _creationTime{std::chrono::system_clock::now()},
 	  _events{events},
@@ -33,7 +34,6 @@ Bonus::~Bonus()
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
-		//TODO: move to pick up moment in tank move beh
 	}
 }
 
@@ -46,7 +46,7 @@ void Bonus::Subscribe()
 
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -84,7 +84,7 @@ void Bonus::UnsubscribeAsClient() const
 
 void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 
-void Bonus::TickUpdate(float /*deltaTime*/)
+void Bonus::TickUpdate(double /*deltaTime*/)
 {
 	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
 	{

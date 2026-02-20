@@ -12,6 +12,9 @@ BonusStatus::BonusStatus() : Command{CommandType::BONUS_STATUS} {}
 BonusStatus::BonusStatus(std::string name, BonusType bonusType, bool isEnable)
 	: Command{CommandType::BONUS_STATUS}, _name{std::move(name)}, _bonusType{bonusType}, _isEnable{isEnable} {}
 
+BonusStatus::BonusStatus(std::string name, BonusType bonusType)
+	: Command{CommandType::BONUS_STATUS}, _name{std::move(name)}, _bonusType{bonusType} {}
+
 std::string BonusStatus::GetName() const noexcept { return _name; }
 
 BonusType BonusStatus::GetBonusType() const noexcept { return _bonusType; }

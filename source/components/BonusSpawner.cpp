@@ -62,7 +62,7 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _name, [this](const float /*deltaTime*/)
+	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/)
 	{
 		this->Update();
 	});
@@ -75,7 +75,7 @@ void BonusSpawner::SubscribeAsClient()
 			[this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
 				const auto size = static_cast<float>(_bonusSize);
-				const int color = RandUtils::GetRandNumber(_distRandColor);
+				const unsigned int color = RandUtils::GetRandNumber(_distRandColor);
 				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
 				SpawnBonus(rect, color, type, uuid);
 			});
@@ -118,7 +118,7 @@ void BonusSpawner::Update()
 	}
 }
 
-void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const BonusType type, buuid uuid)
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const unsigned int color, const BonusType type, buuid uuid)
 {
 	constexpr milliseconds lifetime{std::chrono::seconds{15}};
 	constexpr milliseconds duration{std::chrono::seconds{15}};
@@ -166,7 +166,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const int color, const Bo
 
 void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
-	const int color = RandUtils::GetRandNumber(_distRandColor);//TODO: remove color from bonus
+	const unsigned int color = RandUtils::GetRandNumber(_distRandColor);//TODO: remove color from bonus
 	const auto bonusType = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType));
 	SpawnBonus(rect, color, bonusType);
 }

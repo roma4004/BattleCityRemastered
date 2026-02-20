@@ -27,8 +27,8 @@ protected:
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
-	float _deltaTimeOneFrame{1.f / 60.f};
-	float _gridSize{0.f};
+	float _gridSize{};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	std::string _name = "Player1";
 	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";

@@ -16,7 +16,7 @@ public:
 	int animationFrame{};
 	int elapsedFrames{};
 	int limitOfFrames{};
-	int color{};
+	unsigned int color{};
 	GameMode gameMode{};
 	AnimationType type{};
 	bool markToDispose{};
@@ -34,7 +34,7 @@ public:
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
 	               const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
-	               std::string objName, int color, bool isInfinite = {}, std::weak_ptr<Tank> tank = {});
+	               std::string objName, unsigned int color, bool isInfinite = {}, std::weak_ptr<Tank> tank = {});
 
 	~AnimatedObject();
 

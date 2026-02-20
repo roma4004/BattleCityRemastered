@@ -34,7 +34,7 @@ class Bullet final : public Pawn, public IDrawable
 	void Disable() const;
 
 	void Draw() const override;
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 	void Reset(BulletResetProperty resetProperty);
 

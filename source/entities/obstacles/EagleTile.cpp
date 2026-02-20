@@ -23,6 +23,8 @@ EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 EagleTile::~EagleTile()
 {
 	Unsubscribe();
+
+	_events->EmitEvent("PlayersBaseFinished");
 }
 
 void EagleTile::Subscribe()

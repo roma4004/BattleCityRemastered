@@ -20,11 +20,11 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir,
 	  _allObjects{allObjects} {}
 
 //NOTE: Never user for bullets
-std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(float /*deltaTime*/) const { return {}; }
+std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(double /*deltaTime*/) const { return {}; }
 
-ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const float deltaTime) const
+ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const double deltaTime) const
 {
-	const float speed = _speed * deltaTime;
+	const float speed = _speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
 	if (_direction == Direction::UP)
 	{
@@ -46,9 +46,9 @@ ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const float deltaTime) const
 	return {.x = x, .y = y, .w = w + speed, .h = h};
 }
 
-FPoint MoveLikeBulletBeh::GetBulletNextPoint(const float deltaTime) const
+FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 {
-	const float speed = _speed * deltaTime;
+	const float speed = _speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
 	if (_direction == Direction::UP)
 	{
@@ -69,7 +69,7 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const float deltaTime) const
 	return {.x = x + speed, .y = y};
 }
 
-bool MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
+bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
 {
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
@@ -91,9 +91,9 @@ bool MoveLikeBulletBeh::IsCanMove(const float deltaTime) const
 	return true;
 }
 
-bool MoveLikeBulletBeh::Move(const float deltaTime)
+bool MoveLikeBulletBeh::Move(const double deltaTime)
 {
-	const float speed = _speed * deltaTime;
+	const float speed = _speed * static_cast<float>(deltaTime);
 	const Direction direction = _direction;
 	if (direction == Direction::UP && _rect.y - speed >= 0.0f)
 	{
@@ -122,11 +122,11 @@ bool MoveLikeBulletBeh::Move(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveLeft(const float deltaTime)
+bool MoveLikeBulletBeh::MoveLeft(const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.x += -_speed * deltaTime;
+		_rect.x += -_speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
@@ -136,11 +136,11 @@ bool MoveLikeBulletBeh::MoveLeft(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveRight(const float deltaTime)
+bool MoveLikeBulletBeh::MoveRight(const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.x += _speed * deltaTime;
+		_rect.x += _speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
@@ -150,11 +150,11 @@ bool MoveLikeBulletBeh::MoveRight(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveUp(const float deltaTime)
+bool MoveLikeBulletBeh::MoveUp(const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.y += -_speed * deltaTime;
+		_rect.y += -_speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
@@ -164,11 +164,11 @@ bool MoveLikeBulletBeh::MoveUp(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveDown(const float deltaTime)
+bool MoveLikeBulletBeh::MoveDown(const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.y += _speed * deltaTime;
+		_rect.y += _speed * static_cast<float>(deltaTime);
 
 		return true;
 	}

@@ -19,8 +19,8 @@ protected:
 	milliseconds _turnDuration{std::chrono::seconds(2)};
 
 	//LOS
-	float _shootDistance{0.f};
-	float _bulletOffset{0.f};
+	float _shootDistance{};
+	float _bulletOffset{};
 
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] bool IsAlly(const std::shared_ptr<BaseObj>& obstacle) const;
@@ -30,9 +30,9 @@ protected:
 	[[nodiscard]] bool ActIfBonusSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
 	[[nodiscard]] bool HandleSideObstacles(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Direction dir);
-	void SetRandomDirection(float deltaTime);
+	void SetRandomDirection(double deltaTime);
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 public:
 	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},

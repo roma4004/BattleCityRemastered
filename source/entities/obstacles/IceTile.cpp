@@ -27,10 +27,10 @@ IceTile::~IceTile()
 
 void IceTile::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener("PreDraw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
 void IceTile::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _nameWithUuid);
+	_events->RemoveListener("PreDraw", _nameWithUuid);
 }

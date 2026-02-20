@@ -22,7 +22,7 @@ class Pawn : public BaseObj, public ITickUpdatable
 	virtual void SubscribeAsClient();
 
 protected:
-	float _speed{0.f};
+	float _speed{};
 	int _tier{1};
 	UPoint _windowSize{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -35,7 +35,7 @@ protected:
 	virtual void Unsubscribe() const;
 
 	//TODO: implement collision detection through quadtree
-	void TickUpdate(float deltaTime) override = 0;
+	void TickUpdate(double deltaTime) override = 0;
 
 public:
 	Pawn(PawnProperty pawnProperty);
@@ -52,6 +52,6 @@ public:
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);
 
-	[[nodiscard]] virtual bool Move(float deltaTime);
+	[[nodiscard]] virtual bool Move(double deltaTime);
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 };

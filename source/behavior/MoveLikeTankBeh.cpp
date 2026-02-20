@@ -22,12 +22,12 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& spee
 	  _touchedObstacles{touchedObstacles},
 	  _allObjects{allObjects} {}
 
-bool MoveLikeTankBeh::IsCanMove(const float deltaTime) const
+bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
 {
 	constexpr int defaultCollisionReserve{5};
 	_touchedObstacles.reserve(defaultCollisionReserve);
 
-	const float speed = _speed * deltaTime;
+	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
 	const auto [x, y, w, h] = _rect;
 	ObjRectangle tankNextPosRect;
 	if (_direction == Direction::UP)
@@ -66,7 +66,7 @@ bool MoveLikeTankBeh::IsCanMove(const float deltaTime) const
 	return _touchedObstacles.empty();
 }
 
-std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const float deltaTime) const
+std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime) const
 {
 	std::vector<Direction> freePath;
 
@@ -74,7 +74,7 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const float deltaTime) 
 	freePath.reserve(defaultCollisionReserve);
 
 	const float speed = _speed;
-	const float moveSpeed = speed * deltaTime;
+	const float moveSpeed = speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
 	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - moveSpeed, .w = w, .h = h + moveSpeed};
 	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + moveSpeed};
@@ -174,7 +174,7 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
 	// return distance;
 }
 
-bool MoveLikeTankBeh::Move(const float deltaTime)
+bool MoveLikeTankBeh::Move(const double deltaTime)
 {
 	const auto currentDirection = _direction;
 	if (currentDirection == Direction::UP)
@@ -200,9 +200,9 @@ bool MoveLikeTankBeh::Move(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveLeft(const float deltaTime)
+bool MoveLikeTankBeh::MoveLeft(const double deltaTime)
 {
-	if (const float speed = _speed * deltaTime; _rect.x - speed >= 0.f)
+	if (const float speed = _speed * static_cast<float>(deltaTime); _rect.x - speed >= 0.f)
 	{
 		if (IsCanMove(deltaTime))
 		{
@@ -232,11 +232,11 @@ bool MoveLikeTankBeh::MoveLeft(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveRight(const float deltaTime)
+bool MoveLikeTankBeh::MoveRight(const double deltaTime)
 {
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
-	if (const float speed = _speed * deltaTime; _rect.Right() + speed < maxX)
+	if (const float speed = _speed * static_cast<float>(deltaTime); _rect.Right() + speed < maxX)
 	{
 		if (IsCanMove(deltaTime))
 		{
@@ -266,9 +266,9 @@ bool MoveLikeTankBeh::MoveRight(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveUp(const float deltaTime)
+bool MoveLikeTankBeh::MoveUp(const double deltaTime)
 {
-	if (const float speed = _speed * deltaTime; _rect.y - speed >= 0.0f)
+	if (const float speed = _speed * static_cast<float>(deltaTime); _rect.y - speed >= 0.0f)
 	{
 		if (IsCanMove(deltaTime))
 		{
@@ -298,9 +298,9 @@ bool MoveLikeTankBeh::MoveUp(const float deltaTime)
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveDown(const float deltaTime)
+bool MoveLikeTankBeh::MoveDown(const double deltaTime)
 {
-	if (const float speed = _speed * deltaTime;
+	if (const float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
 	{
 		if (IsCanMove(deltaTime))

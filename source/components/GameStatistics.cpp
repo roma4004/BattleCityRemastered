@@ -154,17 +154,17 @@ void GameStatistics::OnClientStatisticsChange(const std::string& type, const std
 
 void GameStatistics::OnBulletHit(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_bulletHitByEnemy;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1")
+		if (author.ends_with("1"))
 		{
 			++_bulletHitByPlayerOne;
 		}
-		else if (author == "Player2" || author == "CoopBot2")
+		else if (author.ends_with("2"))
 		{
 			++_bulletHitByPlayerTwo;
 		}
@@ -178,17 +178,17 @@ void GameStatistics::OnBulletHit(const std::string& author, const std::string& f
 
 void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_enemyHitByFriendlyFire;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1")
+		if (author.ends_with("1"))
 		{
 			++_enemyHitByPlayerOne;
 		}
-		else if (author == "Player2" || author == "CoopBot2")
+		else if (author.ends_with("2"))
 		{
 			++_enemyHitByPlayerTwo;
 		}
@@ -202,13 +202,13 @@ void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fr
 
 void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_playerOneHitByEnemyTeam;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1" || author == "Player2" || author == "CoopBot2")
+		if (author.ends_with("1") || author.ends_with("2"))
 		{
 			++_playerOneHitFriendlyFire;
 		}
@@ -222,13 +222,13 @@ void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string
 
 void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_playerTwoHitByEnemyTeam;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1" || author == "Player2" || author == "CoopBot2")
+		if (author.ends_with("1") || author.ends_with("2"))
 		{
 			++_playerTwoHitFriendlyFire;
 		}
@@ -242,15 +242,15 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 
 void GameStatistics::OnTankHit(const std::string& who, const std::string& author, const std::string& fraction)
 {
-	if (who == "Enemy1" || who == "Enemy2" || who == "Enemy3" || who == "Enemy4")
+	if (who.starts_with("Enemy"))
 	{
 		OnEnemyHit(author, fraction);
 	}
-	else if (who == "Player1" || who == "CoopBot1")
+	else if (who.ends_with("1"))
 	{
 		OnPlayerOneHit(author, fraction);
 	}
-	else if (who == "Player2" || who == "CoopBot2")
+	else if (who.ends_with("2"))
 	{
 		OnPlayerTwoHit(author, fraction);
 	}
@@ -258,17 +258,17 @@ void GameStatistics::OnTankHit(const std::string& who, const std::string& author
 
 void GameStatistics::OnEnemyDied(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_enemyDiedByFriendlyFire;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1")
+		if (author.ends_with("1"))
 		{
 			++_enemyDiedByPlayerOne;
 		}
-		else if (author == "Player2" || author == "CoopBot2")
+		else if (author.ends_with("2"))
 		{
 			++_enemyDiedByPlayerTwo;
 		}
@@ -282,13 +282,13 @@ void GameStatistics::OnEnemyDied(const std::string& author, const std::string& f
 
 void GameStatistics::OnPlayerOneDied(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_playerDiedByEnemyTeam;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1" || author == "Player2" || author == "CoopBot2")
+		if (author.ends_with("1") || author.ends_with("2"))
 		{
 			++_playerOneDiedByFriendlyFire;
 		}
@@ -302,13 +302,13 @@ void GameStatistics::OnPlayerOneDied(const std::string& author, const std::strin
 
 void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_playerDiedByEnemyTeam;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1" || author == "Player2" || author == "CoopBot2")
+		if (author.ends_with("1") || author.ends_with("2"))
 		{
 			++_playerTwoDiedByFriendlyFire;
 		}
@@ -322,15 +322,15 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 
 void GameStatistics::OnTankDied(const std::string& who, const std::string& author, const std::string& fraction)
 {
-	if (who == "Enemy1" || who == "Enemy2" || who == "Enemy3" || who == "Enemy4")
+	if (who.starts_with("Enemy"))
 	{
 		OnEnemyDied(author, fraction);
 	}
-	else if (who == "Player1" || who == "CoopBot1")
+	else if (who.ends_with("1"))
 	{
 		OnPlayerOneDied(author, fraction);
 	}
-	else if (who == "Player2" || who == "CoopBot2")
+	else if (who.ends_with("2"))
 	{
 		OnPlayerTwoDied(author, fraction);
 	}
@@ -338,17 +338,17 @@ void GameStatistics::OnTankDied(const std::string& who, const std::string& autho
 
 void GameStatistics::OnBrickWallDied(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_brickWallDiedByEnemyTeam;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1")
+		if (author.ends_with("1"))
 		{
 			++_brickWallDiedByPlayerOne;
 		}
-		else if (author == "Player2" || author == "CoopBot2")
+		else if (author.ends_with("2"))
 		{
 			++_brickWallDiedByPlayerTwo;
 		}
@@ -362,17 +362,17 @@ void GameStatistics::OnBrickWallDied(const std::string& author, const std::strin
 
 void GameStatistics::OnSteelWallDied(const std::string& author, const std::string& fraction)
 {
-	if (fraction == "EnemyTeam")
+	if (fraction.starts_with("Enemy"))
 	{
 		++_steelWallDiedByEnemyTeam;
 	}
-	else if (fraction == "PlayerTeam")
+	else if (fraction.starts_with("Player"))
 	{
-		if (author == "Player1" || author == "CoopBot1")
+		if (author.ends_with("1"))
 		{
 			++_steelWallDiedByPlayerOne;
 		}
-		else if (author == "Player2" || author == "CoopBot2")
+		else if (author.ends_with("2"))
 		{
 			++_steelWallDiedByPlayerTwo;
 		}
