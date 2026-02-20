@@ -149,7 +149,6 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			};
 
 			SpawnTank(rect, gray, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
-			_events->EmitEvent("EnemySpawned");
 			return;
 		}
 	}
@@ -188,7 +187,6 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		};
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
-		_events->EmitEvent("PlayerSpawned");
 	}
 }
 
@@ -223,7 +221,6 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		};
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
-		_events->EmitEvent("PlayerSpawned");
 	}
 }
 

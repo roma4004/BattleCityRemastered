@@ -65,10 +65,6 @@ void RespawnManager::Subscribe()
 	{
 		this->TriggerLastPlayersLife();
 	});
-	_events->AddListener("PlayerDestroyed", _name, [this](){ this->_playersDeathCount++; });
-	_events->AddListener("PlayerSpawned", _name, [this](){ this->_playersSpawnCount++; });
-	_events->AddListener("EnemyDestroyed", _name, [this]() { this->_enemiesDeathCount++; });
-	_events->AddListener("EnemySpawned", _name, [this]() { this->_enemiesSpawnCount++; });
 }
 
 void RespawnManager::SubscribeAsClient()
@@ -99,10 +95,6 @@ void RespawnManager::Unsubscribe() const
 	_events->RemoveListener("BonusTank", _name);
 	_events->RemoveListener("SetSlotNeedRespawn", _name);
 	_events->RemoveListener("PlayersBaseFinished", _name);
-	_events->RemoveListener("PlayerDestroyed", _name);
-	_events->RemoveListener("PlayerSpawned", _name);
-	_events->RemoveListener("EnemyDestroyed", _name);
-	_events->RemoveListener("EnemySpawned", _name);
 }
 
 void RespawnManager::UnsubscribeAsClient() const
@@ -258,12 +250,15 @@ void RespawnManager::OnTankSpawn(const buuid& uuid)
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
 					ChangeRespawnCount(-1, RespawnCount::ENEMY_ALL);
+					++_enemiesSpawnCount;
 					break;
 				case TankType::PLAYER1:
 					ChangeRespawnCount(-1, RespawnCount::PLAYER_ONE);
+					++_playersSpawnCount;
 					break;
 				case TankType::PLAYER2:
 					ChangeRespawnCount(-1, RespawnCount::PLAYER_TWO);
+					++_playersSpawnCount;
 					break;
 				default:
 					break;
@@ -288,7 +283,7 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::ENEMY_ALL)] > 0;
-					_events->EmitEvent("EnemyDestroyed");
+					++_enemiesDeathCount;
 					if (_slots[i].isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
 					{
 						_events->EmitEvent("PlayersTeamIsWon");
@@ -297,7 +292,7 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 					break;
 				case TankType::PLAYER1:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_ONE)] > 0;
-					_events->EmitEvent("PlayerDestroyed");
+					++_playersDeathCount;
 					if (_slots[i].isAvailable == false && _playersSpawnCount == _playersDeathCount)
 					{
  						_events->EmitEvent("EnemiesTeamIsWon");
@@ -306,7 +301,7 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 					break;
 				case TankType::PLAYER2:
 					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_TWO)] > 0;
-					_events->EmitEvent("PlayerDestroyed");
+					++_playersDeathCount;
 					if (_slots[i].isAvailable == false && _playersSpawnCount == _playersDeathCount)
 					{
 						_events->EmitEvent("EnemiesTeamIsWon");
