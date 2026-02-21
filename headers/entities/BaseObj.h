@@ -1,7 +1,6 @@
 #pragma once
 
 #include "entities/ObjRectangle.h"
-#include "interfaces/IDrawable.h"
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
@@ -10,16 +9,15 @@
 struct FPoint;
 struct BaseObjProperty;
 
-class BaseObj : public IObstacle, public IDrawable, public ISendableDamageStatistics, public IHaveFraction
+class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public IObstacle
 {
 	using buuid = boost::uuids::uuid;
 
-	int _color{0};
 	int _health{0};
-	bool _isAlive{true};
 
 protected:
 	buuid _uuid{};
+	unsigned int _color{0};
 	std::string _name{};
 	std::string _nameWithUuid{};
 	std::string _fraction{};
@@ -28,9 +26,15 @@ protected:
 public:
 	explicit BaseObj(BaseObjProperty baseObjProperty);
 
-	BaseObj(ObjRectangle rect, int color, int health, buuid uuid, std::string name, std::string fraction);
+	BaseObj(const BaseObj& other);
+	BaseObj(BaseObj&& other) noexcept;
+
+	BaseObj(ObjRectangle rect, unsigned int color, int health, buuid uuid, std::string name, std::string fraction);
 
 	~BaseObj() override;
+
+	BaseObj& operator=(const BaseObj& other);
+	BaseObj& operator=(BaseObj&& other) noexcept;
 
 	[[nodiscard]] FPoint GetPos() const;
 	void SetPos(const FPoint& pos);
@@ -52,14 +56,14 @@ public:
 	void MoveX(float i);
 	void MoveY(float i);
 
-	[[nodiscard]] int GetColor() const;
-	void SetColor(int color);
+	[[nodiscard]] unsigned int GetColor() const;
+	void SetColor(unsigned int color);
 
 	[[nodiscard]] virtual int GetHealth() const;
 	virtual void SetHealth(int health);
 
-	[[nodiscard]] virtual bool GetIsAlive() const;
-	virtual void SetIsAlive(bool isAlive);
+	[[nodiscard]] bool GetIsAlive() const override;
+	void SetIsAlive(bool isAlive) override;
 
 	virtual void TakeDamage(int damage);
 
@@ -75,7 +79,7 @@ public:
 	[[nodiscard]] virtual ObjRectangle GetRect() const;
 	virtual void SetRect(ObjRectangle rect);
 
-	[[nodiscard]] virtual const std::string& GetName() const;
+	[[nodiscard]] virtual std::string_view GetName() const;
 	[[nodiscard]] virtual buuid GetUuid() const;
 	virtual void SetId(buuid uuid);
 	[[nodiscard]] std::string GetFraction() const override;

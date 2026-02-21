@@ -11,13 +11,15 @@ class Player final : public Tank
 
 	std::unique_ptr<IInputProvider> _inputProvider{};
 
-	void Move(Direction dir, float deltaTime);
-
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 public:
-	Player(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool,
-	       std::unique_ptr<IInputProvider> inputProvider, BonusEffectProperty effects);
+	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
+	       std::unique_ptr<IInputProvider> inputProvider, BonusEffectProperty effects = {},
+	       bool enableByDefault = false);
 
 	~Player() override;
+
+	void Enable() override;
+	void Disable() const override;
 };

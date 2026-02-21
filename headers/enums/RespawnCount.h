@@ -1,6 +1,6 @@
 #pragma once
 
-enum RespawnResource : char8_t
+enum class RespawnCount : char8_t
 {
 	ENEMY_ALL,
 	PLAYER_ONE,

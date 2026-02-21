@@ -7,7 +7,7 @@ Logger::Logger()
 	_logFile.open("game_log.txt", std::ios::out | std::ios::app);
 	if (!_logFile.is_open())
 	{
-		std::cerr << "Failed to open log file!" << std::endl;
+		std::cerr << "Failed to open log file!" << '\n';
 	}
 
 	Log("Logger initialized");
@@ -32,7 +32,7 @@ void Logger::Log(const std::string& message)
 {
 	if (_logFile.is_open())
 	{
-		_logFile << GetCurrentTimeString() << " - " << message << std::endl;
+		_logFile << GetCurrentTimeString() << " - " << message << '\n';
 		_logFile.flush();
 	}
 }

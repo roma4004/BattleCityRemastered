@@ -3,14 +3,13 @@
 #include <memory>
 #include <string>
 
-enum GameMode : char8_t;
+enum class GameMode : char8_t;
 class EventSystem;
 
 class GameStatistics final
 {
 	//TODO: fix desync in statistics
 	std::string _name{};
-	GameMode _gameMode{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
@@ -44,6 +43,8 @@ class GameStatistics final
 	int _steelWallDiedByPlayerOne{0};
 	int _steelWallDiedByPlayerTwo{0};
 
+	GameMode _gameMode{};
+
 	void Subscribe();
 	void SubscribeHost();
 	void SubscribeAsClient();
@@ -67,7 +68,7 @@ class GameStatistics final
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
 
 public:
-	explicit GameStatistics(std::shared_ptr<EventSystem> events);
+	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
 
 	~GameStatistics();
 

@@ -1,29 +1,17 @@
 #include "behavior/MoveLikeTankBeh.h"
-#include "behavior/ShootingBeh.h"
 #include "components/LineOfSight.h"
-#include "entities/BonusEffectProperty.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "interfaces/IPickupableBonus.h"
+#include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
-#include <algorithm>
-#include <chrono>
 
-Bot::Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects)
-	: Tank{pawnProperty,
-	       std::make_unique<MoveLikeTankBeh>(this, pawnProperty.allObjects),
-	       std::make_shared<ShootingBeh>(this, pawnProperty.allObjects, pawnProperty.events, std::move(bulletPool)),
-	       effects
-	  },
-	  _distDirection(0, 3),
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
+         const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault},
 	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
-	  _lastTimeTurn{std::chrono::system_clock::now()}
-{
-	std::random_device rd;
-	_gen = std::mt19937(static_cast<unsigned int>(
-		std::chrono::high_resolution_clock::now().time_since_epoch().count() + rd()));
-}
+	  _lastTimeTurn{std::chrono::system_clock::now()} {}
 
 Bot::~Bot() = default;
 
@@ -46,7 +34,7 @@ bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 
 bool Bot::IsFreePathToBonus(const std::vector<std::shared_ptr<BaseObj>>& sideObstacles)
 {
-	if (const auto nearestObstacleBonus = sideObstacles.front();
+	if (const auto& nearestObstacleBonus = sideObstacles.front();
 		IsBonus(nearestObstacleBonus))
 	{
 		return true;
@@ -76,17 +64,17 @@ bool Bot::ActIfBonusSeen(const Direction dir, const std::shared_ptr<BaseObj>& ne
 		const std::vector<std::shared_ptr<BaseObj>>& dirSideObstacles =
 				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
-					if (dir == UP)
+					if (dir == Direction::UP)
 					{
 						return bonusLineOfSight.GetUpSideObstacles();
 					}
 
-					if (dir == LEFT)
+					if (dir == Direction::LEFT)
 					{
 						return bonusLineOfSight.GetLeftSideObstacles();
 					}
 
-					if (dir == DOWN)
+					if (dir == Direction::DOWN)
 					{
 						return bonusLineOfSight.GetDownSideObstacles();
 					}
@@ -129,25 +117,25 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	LineOfSight lineOfSight(_rect, _windowSize, _bulletSize, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
-	if (HandleSideObstacles(UP, upSideObstacles))
+	if (HandleSideObstacles(Direction::UP, upSideObstacles))
 	{
 		return {};
 	}
 
 	const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
-	if (HandleSideObstacles(LEFT, leftSideObstacles))
+	if (HandleSideObstacles(Direction::LEFT, leftSideObstacles))
 	{
 		return {};
 	}
 
 	const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
-	if (HandleSideObstacles(DOWN, downSideObstacles))
+	if (HandleSideObstacles(Direction::DOWN, downSideObstacles))
 	{
 		return {};
 	}
 
 	const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
-	if (HandleSideObstacles(RIGHT, rightSideObstacles))
+	if (HandleSideObstacles(Direction::RIGHT, rightSideObstacles))
 	{
 		return {};
 	}
@@ -160,40 +148,40 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 
 	std::shared_ptr<BaseObj> nearestSeenObstacle{nullptr};
 	// fire on an obstacle if player not found
-	if (dir == UP && !upSideObstacles.empty())
+	if (dir == Direction::UP && !upSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = upSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.y - (nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight());
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
-	if (dir == LEFT && !leftSideObstacles.empty())
+	if (dir == Direction::LEFT && !leftSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = leftSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.x - (nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth());
 			_bulletOffset = _bulletSize.x;
 		}
 	}
 
-	if (dir == DOWN && !downSideObstacles.empty())
+	if (dir == Direction::DOWN && !downSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = downSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
 			_bulletOffset = _bulletSize.y;
 		}
 	}
 
-	if (dir == RIGHT && !rightSideObstacles.empty())
+	if (dir == Direction::RIGHT && !rightSideObstacles.empty())
 	{
 		if (nearestSeenObstacle = rightSideObstacles[0];
-			nearestSeenObstacle && nearestSeenObstacle.get() != nullptr)
+			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
 			_bulletOffset = _bulletSize.x;
@@ -203,33 +191,31 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	return nearestSeenObstacle;
 }
 
-void Bot::TickUpdate(const float deltaTime)
+void Bot::SetRandomDirection(const double deltaTime)
 {
-	// change dir when random time span left
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
+	if (const std::vector<Direction> freePath = _moveBeh->GetFreePathSides(deltaTime);
+		!freePath.empty())
 	{
-		_turnDuration = milliseconds(_distTurnRate(_gen));
-		const int randDir = _distDirection(_gen);
-		SetDirection(static_cast<Direction>(randDir));
+		const int max = static_cast<int>(freePath.size() - 1);
+		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
+		SetDirection(freePath[pathIndex]);
+	}
+}
+
+void Bot::TickUpdate(const double deltaTime)
+{
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot auto change dir
+	{
+		SetRandomDirection(deltaTime);
+
+		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
 		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
-	// move
-	const auto pos = GetPos();
-	if (_moveBeh->Move(deltaTime))
+	if (const bool isMove = Pawn::Move(deltaTime);
+		!isMove)
 	{
-		++animationFrameId;
-		if (animationFrameId % 12 && ++animationId > animationIdLimit)
-		{
-			animationId = 0;
-			animationFrameId = 0;
-		}
-	}
-
-	// change dir it can't move
-	if (pos == GetPos())
-	{
-		const int randDir = _distDirection(_gen);
-		SetDirection(static_cast<Direction>(randDir));
+		SetRandomDirection(deltaTime);// NOTE: change dir it can't move
+		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 }

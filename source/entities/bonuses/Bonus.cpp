@@ -1,19 +1,19 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
-Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-             const milliseconds lifeTime, const int color, std::string name, const buuid uuid, const GameMode gameMode,
+Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
+             const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
              const BonusType bonusType)
 	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
 	  _creationTime{std::chrono::system_clock::now()},
-	  _gameMode{gameMode},
-	  _bonusType{bonusType},
-	  _effectDuration{duration},
+	  _events{events},
 	  _lifetime{lifeTime},
-	  _events{std::move(events)}
+	  _gameMode{gameMode},
+	  _bonusType{bonusType}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -21,10 +21,9 @@ Bonus::Bonus(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, cons
 
 	Subscribe();
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
-				"ServerSend_BonusSpawn", FPoint{rect.x, rect.y}, _bonusType, uuid);
+		_events->EmitEvent("ServerSend_BonusSpawn", FPoint{.x = rect.x, .y = rect.y}, _bonusType, uuid);
 	}
 }
 
@@ -32,23 +31,22 @@ Bonus::~Bonus()
 {
 	Unsubscribe();
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const buuid&>("ServerSend_BonusDeSpawn", _uuid);
-		//TODO: move to pick up moment in tank move beh
+		_events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
 	}
 }
 
 void Bonus::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
-	_gameMode == PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -56,7 +54,7 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener<const buuid&>("ClientReceived_BonusDeSpawn", _name, [this](const buuid& uuid)
+	_events->AddListener("ClientReceived_BonusDeSpawn", _name, [this](const buuid& uuid)
 	{
 		if (uuid != this->_uuid)
 		{
@@ -69,24 +67,24 @@ void Bonus::SubscribeAsClient()
 
 void Bonus::Unsubscribe() const
 {
-	_gameMode == PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 
 	_events->RemoveListener("Draw", _nameWithUuid);
 }
 
 void Bonus::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
+	_events->RemoveListener("TickUpdate", _nameWithUuid);
 }
 
 void Bonus::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const buuid&>("ClientReceived_BonusDeSpawn", _name);
+	_events->RemoveListener("ClientReceived_BonusDeSpawn", _name);
 }
 
-void Bonus::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
+void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 
-void Bonus::TickUpdate(float /*deltaTime*/)
+void Bonus::TickUpdate(double /*deltaTime*/)
 {
 	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
 	{
@@ -96,10 +94,10 @@ void Bonus::TickUpdate(float /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>(_name, author, fraction);
+	_events->EmitEvent(_name, author, fraction);
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>(_name, author, fraction);
+	_events->EmitEvent(_name, author, fraction);
 }

@@ -1,31 +1,48 @@
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/EventSystem.h"
 
-InputProviderForPlayerOne::InputProviderForPlayerOne(std::shared_ptr<EventSystem> events)
-	: _events{std::move(events)}
-{
-	_events->AddListener("W_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
-	_events->AddListener("W_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
-	_events->AddListener("A_Pressed", _name, [&btn = _playerKeys]() { btn.left = true; });
-	_events->AddListener("A_Released", _name, [&btn = _playerKeys]() { btn.left = false; });
-	_events->AddListener("S_Pressed", _name, [&btn = _playerKeys]() { btn.down = true; });
-	_events->AddListener("S_Released", _name, [&btn = _playerKeys]() { btn.down = false; });
-	_events->AddListener("D_Pressed", _name, [&btn = _playerKeys]() { btn.right = true; });
-	_events->AddListener("D_Released", _name, [&btn = _playerKeys]() { btn.right = false; });
-	_events->AddListener("Space_Pressed", _name, [&btn = _playerKeys]() { btn.shot = true; });
-	_events->AddListener("Space_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
-}
+InputProviderForPlayerOne::InputProviderForPlayerOne(const std::shared_ptr<EventSystem>& events)
+	: _events{events} {}
 
 InputProviderForPlayerOne::~InputProviderForPlayerOne()
 {
-	_events->RemoveListener("W_Pressed", _name);
-	_events->RemoveListener("W_Released", _name);
-	_events->RemoveListener("A_Pressed", _name);
-	_events->RemoveListener("A_Released", _name);
-	_events->RemoveListener("S_Pressed", _name);
-	_events->RemoveListener("S_Released", _name);
-	_events->RemoveListener("D_Pressed", _name);
-	_events->RemoveListener("D_Released", _name);
-	_events->RemoveListener("Space_Pressed", _name);
-	_events->RemoveListener("Space_Released", _name);
+	Unsubscribe();
+}
+
+void InputProviderForPlayerOne::Subscribe()
+{
+	_events->AddListener("P1_Move_Up_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
+	_events->AddListener("P1_Move_Up_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
+	_events->AddListener("P1_Move_Left_Pressed", _name, [&btn = _playerKeys]() { btn.left = true; });
+	_events->AddListener("P1_Move_Left_Released", _name, [&btn = _playerKeys]() { btn.left = false; });
+	_events->AddListener("P1_Move_Down_Pressed", _name, [&btn = _playerKeys]() { btn.down = true; });
+	_events->AddListener("P1_Move_Down_Released", _name, [&btn = _playerKeys]() { btn.down = false; });
+	_events->AddListener("P1_Move_Right_Pressed", _name, [&btn = _playerKeys]() { btn.right = true; });
+	_events->AddListener("P1_Move_Right_Released", _name, [&btn = _playerKeys]() { btn.right = false; });
+	_events->AddListener("P1_Fire_Pressed", _name, [&btn = _playerKeys]() { btn.shot = true; });
+	_events->AddListener("P1_Fire_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
+}
+
+void InputProviderForPlayerOne::Unsubscribe() const
+{
+	_events->RemoveListener("P1_Move_Up_Pressed", _name);
+	_events->RemoveListener("P1_Move_Up_Released", _name);
+	_events->RemoveListener("P1_Move_Left_Pressed", _name);
+	_events->RemoveListener("P1_Move_Left_Released", _name);
+	_events->RemoveListener("P1_Move_Down_Pressed", _name);
+	_events->RemoveListener("P1_Move_Down_Released", _name);
+	_events->RemoveListener("P1_Move_Right_Pressed", _name);
+	_events->RemoveListener("P1_Move_Right_Released", _name);
+	_events->RemoveListener("P1_Fire_Pressed", _name);
+	_events->RemoveListener("P1_Fire_Released", _name);
+}
+
+void InputProviderForPlayerOne::Enable()
+{
+	Subscribe();
+}
+
+void InputProviderForPlayerOne::Disable() const
+{
+	Unsubscribe();
 }

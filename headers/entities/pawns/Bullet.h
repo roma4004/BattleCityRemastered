@@ -1,21 +1,28 @@
 ﻿#pragma once
 
 #include "Pawn.h"
+#include "interfaces/IDrawable.h"
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
 struct BulletResetProperty;
 struct UPoint;
 class EventSystem;
+class BulletPool;
+class ShootingBeh;
 
-class Bullet final : public Pawn
+class Bullet final : public Pawn, public IDrawable
 {
+	friend BulletPool;
+	friend ShootingBeh;
+
 	using buuid = boost::uuids::uuid;
 
 	std::string _author{};
-	double _bulletDamageRadius{18.f};
-	int _damage{0};
+	double _bulletDamageRadius{14.f};
 	std::string _uuidStr{};
+	int _damage{0};
+	std::vector<std::shared_ptr<BaseObj>> _bulletTargets{};
 
 	void Subscribe() override;
 	void SubscribeAsClient() override;
@@ -23,18 +30,19 @@ class Bullet final : public Pawn
 	void Unsubscribe() const override;
 	void UnsubscribeAsClient() const override;
 
-	void TickUpdate(float deltaTime) override;
+	void Enable();
+	void Disable() const;
 
-public:
-	explicit Bullet(PawnProperty pawnProperty);
-	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author);
-
-	~Bullet() override;
+	void Draw() const override;
+	void TickUpdate(double deltaTime) override;
 
 	void Reset(BulletResetProperty resetProperty);
 
-	void Disable() const;
-	void Enable();
+public:
+	explicit Bullet(PawnProperty pawnProperty);
+	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, bool enableByDefault = false);
+
+	~Bullet() override;
 
 	[[nodiscard]] int GetDamage() const;
 
@@ -50,4 +58,6 @@ public:
 	void TakeDamage(int damage) override;
 
 	[[nodiscard]] int GetTier() const;
+
+	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
 };

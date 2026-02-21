@@ -2,18 +2,18 @@
 
 #include "Point.h"
 #include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
+#include <SDL_mixer.h>
 #include <memory>
 
 struct UPoint;
-struct Mix_Chunk;
 
 class IConfig;
 
 struct SDLEnvironment final
 {
-	std::shared_ptr<SDL_Window> sdlWindow{nullptr};
+	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
+	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelStartedSound{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
-	std::shared_ptr<Mix_Chunk> levelStartedSound{nullptr};
 
 	UPoint windowSize{};
 
@@ -24,10 +24,13 @@ struct SDLEnvironment final
 
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
-	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName, const char* introMusicName,
-	               const char* textureCollection);
+	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
+	               const char* introMusicName, const char* textureCollection);
 
 	~SDLEnvironment();
 
 	[[nodiscard]] std::unique_ptr<IConfig> Init();
+
+	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow(UPoint& windowSizeHalf) const;
+	std::shared_ptr<SDL_Renderer> InitRender(UPoint& windowSizeHalf) const;
 };

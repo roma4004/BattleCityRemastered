@@ -18,18 +18,18 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
+	int _bulletDamage{1};
+	int _bulletHealth{1};
+	unsigned int _bulletColor{0xffffff};
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
-	float _deltaTimeOneFrame{1.f / 60.f};
-	GameMode _gameMode{OnePlayer};
-	int _bulletDamage{1};
-	int _bulletHealth{1};
-	int _bulletColor{0xffffff};
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	double _bulletDamageRadius{12.0};
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{
@@ -40,16 +40,20 @@ protected:
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
-		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
+		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				.rect = rect, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 3, DOWN, _bulletSpeed};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 3,
+				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
+		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
+						enableByDefault));
 	}
 
 	void TearDown() override
@@ -70,7 +74,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 			steelWall->SetHealth(1);
 			EXPECT_EQ(steelWall->GetHealth(), 1);
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(steelWall->GetHealth(), 0);
 		}

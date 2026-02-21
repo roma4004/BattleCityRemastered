@@ -8,27 +8,23 @@
 class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{};
+
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<SDL_Texture> _screen{nullptr};
-
-	//fps
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
-
 	std::shared_ptr<SDL_Texture> _logoTexture{nullptr};
-
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 
-	//user settings //TODO: should be load from config file or default value
-	bool _isVsyncOn{false};
+	//user settings
+	bool _isVsyncOn{};//TODO: should be load from config file or default value
 
 public:
 	ConfigSuccess() = delete;
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<SDL_Texture> screen,
-	              std::shared_ptr<TTF_Font> fpsFont, std::shared_ptr<SDL_Texture> logoTexture,
-	              std::shared_ptr<SDL_Texture> atlasTexture, bool isVsyncOn);
+	ConfigSuccess(UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
+	              const std::shared_ptr<TTF_Font>& fpsFont, const std::shared_ptr<SDL_Texture>& logoTexture,
+	              const std::shared_ptr<SDL_Texture>& atlasTexture, bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

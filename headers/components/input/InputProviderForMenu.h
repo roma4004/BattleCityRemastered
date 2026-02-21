@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-enum GameMode : char8_t;
+enum class GameMode : char8_t;
 class EventSystem;
 
 struct MenuKeys final
@@ -23,7 +23,7 @@ class InputProviderForMenu final
 	MenuKeys _keys{};
 
 public:
-	explicit InputProviderForMenu(std::shared_ptr<EventSystem> events);
+	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);
 
 	~InputProviderForMenu();
 
@@ -33,11 +33,12 @@ public:
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 	void TogglePause();
+	void SwitchPause(bool switchTo);
 
 	void ToggleMenuInputSubscription();
 
 	void ToggleUp();
 	void ToggleDown();
 
-	[[nodiscard]] MenuKeys GetKeysStats() const { return _keys; }
+	[[nodiscard]] MenuKeys GetKeysStats() const noexcept { return _keys; }
 };

@@ -2,62 +2,44 @@
 
 #include "Point.h"
 #include "components/input/InputProviderForMenu.h"
-#include <SDL.h>
-#include <SDL_ttf.h>
 
+class EventSystem;
 class GameStatistics;
 class InputProviderForMenu;
-class EventSystem;
 
 class Menu final
 {
 	Point _pos;
-	int _height;
-	int _width;
+	int _windowHeight;
 	int _padding;
 	unsigned int _yOffsetStart{};
-	GameMode _selectedGameMode{};
 
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<TTF_Font> _menuFont{nullptr};
-	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
-	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	std::unique_ptr<GameStatistics> _statistics{nullptr};//TODO: extract from menu when we have dedicated screen
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
-	std::shared_ptr<int[]> _menuBackground{nullptr};
-	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
-	std::shared_ptr<SDL_Texture> _backgroundTexture{nullptr};
-
-	//TODO: extract to separate sidebar class
-	int _enemyRespawnResource{20};
-	int _playerOneRespawnResource{3};
-	int _playerTwoRespawnResource{3};
 
 	std::string _name{};
+
+	//TODO: extract to separate sidebar class
+	int _enemyRespawnCount{20};
+	int _playerOneRepawnCount{3};
+	int _playerTwoRespawnCount{3};
+	GameMode _selectedGameMode{};
 
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void PregenerateMenuBackground();
-
-	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
-	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
 	void RenderStatistics(Point pos) const;
-	void RenderTextWithAlignment(Point pos, SDL_Color color, const std::string& text, int player1, int player2,
+	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, int player1, int player2,
 	                             int enemy = -1) const;
-	void RenderTextWithAlignment(Point pos, SDL_Color color, const std::string& text, const std::string& text2,
+	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
 	                             const std::string& text3) const;
-
-	void DrawBackground() const;
-	void DrawMenuLogo() const;
 	void DrawText() const;
 
-	void OnRespawnResourceChanged(const std::string& objectName, int respawnResource);
+	void OnRespawnCountChanged(const std::string& objectName, int respawnCount);
 
 public:
-	Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-	     std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, UPoint windowSize,
-	     std::shared_ptr<EventSystem> events);
+	Menu(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 
 	~Menu();
 

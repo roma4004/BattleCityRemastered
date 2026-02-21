@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entities/bonuses/BonusStatus.h"
+#include "utils/Timer.h"
 
 class EventSystem;
 
@@ -8,16 +8,16 @@ class BonusEffectManager
 {
 	using milliseconds = std::chrono::milliseconds;
 
-	BonusStatus _timerEnemy{};
-	BonusStatus _timerPlayer{};
-	BonusStatus _shovelPlayer{};
-	std::vector<BonusStatus> _helmetSlots{};
+	Timer _timerEnemy{};
+	Timer _timerPlayer{};
+	Timer _shovelPlayer{};
+	std::vector<Timer> _helmetSlots{};
 	std::string _name{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	explicit BonusEffectManager(std::shared_ptr<EventSystem> events);
+	explicit BonusEffectManager(const std::shared_ptr<EventSystem>& events);
 
 	~BonusEffectManager();
 
@@ -28,11 +28,12 @@ public:
 
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool value) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
+	[[nodiscard]] static size_t TankNameToId(const std::string& name);
 
-	void TickUpdate(float);
+	void TickUpdate(double deltaTime);
 
-	[[nodiscard]] BonusStatus GetTimerEnemy() const;
-	[[nodiscard]] BonusStatus GetTimerPlayer() const;
+	[[nodiscard]] Timer GetTimerEnemy() const;
+	[[nodiscard]] Timer GetTimerPlayer() const;
 
-	[[nodiscard]] BonusStatus GetHelmet(int id) const;
+	[[nodiscard]] Timer GetHelmet(size_t id) const;
 };

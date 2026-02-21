@@ -1,23 +1,15 @@
 #include "components/BulletPool.h"
-#include "Point.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/GameMode.h"
-#include <chrono>
-#include <iomanip>
-#include <iostream>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
-BulletPool::BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
                        const UPoint windowSize, const GameMode gameMode)
 	: _name{"BulletPool"},
-	  _gameMode{gameMode},
 	  _windowSize{windowSize},
-	  _events{std::move(events)},
-	  _allObjects{allObjects}
+	  _events{events},
+	  _allObjects{allObjects},
+	  _gameMode{gameMode}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)
@@ -56,7 +48,7 @@ void BulletPool::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Clear(); });
 
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
 	});
@@ -66,18 +58,25 @@ void BulletPool::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
 
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 }
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
-	PawnProperty pawnProperty{{}, _allObjects, _events, _windowSize, _gameMode};
-	return std::shared_ptr<Bullet>(new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); });
+	PawnProperty pawnProperty{
+			.baseObjProperty = {},
+			.allObjects = _allObjects,
+			.events = _events,
+			.windowSize = _windowSize,
+			.gameMode = _gameMode
+	};
+
+	return {new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); }};
 }
 
 std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 {
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 
 	if (_bullets.empty())
 	{
@@ -88,7 +87,7 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 	_bullets.pop();
 
 	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get());
-		bulletAsBase.get() != nullptr && bullet != nullptr)
+		bulletAsBase != nullptr && bullet != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
 		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
@@ -112,7 +111,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 		return;
 	}
 
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
 		// std::cout << "[" << GetCurrentTimeString() << "] "
@@ -128,14 +127,13 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		using buuid = boost::uuids::uuid;
-		_events->EmitEvent<const buuid&>("ServerSend_Dispose", bulletCast->GetUuid());
+		_events->EmitEvent("ServerSend_Dispose", bulletCast->GetUuid());
 	}
 }
 
 void BulletPool::Clear()
 {
-	std::lock_guard<std::mutex> lock(_bulletsMutex);
+	std::scoped_lock lock(_bulletsMutex);
 	_isClearing = true;
 
 	// std::cout << "[" << GetCurrentTimeString() << "] "

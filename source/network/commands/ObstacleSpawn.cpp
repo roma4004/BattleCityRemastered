@@ -8,16 +8,16 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(ObstacleSpawn);
 
-ObstacleSpawn::ObstacleSpawn(): Command(CommandType::OBSTACLE_SPAWN) {}
+ObstacleSpawn::ObstacleSpawn() : Command{CommandType::OBSTACLE_SPAWN} {}
 
-ObstacleSpawn::ObstacleSpawn(const ObjRectangle& rect, const ObstacleType obstacleType, const buuid uuid)
-	: Command(CommandType::OBSTACLE_SPAWN), _rect(rect), _obstacleType(obstacleType), _uuid(uuid) {}
+ObstacleSpawn::ObstacleSpawn(const ObjRectangle rect, const ObstacleType obstacleType, const buuid uuid)
+	: Command{CommandType::OBSTACLE_SPAWN}, _rect{rect}, _obstacleType{obstacleType}, _uuid{uuid} {}
 
-ObjRectangle ObstacleSpawn::GetRect() const { return _rect; }
+ObjRectangle ObstacleSpawn::GetRect() const noexcept { return _rect; }
 
-ObstacleType ObstacleSpawn::GetObstacleType() const { return _obstacleType; }
+ObstacleType ObstacleSpawn::GetObstacleType() const noexcept { return _obstacleType; }
 
 using buuid = boost::uuids::uuid;
-buuid ObstacleSpawn::GetUuid() const { return _uuid; }
+buuid ObstacleSpawn::GetUuid() const noexcept { return _uuid; }
 
-const char* ObstacleSpawn::GetClassNameW() const { return "ObstacleSpawn"; }
+const char* ObstacleSpawn::GetClassNameW() const noexcept { return "ObstacleSpawn"; }

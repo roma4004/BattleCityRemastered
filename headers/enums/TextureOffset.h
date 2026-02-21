@@ -1,5 +1,6 @@
 #pragma once
 
+//TODO: move away non enum structure from enum folders
 #include "entities/ObjRectangle.h"
 
 // struct ObjRectangle;
@@ -34,34 +35,39 @@ struct TextureOffset
 	// tanks are 13x13 so we need to make 1px offset cuz they're not aligned properly and start flickering while we rotate them  
 
 	//Tanks
-	ObjRectangle enemy{129, 1, 13, 13};
-	ObjRectangle playerOne{1, 1, 13, 13};
-	ObjRectangle playerTwo{1, 129, 13, 13};
+	ObjRectangle enemy{.x = 129, .y = 1, .w = 13, .h = 13};
+	ObjRectangle playerOne{.x = 1, .y = 1, .w = 13, .h = 13};
+	ObjRectangle playerTwo{.x = 1, .y = 129, .w = 13, .h = 13};
 
 	//Map
-	ObjRectangle bullet{320, 80, 16, 16};
-	ObjRectangle eagle{304, 32, 16, 16};
-	ObjRectangle brick{256, 64, 8, 8};
-	ObjRectangle steel{256, 16, 8, 8};
-	ObjRectangle grass{272, 32, 8, 8};
-	ObjRectangle ice{288, 32, 8, 8};
+	ObjRectangle bullet{.x = 320, .y = 80, .w = 16, .h = 16};
+	ObjRectangle eagle{.x = 304, .y = 32, .w = 16, .h = 16};
+	ObjRectangle brick{.x = 256, .y = 64, .w = 8, .h = 8};
+	ObjRectangle steel{.x = 256, .y = 16, .w = 8, .h = 8};
+	ObjRectangle grass{.x = 272, .y = 32, .w = 8, .h = 8};
+	ObjRectangle ice{.x = 288, .y = 32, .w = 8, .h = 8};
 	//ObjRectangle water{264, 80, 8, 8}; // waterflow right - > left
-	ObjRectangle water{272, 80, 8, 8};// waterflow left  - > right
+	ObjRectangle water{.x = 272, .y = 80, .w = 8, .h = 8};// waterflow left  - > right
 
 	//Explosions and spawn , left to right,
-	ObjRectangle spawnAnim{256, 96, 16, 16};// 4 step animation 16x16
-	ObjRectangle smallExplosion{256, 128, 16, 16};// 3 step animation 16x16
-	ObjRectangle bigExplosion{304, 128, 32, 32};// 2 steps 32x32
+	ObjRectangle spawnAnim{.x = 256, .y = 96, .w = 16, .h = 16};// 4 step animation 16x16
+	ObjRectangle smallExplosion{.x = 256, .y = 128, .w = 16, .h = 16};// 3 step animation 16x16
+	ObjRectangle bigExplosion{.x = 304, .y = 128, .w = 32, .h = 32};// 2 steps 32x32
 
 	//Bonuses
-	ObjRectangle bonusHelmet{256, 112, 16, 16};
-	ObjRectangle helmetAnimationFrame{352, 112, 16, 16};// 2 step animation 16x16 , left -> right
+	ObjRectangle bonusHelmet{.x = 256, .y = 112, .w = 16, .h = 16};
+	ObjRectangle helmetAnimationFrame{.x = 352, .y = 112, .w = 16, .h = 16};// 2 step animation 16x16 , left -> right
 
-	ObjRectangle bonusTimer{272, 112, 16, 16};
-	ObjRectangle bonusShovel{288, 112, 16, 16};
-	ObjRectangle bonusStar{304, 112, 16, 16};
-	ObjRectangle bonusGrenade{320, 112, 16, 16};
-	ObjRectangle bonusTank{336, 112, 16, 16};
-	ObjRectangle bonusCaliber{352, 112, 16, 16};
-	ObjRectangle bonusShip{352, 80, 16, 16};//TODO implement bonus (make logic\code)
+	ObjRectangle bonusTimer{.x = 272, .y = 112, .w = 16, .h = 16};
+	ObjRectangle bonusShovel{.x = 288, .y = 112, .w = 16, .h = 16};
+	ObjRectangle bonusStar{.x = 304, .y = 112, .w = 16, .h = 16};
+	ObjRectangle bonusGrenade{.x = 320, .y = 112, .w = 16, .h = 16};
+	ObjRectangle bonusTank{.x = 336, .y = 112, .w = 16, .h = 16};
+	ObjRectangle bonusCaliber{.x = 352, .y = 112, .w = 16, .h = 16};
+	ObjRectangle bonusShip{.x = 352, .y = 80, .w = 16, .h = 16};//TODO implement new bonus (make logic\code)
+
+	//Text
+	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};
+	ObjRectangle gameOverText{.x = 288, .y = 183, .w = 32, .h = 18};
+	ObjRectangle gameWonText{.x = 370, .y = 180, .w = 15, .h = 15};
 };

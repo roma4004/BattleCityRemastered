@@ -23,18 +23,18 @@ public:
 	TankShot();
 
 	//for serialization
-	TankShot(const std::string& who, Direction dir, buuid uuid);
+	TankShot(std::string who, Direction dir, buuid uuid);
 
 	~TankShot() override = default;
 
-	[[nodiscard]] const std::string& GetWho() const;
-	[[nodiscard]] Direction GetDir() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] std::string GetWho() const noexcept;
+	[[nodiscard]] Direction GetDir() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

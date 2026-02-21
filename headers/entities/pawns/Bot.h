@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Tank.h"
-#include <chrono>
 #include <random>
 
 struct BonusEffectProperty;
@@ -11,17 +10,17 @@ class BulletPool;
 class Bot : public Tank
 {
 	using milliseconds = std::chrono::milliseconds;
+	using buuid = boost::uuids::uuid;
 
 protected:
-	std::mt19937 _gen{};
-	std::uniform_int_distribution<> _distDirection{};
 	std::uniform_int_distribution<> _distTurnRate{};
+	//TODO: move to random manager one event on start and then get random by type
 	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn{};
 	milliseconds _turnDuration{std::chrono::seconds(2)};
 
 	//LOS
-	float _shootDistance{0.f};
-	float _bulletOffset{0.f};
+	float _shootDistance{};
+	float _bulletOffset{};
 
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] bool IsAlly(const std::shared_ptr<BaseObj>& obstacle) const;
@@ -31,11 +30,13 @@ protected:
 	[[nodiscard]] bool ActIfBonusSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
 	[[nodiscard]] bool HandleSideObstacles(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Direction dir);
+	void SetRandomDirection(double deltaTime);
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 public:
-	Bot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, BonusEffectProperty effects);
+	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},
+	    bool enableByDefault = false);
 
 	~Bot() override;
 };

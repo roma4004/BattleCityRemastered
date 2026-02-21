@@ -6,16 +6,16 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(HealthChange);
 
-HealthChange::HealthChange(): Command(CommandType::HEALTH_CHANGE) {}
+HealthChange::HealthChange() : Command{CommandType::HEALTH_CHANGE} {}
 
-HealthChange::HealthChange(const std::string& who, const int health, const buuid uuid)
-	: Command(CommandType::HEALTH_CHANGE), _who(who), _health(health), _uuid(uuid) {}
+HealthChange::HealthChange(std::string who, const int health, const buuid uuid)
+	: Command{CommandType::HEALTH_CHANGE}, _who{std::move(who)}, _health{health}, _uuid{uuid} {}
 
-const std::string& HealthChange::GetWho() const { return _who; }
+std::string HealthChange::GetWho() const noexcept { return _who; }
 
-int HealthChange::GetHealth() const { return _health; }
+int HealthChange::GetHealth() const noexcept { return _health; }
 
 using buuid = boost::uuids::uuid;
-buuid HealthChange::GetUuid() const { return _uuid; }
+buuid HealthChange::GetUuid() const noexcept { return _uuid; }
 
-const char* HealthChange::GetClassNameW() const { return "HealthChange"; }
+const char* HealthChange::GetClassNameW() const noexcept { return "HealthChange"; }

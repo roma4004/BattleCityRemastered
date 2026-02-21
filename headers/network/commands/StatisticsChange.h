@@ -18,18 +18,18 @@ public:
 	StatisticsChange();
 
 	//for serialization
-	StatisticsChange(const std::string& eventName, const std::string& author, const std::string& fraction);
+	StatisticsChange(std::string eventName, std::string author, std::string fraction);
 
 	~StatisticsChange() override = default;
 
-	[[nodiscard]] const std::string& GetEventName() const;
-	[[nodiscard]] const std::string& GetAuthor() const;
-	[[nodiscard]] const std::string& GetFraction() const;
+	[[nodiscard]] std::string GetEventName() const noexcept;
+	[[nodiscard]] std::string GetAuthor() const noexcept;
+	[[nodiscard]] std::string GetFraction() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

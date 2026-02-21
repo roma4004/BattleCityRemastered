@@ -2,8 +2,8 @@
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 
-InputProviderForMenu::InputProviderForMenu(std::shared_ptr<EventSystem> events)
-	: _events{std::move(events)}
+InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events)
+	: _events{events}
 {
 	Subscribe();
 }
@@ -19,11 +19,11 @@ void InputProviderForMenu::Subscribe()
 
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
 
-		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 }
 
@@ -33,7 +33,7 @@ void InputProviderForMenu::SubscribeAsClient()
 	{
 		_keys.pause = !_keys.pause;
 
-		_events->EmitEvent<const bool>("Pause_Status", _keys.pause);
+		_events->EmitEvent("Pause_Status", _keys.pause);
 	});
 }
 
@@ -41,9 +41,9 @@ void InputProviderForMenu::Unsubscribe() const
 {
 	_events->RemoveListener("Menu_Released", _name);
 	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -58,25 +58,45 @@ void InputProviderForMenu::TogglePause()
 {
 	_keys.pause = !_keys.pause;
 
-	_events->EmitEvent<const bool>("Pause_Status", _keys.pause);
+	_events->EmitEvent("Pause_Status", _keys.pause);
+}
+
+void InputProviderForMenu::SwitchPause(bool switchTo)
+{
+	_keys.pause = switchTo;
+
+	_events->EmitEvent("Pause_Status", _keys.pause);
 }
 
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
 	_keys.menuShow = !_keys.menuShow;
+	SwitchPause(_keys.menuShow);
 	if (_keys.menuShow)
 	{
-		_events->AddListener("ArrowUp_Released", _name, [&btn = _keys]() { btn.up = true; });
-		_events->AddListener("ArrowDown_Released", _name, [&btn = _keys]() { btn.down = true; });
+		_events->AddListener("P1_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("P1_Move_Down_Released", _name, [&btn = _keys]() { btn.down = true; });
+		_events->AddListener("P2_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });
+		_events->AddListener("P2_Move_Down_Released", _name, [&btn = _keys]() { btn.down = true; });
 		_events->AddListener("Enter_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
 		_events->AddListener("Enter_Released", _name, [&btn = _keys]() { btn.reset = false; });
+		_events->AddListener("P1_Fire_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
+		_events->AddListener("P1_Fire_Released", _name, [&btn = _keys]() { btn.reset = false; });
+		_events->AddListener("P2_Fire_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
+		_events->AddListener("P2_Fire_Released", _name, [&btn = _keys]() { btn.reset = false; });
 	}
 	else
 	{
-		_events->RemoveListener("ArrowUp_Released", _name);
-		_events->RemoveListener("ArrowDown_Released", _name);
+		_events->RemoveListener("P1_Move_Up_Released", _name);
+		_events->RemoveListener("P1_Move_Down_Released", _name);
+		_events->RemoveListener("P2_Move_Up_Released", _name);
+		_events->RemoveListener("P2_Move_Down_Released", _name);
 		_events->RemoveListener("Enter_Pressed", _name);
 		_events->RemoveListener("Enter_Released", _name);
+		_events->RemoveListener("P1_Fire_Pressed", _name);
+		_events->RemoveListener("P1_Fire_Released", _name);
+		_events->RemoveListener("P2_Fire_Pressed", _name);
+		_events->RemoveListener("P2_Fire_Released", _name);
 	}
 
 	_keys.reset = false;

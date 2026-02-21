@@ -1,6 +1,6 @@
 #pragma once
 
-enum CommandType : char8_t
+enum class CommandType : char8_t
 {
 	COMMAND_BATCH,
 	POSITION_CHANGE,
@@ -12,6 +12,9 @@ enum CommandType : char8_t
 	FORTRESS_CHANGE,
 	BONUS_SPAWN,
 	BONUS_DESPAWN,
+	BONUS_STATUS,
 	RESPAWN_TANK,
-	OBSTACLE_SPAWN
+	OBSTACLE_SPAWN,
+	ANIMATION_CREATE,
+	TANK_ON_OFF
 };

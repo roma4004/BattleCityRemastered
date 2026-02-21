@@ -1,20 +1,17 @@
 #include "entities/pawns/Enemy.h"
-#include "components/EventSystem.h"
-#include "entities/obstacles/FortressWall.h"
-#include "entities/pawns/Bot.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
 
+//TODO: fix enemy stuck in bricks(local game) looks like 1 pixel issue when finding free path
 //TODO: if enemy see bullets they should try or prioritize move aside
-Enemy::Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, const BonusEffectProperty effects = {})
-	: Bot{std::move(pawnProperty), std::move(bulletPool), effects} {}
+Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
+             const BonusEffectProperty effects, const bool enableByDefault)
+	: Bot{std::move(pawnProperty), bulletPool, effects, enableByDefault} {}
 
 Enemy::~Enemy() = default;
 
-void Enemy::TickUpdate(const float deltaTime)
+void Enemy::TickUpdate(const double deltaTime)
 {
 	if (_effects.isTimerActive)
 	{
@@ -43,11 +40,5 @@ void Enemy::TickUpdate(const float deltaTime)
 				Shot();
 			}
 		}
-	}
-
-	if (_gameMode == PlayAsHost)
-	{
-		_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
-				"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 	}
 }

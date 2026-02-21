@@ -2,24 +2,22 @@
 #include "components/EventSystem.h"
 #include "enums/BonusType.h"
 
-//TODO: replicate timer bonus effect end
-//TODO: on timer bonus effect enemy team should not shoot
-
-BonusTimer::BonusTimer(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-                       const milliseconds lifeTime, const int color, const buuid uuid, const GameMode gameMode)
+BonusTimer::BonusTimer(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events,
+                       const milliseconds lifeTime, const unsigned int color, const buuid uuid, const GameMode gameMode,
+                       const milliseconds duration)
 	: Bonus{rect,
-	        std::move(events),
-	        duration,
+	        events,
 	        lifeTime,
 	        color,
 	        "BonusTimer",
 	        uuid,
 	        gameMode,
-	        Timer} {}
+	        BonusType::Timer},
+	  _effectDuration{duration} {}
 
 BonusTimer::~BonusTimer() = default;
 
 void BonusTimer::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const milliseconds>("TimerActive", fraction, _effectDuration);
+	_events->EmitEvent(_name, fraction, _effectDuration);
 }

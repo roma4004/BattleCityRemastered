@@ -21,20 +21,20 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
+	int _bulletDamage{1};
+	int _bulletHealth{1};
+	unsigned int _bulletColor{0xffffff}; 
 	FPoint _bulletSize;
 	float _bulletSpeed{300.f};
 	float _gridSize{1};
-	float _deltaTimeOneFrame{1.f / 60.f};
-	GameMode _gameMode{OnePlayer};
-	int _bulletDamage{1};
-	int _bulletHealth{1};
-	int _bulletColor{0xffffff};
-	float _tankSize{0.f};
+	float _tankSize{};
 	float _tankSpeed{142.f};
 	float _bulletWidth{6.f};
 	float _bulletHeight{5.f};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	double _bulletDamageRadius{12.0};
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{
@@ -45,17 +45,21 @@ protected:
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
-		ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
+		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				.rect = rect, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, DOWN, _bulletSpeed};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
+		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
+						enableByDefault));
 	}
 
 	void TearDown() override
@@ -91,18 +95,18 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		{
 			//success bullet moves down test, try to move inside a screen bullet
-			bullet->SetDirection(DOWN);
+			bullet->SetDirection(Direction::DOWN);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_LT(bulletStartPos.y, bulletEndPos.y);
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 		}
 		{
 			//success bullet right test, try to move inside a screen bullet
-			bullet->SetDirection(RIGHT);
+			bullet->SetDirection(Direction::RIGHT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_LT(bulletStartPos.x, bulletEndPos.x);
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
@@ -114,18 +118,18 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 		{
 			//success shot up test, try to create an inside screen bullet
-			bullet->SetDirection(UP);
+			bullet->SetDirection(Direction::UP);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_GT(bulletStartPos.y, bulletEndPos.y);
 			EXPECT_EQ(bulletStartPos.x, bulletEndPos.x);
 		}
 		{
 			//success move left test, try to move inside a screen bullet
-			bullet->SetDirection(LEFT);
+			bullet->SetDirection(Direction::LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 			const FPoint bulletEndPos = bullet->GetPos();
 			EXPECT_GT(bulletStartPos.x, bulletEndPos.x);
 			EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
@@ -148,21 +152,21 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 		{
 			//fail bullet move down test, try to move an outside screen bullet
-			bullet->SetDirection(DOWN);
+			bullet->SetDirection(Direction::DOWN);
 			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
 		{
 			//fail the bullet move right test, try to move an outside screen bullet
-			bullet->SetDirection(RIGHT);
+			bullet->SetDirection(Direction::RIGHT);
 			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
@@ -170,19 +174,19 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		bullet->SetPos({.x = 0.f, .y = 0.f});
 		{
 			//fail bullet move up test, try to move an outside screen bullet
-			bullet->SetDirection(UP);
+			bullet->SetDirection(Direction::UP);
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 		}
 		{
 			//fail the bullet move left test, try to move an outside screen bullet
-			bullet->SetDirection(LEFT);
+			bullet->SetDirection(Direction::LEFT);
 			const FPoint bulletStartPos = bullet->GetPos();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletStartPos, bullet->GetPos());
 
@@ -199,7 +203,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 7.f});
-		bullet->SetDirection(UP);
+		bullet->SetDirection(Direction::UP);
 		ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brickWall = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
@@ -207,7 +211,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickWallHealth = brickWall->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickWallHealth, brickWall->GetHealth());
@@ -225,7 +229,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 7.f, .y = 0.f});
-		bullet->SetDirection(LEFT);
+		bullet->SetDirection(Direction::LEFT);
 		ObjRectangle rect{.x = 0, .y = 0, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brickWall = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
@@ -233,7 +237,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickWallHealth = brickWall->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickWallHealth, brickWall->GetHealth());
@@ -251,7 +255,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
-		bullet->SetDirection(DOWN);
+		bullet->SetDirection(Direction::DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
@@ -259,7 +263,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
@@ -277,7 +281,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
-		bullet->SetDirection(RIGHT);
+		bullet->SetDirection(Direction::RIGHT);
 		ObjRectangle rect{.x = 7.f, .y = 0.f, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const BrickWall*>(_allObjects.back().get()))
@@ -285,7 +289,7 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(brickHealth, brick->GetHealth());
@@ -306,18 +310,22 @@ TEST_F(BulletTest, BulletDamageTank)
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
-	BaseObjProperty baseObjProperty{rect, gray, tankHealth, true, _uuid, "Enemy1", "EnemyTeam"};
+	BaseObjProperty baseObjProperty{.rect = rect, .color = gray, .health = tankHealth, .uuid = _uuid, .name = "Enemy1",
+	                                .fraction = "EnemyTeam"};
 	PawnProperty pawnProperty{
-			std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
+			.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+			.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 
-	_allObjects.emplace_back(std::make_shared<Enemy>(
-			std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}));
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(
+			std::make_shared<Enemy>(
+					std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}, enableByDefault));
 
 	const auto enemy = dynamic_cast<const Enemy*>(_allObjects.back().get());
 
 	EXPECT_EQ(enemy->GetHealth(), 1);
 
-	_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(enemy->GetHealth(), 0);
 }
@@ -332,9 +340,11 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		std::string author{"Player2"};
 		ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				rect, _bulletColor, _bulletHealth, true, _uuid, std::move(name), std::move(fraction)};
+				.rect = rect, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _bulletSpeed};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(
@@ -345,7 +355,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 			const int bulletHealth = bullet->GetHealth();
 			const int bullet2Health = bullet2->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_GT(bullet2Health, bullet2->GetHealth());
@@ -363,7 +373,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
-		bullet->SetDirection(DOWN);
+		bullet->SetDirection(Direction::DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const SteelWall*>(_allObjects.back().get()))
@@ -371,7 +381,7 @@ TEST_F(BulletTest, BulletCantDamageSteelWall)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_GT(bulletHealth, bullet->GetHealth());
 			EXPECT_EQ(brickHealth, brick->GetHealth());
@@ -389,7 +399,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 	if (const auto bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
-		bullet->SetDirection(DOWN);
+		bullet->SetDirection(Direction::DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
 		if (const auto brick = dynamic_cast<const WaterTile*>(_allObjects.back().get()))
@@ -397,7 +407,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 			const int bulletHealth = bullet->GetHealth();
 			const int brickHealth = brick->GetHealth();
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(bulletHealth, bullet->GetHealth());
 			EXPECT_EQ(brickHealth, brick->GetHealth());
@@ -414,7 +424,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 	if (auto&& bullet = dynamic_cast<Bullet*>(_allObjects.front().get()))
 	{
 		bullet->SetPos({.x = 0.f, .y = 0.f});
-		bullet->SetDirection(DOWN);
+		bullet->SetDirection(Direction::DOWN);
 		ObjRectangle rect{.x = 0.f, .y = 6.f, .w = 36, .h = 36};
 		_allObjects.emplace_back(
 				std::make_shared<FortressWall>(rect, _events, &_allObjects, _uuid, _gameMode));
@@ -423,9 +433,9 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 			fortressWall->SetHealth(1);
 			EXPECT_EQ(fortressWall->GetHealth(), 1);
 
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(fortressWall->GetHealth(), 0);
+			EXPECT_EQ(fortressWall->GetHealth(), -1);
 
 			return;
 		}

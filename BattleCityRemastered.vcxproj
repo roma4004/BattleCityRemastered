@@ -147,30 +147,36 @@
     <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="source\behavior\ShootingBeh.cpp" />
-    <ClCompile Include="source\components\BonusEffectManager.cpp" />
+    <ClCompile Include="source\components\AnimatedObjects.cpp" />
     <ClCompile Include="source\components\BonusSpawner.cpp" />
     <ClCompile Include="source\components\BulletPool.cpp" />
     <ClCompile Include="source\components\GameStatistics.cpp" />
     <ClCompile Include="source\components\LineOfSight.cpp" />
+    <ClCompile Include="source\components\managers\AnimationManager.cpp" />
+    <ClCompile Include="source\components\managers\BonusEffectManager.cpp" />
+    <ClCompile Include="source\components\managers\DelayedSpawnManager.cpp" />
+    <ClCompile Include="source\components\managers\FramePerSecondManager.cpp" />
+    <ClCompile Include="source\components\managers\RenderManager.cpp" />
+    <ClCompile Include="source\components\managers\RespawnManager.cpp" />
+    <ClCompile Include="source\components\managers\SpawnManager.cpp" />
+    <ClCompile Include="source\components\managers\StateManager.cpp" />
+    <ClCompile Include="source\components\managers\TextureManager.cpp" />
     <ClCompile Include="source\components\Map.cpp" />
     <ClCompile Include="source\components\Menu.cpp" />
     <ClCompile Include="source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="source\components\TankSpawner.cpp" />
-    <ClCompile Include="source\components\TextureManager.cpp" />
     <ClCompile Include="source\components\input\InputProviderForMenu.cpp" />
     <ClCompile Include="source\components\input\InputProviderForPlayerOne.cpp" />
     <ClCompile Include="source\components\input\InputProviderForPlayerOneNet.cpp" />
     <ClCompile Include="source\components\input\InputProviderForPlayerTwo.cpp" />
     <ClCompile Include="source\components\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="source\entities\BaseObj.cpp" />
-    <ClCompile Include="source\entities\ObjRectangle.cpp" />
     <ClCompile Include="source\entities\bonuses\Bonus.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusCaliber.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusGrenade.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusHelmet.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusShovel.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusStar.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusStatus.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusTank.cpp" />
     <ClCompile Include="source\entities\bonuses\BonusTimer.cpp" />
     <ClCompile Include="source\entities\obstacles\BrickWall.cpp" />
@@ -191,6 +197,9 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\network\Client.cpp" />
     <ClCompile Include="source\network\ClientHandler.cpp" />
+    <ClCompile Include="source\network\commands\AnimationCreate.cpp" />
+    <ClCompile Include="source\network\commands\BonusStatus.cpp" />
+    <ClCompile Include="source\network\commands\TankOnOff.cpp" />
     <ClCompile Include="source\network\Server.cpp" />
     <ClCompile Include="source\network\ServerHandler.cpp" />
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
@@ -208,13 +217,30 @@
     <ClCompile Include="source\network\commands\TankShot.cpp" />
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\Logger.cpp" />
+    <ClCompile Include="source\utils\NetworkLogger.cpp" />
+    <ClCompile Include="source\utils\RandUtils.cpp" />
+    <ClCompile Include="source\utils\Timer.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
     <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Circle.h" />
+    <ClInclude Include="headers\components\AnimatedObjects.h" />
+    <ClInclude Include="headers\components\managers\AnimationManager.h" />
+    <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
+    <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />
+    <ClInclude Include="headers\components\managers\RenderManager.h" />
+    <ClInclude Include="headers\components\managers\RespawnManager.h" />
+    <ClInclude Include="headers\components\managers\DelayedSpawnManager.h" />
+    <ClInclude Include="headers\components\managers\SpawnManager.h" />
+    <ClInclude Include="headers\components\managers\StateManager.h" />
+    <ClInclude Include="headers\components\managers\TextureManager.h" />
+    <ClInclude Include="headers\enums\AnimationType.h" />
+    <ClInclude Include="headers\enums\GameState.h" />
+    <ClInclude Include="headers\network\commands\AnimationCreate.h" />
+    <ClInclude Include="headers\network\commands\BonusStatus.h" />
+    <ClInclude Include="headers\network\commands\TankOnOff.h" />
     <ClInclude Include="headers\Point.h" />
-    <ClInclude Include="headers\Point.tpp" />
     <ClInclude Include="headers\application\ConfigFailure.h" />
     <ClInclude Include="headers\application\ConfigSuccess.h" />
     <ClInclude Include="headers\application\GameFailure.h" />
@@ -224,18 +250,15 @@
     <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
     <ClInclude Include="headers\behavior\ShootingBeh.h" />
-    <ClInclude Include="headers\components\BonusEffectManager.h" />
     <ClInclude Include="headers\components\BonusSpawner.h" />
     <ClInclude Include="headers\components\BulletPool.h" />
     <ClInclude Include="headers\components\EventSystem.h" />
-    <ClInclude Include="headers\components\EventSystem.tpp" />
     <ClInclude Include="headers\components\GameStatistics.h" />
     <ClInclude Include="headers\components\LineOfSight.h" />
     <ClInclude Include="headers\components\Map.h" />
     <ClInclude Include="headers\components\Menu.h" />
     <ClInclude Include="headers\components\ObstacleSpawner.h" />
     <ClInclude Include="headers\components\TankSpawner.h" />
-    <ClInclude Include="headers\components\TextureManager.h" />
     <ClInclude Include="headers\components\input\InputProviderForMenu.h" />
     <ClInclude Include="headers\components\input\InputProviderForPlayerOne.h" />
     <ClInclude Include="headers\components\input\InputProviderForPlayerOneNet.h" />
@@ -247,14 +270,12 @@
     <ClInclude Include="headers\entities\BaseObjProperty.h" />
     <ClInclude Include="headers\entities\BonusEffectProperty.h" />
     <ClInclude Include="headers\entities\ObjRectangle.h" />
-    <ClInclude Include="headers\entities\ObjRectangle.tpp" />
     <ClInclude Include="headers\entities\bonuses\Bonus.h" />
     <ClInclude Include="headers\entities\bonuses\BonusCaliber.h" />
     <ClInclude Include="headers\entities\bonuses\BonusGrenade.h" />
     <ClInclude Include="headers\entities\bonuses\BonusHelmet.h" />
     <ClInclude Include="headers\entities\bonuses\BonusShovel.h" />
     <ClInclude Include="headers\entities\bonuses\BonusStar.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusStatus.h" />
     <ClInclude Include="headers\entities\bonuses\BonusTank.h" />
     <ClInclude Include="headers\entities\bonuses\BonusTimer.h" />
     <ClInclude Include="headers\entities\obstacles\BrickWall.h" />
@@ -275,18 +296,17 @@
     <ClInclude Include="headers\entities\pawns\Player.h" />
     <ClInclude Include="headers\entities\pawns\Tank.h" />
     <ClInclude Include="headers\enums\BonusType.h" />
-    <ClInclude Include="headers\enums\ComandType.h" />
+    <ClInclude Include="headers\enums\CommandType.h" />
     <ClInclude Include="headers\enums\Direction.h" />
     <ClInclude Include="headers\enums\GameMode.h" />
     <ClInclude Include="headers\enums\ObstacleType.h" />
-    <ClInclude Include="headers\enums\RespawnResource.h" />
+    <ClInclude Include="headers\enums\RespawnCount.h" />
     <ClInclude Include="headers\enums\TankType.h" />
     <ClInclude Include="headers\enums\TextureOffset.h" />
     <ClInclude Include="headers\interfaces\IConfig.h" />
     <ClInclude Include="headers\interfaces\IDrawable.h" />
     <ClInclude Include="headers\interfaces\IGame.h" />
     <ClInclude Include="headers\interfaces\IHaveFraction.h" />
-    <ClInclude Include="headers\interfaces\IHealthBar.h" />
     <ClInclude Include="headers\interfaces\IInputProvider.h" />
     <ClInclude Include="headers\interfaces\IMoveBeh.h" />
     <ClInclude Include="headers\interfaces\INetworkNode.h" />
@@ -317,12 +337,16 @@
     <ClInclude Include="headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="headers\utils\ColliderUtils.h" />
     <ClInclude Include="headers\utils\Logger.h" />
+    <ClInclude Include="headers\utils\NetworkLogger.h" />
     <ClInclude Include="headers\utils\PixelUtils.h" />
+    <ClInclude Include="headers\utils\RandUtils.h" />
+    <ClInclude Include="headers\utils\Timer.h" />
     <ClInclude Include="headers\utils\TimeUtils.h" />
     <ClInclude Include="headers\utils\UuidUtils.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".aiignore" />
     <Content Include="Resources\Fonts\backup\bc7x7.ttf" />
     <Content Include="Resources\Fonts\backup\M10 battle cities.ttf" />
     <Content Include="Resources\Fonts\info.txt" />
@@ -358,8 +382,8 @@
     <Import Project="packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets" Condition="Exists('packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets')" />
     <Import Project="packages\boost.1.87.0\build\boost.targets" Condition="Exists('packages\boost.1.87.0\build\boost.targets')" />
     <Import Project="packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets" Condition="Exists('packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" />
-    <Import Project="packages\sdl2.nuget.redist.2.32.4\build\native\sdl2.nuget.redist.targets" Condition="Exists('packages\sdl2.nuget.redist.2.32.4\build\native\sdl2.nuget.redist.targets')" />
-    <Import Project="packages\sdl2.nuget.2.32.4\build\native\sdl2.nuget.targets" Condition="Exists('packages\sdl2.nuget.2.32.4\build\native\sdl2.nuget.targets')" />
+    <Import Project="packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets" Condition="Exists('packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets')" />
+    <Import Project="packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets" Condition="Exists('packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets')" />
 </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -373,7 +397,7 @@
     <Error Condition="!Exists('packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets'))" />
     <Error Condition="!Exists('packages\boost.1.87.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.87.0\build\boost.targets'))" />
     <Error Condition="!Exists('packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets'))" />
-    <Error Condition="!Exists('packages\sdl2.nuget.redist.2.32.4\build\native\sdl2.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.redist.2.32.4\build\native\sdl2.nuget.redist.targets'))" />
-    <Error Condition="!Exists('packages\sdl2.nuget.2.32.4\build\native\sdl2.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.2.32.4\build\native\sdl2.nuget.targets'))" />
+    <Error Condition="!Exists('packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets'))" />
+    <Error Condition="!Exists('packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets'))" />
   </Target>
 </Project>

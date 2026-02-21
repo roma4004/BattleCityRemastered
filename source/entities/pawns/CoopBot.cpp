@@ -1,17 +1,16 @@
 #include "entities/pawns/CoopBot.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
-#include "entities/pawns/Bot.h"
 #include "entities/pawns/PawnProperty.h"
 #include "utils/TimeUtils.h"
 
-CoopBot::CoopBot(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool,
-                 const BonusEffectProperty effects = {})
-	: Bot{std::move(pawnProperty), std::move(bulletPool), effects} {}
+CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
+                 const BonusEffectProperty effects, const bool enableByDefault)
+	: Bot{std::move(pawnProperty), bulletPool, effects, enableByDefault} {}
 
 CoopBot::~CoopBot() = default;
 
-void CoopBot::TickUpdate(const float deltaTime)
+void CoopBot::TickUpdate(const double deltaTime)
 {
 	if (_effects.isTimerActive)
 	{

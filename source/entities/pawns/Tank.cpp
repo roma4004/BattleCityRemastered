@@ -1,43 +1,65 @@
 #include "entities/pawns/Tank.h"
+#include "behavior/MoveLikeTankBeh.h"
+#include "behavior/ShootingBeh.h"
+#include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
-#include "interfaces/IMoveBeh.h"
-#include "interfaces/IShootable.h"
 
-Tank::Tank(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh, std::shared_ptr<IShootable> shootingBeh,
-           const BonusEffectProperty effects)
-	: Pawn{std::move(pawnProperty), std::move(moveBeh)},
-	  _shootingBeh{std::move(shootingBeh)},
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
+           const bool enableByDefault)
+	: Pawn{std::move(pawnProperty)},
 	  _effects{effects}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	Tank::Subscribe();
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(
+			_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction, _touchedObstacles, _allObjects);
 
-	_events->EmitEvent<const buuid&>("TankSpawn", _uuid);
+	_shootingBeh = std::make_shared<ShootingBeh>(
+			_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier, _bulletDamageRadius, _bulletSize,
+			_windowSize, _name, _fraction, _allObjects, bulletPool);
+
+	if (enableByDefault)
+	{
+		Tank::Subscribe();
+	}
+
+	// NOTE: should be in constructor to be able to enable by replication
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		_events->AddListener("ClientReceived_" + _name + "OnTankOnOff",
+		                     _nameWithUuid,
+		                     [this](const buuid uuid, const bool isEnable) { this->OnTankOnOff(uuid, isEnable); });
+	}
+
+	_events->EmitEvent("TankSpawn", _uuid);
 }
 
 Tank::~Tank()
 {
 	Tank::Unsubscribe();
 
-	_events->EmitEvent<const buuid&>("TankDied", _uuid);
+	_events->EmitEvent("TankDied", _uuid);
+
+	_events->EmitEvent("AnimationCreateTankExplosion", _rect, _name);
 }
 
 void Tank::Subscribe()
 {
-	_events->AddListener("DrawHealthBar", _nameWithUuid, [this]()
+	Pawn::Subscribe();
+
+	_events->AddListener("PostDraw", _nameWithUuid, [this]()
 	{
-		if (!_helmet.isActive)
+		if (!_effects.isHelmetActive)
 		{
-			this->DrawHealthBar(this);
+			this->_events->EmitEvent("RenderHealthBar", GetRect(), GetHealth(), GetColor());
 		}
 	});
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
@@ -47,119 +69,127 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	_events->AddListener<const Direction, const buuid&>(
-			"ClientReceived_" + _name + "Shot", _name, [this](const Direction dir, const buuid& uuid)
+	_events->AddListener(
+			"ClientReceived_" + _name + "Shot", _nameWithUuid, [this](const Direction dir, const buuid& uuid)
 			{
 				this->SetDirection(dir);
 				this->Shot(uuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetActivate", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid, [this](const bool isActive)
 	{
-		this->_helmet.isActive = true;
+		this->_effects.isHelmetActive = isActive;
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
 	{
-		this->_helmet.isActive = false;
+		this->OnBonusStar(_name);
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnStar", _name, [this]()
+	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid, [this]()
 	{
-		this->OnBonusStar(_name, _fraction);
-	});
-
-	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _name, [this]()
-	{
-		this->OnBonusCaliber(_name, _fraction);
+		this->OnBonusCaliber(_name);
 	});
 }
 
 void Tank::SubscribeBonus()
 {
-	_events->AddListener<const std::string&, const bool>(
-			"BonusTimerStatusChange", _name,
+	_events->AddListener(
+			"BonusTimerStatusChange", _nameWithUuid,
 			[this](const std::string& fraction, const bool isActive)
 			{
 				this->OnBonusTimer(fraction, isActive);
 			});
 
-	_events->AddListener<const std::string&, const bool>(
-			"BonusHelmetStatusChange", _name,
+	_events->AddListener(
+			"BonusHelmetStatusChange", _nameWithUuid,
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
-				if (_gameMode == PlayAsHost)
-				{
-					_events->EmitEvent<const std::string&>(
-							isActive
-								? "ServerSend_OnHelmetActivate"
-								: "ServerSend_OnHelmetDeactivate",
-							_name);
-				}
 			});
 
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusGrenade", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusGrenade(author, fraction);
-			});
+	_events->AddListener("BonusGrenade", _nameWithUuid,
+	                     [this](const std::string& /*author*/, const std::string& fraction)
+	                     {
+		                     this->OnBonusGrenade(fraction);
+	                     });
 
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusStar", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusStar(author, fraction);
-			});
+	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
+	{
+		this->OnBonusStar(author);
+	});
 
-	_events->AddListener<const std::string&, const std::string&>(
-			"BonusCaliber", _name, [this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBonusCaliber(author, fraction);
-			});
+	_events->AddListener("BonusCaliber", _nameWithUuid,
+	                     [this](const std::string& author, const std::string& /*fraction*/)
+	                     {
+		                     this->OnBonusCaliber(author);
+	                     });
 }
 
 void Tank::Unsubscribe() const
 {
-	_events->RemoveListener("DrawHealthBar", _nameWithUuid);
+	Pawn::Unsubscribe();
 
-	if (_gameMode == PlayAsClient)
+	_events->RemoveListener("PostDraw", _nameWithUuid);
+
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
 
 	UnsubscribeBonus();
+
+	// NOTE: should be in destructor to be able to unsubscribe in this case
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		_events->RemoveListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid);
+	}
 }
 
 void Tank::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const Direction, const buuid&>("ClientReceived_" + _name + "Shot", _name);
-
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetActivate", _name);
-	_events->RemoveListener("ClientReceived_" + _name + "OnHelmetDeactivate", _name);
-	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _name);
-	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _name);
+	_events->RemoveListener("ClientReceived_" + _name + "Shot", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid);
 }
 
 void Tank::UnsubscribeBonus() const
 {
-	_events->RemoveListener<const std::string&, const bool>("BonusTimerStatusChange", _name);
-	_events->RemoveListener<const std::string&, const bool>("BonusHelmetStatusChange", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusGrenade", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusStar", _name);
-	_events->RemoveListener<const std::string&, const std::string&>("BonusCaliber", _name);
+	_events->RemoveListener("BonusTimerStatusChange", _nameWithUuid);
+	_events->RemoveListener("BonusHelmetStatusChange", _nameWithUuid);
+	_events->RemoveListener("BonusGrenade", _nameWithUuid);
+	_events->RemoveListener("BonusStar", _nameWithUuid);
+	_events->RemoveListener("BonusCaliber", _nameWithUuid);
+}
+
+void Tank::Enable()
+{
+	Subscribe();
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		constexpr bool isEnable = true;
+		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+	}
+}
+
+void Tank::Disable() const
+{
+	Unsubscribe();
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		constexpr bool isEnable = false;
+		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+	}
 }
 
 void Tank::TakeDamage(const int damage)
 {
-	if (!_helmet.isActive)
+	if (!_effects.isHelmetActive)
 	{
 		Pawn::TakeDamage(damage);
-
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const int, const buuid&>(
-					"ServerSend_Health", _name, GetHealth(), _uuid);
-		}
 	}
 }
 
@@ -170,10 +200,9 @@ void Tank::Shot(const buuid withUuid) const
 	_lastTimeFire = std::chrono::system_clock::now();
 	const buuid bulletUuid = _shootingBeh->Shot(withUuid);
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const Direction, const buuid&>(
-				"ServerSend_Shot", _name, GetDirection(), bulletUuid);
+		_events->EmitEvent("ServerSend_Shot", _name, GetDirection(), bulletUuid);
 	}
 }
 
@@ -197,8 +226,6 @@ double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
 
-void Tank::DrawHealthBar(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawHealthBarObj", obj); }
-
 void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
 {
 	if (fraction == _fraction)
@@ -211,11 +238,17 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 {
 	if (_name == name)
 	{
-		_helmet.isActive = isActive;
+		_effects.isHelmetActive = isActive;
+
+		//TODO: move replication to bonusEffectManager
+		if (_gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
+		}
 	}
 }
 
-void Tank::OnBonusGrenade(const std::string& /*author*/, const std::string& fraction)
+void Tank::OnBonusGrenade(const std::string& fraction)
 {
 	if (fraction != _fraction)
 	{
@@ -223,9 +256,9 @@ void Tank::OnBonusGrenade(const std::string& /*author*/, const std::string& frac
 	}
 }
 
-void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
+void Tank::OnBonusStar(const std::string& author)
 {
-	if (fraction == _fraction && author == _name)
+	if (author == _name)
 	{
 		SetHealth(GetHealth() + 50);
 		if (_tier > 4)
@@ -241,16 +274,16 @@ void Tank::OnBonusStar(const std::string& author, const std::string& fraction)
 		_fireCooldown -= milliseconds{150};
 		_bulletDamageRadius *= 1.25f;
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&>("ServerSend_OnStar", author);
+			_events->EmitEvent("ServerSend_OnStar", author);
 		}
 	}
 }
 
-void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction)
+void Tank::OnBonusCaliber(const std::string& author)
 {
-	if (fraction == _fraction && author == _name)
+	if (author == _name)
 	{
 		SetHealth(GetHealth() + 50);
 		if (_tier > 3)
@@ -266,22 +299,28 @@ void Tank::OnBonusCaliber(const std::string& author, const std::string& fraction
 		_fireCooldown -= milliseconds{450};
 		_bulletDamageRadius *= 1.75f;
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&>("ServerSend_OnCaliber", author);
+			_events->EmitEvent("ServerSend_OnCaliber", author);
 		}
+	}
+}
+
+void Tank::OnTankOnOff(const buuid uuid, const bool isEnable)
+{
+	if (uuid == _uuid)
+	{
+		isEnable ? Enable() : Disable();
 	}
 }
 
 void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-			"Statistics_TankHit", _name, author, fraction);
+	_events->EmitEvent("Statistics_TankHit", _name, author, fraction);
 
 	if (GetHealth() < 1)
 	{
 		//TODO: move to event from statistic when last tank died
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"Statistics_TankDied", _name, author, fraction);
+		_events->EmitEvent("Statistics_TankDied", _name, author, fraction);
 	}
 }

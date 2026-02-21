@@ -7,7 +7,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
-enum ObstacleType : char8_t;
+enum class ObstacleType : char8_t;
 
 class ObstacleSpawn : public Command
 {
@@ -24,18 +24,18 @@ public:
 	ObstacleSpawn();
 
 	//for serialization
-	ObstacleSpawn(const ObjRectangle& rect, ObstacleType obstacleType, buuid uuid);
+	ObstacleSpawn(ObjRectangle rect, ObstacleType obstacleType, buuid uuid);
 
 	~ObstacleSpawn() override = default;
 
-	[[nodiscard]] ObjRectangle GetRect() const;
-	[[nodiscard]] ObstacleType GetObstacleType() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] ObjRectangle GetRect() const noexcept;
+	[[nodiscard]] ObstacleType GetObstacleType() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

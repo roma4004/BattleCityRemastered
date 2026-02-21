@@ -5,14 +5,13 @@
 struct UPoint;
 class BaseObj;
 class EventSystem;
-class ObstacleSpawner;
 
 class Map final
 {
-	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{};
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	explicit Map(std::shared_ptr<ObstacleSpawner> obstacleSpawner);
+	explicit Map(const std::shared_ptr<EventSystem>& _events);
 
 	~Map();
 

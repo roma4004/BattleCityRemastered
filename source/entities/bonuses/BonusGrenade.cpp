@@ -1,16 +1,16 @@
 #include "entities/bonuses/BonusGrenade.h"
 #include "enums/BonusType.h"
 
-BonusGrenade::BonusGrenade(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, const milliseconds duration,
-                           const milliseconds lifeTime, const int color, const buuid uuid, const GameMode gameMode)
+BonusGrenade::BonusGrenade(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events,
+                           const milliseconds lifeTime, const unsigned int color, const buuid uuid,
+                           const GameMode gameMode)
 	: Bonus{rect,
-	        std::move(events),
-	        duration,
+	        events,
 	        lifeTime,
 	        color,
 	        "BonusGrenade",
 	        uuid,
 	        gameMode,
-	        Grenade} {}
+	        BonusType::Grenade} {}
 
 BonusGrenade::~BonusGrenade() = default;

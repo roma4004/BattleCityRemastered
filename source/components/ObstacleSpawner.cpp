@@ -1,5 +1,7 @@
 #include "components/ObstacleSpawner.h"
+#include "Point.h"
 #include "components/EventSystem.h"
+#include "components/Map.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
@@ -13,22 +15,18 @@
 #include <memory>
 
 class BaseObj;
-class EventSystem;
 
-ObstacleSpawner::ObstacleSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                                 /*, const int sideBarWidth*/ const int obstacleSize)
-	: _events{std::move(events)},
-	  _obstacleSize{obstacleSize},
-	  _allObjects{allObjects}
+ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
+                                 std::vector<std::shared_ptr<BaseObj>>* allObjects,/*, const int sideBarWidth*/
+                                 UPoint windowSize)
+	: _allObjects{allObjects},
+	  _events{events},
+	  _windowSize{windowSize}
 
 // _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
 // _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
 // _distSpawnType{None + 1, lastId - 1}
 {
-	// std::random_device rd;
-	// _gen = std::mt19937(
-	// static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) + rd());
-
 	Subscribe();
 }
 
@@ -39,16 +37,22 @@ ObstacleSpawner::~ObstacleSpawner()
 
 void ObstacleSpawner::Subscribe()
 {
-	_events->AddListener<const GameMode>("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		_gameMode = newGameMode;
-		_gameMode == PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	});
+
+	_events->AddListener("LoadMap", _name, [this]() { LoadMap(); });
+	_events->AddListener("SpawnObstacle", _name, [this](const ObjRectangle rect, const ObstacleType type)
+	{
+		SpawnObstacle(rect, type);
 	});
 }
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener<const ObjRectangle, const ObstacleType, const buuid&>(
+	_events->AddListener(
 			"ClientReceived_ObstacleSpawn", _name,
 			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
@@ -58,9 +62,11 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::Unsubscribe() const
 {
-	_events->RemoveListener<const GameMode>("GameModeChangedTo", _name);
+	_events->RemoveListener("GameModeChangedTo", _name);
+	_events->RemoveListener("LoadMap", _name);
+	_events->RemoveListener("SpawnObstacle", _name);
 
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -68,8 +74,7 @@ void ObstacleSpawner::Unsubscribe() const
 
 void ObstacleSpawner::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const ObjRectangle, const ObstacleType, const buuid&>(
-			"ClientReceived_ObstacleSpawn", _name);
+	_events->RemoveListener("ClientReceived_ObstacleSpawn", _name);
 }
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
@@ -83,25 +88,25 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 	switch (type)
 	{
-		case Brick:
+		case ObstacleType::Brick:
 			obstacle = std::make_shared<BrickWall>(rect, _events, uuid, _gameMode);
 			break;
-		case Steel:
+		case ObstacleType::Steel:
 			obstacle = std::make_shared<SteelWall>(rect, _events, uuid, _gameMode);
 			break;
-		case Water:
+		case ObstacleType::Water:
 			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameMode);
 			break;
-		case Fortress:
+		case ObstacleType::Fortress:
 			obstacle = std::make_shared<FortressWall>(rect, _events, _allObjects, uuid, _gameMode);
 			break;
-		case Eagle:
+		case ObstacleType::Eagle:
 			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
 			break;
-		case Grass:
+		case ObstacleType::Grass:
 			obstacle = std::make_shared<GrassTile>(rect, _events, uuid, _gameMode);
 			break;
-		case Ice:
+		case ObstacleType::Ice:
 			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameMode);
 			break;
 		default:
@@ -116,6 +121,15 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 /*void ObstacleSpawner::SpawnRandomObstacle(const ObjRectangle rect)
 {
-	const auto obstacleType = static_cast<ObstacleType>(_distSpawnType(_gen));
+	const auto obstacleType = static_cast<ObstacleType>(RandUtils::GetRandNumber(_distSpawnType));
 	SpawnObstacle(rect, obstacleType);
 }*/
+
+void ObstacleSpawner::LoadMap() const
+{
+	//Map creation
+	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
+	//TODO: update window size via subscription onChange
+	const Map field{_events};
+	field.MapCreation(gridOffset);
+}

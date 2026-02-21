@@ -14,7 +14,6 @@
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 
-//TODO: write replication tests, server to client events and client to server
 class PlayerTest : public testing::Test
 {
 	using buuid = boost::uuids::uuid;
@@ -28,13 +27,13 @@ protected:
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _bulletSpeed{300.f};
-	float _deltaTimeOneFrame{1.f / 60.f};
-	float _gridSize{0.f};
-	GameMode _gameMode{OnePlayer};
+	float _gridSize{};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	std::string _name = "Player1";
 	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";
 	buuid _uuid{};
+	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
 	{
@@ -48,14 +47,17 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, yellow, _tankHealth, true, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{.rect = rect, .color = yellow, .health = _tankHealth, .uuid = _uuid,
+		                                .name = _name, .fraction = _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};;
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
+		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}, enableByDefault));
 	}
 
 	void TearDown() override
@@ -73,8 +75,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 		player->SetPos({.x = 0.f, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("W_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Up_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
 		EXPECT_NE(startPos.y, endPos.y);
@@ -97,8 +99,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 		player->SetPos({.x = windowWidth - _tankSize, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("A_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Left_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
 		EXPECT_NE(startPos.x, endPos.x);
@@ -120,8 +122,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("S_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Down_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
 		EXPECT_NE(startPos.y, endPos.y);
@@ -143,8 +145,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("D_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Right_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
 		EXPECT_NE(startPos.x, endPos.x);
@@ -167,7 +169,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("W_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -186,7 +188,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("A_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -207,7 +209,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("S_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -228,7 +230,7 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("D_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -263,11 +265,11 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(UP);
+		player->SetDirection(Direction::UP);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -284,11 +286,11 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(LEFT);
+		player->SetDirection(Direction::LEFT);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -305,11 +307,11 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(DOWN);
+		player->SetDirection(Direction::DOWN);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -326,11 +328,11 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
 		                .y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(RIGHT);
+		player->SetDirection(Direction::RIGHT);
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -347,11 +349,11 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	{
 		player->SetPos({.x = 0.f, .y = 0.f});
 		//success shot down test, try to create an inside screen bullet
-		player->SetDirection(DOWN);
+		player->SetDirection(Direction::DOWN);
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Fire_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
 
@@ -370,9 +372,9 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 		//success shot right test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("D_Pressed");
-		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Right_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
 
@@ -392,9 +394,9 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 		//success shot up test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("W_Pressed");
-		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Up_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
 
@@ -414,9 +416,9 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 		//success shot left test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("A_Pressed");
-		_events->EmitEvent("Space_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("P1_Move_Left_Pressed");
+		_events->EmitEvent("P1_Fire_Pressed");
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
 
@@ -438,7 +440,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 
 			_events->EmitEvent("W_Pressed");
 			_events->EmitEvent("Space_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(size, _allObjects.size());
 		}
@@ -448,7 +450,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 
 			_events->EmitEvent("A_Pressed");
 			_events->EmitEvent("Space_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(size, _allObjects.size());
 		}
@@ -461,7 +463,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 
 			_events->EmitEvent("S_Pressed");
 			_events->EmitEvent("Space_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(size, _allObjects.size());
 		}
@@ -471,7 +473,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 
 			_events->EmitEvent("D_Pressed");
 			_events->EmitEvent("Space_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(size, _allObjects.size());
 
@@ -490,9 +492,11 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		constexpr int green = 0x408000;
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{rect, green, _tankHealth, true, _uuid, _name, _fraction};
+		BaseObjProperty baseObjProperty{.rect = rect, .color = green, .health = _tankHealth, .uuid = _uuid,
+		                                .name = _name, .fraction = _fraction};
 		PawnProperty pawnProperty{
-				std::move(baseObjProperty), &_allObjects, _events, _windowSize, _gameMode, 1, UP, _tankSpeed};
+				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
+				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
@@ -505,7 +509,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 
 			_events->EmitEvent("A_Pressed");
 			_events->EmitEvent("ArrowUp_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(playerStartPos, player->GetPos());
 			EXPECT_EQ(player2StartPos, player2->GetPos());
@@ -531,7 +535,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("S_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -555,7 +559,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("S_Pressed");
-		_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
 
@@ -572,8 +576,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	{
 		_allObjects.emplace_back(
 				std::make_shared<WaterTile>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-						_gameMode));
+						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
+						_events, _uuid, _gameMode));
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
@@ -581,7 +585,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 			const FPoint startPos = player->GetPos();
 
 			_events->EmitEvent("S_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(startPos, player->GetPos());
 
@@ -608,7 +612,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 			const FPoint startPos = player->GetPos();
 
 			_events->EmitEvent("S_Pressed");
-			_events->EmitEvent<const float>("TickUpdate", _deltaTimeOneFrame);
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(startPos, player->GetPos());
 

@@ -22,18 +22,18 @@ public:
 	HealthChange();
 
 	//for serialization
-	HealthChange(const std::string& who, int health, buuid uuid);
+	HealthChange(std::string who, int health, buuid uuid);
 
 	~HealthChange() override = default;
 
-	[[nodiscard]] const std::string& GetWho() const;
-	[[nodiscard]] int GetHealth() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] std::string GetWho() const noexcept;
+	[[nodiscard]] int GetHealth() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

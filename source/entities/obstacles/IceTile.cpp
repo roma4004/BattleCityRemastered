@@ -2,20 +2,35 @@
 #include "components/EventSystem.h"
 #include "enums/ObstacleType.h"
 
-IceTile::IceTile(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
                  const GameMode gameMode)
 	: Obstacle{rect,
 	           0x1e90ff,
 	           1,
 	           "Ice",
-	           std::move(events),
+	           events,
 	           uuid,
 	           gameMode,
-	           Ice}
+	           ObstacleType::Ice}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
+
+	Subscribe();
 }
 
-IceTile::~IceTile() = default;
+IceTile::~IceTile()
+{
+	Unsubscribe();
+}
+
+void IceTile::Subscribe()
+{
+	_events->AddListener("PreDraw", _nameWithUuid, [this]() { this->Draw(); });
+}
+
+void IceTile::Unsubscribe() const
+{
+	_events->RemoveListener("PreDraw", _nameWithUuid);
+}

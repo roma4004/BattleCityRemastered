@@ -8,10 +8,11 @@ class Enemy final : public Bot
 {
 	using buuid = boost::uuids::uuid;
 
-	void TickUpdate(float deltaTime) override;
+	void TickUpdate(double deltaTime) override;
 
 public:
-	Enemy(PawnProperty pawnProperty, std::shared_ptr<BulletPool> bulletPool, BonusEffectProperty effects);
+	Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},
+	      bool enableByDefault = false);
 
 	~Enemy() override;
 };

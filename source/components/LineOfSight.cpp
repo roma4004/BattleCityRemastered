@@ -15,9 +15,9 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, 
 	const FPoint tankCenter = {.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankHalf.y};
 	const float tankDownY = {tankRect.y + tankRect.h};
 	const float tankRightX = {tankRect.x + tankRect.w};
-	const FPoint bulletSpawnPos = {tankCenter.x - bulletSize.x, tankCenter.y - bulletSize.y};
-	const FPoint bulletHalfSize = {bulletSize.x / 2, bulletSize.y / 2};
-	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
+	const FPoint bulletSpawnPos = {.x = tankCenter.x - bulletSize.x, .y = tankCenter.y - bulletSize.y};
+	const FPoint bulletHalfSize = {.x = bulletSize.x / 2, .y = bulletSize.y / 2};
+	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{
 			/*up, left, down, right*///TODO: align to not needed exclude self
@@ -38,7 +38,7 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
 	const float tankDownY = {tankRect.y + tankRect.h};
 	const float tankRightX = {tankRect.x + tankRect.w};
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const FPoint sightSize = {fWindowSize.x - tankRightX, fWindowSize.y - tankDownY};
+	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{
 			/*up, left, down, right*/
@@ -58,33 +58,33 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (object.get() == nullptr || excludeSelf == object.get())//TODO: investigate empty object adding
+		if (excludeSelf->GetUuid() == object->GetUuid())
 		{
 			continue;
 		}
 
 		// tank cannot pass water, so we need to skip water when we find enemy to shoot
 		// but when we search for bonus, we should not skip water to avoid moving to bonus through water.
-		const bool isWater =  dynamic_cast<WaterTile*>(object.get());
+		const bool isWater = dynamic_cast<WaterTile*>(object.get());
 		const bool isPenetrable = object->GetIsPenetrable();
 		if (!object->GetIsPassable() && (!isPenetrable || (isWater && !isWaterSkip)))
 		{
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[UP], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::UP)], object->GetRect()))
 			{
 				_upSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[LEFT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::LEFT)], object->GetRect()))
 			{
 				_leftSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[DOWN], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::DOWN)], object->GetRect()))
 			{
 				_downSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[RIGHT], object->GetRect()))
+			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::RIGHT)], object->GetRect()))
 			{
 				_rightSideObstacles.emplace_back(object);
 			}

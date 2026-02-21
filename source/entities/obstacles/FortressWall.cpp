@@ -4,21 +4,28 @@
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "enums/GameMode.h"
+#include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
 #include <algorithm>
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
+//TODO: fix desync on client when destroyed
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
                            std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
 	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
-	  _gameMode{gameMode},
 	  _events{events},
 	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}
+	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)},
+	  _gameMode{gameMode}
 {
-	//TODO: fix fortress replication
 	Subscribe();
+
+	//disable replication for fortress _obstacle
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_ObstacleSpawn", _rect, ObstacleType::Fortress, _uuid);
+	}
 }
 
 FortressWall::~FortressWall()
@@ -28,7 +35,7 @@ FortressWall::~FortressWall()
 
 void FortressWall::Subscribe()
 {
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
@@ -38,7 +45,7 @@ void FortressWall::Subscribe()
 
 void FortressWall::SubscribeAsClient()
 {
-	_events->AddListener<const std::string&, const buuid&>(
+	_events->AddListener(
 			"ClientReceived_FortressChange", _nameWithUuid,
 			[this](const std::string& state, const buuid& uuid)
 			{
@@ -48,13 +55,13 @@ void FortressWall::SubscribeAsClient()
 					{
 						this->OnEnemyPickupShovel();
 					}
-					else if (state == "ToSteel")
-					{
-						this->OnPlayerPickupShovel();
-					}
 					else if (state == "ToBrick")
 					{
 						this->OnPlayerShovelCooldownEnd();
+					}
+					else if (state == "ToSteel")
+					{
+						this->OnPlayerPickupShovel();
 					}
 				}
 			});
@@ -69,7 +76,7 @@ void FortressWall::SubscribeBonus()
 
 void FortressWall::Unsubscribe() const
 {
-	if (_gameMode == PlayAsClient)
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		UnsubscribeAsClient();
 	}
@@ -79,7 +86,7 @@ void FortressWall::Unsubscribe() const
 
 void FortressWall::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const std::string&, const buuid&>("ClientReceived_FortressChange", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_FortressChange", _nameWithUuid);
 }
 
 void FortressWall::UnsubscribeBonus() const
@@ -89,27 +96,15 @@ void FortressWall::UnsubscribeBonus() const
 	_events->RemoveListener("BonusShovelOnEnemyPickup", _nameWithUuid);
 }
 
-void FortressWall::Draw(const BaseObj* /*obj*/) const {}
-
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("Statistics_BrickWallDied", author, fraction);
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const int, const buuid&>(
-					"ServerSend_Health", GetName(), GetHealth(), GetUuid());
-		}
+		_events->EmitEvent("Statistics_BrickWallDied", author, fraction);
 	}
 	else
 	{
-		_events->EmitEvent<const std::string&, const std::string&>("Statistics_SteelWallDied", author, fraction);
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const int, const buuid&>(
-					"ServerSend_Health", GetName(), GetHealth(), GetUuid());
-		}
+		_events->EmitEvent("Statistics_SteelWallDied", author, fraction);
 	}
 }
 
@@ -122,10 +117,9 @@ void FortressWall::OnPlayerShovelCooldownEnd()
 			_obstacle = std::make_unique<BrickWall>(_rect, _events, _uuid, _gameMode);
 		}
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const buuid&>(
-					"ServerSend_FortressChange", "ToBrick", _uuid);
+			_events->EmitEvent("ServerSend_FortressChange", "ToBrick", _uuid);
 		}
 	}
 }
@@ -136,11 +130,6 @@ void FortressWall::OnPlayerPickupShovel()
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [this](const std::shared_ptr<BaseObj>& object)
 	{
-		if (object == nullptr)
-		{
-			return false;
-		}
-
 		if (dynamic_cast<Pawn*>(object.get()))
 		{
 			return ColliderUtils::IsCollide(_rect, object->GetRect());
@@ -153,34 +142,33 @@ void FortressWall::OnPlayerPickupShovel()
 	{
 		_obstacle = std::make_unique<SteelWall>(_rect, _events, _uuid, _gameMode);
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const buuid&>(
-					"ServerSend_FortressChange", "ToSteel", _uuid);
+			_events->EmitEvent("ServerSend_FortressChange", "ToSteel", _uuid);
 		}
 	}
 }
 
 void FortressWall::TakeDamage(const int damage)
 {
-	int health{0};
-
-	std::visit([damage, &health](auto&& obstacle)
+	const int health = std::visit([damage](auto&& obstacle) -> int
 	{
 		if (obstacle)
 		{
 			obstacle->TakeDamage(damage);
-			health = obstacle->GetHealth();
+			return obstacle->GetHealth();
 		}
+
+		return -1;
 	}, _obstacle);
 
 	if (health <= 0)
 	{
 		_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-		if (_gameMode == PlayAsHost)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
+			_events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
 		}
 	}
 }
@@ -200,25 +188,18 @@ void FortressWall::OnEnemyPickupShovel()
 {
 	_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-	if (_gameMode == PlayAsHost)
+	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent<const std::string&, const buuid&>("ServerSend_FortressChange", "Died", _uuid);
+		_events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
 	}
 }
 
 bool FortressWall::GetIsPassable() const
 {
-	bool result{true};
-
-	std::visit([&result](auto&& obstacle)
+	return std::visit([](auto&& obstacle)
 	{
-		if (obstacle)
-		{
-			result = obstacle->GetIsPassable();
-		}
+		return obstacle ? obstacle->GetIsPassable() : true;
 	}, _obstacle);
-
-	return result;
 }
 
 void FortressWall::SetIsPassable(const bool value)
@@ -234,17 +215,10 @@ void FortressWall::SetIsPassable(const bool value)
 
 bool FortressWall::GetIsDestructible() const
 {
-	bool result{false};
-
-	std::visit([&result](auto&& obstacle)
+	return std::visit([](auto&& obstacle)
 	{
-		if (obstacle)
-		{
-			result = obstacle->GetIsDestructible();
-		}
+		return obstacle ? obstacle->GetIsDestructible() : false;
 	}, _obstacle);
-
-	return result;
 }
 
 void FortressWall::SetIsDestructible(const bool value)
@@ -260,17 +234,10 @@ void FortressWall::SetIsDestructible(const bool value)
 
 bool FortressWall::GetIsPenetrable() const
 {
-	bool result{true};
-
-	std::visit([&result](auto&& obstacle)
+	return std::visit([](auto&& obstacle)
 	{
-		if (obstacle)
-		{
-			result = obstacle->GetIsPenetrable();
-		}
+		return obstacle ? obstacle->GetIsPenetrable() : true;
 	}, _obstacle);
-
-	return result;
 }
 
 void FortressWall::SetIsPenetrable(const bool value)
@@ -286,17 +253,10 @@ void FortressWall::SetIsPenetrable(const bool value)
 
 int FortressWall::GetHealth() const
 {
-	int health{0};
-
-	std::visit([&health](auto&& obstacle)
+	return std::visit([](auto&& obstacle) -> int
 	{
-		if (obstacle)
-		{
-			health = obstacle->GetHealth();
-		}
+		return obstacle ? obstacle->GetHealth() : -1;
 	}, _obstacle);
-
-	return health;
 }
 
 void FortressWall::SetHealth(const int health)
@@ -312,17 +272,10 @@ void FortressWall::SetHealth(const int health)
 
 ObjRectangle FortressWall::GetRect() const
 {
-	ObjRectangle rect{};
-
-	std::visit([&rect](auto&& obstacle)
+	return std::visit([](auto&& obstacle) -> ObjRectangle
 	{
-		if (obstacle)
-		{
-			rect = obstacle->GetRect();
-		}
+		return obstacle ? obstacle->GetRect() : ObjRectangle{};
 	}, _obstacle);
-
-	return rect;
 }
 
 void FortressWall::SetRect(const ObjRectangle rect)
@@ -352,16 +305,12 @@ void FortressWall::SetIsAlive(const bool isAlive)
 	}, _obstacle);
 }
 
-const std::string& FortressWall::GetName() const
+//TODO: add to event system trait for auto conversion from std::string_view to string or working direct with view
+std::string_view FortressWall::GetName() const
 {
-	return std::visit([&](auto&& obstacle)
+	return std::visit([this](auto&& obstacle) -> std::string_view
 	{
-		if (obstacle)
-		{
-			return obstacle->GetName();
-		}
-
-		return _name;//TODO: use string_view instead
+		return obstacle ? obstacle->GetName() : "none";
 	}, _obstacle);
 }
 
@@ -369,15 +318,8 @@ using buuid = boost::uuids::uuid;
 
 buuid FortressWall::GetUuid() const
 {
-	buuid uuid{};
-
-	std::visit([&uuid](auto&& obstacle)
+	return std::visit([this](auto&& obstacle) -> buuid
 	{
-		if (obstacle)
-		{
-			uuid = obstacle->GetUuid();
-		}
+		return obstacle ? obstacle->GetUuid() : buuid{};
 	}, _obstacle);
-
-	return uuid;
 }

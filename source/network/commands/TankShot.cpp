@@ -6,16 +6,16 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(TankShot);
 
-TankShot::TankShot(): Command(CommandType::TANK_SHOT) {}
+TankShot::TankShot() : Command(CommandType::TANK_SHOT) {}
 
-TankShot::TankShot(const std::string& who, const Direction dir, const buuid uuid)
-	: Command(CommandType::TANK_SHOT), _who(who), _dir(dir), _uuid(uuid) {}
+TankShot::TankShot(std::string who, const Direction dir, const buuid uuid)
+	: Command{CommandType::TANK_SHOT}, _who{std::move(who)}, _dir{dir}, _uuid{uuid} {}
 
-const std::string& TankShot::GetWho() const { return _who; }
+std::string TankShot::GetWho() const noexcept { return _who; }
 
-Direction TankShot::GetDir() const { return _dir; }
+Direction TankShot::GetDir() const noexcept { return _dir; }
 
 using buuid = boost::uuids::uuid;
-buuid TankShot::GetUuid() const { return _uuid; }
+buuid TankShot::GetUuid() const noexcept { return _uuid; }
 
-const char* TankShot::GetClassNameW() const { return "TankShot"; }
+const char* TankShot::GetClassNameW() const noexcept { return "TankShot"; }

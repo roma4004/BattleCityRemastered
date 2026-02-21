@@ -6,18 +6,18 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(PositionChange);
 
-PositionChange::PositionChange(): Command(CommandType::POSITION_CHANGE) {}
+PositionChange::PositionChange() : Command{CommandType::POSITION_CHANGE} {}
 
-PositionChange::PositionChange(const std::string& who, const FPoint& pos, const Direction dir, const buuid uuid)
-	: Command(CommandType::POSITION_CHANGE), _who(who), _pos(pos), _dir(dir), _uuid(uuid) {}
+PositionChange::PositionChange(std::string who, const FPoint pos, const Direction dir, const buuid uuid)
+	: Command{CommandType::POSITION_CHANGE}, _who{std::move(who)}, _pos{pos}, _dir{dir}, _uuid{uuid} {}
 
-const std::string& PositionChange::GetWho() const { return _who; }
+std::string PositionChange::GetWho() const noexcept { return _who; }
 
-FPoint PositionChange::GetPos() const { return _pos; }
+FPoint PositionChange::GetPos() const noexcept { return _pos; }
 
-Direction PositionChange::GetDir() const { return _dir; }
+Direction PositionChange::GetDir() const noexcept { return _dir; }
 
 using buuid = boost::uuids::uuid;
-buuid PositionChange::GetUuid() const { return _uuid; }
+buuid PositionChange::GetUuid() const noexcept { return _uuid; }
 
-const char* PositionChange::GetClassNameW() const { return "PositionChange"; }
+const char* PositionChange::GetClassNameW() const noexcept { return "PositionChange"; }

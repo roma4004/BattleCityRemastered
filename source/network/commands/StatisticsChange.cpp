@@ -6,13 +6,18 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(StatisticsChange);
 
-StatisticsChange::StatisticsChange(): Command(CommandType::STATISTICS_CHANGE) {}
+StatisticsChange::StatisticsChange() : Command{CommandType::STATISTICS_CHANGE} {}
 
-StatisticsChange::StatisticsChange(const std::string& eventName, const std::string& author, const std::string& fraction)
-	: Command(CommandType::STATISTICS_CHANGE), _eventName(eventName), _author(author), _fraction(fraction) {}
+StatisticsChange::StatisticsChange(std::string eventName, std::string author, std::string fraction)
+	: Command{CommandType::STATISTICS_CHANGE},
+	  _eventName{std::move(eventName)},
+	  _author{std::move(author)},
+	  _fraction{std::move(fraction)} {}
 
-const std::string& StatisticsChange::GetEventName() const { return _eventName; }
-const std::string& StatisticsChange::GetAuthor() const { return _author; }
-const std::string& StatisticsChange::GetFraction() const { return _fraction; }
+std::string StatisticsChange::GetEventName() const noexcept { return _eventName; }
 
-const char* StatisticsChange::GetClassNameW() const { return "StatisticsChange"; }
+std::string StatisticsChange::GetAuthor() const noexcept { return _author; }
+
+std::string StatisticsChange::GetFraction() const noexcept { return _fraction; }
+
+const char* StatisticsChange::GetClassNameW() const noexcept { return "StatisticsChange"; }

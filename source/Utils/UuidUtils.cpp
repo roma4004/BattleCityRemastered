@@ -18,7 +18,7 @@ buuid UuidUtils::GetNilUuid()
 	return boost::uuids::nil_uuid();
 }
 
-std::string UuidUtils::GetStringUuid(buuid uuid)
+std::string UuidUtils::GetStringUuid(const buuid uuid)
 {
 	return boost::uuids::to_string(uuid);
 }

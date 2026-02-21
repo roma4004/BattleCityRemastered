@@ -1,11 +1,11 @@
 ﻿#include "components/Map.h"
-#include "components/ObstacleSpawner.h"
+#include "components/EventSystem.h"
 #include "entities/ObjRectangle.h"
 #include "enums/ObstacleType.h"
 
-Map::Map(std::shared_ptr<ObstacleSpawner> obstacleSpawner) : _obstacleSpawner{std::move(obstacleSpawner)} {}
+Map::Map(const std::shared_ptr<EventSystem>& events) : _events{events} {}
 
-Map::~Map() {}
+Map::~Map() = default;
 
 void Map::MapCreation(const float gridSize) const
 {
@@ -22,27 +22,27 @@ void Map::MapCreation(const float gridSize) const
 				case 0:
 					break;
 				case 1:
-					_obstacleSpawner->SpawnObstacle(rect, Brick);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Brick);
 					break;
 				case 2:
-					_obstacleSpawner->SpawnObstacle(rect, Steel);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Steel);
 					break;
 				case 3:
 					rect.w += gridSize * 3;
 					rect.h += gridSize * 3;
-					_obstacleSpawner->SpawnObstacle(rect, Eagle);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Eagle);
 					break;
 				case 4:
-					_obstacleSpawner->SpawnObstacle(rect, Fortress);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Fortress);
 					break;
 				case 5:
-					_obstacleSpawner->SpawnObstacle(rect, Water);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Water);
 					break;
 				case 6:
-					_obstacleSpawner->SpawnObstacle(rect, Grass);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Grass);
 					break;
 				case 7:
-					_obstacleSpawner->SpawnObstacle(rect, Ice);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Ice);
 					break;
 				default:
 					break;

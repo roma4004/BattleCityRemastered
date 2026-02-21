@@ -6,10 +6,7 @@
 #include <queue>
 #include <string>
 
-enum GameMode : char8_t;
-enum Direction : char8_t;
-struct ObjRectangle;
-struct SDL_Renderer;
+enum class GameMode : char8_t;
 class Bullet;
 class BaseObj;
 class EventSystem;
@@ -20,15 +17,15 @@ class BulletPool final
 
 	std::mutex _bulletsMutex{};
 	std::string _name{};
-	GameMode _gameMode{};
 	UPoint _windowSize{};
-	bool _isClearing{false};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 	std::queue<std::shared_ptr<BaseObj>> _bullets{};
+	GameMode _gameMode{};
+	bool _isClearing{false};
 
 public:
-	BulletPool(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	           UPoint windowSize, GameMode gameMode);
 
 	~BulletPool();
@@ -45,5 +42,4 @@ public:
 	void Clear();
 
 	[[nodiscard]] static std::string GetCurrentTimeString();
-
 };

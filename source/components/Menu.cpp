@@ -1,40 +1,23 @@
 #include "components/Menu.h"
+#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "enums/GameMode.h"
+#include <iomanip>
+#include <sstream>
 
-Menu::Menu(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> menuFont,
-           std::shared_ptr<SDL_Texture> menuLogo, std::shared_ptr<GameStatistics> statistics, const UPoint windowSize,
-           std::shared_ptr<EventSystem> events)
+Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)},
-	  _selectedGameMode{OnePlayer},
-	  _renderer{std::move(renderer)},
 	  _events{events},
-	  _menuFont{std::move(menuFont)},
-	  _menuLogo{std::move(menuLogo)},
-	  _statistics{std::move(statistics)},
+	  _statistics{std::make_unique<GameStatistics>(events)},
 	  _input{std::make_unique<InputProviderForMenu>(events)},
-	  _name{std::string("Menu")}
+	  _name{std::string("Menu")},
+	  _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
 	_padding = 25;
-	const auto windowWidth = static_cast<unsigned int>(windowSize.x);
-	_height = static_cast<int>(windowSize.y) - _padding * 3;
-	constexpr int sideBarWidth = 228;
-	_width = windowWidth - sideBarWidth - _padding;
-
-	PregenerateMenuBackground();
-
-	// SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
-	_backgroundTexture = std::shared_ptr<SDL_Texture>(
-			SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-			                  _width, _height),
-			SDL_DestroyTexture);
-	SDL_SetTextureBlendMode(_backgroundTexture.get(), SDL_BLENDMODE_BLEND);
-
-	const SDL_Rect rect{_padding, _padding, _width, _height};
-	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
+	_windowHeight = static_cast<int>(windowSize.y);
 }
 
 Menu::~Menu()
@@ -44,22 +27,27 @@ Menu::~Menu()
 
 void Menu::Subscribe()
 {
-	_events->AddListener<const GameMode>("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_selectedGameMode = newGameMode;
 	});
 
-	_events->AddListener<const std::string&, const int>(
-			"RespawnResourceChangedTo", _name, [this](const std::string& objectName, const int respawnResource)
+	_events->AddListener(
+			"RespawnCountChangedTo", _name,
+			[this](const std::string& objectName, const int respawnCount)
 			{
-				this->OnRespawnResourceChanged(objectName, respawnResource);
+				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
+	_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
 }
 
 void Menu::Unsubscribe() const
 {
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
-	_events->RemoveListener<const std::string&, const int>("RespawnResourceChangedTo", _name);
+	_events->RemoveListener("RespawnCountChangedTo", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
+	_events->RemoveListener("DrawUserInterface", _name);
 }
 
 void Menu::MenuUpdate() const
@@ -84,22 +72,11 @@ void Menu::MenuUpdate() const
 	}
 }
 
-void Menu::PregenerateMenuBackground()
-{
-	_menuBackground = std::make_shared<int[]>(_height * _width);
-	for (int y = 0; y < _height; ++y)
-	{
-		for (int x = 0; x < _width; ++x)
-		{
-			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency
-			_menuBackground[y * _width + x] = menuColor;
-		}
-	}
-}
-
+//TODO: optimize draw call with cache non changed text part
 void Menu::DrawMenu()
 {
 	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)
+	//TODO: split input and local menu state is shown
 	{
 		return;
 	}
@@ -111,78 +88,30 @@ void Menu::DrawMenu()
 	}
 
 	_pos.x = _padding;
-	_pos.y = _padding + _yOffsetStart;
+	_pos.y = static_cast<int>(_padding + _yOffsetStart);
 
-	DrawBackground();
-	DrawMenuLogo();
+	_events->EmitEvent("RenderMenuBackground", _pos);
+	_events->EmitEvent("RenderMenuLogo", _pos);
 	DrawText();
-}
-
-// blend menu panel and menu texture background
-void Menu::DrawBackground() const
-{
-	const SDL_Rect rect{_pos.x, _pos.y, _width, _height};
-
-	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
-	SDL_RenderCopy(_renderer.get(), _backgroundTexture.get(), nullptr, &rect);
-}
-
-void Menu::DrawMenuLogo() const
-{
-	const SDL_Rect rect{.x = _pos.x + 135, .y = _pos.y + 42, .w = 300, .h = 75};
-
-	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
-}
-
-void Menu::TextToRender(const Point& pos, const SDL_Color& color, const int value) const
-{
-	TextToRender(pos, color, std::to_string(value));
-}
-
-void Menu::TextToRender(const Point pos, const SDL_Color color, const std::string& text) const
-{
-	if (!_menuFont || !_renderer)
-	{
-		return;
-	}
-
-	const std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(_menuFont.get(), text.c_str(), color),
-			SDL_FreeSurface);
-	if (!surface)
-	{
-		return;
-	}
-
-	const std::unique_ptr<SDL_Texture, void(*)(SDL_Texture*)> texture(
-			SDL_CreateTextureFromSurface(_renderer.get(), surface.get()),
-			SDL_DestroyTexture);
-	if (!texture)
-	{
-		return;
-	}
-
-	const SDL_Rect textRect{pos.x, pos.y, surface->w, surface->h};
-	SDL_RenderCopy(_renderer.get(), texture.get(), nullptr, &textRect);
 }
 
 void Menu::RenderStatistics(const Point pos) const
 {
-	constexpr SDL_Color color = {0x00, 0xff, 0xff, 0xff};
+	constexpr unsigned int color = {0xff00ffff};
 
-	TextToRender({.x = pos.x - 60, .y = pos.y + 100}, color, "GAME STATISTICS");
+	_events->EmitEvent("RenderText", Point{.x = pos.x - 60, .y = pos.y + 100}, color, "GAME STATISTICS");
 
 	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
-	                        _playerOneRespawnResource,
-	                        _playerTwoRespawnResource,
-	                        _enemyRespawnResource);
+	                        _playerOneRepawnCount,
+	                        _playerTwoRespawnCount,
+	                        _enemyRespawnCount);
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
-	                        _playerOneRespawnResource,
-	                        _playerTwoRespawnResource,
-	                        _enemyRespawnResource);
+	                        _playerOneRepawnCount,
+	                        _playerTwoRespawnCount,
+	                        _enemyRespawnCount);
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET",
 	                        _statistics->GetBulletHitByPlayerOne(),
@@ -230,8 +159,8 @@ void Menu::RenderStatistics(const Point pos) const
 	//                         _statistics->GetBonusPickupByEnemyTeam());
 }
 
-void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text, const int player1,
-                                   const int player2, const int enemy) const
+void Menu::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
+                                   const int player1, const int player2, const int enemy) const
 {
 	std::ostringstream textStream;
 	textStream << std::left
@@ -244,10 +173,10 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 		textStream << std::setw(4) << enemy;
 	}
 
-	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+	_events->EmitEvent("RenderText", pos, color, textStream.str());
 }
 
-void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const std::string& text,
+void Menu::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
                                    const std::string& text2, const std::string& text3) const
 {
 	std::ostringstream textStream;
@@ -258,41 +187,45 @@ void Menu::RenderTextWithAlignment(const Point pos, const SDL_Color color, const
 			<< std::setw(4) << text2
 			<< std::setw(4) << text3;
 
-	TextToRender(Point{pos.x, pos.y}, color, textStream.str());
+	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
 void Menu::DrawText() const
 {
-	//TODO: add skip if outside screen
-	const Point pos = {.x = _pos.x + 180, .y = _pos.y + 180};
-	constexpr SDL_Color color = {0xff, 0xff, 0xff, 0xff};
+	const Point pos{.x = _pos.x + 180, .y = _pos.y + 180};
+	if (pos.y - 50 >= _windowHeight)
+	{
+		return;
+	}
 
-	TextToRender({.x = pos.x, .y = pos.y - 50}, color,
-	             _selectedGameMode == OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
-	TextToRender({.x = pos.x, .y = pos.y - 25}, color,
-	             _selectedGameMode == TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
-	TextToRender({.x = pos.x, .y = pos.y}, color,
-	             _selectedGameMode == CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
-	TextToRender({.x = pos.x, .y = pos.y + 25}, color,
-	             _selectedGameMode == PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
-	TextToRender({.x = pos.x, .y = pos.y + 50}, color,
-	             _selectedGameMode == PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
+	constexpr unsigned int color = {0xffffffff};
+
+	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y - 50}, color,
+	                   _selectedGameMode == GameMode::OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
+	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y - 25}, color,
+	                   _selectedGameMode == GameMode::TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
+	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color,
+	                   _selectedGameMode == GameMode::CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
+	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y + 25}, color,
+	                   _selectedGameMode == GameMode::PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
+	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y + 50}, color,
+	                   _selectedGameMode == GameMode::PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(pos);
 }
 
-void Menu::OnRespawnResourceChanged(const std::string& objectName, const int respawnResource)
+void Menu::OnRespawnCountChanged(const std::string& objectName, const int respawnCount)
 {
 	if (objectName == "Enemy")
 	{
-		_enemyRespawnResource = respawnResource;
+		_enemyRespawnCount = respawnCount;
 	}
 	else if (objectName == "Player1")
 	{
-		_playerOneRespawnResource = respawnResource;
+		_playerOneRepawnCount = respawnCount;
 	}
 	else if (objectName == "Player2")
 	{
-		_playerTwoRespawnResource = respawnResource;
+		_playerTwoRespawnCount = respawnCount;
 	}
 }

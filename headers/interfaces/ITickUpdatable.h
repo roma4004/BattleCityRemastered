@@ -2,7 +2,7 @@
 
 class ITickUpdatable
 {
-	virtual void TickUpdate(float deltaTime) = 0;
+	virtual void TickUpdate(double deltaTime) = 0;
 
 protected:
 	virtual ~ITickUpdatable() = default;

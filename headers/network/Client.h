@@ -8,8 +8,8 @@
 #include <boost/asio.hpp>
 #include <boost/serialization/vector.hpp>
 
-enum BonusType : char8_t;
-enum Direction : char8_t;
+enum class BonusType : char8_t;
+enum class Direction : char8_t;
 class EventSystem;
 class BaseObj;
 using boost::asio::ip::tcp;
@@ -21,16 +21,16 @@ struct ClientData final
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int version);
 
-	int health{-1};
-	int respawnResource{-1};
-	int id{-1};
-	BonusType type{};
 	std::string who{};
 	std::string eventType{};
 	std::string eventName{};
 	std::string fraction{};
 	std::vector<std::string> names{};
 	FPoint pos{};
+	int respawnCount{-1};
+	int id{-1};
+	int health{-1};
+	BonusType type{};
 	Direction dir{};
 };
 
@@ -38,7 +38,7 @@ class Client final//: public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       std::shared_ptr<EventSystem> events);
+	       const std::shared_ptr<EventSystem>& events);
 
 	~Client();
 
@@ -59,7 +59,10 @@ public:
 	void OnBonusDeSpawn(const std::shared_ptr<Command>& command) const;
 	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
 	void OnObstacleSpawn(const std::shared_ptr<Command>& command) const;
+	void OnAnimationCreate(const std::shared_ptr<Command>& command) const;
+	void OnTankOnOff(const std::shared_ptr<Command>& command) const;
 	void OnCommandBatch(const std::shared_ptr<Command>& commands) const;
+	void OnBonusStatus(const std::shared_ptr<Command>& command) const;
 	void ProcessClientCommand(const std::shared_ptr<Command>& command) const;
 	void ProcessReceivedData(const std::string& archiveData) const;
 

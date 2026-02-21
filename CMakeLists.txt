@@ -24,18 +24,19 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 include(FetchContent)
 set(vendored_default FALSE)
 set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
-set(SDL2_TAG "release-2.30.8")
+set(SDL2_TAG "release-2.32.8")
 set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
-set(SDL2_TTF_TAG "release-2.22.0")
+set(SDL2_TTF_TAG "release-2.24.0")
 set(SDL2_IMG_URL "https://github.com/libsdl-org/SDL_image.git")
-set(SDL2_IMG_TAG "release-2.8.2")
+set(SDL2_IMG_TAG "release-2.8.8")
 set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
-set(SDL2_MXR_TAG "release-2.8.0")
+set(SDL2_MXR_TAG "release-2.8.1")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
 set(BOOST_VERSION "1.87.0")
 string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE "${BOOST_VERSION}")
 set(BOOST_TAG "boost-${BOOST_VERSION}")
 set(SDL2_MIXER_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_mixer.git")
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE)
 
 cmake_policy(SET CMP0148 NEW)
 include (FindPython)
@@ -47,13 +48,14 @@ set(SDL_STATIC ON CACHE BOOL "Build static SDL2 libraries")
 set(SDL_TTF_SHARED OFF CACHE BOOL "Build shared SDL2_ttf library")
 set(SDL_TTF_STATIC ON CACHE BOOL "Build static SDL2_ttf library")
 option(SDL2_TTF_STATIC "Build static SDL2_ttf library" ON)
+set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
+set(SDL2TTF_HARFBUZZ OFF CACHE BOOL "Enable HarfBuzz shaping in SDL2_ttf" FORCE)
 
 set(SDL2MIXER_FLUIDSYNTH OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MODPLUG OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MIDI OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MP3 OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_FLAC OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_LIBXMP OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_LIBXME OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MPG123 OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_OGG OFF CACHE BOOL "" FORCE)
@@ -80,7 +82,6 @@ FetchContent_GetProperties(SDL2)
 set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/include")
 set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/libfreetype.a")
 FetchContent_MakeAvailable(SDL2_ttf)
-add_subdirectory(${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype)
 FetchContent_GetProperties(SDL2_ttf)
 
 FetchContent_MakeAvailable(SDL2_image)
@@ -89,7 +90,6 @@ FetchContent_GetProperties(SDL2_image)
 set(libxmp_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/include")
 set(libxmp_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/libxmp.a")
 FetchContent_MakeAvailable(SDL2_mixer)
-add_subdirectory(${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp)
 FetchContent_GetProperties(SDL2_mixer)
 
 #FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
@@ -265,7 +265,7 @@ set(SOURCE_FILES
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
-        source/components/BonusEffectManager.cpp
+        source/components/AnimatedObjects.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
@@ -274,14 +274,21 @@ set(SOURCE_FILES
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/TankSpawner.cpp
-        source/components/TextureManager.cpp
         source/components/input/InputProviderForMenu.cpp
         source/components/input/InputProviderForPlayerOne.cpp
         source/components/input/InputProviderForPlayerOneNet.cpp
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/components/managers/AnimationManager.cpp
+        source/components/managers/BonusEffectManager.cpp
+        source/components/managers/FramePerSecondManager.cpp
+        source/components/managers/RenderManager.cpp
+        source/components/managers/RespawnManager.cpp
+        source/components/managers/SpawnManager.cpp
+        source/components/managers/DelayedSpawnManager.cpp
+        source/components/managers/StateManager.cpp
+        source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
-        source/entities/ObjRectangle.cpp
         source/entities/Obstacles/EagleTile.cpp
         source/entities/Obstacles/GrassTile.cpp
         source/entities/Obstacles/IceTile.cpp
@@ -291,7 +298,6 @@ set(SOURCE_FILES
         source/entities/bonuses/BonusHelmet.cpp
         source/entities/bonuses/BonusShovel.cpp
         source/entities/bonuses/BonusStar.cpp
-        source/entities/bonuses/BonusStatus.cpp
         source/entities/bonuses/BonusTank.cpp
         source/entities/bonuses/BonusTimer.cpp
         source/entities/obstacles/BrickWall.cpp
@@ -311,6 +317,9 @@ set(SOURCE_FILES
         source/network/ClientHandler.cpp
         source/network/Server.cpp
         source/network/ServerHandler.cpp
+        source/network/commands/AnimationCreate.cpp
+        source/network/commands/BonusStatus.cpp
+        source/network/commands/TankOnOff.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
         source/network/commands/Command.cpp
@@ -326,6 +335,9 @@ set(SOURCE_FILES
         source/network/commands/TankShot.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
+        source/utils/NetworkLogger.cpp
+        source/utils/RandUtils.cpp
+        source/utils/Timer.cpp
         source/utils/TimeUtils.cpp
         source/utils/UuidUtils.cpp
 )
@@ -333,11 +345,9 @@ set(SOURCE_FILES
 set(SOURCE_FILES_FOR_UNIT_TESTS
         source/Utils/ColliderUtils.cpp
         source/Utils/TimeUtils.cpp
-        source/Utils/UuidUtils.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
-        source/components/BonusEffectManager.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
         source/components/GameStatistics.cpp
@@ -349,25 +359,27 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/input/InputProviderForPlayerOneNet.cpp
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/components/managers/BonusEffectManager.cpp
+        source/components/managers/RespawnManager.cpp
+        source/components/managers/DelayedSpawnManager.cpp
+        source/components/Map.cpp
         source/entities/BaseObj.cpp
-        source/entities/ObjRectangle.cpp
-        source/entities/Obstacles/BrickWall.cpp
-        source/entities/Obstacles/EagleTile.cpp
-        source/entities/Obstacles/GrassTile.cpp
-        source/entities/Obstacles/IceTile.cpp
-        source/entities/Obstacles/SteelWall.cpp
-        source/entities/Obstacles/WaterTile.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
         source/entities/bonuses/BonusGrenade.cpp
         source/entities/bonuses/BonusHelmet.cpp
         source/entities/bonuses/BonusShovel.cpp
         source/entities/bonuses/BonusStar.cpp
-        source/entities/bonuses/BonusStatus.cpp
         source/entities/bonuses/BonusTank.cpp
         source/entities/bonuses/BonusTimer.cpp
+        source/entities/obstacles/BrickWall.cpp
+        source/entities/obstacles/EagleTile.cpp
         source/entities/obstacles/FortressWall.cpp
+        source/entities/obstacles/GrassTile.cpp
+        source/entities/obstacles/IceTile.cpp
         source/entities/obstacles/Obstacle.cpp
+        source/entities/obstacles/SteelWall.cpp
+        source/entities/obstacles/WaterTile.cpp
         source/entities/pawns/Bot.cpp
         source/entities/pawns/Bullet.cpp
         source/entities/pawns/CoopBot.cpp
@@ -375,7 +387,31 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/entities/pawns/Pawn.cpp
         source/entities/pawns/Player.cpp
         source/entities/pawns/Tank.cpp
+        source/network/Client.cpp
+        source/network/ClientHandler.cpp
+        source/network/Server.cpp
+        source/network/ServerHandler.cpp
+        source/network/commands/AnimationCreate.cpp
+        source/network/commands/BonusStatus.cpp
+        source/network/commands/TankOnOff.cpp
+        source/network/commands/BonusDeSpawn.cpp
+        source/network/commands/BonusSpawn.cpp
+        source/network/commands/Command.cpp
+        source/network/commands/CommandBatch.cpp
+        source/network/commands/Dispose.cpp
+        source/network/commands/FortressChange.cpp
+        source/network/commands/HealthChange.cpp
+        source/network/commands/KeyStateChange.cpp
+        source/network/commands/ObstacleSpawn.cpp
+        source/network/commands/PositionChange.cpp
+        source/network/commands/RespawnTank.cpp
+        source/network/commands/StatisticsChange.cpp
+        source/network/commands/TankShot.cpp
         source/utils/Logger.cpp
+        source/utils/NetworkLogger.cpp
+        source/utils/RandUtils.cpp
+        source/utils/Timer.cpp
+        source/utils/UuidUtils.cpp
 )
 
 set(UNIT_TESTS_FILES
@@ -383,6 +419,7 @@ set(UNIT_TESTS_FILES
         UnitTests/BonusTestsEnemy.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp
+        UnitTests/NetworkTests.cpp
         UnitTests/PlayerTests.cpp
         UnitTests/RespawnTankTests.cpp
         UnitTests/StatisticsTestsAdvanced.cpp
@@ -402,7 +439,14 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 endif()
 
 target_include_directories(unit_tests PRIVATE headers)
-target_link_libraries(unit_tests gtest gtest_main ${Boost_LIBRARIES})
+target_link_libraries(unit_tests
+        gtest
+        gtest_main
+        ${Boost_LIBRARIES}
+        wsock32  #NOTE: this for windows socket
+        ws2_32   #NOTE: this for windows socket
+)
+
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 

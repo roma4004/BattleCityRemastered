@@ -6,7 +6,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
-enum TankType : char8_t;
+enum class TankType : char8_t;
 
 class RespawnTank : public Command
 {
@@ -26,13 +26,13 @@ public:
 
 	~RespawnTank() override = default;
 
-	[[nodiscard]] TankType GetTankType() const;
-	[[nodiscard]] buuid GetUuid() const;
+	[[nodiscard]] TankType GetTankType() const noexcept;
+	[[nodiscard]] buuid GetUuid() const noexcept;
 
 	template<class Archive>
-	void serialize(Archive& ar, const unsigned int /*version*/);
+	void serialize(Archive& ar, unsigned int /*version*/);
 
-	[[nodiscard]] const char* GetClassNameW() const override;
+	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>

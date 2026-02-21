@@ -13,8 +13,8 @@ class BonusGrenade final : public Bonus
 	using buuid = boost::uuids::uuid;
 
 public:
-	BonusGrenade(const ObjRectangle& rect, std::shared_ptr<EventSystem> events, milliseconds duration,
-	             milliseconds lifeTime, int color, buuid uuid, GameMode gameMode);
+	BonusGrenade(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
+	             unsigned int color, buuid uuid, GameMode gameMode);
 
 	~BonusGrenade() override;
 };

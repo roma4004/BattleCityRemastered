@@ -4,7 +4,7 @@
 #include <string>
 #include <boost/uuid/uuid.hpp>
 
-enum Direction : char8_t;
+enum class Direction : char8_t;
 
 struct BulletResetProperty
 {
@@ -12,13 +12,13 @@ struct BulletResetProperty
 
 	ObjRectangle rect{};
 	int damage{};
-	double aoeRadius{};
-	int color{};
-	int health{};
 	Direction dir{};
+	double aoeRadius{};
+	unsigned int color{};
+	int health{};
 	float speed{};
+	int tier{};
 	std::string author{};
 	std::string fraction{};
-	int tier{};
 	buuid uuid{};
 };

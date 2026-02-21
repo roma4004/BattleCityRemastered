@@ -1,18 +1,20 @@
 ﻿#include "entities/pawns/Bullet.h"
-#include "Point.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
+#include "entities/obstacles/GrassTile.h"
+#include "entities/obstacles/IceTile.h"
+#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 // #include <iostream>
-#include <string>
 
-Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, {18.f}, "") {}
+Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, 18.f, "") {}
 
-Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author)
-	: Pawn{pawnProperty, std::make_unique<MoveLikeBulletBeh>(this, pawnProperty.allObjects, pawnProperty.events)},
+Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
+               const bool enableByDefault)
+	: Pawn{std::move(pawnProperty)},
 	  _author{std::move(author)},
 	  _bulletDamageRadius{aoeRadius},
 	  _damage{damage}
@@ -20,6 +22,13 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
+
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
+	                                               _bulletTargets, _allObjects);
+	if (enableByDefault)
+	{
+		Bullet::Subscribe();
+	}
 
 	if (_uuid == UuidUtils::GetNilUuid())
 	{
@@ -37,16 +46,57 @@ Bullet::~Bullet()
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	Unsubscribe();
+	Bullet::Unsubscribe();
 }
 
 void Bullet::Subscribe()
 {
-	if (_gameMode == PlayAsClient)
+	Pawn::Subscribe();
+
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+
+	if (_gameMode == GameMode::PlayAsClient)
 	{
 		SubscribeAsClient();
 	}
 }
+
+void Bullet::SubscribeAsClient()
+{
+	_events->AddListener("ClientReceived_" + _name + "Dispose", _nameWithUuid, [this](const buuid& uuid)
+	{
+		if (uuid != _uuid)
+		{
+			return;
+		}
+
+		this->SetIsAlive(false);
+	});
+}
+
+void Bullet::Unsubscribe() const
+{
+	Pawn::Unsubscribe();
+
+	_events->RemoveListener("Draw", _nameWithUuid);
+
+	// std::cout << "[" << "Bullet::Unsubscribe" << "] "
+	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
+	// 			<< ", name=" << _name
+	// 			<< ", name+UUID=" << _nameWithUuid
+	// 			<< std::endl;
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		UnsubscribeAsClient();
+	}
+}
+
+void Bullet::UnsubscribeAsClient() const
+{
+	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _nameWithUuid);
+}
+
+void Bullet::Draw() const { _events->EmitEvent("DrawObj", _rect, _dir, _name, _color); }
 
 using buuid = boost::uuids::uuid;
 
@@ -60,35 +110,9 @@ const std::string& Bullet::GetUuidStr() const
 	return _uuidStr;
 }
 
-void Bullet::SubscribeAsClient()
+void Bullet::Enable()
 {
-	_events->AddListener<const buuid&>("ClientReceived_" + _name + "Dispose", _nameWithUuid, [this](const buuid& uuid)
-	{
-		if (uuid != _uuid)
-		{
-			return;
-		}
-
-		this->SetIsAlive(false);
-	});
-}
-
-void Bullet::Unsubscribe() const
-{
-	// std::cout << "[" << "Bullet::Unsubscribe" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
-	if (_gameMode == PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-}
-
-void Bullet::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _nameWithUuid);
+	Subscribe();
 }
 
 void Bullet::Disable() const
@@ -98,14 +122,8 @@ void Bullet::Disable() const
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	Pawn::Unsubscribe();
-	Unsubscribe();
-}
 
-void Bullet::Enable()
-{
-	Pawn::Subscribe();
-	Subscribe();
+	Unsubscribe();
 }
 
 void Bullet::Reset(BulletResetProperty resetProperty)
@@ -117,7 +135,10 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
 
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(this, _allObjects, _events);
+	//TODO: write reset for MoveLikeBulletBeh
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
+	                                               _bulletTargets, _allObjects);
+	_bulletTargets.clear();
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_damage = resetProperty.damage;
@@ -137,24 +158,14 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	Enable();
 }
 
-void Bullet::TickUpdate(const float deltaTime)
+void Bullet::TickUpdate(const double deltaTime)
 {
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
-		if (_moveBeh->Move(deltaTime))
+		if (!Pawn::Move(deltaTime))
 		{
-			++animationFrameId;
-			if (animationFrameId % 12 && ++animationId > animationIdLimit)
-			{
-				animationId = 0;
-				animationFrameId = 0;
-			}
-		}
-
-		if (_gameMode == PlayAsHost)
-		{
-			_events->EmitEvent<const std::string&, const FPoint, const Direction, const buuid&>(
-					"ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
+			DealDamage(_bulletTargets);
+			_bulletTargets.clear();
 		}
 	}
 }
@@ -167,19 +178,38 @@ std::string Bullet::GetAuthor() const { return _author; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent<const std::string&, const std::string&>("Statistics_BulletHit", author, fraction);
+	_events->EmitEvent("Statistics_BulletHit", author, fraction);
 }
 
 void Bullet::TakeDamage(const int damage)
 {
-	BaseObj::TakeDamage(damage);
-
-	if (_gameMode == PlayAsHost)
-	{
-		//TODO: move this to onHealthChange
-		_events->EmitEvent<const std::string&, const int, const buuid&>(
-				"ServerSend_Health", GetName(), GetHealth(), _uuid);
-	}
+	Pawn::TakeDamage(damage);
 }
 
 int Bullet::GetTier() const { return _tier; }
+
+void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
+{
+	if (!objectList.empty())
+	{
+		for (const auto& target: objectList)
+		{
+			if (target && !dynamic_cast<WaterTile*>(target.get())
+			    && !dynamic_cast<GrassTile*>(target.get())
+			    && !dynamic_cast<IceTile*>(target.get())
+			    && (target->GetIsDestructible() || _tier > 2))
+			{
+				target->TakeDamage(_damage);
+				target->SendDamageStatistics(GetAuthor(), GetFraction());
+				if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
+				{
+					SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
+				}
+			}
+		}
+	}
+
+	TakeDamage(_damage);
+
+	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
+}

@@ -1,13 +1,10 @@
 #pragma once
 
-#include <chrono>
-#include <memory>
 #include <random>
-#include <vector>
 #include <boost/uuid/uuid.hpp>
 
-enum GameMode : char8_t;
-enum BonusType : char8_t;
+enum class GameMode : char8_t;
+enum class BonusType : char8_t;
 struct UPoint;
 struct ObjRectangle;
 class BaseObj;
@@ -19,14 +16,11 @@ class BonusSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"BonusSpawner"};
-	GameMode _gameMode{};
-	int _bonusSize{0};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	std::mt19937 _gen{};
 	std::uniform_int_distribution<> _distSpawnPosY{};
 	std::uniform_int_distribution<> _distSpawnPosX{};
 	std::uniform_int_distribution<> _distSpawnType{};
@@ -34,6 +28,8 @@ class BonusSpawner final
 
 	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};// Bonus spawn time
 	std::chrono::system_clock::time_point _lastTimeSpawn{};
+	int _bonusSize{};
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeAsHost();
@@ -46,12 +42,12 @@ class BonusSpawner final
 	void Update();
 
 public:
-	BonusSpawner(std::shared_ptr<EventSystem> events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be in bonus.h
 
 	~BonusSpawner();
 
 	void SpawnRandomBonus(ObjRectangle rect);
 
-	void SpawnBonus(ObjRectangle rect, int color, BonusType type, buuid uuid = {}); //NOTE: for unit tests
+	void SpawnBonus(ObjRectangle rect, unsigned int color, BonusType type, buuid uuid = {});//NOTE: for unit tests
 };

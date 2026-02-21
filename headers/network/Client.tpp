@@ -4,7 +4,7 @@ template<class Archive>
 void ClientData::serialize(Archive& ar, const unsigned int /*version*/)
 {
 	ar & health;
-	ar & respawnResource;
+	ar & respawnCount;
 	ar & id;
 	ar & type;
 	ar & who;

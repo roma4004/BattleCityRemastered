@@ -2,20 +2,35 @@
 #include "components/EventSystem.h"
 #include "enums/ObstacleType.h"
 
-GrassTile::GrassTile(const ObjRectangle rect, std::shared_ptr<EventSystem> events, const buuid uuid,
+GrassTile::GrassTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
                      const GameMode gameMode)
 	: Obstacle{rect,
 	           0x1e90ff,
 	           1,
 	           "Grass",
-	           std::move(events),
+	           events,
 	           uuid,
 	           gameMode,
-	           Grass}
+	           ObstacleType::Grass}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);
 	BaseObj::SetIsPenetrable(true);
+
+	Subscribe();
 }
 
-GrassTile::~GrassTile() = default;
+GrassTile::~GrassTile()
+{
+	Unsubscribe();
+}
+
+void GrassTile::Subscribe()
+{
+	_events->AddListener("PostDraw", _nameWithUuid, [this]() { this->Draw(); });
+}
+
+void GrassTile::Unsubscribe() const
+{
+	_events->RemoveListener("PostDraw", _nameWithUuid);
+}

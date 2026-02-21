@@ -2,24 +2,45 @@
 #include "Point.h"
 #include "entities/BaseObjProperty.h"
 #include "utils/UuidUtils.h"
+#include <utility>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
-	: _color(baseObjProperty.color),
-	  _health(baseObjProperty.health),
+	: _health(baseObjProperty.health),
 	  _uuid{baseObjProperty.uuid},
+	  _color(baseObjProperty.color),
 	  _name{std::move(baseObjProperty.name)},
 	  _fraction{std::move(baseObjProperty.fraction)},
-	  _rect{std::move(baseObjProperty.rect)}
+	  _rect{baseObjProperty.rect}
 {
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
 
-//Deprecated
-BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, const buuid uuid, std::string name,
-                 std::string fraction)
-	: _color(color),
-	  _health(health),
+//Copy ctor
+BaseObj::BaseObj(const BaseObj& other)
+	: _health(other._health),
+	  _uuid(other._uuid),
+	  _color(other._color),
+	  _name(other._name),
+	  _nameWithUuid(other._nameWithUuid),
+	  _fraction(other._fraction),
+	  _rect(other._rect) {}
+
+//Move ctor
+BaseObj::BaseObj(BaseObj&& other) noexcept
+	: _health(std::exchange(other._health, 0)),
+	  _uuid(other._uuid),
+	  _color(std::exchange(other._color, 0)),
+	  _name(other._name),
+	  _nameWithUuid(other._nameWithUuid),
+	  _fraction(other._fraction),
+	  _rect(other._rect) {}
+
+//Deprecated //TODO: remove this con overload
+BaseObj::BaseObj(const ObjRectangle rect, const unsigned int color, const int health, const buuid uuid,
+                 std::string name, std::string fraction)
+	: _health(health),
 	  _uuid{uuid},
+	  _color(color),
 	  _name{std::move(name)},
 	  _fraction{std::move(fraction)},
 	  _rect{rect}
@@ -29,11 +50,45 @@ BaseObj::BaseObj(const ObjRectangle rect, const int color, const int health, con
 
 BaseObj::~BaseObj() = default;
 
+//Copy assignment
+BaseObj& BaseObj::operator=(const BaseObj& other)
+{
+	if (this != &other)
+	{
+		_color = other._color;
+		_health = other._health;
+		_uuid = other._uuid;
+		_name = other._name;
+		_nameWithUuid = other._nameWithUuid;
+		_fraction = other._fraction;
+		_rect = other._rect;
+	}
+
+	return *this;
+}
+
+//Move assignment
+BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
+{
+	if (this != &other)
+	{
+		_color = std::exchange(other._color, 0);
+		_health = std::exchange(other._health, 0);
+		_uuid = other._uuid;
+		_name = other._name;
+		_nameWithUuid = other._nameWithUuid;
+		_fraction = other._fraction;
+		_rect = other._rect;
+	}
+
+	return *this;
+}
+
 ObjRectangle BaseObj::GetRect() const { return _rect; }
 
 void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
-const std::string& BaseObj::GetName() const { return _name; }
+std::string_view BaseObj::GetName() const { return _name; }
 
 using buuid = boost::uuids::uuid;
 buuid BaseObj::GetUuid() const { return _uuid; }
@@ -74,9 +129,9 @@ void BaseObj::MoveX(const float i) { _rect.x += i; }
 
 void BaseObj::MoveY(const float i) { _rect.y += i; }
 
-int BaseObj::GetColor() const { return _color; }
+unsigned int BaseObj::GetColor() const { return _color; }
 
-void BaseObj::SetColor(const int color) { _color = color; }
+void BaseObj::SetColor(const unsigned int color) { _color = color; }
 
 int BaseObj::GetHealth() const { return _health; }
 

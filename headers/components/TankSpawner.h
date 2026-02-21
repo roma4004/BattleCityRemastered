@@ -1,18 +1,15 @@
 #pragma once
 
 #include "Point.h"
-#include "enums/GameMode.h"
-#include "enums/RespawnResource.h"
-#include <memory>
-#include <random>
+#include "managers/RespawnManager.h"
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
-enum TankType : char8_t;
-enum GameMode : char8_t;
-struct SDL_Renderer;
+enum class TankType : char8_t;
+enum class GameMode : char8_t;
 struct ObjRectangle;
 struct BonusEffectProperty;
+class Tank;
 class BaseObj;
 class BulletPool;
 class EventSystem;
@@ -25,7 +22,6 @@ class TankSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"TankSpawner"};
-	GameMode _gameMode{};
 	UPoint _windowSize{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -33,23 +29,9 @@ class TankSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 
-	std::random_device _rd{};
-
-	// TODO: use std::atomic when multithreading is used
-	std::vector<int> _respawnResource{20, 3, 3};
-	int _enemyNeedRespawn{4};
-
-	struct SpawnSlot
-	{
-		buuid id{};
-		bool isAvailable{false};
-	};
-
-	std::vector<SpawnSlot> _slots{};
-
-	void OnBonusGrenade(const std::string& author, const std::string& fraction);
-	void OnBonusTank(const std::string& author, const std::string& fraction);
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeAsClient();
@@ -57,48 +39,30 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(buuid uuid, TankType type, float speed, int health);
-	void SetEnemyNeedRespawn();
+	void SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type);
-
-	void SpawnTank(ObjRectangle rect, int color, int health, std::string name, std::string fraction, float speed,
-	               buuid uuid, BonusEffectProperty effects, TankType type);
+	void SpawnTank(ObjRectangle rect, unsigned int color, int health, const std::string& name, std::string fraction,
+	               float speed, buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
-	[[nodiscard]] std::shared_ptr<BaseObj> CreateTank(TankType type, PawnProperty pawnProperty, BonusEffectProperty effects);
+	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty,
+	                                               BonusEffectProperty effects);
 
-	void RespawnEnemyTanks(TankType type, buuid uuid);
-	void RespawnPlayerTeam(TankType type, buuid uuid);
-	void SetPlayerNeedRespawn();
+	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
+	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
 	[[nodiscard]] static std::string GetCurrentTimeString();
 
-	void ResetRespawnStat();
-	void RespawnClient(TankType type, buuid uuid);
-	void ResetSpawn();
-
-	void IncreaseEnemyRespawnResource();
-	void IncreasePlayerOneRespawnResource();
-	void IncreasePlayerTwoRespawnResource();
-
-	void DecreaseEnemyRespawnResource();
-	void DecreasePlayerOneRespawnResource();
-	void DecreasePlayerTwoRespawnResource();
-	void OnTankSpawn(const buuid& uuid);
-	void OnTankDied(const buuid& uuid);
+	void OnClientRespawn(TankType type, buuid uuid, bool skipDelay = false);
 
 public:
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            std::shared_ptr<EventSystem> events, std::shared_ptr<BulletPool> bulletPool,
-	            std::shared_ptr<BonusEffectManager> bonusEffectManager);
+	            const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner();
 
-	void RespawnTanks();
-
-	// NOTE: for unit tests only:
-	[[nodiscard]] int GetEnemyRespawnResource() const { return _respawnResource[RespawnResource::ENEMY_ALL]; }
-	[[nodiscard]] int GetPlayerOneRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_ONE]; }
-	[[nodiscard]] int GetPlayerTwoRespawnResource() const { return _respawnResource[RespawnResource::PLAYER_TWO]; }
-	void SetSlotNeedRespawn(int slotIndex);
+	void RespawnTanks(bool skipDelay = false);//TODO: still public for unit test
+	[[nodiscard]] int GetEnemyRespawnCount() const;//TODO: still public for unit test
+	[[nodiscard]] int GetPlayerOneRespawnCount() const;//TODO: still public for unit test
+	[[nodiscard]] int GetPlayerTwoRespawnCount() const;//TODO: still public for unit test
 };

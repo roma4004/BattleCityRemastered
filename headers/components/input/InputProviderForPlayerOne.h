@@ -12,7 +12,13 @@ class InputProviderForPlayerOne final : public IInputProvider
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 public:
-	explicit InputProviderForPlayerOne(std::shared_ptr<EventSystem> events);
+	explicit InputProviderForPlayerOne(const std::shared_ptr<EventSystem>& events);
 
-	~InputProviderForPlayerOne();
+	~InputProviderForPlayerOne() override;
+
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void Enable() override;
+	void Disable() const override;
 };

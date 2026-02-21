@@ -5,40 +5,26 @@
 #include "interfaces/IMoveBeh.h"
 // #include <iostream>
 
-Pawn::Pawn(PawnProperty pawnProperty, std::unique_ptr<IMoveBeh> moveBeh)
+Pawn::Pawn(PawnProperty pawnProperty)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)},
-	  _dir{pawnProperty.dir},
-	  _gameMode{pawnProperty.gameMode},
 	  _speed{pawnProperty.speed},
 	  _tier{pawnProperty.tier},
 	  _windowSize{pawnProperty.windowSize},
 	  _allObjects{pawnProperty.allObjects},
 	  _events{std::move(pawnProperty.events)},
-	  _moveBeh{std::move(moveBeh)}
-{
-	Pawn::Subscribe();
-}
+	  _dir{pawnProperty.dir},
+	  _gameMode{pawnProperty.gameMode} {}
 
-Pawn::~Pawn()
-{
-	// std::cout << "[" << "Pawn::~Pawn()" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
-	Pawn::Unsubscribe();
-}
+Pawn::~Pawn() = default;
 
 void Pawn::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(this); });
-
-	_gameMode == PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
 
 void Pawn::SubscribeAsHost()
 {
-	_events->AddListener<const float>("TickUpdate", _nameWithUuid, [this](const float deltaTime)
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
 	{
 		this->TickUpdate(deltaTime);
 	});
@@ -46,26 +32,18 @@ void Pawn::SubscribeAsHost()
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener<const FPoint, const Direction, const buuid&>(
-			"ClientReceived_" + _name + "Pos", _nameWithUuid,
+	_events->AddListener(
+			"ClientReceived_" + _name + "Pos",
+			_nameWithUuid,
 			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
 			{
-				if (uuid != this->_uuid)//TODO: check maybe never true
-				{
-					return;
-				}
-
-				this->SetDirection(dir);
-				this->SetPos(newPos);
-				this->UpdateAnimationFrame();
+				OnClientChangePos(newPos, dir, uuid);
 			});
 
-	_events->AddListener<const int>(
-			"ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid,
-			[this](const int health)
-			{
-				this->SetHealth(health);
-			});
+	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
+	{
+		this->SetHealth(health);
+	});
 }
 
 void Pawn::Unsubscribe() const
@@ -75,54 +53,30 @@ void Pawn::Unsubscribe() const
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	_events->RemoveListener("Draw", _nameWithUuid);
 
-	_gameMode == PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
+	_gameMode == GameMode::PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
 }
 
 void Pawn::UnsubscribeAsHost() const
 {
-	_events->RemoveListener<const float>("TickUpdate", _nameWithUuid);
+	_events->RemoveListener("TickUpdate", _nameWithUuid);
 }
 
 void Pawn::UnsubscribeAsClient() const
 {
-	_events->RemoveListener<const FPoint, const Direction, const buuid&>(
-			"ClientReceived_" + _name + "Pos", _nameWithUuid);
-	_events->RemoveListener<const int>("ClientReceived_" + _name + "Health", _nameWithUuid);
-}
-
-void Pawn::SetHealth(const int health)
-{
-	BaseObj::SetHealth(health);
-
-	// if (!GetIsAlive()) //TODO: remove or check if needed
-	// {
-	// 	Unsubscribe();
-	// }
+	_events->RemoveListener("ClientReceived_" + _name + "Pos", _nameWithUuid);
+	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
 }
 
 void Pawn::TakeDamage(const int damage)
 {
 	BaseObj::TakeDamage(damage);
 
-	// if (!GetIsAlive()) //TODO: remove or check if needed
-	// {
-	// 	Unsubscribe();
-	// }
-}
-
-void Pawn::UpdateAnimationFrame()
-{
-	++animationFrameId;
-	if (animationFrameId % 12 && ++animationId > animationIdLimit)//TODO: 12 is frame cycle, need skip for bullet
+	if (_gameMode == GameMode::PlayAsHost)
 	{
-		animationId = 0;
-		animationFrameId = 0;
+		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
 	}
 }
-
-void Pawn::Draw(const BaseObj* obj) const { _events->EmitEvent<const BaseObj*>("DrawObj", obj); }
 
 UPoint Pawn::GetWindowSize() const { return _windowSize; }
 
@@ -133,3 +87,30 @@ void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
+
+bool Pawn::Move(const double deltaTime)
+{
+	const bool isMove = _moveBeh->Move(deltaTime);
+	if (isMove)
+	{
+		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()));
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
+		}
+	}
+
+	return isMove;
+}
+
+void Pawn::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
+{
+	if (uuid != _uuid)//TODO: check maybe never true
+	{
+		return;
+	}
+
+	SetDirection(dir);
+	SetPos(newPos);
+}

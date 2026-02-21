@@ -6,7 +6,10 @@
 
 BOOST_CLASS_EXPORT_IMPLEMENT(CommandBatch)
 
-CommandBatch::CommandBatch() : Command(CommandType::COMMAND_BATCH) {}
+CommandBatch::CommandBatch() : Command{CommandType::COMMAND_BATCH}
+{
+	//_commands.reserve(1000);
+}
 
 void CommandBatch::AddCommand(const std::shared_ptr<Command>& command)
 {
@@ -16,9 +19,10 @@ void CommandBatch::AddCommand(const std::shared_ptr<Command>& command)
 	}
 }
 
-const std::vector<std::shared_ptr<Command>>& CommandBatch::GetCommands() const
-{
-	return _commands;
-}
+const std::vector<std::shared_ptr<Command>>& CommandBatch::GetCommands() const noexcept { return _commands; }
 
-const char* CommandBatch::GetClassNameW() const { return "CommandBatch"; }
+const char* CommandBatch::GetClassNameW() const noexcept { return "CommandBatch"; }
+
+size_t CommandBatch::GetSize() const noexcept { return _commands.size(); }
+
+bool CommandBatch::IsEmpty() const noexcept { return _commands.empty(); }

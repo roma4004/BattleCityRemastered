@@ -1,7 +1,7 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
 #include "entities/ObjRectangle.h"
-#include "enums/ComandType.h"
+#include "enums/CommandType.h"
 #include "enums/TankType.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
@@ -16,30 +16,33 @@
 #include "network/commands/RespawnTank.h"
 #include "network/commands/StatisticsChange.h"
 #include "network/commands/TankShot.h"
+#include "utils/NetworkLogger.h"
 #include "utils/UuidUtils.h"
-#include <fstream>
+// #include <fstream>
+#include "enums/AnimationType.h"
+#include "network/commands/AnimationCreate.h"
+#include "network/commands/BonusStatus.h"
+#include "network/commands/TankOnOff.h"
 #include <iostream>
 #include <string>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-// std::ofstream error_log("error_log_client.txt");
-
 using buuid = boost::uuids::uuid;
 
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               std::shared_ptr<EventSystem> events)
+               const std::shared_ptr<EventSystem>& events)
 	: _socket(ioContext),
-	  _events{std::move(events)},
+	  _events{events},
 	  _name{"Client"}
 {
 	Subscribe();
 
 	tcp::resolver resolver(ioContext);
 	const auto endpointIterator = resolver.resolve(host, port);
-	boost::asio::async_connect(
+	boost::asio::async_connect(//TODO: extract to reconnect method
 			_socket, endpointIterator,
-			[this](const boost::system::error_code& ec, tcp::endpoint /*endpoint_iterator*/)
+			[this](const boost::system::error_code& ec, const tcp::endpoint& /*endpoint_iterator*/)
 			{
 				if (!ec)
 				{
@@ -59,16 +62,16 @@ Client::~Client()
 		if (_socket.is_open())
 		{
 			boost::system::error_code ec;
-			_socket.shutdown(tcp::socket::shutdown_both, ec);
+			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << std::endl;
+				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			_socket.close(ec);
+			std::ignore = _socket.close(ec);
 			if (ec)
 			{
-				std::cerr << "Error during socket close: " << ec.message() << std::endl;
+				std::cerr << "Error during socket close: " << ec.message() << '\n';
 			}
 		}
 	}
@@ -84,34 +87,35 @@ Client::~Client()
 
 void Client::Subscribe()
 {
-	_events->AddListener("ArrowUp_Pressed", _name, [this]() { this->SendKeyState("ArrowUp_Pressed"); });
-	_events->AddListener("ArrowLeft_Pressed", _name, [this]() { this->SendKeyState("ArrowLeft_Pressed"); });
-	_events->AddListener("ArrowDown_Pressed", _name, [this]() { this->SendKeyState("ArrowDown_Pressed"); });
-	_events->AddListener("ArrowRight_Pressed", _name, [this]() { this->SendKeyState("ArrowRight_Pressed"); });
-	_events->AddListener("RCTRL_Pressed", _name, [this]() { this->SendKeyState("RCTRL_Pressed"); });
-
-	_events->AddListener("ArrowUp_Released", _name, [this]() { this->SendKeyState("ArrowUp_Released"); });
-	_events->AddListener("ArrowLeft_Released", _name, [this]() { this->SendKeyState("ArrowLeft_Released"); });
-	_events->AddListener("ArrowDown_Released", _name, [this]() { this->SendKeyState("ArrowDown_Released"); });
-	_events->AddListener("ArrowRight_Released", _name, [this]() { this->SendKeyState("ArrowRight_Released"); });
-	_events->AddListener("RCTRL_Released", _name, [this]() { this->SendKeyState("RCTRL_Released"); });
+	//TODO: write batch sending on client and sending queue
+	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
+	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
+	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
+	_events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left_Released"); });
+	_events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down_Pressed"); });
+	_events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down_Released"); });
+	_events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right_Pressed"); });
+	_events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right_Released"); });
+	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
+	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
 
 	_events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
 }
 
 void Client::Unsubscribe() const
 {
-	_events->RemoveListener("ArrowUp_Pressed", _name);
-	_events->RemoveListener("ArrowLeft_Pressed", _name);
-	_events->RemoveListener("ArrowDown_Pressed", _name);
-	_events->RemoveListener("ArrowRight_Pressed", _name);
-	_events->RemoveListener("RCTRL_Pressed", _name);
+	_events->RemoveListener("P2_Move_Up_Pressed", _name);
+	_events->RemoveListener("P2_Move_Up_Released", _name);
+	_events->RemoveListener("P2_Move_Left_Pressed", _name);
+	_events->RemoveListener("P2_Move_Left_Released", _name);
+	_events->RemoveListener("P2_Move_Down_Pressed", _name);
+	_events->RemoveListener("P2_Move_Down_Released", _name);
+	_events->RemoveListener("P2_Move_Right_Pressed", _name);
+	_events->RemoveListener("P2_Move_Right_Released", _name);
+	_events->RemoveListener("P2_Fire_Pressed", _name);
+	_events->RemoveListener("P2_Fire_Released", _name);
 
-	_events->RemoveListener("ArrowUp_Released", _name);
-	_events->RemoveListener("ArrowLeft_Released", _name);
-	_events->RemoveListener("ArrowDown_Released", _name);
-	_events->RemoveListener("ArrowRight_Released", _name);
-	_events->RemoveListener("RCTRL_Released", _name);
+	_events->RemoveListener("ClientReadyToPlay", _name);
 }
 
 void Client::ReadResponse()
@@ -139,15 +143,7 @@ void Client::ReadResponse()
 			// 	isFirstRead = false;
 			// }
 
-			// if (data.eventName == "OnHelmetActivate")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnHelmetDeactivate")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnStar")
+			// if (data.eventName == "OnStar")
 			// {
 			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
 			// }
@@ -157,12 +153,12 @@ void Client::ReadResponse()
 			// }
 			// else if (data.eventName == "OnTank")
 			// {
-			// 	events->EmitEvent<const std::string&, const std::string&>(
+			// 	events->EmitEvent(
 			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
 			// }
 			// else if (data.eventName == "OnGrenade")
 			// {
-			// 	events->EmitEvent<const std::string&, const std::string&>(
+			// 	events->EmitEvent(
 			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
 			// }
 
@@ -174,6 +170,12 @@ void Client::ReadResponse()
 	boost::asio::async_read_until(_socket, _read_buffer, "\n\n", std::move(lambda));
 }
 
+//TODO: rewrite old style SendKeyState to batch command
+// _events->AddListener("Pause_Pressed", _name, [this]()
+// {
+// 	std::scoped_lock lock(_batchWriteMutex);
+// 	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
+// });
 void Client::SendKeyState(const std::string& state)
 {
 	// auto self(shared_from_this());
@@ -181,6 +183,8 @@ void Client::SendKeyState(const std::string& state)
 	data.health = 1;
 	data.eventName = state;
 	data.names = {"Name1", "Name2"};
+
+	// NetworkLogger::LogClientSend(state);
 
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
@@ -209,8 +213,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const Direction, const buuid&>(
-				"ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
 	}
 }
 
@@ -218,9 +221,7 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
 	{
-		const buuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const Direction, const buuid&>(
-				"ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), uuid);
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), cmd->GetUuid());
 	}
 }
 
@@ -228,9 +229,8 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
-		_events->EmitEvent<const int>(
-				"ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
-				cmd->GetHealth());
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
+		                   cmd->GetHealth());
 	}
 }
 
@@ -238,7 +238,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		_events->EmitEvent<const buuid&>("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
 	}
 }
 
@@ -246,8 +246,7 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
 	{
-		_events->EmitEvent<const std::string&, const std::string&, const std::string&>(
-				"ClientReceived_Statistics", cmd->GetEventName(), cmd->GetAuthor(), cmd->GetFraction());
+		_events->EmitEvent("ClientReceived_Statistics", cmd->GetEventName(), cmd->GetAuthor(), cmd->GetFraction());
 	}
 }
 
@@ -256,7 +255,7 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetKeyState());
+		_events->EmitEvent(cmd->GetKeyState()/*, cmd->GetIsEnable()*/);
 	}
 }
 
@@ -264,9 +263,8 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		const buuid uuid = cmd->GetUuid();
-		_events->EmitEvent<const std::string&, const buuid&>(
-				"ClientReceived_FortressChange", cmd->GetState(), uuid);
+		const std::string state = cmd->GetState();//NOTE: const required
+		_events->EmitEvent("ClientReceived_FortressChange", state, cmd->GetUuid());
 	}
 }
 
@@ -274,8 +272,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const FPoint, const BonusType, const buuid&>(
-				"ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
 	}
 }
 
@@ -283,7 +280,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const buuid&>("ClientReceived_BonusDeSpawn", cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_BonusDeSpawn", cmd->GetUuid());
 	}
 }
 
@@ -291,8 +288,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
 	{
-		_events->EmitEvent<const TankType, const buuid&>(
-				"ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
 	}
 }
 
@@ -300,8 +296,24 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent<const ObjRectangle, const ObstacleType, const buuid&>(
-				"ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
+		_events->EmitEvent("ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
+	}
+}
+
+void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
+	{
+		_events->EmitEvent("AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetName());
+	}
+}
+
+void Client::OnTankOnOff(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
+	{
+		//TODO: don't need uuid or name in this case
+		_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnTankOnOff", cmd->GetUuid(), cmd->GetIsEnable());
 	}
 }
 
@@ -316,10 +328,37 @@ void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 	}
 }
 
+void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
+{
+	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
+	{
+		switch (cmd->GetBonusType())
+		{
+			case BonusType::Helmet:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnBonusHelmet", cmd->GetIsEnable());
+				break;
+			case BonusType::Star:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnStar");
+				break;
+			case BonusType::Caliber:
+				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnCaliber");
+				break;
+			case BonusType::Tank:
+				_events->EmitEvent("ClientReceived_OnTank", cmd->GetName());
+				break;
+			default: //TODO: add assert
+				break;
+		}
+	}
+}
+
 void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 {
 	if (command)
 	{
+		// auto classNameW = std::string(command->GetClassNameW());
+		// auto commandName = std::string("client receive:" + classNameW);
+		// NetworkLogger::LogClientReceive(commandName);
 		switch (command->GetType())
 		{
 			case CommandType::COMMAND_BATCH:
@@ -383,6 +422,21 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 				OnObstacleSpawn(command);
 				break;
 			}
+			case CommandType::ANIMATION_CREATE:
+			{
+				OnAnimationCreate(command);
+				break;
+			}
+			case CommandType::TANK_ON_OFF:
+			{
+				OnTankOnOff(command);
+				break;
+			}
+			case CommandType::BONUS_STATUS:
+			{
+				OnBonusStatus(command);
+				break;
+			}
 			//TODO: implement other command types
 			default:
 				break;
@@ -400,11 +454,24 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 		std::shared_ptr<Command> command;
 		ia >> command;
 
+		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
 		ProcessClientCommand(command);
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Deserialization error: " << e.what() << std::endl;
-		std::cerr << "Raw data: " << archiveData << std::endl;
+		const std::string errorMsg = std::string("error deserialization: ") + e.what();
+		NetworkLogger::WriteLog(errorMsg);
+
+		if (archiveData.length() < 200)
+		{
+			NetworkLogger::WriteLog("raw data: " + archiveData);
+		}
+		else
+		{
+			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
+		}
+
+		std::cerr << "Deserialization error: " << e.what() << '\n';
+		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
 	}
 }
