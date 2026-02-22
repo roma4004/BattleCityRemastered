@@ -7,8 +7,8 @@
 #include <algorithm>
 
 AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
-	: _events(events),
-	  _gameMode{GameMode::Demo}
+	: _events(events)
+	, _gameMode{GameMode::Demo}
 {
 	_animatedObjects.reserve(100);
 	_tankObjects.reserve(6);
@@ -41,7 +41,7 @@ void AnimationManager::Subscribe()
 			});
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
-	_events->AddListener("PostDraw", _name, [this]() { Update(); });
+	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
 	_events->AddListener("AnimationTankUpdate", _name, [this](const std::string& objName) { UpdateTank(objName); });
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
 }
@@ -63,15 +63,19 @@ void AnimationManager::SubscribeAsHost()
 			});
 
 	//TODO: create client like subscription
-	_events->AddListener("AnimationCreateTank", _name, [this](const std::weak_ptr<Tank>& tank)
-	{
-		this->CreateAnimationTank(tank);
-	});
+	_events->AddListener(
+			"AnimationCreateTank", _name,
+			[this](const std::weak_ptr<Tank>& tank)
+			{
+				this->CreateAnimationTank(tank);
+			});
 
-	_events->AddListener("AnimationCreateWater", _name, [this](const ObjRectangle rect)
-	{
-		this->CreateAnimationWater(rect);
-	});
+	_events->AddListener(
+			"AnimationCreateWater", _name,
+			[this](const ObjRectangle rect)
+			{
+				this->CreateAnimationWater(rect);
+			});
 }
 
 // void AnimationManager::SubscribeAsClient() {}
@@ -90,7 +94,7 @@ void AnimationManager::Unsubscribe() const
 	_events->RemoveListener("AnimationCreate", _name);
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("PostDraw", _name);
+	_events->RemoveListener("TickUpdate", _name);
 	_events->RemoveListener("AnimationTankUpdate", _name);
 	_events->RemoveListener("PostTickUpdate", _name);
 }
@@ -188,12 +192,12 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
-                              const int limitOfFrames, const int scale, const std::string& objName,
-                              const bool isInfinite)
+							  const int limitOfFrames, const int scale, const std::string& objName,
+							  const bool isInfinite)
 {
 	constexpr int placeholderWhiteColor = 0xffffff;
-	_animatedObjects.emplace_back(
-			name, rect, type, _events, _gameMode, limitOfFrames, scale, objName, placeholderWhiteColor, isInfinite);
+	_animatedObjects.emplace_back(name, rect, type, _events, _gameMode, limitOfFrames, scale, objName,
+								  placeholderWhiteColor, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -230,7 +234,7 @@ void AnimationManager::Update()
 void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed)
 {
 	if (obj.markToDispose == false
-	    && ++obj.elapsedFrames % animationSpeed == 0)
+		&& ++obj.elapsedFrames % animationSpeed == 0)
 	{
 		obj.elapsedFrames = 0;
 		if (++obj.animationFrame >= obj.limitOfFrames)
@@ -247,7 +251,7 @@ void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed
 void AnimationManager::UpdateFrameInfinite(AnimatedObject& obj, const int animationSpeed)
 {
 	if (obj.markToDispose == false
-	    && ++obj.elapsedFrames % animationSpeed == 0)
+		&& ++obj.elapsedFrames % animationSpeed == 0)
 	{
 		obj.elapsedFrames = 0;
 		if (++obj.animationFrame == obj.limitOfFrames)

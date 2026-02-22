@@ -2,17 +2,17 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
-#include "enums/GameMode.h"
-#include "network/ClientHandler.h"
-#include "network/ServerHandler.h"
 #include "components/managers/FramePerSecondManager.h"
+#include "components/managers/RenderManager.h"
 #include "components/managers/SpawnManager.h"
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
-#include "components/managers/RenderManager.h"
+#include "enums/GameMode.h"
+#include "network/ClientHandler.h"
+#include "network/ServerHandler.h"
+#include <algorithm>
 #include <iostream>
 #include <memory>
-#include <algorithm>
 //#include <fstream>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -21,21 +21,25 @@
 //#endif
 #define ASIO_STANDALONE
 
+//TODO: can't start game if no sound device on PC
+//TODO: fix unpause when dragging
+//TODO: fix destroying animation when client start
+
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-                         std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-                         std::unique_ptr<RenderManager>& renderManager)
-	: _windowSize{windowSize},
-	  _menu{std::move(menu)},
-	  _textureManager(std::make_unique<TextureManager>(windowSize, events)),
-	  _stateManager{std::make_unique<StateManager>(events)},
-	  _userInput{std::make_unique<UserInput>(windowSize, events)},
-	  _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)},
-	  _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)},
-	  _renderManager{std::move(renderManager)},
-	  _events{events},
-	  _selectedGameMode{GameMode::OnePlayer}
+						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
+						 std::unique_ptr<RenderManager>& renderManager)
+	: _windowSize{windowSize}
+	, _menu{std::move(menu)}
+	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
+	, _stateManager{std::make_unique<StateManager>(events)}
+	, _userInput{std::make_unique<UserInput>(windowSize, events)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)}
+	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
+	, _renderManager{std::move(renderManager)}
+	, _events{events}
+	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
@@ -156,7 +160,7 @@ void GameSuccess::DisposeDeadObject()
 void GameSuccess::OnClientReady() const
 {
 	_events->EmitEvent("LoadMap");
-	_events->EmitEvent("Pause_Released");
+	_events->EmitEvent("Pause_Status", false);
 }
 
 void GameSuccess::MainLoop()
@@ -225,11 +229,11 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_networkNode = std::make_unique<ServerHandler>(_events);
+		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
-		_networkNode = std::make_unique<ClientHandler>(_events);
+		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else
 	{

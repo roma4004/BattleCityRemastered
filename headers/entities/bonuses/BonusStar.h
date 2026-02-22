@@ -14,7 +14,7 @@ class BonusStar final : public Bonus
 
 public:
 	BonusStar(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-	          unsigned int color, buuid uuid, GameMode gameMode);
+			  unsigned int color, buuid uuid, GameMode gameMode);
 
 	~BonusStar() override;
 };

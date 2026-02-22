@@ -44,10 +44,10 @@ class TankSpawner final
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
 	void SpawnTank(ObjRectangle rect, unsigned int color, int health, const std::string& name, std::string fraction,
-	               float speed, buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
+				   float speed, buuid uuid, BonusEffectProperty effects, TankType type, bool skipDelay = false);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty,
-	                                               BonusEffectProperty effects);
+												   BonusEffectProperty effects);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
 	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
@@ -57,7 +57,7 @@ class TankSpawner final
 
 public:
 	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<EventSystem>& events);
+				const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner();
 

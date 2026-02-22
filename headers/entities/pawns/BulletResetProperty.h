@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../ObjRectangle.h"
-#include <string>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 
 enum class Direction : char8_t;
 

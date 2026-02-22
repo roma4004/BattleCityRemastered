@@ -3,7 +3,8 @@
 #include "entities/ObjRectangle.h"
 #include "enums/ObstacleType.h"
 
-Map::Map(const std::shared_ptr<EventSystem>& events) : _events{events} {}
+Map::Map(const std::shared_ptr<EventSystem>& events)
+	: _events{events} {}
 
 Map::~Map() = default;
 

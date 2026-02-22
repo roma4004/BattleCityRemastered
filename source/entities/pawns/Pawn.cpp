@@ -6,14 +6,14 @@
 // #include <iostream>
 
 Pawn::Pawn(PawnProperty pawnProperty)
-	: BaseObj{std::move(pawnProperty.baseObjProperty)},
-	  _speed{pawnProperty.speed},
-	  _tier{pawnProperty.tier},
-	  _windowSize{pawnProperty.windowSize},
-	  _allObjects{pawnProperty.allObjects},
-	  _events{std::move(pawnProperty.events)},
-	  _dir{pawnProperty.dir},
-	  _gameMode{pawnProperty.gameMode} {}
+	: BaseObj{std::move(pawnProperty.baseObjProperty)}
+	, _speed{pawnProperty.speed}
+	, _tier{pawnProperty.tier}
+	, _windowSize{pawnProperty.windowSize}
+	, _allObjects{pawnProperty.allObjects}
+	, _events{std::move(pawnProperty.events)}
+	, _dir{pawnProperty.dir}
+	, _gameMode{pawnProperty.gameMode} {}
 
 Pawn::~Pawn() = default;
 

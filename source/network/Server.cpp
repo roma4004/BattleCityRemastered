@@ -18,19 +18,21 @@
 #include "network/commands/TankOnOff.h"
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
-#include <fstream>
-#include <iostream>
-#include <mutex>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <fstream>
+#include <iostream>
+#include <mutex>
 
 // std::ofstream error_log("error_log.txt");
-
+namespace network::commands
+{
 using buuid = boost::uuids::uuid;
 
 Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
-	: _socket(std::move(sock)), _events(events) {}
+	: _socket(std::move(sock))
+	, _events(events) {}
 
 Session::~Session()
 {
@@ -40,13 +42,13 @@ Session::~Session()
 		{
 			boost::system::error_code ec;
 
-			boost::system::error_code shutdownResut = _socket.shutdown(tcp::socket::shutdown_both, ec);
+			boost::system::error_code shutdownResult = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
 				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			boost::system::error_code closeResut = _socket.close(ec);
+			boost::system::error_code closeResult = _socket.close(ec);
 			if (ec)
 			{
 				std::cerr << "Error closing socket socket: " << ec.message() << '\n';
@@ -94,7 +96,7 @@ void Session::DoRead()
 			else
 			{
 				const std::string archiveData(buffers_begin(_readBuffer.data()),
-				                              buffers_begin(_readBuffer.data()) + length);
+											  buffers_begin(_readBuffer.data()) + length);
 				std::istringstream archiveStream(archiveData);
 				boost::archive::text_iarchive ia(archiveStream);
 
@@ -182,11 +184,11 @@ void Session::DoWrite(const std::string& message)
 }
 
 Server::Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               const std::shared_ptr<EventSystem>& events)
+			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
-	                                     static_cast<unsigned short>(std::stoul(port)))),
-	  _events{events},
-	  _name{"Server"}
+										 static_cast<unsigned short>(std::stoul(port))))
+	, _events{events}
+	, _name{"Server"}
 {
 	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
@@ -204,10 +206,7 @@ void Server::StartSendThread()
 			std::shared_ptr<CommandBatch> batch;
 			{
 				std::unique_lock<std::mutex> lock(_sendQueueMutex);
-				_sendCondition.wait(lock, [this]
-				{
-					return !_sendQueue.empty() || !_isRunning;
-				});
+				_sendCondition.wait(lock, [this] { return !_sendQueue.empty() || !_isRunning; });
 
 				if (!_isRunning)
 					break;
@@ -276,16 +275,13 @@ void Server::Subscribe()
 		_batch = std::make_shared<CommandBatch>();
 	});
 
-	_events->AddListener("Pause_Pressed", _name, [this]()
+	_events->AddListener("Pause_Status", _name, [this](const bool isPaused)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
-	});
-
-	_events->AddListener("Pause_Released", _name, [this]()
-	{
-		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", false));
+		const char* eventName = isPaused
+									? "Pause_Pressed"
+									: "Pause_Released";
+		_batch->AddCommand(std::make_shared<KeyStateChange>(eventName, isPaused));
 	});
 
 	_events->AddListener(
@@ -310,7 +306,7 @@ void Server::Subscribe()
 		_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
 	});
 
-	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/const buuid& uuid)
+	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/ const buuid& uuid)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
@@ -410,8 +406,7 @@ void Server::SubscribeBonus()
 void Server::Unsubscribe() const
 {
 	_events->RemoveListener("Server_EndFrame", _name);
-	_events->RemoveListener("Pause_Pressed", _name);
-	_events->RemoveListener("Pause_Released", _name);
+	_events->RemoveListener("Pause_Status", _name);
 
 	_events->RemoveListener("ServerSend_Pos", _name);
 	_events->RemoveListener("ServerSend_Shot", _name);
@@ -479,7 +474,9 @@ void Server::DoAccept()
 void Server::SendToAll(const std::string& message) const
 {
 	for (const auto& session: _sessions)
+	{
 		session->DoWrite(message);
+	}
 }
 
 void Server::SendCommand(const std::shared_ptr<Command>& command) const
@@ -494,3 +491,4 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
 	this->SendToAll(basicString + "\n\n");
 }
+}//namespace network::commands

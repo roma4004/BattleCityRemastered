@@ -47,17 +47,28 @@ protected:
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{.rect = rect, .color = yellow, .health = _tankHealth, .uuid = _uuid,
-		                                .name = _name, .fraction = _fraction};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.color = yellow,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = _name,
+										.fraction = _fraction};
 		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
-				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
+				.baseObjProperty = std::move(baseObjProperty),
+				.allObjects = &_allObjects,
+				.events = _events,
+				.tier = 1,
+				.speed = _tankSpeed,
+				.windowSize = _windowSize,
+				.dir = Direction::UP,
+				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}, enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{},
+						enableByDefault));
 	}
 
 	void TearDown() override
@@ -264,7 +275,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-		                .y = static_cast<float>(_windowSize.y) / 2.f});
+						.y = static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(Direction::UP);
 		const FPoint startPos = player->GetPos();
 
@@ -285,7 +296,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-		                .y = static_cast<float>(_windowSize.y) / 2.f});
+						.y = static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(Direction::LEFT);
 		const FPoint startPos = player->GetPos();
 
@@ -306,7 +317,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-		                .y = static_cast<float>(_windowSize.y) / 2.f});
+						.y = static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(Direction::DOWN);
 		const FPoint startPos = player->GetPos();
 
@@ -327,7 +338,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-		                .y = static_cast<float>(_windowSize.y) / 2.f});
+						.y = static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(Direction::RIGHT);
 		const FPoint startPos = player->GetPos();
 
@@ -390,7 +401,7 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-		                .y = static_cast<float>(_windowSize.y) - _tankSize});
+						.y = static_cast<float>(_windowSize.y) - _tankSize});
 		//success shot up test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
@@ -412,7 +423,7 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-		                .y = static_cast<float>(_windowSize.y) - _tankSize});
+						.y = static_cast<float>(_windowSize.y) - _tankSize});
 		//success shot left test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
@@ -456,7 +467,7 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		}
 
 		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-		                .y = static_cast<float>(_windowSize.y) - _tankSize});
+						.y = static_cast<float>(_windowSize.y) - _tankSize});
 		{
 			//fail the shot down test, try to create an outside screen bullet
 			const size_t size = _allObjects.size();
@@ -492,11 +503,21 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 		constexpr int green = 0x408000;
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{.rect = rect, .color = green, .health = _tankHealth, .uuid = _uuid,
-		                                .name = _name, .fraction = _fraction};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.color = green,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = _name,
+										.fraction = _fraction};
 		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 1,
-				.speed = _tankSpeed, .windowSize = _windowSize, .dir = Direction::UP, .gameMode = _gameMode};
+				.baseObjProperty = std::move(baseObjProperty),
+				.allObjects = &_allObjects,
+				.events = _events,
+				.tier = 1,
+				.speed = _tankSpeed,
+				.windowSize = _windowSize,
+				.dir = Direction::UP,
+				.gameMode = _gameMode};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));

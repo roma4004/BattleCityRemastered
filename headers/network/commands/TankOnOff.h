@@ -6,6 +6,8 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
+namespace network::commands
+{
 class TankOnOff : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -43,5 +45,6 @@ void TankOnOff::serialize(Archive& ar, const unsigned int)
 	ar & _isEnable;
 	ar & _name;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(TankOnOff);
+BOOST_CLASS_EXPORT_KEY(network::commands::TankOnOff);

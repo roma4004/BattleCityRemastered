@@ -6,11 +6,11 @@
 
 namespace boost::serialization
 {
-	using buuid = uuids::uuid;
+using buuid = uuids::uuid;
 
-	template<class Archive>
-	void serialize(Archive& ar, buuid& uuid, const unsigned int /*version*/)
-	{
-		ar & make_binary_object(&uuid, sizeof(uuid));
-	}
+template<class Archive>
+void serialize(Archive& ar, buuid& uuid, const unsigned int /*version*/)
+{
+	ar & make_binary_object(&uuid, sizeof(uuid));
 }
+}// namespace boost::serialization

@@ -4,9 +4,12 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(CommandBatch)
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::CommandBatch)
 
-CommandBatch::CommandBatch() : Command{CommandType::COMMAND_BATCH}
+namespace network::commands
+{
+CommandBatch::CommandBatch()
+	: Command{CommandType::COMMAND_BATCH}
 {
 	//_commands.reserve(1000);
 }
@@ -26,3 +29,4 @@ const char* CommandBatch::GetClassNameW() const noexcept { return "CommandBatch"
 size_t CommandBatch::GetSize() const noexcept { return _commands.size(); }
 
 bool CommandBatch::IsEmpty() const noexcept { return _commands.empty(); }
+}//namespace network::commands

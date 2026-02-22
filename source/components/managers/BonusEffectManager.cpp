@@ -3,7 +3,8 @@
 #include "utils/TimeUtils.h"
 
 BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& events)
-	: _name{"BonusEffectManager"}, _events{events}
+	: _name{"BonusEffectManager"}
+	, _events{events}
 {
 	Reset();
 
@@ -19,34 +20,34 @@ void BonusEffectManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
-	_events->AddListener("TickUpdate", _name, [this](const double deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
+	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener("BonusTimer", _name, [this](const std::string& fraction, const milliseconds effectDuration)
-	{
-		if (fraction == "EnemyTeam")
-		{
-			_timerPlayer = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
-		}
-		else if (fraction == "PlayerTeam")
-		{
-			_timerEnemy = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Timer", "EnemyTeam", _timerEnemy.isActive);
-		}
-	});
+	_events->AddListener(
+			"BonusTimer", _name,
+			[this](const std::string& fraction, const milliseconds effectDuration)
+			{
+				if (fraction == "EnemyTeam")
+				{
+					_timerPlayer = {effectDuration, std::chrono::system_clock::now()};
+					OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
+				}
+				else if (fraction == "PlayerTeam")
+				{
+					_timerEnemy = {effectDuration, std::chrono::system_clock::now()};
+					OnBonusStatusChange("Timer", "EnemyTeam", _timerEnemy.isActive);
+				}
+			});
 
-	_events->AddListener("BonusHelmet", _name, [this](const std::string& name, const milliseconds effectDuration)
-	{
-		if (const size_t id{TankNameToId(name)};
-			id < _helmetSlots.size())
-		{
-			_helmetSlots[id] = {effectDuration, std::chrono::system_clock::now()};
-			OnBonusStatusChange("Helmet", name, _helmetSlots[id].isActive);
-		}
-	});
+	_events->AddListener(
+			"BonusHelmet", _name,
+			[this](const std::string& name, const milliseconds effectDuration)
+			{
+				if (const size_t id{TankNameToId(name)}; id < _helmetSlots.size())
+				{
+					_helmetSlots[id] = {effectDuration, std::chrono::system_clock::now()};
+					OnBonusStatusChange("Helmet", name, _helmetSlots[id].isActive);
+				}
+			});
 
 	//TODO: remove duration for bonuses
 	_events->AddListener("BonusShovel", _name, [this](const std::string& fraction, const milliseconds effectDuration)
@@ -100,7 +101,7 @@ void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 	for (size_t i = 0u; i < _helmetSlots.size(); ++i)
 	{
 		if (_helmetSlots[i].isActive && TimeUtils::IsCooldownFinish(_helmetSlots[i].activateTime,
-		                                                            _helmetSlots[i].cooldown))
+																	_helmetSlots[i].cooldown))
 		{
 			_helmetSlots[i].isActive = false;
 			if (i == 0)

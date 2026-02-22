@@ -9,6 +9,8 @@
 
 enum class ObstacleType : char8_t;
 
+namespace network::commands
+{
 class ObstacleSpawn : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -46,5 +48,6 @@ void ObstacleSpawn::serialize(Archive& ar, const unsigned int)
 	ar & _obstacleType;
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(ObstacleSpawn);
+BOOST_CLASS_EXPORT_KEY(network::commands::ObstacleSpawn);

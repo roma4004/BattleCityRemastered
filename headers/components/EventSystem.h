@@ -8,59 +8,60 @@
 //TODO: create eventType and derived just like network command to compile time parameter check and replace event name
 namespace detail
 {
-	// Type adapter for auto conversion const char* to std::string
-	template<typename T>
-	struct type_adapter
-	{
-		using type = T;
-	};
+// Type adapter for auto conversion const char* to std::string
+template<typename T>
+struct type_adapter
+{
+	using type = T;
+};
 
-	// specialization for const char*
-	template<>
-	struct type_adapter<const char*>
-	{
-		using type = std::string;
-	};
+// specialization for const char*
+template<>
+struct type_adapter<const char*>
+{
+	using type = std::string;
+};
 
-	// specialization for char*
-	template<>
-	struct type_adapter<char*>
-	{
-		using type = std::string;
-	};
+// specialization for char*
+template<>
+struct type_adapter<char*>
+{
+	using type = std::string;
+};
 
-	// specialization for a char array
-	template<size_t N>
-	struct type_adapter<char[N]>
-	{
-		using type = std::string;
-	};
+// specialization for a char array
+template<size_t N>
+struct type_adapter<char[N]>
+{
+	using type = std::string;
+};
 
-	template<size_t N>
-	struct type_adapter<const char[N]>
-	{
-		using type = std::string;
-	};
+template<size_t N>
+struct type_adapter<const char[N]>
+{
+	using type = std::string;
+};
 
-	template<typename T>
-	using type_adapter_t = type_adapter<std::decay_t<T>>::type;
-}
+template<typename T>
+using type_adapter_t = type_adapter<std::decay_t<T>>::type;
+}// namespace detail
 
 // traits for deducing types
 template<typename T>
 struct callable_signature;
 
 // Lambda с operator()
-template<typename T> requires requires { &T::operator(); }
+template<typename T>
+	requires requires { &T::operator(); }
 struct callable_signature<T> : callable_signature<decltype(&T::operator())> {};
 
 // Const lambda without arguments
 template<typename Class>
-struct callable_signature<void(Class::*)() const>
+struct callable_signature<void (Class::*)() const>
 {
 	template<typename CallableT>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-	                              CallableT&& callback)
+								  CallableT&& callback)
 	{
 		eventSystem->template AddListenerImpl<>(eventName, listenerName, std::forward<CallableT>(callback));
 	}
@@ -68,11 +69,11 @@ struct callable_signature<void(Class::*)() const>
 
 // Mutable lambda without arguments
 template<typename Class>
-struct callable_signature<void(Class::*)()>
+struct callable_signature<void (Class::*)()>
 {
 	template<typename CallableT>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-	                              CallableT&& callback)
+								  CallableT&& callback)
 	{
 		eventSystem->template AddListenerImpl<>(eventName, listenerName, std::forward<CallableT>(callback));
 	}
@@ -80,11 +81,11 @@ struct callable_signature<void(Class::*)()>
 
 // Const lambda with arguments
 template<typename Class, typename R, typename... Args>
-struct callable_signature<R(Class::*)(Args...) const>
+struct callable_signature<R (Class::*)(Args...) const>
 {
 	template<typename CallableT>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-	                              CallableT&& callback)
+								  CallableT&& callback)
 	{
 		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
 	}
@@ -92,11 +93,11 @@ struct callable_signature<R(Class::*)(Args...) const>
 
 // mutable lambda with arguments
 template<typename Class, typename R, typename... Args>
-struct callable_signature<R(Class::*)(Args...)>
+struct callable_signature<R (Class::*)(Args...)>
 {
 	template<typename CallableT>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-	                              CallableT&& callback)
+								  CallableT&& callback)
 	{
 		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
 	}
@@ -104,11 +105,11 @@ struct callable_signature<R(Class::*)(Args...)>
 
 // function pointers
 template<typename R, typename... Args>
-struct callable_signature<R(*)(Args...)>
+struct callable_signature<R (*)(Args...)>
 {
 	template<typename CallableT>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-	                              CallableT&& callback)
+								  CallableT&& callback)
 	{
 		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
 	}
@@ -120,7 +121,7 @@ struct callable_signature<std::function<R(Args...)>>
 {
 	template<typename CallableT>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-	                              CallableT&& callback)
+								  CallableT&& callback)
 	{
 		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
 	}
@@ -168,7 +169,6 @@ public:
 			{
 				std::cerr << "Unknown exception in event callback" << '\n';
 			}
-
 		}
 	}
 
@@ -191,7 +191,8 @@ class EventSystem final
 		const std::type_info* type_info;
 
 		EventInfo(std::unique_ptr<BaseEvent> ev, const std::type_info* ti)
-			: event(std::move(ev)), type_info(ti) {}
+			: event(std::move(ev))
+			, type_info(ti) {}
 	};
 
 	std::unordered_map<std::string, EventInfo> _events;
@@ -236,7 +237,7 @@ public:
 	void AddListener(const std::string& eventName, const std::string& listenerName, CallableT&& callback)
 	{
 		callable_signature<std::decay_t<CallableT>>::call_add_listener(this, eventName, listenerName,
-		                                                               std::forward<CallableT>(callback));
+																	   std::forward<CallableT>(callback));
 	}
 
 	// internal implementation for concrete types (used in callable_signature)
@@ -244,8 +245,7 @@ public:
 	void AddListenerImpl(const std::string& eventName, const std::string& listenerName, CallableT&& callback)
 	{
 		//create new if not exist
-		if (const auto it = _events.find(eventName);
-			it == _events.end())
+		if (const auto it = _events.find(eventName); it == _events.end())
 		{
 			_events.emplace(eventName, EventInfo{std::make_unique<Event<Args...>>(), &typeid(Event<Args...>)});
 		}

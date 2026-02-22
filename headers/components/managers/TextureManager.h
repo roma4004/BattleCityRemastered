@@ -23,12 +23,12 @@ class TextureManager final
 
 	void Draw(ObjRectangle rect, Direction dir, const std::string& name, unsigned int color) const;
 	void DrawAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name,
-	                   unsigned int color) const;
+					   unsigned int color) const;
 	void DrawTankAnimation(ObjRectangle destRect, Direction dir, int step, int scale, const std::string& name,
-	                       unsigned int color) const;
+						   unsigned int color) const;
 
 	[[nodiscard]] ObjRectangle GetAnimTextureRect(const std::string& name, ObjRectangle rect,
-	                                              ObjRectangle& destRect) const;
+												  ObjRectangle& destRect) const;
 	[[nodiscard]] ObjRectangle GetTextureRect(const std::string& name) const;
 	[[nodiscard]] ObjRectangle GetTankTextureRect(const std::string& name) const;
 

@@ -4,12 +4,12 @@
 #include "entities/pawns/PawnProperty.h"
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                       const UPoint windowSize, const GameMode gameMode)
-	: _name{"BulletPool"},
-	  _windowSize{windowSize},
-	  _events{events},
-	  _allObjects{allObjects},
-	  _gameMode{gameMode}
+					   const UPoint windowSize, const GameMode gameMode)
+	: _name{"BulletPool"}
+	, _windowSize{windowSize}
+	, _events{events}
+	, _allObjects{allObjects}
+	, _gameMode{gameMode}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)
@@ -38,8 +38,7 @@ std::string BulletPool::GetCurrentTimeString()
 	localtime_s(&timeInfo, &nowTime);
 
 	std::stringstream ss;
-	ss << std::put_time(&timeInfo, "%H:%M:%S") << '.'
-			<< std::setfill('0') << std::setw(3) << ms.count();
+	ss << std::put_time(&timeInfo, "%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << ms.count();
 
 	return ss.str();
 }
@@ -48,10 +47,7 @@ void BulletPool::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Clear(); });
 
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	{
-		_gameMode = newGameMode;
-	});
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { _gameMode = newGameMode; });
 }
 
 void BulletPool::Unsubscribe() const
@@ -63,13 +59,11 @@ void BulletPool::Unsubscribe() const
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
-	PawnProperty pawnProperty{
-			.baseObjProperty = {},
-			.allObjects = _allObjects,
-			.events = _events,
-			.windowSize = _windowSize,
-			.gameMode = _gameMode
-	};
+	PawnProperty pawnProperty{.baseObjProperty = {},
+							  .allObjects = _allObjects,
+							  .events = _events,
+							  .windowSize = _windowSize,
+							  .gameMode = _gameMode};
 
 	return {new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); }};
 }

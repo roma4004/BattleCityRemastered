@@ -2,6 +2,9 @@
 
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
+#include <boost/asio.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/serialization/vector.hpp>//NOTE: required for serialization ServerData
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -9,12 +12,11 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <boost/asio.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/serialization/vector.hpp> //NOTE: required for serialization ServerData
 
 class EventSystem;
 
+namespace network::commands
+{
 using boost::asio::ip::tcp;
 
 struct ServerData final
@@ -66,7 +68,7 @@ class Server final
 
 public:
 	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       const std::shared_ptr<EventSystem>& events);
+		   const std::shared_ptr<EventSystem>& events);
 
 	~Server();
 
@@ -85,3 +87,4 @@ public:
 
 // Include the template implementation
 #include "Server.tpp"
+}//namespace network::commands

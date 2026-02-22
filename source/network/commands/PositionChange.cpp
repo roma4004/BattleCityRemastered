@@ -4,12 +4,19 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(PositionChange);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::PositionChange)
 
-PositionChange::PositionChange() : Command{CommandType::POSITION_CHANGE} {}
+namespace network::commands
+{
+PositionChange::PositionChange()
+	: Command{CommandType::POSITION_CHANGE} {}
 
 PositionChange::PositionChange(std::string who, const FPoint pos, const Direction dir, const buuid uuid)
-	: Command{CommandType::POSITION_CHANGE}, _who{std::move(who)}, _pos{pos}, _dir{dir}, _uuid{uuid} {}
+	: Command{CommandType::POSITION_CHANGE}
+	, _who{std::move(who)}
+	, _pos{pos}
+	, _dir{dir}
+	, _uuid{uuid} {}
 
 std::string PositionChange::GetWho() const noexcept { return _who; }
 
@@ -21,3 +28,4 @@ using buuid = boost::uuids::uuid;
 buuid PositionChange::GetUuid() const noexcept { return _uuid; }
 
 const char* PositionChange::GetClassNameW() const noexcept { return "PositionChange"; }
+}//namespace network::commands

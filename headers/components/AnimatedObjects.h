@@ -33,8 +33,8 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
-	               const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
-	               std::string objName, unsigned int color, bool isInfinite = {}, std::weak_ptr<Tank> tank = {});
+				   const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
+				   std::string objName, unsigned int color, bool isInfinite = {}, std::weak_ptr<Tank> tank = {});
 
 	~AnimatedObject();
 

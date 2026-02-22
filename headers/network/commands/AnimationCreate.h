@@ -8,6 +8,8 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
+namespace network::commands
+{
 class AnimationCreate : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -45,5 +47,6 @@ void AnimationCreate::serialize(Archive& ar, const unsigned int)
 	ar & _rect;
 	ar & _name;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(AnimationCreate);
+BOOST_CLASS_EXPORT_KEY(network::commands::AnimationCreate);

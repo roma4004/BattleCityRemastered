@@ -3,16 +3,13 @@
 #include "enums/GameMode.h"
 
 StateManager::StateManager(const std::shared_ptr<EventSystem>& events)
-	: _name{"StateManager"},
-	  _events{events}
+	: _name{"StateManager"}
+	, _events{events}
 {
 	Subscribe();
 }
 
-StateManager::~StateManager()
-{
-	Unsubscribe();
-}
+StateManager::~StateManager() { Unsubscribe(); }
 
 void StateManager::Subscribe()
 {
@@ -20,9 +17,9 @@ void StateManager::Subscribe()
 	// TODO: investigate why on demo after start we have skip one pause input
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
-	_events->AddListener("PlayersBaseFinished", _name, [this](){});
-	_events->AddListener("PlayersTeamIsWon", _name, [this](){ this->_isGameWon = true; });
-	_events->AddListener("EnemiesTeamIsWon", _name, [this](){ this->_isGameOver = true; });
+	_events->AddListener("PlayersBaseFinished", _name, [this]() {});
+	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->_isGameWon = true; });
+	_events->AddListener("EnemiesTeamIsWon", _name, [this]() { this->_isGameOver = true; });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;

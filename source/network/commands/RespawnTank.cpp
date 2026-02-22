@@ -4,12 +4,17 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(RespawnTank);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::RespawnTank)
 
-RespawnTank::RespawnTank() : Command{CommandType::RESPAWN_TANK} {}
+namespace network::commands
+{
+RespawnTank::RespawnTank()
+	: Command{CommandType::RESPAWN_TANK} {}
 
 RespawnTank::RespawnTank(const TankType tankType, const buuid uuid)
-	: Command{CommandType::RESPAWN_TANK}, _tankType{tankType}, _uuid{uuid} {}
+	: Command{CommandType::RESPAWN_TANK}
+	, _tankType{tankType}
+	, _uuid{uuid} {}
 
 using buuid = boost::uuids::uuid;
 buuid RespawnTank::GetUuid() const noexcept { return _uuid; }
@@ -17,3 +22,4 @@ buuid RespawnTank::GetUuid() const noexcept { return _uuid; }
 TankType RespawnTank::GetTankType() const noexcept { return _tankType; }
 
 const char* RespawnTank::GetClassNameW() const noexcept { return "RespawnTank"; }
+}//namespace network::commands

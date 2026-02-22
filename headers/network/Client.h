@@ -2,15 +2,18 @@
 
 #include "Point.h"
 #include "commands/Command.h"
+#include <boost/asio.hpp>
+#include <boost/serialization/vector.hpp>
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/asio.hpp>
-#include <boost/serialization/vector.hpp>
 
+class EventSystem;
 enum class BonusType : char8_t;
 enum class Direction : char8_t;
-class EventSystem;
+
+namespace network::commands
+{
 class BaseObj;
 using boost::asio::ip::tcp;
 
@@ -38,7 +41,7 @@ class Client final//: public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-	       const std::shared_ptr<EventSystem>& events);
+		   const std::shared_ptr<EventSystem>& events);
 
 	~Client();
 
@@ -67,7 +70,7 @@ public:
 	void ProcessReceivedData(const std::string& archiveData) const;
 
 private:
-	boost::asio::ip::tcp::socket _socket;
+	tcp::socket _socket;
 	boost::asio::streambuf _read_buffer{};
 	boost::asio::streambuf _write_buffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -76,3 +79,4 @@ private:
 
 // Include the template implementation
 #include "Client.tpp"
+}//namespace network::commands

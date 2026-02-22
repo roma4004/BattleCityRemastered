@@ -5,10 +5,10 @@
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-               std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects,
-               const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault},
-	  _inputProvider{std::move(inputProvider)}
+			   std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects,
+			   const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault}
+	, _inputProvider{std::move(inputProvider)}
 {
 	if (enableByDefault)
 	{

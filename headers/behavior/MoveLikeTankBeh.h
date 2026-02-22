@@ -3,9 +3,9 @@
 #include "Point.h"
 #include "entities/ObjRectangle.h"
 #include "interfaces/IMoveBeh.h"
+#include <boost/uuid/uuid.hpp>
 #include <functional>
 #include <memory>
-#include <boost/uuid/uuid.hpp>
 
 class BaseObj;
 class Tank;
@@ -29,7 +29,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 
 	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] bool MoveLeft(double deltaTime) override;
 	[[nodiscard]] bool MoveRight(double deltaTime) override;
@@ -38,8 +38,8 @@ class MoveLikeTankBeh final : public IMoveBeh
 
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
-	                std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
-	                std::vector<std::shared_ptr<BaseObj>>* allObjects);
+					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
+					std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeTankBeh() override = default;
 

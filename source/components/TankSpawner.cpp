@@ -19,19 +19,19 @@
 #include "utils/Logger.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
+#include <boost/uuid/uuid.hpp>
 #include <iostream>
 #include <memory>
-#include <boost/uuid/uuid.hpp>
 
 //TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         const std::shared_ptr<EventSystem>& events)
-	: _windowSize{windowSize},
-	  _allObjects{allObjects},
-	  _events{events},
-	  _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)},
-	  _bonusEffectManager{std::make_shared<BonusEffectManager>(events)},
-	  _respawnManager{std::make_shared<RespawnManager>(events)}
+						 const std::shared_ptr<EventSystem>& events)
+	: _windowSize{windowSize}
+	, _allObjects{allObjects}
+	, _events{events}
+	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)}
+	, _bonusEffectManager{std::make_shared<BonusEffectManager>(events)}
+	, _respawnManager{std::make_shared<RespawnManager>(events)}
 //TODO: extract tank spawner to respawn manager as sub component
 {
 	Subscribe();
@@ -45,34 +45,40 @@ TankSpawner::~TankSpawner()
 void TankSpawner::Subscribe()
 {
 	//TODO: reuse existing tanks when game mode changed
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	{
-		this->_gameMode = newGameMode;
+	_events->AddListener(
+			"GameModeChangedTo", _name,
+			[this](const GameMode newGameMode)
+			{
+				this->_gameMode = newGameMode;
 
-		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	});
+				this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+			});
 
-	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
-	{
-		std::shared_ptr<Tank> tankLck = tank.lock();
-		if (!tankLck)
-			return;//TODO: add assert for this case
+	_events->AddListener(
+			"SpawnEnabled", _name,
+			[this](std::weak_ptr<Tank> tank)
+			{
+				std::shared_ptr<Tank> tankLck = tank.lock();
+				if (!tankLck)
+					return;//TODO: add assert for this case
 
-		tankLck->Enable();
-		_events->EmitEvent("AnimationCreateTank", tank);
-	});
+				tankLck->Enable();
+				_events->EmitEvent("AnimationCreateTank", tank);
+			});
 
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->RespawnTanks(); });
 }
 
 void TankSpawner::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
-	{
-		//TODO: if true we see tanks on client until they first die, refactor whole spawn flow on client
-		constexpr bool skipDelay = true;
-		this->OnClientRespawn(type, uuid, skipDelay);
-	});
+	_events->AddListener(
+			"ClientReceived_RespawnTank", _name,
+			[this](const TankType type, const buuid& uuid)
+			{
+				//TODO: if true we see tanks on client until they first die, refactor whole spawn flow on client
+				constexpr bool skipDelay = true;
+				this->OnClientRespawn(type, uuid, skipDelay);
+			});
 }
 
 void TankSpawner::Unsubscribe() const
@@ -88,10 +94,7 @@ void TankSpawner::Unsubscribe() const
 	_events->RemoveListener("PreTickUpdate", _name);
 }
 
-void TankSpawner::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_RespawnTank", _name);
-}
+void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
 
 std::string TankSpawner::GetCurrentTimeString()
 {
@@ -110,7 +113,7 @@ std::string TankSpawner::GetCurrentTimeString()
 }
 
 void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health,
-                             const bool skipDelay)
+							 const bool skipDelay)
 {
 	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
 	const float size{gridOffset * 3};
@@ -118,8 +121,7 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
 			{.x = gridOffset * 32.f - size * 2.f, .y = 0, .w = size, .h = size},
 			{.x = gridOffset * 16.f + size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 32.f + size * 2.f, .y = 0, .w = size, .h = size}
-	}};
+			{.x = gridOffset * 32.f + size * 2.f, .y = 0, .w = size, .h = size}}};
 
 	for (const auto& rect: spawnPos)
 	{
@@ -145,8 +147,7 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 			constexpr int gray{0x808080};
 			const BonusEffectProperty effects = {
 					.isTimerActive = _bonusEffectManager->GetTimerEnemy().isActive,
-					.isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<size_t>(type)).isActive
-			};
+					.isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<size_t>(type)).isActive};
 
 			SpawnTank(rect, gray, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
 			return;
@@ -155,7 +156,7 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 }
 
 void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const buuid uuid,
-                              const TankType type, const bool skipDelay)
+							  const TankType type, const bool skipDelay)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -173,9 +174,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
 		std::cout << "[" << GetCurrentTimeString() << "] "
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< "SpawnPlayer UUID = " << uuidString
-				<< ", Name = " << name
-				<< '\n';
+				<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
@@ -191,7 +190,7 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 }
 
 void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int health, const buuid uuid,
-                               const TankType type, const bool skipDelay)
+							   const TankType type, const bool skipDelay)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -208,17 +207,14 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 		Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
 		std::cout << "[" << GetCurrentTimeString() << "] "
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< "SpawnEnemy  UUID = " << uuidString
-				<< ", Name = " << name
-				<< '\n';
+				<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
 
 		constexpr int yellow{0xeaea00};
 		constexpr int green{0x408000};
 		const unsigned int color = type == TankType::COOP1 ? yellow : green;
 		const BonusEffectProperty effects = {
 				.isTimerActive = _bonusEffectManager->GetTimerPlayer().isActive,
-				.isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive
-		};
+				.isHelmetActive = _bonusEffectManager->GetHelmet(type == TankType::COOP1 ? 4 : 5).isActive};
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
 	}
@@ -247,10 +243,10 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 	const ObjRectangle rect{.x = gridOffset * (isFirst ? 16.f : 32.f), .y = windowSizeY - size, .w = size, .h = size};
 
 	if (_gameMode == GameMode::OnePlayer
-	    || _gameMode == GameMode::TwoPlayers
-	    || _gameMode == GameMode::PlayAsHost
-	    || _gameMode == GameMode::PlayAsClient
-	    || _gameMode == GameMode::CoopWithBot && isFirst)
+		|| _gameMode == GameMode::TwoPlayers
+		|| _gameMode == GameMode::PlayAsHost
+		|| _gameMode == GameMode::PlayAsClient
+		|| _gameMode == GameMode::CoopWithBot && isFirst)
 	{
 		SpawnPlayer(rect, speed, health, uuid, type, skipDelay);
 	}
@@ -338,7 +334,7 @@ std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType typ
 }
 
 std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty,
-                                              BonusEffectProperty effects)
+											  BonusEffectProperty effects)
 {
 	if (type == TankType::ENEMY1 || type == TankType::ENEMY2 || type == TankType::ENEMY3 || type == TankType::ENEMY4)
 	{
@@ -354,26 +350,24 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const unsigned int color, const int health,
-                            const std::string& name, std::string fraction, const float speed, buuid uuid,
-                            BonusEffectProperty effects, const TankType type, const bool skipDelay)
+							const std::string& name, std::string fraction, const float speed, buuid uuid,
+							BonusEffectProperty effects, const TankType type, const bool skipDelay)
 {
-	BaseObjProperty baseObjProperty{
-			.rect = rect,
-			.color = color,
-			.health = health,
-			.uuid = uuid,
-			.name = name,
-			.fraction = std::move(fraction)};
+	BaseObjProperty baseObjProperty{.rect = rect,
+									.color = color,
+									.health = health,
+									.uuid = uuid,
+									.name = name,
+									.fraction = std::move(fraction)};
 
-	PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = _allObjects,
-			.events = _events,
-			.tier = 1,
-			.speed = speed,
-			.windowSize = _windowSize,
-			.dir = Direction::UP,
-			.gameMode = _gameMode};
+	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
+							  .allObjects = _allObjects,
+							  .events = _events,
+							  .tier = 1,
+							  .speed = speed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::UP,
+							  .gameMode = _gameMode};
 
 	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty), effects)})
 	{

@@ -9,18 +9,18 @@
 
 ///TODO: change selfParent to Tank to avoid check on each IsCanMove
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
-                                 std::string& name, std::string& fraction,
-                                 std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
-                                 std::vector<std::shared_ptr<BaseObj>>* allObjects)
-	: _uuid{uuid},
-	  _rect{rect},
-	  _direction{dir},
-	  _speed{speed},
-	  _windowSize{windowSize},
-	  _name{name},
-	  _fraction{fraction},
-	  _touchedObstacles{touchedObstacles},
-	  _allObjects{allObjects} {}
+								 std::string& name, std::string& fraction,
+								 std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
+								 std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	: _uuid{uuid}
+	, _rect{rect}
+	, _direction{dir}
+	, _speed{speed}
+	, _windowSize{windowSize}
+	, _name{name}
+	, _fraction{fraction}
+	, _touchedObstacles{touchedObstacles}
+	, _allObjects{allObjects} {}
 
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
 {
@@ -143,7 +143,7 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime)
 // }
 
 float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-                                       const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+									   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto [maxX, maxY] = _windowSize;
 	auto minDist = static_cast<float>(maxX * maxY);
@@ -311,8 +311,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime)
 		}
 
 		// move less than speed to stand next to an object
-		const auto getSideDiff =
-				[thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> float
+		const auto getSideDiff = [thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> float
 		{
 			return object->GetY() - thisBottomSide;
 		};

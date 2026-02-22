@@ -5,6 +5,8 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 
+namespace network::commands
+{
 class BonusStatus : public Command
 {
 	friend class boost::serialization::access;
@@ -41,5 +43,6 @@ void BonusStatus::serialize(Archive& ar, const unsigned int)
 	ar & _bonusType;
 	ar & _isEnable;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(BonusStatus);
+BOOST_CLASS_EXPORT_KEY(network::commands::BonusStatus);

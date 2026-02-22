@@ -4,12 +4,18 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(BonusSpawn);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::BonusSpawn);
 
-BonusSpawn::BonusSpawn() : Command{CommandType::BONUS_SPAWN} {}
+namespace network::commands
+{
+BonusSpawn::BonusSpawn()
+	: Command{CommandType::BONUS_SPAWN} {}
 
 BonusSpawn::BonusSpawn(const FPoint pos, const BonusType bonusType, const buuid uuid)
-	: Command{CommandType::BONUS_SPAWN}, _pos{pos}, _bonusType{bonusType}, _uuid{uuid} {}
+	: Command{CommandType::BONUS_SPAWN}
+	, _pos{pos}
+	, _bonusType{bonusType}
+	, _uuid{uuid} {}
 
 FPoint BonusSpawn::GetPos() const noexcept { return _pos; }
 
@@ -19,3 +25,4 @@ using buuid = boost::uuids::uuid;
 buuid BonusSpawn::GetUuid() const noexcept { return _uuid; }
 
 const char* BonusSpawn::GetClassNameW() const noexcept { return "BonusSpawn"; }
+}//namespace network::commands

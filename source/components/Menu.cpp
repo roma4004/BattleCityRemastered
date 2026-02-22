@@ -7,12 +7,12 @@
 #include <sstream>
 
 Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)},
-	  _events{events},
-	  _statistics{std::make_unique<GameStatistics>(events)},
-	  _input{std::make_unique<InputProviderForMenu>(events)},
-	  _name{std::string("Menu")},
-	  _selectedGameMode{GameMode::OnePlayer}
+	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)}
+	, _events{events}
+	, _statistics{std::make_unique<GameStatistics>(events)}
+	, _input{std::make_unique<InputProviderForMenu>(events)}
+	, _name{std::string("Menu")}
+	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
@@ -32,12 +32,10 @@ void Menu::Subscribe()
 		this->_selectedGameMode = newGameMode;
 	});
 
-	_events->AddListener(
-			"RespawnCountChangedTo", _name,
-			[this](const std::string& objectName, const int respawnCount)
-			{
-				this->OnRespawnCountChanged(objectName, respawnCount);
-			});
+	_events->AddListener("RespawnCountChangedTo", _name, [this](const std::string& objectName, const int respawnCount)
+	{
+		this->OnRespawnCountChanged(objectName, respawnCount);
+	});
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
 	_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
 }
@@ -103,54 +101,52 @@ void Menu::RenderStatistics(const Point pos) const
 
 	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
-	                        _playerOneRepawnCount,
-	                        _playerTwoRespawnCount,
-	                        _enemyRespawnCount);
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN", _playerOneRepawnCount,
+							_playerTwoRespawnCount,
+							_enemyRespawnCount);
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN",
-	                        _playerOneRepawnCount,
-	                        _playerTwoRespawnCount,
-	                        _enemyRespawnCount);
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 160}, color, "RESPAWN REMAIN", _playerOneRepawnCount,
+							_playerTwoRespawnCount,
+							_enemyRespawnCount);
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 180}, color, "BULLET HIT BY BULLET",
-	                        _statistics->GetBulletHitByPlayerOne(),
-	                        _statistics->GetBulletHitByPlayerTwo(),
-	                        _statistics->GetBulletHitByEnemy());
+							_statistics->GetBulletHitByPlayerOne(),
+							_statistics->GetBulletHitByPlayerTwo(),
+							_statistics->GetBulletHitByEnemy());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 200}, color, "PLAYER HIT BY ENEMY",
-	                        _statistics->GetPlayerOneHitByEnemyTeam(),
-	                        _statistics->GetPlayerTwoHitByEnemyTeam());
+							_statistics->GetPlayerOneHitByEnemyTeam(),
+							_statistics->GetPlayerTwoHitByEnemyTeam());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 220}, color, "TANK KILLS",
-	                        _statistics->GetEnemyDiedByPlayerOne(),
-	                        _statistics->GetEnemyDiedByPlayerTwo(),
-	                        _statistics->GetPlayerDiedByEnemyTeam());
+							_statistics->GetEnemyDiedByPlayerOne(),
+							_statistics->GetEnemyDiedByPlayerTwo(),
+							_statistics->GetPlayerDiedByEnemyTeam());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 240}, color, "ENEMY HIT BY",
-	                        _statistics->GetEnemyHitByPlayerOne(),
-	                        _statistics->GetEnemyHitByPlayerTwo(),
-	                        _statistics->GetEnemyHitByFriendlyFire());
+							_statistics->GetEnemyHitByPlayerOne(),
+							_statistics->GetEnemyHitByPlayerTwo(),
+							_statistics->GetEnemyHitByFriendlyFire());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 260}, color, "FRIEND HIT FRIEND",
-	                        _statistics->GetPlayerOneHitFriendlyFire(),
-	                        _statistics->GetPlayerTwoHitFriendlyFire(),
-	                        _statistics->GetEnemyHitByFriendlyFire());
+							_statistics->GetPlayerOneHitFriendlyFire(),
+							_statistics->GetPlayerTwoHitFriendlyFire(),
+							_statistics->GetEnemyHitByFriendlyFire());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 280}, color, "FRIEND KILLS FRIEND",
-	                        _statistics->GetPlayerOneDiedByFriendlyFire(),
-	                        _statistics->GetPlayerTwoDiedByFriendlyFire(),
-	                        _statistics->GetEnemyDiedByFriendlyFire());
+							_statistics->GetPlayerOneDiedByFriendlyFire(),
+							_statistics->GetPlayerTwoDiedByFriendlyFire(),
+							_statistics->GetEnemyDiedByFriendlyFire());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKS KILLS",
-	                        _statistics->GetBrickWallDiedByPlayerOne(),
-	                        _statistics->GetBrickWallDiedByPlayerTwo(),
-	                        _statistics->GetBrickWallDiedByEnemyTeam());
+							_statistics->GetBrickWallDiedByPlayerOne(),
+							_statistics->GetBrickWallDiedByPlayerTwo(),
+							_statistics->GetBrickWallDiedByEnemyTeam());
 
 	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 320}, color, "STEEL KILLS",
-	                        _statistics->GetSteelWallDiedByPlayerOne(),
-	                        _statistics->GetSteelWallDiedByPlayerTwo(),
-	                        _statistics->GetSteelWallDiedByEnemyTeam());
+							_statistics->GetSteelWallDiedByPlayerOne(),
+							_statistics->GetSteelWallDiedByPlayerTwo(),
+							_statistics->GetSteelWallDiedByEnemyTeam());
 
 	//TODO: display statistics for pickuped bonuses
 	// RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 340}, color, "BONUS PICKUPS",
@@ -160,7 +156,7 @@ void Menu::RenderStatistics(const Point pos) const
 }
 
 void Menu::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-                                   const int player1, const int player2, const int enemy) const
+								   const int player1, const int player2, const int enemy) const
 {
 	std::ostringstream textStream;
 	textStream << std::left
@@ -177,15 +173,11 @@ void Menu::RenderTextWithAlignment(const Point pos, const unsigned int color, co
 }
 
 void Menu::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-                                   const std::string& text2, const std::string& text3) const
+								   const std::string& text2, const std::string& text3) const
 {
 	std::ostringstream textStream;
 
-	textStream << std::left
-			<< std::setw(22)
-			<< std::setw(4) << text
-			<< std::setw(4) << text2
-			<< std::setw(4) << text3;
+	textStream << std::left << std::setw(22) << std::setw(4) << text << std::setw(4) << text2 << std::setw(4) << text3;
 
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
@@ -201,15 +193,15 @@ void Menu::DrawText() const
 	constexpr unsigned int color = {0xffffffff};
 
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y - 50}, color,
-	                   _selectedGameMode == GameMode::OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
+					   _selectedGameMode == GameMode::OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y - 25}, color,
-	                   _selectedGameMode == GameMode::TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
+					   _selectedGameMode == GameMode::TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color,
-	                   _selectedGameMode == GameMode::CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
+					   _selectedGameMode == GameMode::CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y + 25}, color,
-	                   _selectedGameMode == GameMode::PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
+					   _selectedGameMode == GameMode::PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y + 50}, color,
-	                   _selectedGameMode == GameMode::PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
+					   _selectedGameMode == GameMode::PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
 
 	RenderStatistics(pos);
 }

@@ -3,11 +3,13 @@
 #include "Command.h"
 #include "UuidSerialization.h"
 #include "enums/Direction.h"
-#include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 
+namespace network::commands
+{
 class TankShot : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -45,5 +47,6 @@ void TankShot::serialize(Archive& ar, const unsigned int)
 	ar & _dir;
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(TankShot);
+BOOST_CLASS_EXPORT_KEY(network::commands::TankShot);

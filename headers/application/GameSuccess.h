@@ -60,7 +60,7 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-	            bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
+				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
 
 	~GameSuccess() override;
 };

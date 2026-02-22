@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../BaseObj.h"
 #include "BrickWall.h"
 #include "SteelWall.h"
-#include "../BaseObj.h"
 #include "utils/Timer.h"
 #include <variant>
 
@@ -18,7 +18,7 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 
 	std::variant<std::unique_ptr<BrickWall>,
-	             std::unique_ptr<SteelWall>> _obstacle{};
+				 std::unique_ptr<SteelWall>> _obstacle{};
 
 	Timer _shovel{};
 	GameMode _gameMode{};
@@ -38,7 +38,7 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 
 public:
 	FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
-	             std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode);
+				 std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode);
 
 	~FortressWall() override;
 

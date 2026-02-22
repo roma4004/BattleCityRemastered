@@ -6,6 +6,8 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 
+namespace network::commands
+{
 class CommandBatch : public Command
 {
 	friend class boost::serialization::access;
@@ -33,5 +35,6 @@ void CommandBatch::serialize(Archive& ar, const unsigned int)
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _commands;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(CommandBatch);
+BOOST_CLASS_EXPORT_KEY(network::commands::CommandBatch);

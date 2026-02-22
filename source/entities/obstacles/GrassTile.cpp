@@ -3,15 +3,15 @@
 #include "enums/ObstacleType.h"
 
 GrassTile::GrassTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
-                     const GameMode gameMode)
+					 const GameMode gameMode)
 	: Obstacle{rect,
-	           0x1e90ff,
-	           1,
-	           "Grass",
-	           events,
-	           uuid,
-	           gameMode,
-	           ObstacleType::Grass}
+			   0x1e90ff,
+			   1,
+			   "Grass",
+			   events,
+			   uuid,
+			   gameMode,
+			   ObstacleType::Grass}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);

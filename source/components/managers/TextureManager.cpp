@@ -5,9 +5,9 @@
 #include "enums/Direction.h"
 
 TextureManager::TextureManager(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _windowSize{windowSize},
-	  _animationManager{std::make_unique<AnimationManager>(events)},
-	  _events{events}
+	: _windowSize{windowSize}
+	, _animationManager{std::make_unique<AnimationManager>(events)}
+	, _events{events}
 {
 	Subscribe();
 }
@@ -29,14 +29,14 @@ void TextureManager::Subscribe() const
 	_events->AddListener(
 			"DrawAnimation", _name,
 			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-			       const std::string& name, const unsigned int color)
+				   const std::string& name, const unsigned int color)
 			{
 				this->DrawAnimation(rect, dir, step, scale, name, color);
 			});
 	_events->AddListener(
 			"DrawTankAnimation", _name,
 			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-			       const std::string& name, const unsigned int color)
+				   const std::string& name, const unsigned int color)
 			{
 				this->DrawTankAnimation(rect, dir, step, scale, name, color);
 			});
@@ -140,7 +140,7 @@ ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
 }
 
 ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect,
-                                                ObjRectangle& destRect) const
+												ObjRectangle& destRect) const
 {
 	ObjRectangle textureRect{};
 	if (name == "Water")
@@ -171,7 +171,7 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 
 
 void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name,
-                          const unsigned int color) const
+						  const unsigned int color) const
 {
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
@@ -189,15 +189,17 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 }
 
 void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
-                                   const std::string& name, const unsigned int color) const
+								   const std::string& name, const unsigned int color) const
 {
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
 	textureRect.x += step * scale;
 	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+		textureRect.x == defaultSdlRect.x
+		&& textureRect.y == defaultSdlRect.y
 		//TODO: incorrect float comparison in whole class
-		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
+		&& textureRect.w == defaultSdlRect.w
+		&& textureRect.h == defaultSdlRect.h)
 	{
 		_events->EmitEvent("RenderColorTexture", rect, color);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
@@ -207,12 +209,13 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 }
 
 void TextureManager::DrawTankAnimation(const ObjRectangle destRect, const Direction dir, const int step,
-                                       const int scale, const std::string& name, const unsigned int color) const
+									   const int scale, const std::string& name, const unsigned int color) const
 {
 	ObjRectangle textureRect = GetTankTextureRect(name);
 	textureRect.x += step * scale;
 	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x && textureRect.y == defaultSdlRect.y
+		textureRect.x == defaultSdlRect.x
+		&& textureRect.y == defaultSdlRect.y
 		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
 	{
 		_events->EmitEvent("RenderColorTexture", destRect, color);

@@ -32,7 +32,7 @@ struct TextureOffset
 
 
 	// Battle City SpriteSheet.png Grid size 16x16
-	// tanks are 13x13 so we need to make 1px offset cuz they're not aligned properly and start flickering while we rotate them  
+	// tanks are 13x13 so we need to make 1px offset cuz they're not aligned properly and start flickering while we rotate them
 
 	//Tanks
 	ObjRectangle enemy{.x = 129, .y = 1, .w = 13, .h = 13};

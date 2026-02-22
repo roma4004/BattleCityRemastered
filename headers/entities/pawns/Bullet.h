@@ -2,8 +2,8 @@
 
 #include "Pawn.h"
 #include "interfaces/IDrawable.h"
-#include <string>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 
 struct BulletResetProperty;
 struct UPoint;

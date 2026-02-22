@@ -2,9 +2,9 @@
 
 #include "Point.h"
 #include "interfaces/IMoveBeh.h"
+#include <boost/uuid/uuid.hpp>
 #include <functional>
 #include <memory>
-#include <boost/uuid/uuid.hpp>
 
 // enum class Direction : char8_t;
 class Bullet;
@@ -41,8 +41,8 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
-	                  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
-	                  std::vector<std::shared_ptr<BaseObj>>* allObjects);
+					  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
+					  std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;
 

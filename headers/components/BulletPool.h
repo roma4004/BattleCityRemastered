@@ -26,7 +26,7 @@ class BulletPool final
 
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	           UPoint windowSize, GameMode gameMode);
+			   UPoint windowSize, GameMode gameMode);
 
 	~BulletPool();
 

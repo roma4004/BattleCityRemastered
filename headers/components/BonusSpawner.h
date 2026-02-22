@@ -1,7 +1,7 @@
 #pragma once
 
-#include <random>
 #include <boost/uuid/uuid.hpp>
+#include <random>
 
 enum class GameMode : char8_t;
 enum class BonusType : char8_t;
@@ -43,7 +43,7 @@ class BonusSpawner final
 
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	             UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be in bonus.h
+				 UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be in bonus.h
 
 	~BonusSpawner();
 

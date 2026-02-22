@@ -4,7 +4,7 @@
 
 namespace boost::uuids
 {
-	struct uuid;
+struct uuid;
 }
 
 class UuidUtils final

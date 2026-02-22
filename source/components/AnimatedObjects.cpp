@@ -13,21 +13,21 @@ class Tank;
 using buuid = boost::uuids::uuid;
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-                               const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
-                               const int frameLimit, const int scale, std::string objName, const unsigned int color,
-                               const bool isInfinite, const std::weak_ptr<Tank> tank)
-	: events(events),
-	  rect{rect},
-	  limitOfFrames{frameLimit},
-	  color{color},
-	  gameMode{gameMode},
-	  type(type),
-	  isInfinite{isInfinite},
-	  scale{scale},
-	  name{name},
-	  nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())},
-	  objName(std::move(objName)),
-	  parent{tank}
+							   const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
+							   const int frameLimit, const int scale, std::string objName, const unsigned int color,
+							   const bool isInfinite, const std::weak_ptr<Tank> tank)
+	: events(events)
+	, rect{rect}
+	, limitOfFrames{frameLimit}
+	, color{color}
+	, gameMode{gameMode}
+	, type(type)
+	, isInfinite{isInfinite}
+	, scale{scale}
+	, name{name}
+	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())}
+	, objName(std::move(objName))
+	, parent{tank}
 {
 	Subscribe();
 }
@@ -74,8 +74,8 @@ void AnimatedObject::Draw() const
 		{
 			if (events != nullptr)
 			{
-				events->EmitEvent("DrawTankAnimation", tankLck->GetRect(), tankLck->GetDirection(),
-				                  animationFrame, scale, objName, tankLck->GetColor());
+				events->EmitEvent("DrawTankAnimation", tankLck->GetRect(), tankLck->GetDirection(), animationFrame,
+								  scale, objName, tankLck->GetColor());
 			}
 		}
 	}

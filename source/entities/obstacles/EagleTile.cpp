@@ -3,15 +3,15 @@
 #include "enums/ObstacleType.h"
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
-                     const GameMode gameMode)
+					 const GameMode gameMode)
 	: Obstacle{rect,
-	           0x1e90ff,
-	           1,
-	           "Eagle",
-	           events,
-	           uuid,
-	           gameMode,
-	           ObstacleType::Eagle}
+			   0x1e90ff,
+			   1,
+			   "Eagle",
+			   events,
+			   uuid,
+			   gameMode,
+			   ObstacleType::Eagle}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

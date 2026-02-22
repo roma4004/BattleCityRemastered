@@ -28,7 +28,7 @@ protected:
 
 public:
 	Obstacle(ObjRectangle rect, unsigned int color, int health, std::string name,
-	         const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode, ObstacleType obstacleType);
+			 const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode, ObstacleType obstacleType);
 
 	~Obstacle() override;
 };

@@ -4,11 +4,12 @@
 #include <SDL_events.h>
 #include <SDL_gamecontroller.h>
 #include <algorithm>
-#include <ranges>
 #include <iostream>
+#include <ranges>
 
 UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _windowSize{windowSize}, _events{events}
+	: _windowSize{windowSize}
+	, _events{events}
 {
 	Subscribe();
 
@@ -24,10 +25,7 @@ UserInput::~UserInput()
 
 void UserInput::Subscribe()
 {
-	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus)
-	{
-		this->_isPause = newPauseStatus;
-	});
+	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus) { this->_isPause = newPauseStatus; });
 	_events->AddListener("Tab_Released", _name, [this]() { SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
@@ -51,7 +49,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 			if (!_isPause)
 			{
 				_isPauseBeforeDragNDrop = true;
-				_events->EmitEvent("Pause_Released");
+				_events->EmitEvent("Pause_Status", _isPauseBeforeDragNDrop);
 			}
 		}
 
@@ -100,8 +98,8 @@ void UserInput::OnWindowMoveStop()
 
 			if (_isPauseBeforeDragNDrop)
 			{
+				_events->EmitEvent("Pause_Status", _isPauseBeforeDragNDrop);
 				_isPauseBeforeDragNDrop = false;
-				_events->EmitEvent("Pause_Released");
 			}
 		}
 	}
@@ -134,8 +132,9 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		// std::cout << "x: " << x << " \t y: " << y << '\n';
 		// const int rowSize = env.windowWidth; ???
 
-		if (x < 1 || y < 1 || x >= static_cast<Sint32>(_windowSize.x) - 1
-		    && y >= static_cast<Sint32>(_windowSize.y) - 1) {}
+		if (x < 1 || y < 1
+			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1)
+			{}
 	}
 }
 

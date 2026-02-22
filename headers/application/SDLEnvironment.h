@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Point.h"
-#include <SDL.h> //NOTE: do not replace with forward declaration, required for minGW
+#include <SDL.h>//NOTE: do not replace with forward declaration, required for minGW
 #include <SDL_mixer.h>
 #include <memory>
 
@@ -24,8 +24,8 @@ struct SDLEnvironment final
 
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
-	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName,
-	               const char* introMusicName, const char* textureCollection);
+	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName, const char* introMusicName,
+				   const char* textureCollection);
 
 	~SDLEnvironment();
 

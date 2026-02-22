@@ -4,14 +4,19 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(BonusDeSpawn);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::BonusDeSpawn);
 
-BonusDeSpawn::BonusDeSpawn() : Command{CommandType::BONUS_DESPAWN} {}
+namespace network::commands
+{
+BonusDeSpawn::BonusDeSpawn()
+	: Command{CommandType::BONUS_DESPAWN} {}
 
 BonusDeSpawn::BonusDeSpawn(const buuid uuid)
-	: Command{CommandType::BONUS_DESPAWN}, _uuid{uuid} {}
+	: Command{CommandType::BONUS_DESPAWN}
+	, _uuid{uuid} {}
 
 using buuid = boost::uuids::uuid;
 buuid BonusDeSpawn::GetUuid() const noexcept { return _uuid; }
 
 const char* BonusDeSpawn::GetClassNameW() const noexcept { return "BonusDeSpawn"; }
+}//namespace network::commands

@@ -8,5 +8,5 @@ class TimeUtils final
 
 public:
 	[[nodiscard]] static bool IsCooldownFinish(const std::chrono::system_clock::time_point& activateTime,
-	                                           const milliseconds& cooldown);
+											   const milliseconds& cooldown);
 };

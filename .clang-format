@@ -32,6 +32,7 @@ BraceWrapping:
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 2
 BreakInheritanceList: BeforeColon
 ColumnLimit: 120
 CompactNamespaces: false
@@ -41,7 +42,7 @@ IndentPPDirectives: None
 IndentWidth: 4
 KeepEmptyLinesAtTheStartOfBlocks: true
 MaxEmptyLinesToKeep: 2
-NamespaceIndentation: All
+NamespaceIndentation: None
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 PointerAlignment: Left
@@ -63,5 +64,5 @@ SpacesInContainerLiterals: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 TabWidth: 4
-UseTab: Always
+UseTab: ForIndentation
 InsertNewlineAtEOF: true

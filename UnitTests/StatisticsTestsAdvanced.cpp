@@ -59,11 +59,21 @@ protected:
 	{
 		ObjRectangle rect2{.x = x, .y = y, .w = _bulletWidth, .h = _bulletHeight};
 		BaseObjProperty baseObjProperty2{
-				.rect = rect2, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.rect = rect2,
+				.color = _bulletColor,
+				.health = _bulletHealth,
+				.uuid = _uuid,
+				.name = std::move(name),
 				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty2{
-				.baseObjProperty = std::move(baseObjProperty2), .allObjects = &_allObjects, .events = _events, .tier = 1,
-				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = dir, .gameMode = _gameMode};
+				.baseObjProperty = std::move(baseObjProperty2),
+				.allObjects = &_allObjects,
+				.events = _events,
+				.tier = 1,
+				.speed = _bulletSpeed,
+				.windowSize = _windowSize,
+				.dir = dir,
+				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(

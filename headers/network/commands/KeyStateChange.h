@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Command.h"
-#include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <string>
 
+namespace network::commands
+{
 class KeyStateChange : public Command
 {
 	friend class boost::serialization::access;
@@ -37,5 +39,6 @@ void KeyStateChange::serialize(Archive& ar, const unsigned int)
 	ar & _keyState;
 	ar & _isEnable;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(KeyStateChange);
+BOOST_CLASS_EXPORT_KEY(network::commands::KeyStateChange);

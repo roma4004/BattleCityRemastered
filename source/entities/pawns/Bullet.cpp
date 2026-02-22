@@ -10,21 +10,22 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Bullet::Bullet(PawnProperty pawnProperty) : Bullet(std::move(pawnProperty), 0, 18.f, "") {}
+Bullet::Bullet(PawnProperty pawnProperty)
+	: Bullet(std::move(pawnProperty), 0, 18.f, "") {}
 
 Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
-               const bool enableByDefault)
-	: Pawn{std::move(pawnProperty)},
-	  _author{std::move(author)},
-	  _bulletDamageRadius{aoeRadius},
-	  _damage{damage}
+			   const bool enableByDefault)
+	: Pawn{std::move(pawnProperty)}
+	, _author{std::move(author)}
+	, _bulletDamageRadius{aoeRadius}
+	, _damage{damage}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
-	                                               _bulletTargets, _allObjects);
+												   _bulletTargets, _allObjects);
 	if (enableByDefault)
 	{
 		Bullet::Subscribe();
@@ -46,7 +47,7 @@ Bullet::~Bullet()
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< std::endl;
-	Bullet::Unsubscribe();
+	Unsubscribe();
 }
 
 void Bullet::Subscribe()
@@ -63,15 +64,17 @@ void Bullet::Subscribe()
 
 void Bullet::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_" + _name + "Dispose", _nameWithUuid, [this](const buuid& uuid)
-	{
-		if (uuid != _uuid)
-		{
-			return;
-		}
+	_events->AddListener(
+			"ClientReceived_" + _name + "Dispose", _nameWithUuid,
+			[this](const buuid& uuid)
+			{
+				if (uuid != _uuid)
+				{
+					return;
+				}
 
-		this->SetIsAlive(false);
-	});
+				this->SetIsAlive(false);
+			});
 }
 
 void Bullet::Unsubscribe() const
@@ -137,7 +140,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 
 	//TODO: write reset for MoveLikeBulletBeh
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
-	                                               _bulletTargets, _allObjects);
+												   _bulletTargets, _allObjects);
 	_bulletTargets.clear();
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
@@ -195,9 +198,9 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		for (const auto& target: objectList)
 		{
 			if (target && !dynamic_cast<WaterTile*>(target.get())
-			    && !dynamic_cast<GrassTile*>(target.get())
-			    && !dynamic_cast<IceTile*>(target.get())
-			    && (target->GetIsDestructible() || _tier > 2))
+				&& !dynamic_cast<GrassTile*>(target.get())
+				&& !dynamic_cast<IceTile*>(target.get())
+				&& (target->GetIsDestructible() || _tier > 2))
 			{
 				target->TakeDamage(_damage);
 				target->SendDamageStatistics(GetAuthor(), GetFraction());

@@ -4,12 +4,17 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(Dispose);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::Dispose);
 
-Dispose::Dispose() : Command{CommandType::DISPOSE} {}
+namespace network::commands
+{
+Dispose::Dispose()
+	: Command{CommandType::DISPOSE} {}
 
 Dispose::Dispose(std::string who, const buuid uuid)
-	: Command{CommandType::DISPOSE}, _who{std::move(who)}, _uuid{uuid} {}
+	: Command{CommandType::DISPOSE}
+	, _who{std::move(who)}
+	, _uuid{uuid} {}
 
 std::string Dispose::GetWho() const noexcept { return _who; }
 
@@ -17,3 +22,4 @@ using buuid = boost::uuids::uuid;
 buuid Dispose::GetUuid() const noexcept { return _uuid; }
 
 const char* Dispose::GetClassNameW() const noexcept { return "Dispose"; }
+}//namespace network::commands

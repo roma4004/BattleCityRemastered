@@ -6,18 +6,18 @@
 #include "utils/ColliderUtils.h"
 #include <memory>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir,
-                                     float& speed, buuid& uuid, double& damageRadius, UPoint& windowSize,
-                                     std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
-                                     std::vector<std::shared_ptr<BaseObj>>* allObjects)
-	: _uuid{uuid},
-	  _rect{rect},
-	  _direction{dir},
-	  _speed{speed},
-	  _bulletDamageRadius{damageRadius},
-	  _windowSize{windowSize},
-	  _bulletTargets{bulletTargets},
-	  _allObjects{allObjects} {}
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid,
+									 double& damageRadius, UPoint& windowSize,
+									 std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
+									 std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	: _uuid{uuid}
+	, _rect{rect}
+	, _direction{dir}
+	, _speed{speed}
+	, _bulletDamageRadius{damageRadius}
+	, _windowSize{windowSize}
+	, _bulletTargets{bulletTargets}
+	, _allObjects{allObjects} {}
 
 //NOTE: Never user for bullets
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(double /*deltaTime*/) const { return {}; }

@@ -2,22 +2,22 @@
 #include "application/ConfigFailure.h"
 #include "application/ConfigSuccess.h"
 #include "application/UserInput.h"
+#include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
-#include <SDL.h>
 #include <iostream>
 #include <memory>
 
 class IConfig;
 
 SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
-                               const char* introMusicName, const char* textureCollection)
-	: windowSize{windowSize},
-	  fpsFontPathName{fpsFontName},
-	  logoPathName{logoName},
-	  introMusicPathName{introMusicName},
-	  textureAtlasPath{textureCollection} {}
+							   const char* introMusicName, const char* textureCollection)
+	: windowSize{windowSize}
+	, fpsFontPathName{fpsFontName}
+	, logoPathName{logoName}
+	, introMusicPathName{introMusicName}
+	, textureAtlasPath{textureCollection} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -165,8 +165,8 @@ SDLEnvironment::~SDLEnvironment()
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
-		                      static_cast<int>(bounds.x + bounds.w / 2 - windowSizeHalf.x / 2),
-		                      static_cast<int>(bounds.y + bounds.h / 2 - windowSizeHalf.y / 2 - bordersSize.y));
+							  static_cast<int>(bounds.x + bounds.w / 2 - windowSizeHalf.x / 2),
+							  static_cast<int>(bounds.y + bounds.h / 2 - windowSizeHalf.y / 2 - bordersSize.y));
 	}
 
 	return {SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags), SDL_DestroyRenderer};

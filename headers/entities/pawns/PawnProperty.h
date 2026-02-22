@@ -1,7 +1,7 @@
 #pragma once
 
-#include "point.h"
 #include "../BaseObjProperty.h"
+#include "point.h"
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;

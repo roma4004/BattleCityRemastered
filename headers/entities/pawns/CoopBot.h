@@ -10,7 +10,7 @@ class CoopBot final : public Bot
 
 public:
 	CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},
-	        bool enableByDefault = false);
+			bool enableByDefault = false);
 
 	~CoopBot() override;
 };

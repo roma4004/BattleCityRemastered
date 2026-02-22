@@ -1,8 +1,8 @@
 #pragma once
 
 #include "entities/ObjRectangle.h"
+#include <boost/uuid/uuid.hpp>//TODO: use PCH
 #include <string>
-#include <boost/uuid/uuid.hpp> //TODO: use PCH
 
 struct BaseObjProperty
 {

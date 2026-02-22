@@ -8,10 +8,10 @@
 #include "utils/TimeUtils.h"
 
 Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
-         const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault},
-	  _distTurnRate(1000/*ms*/, 5000/*ms*/),
-	  _lastTimeTurn{std::chrono::system_clock::now()} {}
+		 const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault}
+	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
+	, _lastTimeTurn{std::chrono::system_clock::now()} {}
 
 Bot::~Bot() = default;
 

@@ -3,7 +3,9 @@
 #include "enums/GameMode.h"
 
 //TODO: write statistics for pickuped bonuses
-GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events) : _name{"Statistics"}, _events{events}
+GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
+	: _name{"Statistics"}
+	, _events{events}
 {
 	Subscribe();
 }
@@ -27,12 +29,10 @@ void GameStatistics::Subscribe()
 void GameStatistics::SubscribeHost()
 {
 	//TODO: replace <std::string> with <Enum::statisticsType>
-	_events->AddListener(
-			"Statistics_BulletHit", _name,
-			[this](const std::string& author, const std::string& fraction)
-			{
-				this->OnBulletHit(author, fraction);
-			});
+	_events->AddListener("Statistics_BulletHit", _name, [this](const std::string& author, const std::string& fraction)
+	{
+		this->OnBulletHit(author, fraction);
+	});
 
 	_events->AddListener(
 			"Statistics_TankHit", _name,
@@ -90,10 +90,7 @@ void GameStatistics::UnsubscribeAsHost() const
 	_events->RemoveListener("Statistics_SteelWallDied", _name);
 }
 
-void GameStatistics::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_Statistics", _name);
-}
+void GameStatistics::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_Statistics", _name); }
 
 void GameStatistics::OnGameModeChangedTo(const GameMode newGameMode)
 {
@@ -112,7 +109,7 @@ void GameStatistics::OnGameModeChangedTo(const GameMode newGameMode)
 }
 
 void GameStatistics::OnClientStatisticsChange(const std::string& type, const std::string& author,
-                                              const std::string& fraction)
+											  const std::string& fraction)
 {
 	if (type == "BulletHit")
 	{

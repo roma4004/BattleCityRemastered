@@ -12,7 +12,7 @@ class Enemy final : public Bot
 
 public:
 	Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},
-	      bool enableByDefault = false);
+		  bool enableByDefault = false);
 
 	~Enemy() override;
 };

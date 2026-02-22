@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Pawn.h"
 #include "../BonusEffectProperty.h"
+#include "Pawn.h"
 
 struct UPoint;
 class PlayerTest;
@@ -60,7 +60,7 @@ protected:
 
 public:
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects,
-	     bool enableByDefault = false);
+		 bool enableByDefault = false);
 
 	~Tank() override;
 

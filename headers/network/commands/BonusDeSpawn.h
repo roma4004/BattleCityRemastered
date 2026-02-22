@@ -6,6 +6,8 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
+namespace network::commands
+{
 class BonusDeSpawn : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -37,5 +39,6 @@ void BonusDeSpawn::serialize(Archive& ar, const unsigned int)
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(BonusDeSpawn);
+BOOST_CLASS_EXPORT_KEY(network::commands::BonusDeSpawn);

@@ -35,15 +35,15 @@ class ShootingBeh final : public IShootable
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-	                                    const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
 	ShootingBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, float& bulletSpeed, int& bulletDamage,
-	            int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize, std::string& name,
-	            std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-	            const std::shared_ptr<BulletPool>& bulletPool);
+				int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize, std::string& name,
+				std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+				const std::shared_ptr<BulletPool>& bulletPool);
 
 	~ShootingBeh() override;
 

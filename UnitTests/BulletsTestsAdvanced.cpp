@@ -42,11 +42,21 @@ protected:
 		std::string author{"Player1"};
 		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
 		BaseObjProperty baseObjProperty{
-				.rect = rect, .color = _bulletColor, .health = _bulletHealth, .uuid = _uuid, .name = std::move(name),
+				.rect = rect,
+				.color = _bulletColor,
+				.health = _bulletHealth,
+				.uuid = _uuid,
+				.name = std::move(name),
 				.fraction = std::move(fraction)};
 		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty), .allObjects = &_allObjects, .events = _events, .tier = 3,
-				.speed = _bulletSpeed, .windowSize = _windowSize, .dir = Direction::DOWN, .gameMode = _gameMode};
+				.baseObjProperty = std::move(baseObjProperty),
+				.allObjects = &_allObjects,
+				.events = _events,
+				.tier = 3,
+				.speed = _bulletSpeed,
+				.windowSize = _windowSize,
+				.dir = Direction::DOWN,
+				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);

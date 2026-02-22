@@ -4,6 +4,8 @@
 #include "interfaces/INetworkNode.h"
 #include <thread>
 
+namespace network::commands
+{
 class ServerHandler : public INetworkNode
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -17,3 +19,4 @@ public:
 
 	~ServerHandler();
 };
+}//namespace network::commands

@@ -10,23 +10,23 @@
 // #include <boost/uuid/uuid_io.hpp>
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, float& bulletSpeed,
-                         int& bulletDamage, int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize,
-                         std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-                         const std::shared_ptr<BulletPool>& bulletPool)
-	: _uuid{uuid},
-	  _rect{rect},
-	  _direction{dir},
-	  _speed{speed},
-	  _bulletSpeed{bulletSpeed},
-	  _bulletDamage{bulletDamage},
-	  _bulletDamageRadius{damageRadius},
-	  _tier{tier},
-	  _bulletSize{bulletSize},
-	  _windowSize{windowSize},
-	  _name{name},
-	  _fraction{fraction},
-	  _allObjects{allObjects},
-	  _bulletPool{bulletPool} {}
+						 int& bulletDamage, int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize,
+						 std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+						 const std::shared_ptr<BulletPool>& bulletPool)
+	: _uuid{uuid}
+	, _rect{rect}
+	, _direction{dir}
+	, _speed{speed}
+	, _bulletSpeed{bulletSpeed}
+	, _bulletDamage{bulletDamage}
+	, _bulletDamageRadius{damageRadius}
+	, _tier{tier}
+	, _bulletSize{bulletSize}
+	, _windowSize{windowSize}
+	, _name{name}
+	, _fraction{fraction}
+	, _allObjects{allObjects}
+	, _bulletPool{bulletPool} {}
 
 ShootingBeh::~ShootingBeh() = default;
 
@@ -36,7 +36,7 @@ ShootingBeh::~ShootingBeh() = default;
 // }
 
 float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-                                   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	float minDist = static_cast<float>(_windowSize.x * _windowSize.y);
 	// float nearestDist = 0;
@@ -126,7 +126,8 @@ buuid ShootingBeh::Shot(const buuid uuid)
 				.speed = _bulletSpeed,
 				.tier = _tier,
 				.author = _name,
-				.fraction = _fraction,//TODO: replace fraction with enum
+				.fraction = _fraction,
+				//TODO: replace fraction with enum
 				.uuid = uuid
 		};
 

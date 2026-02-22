@@ -1,6 +1,9 @@
 #include "network/commands/Command.h"
 
-Command::Command(const CommandType type) : _type{type} {}
+namespace network::commands
+{
+Command::Command(const CommandType type)
+	: _type{type} {}
 
 CommandType Command::GetType() const noexcept { return _type; }
 
@@ -38,3 +41,4 @@ const char* Command::GetCommandType() const noexcept
 			return "UNKNOWN_COMMAND";
 	}
 }
+}//namespace network::commands

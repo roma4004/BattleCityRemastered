@@ -5,45 +5,45 @@
 #include <utility>
 
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
-	: _health(baseObjProperty.health),
-	  _uuid{baseObjProperty.uuid},
-	  _color(baseObjProperty.color),
-	  _name{std::move(baseObjProperty.name)},
-	  _fraction{std::move(baseObjProperty.fraction)},
-	  _rect{baseObjProperty.rect}
+	: _health(baseObjProperty.health)
+	, _uuid{baseObjProperty.uuid}
+	, _color(baseObjProperty.color)
+	, _name{std::move(baseObjProperty.name)}
+	, _fraction{std::move(baseObjProperty.fraction)}
+	, _rect{baseObjProperty.rect}
 {
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
 
 //Copy ctor
 BaseObj::BaseObj(const BaseObj& other)
-	: _health(other._health),
-	  _uuid(other._uuid),
-	  _color(other._color),
-	  _name(other._name),
-	  _nameWithUuid(other._nameWithUuid),
-	  _fraction(other._fraction),
-	  _rect(other._rect) {}
+	: _health(other._health)
+	, _uuid(other._uuid)
+	, _color(other._color)
+	, _name(other._name)
+	, _nameWithUuid(other._nameWithUuid)
+	, _fraction(other._fraction)
+	, _rect(other._rect) {}
 
 //Move ctor
 BaseObj::BaseObj(BaseObj&& other) noexcept
-	: _health(std::exchange(other._health, 0)),
-	  _uuid(other._uuid),
-	  _color(std::exchange(other._color, 0)),
-	  _name(other._name),
-	  _nameWithUuid(other._nameWithUuid),
-	  _fraction(other._fraction),
-	  _rect(other._rect) {}
+	: _health(std::exchange(other._health, 0))
+	, _uuid(other._uuid)
+	, _color(std::exchange(other._color, 0))
+	, _name(other._name)
+	, _nameWithUuid(other._nameWithUuid)
+	, _fraction(other._fraction)
+	, _rect(other._rect) {}
 
 //Deprecated //TODO: remove this con overload
 BaseObj::BaseObj(const ObjRectangle rect, const unsigned int color, const int health, const buuid uuid,
-                 std::string name, std::string fraction)
-	: _health(health),
-	  _uuid{uuid},
-	  _color(color),
-	  _name{std::move(name)},
-	  _fraction{std::move(fraction)},
-	  _rect{rect}
+				 std::string name, std::string fraction)
+	: _health(health)
+	, _uuid{uuid}
+	, _color(color)
+	, _name{std::move(name)}
+	, _fraction{std::move(fraction)}
+	, _rect{rect}
 {
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }

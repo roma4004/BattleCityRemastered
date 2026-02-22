@@ -31,9 +31,9 @@ class Menu final
 
 	void RenderStatistics(Point pos) const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, int player1, int player2,
-	                             int enemy = -1) const;
+								 int enemy = -1) const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
-	                             const std::string& text3) const;
+								 const std::string& text3) const;
 	void DrawText() const;
 
 	void OnRespawnCountChanged(const std::string& objectName, int respawnCount);

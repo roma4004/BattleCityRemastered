@@ -1,8 +1,8 @@
 #pragma once
 
+#include "RespawnManager.h"
 #include <memory>
 #include <string>
-#include "RespawnManager.h"
 
 class EventSystem;
 class StateManager;

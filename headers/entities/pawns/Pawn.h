@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Point.h"
 #include "../BaseObj.h"
+#include "Point.h"
 #include "interfaces/ITickUpdatable.h"
 
 struct PawnProperty;

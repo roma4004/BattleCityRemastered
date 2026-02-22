@@ -20,11 +20,9 @@ class LineOfSight final
 
 public:
 	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize, FPoint bulletSize,
-	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
-	            bool isWaterSkip = true);
-	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize,
-	            std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
-	            bool isWaterSkip = true);
+				std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf, bool isWaterSkip = true);
+	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+				const BaseObj* excludeSelf, bool isWaterSkip = true);
 
 	~LineOfSight();
 

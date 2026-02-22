@@ -6,12 +6,18 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(ObstacleSpawn);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::ObstacleSpawn)
 
-ObstacleSpawn::ObstacleSpawn() : Command{CommandType::OBSTACLE_SPAWN} {}
+namespace network::commands
+{
+ObstacleSpawn::ObstacleSpawn()
+	: Command{CommandType::OBSTACLE_SPAWN} {}
 
 ObstacleSpawn::ObstacleSpawn(const ObjRectangle rect, const ObstacleType obstacleType, const buuid uuid)
-	: Command{CommandType::OBSTACLE_SPAWN}, _rect{rect}, _obstacleType{obstacleType}, _uuid{uuid} {}
+	: Command{CommandType::OBSTACLE_SPAWN}
+	, _rect{rect}
+	, _obstacleType{obstacleType}
+	, _uuid{uuid} {}
 
 ObjRectangle ObstacleSpawn::GetRect() const noexcept { return _rect; }
 
@@ -21,3 +27,4 @@ using buuid = boost::uuids::uuid;
 buuid ObstacleSpawn::GetUuid() const noexcept { return _uuid; }
 
 const char* ObstacleSpawn::GetClassNameW() const noexcept { return "ObstacleSpawn"; }
+}//namespace network::commands

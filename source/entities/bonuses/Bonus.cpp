@@ -6,14 +6,14 @@
 #include "utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-             const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
-             const BonusType bonusType)
-	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"},
-	  _creationTime{std::chrono::system_clock::now()},
-	  _events{events},
-	  _lifetime{lifeTime},
-	  _gameMode{gameMode},
-	  _bonusType{bonusType}
+			 const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
+			 const BonusType bonusType)
+	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"}
+	, _creationTime{std::chrono::system_clock::now()}
+	, _events{events}
+	, _lifetime{lifeTime}
+	, _gameMode{gameMode}
+	, _bonusType{bonusType}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

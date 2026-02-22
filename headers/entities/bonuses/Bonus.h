@@ -32,7 +32,7 @@ protected:
 
 public:
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-	      unsigned int color, std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
+		  unsigned int color, std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 

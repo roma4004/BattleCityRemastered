@@ -7,17 +7,17 @@
 #include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
 #include <algorithm>
-#include <string>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 
 //TODO: fix desync on client when destroyed
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
-	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"},
-	  _events{events},
-	  _allObjects{allObjects},
-	  _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)},
-	  _gameMode{gameMode}
+						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
+	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"}
+	, _events{events}
+	, _allObjects{allObjects}
+	, _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}
+	, _gameMode{gameMode}
 {
 	Subscribe();
 

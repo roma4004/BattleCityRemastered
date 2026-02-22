@@ -4,14 +4,20 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(AnimationCreate);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::AnimationCreate);
 
-AnimationCreate::AnimationCreate() : Command{CommandType::ANIMATION_CREATE} {}
+namespace network::commands
+{
+AnimationCreate::AnimationCreate()
+	: Command{CommandType::ANIMATION_CREATE} {}
 
 using buuid = boost::uuids::uuid;
 
 AnimationCreate::AnimationCreate(const AnimationType type, const ObjRectangle rect, std::string name)
-	: Command{CommandType::ANIMATION_CREATE}, _type{type}, _rect{rect}, _name{std::move(name)} {}
+	: Command{CommandType::ANIMATION_CREATE}
+	, _type{type}
+	, _rect{rect}
+	, _name{std::move(name)} {}
 
 AnimationType AnimationCreate::GetAnimationType() const noexcept { return _type; }
 
@@ -20,3 +26,4 @@ ObjRectangle AnimationCreate::GetRect() const noexcept { return _rect; }
 std::string AnimationCreate::GetName() const noexcept { return _name; }
 
 const char* AnimationCreate::GetClassNameW() const noexcept { return "AnimationCreate"; }
+}//namespace network::commands

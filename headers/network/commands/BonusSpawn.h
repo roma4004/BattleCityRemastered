@@ -8,6 +8,8 @@
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
 
+namespace network::commands
+{
 class BonusSpawn : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -45,5 +47,6 @@ void BonusSpawn::serialize(Archive& ar, const unsigned int)
 	ar & _bonusType;
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(BonusSpawn);
+BOOST_CLASS_EXPORT_KEY(network::commands::BonusSpawn);

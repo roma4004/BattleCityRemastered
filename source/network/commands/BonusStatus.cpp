@@ -5,15 +5,23 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <utility>
 
-BOOST_CLASS_EXPORT_IMPLEMENT(BonusStatus);
+BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::BonusStatus);
 
-BonusStatus::BonusStatus() : Command{CommandType::BONUS_STATUS} {}
+namespace network::commands
+{
+BonusStatus::BonusStatus()
+	: Command{CommandType::BONUS_STATUS} {}
 
 BonusStatus::BonusStatus(std::string name, BonusType bonusType, bool isEnable)
-	: Command{CommandType::BONUS_STATUS}, _name{std::move(name)}, _bonusType{bonusType}, _isEnable{isEnable} {}
+	: Command{CommandType::BONUS_STATUS}
+	, _name{std::move(name)}
+	, _bonusType{bonusType}
+	, _isEnable{isEnable} {}
 
 BonusStatus::BonusStatus(std::string name, BonusType bonusType)
-	: Command{CommandType::BONUS_STATUS}, _name{std::move(name)}, _bonusType{bonusType} {}
+	: Command{CommandType::BONUS_STATUS}
+	, _name{std::move(name)}
+	, _bonusType{bonusType} {}
 
 std::string BonusStatus::GetName() const noexcept { return _name; }
 
@@ -22,3 +30,4 @@ BonusType BonusStatus::GetBonusType() const noexcept { return _bonusType; }
 bool BonusStatus::GetIsEnable() const noexcept { return _isEnable; }
 
 const char* BonusStatus::GetClassNameW() const noexcept { return "BonusStatus"; }
+}//namespace network::commands

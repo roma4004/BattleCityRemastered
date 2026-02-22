@@ -6,8 +6,8 @@
 #include <algorithm>
 
 LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, const FPoint bulletSize,
-                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
-                         const bool isWaterSkip)
+						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+						 const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
@@ -24,15 +24,14 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, 
 			{.x = bulletSpawnPos.x - bulletHalfSize.x, .y = 0.f, .w = bulletSize.x, .h = tankRect.y},
 			{.x = 0.f, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = tankRect.x, .h = bulletSize.y},
 			{.x = bulletSpawnPos.x - bulletHalfSize.x, .y = tankDownY, .w = bulletSize.x, .h = sightSize.y},
-			{.x = tankRightX, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = sightSize.x, .h = bulletSize.y}
-	};
+			{.x = tankRightX, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = sightSize.x, .h = bulletSize.y}};
 
 	CheckLineOfSight(excludeSelf, isWaterSkip);
 }
 
 LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
-                         std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
-                         const bool isWaterSkip)
+						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+						 const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
 	const float tankDownY = {tankRect.y + tankRect.h};
@@ -40,13 +39,12 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
 	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
 	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
 
-	_lineOfSightBoundaries = std::vector<ObjRectangle>{
-			/*up, left, down, right*/
-			{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = tankRect.y},
-			{.x = 0.f, .y = tankRect.y, .w = tankRect.x, .h = tankRect.h},
-			{.x = tankRect.x, .y = tankDownY, .w = tankRect.w, .h = sightSize.y},
-			{.x = tankRightX, .y = tankRect.y, .w = sightSize.x, .h = tankRect.h}
-	};
+	_lineOfSightBoundaries =
+			std::vector<ObjRectangle>{/*up, left, down, right*/
+					{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = tankRect.y},
+					{.x = 0.f, .y = tankRect.y, .w = tankRect.x, .h = tankRect.h},
+					{.x = tankRect.x, .y = tankDownY, .w = tankRect.w, .h = sightSize.y},
+					{.x = tankRightX, .y = tankRect.y, .w = sightSize.x, .h = tankRect.h}};
 
 	CheckLineOfSight(excludeSelf, isWaterSkip);
 }

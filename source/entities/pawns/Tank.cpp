@@ -7,20 +7,20 @@
 #include "enums/GameMode.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
-           const bool enableByDefault)
-	: Pawn{std::move(pawnProperty)},
-	  _effects{effects}
+		   const bool enableByDefault)
+	: Pawn{std::move(pawnProperty)}
+	, _effects{effects}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(
-			_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction, _touchedObstacles, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction,
+												 _touchedObstacles, _allObjects);
 
-	_shootingBeh = std::make_shared<ShootingBeh>(
-			_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier, _bulletDamageRadius, _bulletSize,
-			_windowSize, _name, _fraction, _allObjects, bulletPool);
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier,
+												 _bulletDamageRadius, _bulletSize, _windowSize, _name, _fraction,
+												 _allObjects, bulletPool);
 
 	if (enableByDefault)
 	{
@@ -30,9 +30,12 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	// NOTE: should be in constructor to be able to enable by replication
 	if (_gameMode == GameMode::PlayAsClient)
 	{
-		_events->AddListener("ClientReceived_" + _name + "OnTankOnOff",
-		                     _nameWithUuid,
-		                     [this](const buuid uuid, const bool isEnable) { this->OnTankOnOff(uuid, isEnable); });
+		_events->AddListener(
+				"ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid,
+				[this](const buuid uuid, const bool isEnable)
+				{
+					this->OnTankOnOff(uuid, isEnable);
+				});
 	}
 
 	_events->EmitEvent("TankSpawn", _uuid);
@@ -108,22 +111,24 @@ void Tank::SubscribeBonus()
 				this->OnBonusHelmet(name, isActive);
 			});
 
-	_events->AddListener("BonusGrenade", _nameWithUuid,
-	                     [this](const std::string& /*author*/, const std::string& fraction)
-	                     {
-		                     this->OnBonusGrenade(fraction);
-	                     });
+	_events->AddListener(
+			"BonusGrenade", _nameWithUuid,
+			[this](const std::string& /*author*/, const std::string& fraction)
+			{
+				this->OnBonusGrenade(fraction);
+			});
 
 	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusStar(author);
 	});
 
-	_events->AddListener("BonusCaliber", _nameWithUuid,
-	                     [this](const std::string& author, const std::string& /*fraction*/)
-	                     {
-		                     this->OnBonusCaliber(author);
-	                     });
+	_events->AddListener(
+			"BonusCaliber", _nameWithUuid,
+			[this](const std::string& author, const std::string& /*fraction*/)
+			{
+				this->OnBonusCaliber(author);
+			});
 }
 
 void Tank::Unsubscribe() const

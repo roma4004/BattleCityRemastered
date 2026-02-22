@@ -8,15 +8,15 @@
 #include <ranges>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-                             const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
-                             const std::shared_ptr<SDL_Texture>& atlasTexture, UPoint windowSize)
-	: _name{"RenderManager"},
-	  _events{events},
-	  _renderer{renderer},
-	  _font{menuFont},
-	  _menuLogo{menuLogo},
-	  _atlasTexture{atlasTexture},
-	  _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
+							 const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
+							 const std::shared_ptr<SDL_Texture>& atlasTexture, UPoint windowSize)
+	: _name{"RenderManager"}
+	, _events{events}
+	, _renderer{renderer}
+	, _font{menuFont}
+	, _menuLogo{menuLogo}
+	, _atlasTexture{atlasTexture}
+	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
 	GenerateFpsTextures();
@@ -75,64 +75,61 @@ void RenderManager::Subscribe()
 		TextToRender(pos, IntToColor(color), text);
 	});
 
-	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos)
-	{
-		DrawBackground(pos);
-	});
+	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawBackground(pos); });
 
-	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos)
-	{
-		DrawMenuLogo(pos);
-	});
+	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
 
-	_events->AddListener("RenderPauseText", _name, [this]()
-	{
-		constexpr TextureOffset offset{};
-		constexpr SDL_Rect rect{.x = 135, .y = 142, .w = 300, .h = 75};
+	_events->AddListener(
+			"RenderPauseText", _name,
+			[this]()
+			{
+				constexpr TextureOffset offset{};
+				constexpr SDL_Rect rect{.x = 135, .y = 142, .w = 300, .h = 75};
 
-		SDL_Rect srcRect{static_cast<int>(offset.pauseText.x),
-		                 static_cast<int>(offset.pauseText.y),
-		                 static_cast<int>(offset.pauseText.w),
-		                 static_cast<int>(offset.pauseText.h)};
-		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
-	});
+				SDL_Rect srcRect{
+						static_cast<int>(offset.pauseText.x),
+						static_cast<int>(offset.pauseText.y),
+						static_cast<int>(offset.pauseText.w),
+						static_cast<int>(offset.pauseText.h)};
+				SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+			});
 
-	_events->AddListener("RenderGameOverText", _name, [this]()
-	{
-		constexpr TextureOffset offset{};
-		constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
+	_events->AddListener(
+			"RenderGameOverText", _name,
+			[this]()
+			{
+				constexpr TextureOffset offset{};
+				constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
 
-		SDL_Rect srcrect{static_cast<int>(offset.gameOverText.x),
-		                 static_cast<int>(offset.gameOverText.y),
-		                 static_cast<int>(offset.gameOverText.w),
-		                 static_cast<int>(offset.gameOverText.h)};
-		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
-	});
+				SDL_Rect srcrect{
+						static_cast<int>(offset.gameOverText.x),
+						static_cast<int>(offset.gameOverText.y),
+						static_cast<int>(offset.gameOverText.w),
+						static_cast<int>(offset.gameOverText.h)};
+				SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
+			});
 
-	_events->AddListener("RenderGameWonText", _name, [this]()
-	{
-		DrawGameWonText();
-	});
+	_events->AddListener("RenderGameWonText", _name, [this]() { DrawGameWonText(); });
 
-	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect, const unsigned int color)
-	{
-		const SDL_Rect destRect = RectToSdlRect(rect);
+	_events->AddListener(
+			"RenderColorTexture", _name,
+			[this](const ObjRectangle rect, const unsigned int color)
+			{
+				const SDL_Rect destRect = RectToSdlRect(rect);
 
-		SDL_Texture* colorTexture = CreateColorTexture(color);
+				SDL_Texture* colorTexture = CreateColorTexture(color);
 
-		SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
-	});
+				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
+			});
 
-	_events->AddListener("RenderTexture", _name,
-	                     [this](const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir)
-	                     {
-		                     DrawTexture(textureRect, destRect, dir);
-	                     });
+	_events->AddListener(
+			"RenderTexture", _name,
+			[this](const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir)
+			{
+				DrawTexture(textureRect, destRect, dir);
+			});
 
-	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps)
-	{
-		RenderFPS(fps);
-	});
+	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });
 
 	_events->AddListener(
 			"RenderHealthBar", _name,
@@ -163,9 +160,9 @@ void RenderManager::DrawPauseText() const
 	constexpr SDL_Rect rect{.x = 135, .y = 142, .w = 300, .h = 75};
 
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.pauseText.x),
-	                           .y = static_cast<int>(offset.pauseText.y),
-	                           .w = static_cast<int>(offset.pauseText.w),
-	                           .h = static_cast<int>(offset.pauseText.h)};
+							   .y = static_cast<int>(offset.pauseText.y),
+							   .w = static_cast<int>(offset.pauseText.w),
+							   .h = static_cast<int>(offset.pauseText.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
@@ -175,9 +172,9 @@ void RenderManager::DrawGameOverText() const
 	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
 
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameOverText.x),
-	                           .y = static_cast<int>(offset.gameOverText.y),
-	                           .w = static_cast<int>(offset.gameOverText.w),
-	                           .h = static_cast<int>(offset.gameOverText.h)};
+							   .y = static_cast<int>(offset.gameOverText.y),
+							   .w = static_cast<int>(offset.gameOverText.w),
+							   .h = static_cast<int>(offset.gameOverText.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
@@ -186,9 +183,9 @@ void RenderManager::DrawGameWonText() const
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameWonText.x),
-	                           .y = static_cast<int>(offset.gameOverText.y),
-	                           .w = static_cast<int>(offset.gameOverText.w),
-	                           .h = static_cast<int>(offset.gameOverText.h)};
+							   .y = static_cast<int>(offset.gameOverText.y),
+							   .w = static_cast<int>(offset.gameOverText.w),
+							   .h = static_cast<int>(offset.gameOverText.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
@@ -212,12 +209,10 @@ unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 
 SDL_Color RenderManager::IntToColor(const unsigned int color)
 {
-	return SDL_Color{
-			.r = static_cast<Uint8>((color >> 16) & 0xFF),
-			.g = static_cast<Uint8>((color >> 8) & 0xFF),
-			.b = static_cast<Uint8>(color & 0xFF),
-			.a = static_cast<Uint8>((color >> 24) & 0xFF)
-	};
+	return SDL_Color{.r = static_cast<Uint8>((color >> 16) & 0xFF),
+					 .g = static_cast<Uint8>((color >> 8) & 0xFF),
+					 .b = static_cast<Uint8>(color & 0xFF),
+					 .a = static_cast<Uint8>((color >> 24) & 0xFF)};
 }
 
 unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
@@ -253,17 +248,15 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 		return;
 	}
 
-	const std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(_font.get(), text.c_str(), color),
-			SDL_FreeSurface);
+	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
+			TTF_RenderText_Solid(_font.get(), text.c_str(), color), SDL_FreeSurface);
 	if (!surface)
 	{
 		return;
 	}
 
-	const std::unique_ptr<SDL_Texture, void(*)(SDL_Texture*)> texture(
-			SDL_CreateTextureFromSurface(_renderer.get(), surface.get()),
-			SDL_DestroyTexture);
+	const std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)> texture(
+			SDL_CreateTextureFromSurface(_renderer.get(), surface.get()), SDL_DestroyTexture);
 	if (!texture)
 	{
 		return;
@@ -277,8 +270,7 @@ void RenderManager::PregenerateMenuBackgroundTexture()
 {
 	// SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
 	_backgroundTexture = std::shared_ptr<SDL_Texture>(
-			SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-			                  _width, _height),
+			SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, _width, _height),
 			SDL_DestroyTexture);
 	SDL_SetTextureBlendMode(_backgroundTexture.get(), SDL_BLENDMODE_BLEND);
 
@@ -288,11 +280,10 @@ void RenderManager::PregenerateMenuBackgroundTexture()
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
 {
-	return SDL_Rect{
-			static_cast<int>(rect.x),
-			static_cast<int>(rect.y),
-			static_cast<int>(rect.w),
-			static_cast<int>(rect.h)};
+	return SDL_Rect{static_cast<int>(rect.x),
+					static_cast<int>(rect.y),
+					static_cast<int>(rect.w),
+					static_cast<int>(rect.h)};
 }
 
 void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency = 255) const
@@ -307,8 +298,7 @@ void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 tra
 
 SDL_Texture* RenderManager::CreateColorTexture(const unsigned int color)
 {
-	if (const auto it = _colorTextureCache.find(color);
-		it != _colorTextureCache.end())
+	if (const auto it = _colorTextureCache.find(color); it != _colorTextureCache.end())
 	{
 		return it->second;
 	}
@@ -353,7 +343,7 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 }
 
 void RenderManager::DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect,
-                                const Direction dir) const
+								const Direction dir) const
 {
 	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
@@ -412,10 +402,9 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, con
 
 	const int offset = health > 100 ? (health - 100) / 2 : 0;
 	const SDL_Rect healthBarRect = {.x = static_cast<int>(rect.x) + 2 - offset / 3,
-	                                .y = static_cast<int>(rect.y) - 10,
-	                                .w = healthWidth,
-	                                .h = 5
-	};
+									.y = static_cast<int>(rect.y) - 10,
+									.w = healthWidth,
+									.h = 5};
 
 	SetRenderDrawColor(color, 127);
 

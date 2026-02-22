@@ -23,18 +23,20 @@
 #include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusStatus.h"
 #include "network/commands/TankOnOff.h"
-#include <iostream>
-#include <string>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <iostream>
+#include <string>
 
+namespace network::commands
+{
 using buuid = boost::uuids::uuid;
 
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
-               const std::shared_ptr<EventSystem>& events)
-	: _socket(ioContext),
-	  _events{events},
-	  _name{"Client"}
+			   const std::shared_ptr<EventSystem>& events)
+	: _socket(ioContext)
+	, _events{events}
+	, _name{"Client"}
 {
 	Subscribe();
 
@@ -121,7 +123,7 @@ void Client::Unsubscribe() const
 void Client::ReadResponse()
 {
 	// auto self(shared_from_this());
-	auto lambda = [this/*, events = _events*/](const boost::system::error_code& ec, const std::size_t length)
+	auto lambda = [this /*, events = _events*/](const boost::system::error_code& ec, const std::size_t length)
 	{
 		if (ec)
 		{
@@ -131,7 +133,7 @@ void Client::ReadResponse()
 		else
 		{
 			const std::string archiveData(buffers_begin(_read_buffer.data()),
-			                              buffers_begin(_read_buffer.data()) + length);
+										  buffers_begin(_read_buffer.data()) + length);
 
 			_read_buffer.consume(length);
 
@@ -230,7 +232,7 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
 		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
-		                   cmd->GetHealth());
+						   cmd->GetHealth());
 	}
 }
 
@@ -255,7 +257,7 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
 {
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetKeyState()/*, cmd->GetIsEnable()*/);
+		_events->EmitEvent(cmd->GetKeyState() /*, cmd->GetIsEnable()*/);
 	}
 }
 
@@ -475,3 +477,4 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
 	}
 }
+}//namespace network::commands

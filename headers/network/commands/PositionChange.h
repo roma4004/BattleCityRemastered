@@ -4,11 +4,13 @@
 #include "Point.h"
 #include "UuidSerialization.h"
 #include "enums/Direction.h"
-#include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 
+namespace network::commands
+{
 class PositionChange : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -49,5 +51,6 @@ void PositionChange::serialize(Archive& ar, const unsigned int)
 	ar & _dir;
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(PositionChange);
+BOOST_CLASS_EXPORT_KEY(network::commands::PositionChange);

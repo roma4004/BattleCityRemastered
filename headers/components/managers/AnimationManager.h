@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-enum class AnimationType: char8_t;
+enum class AnimationType : char8_t;
 struct ObjRectangle;
 class Tank;
 
@@ -42,8 +42,8 @@ public:
 	void DeleteTankAnimation(const std::string& objName);
 
 private:
-	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames,
-	            int scale, const std::string& objName, bool isInfinite = {});
+	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
+				const std::string& objName, bool isInfinite = {});
 	void Update();
 	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
 	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);

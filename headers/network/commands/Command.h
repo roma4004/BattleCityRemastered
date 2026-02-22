@@ -5,6 +5,8 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
+namespace network::commands
+{
 class Command
 {
 	friend class boost::serialization::access;
@@ -28,5 +30,6 @@ void Command::serialize(Archive& ar, const unsigned int)
 {
 	ar & _type;
 }
+}//namespace network::commands
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Command);
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(network::commands::Command);

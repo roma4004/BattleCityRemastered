@@ -8,6 +8,8 @@
 
 enum class TankType : char8_t;
 
+namespace network::commands
+{
 class RespawnTank : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -42,5 +44,6 @@ void RespawnTank::serialize(Archive& ar, const unsigned int)
 	ar & _tankType;
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(RespawnTank);
+BOOST_CLASS_EXPORT_KEY(network::commands::RespawnTank);

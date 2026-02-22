@@ -119,8 +119,8 @@ std::string NetworkLogger::GetCurrentTimeStamp()
 	localtime_s(&timeStruct, &nowTime);
 
 	std::stringstream ss;
-	ss << '[' << std::put_time(&timeStruct, "%H:%M:%S") << '.'
-			<< std::setfill('0') << std::setw(3) << nowMs.count() << ']';
+	ss << '[' << std::put_time(&timeStruct, "%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << nowMs.count()
+			<< ']';
 
 	return ss.str();
 }

@@ -16,7 +16,7 @@ class BonusShovel final : public Bonus
 
 public:
 	BonusShovel(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-	            unsigned int color, buuid uuid, GameMode gameMode, milliseconds duration);
+				unsigned int color, buuid uuid, GameMode gameMode, milliseconds duration);
 
 	~BonusShovel() override;
 

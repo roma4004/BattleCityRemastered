@@ -5,12 +5,12 @@
 #include "enums/ObstacleType.h"
 
 Obstacle::Obstacle(const ObjRectangle rect, const unsigned int color, const int health, std::string name,
-                   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
-                   const ObstacleType obstacleType)
-	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"},
-	  _events(events),
-	  _gameMode{gameMode},
-	  _obstacleType(obstacleType)
+				   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
+				   const ObstacleType obstacleType)
+	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"}
+	, _events(events)
+	, _gameMode{gameMode}
+	, _obstacleType(obstacleType)
 {
 	Obstacle::Subscribe();
 

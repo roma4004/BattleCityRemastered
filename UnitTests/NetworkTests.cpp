@@ -79,7 +79,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	const auto name = std::string("TestTank");
 	events->AddListener("ClientReceived_" + name + "Shot", "ShotEventReplication",
-	                    [&promise](const Direction dir, const buuid& uuid) { promise.set_value({dir, uuid}); });
+						[&promise](const Direction dir, const buuid& uuid) { promise.set_value({dir, uuid}); });
 
 	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Shot", name, direction, _uuid);
@@ -114,7 +114,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	const auto nameWithUuid = name + uuidStr;
 
 	events->AddListener("ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication",
-	                    [&promise](const int health) { promise.set_value(health); });
+						[&promise](const int health) { promise.set_value(health); });
 
 	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Health", name, healthOrigin, _uuid);
@@ -143,7 +143,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	const auto name = std::string("Bullet");
 
 	events->AddListener("ClientReceived_" + name + "Dispose", "DisposeEventReplication",
-	                    [&promise](const buuid& uuid) { promise.set_value(uuid); });
+						[&promise](const buuid& uuid) { promise.set_value(uuid); });
 
 	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Dispose", _uuid);
@@ -473,7 +473,12 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 			});
 
 	constexpr std::array tankTypes{
-			TankType::PLAYER1, TankType::PLAYER2, TankType::ENEMY1, TankType::ENEMY2, TankType::ENEMY3, TankType::ENEMY4
+			TankType::PLAYER1,
+			TankType::PLAYER2,
+			TankType::ENEMY1,
+			TankType::ENEMY2,
+			TankType::ENEMY3,
+			TankType::ENEMY4
 	};
 
 	// events->EmitEvent("Server_StartFrame");

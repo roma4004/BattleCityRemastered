@@ -1,10 +1,12 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "components/EventSystem.h"
-#include <cmath> //NOTE: need for cmake build
+#include <cmath>//NOTE: need for cmake build
 #include <thread>
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const bool isVsyncOn)
-	: _name{"FramePerSecondManager"}, _events{events}, _isVsyncOn{isVsyncOn}
+	: _name{"FramePerSecondManager"}
+	, _events{events}
+	, _isVsyncOn{isVsyncOn}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 
@@ -18,10 +20,7 @@ FramePerSecondManager::~FramePerSecondManager()
 
 void FramePerSecondManager::Subscribe()
 {
-	_events->AddListener("CalculateActualFps", _name, [this]()
-	{
-		this->CountFpsAndDeltaTime();
-	});
+	_events->AddListener("CalculateActualFps", _name, [this]() { this->CountFpsAndDeltaTime(); });
 
 	_events->AddListener("FrameStart", _name, [this]()
 	{

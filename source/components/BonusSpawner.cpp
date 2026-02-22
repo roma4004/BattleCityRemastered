@@ -20,24 +20,21 @@ class BaseObj;
 class EventSystem;
 
 BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
-                           std::vector<std::shared_ptr<BaseObj>>* allObjects, const UPoint windowSize,
-                           const int sideBarWidth, const int bonusSize)
-	: _events{events},
-	  _allObjects{allObjects},
-	  _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize},
-	  _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize},
-	  _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1},
-	  _distRandColor{0, std::numeric_limits<int>::max()},
-	  _lastTimeSpawn{std::chrono::system_clock::now()},
-	  _bonusSize{bonusSize}
+						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const UPoint windowSize,
+						   const int sideBarWidth, const int bonusSize)
+	: _events{events}
+	, _allObjects{allObjects}
+	, _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize}
+	, _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize}
+	, _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1}
+	, _distRandColor{0, std::numeric_limits<int>::max()}
+	, _lastTimeSpawn{std::chrono::system_clock::now()}
+	, _bonusSize{bonusSize}
 {
 	Subscribe();
 }
 
-BonusSpawner::~BonusSpawner()
-{
-	Unsubscribe();
-}
+BonusSpawner::~BonusSpawner() { Unsubscribe(); }
 
 void BonusSpawner::Subscribe()
 {
@@ -62,10 +59,7 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/)
-	{
-		this->Update();
-	});
+	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
 
 void BonusSpawner::SubscribeAsClient()
@@ -88,15 +82,9 @@ void BonusSpawner::Unsubscribe() const
 	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
 }
 
-void BonusSpawner::UnsubscribeAsHost() const
-{
-	_events->RemoveListener("TickUpdate", _name);
-}
+void BonusSpawner::UnsubscribeAsHost() const { _events->RemoveListener("TickUpdate", _name); }
 
-void BonusSpawner::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_BonusSpawn", _name);
-}
+void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_BonusSpawn", _name); }
 
 void BonusSpawner::Update()
 {

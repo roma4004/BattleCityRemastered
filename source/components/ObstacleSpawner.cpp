@@ -17,11 +17,11 @@
 class BaseObj;
 
 ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
-                                 std::vector<std::shared_ptr<BaseObj>>* allObjects,/*, const int sideBarWidth*/
-                                 UPoint windowSize)
-	: _allObjects{allObjects},
-	  _events{events},
-	  _windowSize{windowSize}
+								 std::vector<std::shared_ptr<BaseObj>>* allObjects,/*, const int sideBarWidth*/
+								 UPoint windowSize)
+	: _allObjects{allObjects}
+	, _events{events}
+	, _windowSize{windowSize}
 
 // _distSpawnPosY{0, static_cast<int>(_window->size.y) - obstacleSize},
 // _distSpawnPosX{0, static_cast<int>(_window->size.x) - sideBarWidth - obstacleSize},
@@ -72,10 +72,7 @@ void ObstacleSpawner::Unsubscribe() const
 	}
 }
 
-void ObstacleSpawner::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_ObstacleSpawn", _name);
-}
+void ObstacleSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_ObstacleSpawn", _name); }
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
 {

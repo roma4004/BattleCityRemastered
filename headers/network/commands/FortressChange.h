@@ -2,11 +2,13 @@
 
 #include "Command.h"
 #include "UuidSerialization.h"
-#include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <string>
 
+namespace network::commands
+{
 class FortressChange : public Command
 {
 	using buuid = boost::uuids::uuid;
@@ -41,5 +43,6 @@ void FortressChange::serialize(Archive& ar, const unsigned int)
 	ar & _state;
 	ar & _uuid;
 }
+}//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(FortressChange);
+BOOST_CLASS_EXPORT_KEY(network::commands::FortressChange);

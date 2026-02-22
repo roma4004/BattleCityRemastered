@@ -31,5 +31,4 @@ public:
 
 	void TickUpdate(double deltaTime);
 	void Disposer();
-
 };
