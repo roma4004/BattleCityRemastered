@@ -14,7 +14,7 @@ public:
 	std::shared_ptr<EventSystem> events{nullptr};
 	ObjRectangle rect{};
 	int animationFrame{};
-	int elapsedFrames{};
+	int elapsedFrames{};//TODO: Animation frame and the elapsed frame looks the same logically
 	int limitOfFrames{};
 	unsigned int color{};
 	GameMode gameMode{};

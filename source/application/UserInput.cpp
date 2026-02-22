@@ -98,8 +98,8 @@ void UserInput::OnWindowMoveStop()
 
 			if (_isPauseBeforeDragNDrop)
 			{
-				_events->EmitEvent("Pause_Status", _isPauseBeforeDragNDrop);
 				_isPauseBeforeDragNDrop = false;
+				_events->EmitEvent("Pause_Status", _isPauseBeforeDragNDrop);
 			}
 		}
 	}

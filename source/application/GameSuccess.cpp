@@ -22,7 +22,6 @@
 #define ASIO_STANDALONE
 
 //TODO: can't start game if no sound device on PC
-//TODO: fix unpause when dragging
 //TODO: fix destroying animation when client start
 
 class BaseObj;
