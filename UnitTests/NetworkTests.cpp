@@ -31,8 +31,8 @@ TEST_F(NetworkTest, PosEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	constexpr FPoint posOrigin{.x = 42.f, .y = 42.f};
 	constexpr auto directionOrigin{Direction::UP};
@@ -69,8 +69,8 @@ TEST_F(NetworkTest, ShotEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	constexpr Direction direction{Direction::UP};
 
@@ -101,8 +101,8 @@ TEST_F(NetworkTest, HealthEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	constexpr int healthOrigin{42};
 
@@ -134,8 +134,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	std::promise<buuid> promise{};
 	auto future = promise.get_future();
@@ -162,8 +162,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	std::promise<std::tuple<std::string, std::string, std::string>> promise{};
 	auto future = promise.get_future();
@@ -196,8 +196,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	std::promise<std::tuple<std::string, buuid>> promiseDied{};
 	auto futureDied = promiseDied.get_future();
@@ -261,8 +261,8 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	std::promise<std::tuple<FPoint, BonusType, buuid>> promise{};
 	auto future = promise.get_future();
@@ -296,8 +296,8 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	std::promise<buuid> promise;
 	auto future = promise.get_future();
@@ -322,8 +322,8 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	const std::string nameOrigin = "Player1";
 	constexpr bool isActiveOrigin = true;
@@ -356,8 +356,8 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	constexpr auto obstacleType = ObstacleType::Brick;
 	constexpr ObjRectangle rectOrigin{.x = 42.0f, .y = 43.0f, .w = 44.0f, .h = 45.0f};
@@ -395,8 +395,8 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	constexpr auto obstacleType = ObstacleType::Brick;
 	std::vector<ObjRectangle> bricksRect;
@@ -459,8 +459,8 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<ServerHandler>(events);
-	auto client = std::make_unique<ClientHandler>(events);
+	auto server = std::make_unique<network::commands::ServerHandler>(events);
+	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
 	std::vector<std::promise<std::tuple<TankType, buuid>>> promises(6);
 
