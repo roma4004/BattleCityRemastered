@@ -22,6 +22,7 @@
 #include "enums/AnimationType.h"
 #include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusStatus.h"
+#include "network/commands/SignalEvent.h"
 #include "network/commands/TankOnOff.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -101,7 +102,12 @@ void Client::Subscribe()
 	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
 	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
 
-	_events->AddListener("ClientReadyToPlay", _name, [this]() { this->SendKeyState("ClientReadyToPlay"); });
+	_events->AddListener("ClientReadyToPlay", _name, [this]()
+	{
+		// std::scoped_lock lock(_batchWriteMutex);
+		SendCommand(std::make_shared<SignalEvent>("ClientReadyToPlay"));
+		// this->SendKeyState("ClientReadyToPlay");
+	});
 }
 
 void Client::Unsubscribe() const
@@ -122,204 +128,230 @@ void Client::Unsubscribe() const
 
 void Client::ReadResponse()
 {
-	// auto self(shared_from_this());
-	auto lambda = [this /*, events = _events*/](const boost::system::error_code& ec, const std::size_t length)
+	auto self(shared_from_this());
+	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
 	{
 		if (ec)
 		{
-			_read_buffer.consume(length);
+			_readBuffer.consume(length);
 			std::cerr << ec.message() << '\n';
 		}
 		else
 		{
-			const std::string archiveData(buffers_begin(_read_buffer.data()),
-										  buffers_begin(_read_buffer.data()) + length);
+			const std::string archiveData(buffers_begin(_readBuffer.data()),
+										  buffers_begin(_readBuffer.data()) + length);
 
-			_read_buffer.consume(length);
+			_readBuffer.consume(length);
 
 			ProcessReceivedData(archiveData);
-
-			// static bool isFirstRead = true;
-			// if (isFirstRead) {
-			// 	// events->EmitEvent("ClientConnected");
-			// 	isFirstRead = false;
-			// }
-
-			// if (data.eventName == "OnStar")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			//else if (data.eventName == "OnCaliber")
-			// {
-			// 	events->EmitEvent("ClientReceived_" + data.who + data.eventName);
-			// }
-			// else if (data.eventName == "OnTank")
-			// {
-			// 	events->EmitEvent(
-			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
-			// }
-			// else if (data.eventName == "OnGrenade")
-			// {
-			// 	events->EmitEvent(
-			// 			"ClientReceived_" + data.eventName, data.who, data.fraction);
-			// }
 
 			// Since we want to keep listening, initiate reading again
 			this->ReadResponse();
 		}
 	};
 
-	boost::asio::async_read_until(_socket, _read_buffer, "\n\n", std::move(lambda));
+	boost::asio::async_read_until(_socket, _readBuffer, "\n\n", std::move(lambda));
 }
-
-//TODO: rewrite old style SendKeyState to batch command
-// _events->AddListener("Pause_Pressed", _name, [this]()
-// {
-// 	std::scoped_lock lock(_batchWriteMutex);
-// 	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Pressed", true));
-// });
+//TODO: check there is pause can be set\unset from client as well as from host
 void Client::SendKeyState(const std::string& state)
 {
-	// auto self(shared_from_this());
-	ClientData data;
-	data.health = 1;
-	data.eventName = state;
-	data.names = {"Name1", "Name2"};
-
 	// NetworkLogger::LogClientSend(state);
 
-	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << data;
-
-	{
-		std::ostream os(&_write_buffer);
-		os << archiveStream.str() + "\n\n";
-	}
-
-	boost::asio::async_write(
-			_socket,
-			_write_buffer,
-			[this](const boost::system::error_code& ec, const std::size_t length)
-			{
-				_write_buffer.consume(length);// Now we can consume the written data
-				if (!ec)
-				{
-					// Response send success!
-					// this->ReadResponse();
-				}
-			});
+	const bool isPressed = state.find("Pressed") != std::string::npos;
+	SendCommand(std::make_shared<KeyStateChange>(state, isPressed));
 }
 
-void Client::OnPositionChange(const std::shared_ptr<Command>& command) const
+void Client::OnPositionChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Pos", cmd->GetPos(), cmd->GetDir(), cmd->GetUuid());
+		const auto who = cmd->GetWho();
+		const auto pos = cmd->GetPos();
+		const auto dir = cmd->GetDir();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, who, pos, dir, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_" + who + "Pos", pos, dir, uuid);
+		});
 	}
 }
 
-void Client::OnTankShot(const std::shared_ptr<Command>& command) const
+void Client::OnTankShot(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Shot", cmd->GetDir(), cmd->GetUuid());
+		const auto who = cmd->GetWho();
+		const auto dir = cmd->GetDir();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, who, dir, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_" + who + "Shot", dir, uuid);
+		});
 	}
 }
 
-void Client::OnHealthChange(const std::shared_ptr<Command>& command) const
+void Client::OnHealthChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + UuidUtils::GetStringUuid(cmd->GetUuid()) + "Health",
-						   cmd->GetHealth());
+		const auto who = cmd->GetWho();
+		const auto uuid = cmd->GetUuid();
+		const auto health = cmd->GetHealth();
+
+		_commandQueue.Enqueue([this, who, uuid, health]()
+		{
+			_events->EmitEvent("ClientReceived_" + who + UuidUtils::GetStringUuid(uuid) + "Health", health);
+		});
 	}
 }
 
-void Client::OnDispose(const std::shared_ptr<Command>& command) const
+void Client::OnDispose(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_" + cmd->GetWho() + "Dispose", cmd->GetUuid());
+		const auto who = cmd->GetWho();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, who, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_" + who + "Dispose", uuid);
+		});
 	}
 }
 
-void Client::OnStatisticsChange(const std::shared_ptr<Command>& command) const
+void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_Statistics", cmd->GetEventName(), cmd->GetAuthor(), cmd->GetFraction());
+		const auto eventName = cmd->GetEventName();
+		const auto author = cmd->GetAuthor();
+		const auto fraction = cmd->GetFraction();
+
+		_commandQueue.Enqueue([this, eventName, author, fraction]()
+		{
+			_events->EmitEvent("ClientReceived_Statistics", eventName, author, fraction);
+		});
 	}
 }
 
 // void Client::OnKeyStateChange<//TODO: template this>(const std::shared_ptr<Command>& command) const
-void Client::OnKeyStateChange(const std::shared_ptr<Command>& command) const
+void Client::OnKeyStateChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
-		_events->EmitEvent(cmd->GetKeyState() /*, cmd->GetIsEnable()*/);
+		const auto keyState = cmd->GetKeyState();
+
+		_commandQueue.Enqueue([this, keyState]()
+		{
+			_events->EmitEvent(keyState);
+		});
 	}
 }
 
-void Client::OnFortressChange(const std::shared_ptr<Command>& command) const
+void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
 	{
-		const std::string state = cmd->GetState();//NOTE: const required
-		_events->EmitEvent("ClientReceived_FortressChange", state, cmd->GetUuid());
+		const std::string state = cmd->GetState();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, state, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_FortressChange", state, uuid);
+		});
 	}
 }
 
-void Client::OnBonusSpawn(const std::shared_ptr<Command>& command) const
+void Client::OnBonusSpawn(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_BonusSpawn", cmd->GetPos(), cmd->GetBonusType(), cmd->GetUuid());
+		const auto pos = cmd->GetPos();
+		const auto bonusType = cmd->GetBonusType();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, pos, bonusType, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_BonusSpawn", pos, bonusType, uuid);
+		});
 	}
 }
 
-void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command) const
+void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_BonusDeSpawn", cmd->GetUuid());
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_BonusDeSpawn", uuid);
+		});
 	}
 }
 
-void Client::OnRespawnTank(const std::shared_ptr<Command>& command) const
+void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_RespawnTank", cmd->GetTankType(), cmd->GetUuid());
+		const auto tankType = cmd->GetTankType();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, tankType, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_RespawnTank", tankType, uuid);
+		});
 	}
 }
 
-void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command) const
+void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
 	{
-		_events->EmitEvent("ClientReceived_ObstacleSpawn", cmd->GetRect(), cmd->GetObstacleType(), cmd->GetUuid());
+		const auto rect = cmd->GetRect();
+		const auto obstacleType = cmd->GetObstacleType();
+		const auto uuid = cmd->GetUuid();
+
+		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
+		{
+			_events->EmitEvent("ClientReceived_ObstacleSpawn", rect, obstacleType, uuid);
+		});
 	}
 }
 
-void Client::OnAnimationCreate(const std::shared_ptr<Command>& command) const
+void Client::OnAnimationCreate(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
 	{
-		_events->EmitEvent("AnimationCreate", cmd->GetAnimationType(), cmd->GetRect(), cmd->GetName());
+		const auto animationType = cmd->GetAnimationType();
+		const auto rect = cmd->GetRect();
+		const auto name = cmd->GetName();
+
+		_commandQueue.Enqueue([this, animationType, rect, name]()
+		{
+			_events->EmitEvent("AnimationCreate", animationType, rect, name);
+		});
 	}
 }
 
-void Client::OnTankOnOff(const std::shared_ptr<Command>& command) const
+void Client::OnTankOnOff(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
 	{
-		//TODO: don't need uuid or name in this case
-		_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnTankOnOff", cmd->GetUuid(), cmd->GetIsEnable());
+		const auto name = cmd->GetName();
+		const auto uuid = cmd->GetUuid();
+		const auto isEnable = cmd->GetIsEnable();
+
+		_commandQueue.Enqueue([this, name, uuid, isEnable]()
+		{
+			_events->EmitEvent("ClientReceived_" + name + "OnTankOnOff", uuid, isEnable);
+		});
 	}
 }
 
-void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
+void Client::OnCommandBatch(const std::shared_ptr<Command>& commands)
 {
 	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
 	{
@@ -330,31 +362,38 @@ void Client::OnCommandBatch(const std::shared_ptr<Command>& commands) const
 	}
 }
 
-void Client::OnBonusStatus(const std::shared_ptr<Command>& command) const
+void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
 	{
-		switch (cmd->GetBonusType())
+		const auto bonusType = cmd->GetBonusType();
+		const auto name = cmd->GetName();
+		const auto isEnable = cmd->GetIsEnable();
+
+		_commandQueue.Enqueue([this, bonusType, name, isEnable]()
 		{
-			case BonusType::Helmet:
-				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnBonusHelmet", cmd->GetIsEnable());
-				break;
-			case BonusType::Star:
-				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnStar");
-				break;
-			case BonusType::Caliber:
-				_events->EmitEvent("ClientReceived_" + cmd->GetName() + "OnCaliber");
-				break;
-			case BonusType::Tank:
-				_events->EmitEvent("ClientReceived_OnTank", cmd->GetName());
-				break;
-			default: //TODO: add assert
-				break;
-		}
+			switch (bonusType)
+			{
+				case BonusType::Helmet:
+					_events->EmitEvent("ClientReceived_" + name + "OnBonusHelmet", isEnable);
+					break;
+				case BonusType::Star:
+					_events->EmitEvent("ClientReceived_" + name + "OnStar");
+					break;
+				case BonusType::Caliber:
+					_events->EmitEvent("ClientReceived_" + name + "OnCaliber");
+					break;
+				case BonusType::Tank:
+					_events->EmitEvent("ClientReceived_OnTank", name);
+					break;
+				default: //TODO: add assert
+					break;
+			}
+		});
 	}
 }
 
-void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
+void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
 {
 	if (command)
 	{
@@ -446,7 +485,7 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command) const
 	}
 }
 
-void Client::ProcessReceivedData(const std::string& archiveData) const
+void Client::ProcessReceivedData(const std::string& archiveData)
 {
 	try
 	{
@@ -476,5 +515,40 @@ void Client::ProcessReceivedData(const std::string& archiveData) const
 		std::cerr << "Deserialization error: " << e.what() << '\n';
 		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
 	}
+}
+
+void Client::SendCommand(const std::shared_ptr<Command>& command)
+{
+	std::ostringstream archiveStream;
+	boost::archive::text_oarchive oa(archiveStream);
+	oa << command;
+
+	{
+		std::ostream os(&_writeBuffer);
+		os << archiveStream.str() + "\n\n";
+	}
+
+	auto self(shared_from_this());
+	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
+	{
+		_writeBuffer.consume(length);
+
+		if (ec)
+		{
+			if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
+			{
+				std::cout << "Connection closed normally" << '\n';
+			}
+			else
+			{
+				std::cerr << "Write error: " << ec.message() << '\n';
+				//TODO: need handle close connection and delete session
+			}
+
+			_socket.close();
+		}
+	};
+
+	boost::asio::async_write(_socket, _writeBuffer.data(), std::move(lambda));
 }
 }//namespace network::commands

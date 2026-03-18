@@ -552,7 +552,7 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
 						_gameMode));
 
-		//moveDown player should failure, because below we have brickWall obstacle
+		//moveDown player should failure, because below we have a brickWall obstacle
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("P1_Move_Down_Pressed");
@@ -576,7 +576,7 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
 						_gameMode));
 
-		//moveDown player should failure, because below we have brickWall obstacle
+		//moveDown player should failure, because below we have a steelWall obstacle
 		const FPoint startPos = player->GetPos();
 
 		_events->EmitEvent("P1_Move_Down_Pressed");
@@ -602,7 +602,7 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 
 		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
 		{
-			//moveDown player should failure, because below we have SteelWall obstacle
+			//moveDown player should failure, because below we have a water obstacle
 			const FPoint startPos = player->GetPos();
 
 			_events->EmitEvent("P1_Move_Down_Pressed");
@@ -629,7 +629,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 
 		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
 		{
-			//moveDown player should failure, because below we have SteelWall obstacle
+			//moveDown player should failure, because below we have a fortressWall obstacle
 			const FPoint startPos = player->GetPos();
 
 			_events->EmitEvent("P1_Move_Down_Pressed");

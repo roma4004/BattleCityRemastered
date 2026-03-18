@@ -1,4 +1,5 @@
 #include "network/ServerHandler.h"
+#include "components/EventSystem.h"
 #include <boost/asio/io_context.hpp>
 #include <iostream>
 
@@ -8,6 +9,12 @@ ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
 	, _server{_ioContext, "127.0.0.1", "1234", _events}
 {
+	_name = "ServerHandler";
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/)
+	{
+		this->ProcessNetworkCommands();
+	});
+
 	_serverThread = std::thread([&]()
 	{
 		try
@@ -31,6 +38,12 @@ ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 	: _events{events}
 	, _server{_ioContext, host, port, _events}
 {
+	_name = "ServerHandler";
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/)
+	{
+		this->ProcessNetworkCommands();//TODO: move to separated method subscribe/unsubscribe, and same for client
+	});
+
 	_serverThread = std::thread([&]()
 	{
 		try
@@ -60,5 +73,7 @@ ServerHandler::~ServerHandler()
 	{
 		_serverThread.join();
 	}
-};
+
+	_events->RemoveListener("PreTickUpdate", _name);
+}
 }//namespace network::commands

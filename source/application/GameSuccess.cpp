@@ -22,6 +22,7 @@
 #define ASIO_STANDALONE
 
 //TODO: can't start game if no sound device on PC
+//TODO: fix sending pause command when pause, so we can't see onPause, but can unPause 
 //TODO: fix destroying animation when client start
 
 class BaseObj;

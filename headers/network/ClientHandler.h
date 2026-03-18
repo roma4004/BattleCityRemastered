@@ -11,13 +11,22 @@ class ClientHandler : public INetworkNode
 	std::shared_ptr<EventSystem> _events{nullptr};
 	boost::asio::io_context _ioContext{};
 	// boost::asio::ip::tcp::socket _socket;
-	Client _client;
+	std::shared_ptr<Client> _client{nullptr};
 	std::thread _clientThread{};
+	std::string _name{};
 
 public:
 	explicit ClientHandler(const std::shared_ptr<EventSystem>& events);
 	ClientHandler(const std::string& host, const std::string& port, const std::shared_ptr<EventSystem>& events);
 
-	~ClientHandler();
+	~ClientHandler() override;
+
+	void ProcessNetworkCommands() override
+	{
+		if (_client)
+		{
+			_client->GetCommandQueue().ProcessAll(); //TODO: refactor to _client->ProcessCommandQueue()
+		}
+	}
 };
 }//namespace network::commands

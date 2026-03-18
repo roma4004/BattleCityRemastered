@@ -12,11 +12,17 @@ class ServerHandler : public INetworkNode
 	boost::asio::io_context _ioContext{};
 	Server _server;
 	std::thread _serverThread{};
+	std::string _name{};
 
 public:
 	explicit ServerHandler(const std::shared_ptr<EventSystem>& events);
 	ServerHandler(const std::string& host, const std::string& port, const std::shared_ptr<EventSystem>& events);
 
-	~ServerHandler();
+	~ServerHandler() override;
+
+	void ProcessNetworkCommands() override
+	{
+		_server.ProcessNetworkCommands();
+	}
 };
 }//namespace network::commands

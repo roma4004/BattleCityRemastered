@@ -14,10 +14,12 @@
 #include "network/commands/ObstacleSpawn.h"
 #include "network/commands/PositionChange.h"
 #include "network/commands/RespawnTank.h"
+#include "network/commands/SignalEvent.h"
 #include "network/commands/StatisticsChange.h"
 #include "network/commands/TankOnOff.h"
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
+#include <algorithm>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -81,6 +83,113 @@ void Session::Start()
 	}
 }
 
+void Session::ProcessReceivedData(const std::string& archiveData)
+{
+	try
+	{
+		std::istringstream archiveStream(archiveData);
+		boost::archive::text_iarchive ia(archiveStream);
+
+		std::shared_ptr<Command> command;
+		ia >> command;
+
+		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
+		ProcessServerCommand(command);
+	}
+	catch (const std::exception& e)
+	{
+		const std::string errorMsg = std::string("error deserialization: ") + e.what();
+		NetworkLogger::WriteLog(errorMsg);
+
+		if (archiveData.length() < 200)
+		{
+			NetworkLogger::WriteLog("raw data: " + archiveData);
+		}
+		else
+		{
+			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
+		}
+
+		std::cerr << "Deserialization error: " << e.what() << '\n';
+		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
+	}
+}
+
+void Session::OnCommandBatch(const std::shared_ptr<Command>& commands)
+{
+	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
+	{
+		for (const auto& command: cmd->GetCommands())
+		{
+			ProcessServerCommand(command);
+		}
+	}
+}
+
+void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
+{
+	if (const auto* cmd = dynamic_cast<SignalEvent*>(command.get()))
+	{
+		const std::string signalName = cmd->GetSignalName();
+
+		_commandQueue.Enqueue([this, signalName]()
+		{
+			// Special handling for ClientReadyToPlay signal
+			if (signalName == "ClientReadyToPlay")
+			{
+				_events->EmitEvent("ClientReadyToStartGame");
+			}
+			else
+			{
+				_events->EmitEvent("ClientReceived_" + signalName);
+			}
+		});
+	}
+}
+
+void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
+{
+	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
+	{
+		const auto keyState = cmd->GetKeyState();
+
+		_commandQueue.Enqueue([this, keyState]()
+		{
+			_events->EmitEvent("ServerReceive_" + keyState);
+		});
+	}
+}
+
+void Session::ProcessServerCommand(const std::shared_ptr<Command>& command)
+{
+	if (command)
+	{
+		// auto classNameW = std::string(command->GetClassNameW());
+		// auto commandName = std::string("client receive:" + classNameW);
+		// NetworkLogger::LogClientReceive(commandName);
+		switch (command->GetType())
+		{
+			case CommandType::COMMAND_BATCH:
+			{
+				OnCommandBatch(command);
+				break;
+			}
+			case CommandType::SIGNAL_EVENT:
+			{
+				OnSignalEvent(command);
+				break;
+			}
+			case CommandType::KEY_STATE_CHANGE:
+			{
+				OnKeyStateChange(command);
+				break;
+			}
+			default:
+				break;
+		}
+	}
+}
+
 void Session::DoRead()
 {
 	try
@@ -100,19 +209,21 @@ void Session::DoRead()
 				std::istringstream archiveStream(archiveData);
 				boost::archive::text_iarchive ia(archiveStream);
 
-				ServerData data;
-				ia >> data;
+				this->ProcessReceivedData(archiveData);
+				
 
 				// NetworkLogger::LogServerReceive(data.eventName);
-				if (data.eventName == "ClientReadyToPlay")//TODO: refactor this to command pattern
-				{
-					events->EmitEvent("ClientReadyToStartGame");
-				}
-				else
-				{
-					//TODO: check if key allowed to receive from client and strong validating net input
-					events->EmitEvent("ServerReceive_" + data.eventName);//TODO: refactor this to command pattern
-				}
+				
+				//SignalEvent
+				// if (data.eventName == "ClientReadyToPlay")//TODO: refactor this to command pattern
+				// {
+				// 	events->EmitEvent("ClientReadyToStartGame");
+				// }
+				// else
+				// {
+				// 	//TODO: check if key allowed to receive from client and strong validating net input
+//TODO: rewrite command keyState		// 	events->EmitEvent("ServerReceive_" + data.eventName);//TODO: refactor this to command pattern
+				// }
 
 				// // Respond back to a client
 				// self->DoWrite({123, "Test", {"Name1", "Name2"}});
@@ -471,15 +582,28 @@ void Server::DoAccept()
 	});
 }
 
-void Server::SendToAll(const std::string& message) const
+void Server::CleanupDeadSessions()
 {
+	std::erase_if(_sessions, [](const std::shared_ptr<Session>& session)
+	{
+		return !session || !session->IsSocketOpen();
+	});
+}
+
+void Server::SendToAll(const std::string& message)
+{
+	CleanupDeadSessions();
+
 	for (const auto& session: _sessions)
 	{
-		session->DoWrite(message);
+		if (session && session->IsSocketOpen())
+		{
+			session->DoWrite(message);
+		}
 	}
 }
 
-void Server::SendCommand(const std::shared_ptr<Command>& command) const
+void Server::SendCommand(const std::shared_ptr<Command>& command)
 {
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
@@ -489,6 +613,6 @@ void Server::SendCommand(const std::shared_ptr<Command>& command) const
 
 	const auto& basicString = archiveStream.str();
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
-	this->SendToAll(basicString + "\n\n");
+	SendToAll(basicString + "\n\n");
 }
 }//namespace network::commands

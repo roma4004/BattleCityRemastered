@@ -167,7 +167,7 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Water_Animation, rect, "Water", 0);
+		this->_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Water_Animation, rect, "Water");
 	}
 }
 
@@ -187,7 +187,7 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name, color);
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName);
 	}
 }
 
@@ -201,7 +201,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName, placeholderWhiteColor);
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName);
 	}
 }
 

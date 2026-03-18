@@ -31,12 +31,6 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 		Bullet::Subscribe();
 	}
 
-	if (_uuid == UuidUtils::GetNilUuid())
-	{
-		_uuid = UuidUtils::GetRandomUuid();
-	}
-	_uuidStr = UuidUtils::GetStringUuid(_uuid);
-
 	_name = "Bullet";
 }
 

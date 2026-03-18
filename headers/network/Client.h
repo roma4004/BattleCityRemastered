@@ -1,12 +1,10 @@
 #pragma once
 
-#include "Point.h"
+#include "NetworkCommandQueue.h"
 #include "commands/Command.h"
 #include <boost/asio.hpp>
-#include <boost/serialization/vector.hpp>
 #include <memory>
 #include <string>
-#include <vector>
 
 class EventSystem;
 enum class BonusType : char8_t;
@@ -17,27 +15,7 @@ namespace network::commands
 class BaseObj;
 using boost::asio::ip::tcp;
 
-struct ClientData final
-{
-	friend class boost::serialization::access;
-
-	template<class Archive>
-	void serialize(Archive& ar, unsigned int version);
-
-	std::string who{};
-	std::string eventType{};
-	std::string eventName{};
-	std::string fraction{};
-	std::vector<std::string> names{};
-	FPoint pos{};
-	int respawnCount{-1};
-	int id{-1};
-	int health{-1};
-	BonusType type{};
-	Direction dir{};
-};
-
-class Client final//: public std::enable_shared_from_this<Client>
+class Client final : public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
@@ -51,32 +29,33 @@ public:
 	void ReadResponse();
 
 	void SendKeyState(const std::string& state);
-	void OnPositionChange(const std::shared_ptr<Command>& command) const;
-	void OnTankShot(const std::shared_ptr<Command>& command) const;
-	void OnHealthChange(const std::shared_ptr<Command>& command) const;
-	void OnDispose(const std::shared_ptr<Command>& command) const;
-	void OnStatisticsChange(const std::shared_ptr<Command>& command) const;
-	void OnKeyStateChange(const std::shared_ptr<Command>& command) const;
-	void OnFortressChange(const std::shared_ptr<Command>& command) const;
-	void OnBonusSpawn(const std::shared_ptr<Command>& command) const;
-	void OnBonusDeSpawn(const std::shared_ptr<Command>& command) const;
-	void OnRespawnTank(const std::shared_ptr<Command>& command) const;
-	void OnObstacleSpawn(const std::shared_ptr<Command>& command) const;
-	void OnAnimationCreate(const std::shared_ptr<Command>& command) const;
-	void OnTankOnOff(const std::shared_ptr<Command>& command) const;
-	void OnCommandBatch(const std::shared_ptr<Command>& commands) const;
-	void OnBonusStatus(const std::shared_ptr<Command>& command) const;
-	void ProcessClientCommand(const std::shared_ptr<Command>& command) const;
-	void ProcessReceivedData(const std::string& archiveData) const;
+	void OnPositionChange(const std::shared_ptr<Command>& command);
+	void OnTankShot(const std::shared_ptr<Command>& command);
+	void OnHealthChange(const std::shared_ptr<Command>& command);
+	void OnDispose(const std::shared_ptr<Command>& command);
+	void OnStatisticsChange(const std::shared_ptr<Command>& command);
+	void OnKeyStateChange(const std::shared_ptr<Command>& command);
+	void OnFortressChange(const std::shared_ptr<Command>& command);
+	void OnBonusSpawn(const std::shared_ptr<Command>& command);
+	void OnBonusDeSpawn(const std::shared_ptr<Command>& command);
+	void OnRespawnTank(const std::shared_ptr<Command>& command);
+	void OnObstacleSpawn(const std::shared_ptr<Command>& command);
+	void OnAnimationCreate(const std::shared_ptr<Command>& command);
+	void OnTankOnOff(const std::shared_ptr<Command>& command);
+	void OnCommandBatch(const std::shared_ptr<Command>& commands);
+	void OnBonusStatus(const std::shared_ptr<Command>& command);
+	void ProcessClientCommand(const std::shared_ptr<Command>& command);
+	void ProcessReceivedData(const std::string& archiveData);
+	void SendCommand(const std::shared_ptr<Command>& command);
+
+	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
 
 private:
 	tcp::socket _socket;
-	boost::asio::streambuf _read_buffer{};
-	boost::asio::streambuf _write_buffer{};
+	boost::asio::streambuf _readBuffer{};
+	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name{};
+	network::NetworkCommandQueue _commandQueue;
 };
-
-// Include the template implementation
-#include "Client.tpp"
 }//namespace network::commands

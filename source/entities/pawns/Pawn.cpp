@@ -3,6 +3,7 @@
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
+#include "utils/UuidUtils.h"
 // #include <iostream>
 
 Pawn::Pawn(PawnProperty pawnProperty)
@@ -13,7 +14,16 @@ Pawn::Pawn(PawnProperty pawnProperty)
 	, _allObjects{pawnProperty.allObjects}
 	, _events{std::move(pawnProperty.events)}
 	, _dir{pawnProperty.dir}
-	, _gameMode{pawnProperty.gameMode} {}
+	, _gameMode{pawnProperty.gameMode}
+{
+	if (_uuid == UuidUtils::GetNilUuid())
+	{
+		_uuid = UuidUtils::GetRandomUuid();
+	}
+	_uuidStr = UuidUtils::GetStringUuid(_uuid);
+}
+
+
 
 Pawn::~Pawn() = default;
 

@@ -4,6 +4,7 @@ class INetworkNode
 {
 public:
 	INetworkNode() = default;
+	virtual ~INetworkNode() = default;
 
-	~INetworkNode() = default;
+	virtual void ProcessNetworkCommands() = 0;
 };

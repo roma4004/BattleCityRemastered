@@ -1,10 +1,10 @@
 #pragma once
 
+#include "NetworkCommandQueue.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/serialization/vector.hpp>//NOTE: required for serialization ServerData
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -19,22 +19,13 @@ namespace network::commands
 {
 using boost::asio::ip::tcp;
 
-struct ServerData final
-{
-	friend class boost::serialization::access;
-
-	template<class Archive>
-	void serialize(Archive& ar, unsigned int /*version*/);
-
-	std::string eventName{};
-};
-
 class Session final : public std::enable_shared_from_this<Session>
 {
 	tcp::socket _socket;
 	boost::asio::streambuf _readBuffer{};
 	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	network::NetworkCommandQueue _commandQueue;
 
 public:
 	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events);
@@ -46,6 +37,15 @@ public:
 	void DoRead();
 
 	void DoWrite(const std::string& message);
+
+	void ProcessReceivedData(const std::string& archiveData);
+	void ProcessServerCommand(const std::shared_ptr<Command>& command);
+	void OnCommandBatch(const std::shared_ptr<Command>& commands);
+	void OnSignalEvent(const std::shared_ptr<Command>& command);
+	void OnKeyStateChange(const std::shared_ptr<Command>& command);
+
+	[[nodiscard]] bool IsSocketOpen() const { return _socket.is_open(); }
+	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
 };
 
 class Server final
@@ -56,7 +56,7 @@ class Server final
 	std::string _name;
 
 	std::mutex _batchWriteMutex;
-	std::shared_ptr<CommandBatch> _batch;
+	std::shared_ptr<CommandBatch> _batch{nullptr};
 
 	std::queue<std::shared_ptr<CommandBatch>> _sendQueue;
 	std::mutex _sendQueueMutex;
@@ -75,16 +75,25 @@ public:
 	void StartSendThread();
 	void StopSendThread();
 
-	void SendCommand(const std::shared_ptr<Command>& command) const;
+	void SendCommand(const std::shared_ptr<Command>& command);
 
 	void Subscribe();
 	void SubscribeBonus();
 	void Unsubscribe() const;
 	void UnsubscribeBonus() const;
 
-	void SendToAll(const std::string& message) const;
-};
+	void SendToAll(const std::string& message);
+	void CleanupDeadSessions();
 
-// Include the template implementation
-#include "Server.tpp"
+	void ProcessNetworkCommands()
+	{
+		for (const auto& session : _sessions)
+		{
+			if (session && session->IsSocketOpen())
+			{
+				session->GetCommandQueue().ProcessAll(); //TODO: refactor to session->ProcessCommandQueue()
+			}
+		}
+	}
+};
 }//namespace network::commands

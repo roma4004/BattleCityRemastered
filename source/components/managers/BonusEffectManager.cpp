@@ -207,5 +207,5 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 		return 5;
 	}
 
-	return -1;
+	return static_cast<size_t>(-1);
 }
