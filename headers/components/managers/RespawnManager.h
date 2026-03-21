@@ -51,6 +51,8 @@ class RespawnManager final
 	void TriggerLastPlayersLife();
 
 	void OnTankSpawn(const buuid& uuid);
+	void EnemyDied(bool isAvailable);
+	void PlayerDied(bool isAvailable);
 	void OnTankDied(const buuid& uuid);
 
 public:
