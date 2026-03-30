@@ -666,30 +666,7 @@ TEST_F(PlayerTest, PlayerTeamWon)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		using buuid = boost::uuids::uuid;
-		// ** Scene=>Spawn player & Enemy then remove enemy from container **
-		// Spawn player
-		/*constexpr int green = 0x408000;
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = green,
-										.health = _tankHealth,
-										.uuid = _uuid,
-										.name = _name,
-										.fraction = _fraction};
-		PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1,
-			.speed = _tankSpeed,
-			.windowSize = _windowSize,
-			.dir = Direction::UP,
-			.gameMode = _gameMode};
-		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));*/
+		// ** Scene=>Spawn player & Enemy, set enemies HP to 0 then remove enemy from container **
 
 		// Spawn Enemy
 		unsigned int _gray{0x808080};
@@ -711,18 +688,12 @@ TEST_F(PlayerTest, PlayerTeamWon)
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
-		//TankSpawner::CreateTank(TankType::ENEMY2, pawnProperty2, BonusEffectProperty{});
-
-		/*_allObjects.emplace_back(
-				std::make_shared<Enemy>(std::move(pawnProperty2), _bulletPool, BonusEffectProperty{}, enableByDefault));*/
-
 		_events->AddListener("PlayersTeamIsWon", _name, [this]()
 		{
 			this->_isGameWon = true;
 		});
 
 		_events->EmitEvent("Reset");
-		std::cout << "Entities = " << _allObjects.size() << "\n";
 
 		for (int i = 0; i < 5; ++i)
 		{
@@ -736,14 +707,12 @@ TEST_F(PlayerTest, PlayerTeamWon)
 			_tankSpawner->RespawnTanks(enableByDefault);
 			_tankSpawner->RespawnTanks(enableByDefault);
 
-			std::cout << "Entities pretick = " << _allObjects.size() << "\n";
+			//std::cout << "Entities pretick = " << _allObjects.size() << "\n";  Debug
 			for (auto& obj: _allObjects)
 			{
 				if (auto enemy = dynamic_cast<Enemy*>(obj.get()))
 				{
-					std::cout << "Pre E-health = " << enemy->GetHealth() << "\n";
 					enemy->SetHealth(0);
-					std::cout << "Post E-health = " << enemy->GetHealth() << "\n";
 				}
 			}
 
@@ -753,10 +722,14 @@ TEST_F(PlayerTest, PlayerTeamWon)
 				return obj.get() == nullptr || obj->GetIsAlive() == false;
 			});
 
-			std::cout << "Entities posttick= " << _allObjects.size() << "\n";
+			//std::cout << "Entities posttick= " << _allObjects.size() << "\n"; Debug
 		}
 
 		//Check result
+		/*_isGameWon ?
+		std::cout << "\nTest result = PASS" << "\n": 
+		std::cout << "\nTest result = FAIL" << "\n"; Debug*/
+
 		EXPECT_TRUE(_isGameWon);
 
 		return;
