@@ -24,6 +24,7 @@ class EventSystem;
 class StateManager;
 class TankSpawner;
 class RespawnManager;
+
 class PlayerTest : public testing::Test
 {
 	using buuid = boost::uuids::uuid;
@@ -33,7 +34,6 @@ protected:
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<StateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
-	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
@@ -56,7 +56,6 @@ protected:
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_stateManager = std::make_shared<StateManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
-		_respawnManager = std::make_shared<RespawnManager>(_events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -696,22 +695,22 @@ TEST_F(PlayerTest, PlayerTeamWon)
 		unsigned int _gray{0x808080};
 		const ObjRectangle rect2{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty2{.rect = rect2,
-										.color = _gray,
-										.health = _tankHealth,
-										.uuid = _uuid,
-										.name = "Enemy2",
-										.fraction = "EnemyTeam"};
+										 .color = _gray,
+										 .health = _tankHealth,
+										 .uuid = _uuid,
+										 .name = "Enemy2",
+										 .fraction = "EnemyTeam"};
 		PawnProperty pawnProperty2{
-			.baseObjProperty = std::move(baseObjProperty2),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1,
-			.speed = _tankSpeed,
-			.windowSize = _windowSize,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
+				.baseObjProperty = std::move(baseObjProperty2),
+				.allObjects = &_allObjects,
+				.events = _events,
+				.tier = 1,
+				.speed = _tankSpeed,
+				.windowSize = _windowSize,
+				.dir = Direction::DOWN,
+				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
-		
+
 		//TankSpawner::CreateTank(TankType::ENEMY2, pawnProperty2, BonusEffectProperty{});
 
 		/*_allObjects.emplace_back(
@@ -723,29 +722,38 @@ TEST_F(PlayerTest, PlayerTeamWon)
 		});
 
 		_events->EmitEvent("Reset");
-		std::cout<<"Entities = "<< _allObjects.size()<<"\n";
+		std::cout << "Entities = " << _allObjects.size() << "\n";
 
 		for (int i = 0; i < 5; ++i)
 		{
+			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
 			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
+			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
+			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
 
 			_tankSpawner->RespawnTanks(enableByDefault);
-			//_events->EmitEvent("TankSpawn");
+			_tankSpawner->RespawnTanks(enableByDefault);
+			_tankSpawner->RespawnTanks(enableByDefault);
+			_tankSpawner->RespawnTanks(enableByDefault);
 
-					_events->EmitEvent("PreTickUpdate");
-			std::cout<<"Entities pretick = "<< _allObjects.size()<<"\n";
-            		for (auto& obj : _allObjects)
-            		{
-            			if (auto enemy = dynamic_cast<Enemy*>(obj.get()))
-            			{
-            				std::cout<<"Pre E-health = "<< enemy->GetHealth()<<"\n";
-            				enemy->SetHealth(0);
-            				std::cout<<"Post E-health = "<< enemy->GetHealth()<<"\n";
-            				//_events->EmitEvent("TankDied");
-            			}
-            		}
-			_events->EmitEvent("PostTickUpdate");
-			std::cout<<"Entities posttick= "<< _allObjects.size()<<"\n";
+			std::cout << "Entities pretick = " << _allObjects.size() << "\n";
+			for (auto& obj: _allObjects)
+			{
+				if (auto enemy = dynamic_cast<Enemy*>(obj.get()))
+				{
+					std::cout << "Pre E-health = " << enemy->GetHealth() << "\n";
+					enemy->SetHealth(0);
+					std::cout << "Post E-health = " << enemy->GetHealth() << "\n";
+				}
+			}
+
+			//delete dead tanks
+			std::erase_if(_allObjects, [](const auto& obj)
+			{
+				return obj.get() == nullptr || obj->GetIsAlive() == false;
+			});
+
+			std::cout << "Entities posttick= " << _allObjects.size() << "\n";
 		}
 
 		//Check result
@@ -756,4 +764,4 @@ TEST_F(PlayerTest, PlayerTeamWon)
 	EXPECT_TRUE(false);
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
-	}
+}
