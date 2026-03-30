@@ -1,19 +1,29 @@
+#include "../packages/sdl2.nuget.2.32.8/build/native/include/SDL_events.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/TankSpawner.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerTwo.h"
+#include "components/managers/BonusEffectManager.h"
+#include "components/managers/StateManager.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
+#include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/TankType.h"
+#include "components/managers/DelayedSpawnManager.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
-
+class EventSystem;
+class StateManager;
+class TankSpawner;
+class RespawnManager;
 class PlayerTest : public testing::Test
 {
 	using buuid = boost::uuids::uuid;
@@ -21,6 +31,10 @@ class PlayerTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<StateManager> _stateManager{nullptr};
+	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
+	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -34,12 +48,16 @@ protected:
 	std::string _fraction = "PlayerTeam";
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
+	bool _isGameWon{false};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-
+		_stateManager = std::make_shared<StateManager>(_events);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
+		_respawnManager = std::make_shared<RespawnManager>(_events);
+		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
@@ -65,6 +83,7 @@ protected:
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
+		BonusEffectProperty bonusEffects{};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{},
@@ -643,3 +662,98 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 
 	EXPECT_TRUE(false);
 }
+
+TEST_F(PlayerTest, PlayerTeamWon)
+{
+	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	{
+		using buuid = boost::uuids::uuid;
+		// ** Scene=>Spawn player & Enemy then remove enemy from container **
+		// Spawn player
+		/*constexpr int green = 0x408000;
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.color = green,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = _name,
+										.fraction = _fraction};
+		PawnProperty pawnProperty{
+			.baseObjProperty = std::move(baseObjProperty),
+			.allObjects = &_allObjects,
+			.events = _events,
+			.tier = 1,
+			.speed = _tankSpeed,
+			.windowSize = _windowSize,
+			.dir = Direction::UP,
+			.gameMode = _gameMode};
+		_allObjects.emplace_back(
+				std::make_shared<Player>(
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{}));*/
+
+		// Spawn Enemy
+		unsigned int _gray{0x808080};
+		const ObjRectangle rect2{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty2{.rect = rect2,
+										.color = _gray,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = "Enemy2",
+										.fraction = "EnemyTeam"};
+		PawnProperty pawnProperty2{
+			.baseObjProperty = std::move(baseObjProperty2),
+			.allObjects = &_allObjects,
+			.events = _events,
+			.tier = 1,
+			.speed = _tankSpeed,
+			.windowSize = _windowSize,
+			.dir = Direction::DOWN,
+			.gameMode = _gameMode};
+		constexpr bool enableByDefault{true};
+		
+		//TankSpawner::CreateTank(TankType::ENEMY2, pawnProperty2, BonusEffectProperty{});
+
+		/*_allObjects.emplace_back(
+				std::make_shared<Enemy>(std::move(pawnProperty2), _bulletPool, BonusEffectProperty{}, enableByDefault));*/
+
+		_events->AddListener("PlayersTeamIsWon", _name, [this]()
+		{
+			this->_isGameWon = true;
+		});
+
+		_events->EmitEvent("Reset");
+		std::cout<<"Entities = "<< _allObjects.size()<<"\n";
+
+		for (int i = 0; i < 5; ++i)
+		{
+			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
+
+			_tankSpawner->RespawnTanks(enableByDefault);
+			//_events->EmitEvent("TankSpawn");
+
+					_events->EmitEvent("PreTickUpdate");
+			std::cout<<"Entities pretick = "<< _allObjects.size()<<"\n";
+            		for (auto& obj : _allObjects)
+            		{
+            			if (auto enemy = dynamic_cast<Enemy*>(obj.get()))
+            			{
+            				std::cout<<"Pre E-health = "<< enemy->GetHealth()<<"\n";
+            				enemy->SetHealth(0);
+            				std::cout<<"Post E-health = "<< enemy->GetHealth()<<"\n";
+            				//_events->EmitEvent("TankDied");
+            			}
+            		}
+			_events->EmitEvent("PostTickUpdate");
+			std::cout<<"Entities posttick= "<< _allObjects.size()<<"\n";
+		}
+
+		//Check result
+		EXPECT_TRUE(_isGameWon);
+
+		return;
+	}
+	EXPECT_TRUE(false);
+
+	_events->RemoveListener("PlayersTeamIsWon", _name);
+	}
