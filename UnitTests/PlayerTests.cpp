@@ -49,6 +49,7 @@ protected:
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 	bool _isGameWon{false};
+	bool _isGameLose{false};
 
 	void SetUp() override
 	{
@@ -662,79 +663,52 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	EXPECT_TRUE(false);
 }
 
+// ** Scene=>Spawn player & Enemy, set enemies HP to 0 then remove enemy from container **
 TEST_F(PlayerTest, PlayerTeamWon)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	_events->AddListener("PlayersTeamIsWon", _name, [this]()
 	{
-		// ** Scene=>Spawn player & Enemy, set enemies HP to 0 then remove enemy from container **
+		this->_isGameWon = true;
+	});
 
-		// Spawn Enemy
-		unsigned int _gray{0x808080};
-		const ObjRectangle rect2{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty2{.rect = rect2,
-										 .color = _gray,
-										 .health = _tankHealth,
-										 .uuid = _uuid,
-										 .name = "Enemy2",
-										 .fraction = "EnemyTeam"};
-		PawnProperty pawnProperty2{
-				.baseObjProperty = std::move(baseObjProperty2),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1,
-				.speed = _tankSpeed,
-				.windowSize = _windowSize,
-				.dir = Direction::DOWN,
-				.gameMode = _gameMode};
-		constexpr bool enableByDefault{true};
+	for (int i = 0; i < 5; ++i)
+	{
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
 
-		_events->AddListener("PlayersTeamIsWon", _name, [this]()
-		{
-			this->_isGameWon = true;
-		});
+		_tankSpawner->RespawnTanks(true);
+		_tankSpawner->RespawnTanks(true);
+		_tankSpawner->RespawnTanks(true);
+		_tankSpawner->RespawnTanks(true);
 
-		_events->EmitEvent("Reset");
-
-		for (int i = 0; i < 5; ++i)
-		{
-			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
-			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
-			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
-			_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
-
-			_tankSpawner->RespawnTanks(enableByDefault);
-			_tankSpawner->RespawnTanks(enableByDefault);
-			_tankSpawner->RespawnTanks(enableByDefault);
-			_tankSpawner->RespawnTanks(enableByDefault);
-
-			//std::cout << "Entities pretick = " << _allObjects.size() << "\n";  Debug
-			for (auto& obj: _allObjects)
-			{
-				if (auto enemy = dynamic_cast<Enemy*>(obj.get()))
-				{
-					enemy->SetHealth(0);
-				}
-			}
-
-			//delete dead tanks
-			std::erase_if(_allObjects, [](const auto& obj)
-			{
-				return obj.get() == nullptr || obj->GetIsAlive() == false;
-			});
-
-			//std::cout << "Entities posttick= " << _allObjects.size() << "\n"; Debug
-		}
-
-		//Check result
-		/*_isGameWon ?
-		std::cout << "\nTest result = PASS" << "\n": 
-		std::cout << "\nTest result = FAIL" << "\n"; Debug*/
-
-		EXPECT_TRUE(_isGameWon);
-
-		return;
+		_allObjects.clear();
 	}
-	EXPECT_TRUE(false);
+	EXPECT_TRUE(_isGameWon);
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
+}
+
+// ** Player team lose with broken base **
+TEST_F(PlayerTest, PlayerTeamLose)
+{
+	_allObjects.clear();
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
+
+	for (int i = 0; i < 5; ++i)
+	{
+		_tankSpawner->RespawnTanks(true);
+	}
+	_events->AddListener("EnemiesTeamIsWon", _name, [this]()
+	{
+		this->_isGameLose = true;
+	});
+	_events->EmitEvent("PlayersBaseFinished");
+	_allObjects.pop_back();
+
+	EXPECT_TRUE(_isGameLose);
+
+	_events->RemoveListener("EnemiesTeamIsWon", _name);
 }
