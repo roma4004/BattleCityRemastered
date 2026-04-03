@@ -355,6 +355,7 @@
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Fonts\info.txt" />
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
+    <Content Include="Resources\Images\JoyIcon.png" />
     <Content Include="Resources\Images\SpriteSheet.png" />
   </ItemGroup>
   <ItemGroup>
