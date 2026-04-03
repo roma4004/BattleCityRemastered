@@ -663,12 +663,13 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	EXPECT_TRUE(false);
 }
 
-// ** Scene=>Spawn player & Enemy, set enemies HP to 0 then remove enemy from container **
+// Scene=>Spawn player & Enemy, set enemies HP to 0 then remove enemy from container
 TEST_F(PlayerTest, PlayerTeamWon)
 {
-	_events->AddListener("PlayersTeamIsWon", _name, [this]()
+	bool isGameWon{false};
+	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
 	{
-		this->_isGameWon = true;
+		isGameWon = true;
 	});
 
 	for (int i = 0; i < 5; ++i)
@@ -685,14 +686,15 @@ TEST_F(PlayerTest, PlayerTeamWon)
 
 		_allObjects.clear();
 	}
-	EXPECT_TRUE(_isGameWon);
+	EXPECT_TRUE(isGameWon);
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
 }
 
-// ** Player team lose with broken base **
-TEST_F(PlayerTest, PlayerTeamLose)
+// Player team lose with broken base
+TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 {
+	bool isGameLose{false};
 	_allObjects.clear();
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
@@ -701,14 +703,37 @@ TEST_F(PlayerTest, PlayerTeamLose)
 	{
 		_tankSpawner->RespawnTanks(true);
 	}
-	_events->AddListener("EnemiesTeamIsWon", _name, [this]()
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
 	{
-		this->_isGameLose = true;
+		isGameLose = true;
 	});
 	_events->EmitEvent("PlayersBaseFinished");
 	_allObjects.pop_back();
 
-	EXPECT_TRUE(_isGameLose);
+	EXPECT_TRUE(isGameLose);
+
+	_events->RemoveListener("EnemiesTeamIsWon", _name);
+}
+
+TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
+{
+	bool isGameLose{false};
+	_allObjects.clear();
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() 
+	{
+		isGameLose = true;
+	});
+
+	for (int i = 0; i < 3; ++i)
+	{
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
+		_tankSpawner->RespawnTanks(true);
+		_allObjects.pop_back();
+	}
+
+	EXPECT_TRUE(isGameLose);
 
 	_events->RemoveListener("EnemiesTeamIsWon", _name);
 }
