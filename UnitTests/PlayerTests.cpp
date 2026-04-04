@@ -686,6 +686,7 @@ TEST_F(PlayerTest, PlayerTeamWon)
 
 		_allObjects.clear();
 	}
+
 	EXPECT_TRUE(isGameWon);
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
@@ -694,19 +695,21 @@ TEST_F(PlayerTest, PlayerTeamWon)
 // Player team lose with broken base
 TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 {
-	bool isGameLose{false};
 	_allObjects.clear();
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
+
+	bool isGameLose{false};
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
+	{
+		isGameLose = true;
+	});
 
 	for (int i = 0; i < 5; ++i)
 	{
 		_tankSpawner->RespawnTanks(true);
 	}
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
-	{
-		isGameLose = true;
-	});
+
 	_events->EmitEvent("PlayersBaseFinished");
 	_allObjects.pop_back();
 
@@ -717,11 +720,11 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 
 TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
 {
-	bool isGameLose{false};
 	_allObjects.clear();
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() 
+	bool isGameLose{false};
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
 	{
 		isGameLose = true;
 	});
