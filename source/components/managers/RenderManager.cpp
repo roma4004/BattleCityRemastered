@@ -9,13 +9,15 @@
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
 							 const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
-							 const std::shared_ptr<SDL_Texture>& atlasTexture, UPoint windowSize)
+							 const std::shared_ptr<SDL_Texture>& atlasTexture,
+							 const std::shared_ptr<SDL_Texture>& joyIcon, UPoint windowSize)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _renderer{renderer}
 	, _font{menuFont}
 	, _menuLogo{menuLogo}
 	, _atlasTexture{atlasTexture}
+	, _joyIcon{joyIcon}
 	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
@@ -78,6 +80,8 @@ void RenderManager::Subscribe()
 	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawBackground(pos); });
 
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
+
+	_events->AddListener("RenderMenuJoyIcon", _name, [this](const Point pos) { DrawJoyIcon(pos); });
 
 	_events->AddListener(
 			"RenderPauseText", _name,
@@ -234,6 +238,13 @@ void RenderManager::DrawMenuLogo(Point pos) const
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
 
 	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
+}
+
+void RenderManager::DrawJoyIcon(Point pos) const
+{
+	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
+
+	SDL_RenderCopy(_renderer.get(), _joyIcon.get(), nullptr, &rect);
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value) const

@@ -42,6 +42,7 @@
     <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp" />
     <ClCompile Include="..\source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp" />
+    <ClCompile Include="..\source\components\managers\StateManager.cpp" />
     <ClCompile Include="..\source\components\Map.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />

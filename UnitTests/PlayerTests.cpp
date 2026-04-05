@@ -1,18 +1,29 @@
+#include "../packages/sdl2.nuget.2.32.8/build/native/include/SDL_events.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/TankSpawner.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerTwo.h"
+#include "components/managers/BonusEffectManager.h"
+#include "components/managers/StateManager.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
+#include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/TankType.h"
+#include "components/managers/DelayedSpawnManager.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
+class EventSystem;
+class StateManager;
+class TankSpawner;
+class RespawnManager;
 
 class PlayerTest : public testing::Test
 {
@@ -21,6 +32,9 @@ class PlayerTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<StateManager> _stateManager{nullptr};
+	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -39,7 +53,9 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-
+		_stateManager = std::make_shared<StateManager>(_events);
+		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
+		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
@@ -65,6 +81,7 @@ protected:
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
+		BonusEffectProperty bonusEffects{};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{},
@@ -642,4 +659,83 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	}
 
 	EXPECT_TRUE(false);
+}
+
+// Check that Player's team can win
+TEST_F(PlayerTest, PlayerTeamWon)
+{
+	bool isGameWon{false};
+	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
+	{
+		isGameWon = true;
+	});
+
+	for (int i = 0; i < 5; ++i)
+	{
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
+
+		_tankSpawner->RespawnTanks(true);
+		_tankSpawner->RespawnTanks(true);
+		_tankSpawner->RespawnTanks(true);
+		_tankSpawner->RespawnTanks(true);
+
+		_allObjects.clear();
+	}
+
+	EXPECT_TRUE(isGameWon);
+
+	_events->RemoveListener("PlayersTeamIsWon", _name);
+}
+
+// Player team lose with broken base
+TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
+{
+	_allObjects.clear();
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
+
+	bool isGameLose{false};
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
+	{
+		isGameLose = true;
+	});
+
+	for (int i = 0; i < 5; ++i)
+	{
+		_tankSpawner->RespawnTanks(true);
+	}
+
+	_events->EmitEvent("PlayersBaseFinished");
+	_allObjects.pop_back();
+
+	EXPECT_TRUE(isGameLose);
+
+	_events->RemoveListener("EnemiesTeamIsWon", _name);
+}
+
+// Player team lose with three death in a row
+TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
+{
+	_allObjects.clear();
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+
+	bool isGameLose{false};
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
+	{
+		isGameLose = true;
+	});
+
+	for (int i = 0; i < 3; ++i)
+	{
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
+		_tankSpawner->RespawnTanks(true);
+		_allObjects.pop_back();
+	}
+
+	EXPECT_TRUE(isGameLose);
+
+	_events->RemoveListener("EnemiesTeamIsWon", _name);
 }

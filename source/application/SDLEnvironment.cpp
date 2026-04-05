@@ -12,12 +12,13 @@
 class IConfig;
 
 SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
-							   const char* introMusicName, const char* textureCollection)
+							   const char* introMusicName, const char* textureCollection, const char* joyIcon)
 	: windowSize{windowSize}
 	, fpsFontPathName{fpsFontName}
 	, logoPathName{logoName}
 	, introMusicPathName{introMusicName}
-	, textureAtlasPath{textureCollection} {}
+	, textureAtlasPath{textureCollection}
+	, joyIconPathName{joyIcon} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -64,14 +65,14 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
+	if (!IMG_Init(IMG_INIT_PNG))
+	{
+		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
+	}
+
 	// texture logo loading
 	std::shared_ptr<SDL_Texture> logoTexture{nullptr};
 	{
-		if (!IMG_Init(IMG_INIT_PNG))
-		{
-			return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
-		}
-
 		std::shared_ptr<SDL_Surface> logoSurface{nullptr};
 		if (logoSurface = {IMG_Load(logoPathName), SDL_FreeSurface};
 			logoSurface == nullptr)
@@ -83,6 +84,23 @@ SDLEnvironment::~SDLEnvironment()
 			logoTexture == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
+		}
+	}
+
+	// texture joy icon loading
+	std::shared_ptr<SDL_Texture> joyIconTexture{nullptr};
+	{
+		std::shared_ptr<SDL_Surface> joyIconSurface{nullptr};
+		if (joyIconSurface = {IMG_Load(joyIconPathName), SDL_FreeSurface};
+			joyIconSurface == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG Joy icon Loading Error", IMG_GetError());
+		}
+
+		if (joyIconTexture = {SDL_CreateTextureFromSurface(renderer.get(), joyIconSurface.get()), SDL_DestroyTexture};
+			joyIconTexture == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG Joy icon Texture Creating Error", IMG_GetError());
 		}
 	}
 
@@ -133,7 +151,8 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
-	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, isVsyncOn);
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, joyIconTexture,
+										   isVsyncOn);
 }
 
 [[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(
