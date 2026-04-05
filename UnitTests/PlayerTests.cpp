@@ -661,7 +661,7 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	EXPECT_TRUE(false);
 }
 
-// Scene=>Spawn player & Enemy, set enemies HP to 0 then remove enemy from container
+// Check that Player's team can win
 TEST_F(PlayerTest, PlayerTeamWon)
 {
 	bool isGameWon{false};
@@ -716,6 +716,7 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 	_events->RemoveListener("EnemiesTeamIsWon", _name);
 }
 
+// Player team lose with three death in a row
 TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
 {
 	_allObjects.clear();
