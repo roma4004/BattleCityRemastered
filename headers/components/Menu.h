@@ -34,6 +34,7 @@ class Menu final
 								 int enemy = -1) const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
 								 const std::string& text3) const;
+	void DrawTextLine(Point& posText, bool isSelected, std::string text) const;
 	void DrawText() const;
 
 	void OnRespawnCountChanged(const std::string& objectName, int respawnCount);

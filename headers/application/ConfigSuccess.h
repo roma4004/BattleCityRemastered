@@ -13,6 +13,7 @@ class ConfigSuccess final : public IConfig
 	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
 	std::shared_ptr<SDL_Texture> _logoTexture{nullptr};
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
+	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
 
 	//user settings
 	bool _isVsyncOn{};//TODO: should be load from config file or default value
@@ -24,7 +25,8 @@ public:
 
 	ConfigSuccess(UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
 				  const std::shared_ptr<TTF_Font>& fpsFont, const std::shared_ptr<SDL_Texture>& logoTexture,
-				  const std::shared_ptr<SDL_Texture>& atlasTexture, bool isVsyncOn);
+				  const std::shared_ptr<SDL_Texture>& atlasTexture, const std::shared_ptr<SDL_Texture>& joyIcon,
+				  bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

@@ -182,28 +182,34 @@ void Menu::RenderTextWithAlignment(const Point pos, const unsigned int color, co
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
+void Menu::DrawTextLine(Point& posText, bool isSelected, std::string text) const
+{
+	if (isSelected)
+	{
+		_events->EmitEvent("RenderMenuJoyIcon", Point{.x = posText.x - 35, .y = posText.y - 10});
+	}
+
+	constexpr unsigned int color = {0xffffffff};
+	_events->EmitEvent("RenderText", posText, color, text);
+	posText.y += 25;
+}
+
 void Menu::DrawText() const
 {
-	const Point pos{.x = _pos.x + 180, .y = _pos.y + 180};
-	if (pos.y - 50 >= _windowHeight)
+	Point relativePosText{.x = _pos.x + 180, .y = _pos.y + 140};
+	const Point posStatistics{.x = _pos.x + 180, .y = _pos.y + 170};
+	if (relativePosText.y >= _windowHeight)
 	{
 		return;
 	}
 
-	constexpr unsigned int color = {0xffffffff};
+	DrawTextLine(relativePosText, _selectedGameMode == GameMode::OnePlayer, "ONE PLAYER");
+	DrawTextLine(relativePosText, _selectedGameMode == GameMode::TwoPlayers, "TWO PLAYER");
+	DrawTextLine(relativePosText, _selectedGameMode == GameMode::CoopWithBot, "COOP WITH BOT");
+	DrawTextLine(relativePosText, _selectedGameMode == GameMode::PlayAsHost, "PLAY AS HOST"); 
+	DrawTextLine(relativePosText, _selectedGameMode == GameMode::PlayAsClient, "PLAY AS CLIENT");
 
-	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y - 50}, color,
-					   _selectedGameMode == GameMode::OnePlayer ? "->ONE PLAYER" : "ONE PLAYER");
-	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y - 25}, color,
-					   _selectedGameMode == GameMode::TwoPlayers ? "=>TWO PLAYER" : "TWO PLAYER");
-	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color,
-					   _selectedGameMode == GameMode::CoopWithBot ? "->COOP WITH BOT" : "COOP WITH BOT");
-	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y + 25}, color,
-					   _selectedGameMode == GameMode::PlayAsHost ? "=>PLAY AS HOST" : "PLAY AS HOST");
-	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y + 50}, color,
-					   _selectedGameMode == GameMode::PlayAsClient ? "=>PLAY AS CLIENT" : "PLAY AS CLIENT");
-
-	RenderStatistics(pos);
+	RenderStatistics(posStatistics);
 }
 
 void Menu::OnRespawnCountChanged(const std::string& objectName, const int respawnCount)
