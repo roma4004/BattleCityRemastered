@@ -48,8 +48,6 @@ protected:
 	std::string _fraction = "PlayerTeam";
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
-	bool _isGameWon{false};
-	bool _isGameLose{false};
 
 	void SetUp() override
 	{
