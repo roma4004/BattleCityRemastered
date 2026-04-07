@@ -3,6 +3,7 @@
 #include "../entities/BaseObj.h"
 #include <memory>
 
+enum class Direction : char8_t;
 enum class AnimationType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
@@ -13,11 +14,11 @@ class AnimatedObject
 public:
 	std::shared_ptr<EventSystem> events{nullptr};
 	ObjRectangle rect{};
+	Direction dir{};
 	int animationFrame{};
 	int elapsedFrames{};//TODO: Animation frame and the elapsed frame looks the same logically
 	int limitOfFrames{};
 	unsigned int color{};
-	GameMode gameMode{};
 	AnimationType type{};
 	bool markToDispose{};
 	bool isInfinite{};
@@ -25,7 +26,6 @@ public:
 	std::string name{};
 	std::string nameWithUuid{};
 	std::string objName{};
-	std::weak_ptr<Tank> parent{};
 
 	void Draw() const;
 
@@ -33,8 +33,8 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
-				   const std::shared_ptr<EventSystem>& events, GameMode gameMode, int frameLimit, int scale,
-				   std::string objName, unsigned int color, bool isInfinite = {}, std::weak_ptr<Tank> tank = {});
+				   const std::shared_ptr<EventSystem>& events, int frameLimit, int scale,
+				   std::string objName, unsigned int color, bool isInfinite = {});
 
 	~AnimatedObject();
 

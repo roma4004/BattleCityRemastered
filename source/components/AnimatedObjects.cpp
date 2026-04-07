@@ -1,33 +1,24 @@
 ﻿#include "components/AnimatedObjects.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/Obstacle.h"
-#include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "enums/Direction.h"
-#include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 #include <boost/uuid/nil_generator.hpp>
 
-class Tank;
-
-using buuid = boost::uuids::uuid;
-
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							   const std::shared_ptr<EventSystem>& events, const GameMode gameMode,
-							   const int frameLimit, const int scale, std::string objName, const unsigned int color,
-							   const bool isInfinite, const std::weak_ptr<Tank> tank)
+							   const std::shared_ptr<EventSystem>& events, const int frameLimit, const int scale,
+							   std::string objName, const unsigned int color, const bool isInfinite)
 	: events(events)
 	, rect{rect}
 	, limitOfFrames{frameLimit}
 	, color{color}
-	, gameMode{gameMode}
 	, type(type)
 	, isInfinite{isInfinite}
 	, scale{scale}
 	, name{name}
 	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())}
 	, objName(std::move(objName))
-	, parent{tank}
 {
 	Subscribe();
 }
@@ -60,23 +51,20 @@ void AnimatedObject::Draw() const
 		events->EmitEvent("DrawAnimation", rect, Direction::UP, -animationFrame, scale, name, color);
 		//TODO: -animationFrame -> +animationFrame
 	}
-	else if (parent.expired())
+	else if (name == "TankAnimation")
 	{
+		//for tanks
+		if (events != nullptr)
+		{
+			events->EmitEvent("DrawTankAnimation", rect, dir, animationFrame, scale, objName, color);
+		}
+	}//TODO: how to merge this branches
+	else
+	{
+		//bullets, explosions and other
 		if (events != nullptr)
 		{
 			events->EmitEvent("DrawAnimation", rect, Direction::UP, animationFrame, scale, name, color);
-		}
-	}
-	else
-	{
-		//for tanks
-		if (const auto tankLck = parent.lock())
-		{
-			if (events != nullptr)
-			{
-				events->EmitEvent("DrawTankAnimation", tankLck->GetRect(), tankLck->GetDirection(), animationFrame,
-								  scale, objName, tankLck->GetColor());
-			}
 		}
 	}
 }
@@ -96,7 +84,6 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
 	color = other.color;
-	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -104,7 +91,6 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	name = other.name;
 	nameWithUuid = other.nameWithUuid;
 	objName = other.objName;
-	parent = other.parent;
 
 	Enable();
 }
@@ -123,7 +109,6 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
 	color = other.color;
-	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -131,7 +116,6 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 	name = std::move(other.name);
 	nameWithUuid = std::move(other.nameWithUuid);
 	objName = std::move(other.objName);
-	parent = other.parent;
 
 	Enable();
 }
@@ -151,7 +135,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
 	color = other.color;
-	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -159,7 +142,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	name = other.name;
 	nameWithUuid = other.nameWithUuid;
 	objName = other.objName;
-	parent = other.parent;
 
 	Enable();
 
@@ -184,7 +166,6 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
 	color = other.color;
-	gameMode = other.gameMode;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -192,7 +173,6 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	name = std::move(other.name);
 	nameWithUuid = std::move(other.nameWithUuid);
 	objName = std::move(other.objName);
-	parent = other.parent;
 
 	Enable();
 

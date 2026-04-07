@@ -10,7 +10,7 @@ ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
 	, _server{_ioContext, "127.0.0.1", "1234", _events}
 {
 	_name = "ServerHandler";
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/)
+	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
 	{
 		this->ProcessNetworkCommands();
 	});
@@ -39,7 +39,7 @@ ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 	, _server{_ioContext, host, port, _events}
 {
 	_name = "ServerHandler";
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/)
+	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
 	{
 		this->ProcessNetworkCommands();//TODO: move to separated method subscribe/unsubscribe, and same for client
 	});
@@ -74,6 +74,6 @@ ServerHandler::~ServerHandler()
 		_serverThread.join();
 	}
 
-	_events->RemoveListener("PreTickUpdate", _name);
+	_events->RemoveListener("NetCommandUpdate", _name);
 }
 }//namespace network::commands

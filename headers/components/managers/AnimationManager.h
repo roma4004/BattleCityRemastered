@@ -47,7 +47,7 @@ private:
 	void Update();
 	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
 	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);
-	void UpdateTank(const std::string& objName);
+	void UpdateTank(const std::string& objName, const ObjRectangle& rect, const Direction& dir);
 	void DisableTankAnimation(const std::string& objName);
 	void AnimationSeqDisposer();
 };

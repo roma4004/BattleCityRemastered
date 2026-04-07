@@ -41,9 +41,13 @@ void AnimationManager::Subscribe()
 			});
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
-	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
-	_events->AddListener("AnimationTankUpdate", _name, [this](const std::string& objName) { UpdateTank(objName); });
-	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
+	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
+	_events->AddListener("AnimationTankUpdate", _name,
+						 [this](const std::string& objName, const ObjRectangle& rect, const Direction& dir)
+						 {
+							 UpdateTank(objName, rect, dir);//TODO:replicate this or recheck
+						 });
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
 }
 
 void AnimationManager::SubscribeAsHost()
@@ -126,7 +130,7 @@ void AnimationManager::SetGameMode(const GameMode newGameMode)
 void AnimationManager::Reset()
 {
 	_animatedObjects.clear();
-	// _tankObjects.clear(); //NOTE: all tank_animation will be removed when tank died
+	_tankObjects.clear();//NOTE: all tank_animation will be removed when tank died
 	_waterObjects.clear();
 }
 
@@ -140,8 +144,8 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 		case AnimationType::Bullet_Explosion:
 			Create("BulletExplosion", rect, type, 3, 16, objName);
 			break;
-		case AnimationType::Tank_Explosion: //TODO: fix tank explosion
-			DeleteTankAnimation(objName);
+		case AnimationType::Tank_Explosion:
+			DeleteTankAnimation(objName);//TODO: fix tank explosion
 			Create("TankExplosion", rect, type, 2, 32, objName);
 			//TODO: should change limitOfFrame to 5?
 			break;
@@ -161,8 +165,8 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	constexpr unsigned int color{0};
 	constexpr auto type = AnimationType::Water_Animation;
 	constexpr bool isInfinite{true};
-	const std::string name = "Water";
-	_waterObjects.emplace_back(name, rect, type, _events, _gameMode, 16, 1, name, color, isInfinite);
+	std::string objName = "Water";
+	_waterObjects.emplace_back(objName, rect, type, _events, 16, 1, objName, color, isInfinite);
 
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
@@ -175,7 +179,9 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 {
 	const auto tankLck = tank.lock();
 	if (!tankLck)
+	{
 		return;//TODO: add assert in this case
+	}
 
 	const ObjRectangle rect = tankLck->GetRect();
 	const std::string objName(tankLck->GetName());
@@ -183,7 +189,7 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 	constexpr auto type = AnimationType::Tank_Animation;
 	const std::string name = "TankAnimation";
 	constexpr bool isInfinite{true};
-	_tankObjects.emplace_back(name, rect, type, _events, _gameMode, 2, 16, objName, color, isInfinite, tank);
+	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, objName, color, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -196,8 +202,8 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 							  const bool isInfinite)
 {
 	constexpr int placeholderWhiteColor = 0xffffff;
-	_animatedObjects.emplace_back(name, rect, type, _events, _gameMode, limitOfFrames, scale, objName,
-								  placeholderWhiteColor, isInfinite);
+	_animatedObjects.emplace_back(name, rect, type, _events, limitOfFrames, scale, objName, placeholderWhiteColor,
+								  isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -261,12 +267,17 @@ void AnimationManager::UpdateFrameInfinite(AnimatedObject& obj, const int animat
 	}
 }
 
-void AnimationManager::UpdateTank(const std::string& objName)//TODO: replace uuid with name or filter by parentUuid
+void AnimationManager::UpdateTank(const std::string& objName, const ObjRectangle& rect, const Direction& dir)
 {
 	for (AnimatedObject& animObj: _tankObjects)
 	{
 		if (animObj.objName == objName)
 		{
+			//Update tank animation position and dir
+			animObj.rect.x = rect.x;
+			animObj.rect.y = rect.y;
+			animObj.dir = dir;
+
 			UpdateFrame(animObj, 20);
 			return;
 		}

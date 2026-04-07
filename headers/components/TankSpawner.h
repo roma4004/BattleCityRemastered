@@ -39,8 +39,8 @@ class TankSpawner final
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
 
-	void SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
+	bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
+	bool SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
 	void SpawnTank(ObjRectangle rect, unsigned int color, int health, const std::string& name, std::string fraction,

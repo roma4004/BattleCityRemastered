@@ -103,7 +103,7 @@ bool Pawn::Move(const double deltaTime)
 	const bool isMove = _moveBeh->Move(deltaTime);
 	if (isMove)
 	{
-		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()));
+		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
@@ -123,4 +123,6 @@ void Pawn::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 
 	SetDirection(dir);
 	SetPos(newPos);
+
+	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection()); //NOTE: fix for tank truck animation tick
 }

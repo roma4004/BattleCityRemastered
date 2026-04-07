@@ -170,12 +170,15 @@ void GameSuccess::MainLoop()
 		while (!_userInput->IsShutdown())
 		{
 			_events->EmitEvent("FrameStart");
+			_events->EmitEvent("NetCommandUpdate", _deltaTime);
 			_events->EmitEvent("PreTickUpdate", _deltaTime);
 
 			if (!_userInput->IsPause())
 			{
 				if (_gameMode != GameMode::PlayAsClient)
 				{
+					_events->EmitEvent("RespawnTanks", _deltaTime);
+
 					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
 					_events->EmitEvent("TickUpdate", _deltaTime);

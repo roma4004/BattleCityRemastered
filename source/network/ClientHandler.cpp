@@ -10,7 +10,7 @@ ClientHandler::ClientHandler(const std::shared_ptr<EventSystem>& events)
 	_client{std::make_shared<Client>(_ioContext, "127.0.0.1", "1234", _events)}
 {
 	_name = "ClientHandler";
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/)
+	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
 	{
 		this->ProcessNetworkCommands();
 	});
@@ -26,7 +26,7 @@ ClientHandler::ClientHandler(const std::string& host, const std::string& port,
 	_client{std::make_shared<Client>(_ioContext, host, port, _events)}
 {
 	_name = "ClientHandler";
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/)
+	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
 	{
 		this->ProcessNetworkCommands();
 	});
@@ -47,6 +47,6 @@ ClientHandler::~ClientHandler()
 		_clientThread.join();
 	}
 	
-	_events->RemoveListener("PreTickUpdate", _name);
+	_events->RemoveListener("NetCommandUpdate", _name);
 }
 }//namespace network::commands

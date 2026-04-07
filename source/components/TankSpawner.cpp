@@ -66,7 +66,10 @@ void TankSpawner::Subscribe()
 				_events->EmitEvent("AnimationCreateTank", tank);
 			});
 
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->RespawnTanks(); });
+	_events->AddListener("RespawnTanks", _name, [this](const double /*deltaTime*/)
+	{
+		this->RespawnTanks();
+	});
 }
 
 void TankSpawner::SubscribeAsClient()
@@ -91,7 +94,7 @@ void TankSpawner::Unsubscribe() const
 	}
 
 	_events->RemoveListener("SpawnEnabled", _name);
-	_events->RemoveListener("PreTickUpdate", _name);
+	_events->RemoveListener("RespawnTanks", _name);
 }
 
 void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
@@ -112,7 +115,7 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
-void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health,
+bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health,
 							 const bool skipDelay)
 {
 	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
@@ -150,12 +153,15 @@ void TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 					.isHelmetActive = _bonusEffectManager->GetHelmet(static_cast<size_t>(type)).isActive};
 
 			SpawnTank(rect, gray, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
-			return;
+
+			return true;
 		}
 	}
+
+	return false;
 }
 
-void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const buuid uuid,
+bool TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const buuid uuid,
 							  const TankType type, const bool skipDelay)
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
@@ -186,7 +192,11 @@ void TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		};
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, effects, type, skipDelay);
+
+		return true;
 	}
+
+	return false;
 }
 
 void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int health, const buuid uuid,
@@ -224,9 +234,9 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 {
 	constexpr float speed{142};
 	constexpr int health{100};
-	SpawnEnemy(uuid, type, speed, health, skipDelay);
+	const bool isSuccessSpawn = SpawnEnemy(uuid, type, speed, health, skipDelay);
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
 	}
@@ -248,16 +258,15 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		|| _gameMode == GameMode::PlayAsClient
 		|| _gameMode == GameMode::CoopWithBot && isFirst)
 	{
-		SpawnPlayer(rect, speed, health, uuid, type, skipDelay);
+		const bool isSuccessSpawn = SpawnPlayer(rect, speed, health, uuid, type, skipDelay);
+		if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
+		}
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
 	{
 		SpawnCoopBot(rect, speed, health, uuid, isFirst ? TankType::COOP1 : TankType::COOP2, skipDelay);
-	}
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
 	}
 }
 

@@ -71,7 +71,7 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
 {
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)//TODO: std::all_of
 	{
 		if (_uuid == object->GetUuid())
 		{
