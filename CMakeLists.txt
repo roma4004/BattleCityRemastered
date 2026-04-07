@@ -474,7 +474,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-bu
 set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
 set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
-set(JOY_ICON_PATH_NAME         ${IMG_PATH}/JoyIcon.png)
+set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
