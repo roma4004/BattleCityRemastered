@@ -42,11 +42,12 @@ void AnimationManager::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
-	_events->AddListener("AnimationTankUpdate", _name,
-						 [this](const std::string& objName, const ObjRectangle& rect, const Direction& dir)
-						 {
-							 UpdateTank(objName, rect, dir);//TODO:replicate this or recheck
-						 });
+	_events->AddListener(
+			"AnimationTankUpdate", _name,
+			[this](const std::string& objName, const ObjRectangle& rect, const Direction& dir)
+			{
+				UpdateTank(objName, rect, dir);
+			});
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
 }
 

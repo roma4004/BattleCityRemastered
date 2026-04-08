@@ -35,7 +35,7 @@ class Tank : public Pawn
 	void OnBonusGrenade(const std::string& fraction);
 	void OnBonusStar(const std::string& author);
 	void OnBonusCaliber(const std::string& author);
-	void OnTankOnOff(buuid uuid, bool isEnable);
+	void OnClientTankOnOff(buuid uuid, bool isEnable);
 
 protected:
 	FPoint _bulletSize{.x = 9.f, .y = 9.f};

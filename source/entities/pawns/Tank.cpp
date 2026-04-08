@@ -34,7 +34,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 				"ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid,
 				[this](const buuid uuid, const bool isEnable)
 				{
-					this->OnTankOnOff(uuid, isEnable);
+					this->OnClientTankOnOff(uuid, isEnable);
 				});
 	}
 
@@ -311,7 +311,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 	}
 }
 
-void Tank::OnTankOnOff(const buuid uuid, const bool isEnable)
+void Tank::OnClientTankOnOff(const buuid uuid, const bool isEnable)
 {
 	if (uuid == _uuid)
 	{

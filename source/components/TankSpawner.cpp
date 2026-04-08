@@ -78,9 +78,7 @@ void TankSpawner::SubscribeAsClient()
 			"ClientReceived_RespawnTank", _name,
 			[this](const TankType type, const buuid& uuid)
 			{
-				//TODO: if true we see tanks on client until they first die, refactor whole spawn flow on client
-				constexpr bool skipDelay = true;
-				this->OnClientRespawn(type, uuid, skipDelay);
+				this->OnClientRespawn(type, uuid);
 			});
 }
 
@@ -303,8 +301,9 @@ int TankSpawner::GetPlayerOneRespawnCount() const { return _respawnManager->GetP
 
 int TankSpawner::GetPlayerTwoRespawnCount() const { return _respawnManager->GetPlayerTwoRespawnCount(); }
 
-void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid, const bool skipDelay)
+void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid)
 {
+	constexpr bool skipDelay{false};
 	switch (type)
 	{
 		case TankType::ENEMY1:

@@ -38,7 +38,7 @@ void DelayedSpawnManager::Subscribe()
 				}
 			});
 
-	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
 
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->Disposer(); });
 }
@@ -47,7 +47,7 @@ void DelayedSpawnManager::Unsubscribe() const
 {
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("SpawnDelayStart", _name);
-	_events->RemoveListener("TickUpdate", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 	_events->RemoveListener("PostTickUpdate", _name);
 }
 
@@ -56,7 +56,7 @@ void DelayedSpawnManager::Reset()
 	_spawnDelays.clear();
 }
 
-void DelayedSpawnManager::TickUpdate(const double /*deltaTime*/)
+void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 {
 	for (auto& [tank, timer]: _spawnDelays)
 	{

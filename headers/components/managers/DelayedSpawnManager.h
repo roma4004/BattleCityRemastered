@@ -29,6 +29,6 @@ public:
 
 	void Reset();
 
-	void TickUpdate(double deltaTime);
+	void PreTickUpdate(double deltaTime);
 	void Disposer();
 };
