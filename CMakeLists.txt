@@ -363,6 +363,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/managers/BonusEffectManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/DelayedSpawnManager.cpp
+        source/components/managers/StateManager.cpp
         source/components/Map.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
