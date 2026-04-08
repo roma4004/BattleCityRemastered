@@ -54,6 +54,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 
@@ -92,6 +93,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -130,6 +132,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -161,6 +164,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -193,6 +197,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -251,6 +256,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	auto statusDied = futureDied.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(statusDied, std::future_status::ready);
 	// ASSERT_EQ(statusDied._Is_ready(), true);
@@ -301,6 +307,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -333,6 +340,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -364,6 +372,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -400,6 +409,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
+	events->EmitEvent("NetCommandUpdate", 1.0);
 	events->EmitEvent("PreTickUpdate", 1.0);
 	// ASSERT_EQ(status, std::future_status::ready);
 	// ASSERT_EQ(future._Is_ready(), true);
@@ -464,6 +474,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 		{
 			auto future = promises[i].get_future();
 			const auto status = future.wait_for(std::chrono::milliseconds(10000));
+			events->EmitEvent("NetCommandUpdate", 1.0);
 			events->EmitEvent("PreTickUpdate", 1.0);
 			// ASSERT_EQ(status, std::future_status::ready);
 			// ASSERT_EQ(future._Is_ready(), true);
@@ -519,6 +530,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	{
 		auto future = promises[i].get_future();
 		const auto status = future.wait_for(std::chrono::milliseconds(1000));
+		events->EmitEvent("NetCommandUpdate", 1.0);
 		events->EmitEvent("PreTickUpdate", 1.0);
 		// ASSERT_EQ(status, std::future_status::ready);
 		// ASSERT_EQ(future._Is_ready(), true);
