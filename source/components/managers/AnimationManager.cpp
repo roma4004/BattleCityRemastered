@@ -117,7 +117,7 @@ void AnimationManager::UnsubscribeAsHost() const
 void AnimationManager::SetGameMode(const GameMode newGameMode)
 {
 	_gameMode = newGameMode;
-	_animatedObjects.clear();
+	Reset();
 	// if (_gameMode == GameMode::PlayAsClient)
 	// {
 	// 	SubscribeAsClient();

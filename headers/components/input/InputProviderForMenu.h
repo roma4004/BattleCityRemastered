@@ -32,10 +32,14 @@ public:
 
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
+	void EnableMenuInput();
+	void DisableMenuInput() const;
+	void ToggleMenuInputSubscription();
+	void Reset();
 	void TogglePause();
 	void SwitchPause(bool switchTo);
-
-	void ToggleMenuInputSubscription();
+	bool GetPause() const;
+	void SetPause(bool value);
 
 	void ToggleUp();
 	void ToggleDown();

@@ -387,12 +387,9 @@ void Server::Subscribe()
 	});
 
 	_events->AddListener("Pause_Status", _name, [this](const bool isPaused)
-	{
+	{ //TODO: allow client pause/unpause
 		std::scoped_lock lock(_batchWriteMutex);
-		const char* eventName = isPaused
-									? "Pause_Pressed"
-									: "Pause_Released";
-		_batch->AddCommand(std::make_shared<KeyStateChange>(eventName, isPaused));
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPaused)); //TODO: allow client pause/unpause
 	});
 
 	_events->AddListener(

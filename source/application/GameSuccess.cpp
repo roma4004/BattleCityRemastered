@@ -78,17 +78,17 @@ void GameSuccess::Unsubscribe() const
 
 void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {
+	_allObjects.clear();
+	_allObjects.reserve(1000);
+
+	_events->EmitEvent("Reset");
+
 	if (gameMode == GameMode::PlayAsClient || gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
 	}
 
-	_allObjects.clear();
-	_allObjects.reserve(1000);
-
 	SetCurrentGameMode(gameMode);
-
-	_events->EmitEvent("Reset");//TODO: recheck reset for new components
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
@@ -160,7 +160,7 @@ void GameSuccess::DisposeDeadObject()
 void GameSuccess::OnClientReady() const
 {
 	_events->EmitEvent("LoadMap");
-	_events->EmitEvent("Pause_Status", false);
+	_events->EmitEvent("Pause_Released");
 }
 
 void GameSuccess::MainLoop()

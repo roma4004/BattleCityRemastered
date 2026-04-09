@@ -49,17 +49,15 @@ void Menu::Unsubscribe() const
 }
 
 void Menu::MenuUpdate() const
-{
+{//TDOO: move input handling to input from menu
 	const auto menuKeysStats = _input->GetKeysStats();
 
 	if (menuKeysStats.up)
 	{
-		_events->EmitEvent("PreviousGameMode");
 		_input->ToggleUp();
 	}
 	else if (menuKeysStats.down)
 	{
-		_events->EmitEvent("NextGameMode");
 		_input->ToggleDown();
 	}
 

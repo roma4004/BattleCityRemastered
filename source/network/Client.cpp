@@ -236,16 +236,16 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
 	}
 }
 
-// void Client::OnKeyStateChange<//TODO: template this>(const std::shared_ptr<Command>& command) const
 void Client::OnKeyStateChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
 		const auto keyState = cmd->GetKeyState();
+		const auto isEnable = cmd->GetIsEnable();
 
-		_commandQueue.Enqueue([this, keyState]()
+		_commandQueue.Enqueue([this, keyState, isEnable]()
 		{
-			_events->EmitEvent(keyState);
+			_events->EmitEvent(keyState, isEnable);
 		});
 	}
 }
