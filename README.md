@@ -57,6 +57,7 @@ TODO roadmap:
 * controling keys hint
 * side bar with respawn counters and level number (just like in oiginal)
 * separated score board
+* ice and bushes logic
 * network multiplayer lobby system
 * SDL_Mixer for sound (in progress, one start music),
 * Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
