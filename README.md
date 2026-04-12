@@ -21,13 +21,16 @@ Already done:
   * Star(increases tank power, when pick up more than 2 can destroy steel walls),
   * Tank(extra life),
   * Timer(freeze enemy team),
-* all bonuses also can be pickupable for an enemy team with the opposite effect.
+* all bonuses also can be pickupable for an enemy team with the opposite effect,
+* based on original textures and animation with some small difference and extendings
+* network multiplayer (playing from two game sparated process, one start as host, othe as client. )
 
-* Multiplayer prototype (still in PR) with replication all events, separated process, 
-  * just chose play as host in one game and play as client in other game
-  * auto pause on network game synchronize start, just unpause host to start
-* Replicate all visual events (move, shot, died, spawn, statistics)
-* All logic compute in host and miroring to client
+NOTE: Multiplayer is separated process that allow to play with replication visual events. 
+Game in host\client mode looks similar but with strict host authority, so clien can only do the key input.
+  * (run exe twice) just choose play as host in one game process and play as client in other game process
+  * auto pause on host when awaiting client joining, so host should start first
+  * Replicate all visual events (move, shot, died, spawn, statistics, animation)
+  * All logic compute in host and miroring to client
 
 Used technologies:
 * C++20,
@@ -44,8 +47,7 @@ Used design patterns:
 * object Pool
 
 TODO roadmap: 
-* network multiplayer (in progress, ~99%)
-* use SDL_Image for texture (in progress, one logo in menu),
+* network multiplayer lobby system
 * SDL_Mixer for sound (in progress, one start music),
 * Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
 * unique bonuses,
