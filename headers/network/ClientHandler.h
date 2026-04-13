@@ -28,8 +28,9 @@ public:
 	{
 		if (_client)
 		{
-			_client->GetCommandQueue().ProcessAll(); //TODO: refactor to _client->ProcessCommandQueue()
+			_client->GetCommandQueue().ProcessAll();//TODO: refactor to _client->ProcessCommandQueue()
 		}
 	}
 };
+
 }//namespace network::commands

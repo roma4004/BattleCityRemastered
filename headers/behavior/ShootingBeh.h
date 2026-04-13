@@ -29,7 +29,6 @@ class ShootingBeh final : public IShootable
 	std::string& _name;
 	std::string& _fraction;
 
-	// BaseObj* _selfParent{nullptr};//TODO: replace with shared ptr
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};

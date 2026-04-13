@@ -28,4 +28,5 @@ public:
 		_server.ProcessNetworkCommands();
 	}
 };
+
 }//namespace network::commands

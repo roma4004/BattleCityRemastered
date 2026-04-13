@@ -7,7 +7,6 @@
 #include <functional>
 #include <memory>
 
-///TODO: change selfParent to Tank to avoid check on each IsCanMove
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
 								 std::string& name, std::string& fraction,
 								 std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
