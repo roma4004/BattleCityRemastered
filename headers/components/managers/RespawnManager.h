@@ -45,6 +45,7 @@ class RespawnManager final
 
 	void ResetRespawnStat();
 	void ResetSpawn();
+	void OnGameModeChange();
 
 	static std::string RespawnCountEnumToString(RespawnCount type);
 	void ChangeRespawnCount(int delta, RespawnCount type);

@@ -22,8 +22,6 @@
 #define ASIO_STANDALONE
 
 //TODO: can't start game if no sound device on PC
-//TODO: fix sending pause command when pause, so we can't see onPause, but can unPause 
-//TODO: fix destroying animation when client start
 
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
@@ -97,7 +95,7 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 
 	if (gameMode == GameMode::PlayAsClient)
 	{
-		_events->EmitEvent("ClientReadyToPlay");
+		_events->EmitEvent("ClientSend_ReadyToPlay");
 	}
 }
 
@@ -180,7 +178,8 @@ void GameSuccess::MainLoop()
 					_events->EmitEvent("RespawnTanks", _deltaTime);
 
 					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
-					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus
+					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus or:
+					//TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)
 					_events->EmitEvent("TickUpdate", _deltaTime);
 				}
 			}
@@ -244,4 +243,3 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 	}
 }
 
-// TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)

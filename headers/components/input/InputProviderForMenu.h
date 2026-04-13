@@ -28,10 +28,8 @@ public:
 	~InputProviderForMenu();
 
 	void Subscribe();
-	void SubscribeAsClient();
-
 	void Unsubscribe() const;
-	void UnsubscribeAsClient() const;
+
 	void EnableMenuInput();
 	void DisableMenuInput() const;
 	void ToggleMenuInputSubscription();

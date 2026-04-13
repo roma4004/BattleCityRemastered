@@ -28,7 +28,7 @@ public:
 
 	void ReadResponse();
 
-	void SendKeyState(const std::string& state);
+	void SendKeyState(const std::string& key, bool state);
 	void OnPositionChange(const std::shared_ptr<Command>& command);
 	void OnTankShot(const std::shared_ptr<Command>& command);
 	void OnHealthChange(const std::shared_ptr<Command>& command);

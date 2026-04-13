@@ -134,8 +134,7 @@ void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, signalName]()
 		{
-			// Special handling for ClientReadyToPlay signal
-			if (signalName == "ClientReadyToPlay")
+			if (signalName == "ClientSend_ReadyToPlay")
 			{
 				_events->EmitEvent("ClientReadyToStartGame");
 			}
@@ -152,10 +151,11 @@ void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
 	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
 	{
 		const auto keyState = cmd->GetKeyState();
+		const auto isEnable = cmd->GetIsEnable();
 
-		_commandQueue.Enqueue([this, keyState]()
+		_commandQueue.Enqueue([this, keyState, isEnable]()//TODO: validate each command, security risk
 		{
-			_events->EmitEvent("ServerReceive_" + keyState);
+			_events->EmitEvent("ServerReceive_" + keyState, isEnable);
 		});
 	}
 }
@@ -210,22 +210,8 @@ void Session::DoRead()
 				boost::archive::text_iarchive ia(archiveStream);
 
 				this->ProcessReceivedData(archiveData);
-				
 
-				// NetworkLogger::LogServerReceive(data.eventName);
-				
-				//SignalEvent
-				// if (data.eventName == "ClientReadyToPlay")//TODO: refactor this to command pattern
-				// {
-				// 	events->EmitEvent("ClientReadyToStartGame");
-				// }
-				// else
-				// {
-				// 	//TODO: check if key allowed to receive from client and strong validating net input
-//TODO: rewrite command keyState		// 	events->EmitEvent("ServerReceive_" + data.eventName);//TODO: refactor this to command pattern
-				// }
-
-				// // Respond back to a client
+				// Respond back to a client
 				// self->DoWrite({123, "Test", {"Name1", "Name2"}});
 
 				_readBuffer.consume(length);
@@ -386,10 +372,10 @@ void Server::Subscribe()
 		_batch = std::make_shared<CommandBatch>();
 	});
 
-	_events->AddListener("Pause_Status", _name, [this](const bool isPaused)
-	{ //TODO: allow client pause/unpause
+	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPaused)
+	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPaused)); //TODO: allow client pause/unpause
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPaused));
 	});
 
 	_events->AddListener(
@@ -514,7 +500,7 @@ void Server::SubscribeBonus()
 void Server::Unsubscribe() const
 {
 	_events->RemoveListener("Server_EndFrame", _name);
-	_events->RemoveListener("Pause_Status", _name);
+	_events->RemoveListener("ServerSend_Pause_Status", _name);
 
 	_events->RemoveListener("ServerSend_Pos", _name);
 	_events->RemoveListener("ServerSend_Shot", _name);

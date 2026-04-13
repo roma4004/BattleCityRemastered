@@ -91,22 +91,26 @@ Client::~Client()
 void Client::Subscribe()
 {
 	//TODO: write batch sending on client and sending queue
-	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up_Pressed"); });
-	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up_Released"); });
-	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left_Pressed"); });
-	_events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left_Released"); });
-	_events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down_Pressed"); });
-	_events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down_Released"); });
-	_events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right_Pressed"); });
-	_events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right_Released"); });
-	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire_Pressed"); });
-	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire_Released"); });
+	//TODO: _Pressed and _Released refactor to true or false as separated parameter
+	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up", true); });
+	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up", false); });
+	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left", true); });
+	_events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left", false); });
+	_events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down", true); });
+	_events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down", false); });
+	_events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right", true); });
+	_events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right", false); });
+	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire", true); });
+	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire", false); });
 
-	_events->AddListener("ClientReadyToPlay", _name, [this]()
+	_events->AddListener("ClientSend_ReadyToPlay", _name, [this]()
 	{
-		// std::scoped_lock lock(_batchWriteMutex);
-		SendCommand(std::make_shared<SignalEvent>("ClientReadyToPlay"));
-		// this->SendKeyState("ClientReadyToPlay");
+		SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
+	});
+
+	_events->AddListener("ClientSend_Pause_Status", _name, [this](const bool isPaused)
+	{
+		SendCommand(std::make_shared<KeyStateChange>("Pause_Released", isPaused));
 	});
 }
 
@@ -123,7 +127,9 @@ void Client::Unsubscribe() const
 	_events->RemoveListener("P2_Fire_Pressed", _name);
 	_events->RemoveListener("P2_Fire_Released", _name);
 
-	_events->RemoveListener("ClientReadyToPlay", _name);
+	_events->RemoveListener("ClientSend_ReadyToPlay", _name);
+
+	_events->RemoveListener("ClientSend_Pause_Status", _name);
 }
 
 void Client::ReadResponse()
@@ -152,13 +158,11 @@ void Client::ReadResponse()
 
 	boost::asio::async_read_until(_socket, _readBuffer, "\n\n", std::move(lambda));
 }
-//TODO: check there is pause can be set\unset from client as well as from host
-void Client::SendKeyState(const std::string& state)
+
+void Client::SendKeyState(const std::string& key, const bool state)
 {
 	// NetworkLogger::LogClientSend(state);
-
-	const bool isPressed = state.find("Pressed") != std::string::npos;
-	SendCommand(std::make_shared<KeyStateChange>(state, isPressed));
+	SendCommand(std::make_shared<KeyStateChange>(key, state));
 }
 
 void Client::OnPositionChange(const std::shared_ptr<Command>& command)
@@ -245,7 +249,7 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, keyState, isEnable]()
 		{
-			_events->EmitEvent(keyState, isEnable);
+			this->_events->EmitEvent(keyState, isEnable);
 		});
 	}
 }

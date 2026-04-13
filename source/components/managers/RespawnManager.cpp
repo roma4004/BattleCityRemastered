@@ -41,6 +41,8 @@ void RespawnManager::Subscribe()
 				this->_gameMode = newGameMode;
 
 				_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+
+				OnGameModeChange();
 			});
 
 	_events->AddListener("TankSpawn", _name, [this](const buuid& uuid) { OnTankSpawn(uuid); });
@@ -129,7 +131,10 @@ void RespawnManager::ResetRespawnStat()
 void RespawnManager::ResetSpawn()
 {
 	ResetRespawnStat();
+}
 
+void RespawnManager::OnGameModeChange()
+{
 	SetPlayerNeedRespawn();
 
 	SetEnemyNeedRespawn();
@@ -137,11 +142,13 @@ void RespawnManager::ResetSpawn()
 
 void RespawnManager::SetPlayerNeedRespawn()
 {
-	_slots[4].isAvailable = true;
+	constexpr size_t player1Id = static_cast<size_t>(TankType::PLAYER1);
+	_slots[player1Id].isAvailable = true;
 
 	if (_gameMode != GameMode::OnePlayer)
 	{
-		_slots[5].isAvailable = true;
+		constexpr size_t player2Id = static_cast<size_t>(TankType::PLAYER2);
+		_slots[player2Id].isAvailable = true;
 	}
 }
 

@@ -39,7 +39,6 @@ void UserInput::Unsubscribe() const
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {
-	//TODO: if already pause not to pause window again on start dragging
 	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_MOVED)
 	{
 		if (!_isMoving)

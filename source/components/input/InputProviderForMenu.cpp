@@ -18,23 +18,11 @@ void InputProviderForMenu::Subscribe()
 	ToggleMenuInputSubscription();
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
 	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
-	_events->AddListener(
-			"GameModeChangedTo", _name,
-			[this](const GameMode newGameMode)
-			{
-				this->_gameMode = newGameMode;
-
-				this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-			});
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
-}
-
-void InputProviderForMenu::SubscribeAsClient()
-{
-	_events->AddListener("ClientReceive_Pause_Status", _name, [this](const bool value)
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
-		SetPause(value);
+		this->_gameMode = newGameMode;
 	});
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 }
 
 void InputProviderForMenu::Unsubscribe() const
@@ -43,16 +31,6 @@ void InputProviderForMenu::Unsubscribe() const
 	_events->RemoveListener("Pause_Released", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("Reset", _name);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-}
-
-void InputProviderForMenu::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceive_Pause_Released", _name);
 }
 
 void InputProviderForMenu::EnableMenuInput()
@@ -85,7 +63,7 @@ void InputProviderForMenu::DisableMenuInput() const
 
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
-	_keys.menuShow = !_keys.menuShow; //TODO: add setter
+	_keys.menuShow = !_keys.menuShow;//TODO: add setter
 	// if (_gameMode != GameMode::PlayAsHost && _gameMode != GameMode::PlayAsClient)
 	// {
 	// SwitchPause(_keys.menuShow);
@@ -119,10 +97,20 @@ void InputProviderForMenu::TogglePause() { SetPause(!GetPause()); }
 void InputProviderForMenu::SwitchPause(bool switchTo) { SetPause(switchTo); }
 
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
+
 void InputProviderForMenu::SetPause(bool value)
 {
 	_keys.pause = value;
 	_events->EmitEvent("Pause_Status", _keys.pause);
+
+	if (_gameMode != GameMode::PlayAsClient)
+	{
+		_events->EmitEvent("ServerSend_Pause_Status", _keys.pause);
+	}
+	else
+	{
+		_events->EmitEvent("ClientSend_Pause_Status", _keys.pause);
+	}
 }
 
 void InputProviderForMenu::Reset() { SetPause(false); }

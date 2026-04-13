@@ -14,7 +14,6 @@ StateManager::~StateManager() { Unsubscribe(); }
 void StateManager::Subscribe()
 {
 	_events->AddListener("Pause_Status", _name, [this](const bool value) { this->_isPause = value; });
-	// TODO: investigate why on demo after start we have skip one pause input
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->_isGameWon = true; });
