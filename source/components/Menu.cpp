@@ -36,48 +36,44 @@ void Menu::Subscribe()
 	{
 		this->OnRespawnCountChanged(objectName, respawnCount);
 	});
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
-	_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
+
+	if (_isMenuDisplayed)
+	{
+		_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
+	}
+
+	_events->AddListener("ShowMenu", _name, [this](const bool isMenuDisplayed)
+	{
+		_isMenuDisplayed = isMenuDisplayed;
+		
+		if (_isMenuDisplayed)
+		{
+			_events->AddListener("DrawUserInterface", _name, [this]() { this->DrawMenu(); });
+		}
+		else
+		{
+			_events->RemoveListener("DrawUserInterface", _name);
+		}
+	});
 }
 
 void Menu::Unsubscribe() const
 {
 	_events->RemoveListener("SelectedGameModeChangedTo", _name);
-	_events->RemoveListener("RespawnCountChangedTo", _name);
-	_events->RemoveListener("PreTickUpdate", _name);
-	_events->RemoveListener("DrawUserInterface", _name);
-}
+	_events->RemoveListener("RespawnCountChangedTo", _name);	
 
-void Menu::MenuUpdate() const
-{//TDOO: move input handling to input from menu
-	const auto menuKeysStats = _input->GetKeysStats();
-
-	if (menuKeysStats.up)
+	if (_isMenuDisplayed)
 	{
-		_input->ToggleUp();
-	}
-	else if (menuKeysStats.down)
-	{
-		_input->ToggleDown();
+		_events->RemoveListener("DrawUserInterface", _name);
 	}
 
-	if (menuKeysStats.reset)
-	{
-		_events->EmitEvent("ResetBattlefield");
-		_input->ToggleMenuInputSubscription();
-	}
+	_events->RemoveListener("ShowMenu", _name);
 }
 
 //TODO: optimize draw call with cache non changed text part
 void Menu::DrawMenu()
 {
-	if (const auto menuKeysStats = _input->GetKeysStats(); !menuKeysStats.menuShow)
-	//TODO: split input and local menu state is shown
-	{
-		return;
-	}
-
-	// animation
+	// first time animation, slow scrolling from bottom corner to vertical center
 	if (constexpr unsigned int yOffsetEnd = 0u; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;

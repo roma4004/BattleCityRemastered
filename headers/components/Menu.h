@@ -25,6 +25,7 @@ class Menu final
 	int _playerOneRepawnCount{3};
 	int _playerTwoRespawnCount{3};
 	GameMode _selectedGameMode{};
+	bool _isMenuDisplayed{true};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -44,7 +45,6 @@ public:
 
 	~Menu();
 
-	void MenuUpdate() const;
 	void DrawMenu();
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }

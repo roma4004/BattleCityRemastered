@@ -23,6 +23,8 @@ void InputProviderForMenu::Subscribe()
 		this->_gameMode = newGameMode;
 	});
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
 }
 
 void InputProviderForMenu::Unsubscribe() const
@@ -31,6 +33,7 @@ void InputProviderForMenu::Unsubscribe() const
 	_events->RemoveListener("Pause_Released", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("Reset", _name);
+	_events->RemoveListener("PreTickUpdate", _name);
 }
 
 void InputProviderForMenu::EnableMenuInput()
@@ -78,6 +81,8 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		DisableMenuInput();
 	}
 
+	_events->EmitEvent("ShowMenu", _keys.menuShow);
+
 	_keys.reset = false;
 }
 
@@ -94,7 +99,7 @@ void InputProviderForMenu::ToggleDown()
 }
 
 void InputProviderForMenu::TogglePause() { SetPause(!GetPause()); }
-void InputProviderForMenu::SwitchPause(bool switchTo) { SetPause(switchTo); }
+void InputProviderForMenu::SwitchPause(const bool switchTo) { SetPause(switchTo); }
 
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
 
@@ -114,3 +119,23 @@ void InputProviderForMenu::SetPause(bool value)
 }
 
 void InputProviderForMenu::Reset() { SetPause(false); }
+
+void InputProviderForMenu::MenuUpdate()
+{
+	const auto menuKeysStats = GetKeysStats();
+
+	if (menuKeysStats.up)
+	{
+		ToggleUp();
+	}
+	else if (menuKeysStats.down)
+	{
+		ToggleDown();
+	}
+
+	if (menuKeysStats.reset)
+	{
+		_events->EmitEvent("ResetBattlefield");
+		ToggleMenuInputSubscription();
+	}
+}

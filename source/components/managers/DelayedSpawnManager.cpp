@@ -21,7 +21,6 @@ void DelayedSpawnManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 
-	//TODO: create flow to enable replicated pawn on client after delay end, replicate enable signal
 	_events->AddListener(
 			"SpawnDelayStart", _name,
 			[this](const std::shared_ptr<Tank>& tank, const milliseconds delay)
@@ -33,7 +32,6 @@ void DelayedSpawnManager::Subscribe()
 				}
 				else
 				{
-					//TODO: fix delay managers to work with on client side
 					this->_spawnDelays.emplace_back(tank, Timer{delay, std::chrono::system_clock::now()});
 				}
 			});

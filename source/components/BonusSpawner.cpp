@@ -88,7 +88,10 @@ void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener("Client
 
 void BonusSpawner::Update()
 {
-	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))//TODO: extract to timer manager
+	//TODO: extract to timer manager to subscribe here,
+	//      instead of update each frame and in timer manager update only timer queue,
+	//      instead of poke each timer and check if there enabled or ends
+	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))
 	{
 		const auto size = static_cast<float>(_bonusSize);
 		const auto x = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosX));

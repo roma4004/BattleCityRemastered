@@ -34,6 +34,7 @@ public:
 	void DisableMenuInput() const;
 	void ToggleMenuInputSubscription();
 	void Reset();
+	void MenuUpdate();
 	void TogglePause();
 	void SwitchPause(bool switchTo);
 	bool GetPause() const;
