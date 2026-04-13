@@ -6,32 +6,7 @@
 namespace network::commands
 {
 ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
-	, _server{_ioContext, "127.0.0.1", "1234", _events}
-{
-	_name = "ServerHandler";
-	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
-	{
-		this->ProcessNetworkCommands();
-	});
-
-	_serverThread = std::thread([&]()
-	{
-		try
-		{
-			_ioContext.run();
-			// io_service.stop();
-		}
-		catch (std::exception& e)
-		{
-			std::cerr << "thread " << e.what() << '\n';
-		}
-		catch (...)
-		{
-			std::cerr << "thread error ..." << '\n';
-		}
-	});
-}
+	: ServerHandler("127.0.0.1", "1234", events) {}
 
 ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 							 const std::shared_ptr<EventSystem>& events)
@@ -39,10 +14,7 @@ ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 	, _server{_ioContext, host, port, _events}
 {
 	_name = "ServerHandler";
-	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
-	{
-		this->ProcessNetworkCommands();//TODO: move to separated method subscribe/unsubscribe, and same for client
-	});
+	Subscribe();
 
 	_serverThread = std::thread([&]()
 	{
@@ -74,6 +46,20 @@ ServerHandler::~ServerHandler()
 		_serverThread.join();
 	}
 
+	Unsubscribe();
+}
+
+void ServerHandler::Subscribe()
+{
+	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
+	{
+		this->ProcessNetworkCommands();
+	});
+}
+
+void ServerHandler::Unsubscribe() const
+{
 	_events->RemoveListener("NetCommandUpdate", _name);
 }
+
 }//namespace network::commands

@@ -66,7 +66,7 @@ void InputProviderForMenu::DisableMenuInput() const
 
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
-	_keys.menuShow = !_keys.menuShow;//TODO: add setter
+	_keys.menuShow = !_keys.menuShow;
 	// if (_gameMode != GameMode::PlayAsHost && _gameMode != GameMode::PlayAsClient)
 	// {
 	// SwitchPause(_keys.menuShow);

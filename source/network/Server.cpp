@@ -475,7 +475,6 @@ void Server::SubscribeBonus()
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Helmet, isActive));
-		//TODO: rewrite other bonus status effect changes just like this OnBonusHelmet
 	});
 
 	_events->AddListener("ServerSend_OnStar", _name, [this](const std::string& name)

@@ -20,6 +20,9 @@ public:
 
 	~ServerHandler() override;
 
+	void Subscribe();
+	void Unsubscribe() const;
+
 	void ProcessNetworkCommands() override
 	{
 		_server.ProcessNetworkCommands();

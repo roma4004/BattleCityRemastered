@@ -21,6 +21,9 @@ public:
 
 	~ClientHandler() override;
 
+	void Subscribe();
+	void Unsubscribe() const;
+
 	void ProcessNetworkCommands() override
 	{
 		if (_client)
