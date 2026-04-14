@@ -694,7 +694,6 @@ TEST_F(PlayerTest, PlayerTeamWon)
 TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 {
 	_allObjects.clear();
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
 
 	bool isGameLose{false};
@@ -720,7 +719,6 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
 {
 	_allObjects.clear();
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 
 	bool isGameLose{false};
 	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()

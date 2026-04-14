@@ -28,9 +28,9 @@ class UserInput final
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 
 	void MouseEvents(const SDL_Event& event);
-	void KeyboardKeyPressRelease(const SDL_Event& event) const;
+	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void KeyboardEvents(const SDL_Event& event) const;
-	void GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag) const;
+	void GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag, const bool& isPressed) const;
 	void GamepadEvents(const SDL_Event& event);
 	void OnWindowMoveStop();
 	void WindowsMoveEvents(const SDL_Event& event);

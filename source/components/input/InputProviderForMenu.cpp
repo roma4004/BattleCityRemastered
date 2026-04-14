@@ -1,6 +1,7 @@
 #include "components/input/InputProviderForMenu.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
+#include "network/Client.h"
 
 InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
@@ -29,8 +30,8 @@ void InputProviderForMenu::Subscribe()
 
 void InputProviderForMenu::Unsubscribe() const
 {
-	_events->RemoveListener("Menu_Released", _name);
-	_events->RemoveListener("Pause_Released", _name);
+	_events->RemoveListener("Menu", _name);
+	_events->RemoveListener("Pause", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("PreTickUpdate", _name);
@@ -38,30 +39,25 @@ void InputProviderForMenu::Unsubscribe() const
 
 void InputProviderForMenu::EnableMenuInput()
 {
-	_events->AddListener("P1_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });
-	_events->AddListener("P1_Move_Down_Released", _name, [&btn = _keys]() { btn.down = true; });
-	_events->AddListener("P2_Move_Up_Released", _name, [&btn = _keys]() { btn.up = true; });
-	_events->AddListener("P2_Move_Down_Released", _name, [&btn = _keys]() { btn.down = true; });
-	_events->AddListener("Enter_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
-	_events->AddListener("Enter_Released", _name, [&btn = _keys]() { btn.reset = false; });
-	_events->AddListener("P1_Fire_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
-	_events->AddListener("P1_Fire_Released", _name, [&btn = _keys]() { btn.reset = false; });
-	_events->AddListener("P2_Fire_Pressed", _name, [&btn = _keys]() { btn.reset = true; });
-	_events->AddListener("P2_Fire_Released", _name, [&btn = _keys]() { btn.reset = false; });
+	_events->AddListener("P1_Move_Up", _name, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("P1_Move_Down", _name, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("P2_Move_Up", _name, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("P2_Move_Down", _name, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("Enter", _name, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("P1_Fire", _name, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("P2_Fire", _name, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+
 }
 
 void InputProviderForMenu::DisableMenuInput() const
 {
-	_events->RemoveListener("P1_Move_Up_Released", _name);
-	_events->RemoveListener("P1_Move_Down_Released", _name);
-	_events->RemoveListener("P2_Move_Up_Released", _name);
-	_events->RemoveListener("P2_Move_Down_Released", _name);
-	_events->RemoveListener("Enter_Pressed", _name);
-	_events->RemoveListener("Enter_Released", _name);
-	_events->RemoveListener("P1_Fire_Pressed", _name);
-	_events->RemoveListener("P1_Fire_Released", _name);
-	_events->RemoveListener("P2_Fire_Pressed", _name);
-	_events->RemoveListener("P2_Fire_Released", _name);
+	_events->RemoveListener("P1_Move_Up", _name);
+	_events->RemoveListener("P1_Move_Down", _name);
+	_events->RemoveListener("P2_Move_Up", _name);
+	_events->RemoveListener("P2_Move_Down", _name);
+	_events->RemoveListener("Enter", _name);
+	_events->RemoveListener("P1_Fire", _name);
+	_events->RemoveListener("P2_Fire", _name);
 }
 
 void InputProviderForMenu::ToggleMenuInputSubscription()

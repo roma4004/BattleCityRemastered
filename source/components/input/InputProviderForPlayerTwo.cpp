@@ -11,30 +11,21 @@ InputProviderForPlayerTwo::~InputProviderForPlayerTwo()
 
 void InputProviderForPlayerTwo::Subscribe()
 {
-	_events->AddListener("P2_Move_Up_Pressed", _name, [&btn = _playerKeys]() { btn.up = true; });
-	_events->AddListener("P2_Move_Up_Released", _name, [&btn = _playerKeys]() { btn.up = false; });
-	_events->AddListener("P2_Move_Left_Pressed", _name, [&btn = _playerKeys]() { btn.left = true; });
-	_events->AddListener("P2_Move_Left_Released", _name, [&btn = _playerKeys]() { btn.left = false; });
-	_events->AddListener("P2_Move_Down_Pressed", _name, [&btn = _playerKeys]() { btn.down = true; });
-	_events->AddListener("P2_Move_Down_Released", _name, [&btn = _playerKeys]() { btn.down = false; });
-	_events->AddListener("P2_Move_Right_Pressed", _name, [&btn = _playerKeys]() { btn.right = true; });
-	_events->AddListener("P2_Move_Right_Released", _name, [&btn = _playerKeys]() { btn.right = false; });
-	_events->AddListener("P2_Fire_Pressed", _name, [&btn = _playerKeys]() { btn.shot = true; });
-	_events->AddListener("P2_Fire_Released", _name, [&btn = _playerKeys]() { btn.shot = false; });
+	_events->AddListener("P2_Move_Up", _name, [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("P2_Move_Left", _name, [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
+	_events->AddListener("P2_Move_Down", _name, [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("P2_Move_Right", _name, [&btn = _playerKeys](const bool isPressed) { btn.right = isPressed; });
+	_events->AddListener("P2_Fire", _name, [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
+
 }
 
 void InputProviderForPlayerTwo::Unsubscribe() const
 {
-	_events->RemoveListener("P2_Move_Up_Pressed", _name);
-	_events->RemoveListener("P2_Move_Up_Released", _name);
-	_events->RemoveListener("P2_Move_Left_Pressed", _name);
-	_events->RemoveListener("P2_Move_Left_Released", _name);
-	_events->RemoveListener("P2_Move_Down_Pressed", _name);
-	_events->RemoveListener("P2_Move_Down_Released", _name);
-	_events->RemoveListener("P2_Move_Right_Pressed", _name);
-	_events->RemoveListener("P2_Move_Right_Released", _name);
-	_events->RemoveListener("P2_Fire_Pressed", _name);
-	_events->RemoveListener("P2_Fire_Released", _name);
+	_events->RemoveListener("P2_Move_Up", _name);
+	_events->RemoveListener("P2_Move_Left", _name);
+	_events->RemoveListener("P2_Move_Down", _name);
+	_events->RemoveListener("P2_Move_Right", _name);
+	_events->RemoveListener("P2_Fire", _name);
 }
 
 void InputProviderForPlayerTwo::Enable()
