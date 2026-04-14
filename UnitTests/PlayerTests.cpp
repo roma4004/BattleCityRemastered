@@ -4,13 +4,11 @@
 #include "components/TankSpawner.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerTwo.h"
-#include "components/managers/BonusEffectManager.h"
 #include "components/managers/StateManager.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
-#include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
@@ -101,7 +99,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 		player->SetPos({.x = 0.f, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Up_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -125,7 +124,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 		player->SetPos({.x = windowWidth - _tankSize, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Left_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Left", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -148,7 +148,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -171,7 +172,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Right_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Right", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		const FPoint endPos = player->GetPos();
@@ -194,7 +196,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Up_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -213,7 +216,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 		player->SetPos({.x = 0.f, .y = 0.f});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Left_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Left", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -234,7 +238,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -255,7 +260,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Right_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Right", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -294,7 +300,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 		player->SetDirection(Direction::UP);
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -315,7 +322,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 		player->SetDirection(Direction::LEFT);
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -335,8 +343,9 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 						.y = static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(Direction::DOWN);
 		const FPoint startPos = player->GetPos();
-
-		_events->EmitEvent("P1_Fire_Pressed");
+		
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -357,7 +366,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 		player->SetDirection(Direction::RIGHT);
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -378,7 +388,8 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 		player->SetDirection(Direction::DOWN);
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -398,8 +409,9 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 		//success shot right test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("P1_Move_Right_Pressed");
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Right", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -420,8 +432,9 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 		//success shot up test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("P1_Move_Up_Pressed");
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -442,8 +455,9 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 		//success shot left test, try to create an inside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("P1_Move_Left_Pressed");
-		_events->EmitEvent("P1_Fire_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Left", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_LT(size, _allObjects.size());
@@ -542,8 +556,9 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 			const FPoint playerStartPos = player->GetPos();
 			const FPoint player2StartPos = player2->GetPos();
 
-			_events->EmitEvent("P1_Move_Left_Pressed");
-			_events->EmitEvent("P2_Move_Up_Pressed");
+			constexpr bool isPressed{true};
+			_events->EmitEvent("P1_Move_Left", isPressed);
+			_events->EmitEvent("P2_Move_Up", isPressed);
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(playerStartPos, player->GetPos());
@@ -569,7 +584,8 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 		//moveDown player should failure, because below we have a brickWall obstacle
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -593,7 +609,8 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 		//moveDown player should failure, because below we have a steelWall obstacle
 		const FPoint startPos = player->GetPos();
 
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_EQ(startPos, player->GetPos());
@@ -619,7 +636,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 			//moveDown player should failure, because below we have a water obstacle
 			const FPoint startPos = player->GetPos();
 
-			_events->EmitEvent("P1_Move_Down_Pressed");
+			constexpr bool isPressed{true};
+			_events->EmitEvent("P1_Move_Down", isPressed);
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(startPos, player->GetPos());
@@ -646,7 +664,8 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 			//moveDown player should failure, because below we have a fortressWall obstacle
 			const FPoint startPos = player->GetPos();
 
-			_events->EmitEvent("P1_Move_Down_Pressed");
+			constexpr bool isPressed{true};
+			_events->EmitEvent("P1_Move_Down", isPressed);
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(startPos, player->GetPos());

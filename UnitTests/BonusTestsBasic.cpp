@@ -90,7 +90,8 @@ TEST_F(BonusTest, BonusPickUp)
 {
 	const size_t size = _allObjects.size();
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-	_events->EmitEvent("P1_Move_Down_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
 
 	if (const auto bonus = _allObjects.back().get())
 	{
@@ -114,7 +115,8 @@ TEST_F(BonusTest, BonusNotPickUp)
 	{
 		const size_t size = _allObjects.size();
 		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		_events->EmitEvent("W_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
@@ -140,7 +142,8 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	{
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Timer);
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
@@ -183,7 +186,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	{
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Timer);
-		_events->EmitEvent("W_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
@@ -226,7 +230,8 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
@@ -284,7 +289,8 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 
 		_bonusSpawner->SpawnBonus(
 				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
-		_events->EmitEvent("W_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 		if (const auto bonus = _allObjects.back().get())
 		{
@@ -335,7 +341,8 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Grenade);
-	_events->EmitEvent("P1_Move_Down_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect,
@@ -377,7 +384,8 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Grenade);
-	_events->EmitEvent("W_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Up", isPressed);
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect,
@@ -419,7 +427,8 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Tank);
-	_events->EmitEvent("P1_Move_Down_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
 
 	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
 	const auto bonus = _allObjects.back().get();
@@ -437,7 +446,8 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Tank);
-	_events->EmitEvent("W_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Up", isPressed);
 
 	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
 
@@ -461,7 +471,8 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	{
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 								  BonusType::Star);
-		_events->EmitEvent("P1_Move_Down_Pressed");
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
 
 		EXPECT_EQ(player->GetTier(), 1);
 
@@ -490,7 +501,8 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	{
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 								  BonusType::Star);
-		_events->EmitEvent("W_Pressed");
+		constexpr bool isPressed{true};	
+		_events->EmitEvent("P1_Move_Up", isPressed);
 
 		EXPECT_EQ(player->GetTier(), 1);
 
@@ -518,7 +530,8 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Shovel);
-	_events->EmitEvent("P1_Move_Down_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
@@ -536,7 +549,8 @@ TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Shovel);
-	_events->EmitEvent("W_Pressed");
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Up", isPressed);
 
 	const auto fortressWall =
 			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},

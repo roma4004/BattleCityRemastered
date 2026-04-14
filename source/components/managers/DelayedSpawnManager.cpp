@@ -63,7 +63,7 @@ void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 		{
 			if (tank)
 			{
-				_events->EmitEvent("SpawnEnabled", tank);
+				_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));
 			}
 			timer.isActive = false;
 		}

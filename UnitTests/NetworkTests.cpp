@@ -41,7 +41,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	std::promise<std::tuple<FPoint, Direction, buuid>> promise{};
 	auto future = promise.get_future();
 
-	const std::string name("TestTank");
+	constexpr std::string name("TestTank");
 	events->AddListener(
 			"ClientReceived_" + name + "Pos", "PosEventReplication",
 			[&promise](const FPoint newPos, const Direction dir, const buuid& uuid)
@@ -84,7 +84,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	std::promise<std::pair<Direction, buuid>> promise{};
 	auto future = promise.get_future();
 
-	const auto name = std::string("TestTank");
+	constexpr auto name = std::string("TestTank");
 	events->AddListener("ClientReceived_" + name + "Shot", "ShotEventReplication",
 						[&promise](const Direction dir, const buuid& uuid) { promise.set_value({dir, uuid}); });
 
@@ -119,7 +119,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	std::promise<int> promise{};
 	auto future = promise.get_future();
 
-	const auto name = std::string("TestTank");
+	constexpr auto name = std::string("TestTank");
 	const auto uuidStr = boost::uuids::to_string(_uuid);
 	const auto nameWithUuid = name + uuidStr;
 
@@ -154,7 +154,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	std::promise<buuid> promise{};
 	auto future = promise.get_future();
 
-	const auto name = std::string("Bullet");
+	constexpr auto name = std::string("Bullet");
 
 	events->AddListener("ClientReceived_" + name + "Dispose", "DisposeEventReplication",
 						[&promise](const buuid& uuid) { promise.set_value(uuid); });
@@ -357,7 +357,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	auto server = std::make_unique<network::commands::ServerHandler>(events);
 	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
-	const std::string nameOrigin = "Player1";
+	constexpr std::string nameOrigin = "Player1";
 	constexpr bool isActiveOrigin = true;
 
 	std::promise<bool> promise;

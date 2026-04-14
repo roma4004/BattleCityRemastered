@@ -188,7 +188,7 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 	const std::string objName(tankLck->GetName());
 	const unsigned int color = tankLck->GetColor();
 	constexpr auto type = AnimationType::Tank_Animation;
-	const std::string name = "TankAnimation";
+	constexpr std::string name = "TankAnimation";
 	constexpr bool isInfinite{true};
 	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, objName, color, isInfinite);
 
