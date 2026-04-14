@@ -715,7 +715,7 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 	_events->RemoveListener("EnemiesTeamIsWon", _name);
 }
 
-// Player team lose with three death in a row
+// Player team lose with three deaths in a row
 TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
 {
 	_allObjects.clear();
