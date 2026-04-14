@@ -184,11 +184,11 @@ void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
 		return;//TODO: add assert in this case
 	}
 
-	const ObjRectangle rect = tankLck->GetRect();
-	const std::string objName(tankLck->GetName());
-	const unsigned int color = tankLck->GetColor();
-	constexpr auto type = AnimationType::Tank_Animation;
-	constexpr std::string name = "TankAnimation";
+	const ObjRectangle rect{tankLck->GetRect()};
+	const std::string objName{tankLck->GetName()};
+	const unsigned int color{tankLck->GetColor()};
+	constexpr auto type{AnimationType::Tank_Animation};
+	const auto name{std::string("TankAnimation")};
 	constexpr bool isInfinite{true};
 	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, objName, color, isInfinite);
 
