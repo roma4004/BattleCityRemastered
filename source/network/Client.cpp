@@ -91,17 +91,11 @@ Client::~Client()
 void Client::Subscribe()
 {
 	//TODO: write batch sending on client and sending queue
-	//TODO: _Pressed and _Released refactor to true or false as separated parameter
-	_events->AddListener("P2_Move_Up_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Up", true); });
-	_events->AddListener("P2_Move_Up_Released", _name, [this]() { this->SendKeyState("P2_Move_Up", false); });
-	_events->AddListener("P2_Move_Left_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Left", true); });
-	_events->AddListener("P2_Move_Left_Released", _name, [this]() { this->SendKeyState("P2_Move_Left", false); });
-	_events->AddListener("P2_Move_Down_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Down", true); });
-	_events->AddListener("P2_Move_Down_Released", _name, [this]() { this->SendKeyState("P2_Move_Down", false); });
-	_events->AddListener("P2_Move_Right_Pressed", _name, [this]() { this->SendKeyState("P2_Move_Right", true); });
-	_events->AddListener("P2_Move_Right_Released", _name, [this]() { this->SendKeyState("P2_Move_Right", false); });
-	_events->AddListener("P2_Fire_Pressed", _name, [this]() { this->SendKeyState("P2_Fire", true); });
-	_events->AddListener("P2_Fire_Released", _name, [this]() { this->SendKeyState("P2_Fire", false); });
+	_events->AddListener("P2_Move_Up", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Up", isPressed); });
+	_events->AddListener("P2_Move_Left", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Left", isPressed); });
+	_events->AddListener("P2_Move_Down", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Down", isPressed); });
+	_events->AddListener("P2_Move_Right", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Right", isPressed); });
+	_events->AddListener("P2_Fire", _name, [this](const bool isPressed) { this->SendKeyState("P2_Fire", isPressed); });
 
 	_events->AddListener("ClientSend_ReadyToPlay", _name, [this]()
 	{
@@ -116,16 +110,11 @@ void Client::Subscribe()
 
 void Client::Unsubscribe() const
 {
-	_events->RemoveListener("P2_Move_Up_Pressed", _name);
-	_events->RemoveListener("P2_Move_Up_Released", _name);
-	_events->RemoveListener("P2_Move_Left_Pressed", _name);
-	_events->RemoveListener("P2_Move_Left_Released", _name);
-	_events->RemoveListener("P2_Move_Down_Pressed", _name);
-	_events->RemoveListener("P2_Move_Down_Released", _name);
-	_events->RemoveListener("P2_Move_Right_Pressed", _name);
-	_events->RemoveListener("P2_Move_Right_Released", _name);
-	_events->RemoveListener("P2_Fire_Pressed", _name);
-	_events->RemoveListener("P2_Fire_Released", _name);
+	_events->RemoveListener("P2_Move_Up", _name);
+	_events->RemoveListener("P2_Move_Left", _name);
+	_events->RemoveListener("P2_Move_Down", _name);
+	_events->RemoveListener("P2_Move_Right", _name);
+	_events->RemoveListener("P2_Fire", _name);
 
 	_events->RemoveListener("ClientSend_ReadyToPlay", _name);
 
