@@ -112,16 +112,14 @@ protected:
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(5);
-		BonusEffectProperty bonusEffects{};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), bonusEffects, enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), bonusEffects,
-						enableByDefault));
+						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), enableByDefault));
 		_allObjects.emplace_back(
-				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, bonusEffects, enableByDefault));
+				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, enableByDefault));
 	}
 
 	void TearDown() override

@@ -7,9 +7,8 @@
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
-Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
-		 const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault}
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, enableByDefault}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 	, _lastTimeTurn{std::chrono::system_clock::now()} {}
 

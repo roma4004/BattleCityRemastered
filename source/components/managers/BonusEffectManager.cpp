@@ -1,5 +1,6 @@
 #include "components/managers/BonusEffectManager.h"
 #include "components/EventSystem.h"
+#include "entities/pawns/Tank.h"
 #include "utils/TimeUtils.h"
 
 BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& events)
@@ -18,41 +19,26 @@ BonusEffectManager::~BonusEffectManager()
 
 void BonusEffectManager::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { Reset(); });
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
 	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener(
-			"BonusTimer", _name,
-			[this](const std::string& fraction, const milliseconds effectDuration)
-			{
-				if (fraction == "EnemyTeam")
-				{
-					_timerPlayer = {effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
-				}
-				else if (fraction == "PlayerTeam")
-				{
-					_timerEnemy = {effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Timer", "EnemyTeam", _timerEnemy.isActive);
-				}
-			});
-
-	_events->AddListener(
-			"BonusHelmet", _name,
-			[this](const std::string& name, const milliseconds effectDuration)
-			{
-				if (const size_t id{TankNameToId(name)}; id < _helmetSlots.size())
-				{
-					_helmetSlots[id] = {effectDuration, std::chrono::system_clock::now()};
-					OnBonusStatusChange("Helmet", name, _helmetSlots[id].isActive);
-				}
-			});
-
+	_events->AddListener("BonusTimer", _name, [this](const std::string& fraction, const milliseconds effectDuration)
+	{
+		this->OnTimerBonus(fraction, effectDuration);
+	});
+	_events->AddListener("BonusHelmet", _name, [this](const std::string& name, const milliseconds effectDuration)
+	{
+		this->OnHelmetBonus(name, effectDuration);
+	});
 	//TODO: remove duration for bonuses
 	_events->AddListener("BonusShovel", _name, [this](const std::string& fraction, const milliseconds effectDuration)
 	{
 		this->OnBonusShovelPickup(fraction, effectDuration);
+	});
+	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
+	{
+		this->ApplyBonusEffectsTo(tank);
 	});
 }
 
@@ -63,6 +49,7 @@ void BonusEffectManager::Unsubscribe() const
 	_events->RemoveListener("BonusTimer", _name);
 	_events->RemoveListener("BonusHelmet", _name);
 	_events->RemoveListener("BonusShovel", _name);
+	_events->RemoveListener("SpawnEnabled", _name);
 }
 
 void BonusEffectManager::Reset()
@@ -71,6 +58,50 @@ void BonusEffectManager::Reset()
 	_timerPlayer = {};
 	_shovelPlayer = {};
 	_helmetSlots = {{}, {}, {}, {}, {}, {}};
+}
+
+void BonusEffectManager::ApplyBonusEffectsTo(std::weak_ptr<Tank> tank)
+{
+	std::shared_ptr<Tank> tankLck = tank.lock();
+	if (!tankLck)
+	{
+		return; //TODO: add assert for this case
+	}
+
+	const auto tankName = std::string(tankLck->GetName());
+	const auto tankFraction = tankLck->GetFraction();
+	if (tankFraction == "EnemyTeam")
+	{
+		_events->EmitEvent("BonusTimer_EffectOnOff", _timerEnemy.isActive, tankName);
+	}
+	else if (tankFraction == "PlayerTeam")
+	{
+		_events->EmitEvent("BonusTimer_EffectOnOff", _timerPlayer.isActive, tankName);
+	}
+
+	const size_t typeId = TankNameToId(tankName);
+	_events->EmitEvent("BonusHelmet_EffectOnOff", _helmetSlots[typeId].isActive, tankName);
+}
+
+void BonusEffectManager::OnTimerBonus(const std::string& fraction, const milliseconds effectDuration)
+{
+	if (fraction == "EnemyTeam")
+	{
+		StartTimer(_timerPlayer, "Timer", "PlayerTeam", effectDuration);
+	}
+	else if (fraction == "PlayerTeam")
+	{
+		StartTimer(_timerEnemy, "Timer", "EnemyTeam", effectDuration);
+	}
+}
+
+void BonusEffectManager::OnHelmetBonus(const std::string& name, const milliseconds effectDuration)
+{
+	if (const size_t id{TankNameToId(name)};
+		id < _helmetSlots.size())
+	{
+		StartTimer(_helmetSlots[id], "Helmet", name, effectDuration);
+	}
 }
 
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool value) const
@@ -84,18 +115,29 @@ void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std
 	// }
 }
 
+void BonusEffectManager::StartTimer(Timer& timer, const std::string& event, const std::string& id,
+									const milliseconds effectDuration) const
+{
+	timer = {effectDuration, std::chrono::system_clock::now()};
+	OnBonusStatusChange(event, id, timer.isActive);
+}
+
+void BonusEffectManager::FinishTimer(Timer& timer, const std::string& event, const std::string& id) const
+{
+	timer.isActive = false;
+	OnBonusStatusChange(event, id, timer.isActive);
+}
+
 void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 {
 	if (_timerEnemy.isActive && TimeUtils::IsCooldownFinish(_timerEnemy.activateTime, _timerEnemy.cooldown))
 	{
-		_timerEnemy.isActive = false;
-		OnBonusStatusChange("Timer", "EnemyTeam", _timerPlayer.isActive);
+		FinishTimer(_timerEnemy, "Timer", "EnemyTeam");
 	}
 
 	if (_timerPlayer.isActive && TimeUtils::IsCooldownFinish(_timerPlayer.activateTime, _timerPlayer.cooldown))
 	{
-		_timerPlayer.isActive = false;
-		OnBonusStatusChange("Timer", "PlayerTeam", _timerPlayer.isActive);
+		FinishTimer(_timerPlayer, "Timer", "PlayerTeam");
 	}
 
 	for (size_t i = 0u; i < _helmetSlots.size(); ++i)
@@ -103,32 +145,8 @@ void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 		if (_helmetSlots[i].isActive && TimeUtils::IsCooldownFinish(_helmetSlots[i].activateTime,
 																	_helmetSlots[i].cooldown))
 		{
-			_helmetSlots[i].isActive = false;
-			if (i == 0)
-			{
-				//TODO: change enemy1 and other to tankType
-				OnBonusStatusChange("Helmet", "Enemy1", _helmetSlots[i].isActive);
-			}
-			else if (i == 1)
-			{
-				OnBonusStatusChange("Helmet", "Enemy2", _helmetSlots[i].isActive);
-			}
-			else if (i == 2)
-			{
-				OnBonusStatusChange("Helmet", "Enemy3", _helmetSlots[i].isActive);
-			}
-			else if (i == 3)
-			{
-				OnBonusStatusChange("Helmet", "Enemy4", _helmetSlots[i].isActive);
-			}
-			else if (i == 4)
-			{
-				OnBonusStatusChange("Helmet", "Player1", _helmetSlots[i].isActive);
-			}
-			else if (i == 5)
-			{
-				OnBonusStatusChange("Helmet", "Player2", _helmetSlots[i].isActive);
-			}
+			//TODO: change enemy1 and other to tankType
+			FinishTimer(_helmetSlots[i], "Helmet", TankIdToName(i));
 		}
 	}
 
@@ -175,6 +193,34 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 	_shovelPlayer.activateTime = std::chrono::system_clock::now();
 }
 
+std::string BonusEffectManager::TankIdToName(const size_t id)
+{
+	switch (id)
+	{
+		case 0:
+			return "Enemy1";//TODO: change enemy1 and other to tankType
+		case 1:
+			return "Enemy2";
+		case 2:
+			return "Enemy3";
+		case 3:
+			return "Enemy4";
+		case 5:
+			return "Player1";
+		case 6:
+			return "Player2";
+		default:
+			return "None";
+	}
+}
+
+size_t BonusEffectManager::TankNameToId(const std::string_view& name)
+{
+	std::string nameStr{name};
+
+	return TankNameToId(nameStr);
+}
+
 size_t BonusEffectManager::TankNameToId(const std::string& name)
 {
 	if (name == "Enemy1")
@@ -197,12 +243,12 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 		return 3;
 	}
 
-	if (name == "Player1")
+	if (name == "Player1" || name == "CoopBot1")
 	{
 		return 4;
 	}
 
-	if (name == "Player2")
+	if (name == "Player2" || name == "CoopBot2")
 	{
 		return 5;
 	}

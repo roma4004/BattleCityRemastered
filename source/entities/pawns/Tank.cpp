@@ -6,10 +6,8 @@
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 
-Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const BonusEffectProperty effects,
-		   const bool enableByDefault)
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
 	: Pawn{std::move(pawnProperty)}
-	, _effects{effects}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -38,6 +36,26 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 				});
 	}
 
+	_events->AddListener(
+				"BonusHelmet_EffectOnOff", _nameWithUuid,
+				[this](const bool isEnabled, const std::string& name)
+				{
+					if (name == this->_name)
+					{
+						this->_effects.isHelmetActive = isEnabled;
+					}
+				});
+
+	_events->AddListener(
+			"BonusTimer_EffectOnOff", _nameWithUuid,
+			[this](const bool isEnabled, const std::string& name)
+			{
+				if (name == this->_name)
+				{
+					this->_effects.isTimerActive = isEnabled;
+				}
+			});
+
 	_events->EmitEvent("TankSpawn", _uuid);
 }
 
@@ -56,9 +74,9 @@ void Tank::Subscribe()
 
 	_events->AddListener("PostDraw", _nameWithUuid, [this]()
 	{
-		if (!_effects.isHelmetActive)
+		if (!this->_effects.isHelmetActive)
 		{
-			this->_events->EmitEvent("RenderHealthBar", GetRect(), GetHealth(), GetColor());
+			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth(), this->GetColor());
 		}
 	});
 
@@ -86,12 +104,12 @@ void Tank::SubscribeAsClient()
 
 	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
 	{
-		this->OnBonusStar(_name);
+		this->OnBonusStar(this->_name);
 	});
 
 	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid, [this]()
 	{
-		this->OnBonusCaliber(_name);
+		this->OnBonusCaliber(this->_name);
 	});
 }
 
@@ -149,6 +167,9 @@ void Tank::Unsubscribe() const
 	{
 		_events->RemoveListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid);
 	}
+
+	_events->RemoveListener("BonusHelmet_EffectOnOff", _nameWithUuid);
+	_events->RemoveListener("BonusTimer_EffectOnOff", _nameWithUuid);	
 }
 
 void Tank::UnsubscribeAsClient() const

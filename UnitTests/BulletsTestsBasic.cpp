@@ -337,9 +337,7 @@ TEST_F(BulletTest, BulletDamageTank)
 			.gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Enemy>(
-					std::move(pawnProperty), std::move(bulletPool), BonusEffectProperty{}, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool), enableByDefault));
 
 	const auto enemy = dynamic_cast<const Enemy*>(_allObjects.back().get());
 

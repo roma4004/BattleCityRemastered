@@ -15,19 +15,20 @@ DelayedSpawnManager::~DelayedSpawnManager()
 	Unsubscribe();
 }
 
-using milliseconds = std::chrono::milliseconds;
-
 void DelayedSpawnManager::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { Reset(); });
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
 	_events->AddListener(
 			"SpawnDelayStart", _name,
-			[this](const std::shared_ptr<Tank>& tank, const milliseconds delay)
+			[this](std::shared_ptr<Tank> tank, const milliseconds delay)
 			{
 				if (delay == milliseconds(0))
 				{
-					_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));
+					if (tank)
+					{
+						this->_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));
+					}
 					// NOTE: immediate call, for tests
 				}
 				else
@@ -60,7 +61,10 @@ void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 	{
 		if (timer.isActive && timer.IsCooldownFinish())
 		{
-			_events->EmitEvent("SpawnEnabled", std::weak_ptr<Tank>(tank));
+			if (tank)
+			{
+				_events->EmitEvent("SpawnEnabled", tank);
+			}
 			timer.isActive = false;
 		}
 	}

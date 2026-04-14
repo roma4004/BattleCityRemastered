@@ -1,5 +1,6 @@
 #pragma once
 
+#include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
 class EventSystem;
@@ -26,8 +27,15 @@ public:
 
 	void Reset();
 
+	void ApplyBonusEffectsTo(std::weak_ptr<Tank> tank);
+	void OnTimerBonus(const std::string& fraction, milliseconds effectDuration);
+	void OnHelmetBonus(const std::string& name, milliseconds effectDuration);
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool value) const;
+	void StartTimer(Timer& timer, const std::string& event, const std::string& id, milliseconds effectDuration) const;
+	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
+	[[nodiscard]] static std::string TankIdToName(size_t id);
+	static size_t TankNameToId(const std::string_view& name);
 	[[nodiscard]] static size_t TankNameToId(const std::string& name);
 
 	void TickUpdate(double deltaTime);

@@ -23,6 +23,7 @@ protected:
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -46,6 +47,7 @@ protected:
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 		// std::string name = "Player1";
@@ -71,8 +73,7 @@ protected:
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
-		_allObjects.emplace_back(
-				std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, BonusEffectProperty{}, enableByDefault));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault));
 	}
 
 	void TearDown() override

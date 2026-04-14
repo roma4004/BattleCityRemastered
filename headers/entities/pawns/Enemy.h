@@ -11,8 +11,7 @@ class Enemy final : public Bot
 	void TickUpdate(double deltaTime) override;
 
 public:
-	Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects = {},
-		  bool enableByDefault = false);
+	Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
 
 	~Enemy() override;
 };

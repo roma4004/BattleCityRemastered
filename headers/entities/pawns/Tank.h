@@ -45,7 +45,6 @@ protected:
 
 	// bonuses
 	BonusEffectProperty _effects{};
-	//in progress TODO: fix this for destroying tank, they respawn with false, need reuse instead of recreating, need pool objects for tanks
 
 	void Shot(buuid withUuid = {}) const;
 
@@ -59,8 +58,7 @@ protected:
 	virtual void Disable() const;
 
 public:
-	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, BonusEffectProperty effects,
-		 bool enableByDefault = false);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
 
 	~Tank() override;
 

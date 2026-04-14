@@ -11,7 +11,7 @@ class DelayedSpawnManager
 
 	struct SpawnDelay
 	{
-		std::shared_ptr<Tank> tank{};
+		std::shared_ptr<Tank> tank{nullptr};
 		Timer timer;
 	};
 

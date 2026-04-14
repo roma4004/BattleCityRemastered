@@ -81,11 +81,9 @@ protected:
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
-		BonusEffectProperty bonusEffects{};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), BonusEffectProperty{},
-						enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
 	}
 
 	void TearDown() override
@@ -536,8 +534,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider2), BonusEffectProperty{}));
+				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2)));
 
 		if (const auto player2 = dynamic_cast<const Player*>(_allObjects.back().get()))
 		{

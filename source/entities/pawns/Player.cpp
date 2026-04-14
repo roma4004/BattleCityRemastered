@@ -5,9 +5,8 @@
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-			   std::unique_ptr<IInputProvider> inputProvider, const BonusEffectProperty effects,
-			   const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, effects, enableByDefault}
+			   std::unique_ptr<IInputProvider> inputProvider, const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, enableByDefault}
 	, _inputProvider{std::move(inputProvider)}
 {
 	if (enableByDefault)
@@ -34,7 +33,7 @@ void Player::Disable() const
 
 void Player::TickUpdate(const double deltaTime)
 {
-	if (_effects.isTimerActive)
+	if (_effects.isTimerActive)//TODO: disable tick update when active
 	{
 		return;
 	}

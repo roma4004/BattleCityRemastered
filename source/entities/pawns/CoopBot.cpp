@@ -4,15 +4,14 @@
 #include "entities/pawns/PawnProperty.h"
 #include "utils/TimeUtils.h"
 
-CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-				 const BonusEffectProperty effects, const bool enableByDefault)
-	: Bot{std::move(pawnProperty), bulletPool, effects, enableByDefault} {}
+CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
+	: Bot{std::move(pawnProperty), bulletPool, enableByDefault} {}
 
 CoopBot::~CoopBot() = default;
 
 void CoopBot::TickUpdate(const double deltaTime)
 {
-	if (_effects.isTimerActive)
+	if (_effects.isTimerActive)//TODO: disable tick update when active
 	{
 		return;
 	}
