@@ -52,7 +52,14 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 			{
 				if (name == this->_name)
 				{
-					this->_effects.isTimerActive = isEnabled;
+					if (isEnabled)
+					{
+						this->UnsubscribeTickUpdate();
+					}
+					else
+					{
+						this->SubscribeTickUpdate();
+					}
 				}
 			});
 
@@ -256,7 +263,14 @@ void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
 {
 	if (fraction == _fraction)
 	{
-		_effects.isTimerActive = isActive;
+		if (isActive)
+		{
+			UnsubscribeTickUpdate();
+		}
+		else
+		{
+			SubscribeTickUpdate();
+		}
 	}
 }
 

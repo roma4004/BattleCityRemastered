@@ -35,6 +35,9 @@ protected:
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;
 
+	void SubscribeTickUpdate();
+	void UnsubscribeTickUpdate() const;
+
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(double deltaTime) override = 0;
 

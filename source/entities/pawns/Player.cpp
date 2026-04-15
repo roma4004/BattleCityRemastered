@@ -33,11 +33,6 @@ void Player::Disable() const
 
 void Player::TickUpdate(const double deltaTime)
 {
-	if (_effects.isTimerActive)//TODO: disable tick update when active
-	{
-		return;
-	}
-
 	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
 	// move

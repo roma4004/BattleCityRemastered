@@ -24,7 +24,6 @@ Pawn::Pawn(PawnProperty pawnProperty)
 }
 
 
-
 Pawn::~Pawn() = default;
 
 void Pawn::Subscribe()
@@ -32,13 +31,7 @@ void Pawn::Subscribe()
 	_gameMode == GameMode::PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
 }
 
-void Pawn::SubscribeAsHost()
-{
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
-}
+void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
@@ -56,6 +49,16 @@ void Pawn::SubscribeAsClient()
 	});
 }
 
+void Pawn::SubscribeTickUpdate()
+{
+	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
+	{
+		this->TickUpdate(deltaTime);
+	});
+}
+
+void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate", _nameWithUuid); }
+
 void Pawn::Unsubscribe() const
 {
 	// std::cout << "[" << "Pawn::Unsubscribe()" << "] "
@@ -69,7 +72,7 @@ void Pawn::Unsubscribe() const
 
 void Pawn::UnsubscribeAsHost() const
 {
-	_events->RemoveListener("TickUpdate", _nameWithUuid);
+	UnsubscribeTickUpdate();
 }
 
 void Pawn::UnsubscribeAsClient() const
@@ -124,5 +127,6 @@ void Pawn::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 	SetDirection(dir);
 	SetPos(newPos);
 
-	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection()); //NOTE: fix for tank truck animation tick
+	//NOTE: fix for tank truck animation tick
+	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
 }

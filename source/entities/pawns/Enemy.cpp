@@ -12,11 +12,6 @@ Enemy::~Enemy() = default;
 
 void Enemy::TickUpdate(const double deltaTime)
 {
-	if (_effects.isTimerActive)//TODO: disable tick update when active
-	{
-		return;
-	}
-
 	Bot::TickUpdate(deltaTime);
 
 	// shot

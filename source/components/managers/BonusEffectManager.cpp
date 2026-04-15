@@ -45,7 +45,7 @@ void BonusEffectManager::Subscribe()
 
 		const std::string tankName{tank->GetName()};
 		const std::string tankFraction{tank->GetFraction()};
-		this->ApplyBonusEffectsTo(tankName, tankFraction);
+		this->ApplyBonusEffectsTo(tankName, tankFraction); //NOTE: continue effects after respawn
 	});
 }
 
