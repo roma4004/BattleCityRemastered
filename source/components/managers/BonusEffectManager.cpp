@@ -36,9 +36,16 @@ void BonusEffectManager::Subscribe()
 	{
 		this->OnBonusShovelPickup(fraction, effectDuration);
 	});
-	_events->AddListener("SpawnEnabled", _name, [this](std::weak_ptr<Tank> tank)
+	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank)
 	{
-		this->ApplyBonusEffectsTo(tank);
+		if (!tank)
+		{
+			return;
+		}
+
+		const std::string tankName{tank->GetName()};
+		const std::string tankFraction{tank->GetFraction()};
+		this->ApplyBonusEffectsTo(tankName, tankFraction);
 	});
 }
 
@@ -60,16 +67,8 @@ void BonusEffectManager::Reset()
 	_helmetSlots = {{}, {}, {}, {}, {}, {}};
 }
 
-void BonusEffectManager::ApplyBonusEffectsTo(std::weak_ptr<Tank> tank)
+void BonusEffectManager::ApplyBonusEffectsTo(const std::string& tankName, const std::string& tankFraction)
 {
-	std::shared_ptr<Tank> tankLck = tank.lock();
-	if (!tankLck)
-	{
-		return; //TODO: add assert for this case
-	}
-
-	const auto tankName = std::string(tankLck->GetName());
-	const auto tankFraction = tankLck->GetFraction();
 	if (tankFraction == "EnemyTeam")
 	{
 		_events->EmitEvent("BonusTimer_EffectOnOff", _timerEnemy.isActive, tankName);

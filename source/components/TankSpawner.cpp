@@ -55,16 +55,18 @@ void TankSpawner::Subscribe()
 
 	_events->AddListener(
 			"SpawnEnabled", _name,
-			[this](std::weak_ptr<Tank> tank)
+			[this](std::shared_ptr<Tank> tank)
 			{
-				std::shared_ptr<Tank> tankLck = tank.lock();
-				if (!tankLck)
+				if (!tank)
 				{
 					return;
 				}
 
-				tankLck->Enable();
-				_events->EmitEvent("AnimationCreateTank", tank);
+				tank->Enable();
+				const ObjRectangle rect{tank->GetRect()};
+				const std::string objName{tank->GetName()};
+				const unsigned int color{tank->GetColor()};
+				_events->EmitEvent("AnimationCreateTank", rect, objName, color);
 			});
 
 	_events->AddListener("RespawnTanks", _name, [this](const double /*deltaTime*/)

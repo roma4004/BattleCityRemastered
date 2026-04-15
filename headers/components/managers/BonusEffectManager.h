@@ -27,7 +27,7 @@ public:
 
 	void Reset();
 
-	void ApplyBonusEffectsTo(std::weak_ptr<Tank> tank);
+	void ApplyBonusEffectsTo(const std::string& tankName, const std::string& tankFraction);
 	void OnTimerBonus(const std::string& fraction, milliseconds effectDuration);
 	void OnHelmetBonus(const std::string& name, milliseconds effectDuration);
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool value) const;

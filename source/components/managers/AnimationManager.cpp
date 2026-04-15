@@ -1,7 +1,6 @@
 ﻿#include "components/managers/AnimationManager.h"
 #include "components/AnimatedObjects.h"
 #include "entities/ObjRectangle.h"
-#include "entities/pawns/Tank.h"
 #include "enums/AnimationType.h"
 #include "utils/RandUtils.h"
 #include <algorithm>
@@ -70,9 +69,9 @@ void AnimationManager::SubscribeAsHost()
 	//TODO: create client like subscription
 	_events->AddListener(
 			"AnimationCreateTank", _name,
-			[this](const std::weak_ptr<Tank>& tank)
+			[this](const ObjRectangle rect, const std::string& objName, const unsigned int color)
 			{
-				this->CreateAnimationTank(tank);
+				this->CreateAnimationTank(rect, objName, color);
 			});
 
 	_events->AddListener(
@@ -176,17 +175,8 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	}
 }
 
-void AnimationManager::CreateAnimationTank(const std::weak_ptr<Tank>& tank)
+void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::string objName, const unsigned int color)
 {
-	const auto tankLck = tank.lock();
-	if (!tankLck)
-	{
-		return;//TODO: add assert in this case
-	}
-
-	const ObjRectangle rect{tankLck->GetRect()};
-	const std::string objName{tankLck->GetName()};
-	const unsigned int color{tankLck->GetColor()};
 	constexpr auto type{AnimationType::Tank_Animation};
 	const auto name{std::string("TankAnimation")};
 	constexpr bool isInfinite{true};
