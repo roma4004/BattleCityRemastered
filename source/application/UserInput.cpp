@@ -26,7 +26,7 @@ UserInput::~UserInput()
 void UserInput::Subscribe()
 {
 	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus) { this->_isPause = newPauseStatus; });
-	_events->AddListener("Tab_Released", _name, [this](const bool isPressed) { this->SwapControllers(), isPressed; });
+	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
 
@@ -141,6 +141,20 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 {
 	const std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
 	const std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
+	std::string KeyStateTag{};
+
+	if (event.key.type == SDL_KEYDOWN)
+	{
+		KeyStateTag = "Pressed";
+	}
+	else if (event.key.type == SDL_KEYUP)
+	{
+		KeyStateTag = "Released";
+	}
+	else
+	{
+		return;
+	}
 
 	switch (event.key.keysym.sym)
 	{
@@ -175,25 +189,16 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 			_events->EmitEvent(KeyboardRightSideTag + "_Fire", isPressed);
 			break;
 		case SDLK_m:
-			if (isPressed)
-			{
-				_events->EmitEvent("Menu_Released", isPressed);
-			}
+			_events->EmitEvent("Menu_" + KeyStateTag);
 			break;
 		case SDLK_p:
-			if (isPressed)
-			{
-				_events->EmitEvent("Pause_Released", isPressed);
-			}
+			_events->EmitEvent("Pause_" + KeyStateTag);
 			break;
 		case SDLK_r:
-			_events->EmitEvent("Reset_", isPressed);
+			_events->EmitEvent("Reset_" + KeyStateTag);
 			break;
 		case SDLK_TAB:
-			if (isPressed)
-			{
-				_events->EmitEvent("Tab_Released", isPressed);
-			}
+			_events->EmitEvent("Tab_" + KeyStateTag);
 			break;
 		case SDLK_RETURN:
 			_events->EmitEvent("Enter", isPressed);
@@ -249,16 +254,10 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event,const std::string&
 				_events->EmitEvent(controllerTag + "_Move_Right", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_START:
-				if (isPressed)
-				{
-					_events->EmitEvent("Menu_Released", isPressed);
-				}
+				_events->EmitEvent("Menu_" + KeyStateTag);
 				break;
 			case SDL_CONTROLLER_BUTTON_BACK:
-				if (isPressed)
-				{
-					_events->EmitEvent("Pause_Released", isPressed);
-				}
+				_events->EmitEvent("Pause_" + KeyStateTag);
 				break;
 
 			default:
