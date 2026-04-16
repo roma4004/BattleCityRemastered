@@ -17,8 +17,8 @@ InputProviderForMenu::~InputProviderForMenu()
 void InputProviderForMenu::Subscribe()
 {
 	ToggleMenuInputSubscription();
-	_events->AddListener("Menu_Released", _name, [this](const bool isPressed) { this->ToggleMenuInputSubscription(), isPressed; });
-	_events->AddListener("Pause_Released", _name, [this](const bool isPressed) { this->TogglePause(), isPressed; });
+	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
+	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;

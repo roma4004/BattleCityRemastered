@@ -26,7 +26,7 @@ UserInput::~UserInput()
 void UserInput::Subscribe()
 {
 	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus) { this->_isPause = newPauseStatus; });
-	_events->AddListener("Tab_Released", _name, [this](const bool isPressed) { this->SwapControllers(), isPressed; });
+	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
 
@@ -175,24 +175,24 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 			_events->EmitEvent(KeyboardRightSideTag + "_Fire", isPressed);
 			break;
 		case SDLK_m:
-			if (isPressed)
+			if (isPressed == false)
 			{
-				_events->EmitEvent("Menu_Released", isPressed);
+				_events->EmitEvent("Menu_Released");
 			}
 			break;
 		case SDLK_p:
-			if (isPressed)
+			if (isPressed == false)
 			{
-				_events->EmitEvent("Pause_Released", isPressed);
+				_events->EmitEvent("Pause_Released");
 			}
 			break;
 		case SDLK_r:
 			_events->EmitEvent("Reset_", isPressed);
 			break;
 		case SDLK_TAB:
-			if (isPressed)
+			if (isPressed == false)
 			{
-				_events->EmitEvent("Tab_Released", isPressed);
+				_events->EmitEvent("Tab_Released");
 			}
 			break;
 		case SDLK_RETURN:
@@ -216,7 +216,7 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 	}
 }
 
-void UserInput::GamepadKeyPressRelease(const SDL_Event& event,const std::string& KeyStateTag, const bool& isPressed) const
+void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
 	if (SDL_NumJoysticks() > 0)
 	{
@@ -249,15 +249,15 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event,const std::string&
 				_events->EmitEvent(controllerTag + "_Move_Right", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_START:
-				if (isPressed)
+				if (isPressed == false)
 				{
-					_events->EmitEvent("Menu_Released", isPressed);
+					_events->EmitEvent("Menu_Released");
 				}
 				break;
 			case SDL_CONTROLLER_BUTTON_BACK:
-				if (isPressed)
+				if (isPressed == false)
 				{
-					_events->EmitEvent("Pause_Released", isPressed);
+					_events->EmitEvent("Pause_Released");
 				}
 				break;
 
@@ -273,12 +273,12 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 	{
 		case SDL_CONTROLLERBUTTONDOWN:
 		{
-			GamepadKeyPressRelease(event,"Pressed", true);
+			GamepadKeyPressRelease(event, true);
 			break;
 		}
 		case SDL_CONTROLLERBUTTONUP:
 		{
-			GamepadKeyPressRelease(event,"Released", false);
+			GamepadKeyPressRelease(event, false);
 			break;
 		}
 		case SDL_CONTROLLERDEVICEADDED:

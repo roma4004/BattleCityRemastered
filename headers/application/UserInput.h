@@ -30,7 +30,7 @@ class UserInput final
 	void MouseEvents(const SDL_Event& event);
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void KeyboardEvents(const SDL_Event& event) const;
-	void GamepadKeyPressRelease(const SDL_Event& event, const std::string& KeyStateTag, const bool& isPressed) const;
+	void GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void GamepadEvents(const SDL_Event& event);
 	void OnWindowMoveStop();
 	void WindowsMoveEvents(const SDL_Event& event);
