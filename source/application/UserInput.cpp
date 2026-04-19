@@ -355,7 +355,7 @@ void UserInput::DisconnectController(const SDL_JoystickID instanceId)
 void UserInput::InitControllers()
 {
 	const int numConnectedJoysticks = SDL_NumJoysticks();
-	std::cout << numConnectedJoysticks << " gamepad/s connected\n";
+	// std::cout << numConnectedJoysticks << " gamepad/s connected\n";
 
 	if (numConnectedJoysticks > 0)
 	{

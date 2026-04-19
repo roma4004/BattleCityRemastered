@@ -11,17 +11,15 @@ ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
 ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 							 const std::shared_ptr<EventSystem>& events)
 	: _events{events}
-	, _server{_ioContext, host, port, _events}
+	, _name{"ServerHandler"}
+	, _server{_ioContext, host, port, events}
 {
-	_name = "ServerHandler";
-	Subscribe();
-
-	_serverThread = std::thread([&]()
+	_serverThread = std::thread([this]()
 	{
 		try
 		{
-			_ioContext.run();
-			// io_service.stop();
+			this->_ioContext.run();
+			// this->io_service.stop();
 		}
 		catch (std::exception& e)
 		{
@@ -32,6 +30,8 @@ ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 			std::cerr << "thread error ..." << '\n';
 		}
 	});
+
+	Subscribe();
 }
 
 ServerHandler::~ServerHandler()

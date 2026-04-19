@@ -31,8 +31,6 @@
 
 namespace network::commands
 {
-using buuid = boost::uuids::uuid;
-
 Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _socket(ioContext)

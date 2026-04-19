@@ -11,9 +11,9 @@ class ClientHandler : public INetworkNode
 	std::shared_ptr<EventSystem> _events{nullptr};
 	boost::asio::io_context _ioContext{};
 	// boost::asio::ip::tcp::socket _socket;
-	std::shared_ptr<Client> _client{nullptr};
-	std::thread _clientThread{};
 	std::string _name{};
+	std::thread _clientThread{};
+	std::shared_ptr<Client> _client{nullptr};
 
 public:
 	explicit ClientHandler(const std::shared_ptr<EventSystem>& events);

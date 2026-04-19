@@ -286,8 +286,8 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 										 static_cast<unsigned short>(std::stoul(port))))
 	, _events{events}
 	, _name{"Server"}
+	, _batch{std::make_shared<CommandBatch>()}
 {
-	_batch = std::make_shared<CommandBatch>();
 	DoAccept();
 	StartSendThread();
 	Subscribe();

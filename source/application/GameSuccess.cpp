@@ -9,6 +9,7 @@
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
+#define ASIO_STANDALONE //NOTE: must be above network
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
@@ -20,7 +21,6 @@
 //#ifdef _WIN32
 //#define _WIN32_WINNT 0x0A00
 //#endif
-#define ASIO_STANDALONE
 
 //TODO: can't start game if no sound device on PC
 
