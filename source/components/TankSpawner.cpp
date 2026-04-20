@@ -185,6 +185,8 @@ bool TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		const unsigned int color = isFirst ? yellow : green;
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+		//_events->EmitEvent("BonusHelmet", "Player1", std::chrono::milliseconds(5000000)); // Debug for win-condition
+		//_events->EmitEvent("PlayersTeamIsWon"); // Debug for win-condition
 
 		return true;
 	}

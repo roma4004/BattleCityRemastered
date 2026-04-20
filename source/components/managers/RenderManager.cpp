@@ -185,11 +185,11 @@ void RenderManager::DrawGameOverText() const
 void RenderManager::DrawGameWonText() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
+	constexpr SDL_Rect rect{.x = 250, .y = 262, .w = 120, .h = 85};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameWonText.x),
-							   .y = static_cast<int>(offset.gameOverText.y),
-							   .w = static_cast<int>(offset.gameOverText.w),
-							   .h = static_cast<int>(offset.gameOverText.h)};
+							   .y = static_cast<int>(offset.gameWonText.y),
+							   .w = static_cast<int>(offset.gameWonText.w),
+							   .h = static_cast<int>(offset.gameWonText.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
