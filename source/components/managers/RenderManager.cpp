@@ -141,6 +141,30 @@ void RenderManager::Subscribe()
 			{
 				DrawHealthBar(rect, health, color);
 			});
+
+	_events->AddListener("EnableRightSideBar", _name,
+	[this]()
+	{
+		_isRightSideBarEnabled = true;
+	});
+
+	_events->AddListener("DisableRightSideBar", _name,
+	[this]()
+	{
+		_isRightSideBarEnabled = false;
+	});
+
+	_events->AddListener(
+			"RenderRightSideBar", _name,
+			[this]()
+			{
+				const ObjRectangle rect{.x = 625, .y = 0, .w = 220, .h = 600};
+				const SDL_Rect destRect = RectToSdlRect(rect);
+				constexpr int gray{0x808080};
+				SDL_Texture* colorTexture = CreateColorTexture(gray);
+
+				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
+			});
 }
 
 void RenderManager::Unsubscribe() const
@@ -156,6 +180,9 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("RenderFPS", _name);
 	_events->RemoveListener("RenderHealthBar", _name);
 	_events->RemoveListener("RenderGameWonText", _name);
+	_events->RemoveListener("EnableRightSideBar", _name);
+	_events->RemoveListener("DisableRightSideBar", _name);
+	_events->RemoveListener("RenderRightSideBar", _name);
 }
 
 void RenderManager::DrawPauseText() const
@@ -190,6 +217,17 @@ void RenderManager::DrawGameWonText() const
 							   .y = static_cast<int>(offset.gameWonText.y),
 							   .w = static_cast<int>(offset.gameWonText.w),
 							   .h = static_cast<int>(offset.gameWonText.h)};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+}
+
+void RenderManager::DrawRightSideBar() const
+{
+	constexpr TextureOffset offset{};
+	constexpr SDL_Rect rect{.x = 550, .y = 62, .w = 120, .h = 85};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.rightSideBar.x),
+							   .y = static_cast<int>(offset.rightSideBar.y),
+							   .w = static_cast<int>(offset.rightSideBar.w),
+							   .h = static_cast<int>(offset.rightSideBar.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 

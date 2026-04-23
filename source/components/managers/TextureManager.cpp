@@ -116,6 +116,10 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.gameWonText;
 	}
+	else if (name == "RightSideBar")
+	{
+		textureRect = _offset.rightSideBar;
+	}
 
 	return textureRect;
 }

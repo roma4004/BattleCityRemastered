@@ -70,4 +70,7 @@ struct TextureOffset
 	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};
 	ObjRectangle gameOverText{.x = 288, .y = 183, .w = 32, .h = 18};
 	ObjRectangle gameWonText{.x = 375, .y = 183, .w = 18, .h = 17};
+
+	//SideBar
+	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 220, .h = 600};
 };

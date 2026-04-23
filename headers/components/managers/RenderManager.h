@@ -31,6 +31,7 @@ class RenderManager
 	int _windowHeight;
 	int _width;
 	int _padding;
+	bool _isRightSideBarEnabled;
 
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
@@ -42,6 +43,7 @@ class RenderManager
 	void DrawPauseText() const;
 	void DrawGameOverText() const;
 	void DrawGameWonText() const;
+	void DrawRightSideBar() const;
 
 	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
