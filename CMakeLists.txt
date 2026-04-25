@@ -273,6 +273,7 @@ set(SOURCE_FILES
         source/components/Map.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
+        source/components/ScoreBoard.cpp
         source/components/TankSpawner.cpp
         source/components/input/InputProviderForMenu.cpp
         source/components/input/InputProviderForPlayerOne.cpp
@@ -476,6 +477,8 @@ set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
 set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
 set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
+set(P1_CONTROLS_PATH_NAME      ${IMG_PATH}/controlP1_2.png)
+set(P2_CONTROLS_PATH_NAME      ${IMG_PATH}/controlP2_4.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
@@ -488,6 +491,14 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${JOY_ICON_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${P1_CONTROLS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${P1_CONTROLS_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${P2_CONTROLS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${P2_CONTROLS_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)
