@@ -18,7 +18,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 			"Resources/Images/Title.png",
 			"Resources/Sounds/levelStarted.wav",
 			"Resources/Images/SpriteSheet.png",
-			"Resources/Images/menuSelectorP1.png"
+			"Resources/Images/menuSelectorP1.png",
+			"Resources/Images/controlP1_2.png",
+			"Resources/Images/controlP2_4.png"
 	);
 	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
 	const std::unique_ptr<IGame> game = sdl->CreateGame();

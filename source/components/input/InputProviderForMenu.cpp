@@ -18,6 +18,10 @@ void InputProviderForMenu::Subscribe()
 {
 	ToggleMenuInputSubscription();
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
+	_events->AddListener("ScoreBoardShowed", _name, [this](const bool isDisplayed)
+	{
+		this->OnScoreBoardShowed(isDisplayed);
+	});
 	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
@@ -30,8 +34,9 @@ void InputProviderForMenu::Subscribe()
 
 void InputProviderForMenu::Unsubscribe() const
 {
-	_events->RemoveListener("Menu", _name);
-	_events->RemoveListener("Pause", _name);
+	_events->RemoveListener("Menu_Released", _name);
+	_events->RemoveListener("ScoreBoardShowed", _name);
+	_events->RemoveListener("Pause_Released", _name);
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("PreTickUpdate", _name);
@@ -58,6 +63,18 @@ void InputProviderForMenu::DisableMenuInput() const
 	_events->RemoveListener("Enter", _name);
 	_events->RemoveListener("P1_Fire", _name);
 	_events->RemoveListener("P2_Fire", _name);
+}
+
+void InputProviderForMenu::OnScoreBoardShowed(const bool isDisplayed)
+{
+	if (isDisplayed)
+	{
+		_keys.menuShow = false;
+	}
+	else
+	{
+		_isScoreBoardDisplayed = false;
+	}
 }
 
 void InputProviderForMenu::ToggleMenuInputSubscription()

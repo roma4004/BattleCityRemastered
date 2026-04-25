@@ -22,11 +22,14 @@ struct SDLEnvironment final
 	const char* introMusicPathName{nullptr};
 	const char* textureAtlasPath{nullptr};
 	const char* joyIconPathName{nullptr};
+	const char* p1ControlHintPathName{nullptr};
+	const char* p2ControlHintPathName{nullptr};
 
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
 	SDLEnvironment(UPoint windowSize, const char* fpsFontName, const char* logoName, const char* introMusicName,
-				   const char* textureCollection, const char* joyIcon);
+				   const char* textureCollection, const char* joyIcon, const char* p1ControlHint,
+				   const char* p2ControlHint);
 
 	~SDLEnvironment();
 

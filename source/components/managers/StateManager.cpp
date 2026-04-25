@@ -13,7 +13,7 @@ StateManager::~StateManager() { Unsubscribe(); }
 
 void StateManager::Subscribe()
 {
-	_events->AddListener("Pause_Status", _name, [this](const bool value) { this->_isPause = value; });
+	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->_isGameWon = true; });

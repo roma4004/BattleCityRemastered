@@ -25,6 +25,8 @@ class RenderManager
 	std::shared_ptr<SDL_Texture> _backgroundTexture{nullptr};
 	std::shared_ptr<SDL_Texture> _atlasTexture{nullptr};
 	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
+	std::shared_ptr<SDL_Texture> _p1ControlHint{nullptr};
+	std::shared_ptr<SDL_Texture> _p2ControlHint{nullptr};
 	std::shared_ptr<unsigned int[]> _menuBackground{nullptr};
 
 	int _height;
@@ -53,6 +55,8 @@ class RenderManager
 	void DrawBackground(Point pos) const;
 	void DrawMenuLogo(Point pos) const;
 	void DrawJoyIcon(Point pos) const;
+	void DrawP1ControlHint(Point pos) const;
+	void DrawP2ControlHint(Point pos) const;
 	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
 	void PregenerateMenuBackgroundTexture();
@@ -74,6 +78,7 @@ public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
 				  const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
 				  const std::shared_ptr<SDL_Texture>& atlasTexture, const std::shared_ptr<SDL_Texture>& joyIcon,
+				  const std::shared_ptr<SDL_Texture>& p1ControlHint, const std::shared_ptr<SDL_Texture>& p2ControlHint,
 				  UPoint windowSize);
 
 	~RenderManager();

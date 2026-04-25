@@ -298,21 +298,21 @@ void Server::StartSendThread()
 	_isRunning = true;
 	_sendThread = std::thread([this]()
 	{
-		while (_isRunning)
+		while (this->_isRunning)
 		{
 			std::shared_ptr<CommandBatch> batch;
 			{
-				std::unique_lock<std::mutex> lock(_sendQueueMutex);
-				_sendCondition.wait(lock, [this] { return !_sendQueue.empty() || !_isRunning; });
+				std::unique_lock<std::mutex> lock(this->_sendQueueMutex);
+				this->_sendCondition.wait(lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning; });
 
-				if (!_isRunning)
+				if (!this->_isRunning)
 					break;
 
-				if (_sendQueue.empty())
+				if (this->_sendQueue.empty())
 					continue;
 
-				batch = _sendQueue.front();
-				_sendQueue.pop();
+				batch = this->_sendQueue.front();
+				this->_sendQueue.pop();
 			}
 
 			if (batch && !batch->IsEmpty())
@@ -326,8 +326,8 @@ void Server::StartSendThread()
 					std::cerr << "Exception in send thread: " << e.what() << '\n';
 
 					// retry send
-					std::scoped_lock lock(_sendQueueMutex);
-					_sendQueue.push(batch);
+					std::scoped_lock lock(this->_sendQueueMutex);
+					this->_sendQueue.push(batch);
 				}
 			}
 		}
@@ -372,10 +372,10 @@ void Server::Subscribe()
 		_batch = std::make_shared<CommandBatch>();
 	});
 
-	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPaused)
+	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPause)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPaused));
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPause));
 	});
 
 	_events->AddListener(

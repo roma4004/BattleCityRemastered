@@ -10,7 +10,10 @@
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
 							 const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
 							 const std::shared_ptr<SDL_Texture>& atlasTexture,
-							 const std::shared_ptr<SDL_Texture>& joyIcon, UPoint windowSize)
+							 const std::shared_ptr<SDL_Texture>& joyIcon,
+							 const std::shared_ptr<SDL_Texture>& p1ControlHint,
+							 const std::shared_ptr<SDL_Texture>& p2ControlHint,
+							 UPoint windowSize)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _renderer{renderer}
@@ -18,6 +21,8 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const s
 	, _menuLogo{menuLogo}
 	, _atlasTexture{atlasTexture}
 	, _joyIcon{joyIcon}
+	, _p1ControlHint{p1ControlHint}
+	, _p2ControlHint{p2ControlHint}
 	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
@@ -82,6 +87,8 @@ void RenderManager::Subscribe()
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
 
 	_events->AddListener("RenderMenuJoyIcon", _name, [this](const Point pos) { DrawJoyIcon(pos); });
+	_events->AddListener("RenderP1ControlHint", _name, [this](const Point pos) { DrawP1ControlHint(pos); });
+	_events->AddListener("RenderP2ControlHint", _name, [this](const Point pos) { DrawP2ControlHint(pos); });
 
 	_events->AddListener(
 			"RenderPauseText", _name,
@@ -149,6 +156,9 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("RenderText", _name);
 	_events->RemoveListener("RenderMenuBackground", _name);
 	_events->RemoveListener("RenderMenuLogo", _name);
+	_events->RemoveListener("RenderMenuJoyIcon", _name);
+	_events->RemoveListener("RenderP1ControlHint", _name);
+	_events->RemoveListener("RenderP2ControlHint", _name);
 	_events->RemoveListener("RenderPauseText", _name);
 	_events->RemoveListener("RenderGameOverText", _name);
 	_events->RemoveListener("RenderColorTexture", _name);
@@ -245,6 +255,20 @@ void RenderManager::DrawJoyIcon(Point pos) const
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
 
 	SDL_RenderCopy(_renderer.get(), _joyIcon.get(), nullptr, &rect);
+}
+
+void RenderManager::DrawP1ControlHint(Point pos) const
+{
+	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 170, .h = 60};
+
+	SDL_RenderCopy(_renderer.get(), _p1ControlHint.get(), nullptr, &rect);
+}
+
+void RenderManager::DrawP2ControlHint(Point pos) const
+{
+	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 150, .h = 60};
+
+	SDL_RenderCopy(_renderer.get(), _p2ControlHint.get(), nullptr, &rect);
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value) const

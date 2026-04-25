@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Point.h"
+#include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "interfaces/IGame.h"
 #include <chrono>
@@ -32,6 +33,7 @@ class GameSuccess final : public IGame
 	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
 	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)

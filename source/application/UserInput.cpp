@@ -25,7 +25,7 @@ UserInput::~UserInput()
 
 void UserInput::Subscribe()
 {
-	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus) { this->_isPause = newPauseStatus; });
+	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
 	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }

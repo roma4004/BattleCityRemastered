@@ -31,7 +31,7 @@ void BonusEffectManager::Subscribe()
 	{
 		this->OnHelmetBonus(name, effectDuration);
 	});
-	//TODO: remove duration for bonuses
+
 	_events->AddListener("BonusShovel", _name, [this](const std::string& fraction, const milliseconds effectDuration)
 	{
 		this->OnBonusShovelPickup(fraction, effectDuration);

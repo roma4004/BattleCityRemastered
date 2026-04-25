@@ -12,13 +12,16 @@
 class IConfig;
 
 SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
-							   const char* introMusicName, const char* textureCollection, const char* joyIcon)
+							   const char* introMusicName, const char* textureCollection, const char* joyIcon,
+							   const char* p1ControlHint, const char* p2ControlHint)
 	: windowSize{windowSize}
 	, fpsFontPathName{fpsFontName}
 	, logoPathName{logoName}
 	, introMusicPathName{introMusicName}
 	, textureAtlasPath{textureCollection}
-	, joyIconPathName{joyIcon} {}
+	, joyIconPathName{joyIcon}
+	, p1ControlHintPathName{p1ControlHint}
+	, p2ControlHintPathName{p2ControlHint} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -104,6 +107,42 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
+	// texture P1 controls hint loading
+	std::shared_ptr<SDL_Texture> p1ControlHintTexture{nullptr};
+	{
+		std::shared_ptr<SDL_Surface> p1ControlHintSurface{nullptr};
+		if (p1ControlHintSurface = {IMG_Load(p1ControlHintPathName), SDL_FreeSurface};
+			p1ControlHintSurface == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG p1ControlHint Loading Error", IMG_GetError());
+		}
+
+		if (p1ControlHintTexture = {SDL_CreateTextureFromSurface(renderer.get(), p1ControlHintSurface.get()),
+									SDL_DestroyTexture};
+			p1ControlHintTexture == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG p1ControlHint Texture Creating Error", IMG_GetError());
+		}
+	}
+
+	// texture P1 controls hint loading
+	std::shared_ptr<SDL_Texture> p2ControlHintTexture{nullptr};
+	{
+		std::shared_ptr<SDL_Surface> p2ControlHintSurface{nullptr};
+		if (p2ControlHintSurface = {IMG_Load(p2ControlHintPathName), SDL_FreeSurface};
+			p2ControlHintSurface == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG p2ControlHint Loading Error", IMG_GetError());
+		}
+
+		if (p2ControlHintTexture = {SDL_CreateTextureFromSurface(renderer.get(), p2ControlHintSurface.get()),
+									SDL_DestroyTexture};
+			p2ControlHintTexture == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG p2ControlHint Texture Creating Error", IMG_GetError());
+		}
+	}
+
 	// texture atlas loading
 	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};
 	{
@@ -152,7 +191,7 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, joyIconTexture,
-										   isVsyncOn);
+										   p1ControlHintTexture, p2ControlHintTexture, isVsyncOn);
 }
 
 [[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(
@@ -160,7 +199,7 @@ SDLEnvironment::~SDLEnvironment()
 {
 	const auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_SHOWN;
-	const SDL_Rect rect{100, 100, static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)};
+	const SDL_Rect rect{.x = 100, .y = 100, .w = static_cast<int>(windowSize.x), .h = static_cast<int>(windowSize.y)};
 	windowSizeHalf = {.x = static_cast<size_t>(rect.w / 2), .y = static_cast<size_t>(rect.h / 2)};
 
 	return {SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};

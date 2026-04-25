@@ -21,6 +21,7 @@ class InputProviderForMenu final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameMode _gameMode{};
 	MenuKeys _keys{};
+	bool _isScoreBoardDisplayed{false};
 
 public:
 	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);
@@ -32,6 +33,7 @@ public:
 
 	void EnableMenuInput();
 	void DisableMenuInput() const;
+	void OnScoreBoardShowed(bool isDisplayed);
 	void ToggleMenuInputSubscription();
 	void Reset();
 	void MenuUpdate();

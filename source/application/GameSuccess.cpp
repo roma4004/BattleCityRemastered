@@ -2,6 +2,7 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
+#include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/RenderManager.h"
@@ -38,6 +39,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(windowSize, events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
