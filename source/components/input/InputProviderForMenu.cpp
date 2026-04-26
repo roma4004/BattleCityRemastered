@@ -40,6 +40,11 @@ void InputProviderForMenu::Unsubscribe() const
 	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("Reset", _name);
 	_events->RemoveListener("PreTickUpdate", _name);
+
+	if (_keys.menuShow)
+	{
+		DisableMenuInput();
+	}
 }
 
 void InputProviderForMenu::EnableMenuInput()
@@ -112,7 +117,7 @@ void InputProviderForMenu::ToggleDown()
 }
 
 void InputProviderForMenu::TogglePause() { SetPause(!GetPause()); }
-void InputProviderForMenu::SwitchPause(const bool switchTo) { SetPause(switchTo); }
+// void InputProviderForMenu::SwitchPause(const bool switchTo) { SetPause(switchTo); }
 
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
 

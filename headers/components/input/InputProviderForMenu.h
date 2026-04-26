@@ -38,7 +38,7 @@ public:
 	void Reset();
 	void MenuUpdate();
 	void TogglePause();
-	void SwitchPause(bool switchTo);
+	// void SwitchPause(bool switchTo);
 	bool GetPause() const;
 	void SetPause(bool value);
 
