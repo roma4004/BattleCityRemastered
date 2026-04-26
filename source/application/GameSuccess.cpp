@@ -56,7 +56,7 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
-	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
+	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });//TODO: add host\client branch subscription
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -67,16 +67,7 @@ void GameSuccess::Subscribe()
 	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
 }
 
-void GameSuccess::Unsubscribe() const
-{
-	_events->RemoveListener("PreviousGameMode", _name);
-	_events->RemoveListener("ClientReadyToStartGame", _name);
-	_events->RemoveListener("NextGameMode", _name);
-	_events->RemoveListener("ResetBattlefield", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);//TODO: add host\client branch subscription
-	_events->RemoveListener("PostTickUpdate", _name);
-	_events->RemoveListener("DeltaTime", _name);
-}
+void GameSuccess::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {

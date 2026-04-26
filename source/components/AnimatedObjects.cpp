@@ -33,14 +33,17 @@ AnimatedObject::~AnimatedObject()
 
 void AnimatedObject::Subscribe() const
 {
-	this->events->AddListener("Draw", nameWithUuid, [this]() { this->Draw(); });
+	if (events != nullptr)
+	{
+		this->events->AddListener("Draw", nameWithUuid, [this]() { this->Draw(); });
+	}
 }
 
 void AnimatedObject::Unsubscribe() const
 {
 	if (events != nullptr)
 	{
-		events->RemoveListener("Draw", nameWithUuid);
+		events->RemoveAllListeners(nameWithUuid);
 	}
 }
 
@@ -48,8 +51,11 @@ void AnimatedObject::Draw() const
 {
 	if (type == AnimationType::Water_Animation)
 	{
-		events->EmitEvent("DrawAnimation", rect, Direction::UP, -animationFrame, scale, name, color);
-		//TODO: -animationFrame -> +animationFrame
+		if (events != nullptr)
+		{
+			events->EmitEvent("DrawAnimation", rect, Direction::UP, -animationFrame, scale, name, color);
+			//TODO: -animationFrame -> +animationFrame
+		}
 	}
 	else if (name == "TankAnimation")
 	{

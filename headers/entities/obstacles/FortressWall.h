@@ -28,8 +28,6 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 	void SubscribeBonus();
 
 	void Unsubscribe() const;
-	void UnsubscribeAsClient() const;
-	void UnsubscribeBonus() const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void OnPlayerShovelCooldownEnd();

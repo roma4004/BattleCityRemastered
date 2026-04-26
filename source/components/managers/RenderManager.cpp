@@ -150,23 +150,7 @@ void RenderManager::Subscribe()
 			});
 }
 
-void RenderManager::Unsubscribe() const
-{
-	_events->RemoveListener("PreTickUpdate", _name);
-	_events->RemoveListener("RenderText", _name);
-	_events->RemoveListener("RenderMenuBackground", _name);
-	_events->RemoveListener("RenderMenuLogo", _name);
-	_events->RemoveListener("RenderMenuJoyIcon", _name);
-	_events->RemoveListener("RenderP1ControlHint", _name);
-	_events->RemoveListener("RenderP2ControlHint", _name);
-	_events->RemoveListener("RenderPauseText", _name);
-	_events->RemoveListener("RenderGameOverText", _name);
-	_events->RemoveListener("RenderColorTexture", _name);
-	_events->RemoveListener("RenderTexture", _name);
-	_events->RemoveListener("RenderFPS", _name);
-	_events->RemoveListener("RenderHealthBar", _name);
-	_events->RemoveListener("RenderGameWonText", _name);
-}
+void RenderManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RenderManager::DrawPauseText() const
 {

@@ -16,7 +16,6 @@ class Obstacle : public BaseObj, public IDrawable
 	virtual void SubscribeAsClient();
 
 	virtual void Unsubscribe() const;
-	virtual void UnsubscribeAsClient() const;
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};

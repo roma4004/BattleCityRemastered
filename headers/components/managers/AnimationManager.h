@@ -32,8 +32,6 @@ public:
 	// void SubscribeAsClient();
 
 	void Unsubscribe() const;
-	// void UnsubscribeAsClient() const;
-	void UnsubscribeAsHost() const;
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);

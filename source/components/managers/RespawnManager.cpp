@@ -76,22 +76,7 @@ void RespawnManager::SubscribeAsClient()
 	});
 }
 
-void RespawnManager::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("TankSpawn", _name);
-	_events->RemoveListener("TankDied", _name);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	_events->RemoveListener("BonusTank", _name);
-	_events->RemoveListener("SetSlotNeedRespawn", _name);
-	_events->RemoveListener("PlayersBaseFinished", _name);
-}
+void RespawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RespawnManager::UnsubscribeAsClient() const
 {

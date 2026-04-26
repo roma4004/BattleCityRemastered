@@ -49,17 +49,7 @@ void Menu::Subscribe()
 	});
 }
 
-void Menu::Unsubscribe() const
-{
-	if (_isMenuDisplayed)
-	{
-		_events->RemoveListener("DrawUserInterface", _name);
-	}
-
-	_events->RemoveListener("SelectedGameModeChangedTo", _name);
-	_events->RemoveListener("ShowMenu", _name);
-	_events->RemoveListener("ScoreBoardShowed", _name);
-}
+void Menu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 //TODO: optimize draw call with cache non changed text part
 void Menu::Draw()

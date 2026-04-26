@@ -27,7 +27,6 @@ class Bullet final : public Pawn, public IDrawable
 	void SubscribeAsClient() override;
 
 	void Unsubscribe() const override;
-	void UnsubscribeAsClient() const override;
 
 	void Enable();
 	void Disable() const;

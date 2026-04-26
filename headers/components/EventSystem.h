@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <ranges>
 
 //TODO: template for deducing lambda parameters type can be constexpr?
 //TODO: create eventType and derived just like network command to compile time parameter check and replace event name
@@ -297,6 +298,14 @@ public:
 		if (auto* event = GetEventByName(eventName))
 		{
 			event->RemoveListener(listenerName);
+		}
+	}
+
+	void RemoveAllListeners(const std::string& listenerName)
+	{
+		for (auto& eventInfo: _events | std::views::values)
+		{
+			eventInfo.event->RemoveListener(listenerName);
 		}
 	}
 

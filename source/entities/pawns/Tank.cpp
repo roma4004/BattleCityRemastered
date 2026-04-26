@@ -159,41 +159,7 @@ void Tank::SubscribeBonus()
 void Tank::Unsubscribe() const
 {
 	Pawn::Unsubscribe();
-
-	_events->RemoveListener("PostDraw", _nameWithUuid);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	UnsubscribeBonus();
-
-	// NOTE: should be in destructor to be able to unsubscribe in this case
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		_events->RemoveListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid);
-	}
-
-	_events->RemoveListener("BonusHelmet_EffectOnOff", _nameWithUuid);
-	_events->RemoveListener("BonusTimer_EffectOnOff", _nameWithUuid);	
-}
-
-void Tank::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _name + "Shot", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid);
-}
-
-void Tank::UnsubscribeBonus() const
-{
-	_events->RemoveListener("BonusTimerStatusChange", _nameWithUuid);
-	_events->RemoveListener("BonusHelmetStatusChange", _nameWithUuid);
-	_events->RemoveListener("BonusGrenade", _nameWithUuid);
-	_events->RemoveListener("BonusStar", _nameWithUuid);
-	_events->RemoveListener("BonusCaliber", _nameWithUuid);
+	_events->RemoveAllListeners(_nameWithUuid);
 }
 
 void Tank::Enable()

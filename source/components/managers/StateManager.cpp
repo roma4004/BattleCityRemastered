@@ -24,15 +24,7 @@ void StateManager::Subscribe()
 	});
 }
 
-void StateManager::Unsubscribe() const
-{
-	_events->RemoveListener("Pause_Status", _name);
-	_events->RemoveListener("PreDrawUserInterface", _name);
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("PlayersTeamIsWon", _name);
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
-}
+void StateManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void StateManager::Draw() const
 {

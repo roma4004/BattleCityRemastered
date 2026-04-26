@@ -41,6 +41,4 @@ public:
 	void SubscribeAsClient();
 
 	void Unsubscribe() const;
-	void UnsubscribeAsHost() const;
-	void UnsubscribeAsClient() const;
 };

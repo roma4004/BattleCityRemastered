@@ -496,40 +496,7 @@ void Server::SubscribeBonus()
 	});
 }
 
-void Server::Unsubscribe() const
-{
-	_events->RemoveListener("Server_EndFrame", _name);
-	_events->RemoveListener("ServerSend_Pause_Status", _name);
-
-	_events->RemoveListener("ServerSend_Pos", _name);
-	_events->RemoveListener("ServerSend_Shot", _name);
-	_events->RemoveListener("ServerSend_Health", _name);
-	_events->RemoveListener("ServerSend_Dispose", _name);
-
-	_events->RemoveListener("ServerSend_Statistics", _name);
-	_events->RemoveListener("ServerSend_RespawnTank", _name);
-	_events->RemoveListener("ServerSend_ObstacleSpawn", _name);
-
-	_events->RemoveListener("ServerSend_AnimationCreate", _name);
-
-	_events->RemoveListener("ServerSend_OnTankOnOff", _name);
-
-	UnsubscribeBonus();
-}
-
-void Server::UnsubscribeBonus() const
-{
-	_events->RemoveListener("ServerSend_BonusSpawn", _name);
-	_events->RemoveListener("ServerSend_BonusDeSpawn", _name);
-
-	_events->RemoveListener("ServerSend_FortressChange", _name);
-
-	_events->RemoveListener("ServerSend_OnBonusHelmet", _name);
-
-	_events->RemoveListener("ServerSend_OnStar", _name);
-	_events->RemoveListener("ServerSend_OnCaliber", _name);
-	_events->RemoveListener("ServerSend_OnTank", _name);
-}
+void Server::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void Server::DoAccept()
 {

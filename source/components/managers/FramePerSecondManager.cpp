@@ -33,12 +33,7 @@ void FramePerSecondManager::Subscribe()
 	});
 }
 
-void FramePerSecondManager::Unsubscribe() const
-{
-	_events->RemoveListener("CalculateActualFps", _name);
-	_events->RemoveListener("FrameStart", _name);
-	_events->RemoveListener("PostDrawUserInterface", _name);
-}
+void FramePerSecondManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void FramePerSecondManager::CountFpsAndDeltaTime()
 {

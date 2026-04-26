@@ -85,18 +85,7 @@ void TankSpawner::SubscribeAsClient()
 			});
 }
 
-void TankSpawner::Unsubscribe() const
-{
-	_events->RemoveListener("GameModeChangedTo", _name);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	_events->RemoveListener("SpawnEnabled", _name);
-	_events->RemoveListener("RespawnTanks", _name);
-}
+void TankSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
 

@@ -30,7 +30,4 @@ void GrassTile::Subscribe()
 	_events->AddListener("PostDraw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
-void GrassTile::Unsubscribe() const
-{
-	_events->RemoveListener("PostDraw", _nameWithUuid);
-}
+void GrassTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

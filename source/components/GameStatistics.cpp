@@ -73,13 +73,7 @@ void GameStatistics::SubscribeAsClient()
 			});
 }
 
-void GameStatistics::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
-
-	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
-}
+void GameStatistics::Unsubscribe() const  { _events->RemoveAllListeners(_name); }
 
 void GameStatistics::UnsubscribeAsHost() const
 {

@@ -32,7 +32,4 @@ void EagleTile::Subscribe()
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
-void EagleTile::Unsubscribe() const
-{
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
+void EagleTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

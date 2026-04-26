@@ -80,7 +80,6 @@ public:
 	void Subscribe();
 	void SubscribeBonus();
 	void Unsubscribe() const;
-	void UnsubscribeBonus() const;
 
 	void SendToAll(const std::string& message);
 	void CleanupDeadSessions();

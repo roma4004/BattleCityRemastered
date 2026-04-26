@@ -30,7 +30,4 @@ void SteelWall::Subscribe()
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
-void SteelWall::Unsubscribe() const
-{
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
+void SteelWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

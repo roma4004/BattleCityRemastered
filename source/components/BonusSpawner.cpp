@@ -75,12 +75,7 @@ void BonusSpawner::SubscribeAsClient()
 			});
 }
 
-void BonusSpawner::Unsubscribe() const
-{
-	_events->RemoveListener("GameModeChangedTo", _name);
-
-	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
-}
+void BonusSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void BonusSpawner::UnsubscribeAsHost() const { _events->RemoveListener("TickUpdate", _name); }
 

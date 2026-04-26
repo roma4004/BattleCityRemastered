@@ -106,18 +106,7 @@ void Client::Subscribe()
 	});
 }
 
-void Client::Unsubscribe() const
-{
-	_events->RemoveListener("P2_Move_Up", _name);
-	_events->RemoveListener("P2_Move_Left", _name);
-	_events->RemoveListener("P2_Move_Down", _name);
-	_events->RemoveListener("P2_Move_Right", _name);
-	_events->RemoveListener("P2_Fire", _name);
-
-	_events->RemoveListener("ClientSend_ReadyToPlay", _name);
-
-	_events->RemoveListener("ClientSend_Pause_Status", _name);
-}
+void Client::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void Client::ReadResponse()
 {

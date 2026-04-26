@@ -32,20 +32,7 @@ void InputProviderForMenu::Subscribe()
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
 }
 
-void InputProviderForMenu::Unsubscribe() const
-{
-	_events->RemoveListener("Menu_Released", _name);
-	_events->RemoveListener("ScoreBoardShowed", _name);
-	_events->RemoveListener("Pause_Released", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("PreTickUpdate", _name);
-
-	if (_keys.menuShow)
-	{
-		DisableMenuInput();
-	}
-}
+void InputProviderForMenu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void InputProviderForMenu::EnableMenuInput()
 {

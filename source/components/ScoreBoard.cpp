@@ -48,20 +48,7 @@ void ScoreBoard::Subscribe()
 	_events->AddListener("EnemiesTeamIsWon", _name, [this]() { this->DisplayScore(true); });
 }
 
-void ScoreBoard::Unsubscribe() const
-{
-	_events->RemoveListener("RespawnCountChangedTo", _name);
-
-	if (_isScoreBoardDisplayed)
-	{
-		_events->RemoveListener("DrawUserInterface", _name);
-	}
-
-	_events->RemoveListener("ShowMenu", _name);
-	_events->RemoveListener("Pause_Status", _name);
-	_events->RemoveListener("PlayersTeamIsWon", _name);
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-}
+void ScoreBoard::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 //TODO: optimize draw call with cache non changed text part
 void ScoreBoard::Draw()

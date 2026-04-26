@@ -42,12 +42,7 @@ void TextureManager::Subscribe() const
 			});
 }
 
-void TextureManager::Unsubscribe() const
-{
-	_events->RemoveListener("DrawObj", _name);
-	_events->RemoveListener("DrawAnimation", _name);
-	_events->RemoveListener("DrawTankAnimation", _name);
-}
+void TextureManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 {

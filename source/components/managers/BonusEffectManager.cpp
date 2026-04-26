@@ -49,15 +49,7 @@ void BonusEffectManager::Subscribe()
 	});
 }
 
-void BonusEffectManager::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("TickUpdate", _name);
-	_events->RemoveListener("BonusTimer", _name);
-	_events->RemoveListener("BonusHelmet", _name);
-	_events->RemoveListener("BonusShovel", _name);
-	_events->RemoveListener("SpawnEnabled", _name);
-}
+void BonusEffectManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void BonusEffectManager::Reset()
 {

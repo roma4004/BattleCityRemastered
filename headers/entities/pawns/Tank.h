@@ -26,8 +26,6 @@ class Tank : public Pawn
 	void SubscribeBonus();
 
 	void Unsubscribe() const override;
-	void UnsubscribeAsClient() const override;
-	void UnsubscribeBonus() const;
 
 	void OnBonusTimer(const std::string& fraction, bool isActive);
 	void OnBonusHelmet(const std::string& name, bool isActive);

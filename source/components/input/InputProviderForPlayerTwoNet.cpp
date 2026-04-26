@@ -23,16 +23,7 @@ void InputProviderForPlayerTwoNet::Subscribe()
 	});
 }
 
-void InputProviderForPlayerTwoNet::Unsubscribe() const
-{
-	_events->RemoveListener("ServerReceive_P2_Move_Up", _name);
-	_events->RemoveListener("ServerReceive_P2_Move_Left", _name);
-	_events->RemoveListener("ServerReceive_P2_Move_Down", _name);
-	_events->RemoveListener("ServerReceive_P2_Move_Right", _name);
-	_events->RemoveListener("ServerReceive_P2_Fire", _name);
-
-	_events->RemoveListener("ServerReceive_Pause_Released", _name);
-}
+void InputProviderForPlayerTwoNet::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void InputProviderForPlayerTwoNet::Enable()
 {

@@ -30,7 +30,4 @@ void IceTile::Subscribe()
 	_events->AddListener("PreDraw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
-void IceTile::Unsubscribe() const
-{
-	_events->RemoveListener("PreDraw", _nameWithUuid);
-}
+void IceTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

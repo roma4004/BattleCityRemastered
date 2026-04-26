@@ -73,27 +73,7 @@ void FortressWall::SubscribeBonus()
 	_events->AddListener("BonusShovelOnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
 }
 
-void FortressWall::Unsubscribe() const
-{
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	UnsubscribeBonus();
-}
-
-void FortressWall::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_FortressChange", _nameWithUuid);
-}
-
-void FortressWall::UnsubscribeBonus() const
-{
-	_events->RemoveListener("BonusShovelOnPlayerPickup", _nameWithUuid);
-	_events->RemoveListener("BonusShovelOnCooldownEnd", _nameWithUuid);
-	_events->RemoveListener("BonusShovelOnEnemyPickup", _nameWithUuid);
-}
+void FortressWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {

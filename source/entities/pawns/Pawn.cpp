@@ -59,27 +59,7 @@ void Pawn::SubscribeTickUpdate()
 
 void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate", _nameWithUuid); }
 
-void Pawn::Unsubscribe() const
-{
-	// std::cout << "[" << "Pawn::Unsubscribe()" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
-
-	_gameMode == GameMode::PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
-}
-
-void Pawn::UnsubscribeAsHost() const
-{
-	UnsubscribeTickUpdate();
-}
-
-void Pawn::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _name + "Pos", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
-}
+void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void Pawn::TakeDamage(const int damage)
 {

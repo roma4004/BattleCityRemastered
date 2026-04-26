@@ -41,18 +41,7 @@ void Obstacle::SubscribeAsClient()
 	});
 }
 
-void Obstacle::Unsubscribe() const
-{
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		Obstacle::UnsubscribeAsClient();
-	}
-}
-
-void Obstacle::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
-}
+void Obstacle::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 

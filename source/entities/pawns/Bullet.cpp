@@ -74,23 +74,7 @@ void Bullet::SubscribeAsClient()
 void Bullet::Unsubscribe() const
 {
 	Pawn::Unsubscribe();
-
-	_events->RemoveListener("Draw", _nameWithUuid);
-
-	// std::cout << "[" << "Bullet::Unsubscribe" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-}
-
-void Bullet::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _name + "Dispose", _nameWithUuid);
+	_events->RemoveAllListeners(_nameWithUuid);
 }
 
 void Bullet::Draw() const { _events->EmitEvent("DrawObj", _rect, _dir, _name, _color); }

@@ -65,22 +65,7 @@ void Bonus::SubscribeAsClient()
 	});
 }
 
-void Bonus::Unsubscribe() const
-{
-	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
-
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
-
-void Bonus::UnsubscribeAsHost() const
-{
-	_events->RemoveListener("TickUpdate", _nameWithUuid);
-}
-
-void Bonus::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_BonusDeSpawn", _name);
-}
+void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
 
