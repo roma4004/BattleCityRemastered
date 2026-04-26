@@ -269,7 +269,7 @@ void AnimationManager::UpdateTank(const std::string& objName, const ObjRectangle
 			animObj.rect.y = rect.y;
 			animObj.dir = dir;
 
-			UpdateFrame(animObj, 20);
+			UpdateFrame(animObj, 2);
 			return;
 		}
 	}

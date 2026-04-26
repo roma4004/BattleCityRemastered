@@ -16,7 +16,6 @@ InputProviderForMenu::~InputProviderForMenu()
 
 void InputProviderForMenu::Subscribe()
 {
-	ToggleMenuInputSubscription();
 	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
 	_events->AddListener("ScoreBoardShowed", _name, [this](const bool isDisplayed)
 	{
@@ -26,6 +25,7 @@ void InputProviderForMenu::Subscribe()
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
+		this->ToggleMenuInputSubscription();
 	});
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
@@ -69,7 +69,7 @@ void InputProviderForMenu::OnScoreBoardShowed(const bool isDisplayed)
 {
 	if (isDisplayed)
 	{
-		_keys.menuShow = false;
+		ToggleMenuInputSubscription();
 	}
 	else
 	{
@@ -118,6 +118,11 @@ void InputProviderForMenu::SwitchPause(const bool switchTo) { SetPause(switchTo)
 
 void InputProviderForMenu::SetPause(bool value)
 {
+	if (_keys.pause == value)
+	{
+		return;
+	}
+
 	_keys.pause = value;
 	_events->EmitEvent("Pause_Status", _keys.pause);
 

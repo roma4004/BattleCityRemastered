@@ -16,7 +16,7 @@ class ScoreBoard final
 	std::unique_ptr<GameStatistics> _statistics{nullptr};
 
 	std::string _name{};
-	bool _isScoreBoardDisplayed{true};
+	bool _isScoreBoardDisplayed{false};
 
 	//TODO: extract to separate sidebar class
 	int _enemyRespawnCount{20};

@@ -25,7 +25,7 @@ class Menu final
 	int _playerOneRepawnCount{3};
 	int _playerTwoRespawnCount{3};
 	GameMode _selectedGameMode{};
-	bool _isMenuDisplayed{true};
+	bool _isMenuDisplayed{false};
 
 	void Subscribe();
 	void Unsubscribe() const;

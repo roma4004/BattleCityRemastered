@@ -43,7 +43,7 @@ void ScoreBoard::Subscribe()
 			this->DisplayScore(false);
 		}
 	});
-	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->DisplayScore(isPause); });
+	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { /*this->DisplayScore(isPause);*/ });
 	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->DisplayScore(true); });
 	_events->AddListener("EnemiesTeamIsWon", _name, [this]() { this->DisplayScore(true); });
 }
