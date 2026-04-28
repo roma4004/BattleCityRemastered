@@ -17,13 +17,14 @@ class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IP
 
 	std::chrono::system_clock::time_point _creationTime{};
 
+	void TickUpdate(double deltaTime) override;
+
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	milliseconds _lifetime{};
 	GameMode _gameMode{};
 	BonusType _bonusType{};
 
-	void TickUpdate(double deltaTime) override;
 
 	void Draw() const override;
 

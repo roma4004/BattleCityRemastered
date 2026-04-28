@@ -71,7 +71,7 @@ void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
+	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime)) //TODO: extract to BonusEffectManager
 	{
 		SetIsAlive(false);
 	}
