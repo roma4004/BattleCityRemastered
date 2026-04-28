@@ -120,6 +120,10 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.rightSideBar;
 	}
+	else if (name == "EnemyDecal")
+	{
+		textureRect = _offset.enemyDecal;
+	}
 
 	return textureRect;
 }
