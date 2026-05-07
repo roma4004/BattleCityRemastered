@@ -21,8 +21,9 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 {
 	auto events = std::make_shared<EventSystem>();
 	auto menu = std::make_unique<Menu>(_windowSize, events);
-	auto renderManager = std::make_unique<RenderManager>(events, _renderer, _fpsFont, _logoTexture, _atlasTexture,
-														 _joyIcon, _windowSize);
+	auto renderManager = std::make_unique<RenderManager>(events, 
+		_renderer, _fpsFont, _logoTexture, _atlasTexture,_joyIcon, _windowSize);
 
-	return std::make_unique<GameSuccess>(_windowSize, events, menu, _isVsyncOn, renderManager);
+	return std::make_unique<GameSuccess>(_windowSize, events, menu, 
+		_isVsyncOn, renderManager, _renderer, _atlasTexture);
 }

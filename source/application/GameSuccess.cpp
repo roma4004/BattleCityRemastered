@@ -28,7 +28,9 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-						 std::unique_ptr<RenderManager>& renderManager)
+						 std::unique_ptr<RenderManager>& renderManager,
+						 const std::shared_ptr<SDL_Renderer>& renderer, 
+						 const std::shared_ptr<SDL_Texture>& atlasTexture)
 	: _windowSize{windowSize}
 	, _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
@@ -40,6 +42,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
+	, _renderer{renderer}
+	, _atlasTexture{atlasTexture}
+	, _rightSideBar{windowSize, events, _renderer, _atlasTexture}
 {
 	Subscribe();
 

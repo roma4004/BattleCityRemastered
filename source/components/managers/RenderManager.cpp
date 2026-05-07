@@ -142,18 +142,6 @@ void RenderManager::Subscribe()
 				DrawHealthBar(rect, health, color);
 			});
 
-	_events->AddListener("EnableRightSideBar", _name,
-	[this]()
-	{
-		_isRightSideBarEnabled = true;
-	});
-
-	_events->AddListener("DisableRightSideBar", _name,
-	[this]()
-	{
-		_isRightSideBarEnabled = false;
-	});
-
 	_events->AddListener(
 			"RenderRightSideBar", _name,
 			[this]()
@@ -164,59 +152,6 @@ void RenderManager::Subscribe()
 				SDL_Texture* colorTexture = CreateColorTexture(gray);
 
 				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
-			});
-
-	_events->AddListener(
-			"EnableEnemyDecal", _name,
-			[this]()
-			{
-				_isEnemyDecalEnabled = true;
-			});
-
-	_events->AddListener(
-			"DisableEnemyDecal", _name,
-			[this]()
-			{
-				_isEnemyDecalEnabled = false;
-			});
-
-	_events->AddListener(
-			"RenderEnemyDecal", _name,
-			[this]()
-			{
-				constexpr TextureOffset offset{};
-				constexpr SDL_Rect rect{.x = 650, .y = 60, .w = 20, .h = 40}; //positioning inside window
-
-				SDL_Rect srcrect{
-						static_cast<int>(offset.enemyDecal.x),
-						static_cast<int>(offset.enemyDecal.y),
-						static_cast<int>(offset.enemyDecal.w),
-						static_cast<int>(offset.enemyDecal.h)};
-
-				//SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
-
-				constexpr int numPictures = 20;
-				constexpr int columns = 2;
-				constexpr int rows = numPictures / columns;
-				constexpr int distanceBetweenColumns = 50;
-				constexpr int verticalDistanceBetweenDecals = 200;
-				int imageWidth{rect.w}, imageHeight{rect.h};
-
-				int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
-				int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
-				
-				for (int i = 0; i < numPictures; ++i)
-				{
-					int leftUpCornerX = 685;
-					int leftUpCornerY = 95;
-					int row = i / columns;
-					int col = i % columns;
-					int x = leftUpCornerX + spacingX + col * (imageWidth + spacingX);
-					int y = leftUpCornerY + spacingY + row * (imageHeight + spacingY);
-
-					SDL_Rect destRect = {x, y, imageWidth, imageHeight};
-					SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &destRect);
-				}
 			});
 }
 
@@ -236,9 +171,6 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("EnableRightSideBar", _name);
 	_events->RemoveListener("DisableRightSideBar", _name);
 	_events->RemoveListener("RenderRightSideBar", _name);
-	_events->RemoveListener("EnableEnemyDecal", _name);
-	_events->RemoveListener("DisableEnemyDecal", _name);
-	_events->RemoveListener("RenderEnemyDecal", _name);
 }
 
 void RenderManager::DrawPauseText() const
@@ -285,18 +217,6 @@ void RenderManager::DrawRightSideBar() const
 							   .w = static_cast<int>(offset.rightSideBar.w),
 							   .h = static_cast<int>(offset.rightSideBar.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
-}
-
-void RenderManager::DrawEnemyDecal() const
-{
-	constexpr TextureOffset offset{};
-	//constexpr SDL_Rect rect{.x = 400, .y = 250, .w = 100, .h = 50};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyDecal.x),
-							   .y = static_cast<int>(offset.enemyDecal.y),
-							   .w = static_cast<int>(offset.enemyDecal.w),
-							   .h = static_cast<int>(offset.enemyDecal.h)};
-
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, /*&rect*/nullptr);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()

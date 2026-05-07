@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Point.h"
+#include "components/RightSideBar.h"
 #include "entities/ObjRectangle.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include <SDL_render.h>
@@ -31,8 +32,6 @@ class RenderManager
 	int _windowHeight;
 	int _width;
 	int _padding;
-	bool _isRightSideBarEnabled;
-	bool _isEnemyDecalEnabled;
 
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
@@ -45,7 +44,6 @@ class RenderManager
 	void DrawGameOverText() const;
 	void DrawGameWonText() const;
 	void DrawRightSideBar() const;
-	void DrawEnemyDecal() const;
 
 	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);

@@ -85,7 +85,7 @@ void Menu::DrawMenu()
 	_events->EmitEvent("RenderMenuBackground", _pos);
 	_events->EmitEvent("RenderMenuLogo", _pos);
 	_events->EmitEvent("RenderRightSideBar");
-	_events->EmitEvent("RenderEnemyDecal");
+	_events->EmitEvent("DrawEnemyIcons");
 	DrawText();
 }
 

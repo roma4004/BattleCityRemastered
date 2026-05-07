@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Point.h"
+#include "components/RightSideBar.h"
 #include "components/managers/BonusEffectManager.h"
+#include "components/managers/RenderManager.h"
 #include "interfaces/IGame.h"
 #include <chrono>
 
@@ -17,6 +19,7 @@ class FramePerSecondManager;
 class SpawnManager;
 class RenderManager;
 class EventSystem;
+class RightSideBar;
 
 class GameSuccess final : public IGame
 {
@@ -36,10 +39,13 @@ class GameSuccess final : public IGame
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+	const std::shared_ptr<SDL_Renderer>& _renderer; 
+	const std::shared_ptr<SDL_Texture>& _atlasTexture;
 
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
+	RightSideBar _rightSideBar{_windowSize, _events, _renderer, _atlasTexture};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -62,7 +68,9 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
+				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager,
+				const std::shared_ptr<SDL_Renderer>& renderer, 
+				const std::shared_ptr<SDL_Texture>& atlasTexture);
 
 	~GameSuccess() override;
 };
