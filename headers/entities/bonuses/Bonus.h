@@ -25,11 +25,7 @@ protected:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
 
-
 	void Draw() const override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 
 public:
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
@@ -42,4 +38,7 @@ public:
 	void SubscribeAsClient();
 
 	void Unsubscribe() const;
+
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 };

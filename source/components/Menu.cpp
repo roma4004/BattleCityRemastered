@@ -83,7 +83,7 @@ void Menu::DrawTextLine(Point& posText, std::string text) const
 {
 	constexpr unsigned int color = {0xffffffff};
 	_events->EmitEvent("RenderText", posText, color, text);
-	posText.y += 25;
+	posText.y += 30;
 }
 
 void Menu::DrawMenuText() const
@@ -109,16 +109,16 @@ void Menu::DrawControlHints() const
 		return;
 	}
 
-	_events->EmitEvent("RenderP1ControlHint", relativePos);
-	if (_selectedGameMode == GameMode::TwoPlayers)
-	{
-		_events->EmitEvent("RenderP2ControlHint", Point{.x = relativePos.x + 200, .y = relativePos.y});
-	}
+	_events->EmitEvent("RenderMenuXBoxHint", Point{.x = relativePos.x + 240, .y = relativePos.y - 40});
+	_events->EmitEvent("RenderMenuPS5Hint", Point{.x = relativePos.x + 280, .y = relativePos.y + 110});
 
-	Point posText{.x = _pos.x + 130, .y = _pos.y + 370};
-	DrawTextLine(posText, "Show Menu [M]");
-	DrawTextLine(posText, "Set/Unset Pause [P]");
-	DrawTextLine(posText, "Swap Player Controls [TAB]");
+	Point posText{.x = _pos.x + 40, .y = _pos.y + 310};
+	DrawTextLine(posText, "Controls: P1/P2 | XBox  | PS");
+	DrawTextLine(posText, "Pause       P      View    Create");
+	DrawTextLine(posText, "Menu        M      Menu    Options");
+	DrawTextLine(posText, "Swap       TAB     Y       Triangle");
+	DrawTextLine(posText, "Move Arrows/WASD   D-pad   D-pad");
+	DrawTextLine(posText, "Fire Space/LCtrl   A       Cross");
 }
 
 void Menu::DisplayMenu(const bool isDisplayed)

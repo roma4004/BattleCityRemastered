@@ -477,8 +477,8 @@ set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
 set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
 set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
-set(P1_CONTROLS_PATH_NAME      ${IMG_PATH}/controlP1_2.png)
-set(P2_CONTROLS_PATH_NAME      ${IMG_PATH}/controlP2_4.png)
+set(XBOX_CON_PATH_NAME         ${IMG_PATH}/XBoxCon.png)
+set(PS5_CON_PATH_NAME          ${IMG_PATH}/PS5Con.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
@@ -493,12 +493,12 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${P1_CONTROLS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${P1_CONTROLS_PATH_NAME}")
+        "../${XBOX_CON_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_CON_PATH_NAME}")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${P2_CONTROLS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${P2_CONTROLS_PATH_NAME}")
+        "../${PS5_CON_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_CON_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)

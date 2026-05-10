@@ -11,17 +11,16 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
-							   const char* introMusicName, const char* textureCollection, const char* joyIcon,
-							   const char* p1ControlHint, const char* p2ControlHint)
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFont, const char* logo, const char* introMusic,
+							   const char* atlas, const char* joyIcon, const char* xBoxCon, const char* pS5Con)
 	: windowSize{windowSize}
-	, fpsFontPathName{fpsFontName}
-	, logoPathName{logoName}
-	, introMusicPathName{introMusicName}
-	, textureAtlasPath{textureCollection}
+	, fpsFontPathName{fpsFont}
+	, logoPathName{logo}
+	, introMusicPathName{introMusic}
+	, textureAtlasPath{atlas}
 	, joyIconPathName{joyIcon}
-	, p1ControlHintPathName{p1ControlHint}
-	, p2ControlHintPathName{p2ControlHint} {}
+	, xBoxHintPathName{xBoxCon}
+	, pS5HintPathName{pS5Con} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -107,39 +106,37 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
-	// texture P1 controls hint loading
-	std::shared_ptr<SDL_Texture> p1ControlHintTexture{nullptr};
+	// texture XBox controls hint loading
+	std::shared_ptr<SDL_Texture> xBoxHintTexture{nullptr};
 	{
-		std::shared_ptr<SDL_Surface> p1ControlHintSurface{nullptr};
-		if (p1ControlHintSurface = {IMG_Load(p1ControlHintPathName), SDL_FreeSurface};
-			p1ControlHintSurface == nullptr)
+		std::shared_ptr<SDL_Surface> xBoxHintSurface{nullptr};
+		if (xBoxHintSurface = {IMG_Load(xBoxHintPathName), SDL_FreeSurface};
+			xBoxHintSurface == nullptr)
 		{
-			return std::make_unique<ConfigFailure>("IMG p1ControlHint Loading Error", IMG_GetError());
+			return std::make_unique<ConfigFailure>("IMG XBoxHint Loading Error", IMG_GetError());
 		}
 
-		if (p1ControlHintTexture = {SDL_CreateTextureFromSurface(renderer.get(), p1ControlHintSurface.get()),
-									SDL_DestroyTexture};
-			p1ControlHintTexture == nullptr)
+		if (xBoxHintTexture = {SDL_CreateTextureFromSurface(renderer.get(), xBoxHintSurface.get()), SDL_DestroyTexture};
+			xBoxHintTexture == nullptr)
 		{
-			return std::make_unique<ConfigFailure>("IMG p1ControlHint Texture Creating Error", IMG_GetError());
+			return std::make_unique<ConfigFailure>("IMG XBoxHint Texture Creating Error", IMG_GetError());
 		}
 	}
 
-	// texture P1 controls hint loading
-	std::shared_ptr<SDL_Texture> p2ControlHintTexture{nullptr};
+	// texture PS5 controls hint loading
+	std::shared_ptr<SDL_Texture> pS5HintTexture{nullptr};
 	{
-		std::shared_ptr<SDL_Surface> p2ControlHintSurface{nullptr};
-		if (p2ControlHintSurface = {IMG_Load(p2ControlHintPathName), SDL_FreeSurface};
-			p2ControlHintSurface == nullptr)
+		std::shared_ptr<SDL_Surface> pS5HintSurface{nullptr};
+		if (pS5HintSurface = {IMG_Load(pS5HintPathName), SDL_FreeSurface};
+			pS5HintSurface == nullptr)
 		{
-			return std::make_unique<ConfigFailure>("IMG p2ControlHint Loading Error", IMG_GetError());
+			return std::make_unique<ConfigFailure>("IMG PS5Hint Loading Error", IMG_GetError());
 		}
 
-		if (p2ControlHintTexture = {SDL_CreateTextureFromSurface(renderer.get(), p2ControlHintSurface.get()),
-									SDL_DestroyTexture};
-			p2ControlHintTexture == nullptr)
+		if (pS5HintTexture = {SDL_CreateTextureFromSurface(renderer.get(), pS5HintSurface.get()), SDL_DestroyTexture};
+			pS5HintTexture == nullptr)
 		{
-			return std::make_unique<ConfigFailure>("IMG p2ControlHint Texture Creating Error", IMG_GetError());
+			return std::make_unique<ConfigFailure>("IMG PS5Hint Texture Creating Error", IMG_GetError());
 		}
 	}
 
@@ -191,11 +188,11 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, joyIconTexture,
-										   p1ControlHintTexture, p2ControlHintTexture, isVsyncOn);
+										   xBoxHintTexture, pS5HintTexture, isVsyncOn);
 }
 
-[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(
-		UPoint& windowSizeHalf) const
+[[nodiscard]]
+std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(UPoint& windowSizeHalf) const
 {
 	const auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_SHOWN;
