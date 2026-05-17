@@ -2,6 +2,7 @@
 
 #include "../BonusEffectProperty.h"
 #include "Pawn.h"
+#include "entities/BulletCalibre.h"
 
 struct UPoint;
 class PlayerTest;
@@ -14,10 +15,6 @@ class Tank : public Pawn
 
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
-
-	int _bulletDamage{15};
-	float _bulletSpeed{300.f};//TODO: move outside this class to bullet caliber stats class and DI into constructor
-	std::vector<std::shared_ptr<BaseObj>> _touchedObstacles;
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
@@ -33,8 +30,7 @@ class Tank : public Pawn
 	void OnClientTankOnOff(buuid uuid, bool isEnable);
 
 protected:
-	FPoint _bulletSize{.x = 9.f, .y = 9.f};
-	double _bulletDamageRadius{18.f};
+	BulletCalibre _calibre{};
 	milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire{};
 

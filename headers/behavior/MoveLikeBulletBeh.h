@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Point.h"
+#include "entities/BulletCalibre.h"
 #include "interfaces/IMoveBeh.h"
 #include <boost/uuid/uuid.hpp>
 #include <memory>
@@ -18,9 +19,8 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	buuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
-	float& _speed;
-	double& _bulletDamageRadius;
 	UPoint& _windowSize;
+	BulletCalibre _calibre{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -36,8 +36,8 @@ protected:
 	[[nodiscard]] bool MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
 
 public:
-	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
-					  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects);
+	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, const BulletCalibre& calibre,
+					  std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;
 

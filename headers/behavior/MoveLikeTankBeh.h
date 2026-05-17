@@ -21,7 +21,6 @@ class MoveLikeTankBeh final : public IMoveBeh
 	UPoint& _windowSize;//TODO: subscribe on windows size change
 	std::string& _name;
 	std::string& _fraction;
-	std::vector<std::shared_ptr<BaseObj>>& _touchedObstacles;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -39,8 +38,7 @@ protected:
 
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
-					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
-					std::vector<std::shared_ptr<BaseObj>>* allObjects);
+					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeTankBeh() override = default;
 

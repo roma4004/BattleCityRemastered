@@ -32,13 +32,11 @@ protected:
 	unsigned int _gray{0x808080};
 	unsigned int _bulletColor{0xffffff};
 	int _bulletHealth{1};
-	int _bulletDamage{1};
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
-	// float _bulletSpeed{300.f};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	double _bulletDamageRadius{12.0};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -262,9 +260,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 				.dir = Direction::LEFT,
 				.gameMode = _gameMode};
 
-		_allObjects.emplace_back(
-				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+		_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author)));
 
 		if (dynamic_cast<Bullet*>(_allObjects.back().get()))
 		{
@@ -323,9 +319,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
-						enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -501,7 +495,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 	{
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 								  BonusType::Star);
-		constexpr bool isPressed{true};	
+		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
 
 		EXPECT_EQ(player->GetTier(), 1);

@@ -9,7 +9,6 @@
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
 								 std::string& name, std::string& fraction,
-								 std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
 								 std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}
@@ -18,7 +17,6 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& spee
 	, _windowSize{windowSize}
 	, _name{name}
 	, _fraction{fraction}
-	, _touchedObstacles{touchedObstacles}
 	, _allObjects{allObjects} {}
 
 ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime) const

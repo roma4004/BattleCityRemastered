@@ -3,6 +3,7 @@
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "entities/BulletCalibre.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "interfaces/IPickupableBonus.h"
@@ -15,11 +16,14 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	BaseObj::SetIsPenetrable(false);
 
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction,
-												 _touchedObstacles, _allObjects);
-
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier,
-												 _bulletDamageRadius, _bulletSize, _windowSize, _name, _fraction,
-												 _allObjects, bulletPool);
+												 _allObjects);
+	_calibre = BulletCalibre{.speed = 300.f,
+							 .damage = 15,
+							 .damageRadius = 18.f,
+							 .tier = _tier,
+							 .size{.x = 9.f, .y = 9.f}};
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _windowSize, _name, _fraction, _allObjects,
+												 bulletPool, _calibre);
 
 	if (enableByDefault)
 	{
@@ -38,14 +42,14 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	}
 
 	_events->AddListener(
-				"BonusHelmet_EffectOnOff", _nameWithUuid,
-				[this](const bool isEnabled, const std::string& name)
+			"BonusHelmet_EffectOnOff", _nameWithUuid,
+			[this](const bool isEnabled, const std::string& name)
+			{
+				if (name == this->_name)
 				{
-					if (name == this->_name)
-					{
-						this->_effects.isHelmetActive = isEnabled;
-					}
-				});
+					this->_effects.isHelmetActive = isEnabled;
+				}
+			});
 
 	_events->AddListener(
 			"BonusTimer_EffectOnOff", _nameWithUuid,
@@ -206,25 +210,25 @@ void Tank::Shot(const buuid withUuid) const
 	}
 }
 
-float Tank::GetBulletWidth() const { return _bulletSize.x; }
+float Tank::GetBulletWidth() const { return _calibre.size.x; }
 
-void Tank::SetBulletWidth(const float bulletWidth) { _bulletSize.x = bulletWidth; }
+void Tank::SetBulletWidth(const float bulletWidth) { _calibre.size.x = bulletWidth; }
 
-float Tank::GetBulletHeight() const { return _bulletSize.y; }
+float Tank::GetBulletHeight() const { return _calibre.size.y; }
 
-void Tank::SetBulletHeight(const float bulletHeight) { _bulletSize.y = bulletHeight; }
+void Tank::SetBulletHeight(const float bulletHeight) { _calibre.size.y = bulletHeight; }
 
-float Tank::GetBulletSpeed() const { return _bulletSpeed; }
+float Tank::GetBulletSpeed() const { return _calibre.speed; }
 
-void Tank::SetBulletSpeed(const float bulletSpeed) { _bulletSpeed = bulletSpeed; }
+void Tank::SetBulletSpeed(const float bulletSpeed) { _calibre.speed = bulletSpeed; }
 
-int Tank::GetBulletDamage() const { return _bulletDamage; }
+int Tank::GetBulletDamage() const { return _calibre.damage; }
 
-void Tank::SetBulletDamage(const int bulletDamage) { _bulletDamage = bulletDamage; }
+void Tank::SetBulletDamage(const int bulletDamage) { _calibre.damage = bulletDamage; }
 
-double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
+double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
 
-void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
+void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
 
 void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
 {
@@ -276,10 +280,10 @@ void Tank::OnBonusStar(const std::string& author)
 		++_tier;
 
 		_speed *= 1.10f;
-		_bulletSpeed *= 1.10f;
-		_bulletDamage += 15;
+		_calibre.speed *= 1.10f;
+		_calibre.damage += 15;
+		_calibre.damageRadius *= 1.25f;
 		_fireCooldown -= milliseconds{150};
-		_bulletDamageRadius *= 1.25f;
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
@@ -301,10 +305,10 @@ void Tank::OnBonusCaliber(const std::string& author)
 		_tier += 3;
 
 		_speed *= 1.30f;
-		_bulletSpeed *= 1.30f;
-		_bulletDamage += 45;
+		_calibre.speed *= 1.30f;
+		_calibre.damage += 45;
+		_calibre.damageRadius *= 1.75f;
 		_fireCooldown -= milliseconds{450};
-		_bulletDamageRadius *= 1.75f;
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{

@@ -113,7 +113,7 @@ bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::shared
 
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 {
-	LineOfSight lineOfSight(_rect, _windowSize, _bulletSize, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _windowSize, _calibre.size, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
 	if (HandleSideObstacles(Direction::UP, upSideObstacles))
@@ -153,7 +153,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.y - (nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight());
-			_bulletOffset = _bulletSize.y;
+			_bulletOffset = _calibre.size.y;
 		}
 	}
 
@@ -163,7 +163,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.x - (nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth());
-			_bulletOffset = _bulletSize.x;
+			_bulletOffset = _calibre.size.x;
 		}
 	}
 
@@ -173,7 +173,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
-			_bulletOffset = _bulletSize.y;
+			_bulletOffset = _calibre.size.y;
 		}
 	}
 
@@ -183,7 +183,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
-			_bulletOffset = _bulletSize.x;
+			_bulletOffset = _calibre.size.x;
 		}
 	}
 

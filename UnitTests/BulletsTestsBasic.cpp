@@ -21,18 +21,11 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
-	int _bulletDamage{1};
 	int _bulletHealth{1};
 	unsigned int _bulletColor{0xffffff};
-	FPoint _bulletSize;
-	float _bulletSpeed{300.f};
 	float _gridSize{1};
-	float _tankSize{};
-	float _tankSpeed{142.f};
-	float _bulletWidth{6.f};
-	float _bulletHeight{5.f};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	double _bulletDamageRadius{12.0};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -40,12 +33,11 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
 
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
-		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
+		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
 
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
@@ -59,7 +51,7 @@ protected:
 				.allObjects = &_allObjects,
 				.events = _events,
 				.tier = 1,
-				.speed = _bulletSpeed,
+				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
@@ -67,9 +59,7 @@ protected:
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
-						enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
 	}
 
 	void TearDown() override
@@ -125,7 +115,7 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		const auto windowWidth = static_cast<float>(_windowSize.x);
 		const auto windowHeight = static_cast<float>(_windowSize.y);
 
-		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
+		bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 		{
 			//success shot up test, try to create an inside screen bullet
 			bullet->SetDirection(Direction::UP);
@@ -159,11 +149,11 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		const auto windowWidth = static_cast<float>(_windowSize.x);
 		const auto windowHeight = static_cast<float>(_windowSize.y);
 
-		bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
+		bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 		{
 			//fail bullet move down test, try to move an outside screen bullet
 			bullet->SetDirection(Direction::DOWN);
-			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
+			bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
@@ -173,7 +163,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 		{
 			//fail the bullet move right test, try to move an outside screen bullet
 			bullet->SetDirection(Direction::RIGHT);
-			bullet->SetPos({.x = windowWidth - _bulletSize.x, .y = windowHeight - _bulletSize.y});
+			bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 			const FPoint bulletStartPos = bullet->GetPos();
 
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
@@ -319,7 +309,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	constexpr int gray = 0x808080;
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
-	ObjRectangle rect{.x = 0, .y = _bulletSize.y, .w = tankSize, .h = tankSize};
+	ObjRectangle rect{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect,
 									.color = gray,
 									.health = tankHealth,
@@ -331,7 +321,7 @@ TEST_F(BulletTest, BulletDamageTank)
 			.allObjects = &_allObjects,
 			.events = _events,
 			.tier = 1,
-			.speed = _bulletSpeed,
+			.speed = _calibre.speed,
 			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
@@ -356,7 +346,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 		std::string name{"Bullet2"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player2"};
-		ObjRectangle rect{.x = 0, .y = _bulletSize.y + 1, .w = _bulletSize.x, .h = _bulletSize.y};
+		ObjRectangle rect{.x = 0, .y = _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
 				.color = _bulletColor,
@@ -369,14 +359,12 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 				.allObjects = &_allObjects,
 				.events = _events,
 				.tier = 1,
-				.speed = _bulletSpeed,
+				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 
-		_allObjects.emplace_back(
-				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author)));
+		_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author)));
 
 		if (const auto bullet2 = dynamic_cast<const Bullet*>(_allObjects.back().get()))
 		{

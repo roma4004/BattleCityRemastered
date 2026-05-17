@@ -10,22 +10,18 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Bullet::Bullet(PawnProperty pawnProperty)
-	: Bullet(std::move(pawnProperty), 0, 18.f, "") {}
-
-Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadius, std::string author,
-			   const bool enableByDefault)
+Bullet::Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre, std::string author, const bool enableByDefault)
 	: Pawn{std::move(pawnProperty)}
 	, _author{std::move(author)}
-	, _bulletDamageRadius{aoeRadius}
-	, _damage{damage}
+	, _calibre{calibre}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
-												   _allObjects);
+	// NOTE: needed only for tests, TODO in test use tank shoot instead of creating bullet
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _windowSize, _calibre, _allObjects);
+
 	if (enableByDefault)
 	{
 		Bullet::Subscribe();
@@ -117,14 +113,10 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	SetDirection(resetProperty.dir);
 
 	//TODO: write reset for MoveLikeBulletBeh
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
-												   _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _windowSize, resetProperty.calibre, _allObjects);
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
-	_damage = resetProperty.damage;
-	_bulletDamageRadius = resetProperty.aoeRadius;
-	_speed = resetProperty.speed;
-	_tier = resetProperty.tier;
+	_calibre = resetProperty.calibre;
 
 	if (resetProperty.uuid != UuidUtils::GetNilUuid())
 	{
@@ -152,9 +144,9 @@ void Bullet::TickUpdate(const double deltaTime)
 	}
 }
 
-int Bullet::GetDamage() const { return _damage; }
+int Bullet::GetDamage() const { return _calibre.damage; }
 
-double Bullet::GetBulletDamageRadius() const { return _bulletDamageRadius; }
+double Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
 std::string Bullet::GetAuthor() const { return _author; }
 
@@ -168,7 +160,7 @@ void Bullet::TakeDamage(const int damage)
 	Pawn::TakeDamage(damage);
 }
 
-int Bullet::GetTier() const { return _tier; }
+int Bullet::GetTier() const { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
@@ -177,9 +169,9 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		if (target && !dynamic_cast<WaterTile*>(target.get())
 			&& !dynamic_cast<GrassTile*>(target.get())
 			&& !dynamic_cast<IceTile*>(target.get())
-			&& (target->GetIsDestructible() || _tier > 2))
+			&& (target->GetIsDestructible() || _calibre.tier > 2))
 		{
-			target->TakeDamage(_damage);
+			target->TakeDamage(_calibre.damage);
 			target->SendDamageStatistics(GetAuthor(), GetFraction());
 			if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
 			{
@@ -188,7 +180,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		}
 	}
 
-	TakeDamage(_damage);
+	TakeDamage(_calibre.damage);
 
 	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
 }
