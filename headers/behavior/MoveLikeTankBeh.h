@@ -26,7 +26,8 @@ class MoveLikeTankBeh final : public IMoveBeh
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
-	std::vector<std::shared_ptr<BaseObj>> GetTouchedObjects(double deltaTime) const;
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetTouchedObjects(double deltaTime) const;
+	[[nodiscard]] ObjRectangle GetNextPosRect(double deltaTime) const;
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 

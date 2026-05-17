@@ -21,7 +21,7 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& 
 //NOTE: Never user for bullets
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(double /*deltaTime*/) const { return {}; }
 
-ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const double deltaTime) const
+ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 {
 	const float speed = _speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
@@ -70,23 +70,13 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
 {
-	return std::ranges::all_of(*_allObjects, [this, deltaTime](const std::shared_ptr<BaseObj>& object)
+	const ObjRectangle nextPosRect = GetNextPos(deltaTime);
+
+	return std::ranges::none_of(*_allObjects, [uuid = _uuid, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (_uuid == object->GetUuid())
-		{
-			return true;
-		}
-
-		if (ColliderUtils::IsCollide(GetBulletPathRect(deltaTime), object->GetRect()))
-		{
-			if (!object->GetIsPenetrable())
-			{
-				return false;
-				//TODO: fix move to a bonus though water
-			}
-		}
-
-		return true;
+		return uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(nextPosRect, object->GetRect())
+			   && !object->GetIsPenetrable();
 	});
 }
 
@@ -180,23 +170,13 @@ bool MoveLikeBulletBeh::MoveDown(std::vector<std::shared_ptr<BaseObj>>& outColli
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(const FPoint blowCenter) const
 {
-	std::vector<std::shared_ptr<BaseObj>> aoeCollisions{};
-	constexpr int defaultCollisionReserve{5};
-	aoeCollisions.reserve(defaultCollisionReserve);
-
 	const Circle circle{.center = blowCenter, .radius = _bulletDamageRadius};
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+
+	auto collisions = *_allObjects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
 	{
-		if (_uuid == object->GetUuid())
-		{
-			continue;
-		}
+		return obj->GetUuid() != _uuid
+			   && ColliderUtils::IsCollide(circle, obj->GetRect());
+	});
 
-		if (ColliderUtils::IsCollide(circle, object->GetRect()))
-		{
-			aoeCollisions.emplace_back(object);
-		}
-	}
-
-	return aoeCollisions;
+	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
 }

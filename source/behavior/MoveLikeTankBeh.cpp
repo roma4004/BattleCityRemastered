@@ -21,74 +21,54 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& spee
 	, _touchedObstacles{touchedObstacles}
 	, _allObjects{allObjects} {}
 
-bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
+ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime) const
 {
 	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
 	const auto [x, y, w, h] = _rect;
-	ObjRectangle tankNextPosRect;
 	if (_direction == Direction::UP)
 	{
-		tankNextPosRect = {.x = x, .y = y - speed, .w = w, .h = h + speed};
-	}
-	else if (_direction == Direction::DOWN)
-	{
-		tankNextPosRect = {.x = x, .y = y, .w = w, .h = h + speed};
-	}
-	else if (_direction == Direction::LEFT)
-	{
-		tankNextPosRect = {.x = x - speed, .y = y, .w = w + speed, .h = h};
-	}
-	else if (_direction == Direction::RIGHT)
-	{
-		tankNextPosRect = {.x = x, .y = y, .w = w + speed, .h = h};
+		return ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
-	return std::ranges::all_of(*_allObjects, [uuid = _uuid, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
+	if (_direction == Direction::DOWN)
 	{
-		if (uuid == object->GetUuid())
-		{
-			return true;
-		}
+		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
+	}
 
-		if (ColliderUtils::IsCollide(tankNextPosRect, object->GetRect()))
-		{
-			if (!object->GetIsPassable())
-			{
-				return false;
-			}
-		}
+	if (_direction == Direction::LEFT)
+	{
+		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
+	}
 
-		return true;
+	if (_direction == Direction::RIGHT)
+	{
+		return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
+	}
+
+	return ObjRectangle{};
+}
+
+bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
+{
+	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime);
+
+	return std::ranges::none_of(*_allObjects, [uuid = _uuid, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
+	{
+		return uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(tankNextPosRect, object->GetRect())
+			   && !object->GetIsPassable();
 	});
 }
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const double deltaTime) const
 {
-	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
-	const auto [x, y, w, h] = _rect;
-	ObjRectangle tankNextPosRect;
-	if (_direction == Direction::UP)
-	{
-		tankNextPosRect = ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
-	}
-	else if (_direction == Direction::DOWN)
-	{
-		tankNextPosRect = ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
-	}
-	else if (_direction == Direction::LEFT)
-	{
-		tankNextPosRect = ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
-	}
-	else if (_direction == Direction::RIGHT)
-	{
-		tankNextPosRect = ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
-	}
+	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime);
 
-	auto collisions = *_allObjects | std::views::filter([this, &tankNextPosRect](const auto& obj)
+	auto collisions = *_allObjects | std::views::filter([this, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		return obj->GetUuid() != _uuid
-			   && ColliderUtils::IsCollide(tankNextPosRect, obj->GetRect())
-			   && !obj->GetIsPassable();
+		return _uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(tankNextPosRect, object->GetRect())
+			   && !object->GetIsPassable();
 	});
 
 	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
@@ -110,13 +90,12 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime)
 	constexpr int defaultCollisionReserve{4};
 	freePath.reserve(defaultCollisionReserve);
 
-	const float speed = _speed;
-	const float moveSpeed = speed * static_cast<float>(deltaTime);
+	const float speed = _speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
-	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - moveSpeed, .w = w, .h = h + moveSpeed};
-	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + moveSpeed};
-	const ObjRectangle tankNextPosRectLeft{.x = x - moveSpeed, .y = y, .w = w + moveSpeed, .h = h};
-	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + moveSpeed, .h = h};
+	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
+	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
+	const ObjRectangle tankNextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
+	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
 
 	bool isFreeUp{true};
 	bool isFreeDown{true};
