@@ -53,6 +53,7 @@ public:
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);
 
-	[[nodiscard]] virtual bool Move(double deltaTime);
+	[[nodiscard]]
+	virtual bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime, bool isDirectionChange);
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 };

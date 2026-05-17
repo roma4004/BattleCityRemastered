@@ -25,7 +25,7 @@ Bullet::Bullet(PawnProperty pawnProperty, const int damage, const double aoeRadi
 	BaseObj::SetIsPenetrable(false);
 
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
-												   _bulletTargets, _allObjects);
+												   _allObjects);
 	if (enableByDefault)
 	{
 		Bullet::Subscribe();
@@ -118,8 +118,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 
 	//TODO: write reset for MoveLikeBulletBeh
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _speed, _uuid, _bulletDamageRadius, _windowSize,
-												   _bulletTargets, _allObjects);
-	_bulletTargets.clear();
+												   _allObjects);
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_damage = resetProperty.damage;
@@ -143,10 +142,12 @@ void Bullet::TickUpdate(const double deltaTime)
 {
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
-		if (!Pawn::Move(deltaTime))
+		std::vector<std::shared_ptr<BaseObj>> outCollisions;
+		constexpr bool isNewDir{false};
+		if (!Pawn::Move(outCollisions, deltaTime, isNewDir))
 		{
-			DealDamage(_bulletTargets);
-			_bulletTargets.clear();
+			DealDamage(outCollisions);
+			outCollisions.clear();
 		}
 	}
 }
@@ -171,21 +172,18 @@ int Bullet::GetTier() const { return _tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
-	if (!objectList.empty())
+	for (const auto& target: objectList)
 	{
-		for (const auto& target: objectList)
+		if (target && !dynamic_cast<WaterTile*>(target.get())
+			&& !dynamic_cast<GrassTile*>(target.get())
+			&& !dynamic_cast<IceTile*>(target.get())
+			&& (target->GetIsDestructible() || _tier > 2))
 		{
-			if (target && !dynamic_cast<WaterTile*>(target.get())
-				&& !dynamic_cast<GrassTile*>(target.get())
-				&& !dynamic_cast<IceTile*>(target.get())
-				&& (target->GetIsDestructible() || _tier > 2))
+			target->TakeDamage(_damage);
+			target->SendDamageStatistics(GetAuthor(), GetFraction());
+			if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
 			{
-				target->TakeDamage(_damage);
-				target->SendDamageStatistics(GetAuthor(), GetFraction());
-				if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
-				{
-					SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
-				}
+				SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
 			}
 		}
 	}

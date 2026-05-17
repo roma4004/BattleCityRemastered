@@ -5,6 +5,7 @@
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include "interfaces/IPickupableBonus.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
 	: Pawn{std::move(pawnProperty)}
@@ -328,5 +329,15 @@ void Tank::SendDamageStatistics(const std::string& author, const std::string& fr
 	{
 		//TODO: move to event from statistic when last tank died
 		_events->EmitEvent("Statistics_TankDied", _name, author, fraction);
+	}
+}
+
+void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
+{
+	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
+	{
+		bonus->PickUpBonus(_name, _fraction);
+		//TODO: on destroy bonus emit PickUpBonus
+		object->TakeDamage(1);
 	}
 }

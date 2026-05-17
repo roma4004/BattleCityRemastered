@@ -208,18 +208,29 @@ void Bot::SetRandomDirection(const double deltaTime)
 
 void Bot::TickUpdate(const double deltaTime)
 {
+	std::vector<std::shared_ptr<BaseObj>> outCollisions;
+	Direction oldDir{GetDirection()};
+	bool isNewDir{false};
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot auto change dir
 	{
 		SetRandomDirection(deltaTime);
+		isNewDir = oldDir != GetDirection();
 
 		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
 		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
-	if (const bool isMove = Pawn::Move(deltaTime);
+	if (const bool isMove = Pawn::Move(outCollisions, deltaTime, isNewDir);
 		!isMove)
 	{
 		SetRandomDirection(deltaTime);// NOTE: change dir it can't move
+
 		_lastTimeTurn = std::chrono::system_clock::now();
+	}
+
+	if (!outCollisions.empty())
+	{
+		HandleBonusPickUp(outCollisions.front());
+		outCollisions.clear();
 	}
 }

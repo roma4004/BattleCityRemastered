@@ -3,7 +3,6 @@
 #include "Point.h"
 #include "interfaces/IMoveBeh.h"
 #include <boost/uuid/uuid.hpp>
-#include <functional>
 #include <memory>
 
 // enum class Direction : char8_t;
@@ -22,7 +21,6 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	float& _speed;
 	double& _bulletDamageRadius;
 	UPoint& _windowSize;
-	std::vector<std::shared_ptr<BaseObj>>& _bulletTargets;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -32,18 +30,17 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
 protected:
-	[[nodiscard]] bool MoveLeft(double deltaTime) override;
-	[[nodiscard]] bool MoveRight(double deltaTime) override;
-	[[nodiscard]] bool MoveUp(double deltaTime) override;
-	[[nodiscard]] bool MoveDown(double deltaTime) override;
+	[[nodiscard]] bool MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
-					  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
-					  std::vector<std::shared_ptr<BaseObj>>* allObjects);
+					  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;
 
-	[[nodiscard]] bool Move(double deltaTime) override;
+	[[nodiscard]] bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
 };

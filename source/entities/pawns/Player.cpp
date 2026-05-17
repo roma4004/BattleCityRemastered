@@ -33,28 +33,59 @@ void Player::Disable() const
 
 void Player::TickUpdate(const double deltaTime)
 {
+	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
 	// move
 	if (up)
 	{
-		SetDirection(Direction::UP);
-		std::ignore = Pawn::Move(deltaTime);
+		const Direction oldDir = GetDirection();
+		const bool isNewDir = oldDir != Direction::UP;
+		if (isNewDir)
+		{
+			SetDirection(Direction::UP);
+		}
+
+		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
 	}
 	else if (left)
 	{
-		SetDirection(Direction::LEFT);
-		std::ignore = Pawn::Move(deltaTime);
+		const Direction oldDir = GetDirection();
+		const bool isNewDir = oldDir != Direction::LEFT;
+		if (isNewDir)
+		{
+			SetDirection(Direction::LEFT);
+		}
+
+		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
 	}
 	else if (down)
 	{
-		SetDirection(Direction::DOWN);
-		std::ignore = Pawn::Move(deltaTime);
+		const Direction oldDir = GetDirection();
+		const bool isNewDir = oldDir != Direction::DOWN;
+		if (isNewDir)
+		{
+			SetDirection(Direction::DOWN);
+		}
+
+		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
 	}
 	else if (right)
 	{
-		SetDirection(Direction::RIGHT);
-		std::ignore = Pawn::Move(deltaTime);
+		const Direction oldDir = GetDirection();
+		const bool isNewDir = oldDir != Direction::RIGHT;
+		if (isNewDir)
+		{
+			SetDirection(Direction::RIGHT);
+		}
+
+		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
+	}
+
+	if (!outCollisions.empty())
+	{
+		HandleBonusPickUp(outCollisions.front());
+		outCollisions.clear();
 	}
 
 	// shot

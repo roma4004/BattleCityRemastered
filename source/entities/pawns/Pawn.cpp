@@ -81,15 +81,20 @@ float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
 
-bool Pawn::Move(const double deltaTime)
+bool Pawn::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime, bool isDirectionChange)
 {
-	const bool isMove = _moveBeh->Move(deltaTime);
+	const bool isMove = _moveBeh->Move(outCollisions, deltaTime);
 
-	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
-
-	if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+	if (isDirectionChange || isMove)
 	{
-		_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
+		//NOTE: dir can change outside
+		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+
+		//NOTE: pos can change in this method
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
+		}
 	}
 
 	return isMove;

@@ -2,10 +2,10 @@
 #include "Point.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
-#include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
-#include <functional>
+#include <algorithm>
 #include <memory>
+#include <ranges>
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
 								 std::string& name, std::string& fraction,
@@ -23,9 +23,6 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& spee
 
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
 {
-	constexpr int defaultCollisionReserve{5};
-	_touchedObstacles.reserve(defaultCollisionReserve);
-
 	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
 	const auto [x, y, w, h] = _rect;
 	ObjRectangle tankNextPosRect;
@@ -46,23 +43,64 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
 		tankNextPosRect = {.x = x, .y = y, .w = w + speed, .h = h};
 	}
 
-	for (std::shared_ptr<BaseObj>& object: *_allObjects)
+	return std::ranges::all_of(*_allObjects, [uuid = _uuid, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (_uuid == object->GetUuid())
+		if (uuid == object->GetUuid())
 		{
-			continue;
+			return true;
 		}
 
 		if (ColliderUtils::IsCollide(tankNextPosRect, object->GetRect()))
 		{
 			if (!object->GetIsPassable())
 			{
-				_touchedObstacles.emplace_back(object);
+				return false;
 			}
 		}
+
+		return true;
+	});
+}
+
+std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const double deltaTime) const
+{
+	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
+	const auto [x, y, w, h] = _rect;
+	ObjRectangle tankNextPosRect;
+	if (_direction == Direction::UP)
+	{
+		tankNextPosRect = ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
+	}
+	else if (_direction == Direction::DOWN)
+	{
+		tankNextPosRect = ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
+	}
+	else if (_direction == Direction::LEFT)
+	{
+		tankNextPosRect = ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
+	}
+	else if (_direction == Direction::RIGHT)
+	{
+		tankNextPosRect = ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
 	}
 
-	return _touchedObstacles.empty();
+	auto collisions = *_allObjects | std::views::filter([this, &tankNextPosRect](const auto& obj)
+	{
+		return obj->GetUuid() != _uuid
+			   && ColliderUtils::IsCollide(tankNextPosRect, obj->GetRect())
+			   && !obj->GetIsPassable();
+	});
+
+	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
+
+	//C++ 23: TODO:
+	// return *_allObjects | std::views::filter([this, &tankNextPosRect](const auto& obj)
+	// {
+	// 	return obj->GetUuid() != _uuid
+	// 		&& ColliderUtils::IsCollide(tankNextPosRect, obj->GetRect())
+	// 		&& !obj->GetIsPassable();
+	// })
+	// | std::ranges::to<std::vector>();
 }
 
 std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime) const
@@ -173,33 +211,33 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
 	// return distance;
 }
 
-bool MoveLikeTankBeh::Move(const double deltaTime)
+bool MoveLikeTankBeh::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	const auto currentDirection = _direction;
 	if (currentDirection == Direction::UP)
 	{
-		return MoveUp(deltaTime);
+		return MoveUp(outCollisions, deltaTime);
 	}
 
 	if (currentDirection == Direction::LEFT)
 	{
-		return MoveLeft(deltaTime);
+		return MoveLeft(outCollisions, deltaTime);
 	}
 
 	if (currentDirection == Direction::DOWN)
 	{
-		return MoveDown(deltaTime);
+		return MoveDown(outCollisions, deltaTime);
 	}
 
 	if (currentDirection == Direction::RIGHT)
 	{
-		return MoveRight(deltaTime);
+		return MoveRight(outCollisions, deltaTime);
 	}
 
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveLeft(const double deltaTime)
+bool MoveLikeTankBeh::MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime); _rect.x - speed >= 0.f)
 	{
@@ -219,21 +257,19 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime)
 		};
 
 		constexpr float padding = 1.f;
-		if (const float distance = FindMinDistance(_touchedObstacles, getSideDiff) - padding; distance > 0.f)
+		outCollisions = GetTouchedObjects(deltaTime);
+		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
 			_rect.x -= std::floor(distance);
 
 			return true;
 		}
-
-		HandleBonusPickUp(_touchedObstacles.front());
-		_touchedObstacles.clear();
 	}
 
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveRight(const double deltaTime)
+bool MoveLikeTankBeh::MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
@@ -255,21 +291,19 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime)
 		};
 
 		constexpr float padding = 1.f;
-		if (const float distance = FindMinDistance(_touchedObstacles, getSideDiff) - padding; distance > 0.f)
+		outCollisions = GetTouchedObjects(deltaTime);
+		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
 			_rect.x += std::floor(distance);
 
 			return true;
 		}
-
-		HandleBonusPickUp(_touchedObstacles.front());
-		_touchedObstacles.clear();
 	}
 
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveUp(const double deltaTime)
+bool MoveLikeTankBeh::MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime); _rect.y - speed >= 0.0f)
 	{
@@ -289,21 +323,19 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime)
 		};
 
 		constexpr float padding = 1.f;
-		if (const float distance = FindMinDistance(_touchedObstacles, getSideDiff) - padding; distance > 0.f)
+		outCollisions = GetTouchedObjects(deltaTime);
+		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
 			_rect.y -= std::floor(distance);
 
 			return true;
 		}
-
-		HandleBonusPickUp(_touchedObstacles.front());
-		_touchedObstacles.clear();
 	}
 
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveDown(const double deltaTime)
+bool MoveLikeTankBeh::MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
@@ -324,27 +356,14 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime)
 		};
 
 		constexpr float padding = 1.f;
-		if (const float distance = FindMinDistance(_touchedObstacles, getSideDiff) - padding; distance > 0.f)
+		outCollisions = GetTouchedObjects(deltaTime);
+		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
 			_rect.y += std::floor(distance);
 
 			return true;
 		}
-
-		HandleBonusPickUp(_touchedObstacles.front());
-		_touchedObstacles.clear();
 	}
 
 	return false;
-}
-
-//TODO: move method outside beh to tank class
-void MoveLikeTankBeh::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
-{
-	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
-	{
-		bonus->PickUpBonus(_name, _fraction);
-		//TODO: on destroy bonus emit PickUpBonus
-		object->TakeDamage(1);
-	}
 }

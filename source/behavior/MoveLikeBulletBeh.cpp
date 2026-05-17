@@ -4,11 +4,11 @@
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
+#include <algorithm>
 #include <memory>
 
 MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid,
 									 double& damageRadius, UPoint& windowSize,
-									 std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
 									 std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}
@@ -16,7 +16,6 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& 
 	, _speed{speed}
 	, _bulletDamageRadius{damageRadius}
 	, _windowSize{windowSize}
-	, _bulletTargets{bulletTargets}
 	, _allObjects{allObjects} {}
 
 //NOTE: Never user for bullets
@@ -71,11 +70,11 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
 {
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)//TODO: std::all_of
+	return std::ranges::all_of(*_allObjects, [this, deltaTime](const std::shared_ptr<BaseObj>& object)
 	{
 		if (_uuid == object->GetUuid())
 		{
-			continue;
+			return true;
 		}
 
 		if (ColliderUtils::IsCollide(GetBulletPathRect(deltaTime), object->GetRect()))
@@ -86,43 +85,43 @@ bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
 				//TODO: fix move to a bonus though water
 			}
 		}
-	}
 
-	return true;
+		return true;
+	});
 }
 
-bool MoveLikeBulletBeh::Move(const double deltaTime)
+bool MoveLikeBulletBeh::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	const float speed = _speed * static_cast<float>(deltaTime);
 	const Direction direction = _direction;
 	if (direction == Direction::UP && _rect.y - speed >= 0.0f)
 	{
-		return MoveUp(deltaTime);
+		return MoveUp(outCollisions, deltaTime);
 	}
 
 	if (direction == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_windowSize.y))
 	{
-		return MoveDown(deltaTime);
+		return MoveDown(outCollisions, deltaTime);
 	}
 
 	if (direction == Direction::LEFT && _rect.x - speed >= 0.0f)
 	{
-		return MoveLeft(deltaTime);
+		return MoveLeft(outCollisions, deltaTime);
 	}
 
 	if (constexpr int sideBarWidth = 175;//TODO: move sidebar width to params
 		direction == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_windowSize.x) - sideBarWidth)
 	{
-		return MoveRight(deltaTime);
+		return MoveRight(outCollisions, deltaTime);
 	}
 
 	// Self-destroy with deal damage when the edge of windows is reached
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveLeft(const double deltaTime)
+bool MoveLikeBulletBeh::MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
@@ -131,12 +130,12 @@ bool MoveLikeBulletBeh::MoveLeft(const double deltaTime)
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveRight(const double deltaTime)
+bool MoveLikeBulletBeh::MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
@@ -145,12 +144,12 @@ bool MoveLikeBulletBeh::MoveRight(const double deltaTime)
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveUp(const double deltaTime)
+bool MoveLikeBulletBeh::MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
@@ -159,12 +158,12 @@ bool MoveLikeBulletBeh::MoveUp(const double deltaTime)
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveDown(const double deltaTime)
+bool MoveLikeBulletBeh::MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
@@ -173,7 +172,7 @@ bool MoveLikeBulletBeh::MoveDown(const double deltaTime)
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }

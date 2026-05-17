@@ -21,11 +21,8 @@ class Tank : public Pawn
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
-	void Subscribe() override;
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
-
-	void Unsubscribe() const override;
 
 	void OnBonusTimer(const std::string& fraction, bool isActive);
 	void OnBonusHelmet(const std::string& name, bool isActive);
@@ -41,16 +38,17 @@ protected:
 	milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire{};
 
+	void Subscribe() override;
+	void Unsubscribe() const override;
+
 	// bonuses
 	BonusEffectProperty _effects{};
 
 	void Shot(buuid withUuid = {}) const;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 
 	void TickUpdate(double deltaTime) override = 0;
-
-	void TakeDamage(int damage) override;
 
 	virtual void Enable();
 	virtual void Disable() const;
@@ -59,6 +57,9 @@ public:
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
 
 	~Tank() override;
+
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void TakeDamage(int damage) override;
 
 	[[nodiscard]] int GetTier() const;
 
