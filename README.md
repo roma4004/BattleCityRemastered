@@ -30,7 +30,8 @@ Already done:
 * network multiplayer (playing from two game sparated process, one start as host, other as client. )
 * based on original textures and animation with some small difference and extendings
 * end game (win\lose condition)
-
+* separated score board
+* controling keys hint
 
 NOTE: For multiplayer game. 
 Its two separated process that allow to trully play with full visual replication via TCP/IP. 
@@ -47,18 +48,16 @@ Used technologies:
 * google unit tests (100+ tests),
 * NuGet dependencies for *.sln and lib source for CMake, so it can be compiled for both CMake (CLion) or *.sln project (Rider, Visual Studio)
 
-Used design patterns: 
-* Event Bus, 
-* Observer, 
-* Strategy, 
+Used design patterns:
+* Event Bus,
+* Observer,
+* Strategy,
 * IoC,
 * Object Pool
 * Flyweight pattern
 
-TODO roadmap: 
-* controling keys hint
-* side bar with respawn counters and level number (just like in oiginal)
-* separated score board
+TODO roadmap:
+* (in progress) side bar with respawn counters and level number (just like in oiginal)
 * ice and bushes logic
 * network multiplayer lobby system
 * SDL_Mixer for sound (in progress, one start music),
