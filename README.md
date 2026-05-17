@@ -1,8 +1,10 @@
 # BattleCityRemastered
+
 Please note the game is in a development state so the latest version is on the "dev" branch.
 
 Like my old, [Battle City on C++/QT QML](https://github.com/roma4004/battle_city_qt_qml) project but remastered as a mentoring project for studying new programmers
-and for me to practice design patterns and game architecture in modern C++.
+and for me to practice design patterns and game architecture in modern C++. If you want to join or stydy with me, let me know in direct 
+https://t.me/Dentair.
 
 <img width="1201" height="952" alt="зображення" src="https://github.com/user-attachments/assets/054932d5-2ed3-4507-b071-13e56bcc49f9" />
 
