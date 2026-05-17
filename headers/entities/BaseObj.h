@@ -29,8 +29,6 @@ public:
 	BaseObj(const BaseObj& other);
 	BaseObj(BaseObj&& other) noexcept;
 
-	BaseObj(ObjRectangle rect, unsigned int color, int health, buuid uuid, std::string name, std::string fraction);
-
 	~BaseObj() override;
 
 	BaseObj& operator=(const BaseObj& other);

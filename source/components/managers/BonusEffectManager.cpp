@@ -207,7 +207,7 @@ std::string BonusEffectManager::TankIdToName(const size_t id)
 
 size_t BonusEffectManager::TankNameToId(const std::string_view& name)
 {
-	std::string nameStr{name};
+	const std::string nameStr{name};
 
 	return TankNameToId(nameStr);
 }

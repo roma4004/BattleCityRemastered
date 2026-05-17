@@ -16,14 +16,7 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 }
 
 //Copy ctor
-BaseObj::BaseObj(const BaseObj& other)
-	: _health(other._health)
-	, _uuid(other._uuid)
-	, _color(other._color)
-	, _name(other._name)
-	, _nameWithUuid(other._nameWithUuid)
-	, _fraction(other._fraction)
-	, _rect(other._rect) {}
+BaseObj::BaseObj(const BaseObj& other) = default;
 
 //Move ctor
 BaseObj::BaseObj(BaseObj&& other) noexcept
@@ -34,19 +27,6 @@ BaseObj::BaseObj(BaseObj&& other) noexcept
 	, _nameWithUuid(other._nameWithUuid)
 	, _fraction(other._fraction)
 	, _rect(other._rect) {}
-
-//Deprecated //TODO: remove this con overload
-BaseObj::BaseObj(const ObjRectangle rect, const unsigned int color, const int health, const buuid uuid,
-				 std::string name, std::string fraction)
-	: _health(health)
-	, _uuid{uuid}
-	, _color(color)
-	, _name{std::move(name)}
-	, _fraction{std::move(fraction)}
-	, _rect{rect}
-{
-	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
-}
 
 BaseObj::~BaseObj() = default;
 

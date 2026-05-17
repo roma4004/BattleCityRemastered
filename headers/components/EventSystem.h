@@ -303,7 +303,7 @@ public:
 
 	void RemoveAllListeners(const std::string& listenerName)
 	{
-		for (auto& eventInfo: _events | std::views::values)
+		for (const auto& eventInfo: _events | std::views::values)
 		{
 			eventInfo.event->RemoveListener(listenerName);
 		}

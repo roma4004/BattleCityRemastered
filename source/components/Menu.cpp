@@ -103,7 +103,7 @@ void Menu::DrawMenuText() const
 
 void Menu::DrawControlHints() const
 {
-	Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
+	const Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
 	if (relativePos.y >= _windowHeight)
 	{
 		return;

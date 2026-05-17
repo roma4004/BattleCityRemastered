@@ -196,6 +196,11 @@ void Bot::SetRandomDirection(const double deltaTime)
 		!freePath.empty())
 	{
 		const int max = static_cast<int>(freePath.size() - 1);
+		if (max == -1)
+		{
+			return;
+		}
+
 		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
 		SetDirection(freePath[pathIndex]);
 	}

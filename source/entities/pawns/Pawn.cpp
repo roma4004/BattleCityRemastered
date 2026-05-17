@@ -84,14 +84,12 @@ void Pawn::SetSpeed(const float speed) { _speed = speed; }
 bool Pawn::Move(const double deltaTime)
 {
 	const bool isMove = _moveBeh->Move(deltaTime);
-	if (isMove)
-	{
-		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
 
-		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
-		{
-			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
-		}
+	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+
+	if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+	{
+		_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
 	}
 
 	return isMove;

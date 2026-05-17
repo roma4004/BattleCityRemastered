@@ -84,7 +84,7 @@ public:
 	void SendToAll(const std::string& message);
 	void CleanupDeadSessions();
 
-	void ProcessNetworkCommands()
+	void ProcessNetworkCommands() const
 	{
 		for (const auto& session : _sessions)
 		{

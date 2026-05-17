@@ -26,18 +26,16 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
+	[[nodiscard]] ObjRectangle GetBulletPathRect(double deltaTime) const;
+	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
-	[[nodiscard]] bool Move(double deltaTime) override;
+protected:
 	[[nodiscard]] bool MoveLeft(double deltaTime) override;
 	[[nodiscard]] bool MoveRight(double deltaTime) override;
 	[[nodiscard]] bool MoveUp(double deltaTime) override;
 	[[nodiscard]] bool MoveDown(double deltaTime) override;
-
-	[[nodiscard]] ObjRectangle GetBulletPathRect(double deltaTime) const;
-	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
@@ -46,5 +44,6 @@ public:
 
 	~MoveLikeBulletBeh() override = default;
 
+	[[nodiscard]] bool Move(double deltaTime) override;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
 };

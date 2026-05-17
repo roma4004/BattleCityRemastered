@@ -85,7 +85,7 @@ std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime)
 	bool isFreeLeft{true};
 	bool isFreeRight{true};
 
-	for (std::shared_ptr<BaseObj>& object: *_allObjects)
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
 		if (_uuid == object->GetUuid())
 		{
@@ -201,8 +201,10 @@ bool MoveLikeTankBeh::Move(const double deltaTime)
 
 bool MoveLikeTankBeh::MoveLeft(const double deltaTime)
 {
-	if (const float speed = _speed * static_cast<float>(deltaTime); _rect.x - speed >= 0.f)
+	if (float speed = _speed * static_cast<float>(deltaTime); _rect.x - speed >= 0.f)
 	{
+		constexpr float maxMoveStep = 8.0f;
+		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime))
 		{
 			_rect.x -= std::floor(speed);
@@ -235,8 +237,10 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime)
 {
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
-	if (const float speed = _speed * static_cast<float>(deltaTime); _rect.Right() + speed < maxX)
+	if (float speed = _speed * static_cast<float>(deltaTime); _rect.Right() + speed < maxX)
 	{
+		constexpr float maxMoveStep = 8.0f;
+		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime))
 		{
 			_rect.x += std::floor(speed);
@@ -267,8 +271,10 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime)
 
 bool MoveLikeTankBeh::MoveUp(const double deltaTime)
 {
-	if (const float speed = _speed * static_cast<float>(deltaTime); _rect.y - speed >= 0.0f)
+	if (float speed = _speed * static_cast<float>(deltaTime); _rect.y - speed >= 0.0f)
 	{
+		constexpr float maxMoveStep = 8.0f;
+		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime))
 		{
 			_rect.y -= std::floor(speed);
@@ -299,9 +305,11 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime)
 
 bool MoveLikeTankBeh::MoveDown(const double deltaTime)
 {
-	if (const float speed = _speed * static_cast<float>(deltaTime);
+	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
 	{
+		constexpr float maxMoveStep = 8.0f;
+		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime))
 		{
 			_rect.y += std::floor(speed);

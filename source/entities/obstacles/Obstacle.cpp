@@ -1,5 +1,6 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
+#include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
@@ -7,7 +8,12 @@
 Obstacle::Obstacle(const ObjRectangle rect, const unsigned int color, const int health, std::string name,
 				   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
 				   const ObstacleType obstacleType)
-	: BaseObj{rect, color, health, uuid, std::move(name), "Neutral"}
+	: BaseObj{BaseObjProperty{.rect = rect,
+							  .color = color,
+							  .health = health,
+							  .uuid = uuid,
+							  .name = std::move(name),
+							  .fraction = "Neutral"}}
 	, _events(events)
 	, _gameMode{gameMode}
 	, _obstacleType(obstacleType)

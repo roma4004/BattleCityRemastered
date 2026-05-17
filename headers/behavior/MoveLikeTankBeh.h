@@ -31,6 +31,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
+protected:
 	[[nodiscard]] bool MoveLeft(double deltaTime) override;
 	[[nodiscard]] bool MoveRight(double deltaTime) override;
 	[[nodiscard]] bool MoveUp(double deltaTime) override;

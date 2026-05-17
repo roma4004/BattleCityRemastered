@@ -1,5 +1,6 @@
 #include "entities/obstacles/FortressWall.h"
 #include "components/EventSystem.h"
+#include "entities/BaseObjProperty.h"
 #include "entities/Pawns/Pawn.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
@@ -12,7 +13,12 @@
 
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
-	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"}
+	: BaseObj{BaseObjProperty{.rect = rect,
+							  .color = 0x924b00,
+							  .health = 1,
+							  .uuid = uuid,
+							  .name = "FortressWall",
+							  .fraction = "Neutral"}}
 	, _events{events}
 	, _allObjects{allObjects}
 	, _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}

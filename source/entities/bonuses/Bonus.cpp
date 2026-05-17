@@ -1,6 +1,7 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
@@ -8,7 +9,12 @@
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
 			 const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
 			 const BonusType bonusType)
-	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"}
+	: BaseObj{BaseObjProperty{.rect = rect,
+							  .color = color,
+							  .health = 1,
+							  .uuid = uuid,
+							  .name = std::move(name),
+							  .fraction = "Neutral"}}
 	, _creationTime{std::chrono::system_clock::now()}
 	, _events{events}
 	, _lifetime{lifeTime}
@@ -71,7 +77,7 @@ void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime)) //TODO: extract to BonusEffectManager
+	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))//TODO: extract to BonusEffectManager
 	{
 		SetIsAlive(false);
 	}
