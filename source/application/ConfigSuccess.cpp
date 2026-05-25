@@ -25,5 +25,5 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 		_renderer, _fpsFont, _logoTexture, _atlasTexture,_joyIcon, _windowSize);
 
 	return std::make_unique<GameSuccess>(_windowSize, events, menu, 
-		_isVsyncOn, renderManager, _renderer, _atlasTexture);
+		_isVsyncOn, renderManager);
 }

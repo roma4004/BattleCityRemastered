@@ -28,9 +28,7 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-						 std::unique_ptr<RenderManager>& renderManager,
-						 const std::shared_ptr<SDL_Renderer>& renderer, 
-						 const std::shared_ptr<SDL_Texture>& atlasTexture)
+						 std::unique_ptr<RenderManager>& renderManager)
 	: _windowSize{windowSize}
 	, _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
@@ -42,9 +40,6 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
-	, _renderer{renderer}
-	, _atlasTexture{atlasTexture}
-	, _rightSideBar{windowSize, events, _renderer, _atlasTexture}
 {
 	Subscribe();
 
@@ -197,11 +192,13 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent("PreDraw");
 			_events->EmitEvent("Draw");
 			_events->EmitEvent("PostDraw");
+			_events->EmitEvent("RenderRightSideBar");
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("PreDrawUserInterface");
 			_events->EmitEvent("DrawUserInterface");
 			_events->EmitEvent("PostDrawUserInterface");
+
 
 			if (_gameMode == GameMode::PlayAsHost)
 			{

@@ -201,6 +201,7 @@ void RespawnManager::OnBonusTank(const std::string& author)
 	if (author.starts_with("Enemy"))
 	{
 		ChangeRespawnCount(1, RespawnCount::ENEMY_ALL);
+		_events->EmitEvent("IncrementEnemyIconsCount"); 
 	}
 	else if (author.ends_with("1"))
 	{
@@ -277,6 +278,7 @@ void RespawnManager::OnTankSpawn(const buuid& uuid)
 void RespawnManager::EnemyDied(const bool isAvailable)
 {
 	++_enemiesDeathCount;
+	_events->EmitEvent("DecrementEnemyIconsCount");
 	if (isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
 	{
 		_events->EmitEvent("PlayersTeamIsWon");

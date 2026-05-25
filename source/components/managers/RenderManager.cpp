@@ -41,6 +41,7 @@ RenderManager::~RenderManager()
 	Unsubscribe();
 	ClearFpsTextureCache();
 	ClearColorTextureCache();
+	_events->EmitEvent("DrawEnemyIcons");
 }
 
 void RenderManager::ClearColorTextureCache()
@@ -152,7 +153,20 @@ void RenderManager::Subscribe()
 				SDL_Texture* colorTexture = CreateColorTexture(gray);
 
 				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
+				DrawEnemyIcons();
 			});
+
+	_events->AddListener("DecrementEnemyIconsCount",_name, 
+			[this]()
+	{
+			this->numPictures--;
+	});
+
+	_events->AddListener("IncrementEnemyIconsCount",_name, 
+		[this]()
+{
+		this->numPictures++;
+});
 }
 
 void RenderManager::Unsubscribe() const
@@ -171,6 +185,8 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("EnableRightSideBar", _name);
 	_events->RemoveListener("DisableRightSideBar", _name);
 	_events->RemoveListener("RenderRightSideBar", _name);
+	_events->RemoveListener("DecrementEnemyIconsCount", _name);
+	_events->RemoveListener("IncrementEnemyIconsCount", _name);
 }
 
 void RenderManager::DrawPauseText() const
@@ -217,6 +233,27 @@ void RenderManager::DrawRightSideBar() const
 							   .w = static_cast<int>(offset.rightSideBar.w),
 							   .h = static_cast<int>(offset.rightSideBar.h)};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+}
+
+void RenderManager::DrawEnemyIcons()
+{
+	constexpr TextureOffset offset{};
+	SDL_Rect srcrect{
+		static_cast<int>(offset.enemyDecal.x),
+		static_cast<int>(offset.enemyDecal.y),
+		static_cast<int>(offset.enemyDecal.w),
+		static_cast<int>(offset.enemyDecal.h)};
+
+	for (int i = 0; i < numPictures; ++i)
+	{
+		int row= i / columns;
+		const int col = i % columns;
+		x = leftUpCornerX + spacingX + col * (imageWidth + spacingX);
+		y = leftUpCornerY + spacingY + row * (imageHeight + spacingY);
+
+		SDL_Rect destRect = {x, y, imageWidth, imageHeight};
+		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &destRect);
+	}
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()
