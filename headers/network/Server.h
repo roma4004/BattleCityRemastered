@@ -11,6 +11,7 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <atomic>
 #include <vector>
 
 class EventSystem;
@@ -21,22 +22,19 @@ using boost::asio::ip::tcp;
 
 class Session final : public std::enable_shared_from_this<Session>
 {
-	tcp::socket _socket;
-	boost::asio::streambuf _readBuffer{};
-	boost::asio::streambuf _writeBuffer{};
-	std::shared_ptr<EventSystem> _events{nullptr};
-	network::NetworkCommandQueue _commandQueue;
-
 public:
 	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events);
 
 	~Session();
 
+	[[nodiscard]] bool IsSocketOpen() const { return _socket.is_open(); }
+	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
+
 	void Start();
-
-	void DoRead();
-
 	void DoWrite(const std::string& message);
+
+private:
+	void DoRead();
 
 	void ProcessReceivedData(const std::string& archiveData);
 	void ProcessServerCommand(const std::shared_ptr<Command>& command);
@@ -44,33 +42,35 @@ public:
 	void OnSignalEvent(const std::shared_ptr<Command>& command);
 	void OnKeyStateChange(const std::shared_ptr<Command>& command);
 
-	[[nodiscard]] bool IsSocketOpen() const { return _socket.is_open(); }
-	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
+	tcp::socket _socket;
+	boost::asio::streambuf _readBuffer{};
+	boost::asio::streambuf _writeBuffer{};
+	std::shared_ptr<EventSystem> _events{nullptr};
+	network::NetworkCommandQueue _commandQueue;
+
 };
 
 class Server final
 {
-	tcp::acceptor _acceptor;
-	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<std::shared_ptr<Session>> _sessions;
-	std::string _name;
-
-	std::mutex _batchWriteMutex;
-	std::shared_ptr<CommandBatch> _batch{nullptr};
-
-	std::queue<std::shared_ptr<CommandBatch>> _sendQueue;
-	std::mutex _sendQueueMutex;
-	std::condition_variable _sendCondition;
-	std::thread _sendThread;
-	bool _isRunning{false};
-
-	void DoAccept();
-
 public:
-	Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
+	Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Server();
+
+	void ProcessNetworkCommands() const
+	{
+		for (const auto& session : _sessions)
+		{
+			if (session && session->IsSocketOpen())
+			{
+				session->GetCommandQueue().ProcessAll(); //TODO: refactor to session->ProcessCommandQueue()
+			}
+		}
+	}
+
+private:
+	void DoAccept();
 
 	void StartSendThread();
 	void StopSendThread();
@@ -84,15 +84,18 @@ public:
 	void SendToAll(const std::string& message);
 	void CleanupDeadSessions();
 
-	void ProcessNetworkCommands() const
-	{
-		for (const auto& session : _sessions)
-		{
-			if (session && session->IsSocketOpen())
-			{
-				session->GetCommandQueue().ProcessAll(); //TODO: refactor to session->ProcessCommandQueue()
-			}
-		}
-	}
+	tcp::acceptor _acceptor;
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<std::shared_ptr<Session>> _sessions;
+	std::string _name;
+
+	std::mutex _batchWriteMutex;
+	std::shared_ptr<CommandBatch> _batch{nullptr};
+
+	std::queue<std::shared_ptr<CommandBatch>> _sendQueue;
+	std::mutex _sendQueueMutex;
+	std::condition_variable _sendCondition;
+	std::thread _sendThread;
+	std::atomic<bool> _isRunning{false};
 };
 }//namespace network::commands

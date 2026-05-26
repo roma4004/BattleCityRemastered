@@ -35,6 +35,7 @@ void Menu::Subscribe()
 		this->_selectedGameMode = newGameMode;
 	});
 
+	//TODO: menu don't hide if demo game had game over
 	_events->AddListener("ShowMenu", _name, [this](const bool isDisplayed)
 	{
 		DisplayMenu(isDisplayed);

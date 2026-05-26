@@ -171,7 +171,7 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x
+		textureRect.x == defaultSdlRect.x //TODO: fix correct float conversion
 		&& textureRect.y == defaultSdlRect.y
 		&& textureRect.w == defaultSdlRect.w
 		&& textureRect.h == defaultSdlRect.h)

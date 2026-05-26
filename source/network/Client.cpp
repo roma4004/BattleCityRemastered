@@ -31,27 +31,64 @@
 
 namespace network::commands
 {
-Client::Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
+Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _socket(ioContext)
+	, _reconnectTimer(ioContext)
+	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
 	, _events{events}
 	, _name{"Client"}
 {
 	Subscribe();
 
-	tcp::resolver resolver(ioContext);
-	const auto endpointIterator = resolver.resolve(host, port);
-	boost::asio::async_connect(//TODO: extract to reconnect method
-			_socket, endpointIterator,
-			[this](const boost::system::error_code& ec, const tcp::endpoint& /*endpoint_iterator*/)
+	TryConnect();
+}
+
+//TODO: fix reconnect for minGW when we too fast run host and client
+void Client::TryConnect()
+{
+	if (_socket.is_open())
+	{
+		boost::system::error_code ec;
+		const auto result = _socket.close(ec);
+	}
+
+	_socket.open(_endpoint.protocol());
+	_socket.async_connect(_endpoint, [this](const boost::system::error_code& ec)
+	{
+		if (!ec)
+		{
+			std::cout << "Client connected successfully" << '\n';
+			_reconnectAttempts = 0;
+			_isConnected = true;
+			this->ReadResponse();
+			// std::scoped_lock lock(_batchWriteMutex);
+			// this->_batch->AddCommand(  //TODO: implement batch sending
+			this->SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
+		}
+		else
+		{
+			++_reconnectAttempts;
+			std::cerr << "Client connect failed (attempt " << _reconnectAttempts
+					<< "/" << MaxReconnectAttempts << "): " << ec.message() << '\n';
+
+			if (_reconnectAttempts < MaxReconnectAttempts)
 			{
-				if (!ec)
+				_reconnectTimer.expires_after(std::chrono::milliseconds(ReconnectDelayMs));
+				_reconnectTimer.async_wait([this](const boost::system::error_code& timerEc)
 				{
-					// Init connection success, start reading from socket
-					//_events->EmitEvent("ClientConnectionEstablished");
-					this->ReadResponse();
-				}
-			});
+					if (!timerEc)
+					{
+						TryConnect();
+					}
+				});
+			}
+			else
+			{
+				std::cerr << "Client gave up after " << MaxReconnectAttempts << " attempts" << '\n';
+			}
+		}
+	});
 }
 
 Client::~Client()
@@ -89,19 +126,35 @@ Client::~Client()
 void Client::Subscribe()
 {
 	//TODO: write batch sending on client and sending queue
-	_events->AddListener("P2_Move_Up", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Up", isPressed); });
-	_events->AddListener("P2_Move_Left", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Left", isPressed); });
-	_events->AddListener("P2_Move_Down", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Down", isPressed); });
-	_events->AddListener("P2_Move_Right", _name, [this](const bool isPressed) { this->SendKeyState("P2_Move_Right", isPressed); });
+	_events->AddListener("P2_Move_Up", _name, [this](const bool isPressed)
+	{
+		this->SendKeyState("P2_Move_Up", isPressed);
+	});
+	_events->AddListener("P2_Move_Left", _name, [this](const bool isPressed)
+	{
+		this->SendKeyState("P2_Move_Left", isPressed);
+	});
+	_events->AddListener("P2_Move_Down", _name, [this](const bool isPressed)
+	{
+		this->SendKeyState("P2_Move_Down", isPressed);
+	});
+	_events->AddListener("P2_Move_Right", _name, [this](const bool isPressed)
+	{
+		this->SendKeyState("P2_Move_Right", isPressed);
+	});
 	_events->AddListener("P2_Fire", _name, [this](const bool isPressed) { this->SendKeyState("P2_Fire", isPressed); });
 
 	_events->AddListener("ClientSend_ReadyToPlay", _name, [this]()
 	{
+		// std::scoped_lock lock(_batchWriteMutex);
+		// this->_batch->AddCommand(  //TODO: implement batch sending
 		SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
 	});
 
 	_events->AddListener("ClientSend_Pause_Status", _name, [this](const bool isPaused)
 	{
+		// std::scoped_lock lock(_batchWriteMutex);
+		// this->_batch->AddCommand(  //TODO: implement batch sending
 		SendCommand(std::make_shared<KeyStateChange>("Pause_Released", isPaused));
 	});
 }
@@ -138,6 +191,8 @@ void Client::ReadResponse()
 void Client::SendKeyState(const std::string& key, const bool state)
 {
 	// NetworkLogger::LogClientSend(state);
+	// std::scoped_lock lock(_batchWriteMutex);
+	// this->_batch->AddCommand(  //TODO: implement batch sending
 	SendCommand(std::make_shared<KeyStateChange>(key, state));
 }
 
@@ -499,6 +554,12 @@ void Client::ProcessReceivedData(const std::string& archiveData)
 
 void Client::SendCommand(const std::shared_ptr<Command>& command)
 {
+	if (!_isConnected)
+	{
+		return;
+		//TODO: add assert or console error print
+	}
+
 	std::ostringstream archiveStream;
 	boost::archive::text_oarchive oa(archiveStream);
 	oa << command;
@@ -525,6 +586,7 @@ void Client::SendCommand(const std::shared_ptr<Command>& command)
 				//TODO: need handle close connection and delete session
 			}
 
+			_isConnected = false;
 			_socket.close();
 		}
 	};

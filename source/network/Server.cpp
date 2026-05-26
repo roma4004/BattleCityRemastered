@@ -237,7 +237,7 @@ void Session::DoWrite(const std::string& message)
 	{
 		if (!_socket.is_open())
 		{
-			std::cerr << "Socket is not open. Cannot write.";
+			std::cerr << "Session Socket is not open. Cannot write.";
 			return;
 		}
 
@@ -255,11 +255,11 @@ void Session::DoWrite(const std::string& message)
 			{
 				if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
 				{
-					std::cout << "Connection closed normally" << '\n';
+					std::cout << "Session Connection closed normally" << '\n';
 				}
 				else
 				{
-					std::cerr << "Write error: " << ec.message() << '\n';
+					std::cerr << "Session Write error: " << ec.message() << '\n';
 					//TODO: need handle close connection and delete session
 				}
 
@@ -272,18 +272,19 @@ void Session::DoWrite(const std::string& message)
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Exception in DoWrite: " << e.what() << '\n';
+		std::cerr << "Session Exception in DoWrite: " << e.what() << '\n';
+		//TODO: write error to file
 	}
 	catch (...)
 	{
-		std::cerr << "error ..." << '\n';
+		std::cerr << "Session error ..." << '\n';
+		//TODO: write error to file
 	}
 }
 
-Server::Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
+Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
-	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
-										 static_cast<unsigned short>(std::stoul(port))))
+	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}
 	, _name{"Server"}
 	, _batch{std::make_shared<CommandBatch>()}
@@ -293,19 +294,20 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	Subscribe();
 }
 
+//TODO: check the flow after network game choose local mode to clean all then to choose network again successful
 void Server::StartSendThread()
 {
-	_isRunning = true;
+	_isRunning.store(true);
 	_sendThread = std::thread([this]()
 	{
-		while (this->_isRunning)
+		while (this->_isRunning.load())
 		{
 			std::shared_ptr<CommandBatch> batch;
 			{
 				std::unique_lock<std::mutex> lock(this->_sendQueueMutex);
-				this->_sendCondition.wait(lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning; });
+				this->_sendCondition.wait(lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning.load(); });
 
-				if (!this->_isRunning)
+				if (!this->_isRunning.load())
 					break;
 
 				if (this->_sendQueue.empty())
@@ -323,11 +325,16 @@ void Server::StartSendThread()
 				}
 				catch (const std::exception& e)
 				{
-					std::cerr << "Exception in send thread: " << e.what() << '\n';
+					std::cerr << "Server Exception in send thread: " << e.what() << '\n';
 
 					// retry send
 					std::scoped_lock lock(this->_sendQueueMutex);
 					this->_sendQueue.push(batch);
+				}
+				catch (...)
+				{
+					std::cerr << "Server thread error ..." << '\n';
+					//TODO: write error to file
 				}
 			}
 		}
@@ -338,7 +345,7 @@ void Server::StopSendThread()
 {
 	{
 		std::scoped_lock lock(_sendQueueMutex);
-		_isRunning = false;
+		_isRunning.store(false);
 	}
 
 	_sendCondition.notify_one();
@@ -367,7 +374,7 @@ void Server::Subscribe()
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
 		std::scoped_lock lock(_batchWriteMutex, _sendQueueMutex);
-		_sendQueue.emplace(_batch);
+		_sendQueue.emplace(_batch); //TODO: replace with std::swap
 		_sendCondition.notify_one();
 		_batch = std::make_shared<CommandBatch>();
 	});

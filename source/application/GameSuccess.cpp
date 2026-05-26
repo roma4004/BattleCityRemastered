@@ -10,7 +10,6 @@
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
-#define ASIO_STANDALONE //NOTE: must be above network
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
@@ -18,10 +17,6 @@
 #include <memory>
 //#include <fstream>
 #include <boost/uuid/uuid_io.hpp>
-
-//#ifdef _WIN32
-//#define _WIN32_WINNT 0x0A00
-//#endif
 
 //TODO: can't start game if no sound device on PC
 
@@ -85,7 +80,7 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("LoadMap");
+		_events->EmitEvent("LoadMap");//TODO: move to obstacle spawner which should spawn when unpause 
 	}
 
 	if (gameMode == GameMode::PlayAsClient)
