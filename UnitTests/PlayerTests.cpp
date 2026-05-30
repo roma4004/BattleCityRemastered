@@ -15,6 +15,7 @@
 #include "enums/GameMode.h"
 #include "enums/TankType.h"
 #include "components/managers/DelayedSpawnManager.h"
+#include "entities/obstacles/EagleTile.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
@@ -343,7 +344,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 						.y = static_cast<float>(_windowSize.y) / 2.f});
 		player->SetDirection(Direction::DOWN);
 		const FPoint startPos = player->GetPos();
-		
+
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Fire", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
@@ -711,19 +712,14 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 {
 	_allObjects.clear();
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
 	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
-	{
-		isGameLose = true;
-	});
+	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
 
-	for (int i = 0; i < 5; ++i)
-	{
-		_tankSpawner->RespawnTanks(true);
-	}
+	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, _gameMode));
+	_allObjects.pop_back();
 
-	_events->EmitEvent("PlayersBaseFinished");//refactor to create eagle and destroy it
+	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
+	_tankSpawner->RespawnTanks(true);
 	_allObjects.pop_back();
 
 	EXPECT_TRUE(isGameLose);
