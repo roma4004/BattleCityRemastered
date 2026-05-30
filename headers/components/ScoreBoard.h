@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Point.h"
+#include "enums/GameMode.h"
+
 #include <memory>
 
 class EventSystem;
@@ -22,6 +24,7 @@ class ScoreBoard final
 	int _enemyRespawnCount{20};
 	int _playerOneRepawnCount{3};
 	int _playerTwoRespawnCount{3};
+	GameMode _gameMode{};
 
 	void Subscribe();
 	void Unsubscribe() const;

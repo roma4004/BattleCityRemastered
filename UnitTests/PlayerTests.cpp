@@ -710,8 +710,8 @@ TEST_F(PlayerTest, PlayerTeamWon)
 TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 {
 	_allObjects.clear();
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
 
+	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
 	bool isGameLose{false};
 	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
 	{
@@ -723,7 +723,7 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 		_tankSpawner->RespawnTanks(true);
 	}
 
-	_events->EmitEvent("PlayersBaseFinished");
+	_events->EmitEvent("PlayersBaseFinished");//refactor to create eagle and destroy it
 	_allObjects.pop_back();
 
 	EXPECT_TRUE(isGameLose);

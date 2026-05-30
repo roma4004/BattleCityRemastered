@@ -5,7 +5,6 @@
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
-#include "components/managers/BonusEffectManager.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"

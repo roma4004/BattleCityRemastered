@@ -2,6 +2,7 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
+#include "enums/GameMode.h"
 #include <iomanip>
 #include <sstream>
 
@@ -25,6 +26,11 @@ ScoreBoard::~ScoreBoard()
 
 void ScoreBoard::Subscribe()
 {
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
+	});
+
 	_events->AddListener("RespawnCountChangedTo", _name, [this](const std::string& objectName, const int respawnCount)
 	{
 		this->OnRespawnCountChanged(objectName, respawnCount);//TODO: extract from score to sidebar
@@ -165,6 +171,11 @@ void ScoreBoard::OnRespawnCountChanged(const std::string& objectName, const int 
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
 {
+	if (_gameMode != GameMode::Demo)
+	{
+		return;
+	}
+
 	_isScoreBoardDisplayed = isDisplayed;
 
 	if (_isScoreBoardDisplayed)
