@@ -41,6 +41,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	Subscribe();
 
 	ResetBattlefieldTo(GameMode::Demo);
+	_events->EmitEvent("ShowMenu", true);
 }
 
 GameSuccess::~GameSuccess()
@@ -71,12 +72,12 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 
 	_events->EmitEvent("Reset");
 
+	SetCurrentGameMode(gameMode);
+
 	if (gameMode == GameMode::PlayAsClient || gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
 	}
-
-	SetCurrentGameMode(gameMode);
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{

@@ -111,6 +111,11 @@ void RespawnManager::ResetRespawnStat()
 	{
 		isAvailable = false;
 	}
+
+	_enemiesSpawnCount = 0;
+	_enemiesDeathCount = 0;
+	_playersSpawnCount = 0;
+	_playersDeathCount = 0;
 }
 
 void RespawnManager::ResetSpawn()

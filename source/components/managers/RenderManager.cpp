@@ -86,32 +86,8 @@ void RenderManager::Subscribe()
 	_events->AddListener("RenderMenuXBoxHint", _name, [this](const Point pos) { DrawXBoxHint(pos); });
 	_events->AddListener("RenderMenuPS5Hint", _name, [this](const Point pos) { DrawPS5Hint(pos); });
 
-	_events->AddListener(
-			"RenderPauseText", _name,
-			[this]()
-			{
-				constexpr TextureOffset offset{};
-				constexpr SDL_Rect dstRect{.x = 135, .y = 142, .w = 300, .h = 75};
-				constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.pauseText.x),
-										   .y = static_cast<int>(offset.pauseText.y),
-										   .w = static_cast<int>(offset.pauseText.w),
-										   .h = static_cast<int>(offset.pauseText.h)};
-				SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
-			});
-
-	_events->AddListener(
-			"RenderGameOverText", _name,
-			[this]()
-			{
-				constexpr TextureOffset offset{};
-				constexpr SDL_Rect dstRect{.x = 200, .y = 242, .w = 200, .h = 75};
-				constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameOverText.x),
-										   .y = static_cast<int>(offset.gameOverText.y),
-										   .w = static_cast<int>(offset.gameOverText.w),
-										   .h = static_cast<int>(offset.gameOverText.h)};
-				SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
-			});
-
+	_events->AddListener("RenderPauseText", _name, [this]() { DrawPauseText(); });
+	_events->AddListener("RenderGameOverText", _name, [this]() { DrawGameOverText(); });
 	_events->AddListener("RenderGameWonText", _name, [this]() { DrawGameWonText(); });
 
 	_events->AddListener(
@@ -157,7 +133,7 @@ void RenderManager::DrawPauseText() const
 void RenderManager::DrawGameOverText() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect dstRect{.x = 200, .y = 242, .w = 200, .h = 75};
+	constexpr SDL_Rect dstRect{.x = 200, .y = 152, .w = 200, .h = 75};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameOverText.x),
 							   .y = static_cast<int>(offset.gameOverText.y),
 							   .w = static_cast<int>(offset.gameOverText.w),
@@ -168,7 +144,7 @@ void RenderManager::DrawGameOverText() const
 void RenderManager::DrawGameWonText() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect dstRect{.x = 250, .y = 262, .w = 120, .h = 85};
+	constexpr SDL_Rect dstRect{.x = 250, .y = 152, .w = 120, .h = 85};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameWonText.x),
 							   .y = static_cast<int>(offset.gameWonText.y),
 							   .w = static_cast<int>(offset.gameWonText.w),

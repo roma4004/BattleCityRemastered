@@ -89,7 +89,6 @@ void AnimationManager::Unsubscribe() const { _events->RemoveAllListeners(_name);
 void AnimationManager::SetGameMode(const GameMode newGameMode)
 {
 	_gameMode = newGameMode;
-	Reset();
 	// if (_gameMode == GameMode::PlayAsClient)
 	// {
 	// 	SubscribeAsClient();

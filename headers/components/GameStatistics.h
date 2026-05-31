@@ -43,6 +43,10 @@ class GameStatistics final
 	int _steelWallDiedByPlayerOne{0};
 	int _steelWallDiedByPlayerTwo{0};
 
+	int _bonusPickupByEnemyTeam{0};
+	int _bonusPickupByPlayerOne{0};
+	int _bonusPickupByPlayerTwo{0};
+
 	GameMode _gameMode{};
 
 	void Subscribe();
@@ -66,6 +70,7 @@ class GameStatistics final
 	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
 	void OnBrickWallDied(const std::string& author, const std::string& fraction);
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
+	void OnBonusPickup(const std::string& author, const std::string& fraction);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
@@ -103,4 +108,8 @@ public:
 	[[nodiscard]] int GetSteelWallDiedByEnemyTeam() const { return _steelWallDiedByEnemyTeam; }
 	[[nodiscard]] int GetSteelWallDiedByPlayerOne() const { return _steelWallDiedByPlayerOne; }
 	[[nodiscard]] int GetSteelWallDiedByPlayerTwo() const { return _steelWallDiedByPlayerTwo; }
+	
+	[[nodiscard]] int GetBonusPickupByEnemyTeam() const { return _bonusPickupByEnemyTeam; }
+	[[nodiscard]] int GetBonusPickupByPlayerOne() const { return _bonusPickupByPlayerOne; }
+	[[nodiscard]] int GetBonusPickupByPlayerTwo() const { return _bonusPickupByPlayerTwo; }
 };

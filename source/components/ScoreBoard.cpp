@@ -26,6 +26,9 @@ ScoreBoard::~ScoreBoard()
 
 void ScoreBoard::Subscribe()
 {
+	//NOTE: avoid showing score on game start
+	_events->AddListener("Reset", _name, [this]() { this->DisplayScore(false); });
+
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -65,10 +68,11 @@ void ScoreBoard::Draw()
 
 void ScoreBoard::RenderStatistics() const
 {
-	const Point pos{.x = _pos.x + 180, .y = _pos.y + 170};
+	const Point pos{.x = _pos.x + 180, .y = _pos.y + 140};
 	constexpr unsigned int color = {0xff00ffff};
 
-	_events->EmitEvent("RenderText", Point{.x = pos.x - 60, .y = pos.y + 100}, color, "GAME STATISTICS");
+	_events->EmitEvent("RenderText", Point{.x = pos.x - 60, .y = pos.y + 80}, color, "PRESS M TO SHOW MENU");
+	_events->EmitEvent("RenderText", Point{.x = pos.x - 20, .y = pos.y + 120}, color, "GAME STATISTICS:");
 
 	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
 
@@ -119,11 +123,10 @@ void ScoreBoard::RenderStatistics() const
 							_statistics->GetSteelWallDiedByPlayerTwo(),
 							_statistics->GetSteelWallDiedByEnemyTeam());
 
-	//TODO: display statistics for pickuped bonuses
-	// RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 340}, color, "BONUS PICKUPS",
-	//                         _statistics->GetBonusPickupByPlayerOne(),
-	//                         _statistics->GetBonusPickupByPlayerTwo(),
-	//                         _statistics->GetBonusPickupByEnemyTeam());
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 340}, color, "BONUS PICKUPS",
+							_statistics->GetBonusPickupByPlayerOne(),
+							_statistics->GetBonusPickupByPlayerTwo(),
+							_statistics->GetBonusPickupByEnemyTeam());
 }
 
 void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
@@ -171,9 +174,14 @@ void ScoreBoard::OnRespawnCountChanged(const std::string& objectName, const int 
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
 {
-	if (_gameMode != GameMode::Demo)
+	if (isDisplayed && _gameMode == GameMode::Demo)
 	{
 		return;
+	}
+
+	if (isDisplayed)
+	{
+		_events->EmitEvent("ShowMenu", false);
 	}
 
 	_isScoreBoardDisplayed = isDisplayed;

@@ -61,6 +61,13 @@ void GameStatistics::SubscribeHost()
 			{
 				OnSteelWallDied(author, fraction);
 			});
+
+	_events->AddListener(
+			"Statistics_OnBonusPickup", _name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				OnBonusPickup(author, fraction);
+			});
 }
 
 void GameStatistics::SubscribeAsClient()
@@ -83,6 +90,7 @@ void GameStatistics::UnsubscribeAsHost() const
 
 	_events->RemoveListener("Statistics_BrickWallDied", _name);
 	_events->RemoveListener("Statistics_SteelWallDied", _name);
+	_events->RemoveListener("Statistics_OnBonusPickup", _name);
 }
 
 void GameStatistics::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_Statistics", _name); }
@@ -141,6 +149,10 @@ void GameStatistics::OnClientStatisticsChange(const std::string& type, const std
 	else if (type == "SteelWallDied")
 	{
 		OnSteelWallDied(author, fraction);
+	}
+	else if (type == "OnBonusPickup")
+	{
+		OnBonusPickup(author, fraction);
 	}
 }
 
@@ -376,6 +388,30 @@ void GameStatistics::OnSteelWallDied(const std::string& author, const std::strin
 	}
 }
 
+void GameStatistics::OnBonusPickup(const std::string& author, const std::string& fraction)
+{
+	if (fraction.starts_with("Enemy"))
+	{
+		++_bonusPickupByEnemyTeam;
+	}
+	else if (fraction.starts_with("Player"))
+	{
+		if (author.ends_with("1"))
+		{
+			++_bonusPickupByPlayerOne;
+		}
+		else if (author.ends_with("2"))
+		{
+			++_bonusPickupByPlayerTwo;
+		}
+	}
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_Statistics", "SteelWallDied", author, fraction);
+	}
+}
+
 void GameStatistics::Reset()
 {
 	_bulletHitByEnemy = 0;
@@ -403,4 +439,8 @@ void GameStatistics::Reset()
 	_brickWallDiedByEnemyTeam = 0;
 	_brickWallDiedByPlayerOne = 0;
 	_brickWallDiedByPlayerTwo = 0;
+
+	_bonusPickupByEnemyTeam = 0;
+	_bonusPickupByPlayerOne = 0;
+	_bonusPickupByPlayerTwo = 0;
 }
