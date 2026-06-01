@@ -57,6 +57,7 @@ void BonusEffectManager::Reset()
 	_timerPlayer = {};
 	_shovelPlayer = {};
 	_helmetSlots = {{}, {}, {}, {}, {}, {}};
+	_helmetSlotsTankNames = {{}, {}, {}, {}, {}, {}};
 }
 
 void BonusEffectManager::ApplyBonusEffectsTo(const std::string& tankName, const std::string& tankFraction)
@@ -91,6 +92,7 @@ void BonusEffectManager::OnHelmetBonus(const std::string& name, const millisecon
 	if (const size_t id{TankNameToId(name)};
 		id < _helmetSlots.size())
 	{
+		_helmetSlotsTankNames[id] = name;
 		StartTimer(_helmetSlots[id], "Helmet", name, effectDuration);
 	}
 }
@@ -137,7 +139,7 @@ void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 																	_helmetSlots[i].cooldown))
 		{
 			//TODO: change enemy1 and other to tankType
-			FinishTimer(_helmetSlots[i], "Helmet", TankIdToName(i));
+			FinishTimer(_helmetSlots[i], "Helmet", _helmetSlotsTankNames[i]);
 		}
 	}
 
@@ -184,35 +186,7 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 	_shovelPlayer.activateTime = std::chrono::system_clock::now();
 }
 
-std::string BonusEffectManager::TankIdToName(const size_t id)
-{
-	switch (id)
-	{
-		case 0:
-			return "Enemy1";//TODO: change enemy1 and other to tankType
-		case 1:
-			return "Enemy2";
-		case 2:
-			return "Enemy3";
-		case 3:
-			return "Enemy4";
-		case 5:
-			return "Player1";
-		case 6:
-			return "Player2";
-		default:
-			return "None";
-	}
-}
-
 size_t BonusEffectManager::TankNameToId(const std::string_view& name)
-{
-	const std::string nameStr{name};
-
-	return TankNameToId(nameStr);
-}
-
-size_t BonusEffectManager::TankNameToId(const std::string& name)
 {
 	if (name == "Enemy1")
 	{

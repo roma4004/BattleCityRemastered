@@ -13,6 +13,7 @@ class BonusEffectManager
 	Timer _timerPlayer{};
 	Timer _shovelPlayer{};
 	std::vector<Timer> _helmetSlots{};
+	std::vector<std::string> _helmetSlotsTankNames{};
 	std::string _name{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -34,9 +35,7 @@ public:
 	void StartTimer(Timer& timer, const std::string& event, const std::string& id, milliseconds effectDuration) const;
 	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
-	[[nodiscard]] static std::string TankIdToName(size_t id);
 	static size_t TankNameToId(const std::string_view& name);
-	[[nodiscard]] static size_t TankNameToId(const std::string& name);
 
 	void TickUpdate(double deltaTime);
 
