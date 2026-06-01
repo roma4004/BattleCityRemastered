@@ -48,7 +48,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		_tankSize = _gridSize * 3;// for better turns
+		_tankSize = _gridSize * 3.f;// for better turns
 		std::string name = "Player1";
 		std::string fraction = "PlayerTeam";
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
@@ -109,9 +109,10 @@ TEST_F(BonusTest, BonusPickUp)
 // Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusNotPickUp)
 {
-	if (dynamic_cast<Player*>(_allObjects.front().get()))
+	if (auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
 		const size_t size = _allObjects.size();
+		player->SetPos(FPoint{.x = 0.f, .y = 0.f});
 		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);

@@ -1,8 +1,10 @@
+#include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerTwo.h"
+#include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
@@ -22,6 +24,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{1};
@@ -46,7 +49,8 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);		
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
@@ -1183,4 +1187,221 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+}
+
+// Check that tank can pick up a random bonus with statistic count
+TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
+{
+	{
+		auto enemy = _allObjects.back();
+		_allObjects.clear();
+		_allObjects.emplace_back(enemy);
+	}
+
+	if (auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
+	{
+		enemy->SetPos(FPoint{.x = 0.f, .y = 0.f});
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		const auto bonusOne = dynamic_cast<Bonus*>(_allObjects.back().get());
+		if (bonusOne)
+		{
+			_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		}
+
+		if (const auto bonusTwo = dynamic_cast<Bonus*>(_allObjects.back().get()))
+		{
+			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
+
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_FALSE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 1);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+
+			return;
+		}
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that tank can pick up a random bonus with statistic count
+TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
+{
+	{
+		auto enemy = _allObjects.back();
+		_allObjects.clear();
+		_allObjects.emplace_back(enemy);
+	}
+
+	if (auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
+	{
+		enemy->SetPos(FPoint{.x = 0.f, .y = 0.f});
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 2 + 1.f, .w = _tankSize, .h = _tankSize});
+		const auto bonusOne = dynamic_cast<Bonus*>(_allObjects.back().get());
+		if (bonusOne)
+		{
+			_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		}
+
+		if (const auto bonusTwo = dynamic_cast<Bonus*>(_allObjects.back().get()))
+		{
+			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
+
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+		
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+			return;
+		}
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that tank can pick up a random bonus with statistic count
+TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
+{
+	_allObjects.pop_back();
+
+	if (auto playerOne = dynamic_cast<Player*>(_allObjects.front().get()))
+	{
+		playerOne->SetPos(FPoint{.x = 0.f, .y = 0.f});
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Down", isPressed);
+
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+		{
+			EXPECT_TRUE(bonus->GetIsAlive());
+
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_FALSE(bonus->GetIsAlive());
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 1);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+
+			return;
+		}
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that tank can pick up a random bonus with statistic count
+TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
+{
+	_allObjects.pop_back();
+
+	if (auto player = dynamic_cast<Player*>(_allObjects.front().get()))
+	{
+		player->SetPos(FPoint{.x = 0.f, .y = 0.f});
+
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P1_Move_Up", isPressed);
+
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+		{
+			EXPECT_TRUE(bonus->GetIsAlive());
+
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+		
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_TRUE(bonus->GetIsAlive());
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+			return;
+		}
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that tank can pick up a random bonus with statistic count
+TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
+{
+	_allObjects.pop_back();
+
+	if (auto playerTwo = dynamic_cast<Player*>(_allObjects.back().get()))
+	{
+		playerTwo->SetPos(FPoint{.x = _tankSize + 1.f, .y = 0.f});
+		_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P2_Move_Down", isPressed);
+
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+		{
+			EXPECT_TRUE(bonus->GetIsAlive());
+
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_FALSE(bonus->GetIsAlive());
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 1);
+
+			return;
+		}
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that tank can pick up a random bonus with statistic count
+TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
+{
+	_allObjects.pop_back();
+
+	if (auto playerTwo = dynamic_cast<Player*>(_allObjects.front().get()))
+	{
+		playerTwo->SetPos(FPoint{.x = _tankSize + 1.f, .y = 0.f});
+
+		_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+		constexpr bool isPressed{true};
+		_events->EmitEvent("P2_Move_Up", isPressed);
+
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+		{
+			EXPECT_TRUE(bonus->GetIsAlive());
+
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_TRUE(bonus->GetIsAlive());
+			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+			return;
+		}
+	}
+
+	EXPECT_TRUE(false);
 }
