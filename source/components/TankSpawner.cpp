@@ -16,6 +16,8 @@
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
 #include "utils/Logger.h"
+#include "utils/RandUtils.h"
+#include "utils/TimeUtils.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
 #include <boost/uuid/uuid.hpp>
@@ -28,7 +30,7 @@ TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<Ba
 	: _windowSize{windowSize}
 	, _allObjects{allObjects}
 	, _events{events}
-	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)}	
+	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)}
 	, _respawnManager{std::make_shared<RespawnManager>(events)}
 //TODO: extract tank spawner to respawn manager as sub component
 {
@@ -108,15 +110,19 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 							 const bool skipDelay)
 {
 	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
-	const float size{gridOffset * 3};
+	const float tankSize{gridOffset * 3};
 	const static std::vector<ObjRectangle> spawnPos{{
-			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 32.f - size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 16.f + size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 32.f + size * 2.f, .y = 0, .w = size, .h = size}}};
+			{.x = gridOffset * 16.f - tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize},
+			{.x = gridOffset * 32.f - tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize},
+			{.x = gridOffset * 16.f + tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize},
+			{.x = gridOffset * 32.f + tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize}}};
 
-	for (const auto& rect: spawnPos)
+	for (int i = 0; i < 4; ++i)
 	{
+		std::uniform_int_distribution<> distRandId{0, static_cast<int>(spawnPos.size() - 1)};
+		const int randId = RandUtils::GetRandNumber(distRandId);
+		const auto& rect = spawnPos[randId];
+
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
 			return ColliderUtils::IsCollide(rect, object->GetRect());
@@ -254,7 +260,8 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 {
 	for (size_t i = 0; i < _respawnManager->_slots.size(); ++i)
 	{
-		if (_respawnManager->_slots[i].isAvailable)
+		const auto& slot = _respawnManager->_slots[i];
+		if (slot.isAvailable)
 		{
 			switch (const auto type = static_cast<TankType>(i))
 			{
@@ -262,17 +269,20 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					RespawnEnemyTanks(type, _respawnManager->_slots[i].uuid, skipDelay);
+					if (skipDelay || TimeUtils::IsCooldownFinish(_enemySpawnTimer.activateTime, _enemySpawnTimer.cooldown))
+					{
+						_enemySpawnTimer.cooldown = milliseconds{5000};
+						_enemySpawnTimer.activateTime = std::chrono::system_clock::now();
+						RespawnEnemyTanks(type, slot.uuid, skipDelay);
+					}
 					break;
 				case TankType::PLAYER1:
 				case TankType::PLAYER2:
-					RespawnPlayerTeam(type, _respawnManager->_slots[i].uuid, skipDelay);
+					RespawnPlayerTeam(type, slot.uuid, skipDelay);
 					break;
 				default:
 					break;
 			}
-			_respawnManager->_slots[i].isAvailable = false;
-			break;
 		}
 	}
 }

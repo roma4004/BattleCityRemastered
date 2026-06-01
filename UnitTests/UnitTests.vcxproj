@@ -54,6 +54,7 @@
     <ClCompile Include="..\source\network\commands\CommandBatch.cpp" />
     <ClCompile Include="..\source\network\commands\Dispose.cpp" />
     <ClCompile Include="..\source\network\commands\FortressChange.cpp" />
+    <ClCompile Include="..\source\network\commands\GameStateChange.cpp" />
     <ClCompile Include="..\source\network\commands\HealthChange.cpp" />
     <ClCompile Include="..\source\network\commands\KeyStateChange.cpp" />
     <ClCompile Include="..\source\network\commands\ObstacleSpawn.cpp" />

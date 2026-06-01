@@ -712,14 +712,13 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 {
 	_allObjects.clear();
 
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	bool isGameLose{false};
 	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
 
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, _gameMode));
-	_allObjects.pop_back();
-
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
 	_tankSpawner->RespawnTanks(true);
+	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
+	_allObjects.pop_back();
 	_allObjects.pop_back();
 
 	EXPECT_TRUE(isGameLose);

@@ -2,6 +2,8 @@
 
 #include "Point.h"
 #include "managers/RespawnManager.h"
+#include "utils/Timer.h"
+#include <random>
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
@@ -29,7 +31,7 @@ class TankSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
-
+	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
 
 	void Subscribe();

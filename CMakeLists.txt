@@ -397,6 +397,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/ServerHandler.cpp
         source/network/commands/AnimationCreate.cpp
         source/network/commands/BonusStatus.cpp
+        source/network/commands/GameStateChange.cpp
         source/network/commands/SignalEvent.cpp
         source/network/commands/TankOnOff.cpp
         source/network/commands/BonusDeSpawn.cpp
