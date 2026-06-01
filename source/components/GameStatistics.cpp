@@ -408,7 +408,7 @@ void GameStatistics::OnBonusPickup(const std::string& author, const std::string&
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "SteelWallDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "OnBonusPickup", author, fraction);
 	}
 }
 
@@ -439,6 +439,10 @@ void GameStatistics::Reset()
 	_brickWallDiedByEnemyTeam = 0;
 	_brickWallDiedByPlayerOne = 0;
 	_brickWallDiedByPlayerTwo = 0;
+
+	_steelWallDiedByEnemyTeam = 0;
+	_steelWallDiedByPlayerOne = 0;
+	_steelWallDiedByPlayerTwo = 0;
 
 	_bonusPickupByEnemyTeam = 0;
 	_bonusPickupByPlayerOne = 0;

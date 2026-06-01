@@ -9,6 +9,7 @@
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Dispose.h"
 #include "network/commands/FortressChange.h"
+#include "network/commands/GameStateChange.h"
 #include "network/commands/HealthChange.h"
 #include "network/commands/KeyStateChange.h"
 #include "network/commands/ObstacleSpawn.h"
@@ -383,6 +384,18 @@ void Server::Subscribe()
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPause));
+	});
+
+	_events->AddListener("ServerSend_PlayersTeamIsWon", _name, [this]()
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<GameStateChange>("PlayersTeamIsWon"));
+	});
+
+	_events->AddListener("ServerSend_EnemiesTeamIsWon", _name, [this]()
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<GameStateChange>("EnemiesTeamIsWon"));
 	});
 
 	_events->AddListener(

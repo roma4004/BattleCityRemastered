@@ -22,6 +22,7 @@
 #include "enums/AnimationType.h"
 #include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusStatus.h"
+#include "network/commands/GameStateChange.h"
 #include "network/commands/SignalEvent.h"
 #include "network/commands/TankOnOff.h"
 #include <boost/archive/text_iarchive.hpp>
@@ -285,6 +286,19 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command)
 	}
 }
 
+void Client::OnGameStateChange(const std::shared_ptr<Command>& command)
+{
+	if (const auto* cmd = dynamic_cast<GameStateChange*>(command.get()))
+	{
+		const auto gameState = cmd->GetGameState();
+
+		_commandQueue.Enqueue([this, gameState]()
+		{
+			this->_events->EmitEvent(gameState);
+		});
+	}
+}
+
 void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
@@ -471,6 +485,11 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
 			case CommandType::KEY_STATE_CHANGE:
 			{
 				OnKeyStateChange(command);
+				break;
+			}
+			case CommandType::GAME_STATE_CHANGE:
+			{
+				OnGameStateChange(command);
 				break;
 			}
 			case CommandType::FORTRESS_CHANGE:

@@ -39,6 +39,7 @@ private:
 	void OnDispose(const std::shared_ptr<Command>& command);
 	void OnStatisticsChange(const std::shared_ptr<Command>& command);
 	void OnKeyStateChange(const std::shared_ptr<Command>& command);
+	void OnGameStateChange(const std::shared_ptr<Command>& command);
 	void OnFortressChange(const std::shared_ptr<Command>& command);
 	void OnBonusSpawn(const std::shared_ptr<Command>& command);
 	void OnBonusDeSpawn(const std::shared_ptr<Command>& command);
