@@ -374,10 +374,16 @@ void Server::Subscribe()
 {
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
-		std::scoped_lock lock(_batchWriteMutex, _sendQueueMutex);
-		_sendQueue.emplace(_batch); //TODO: replace with std::swap
+		auto batch{std::make_shared<CommandBatch>()};
+		{
+			std::scoped_lock lock(_batchWriteMutex);
+			std::swap(batch, _batch);
+		}
+		{
+			std::scoped_lock lock(_sendQueueMutex);
+			_sendQueue.emplace(batch);
+		}
 		_sendCondition.notify_one();
-		_batch = std::make_shared<CommandBatch>();
 	});
 
 	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPause)
@@ -447,13 +453,11 @@ void Server::Subscribe()
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
-	//TODO: write obstacle dispose
 
 	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
 			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
 			{
-				//TODO: fix multiple spawn bullet explosion animation
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name));
 			});

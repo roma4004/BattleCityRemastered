@@ -172,7 +172,7 @@ std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)
 	return std::string{"Player2"};
 }
 
-void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
+void RespawnManager::ChangeRespawnCount(const unsigned short delta, RespawnCount type)
 {
 	const auto id = static_cast<size_t>(type);
 	_respawnCount[id] += delta;

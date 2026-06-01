@@ -34,7 +34,7 @@ void ScoreBoard::Subscribe()
 		this->_gameMode = newGameMode;
 	});
 
-	_events->AddListener("RespawnCountChangedTo", _name, [this](const std::string& objectName, const int respawnCount)
+	_events->AddListener("RespawnCountChangedTo", _name, [this](const std::string& objectName, const unsigned short respawnCount)
 	{
 		this->OnRespawnCountChanged(objectName, respawnCount);//TODO: extract from score to sidebar
 	});
@@ -130,18 +130,27 @@ void ScoreBoard::RenderStatistics() const
 }
 
 void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
-										 const int player1, const int player2, const int enemy) const
+										 const unsigned short player1, const unsigned short player2,
+										 const unsigned short enemy) const
+{
+	std::ostringstream textStream;
+	textStream << std::left
+			<< std::setw(22) << text
+			<< std::setw(4) << player1
+			<< std::setw(4) << player2
+			<< std::setw(4) << enemy;
+
+	_events->EmitEvent("RenderText", pos, color, textStream.str());
+}
+
+void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
+										 const unsigned short player1, const unsigned short player2) const
 {
 	std::ostringstream textStream;
 	textStream << std::left
 			<< std::setw(22) << text
 			<< std::setw(4) << player1
 			<< std::setw(4) << player2;
-
-	if (enemy != -1)
-	{
-		textStream << std::setw(4) << enemy;
-	}
 
 	_events->EmitEvent("RenderText", pos, color, textStream.str());
 }
@@ -156,7 +165,7 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 	_events->EmitEvent("RenderText", Point{.x = pos.x, .y = pos.y}, color, textStream.str());
 }
 
-void ScoreBoard::OnRespawnCountChanged(const std::string& objectName, const int respawnCount)
+void ScoreBoard::OnRespawnCountChanged(const std::string& objectName, const unsigned short respawnCount)
 {
 	if (objectName == "Enemy")
 	{
