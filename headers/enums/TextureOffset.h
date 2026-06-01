@@ -1,6 +1,5 @@
 #pragma once
 
-//TODO: move away non enum structure from enum folders
 #include "entities/ObjRectangle.h"
 
 // struct ObjRectangle;
@@ -56,7 +55,7 @@ struct TextureOffset
 
 	//Bonuses
 	ObjRectangle bonusHelmet{.x = 256, .y = 112, .w = 16, .h = 16};
-	ObjRectangle helmetAnimationFrame{.x = 352, .y = 112, .w = 16, .h = 16};// 2 step animation 16x16 , left -> right
+	ObjRectangle helmetAnimationFrame{.x = 352, .y = 112, .w = 16, .h = 16};// 2 step animation 16x16, left -> right
 
 	ObjRectangle bonusTimer{.x = 272, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusShovel{.x = 288, .y = 112, .w = 16, .h = 16};

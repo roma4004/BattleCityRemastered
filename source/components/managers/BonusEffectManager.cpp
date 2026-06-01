@@ -73,6 +73,14 @@ void BonusEffectManager::ApplyBonusEffectsTo(const std::string& tankName, const 
 
 	const size_t typeId = TankNameToId(tankName);
 	_events->EmitEvent("BonusHelmet_EffectOnOff", _helmetSlots[typeId].isActive, tankName);
+
+	if (const size_t id{TankNameToId(tankName)};
+		id < _helmetSlots.size())
+	{
+		_helmetSlotsTankNames[id] = tankName;
+		constexpr milliseconds effectDuration{std::chrono::seconds{5}};
+		StartTimer(_helmetSlots[id], "Helmet", tankName, effectDuration);
+	}
 }
 
 void BonusEffectManager::OnTimerBonus(const std::string& fraction, const milliseconds effectDuration)
@@ -97,22 +105,25 @@ void BonusEffectManager::OnHelmetBonus(const std::string& name, const millisecon
 	}
 }
 
-void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool value) const
+void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool isActive) const
 {
-	_events->EmitEvent("Bonus" + event + "StatusChange", id, value);
-
-	//TODO: move replication to bonusEffectManager from tank subscription
-	// if (_gameMode == GameMode::PlayAsHost)
-	// {
-	// 	_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
-	// }
+	_events->EmitEvent("Bonus" + event + "StatusChange", id, isActive);
 }
 
 void BonusEffectManager::StartTimer(Timer& timer, const std::string& event, const std::string& id,
 									const milliseconds effectDuration) const
 {
-	timer = {effectDuration, std::chrono::system_clock::now()};
-	OnBonusStatusChange(event, id, timer.isActive);
+	if (timer.isActive == false)
+	{
+		timer.cooldown = effectDuration;
+		timer.activateTime = std::chrono::system_clock::now();
+		timer.isActive = true;
+		OnBonusStatusChange(event, id, timer.isActive);
+	}
+	else
+	{
+		timer.cooldown += effectDuration;
+	}
 }
 
 void BonusEffectManager::FinishTimer(Timer& timer, const std::string& event, const std::string& id) const
@@ -138,7 +149,6 @@ void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 		if (_helmetSlots[i].isActive && TimeUtils::IsCooldownFinish(_helmetSlots[i].activateTime,
 																	_helmetSlots[i].cooldown))
 		{
-			//TODO: change enemy1 and other to tankType
 			FinishTimer(_helmetSlots[i], "Helmet", _helmetSlotsTankNames[i]);
 		}
 	}

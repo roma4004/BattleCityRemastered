@@ -251,7 +251,6 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	{
 		_effects.isHelmetActive = isActive;
 
-		//TODO: move replication to bonusEffectManager
 		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
