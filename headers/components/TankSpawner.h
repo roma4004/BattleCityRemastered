@@ -39,6 +39,7 @@ class TankSpawner final
 
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
+	void Reset();
 
 	bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
 	bool SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);

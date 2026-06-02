@@ -24,7 +24,6 @@
 #include <iostream>
 #include <memory>
 
-//TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 						 const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize}
@@ -44,6 +43,8 @@ TankSpawner::~TankSpawner()
 
 void TankSpawner::Subscribe()
 {
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+
 	//TODO: reuse existing tanks when game mode changed
 	_events->AddListener(
 			"GameModeChangedTo", _name,
@@ -89,6 +90,11 @@ void TankSpawner::SubscribeAsClient()
 void TankSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
+
+void TankSpawner::Reset()
+{
+	_enemySpawnTimer = {};
+}
 
 std::string TankSpawner::GetCurrentTimeString()
 {
@@ -179,8 +185,6 @@ bool TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 		const unsigned int color = isFirst ? yellow : green;
 
 		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, type, skipDelay);
-		//_events->EmitEvent("BonusHelmet", "Player1", std::chrono::milliseconds(5000000)); // Debug for win-condition
-		//_events->EmitEvent("PlayersTeamIsWon"); // Debug for win-condition
 
 		return true;
 	}
