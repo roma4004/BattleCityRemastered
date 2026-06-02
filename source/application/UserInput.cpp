@@ -127,8 +127,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		// const int rowSize = env.windowWidth; ???
 
 		if (x < 1 || y < 1
-			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1)
-			{}
+			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1) {}
 	}
 }
 

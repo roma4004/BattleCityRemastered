@@ -306,7 +306,8 @@ void Server::StartSendThread()
 			std::shared_ptr<CommandBatch> batch;
 			{
 				std::unique_lock<std::mutex> lock(this->_sendQueueMutex);
-				this->_sendCondition.wait(lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning.load(); });
+				this->_sendCondition.wait(
+						lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning.load(); });
 
 				if (!this->_isRunning.load())
 					break;

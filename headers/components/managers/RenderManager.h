@@ -68,6 +68,7 @@ class RenderManager
 
 	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
+	void DrawColorTexture(ObjRectangle rect, unsigned int color);
 	void DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, Direction dir) const;
 
 	void GenerateFpsTextures();

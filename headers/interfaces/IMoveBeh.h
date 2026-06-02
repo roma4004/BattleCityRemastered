@@ -12,7 +12,7 @@ class IMoveBeh
 
 protected:
 	[[nodiscard]] virtual bool MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) = 0;
-	[[nodiscard]] virtual bool MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) =	0;
+	[[nodiscard]] virtual bool MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) = 0;
 	[[nodiscard]] virtual bool MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) = 0;
 	[[nodiscard]] virtual bool MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) = 0;
 

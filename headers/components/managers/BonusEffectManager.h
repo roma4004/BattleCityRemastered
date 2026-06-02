@@ -35,6 +35,7 @@ public:
 	void StartTimer(Timer& timer, const std::string& event, const std::string& id, milliseconds effectDuration) const;
 	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
+	void OnSpawnEnabled(std::shared_ptr<Tank>& tank);
 	static size_t TankNameToId(const std::string_view& name);
 
 	void TickUpdate(double deltaTime);

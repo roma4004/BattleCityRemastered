@@ -50,7 +50,8 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
-	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });//TODO: add host\client branch subscription
+	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
+	//TODO: add host\client branch subscription
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -231,4 +232,3 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 		_networkNode = nullptr;
 	}
 }
-

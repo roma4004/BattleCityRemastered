@@ -273,7 +273,8 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					if (skipDelay || TimeUtils::IsCooldownFinish(_enemySpawnTimer.activateTime, _enemySpawnTimer.cooldown))
+					if (skipDelay || TimeUtils::IsCooldownFinish(_enemySpawnTimer.activateTime,
+																 _enemySpawnTimer.cooldown))
 					{
 						_enemySpawnTimer.cooldown = milliseconds{5000};
 						_enemySpawnTimer.activateTime = std::chrono::system_clock::now();

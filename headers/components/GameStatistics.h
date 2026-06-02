@@ -109,7 +109,7 @@ public:
 	[[nodiscard]] unsigned short GetSteelWallDiedByEnemyTeam() const { return _data.steelWallDiedByEnemyTeam; }
 	[[nodiscard]] unsigned short GetSteelWallDiedByPlayerOne() const { return _data.steelWallDiedByPlayerOne; }
 	[[nodiscard]] unsigned short GetSteelWallDiedByPlayerTwo() const { return _data.steelWallDiedByPlayerTwo; }
-	
+
 	[[nodiscard]] unsigned short GetBonusPickupByEnemyTeam() const { return _data.bonusPickupByEnemyTeam; }
 	[[nodiscard]] unsigned short GetBonusPickupByPlayerOne() const { return _data.bonusPickupByPlayerOne; }
 	[[nodiscard]] unsigned short GetBonusPickupByPlayerTwo() const { return _data.bonusPickupByPlayerTwo; }

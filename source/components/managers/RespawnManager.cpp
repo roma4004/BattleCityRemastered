@@ -39,9 +39,9 @@ void RespawnManager::Subscribe()
 			{
 				this->_gameMode = newGameMode;
 
-				_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+				this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
 
-				OnGameModeChange();
+				this->OnGameModeChange();
 			});
 
 	_events->AddListener("TankSpawn", _name, [this](const buuid& uuid) { OnTankSpawn(uuid); });
@@ -217,9 +217,7 @@ void RespawnManager::OnClientRespawn(const TankType type)
 			ChangeRespawnCount(-1, RespawnCount::ENEMY_ALL);
 			break;
 		case TankType::PLAYER1:
-		// case TankType::COOP1:
 		case TankType::PLAYER2:
-		// case TankType::COOP2:
 			ChangeRespawnCount(-1, type == TankType::PLAYER1
 									   ? RespawnCount::PLAYER_ONE
 									   : RespawnCount::PLAYER_TWO);

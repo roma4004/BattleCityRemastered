@@ -90,21 +90,16 @@ void RenderManager::Subscribe()
 	_events->AddListener("RenderGameOverText", _name, [this]() { DrawGameOverText(); });
 	_events->AddListener("RenderGameWonText", _name, [this]() { DrawGameWonText(); });
 
-	_events->AddListener(
-			"RenderColorTexture", _name,
-			[this](const ObjRectangle rect, const unsigned int color)
-			{
-				const SDL_Rect dstRect = RectToSdlRect(rect);
-				SDL_Texture* colorTexture = CreateColorTexture(color);
-				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &dstRect);
-				SDL_DestroyTexture(colorTexture);
-			});
+	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect, const unsigned int color)
+	{
+		this->DrawColorTexture(rect, color);
+	});
 
 	_events->AddListener(
 			"RenderTexture", _name,
 			[this](const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir)
 			{
-				DrawTexture(textureRect, destRect, dir);
+				this->DrawTexture(textureRect, destRect, dir);
 			});
 
 	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });
@@ -113,7 +108,7 @@ void RenderManager::Subscribe()
 			"RenderHealthBar", _name,
 			[this](const ObjRectangle rect, const int health, const unsigned int color)
 			{
-				DrawHealthBar(rect, health, color);
+				this->DrawHealthBar(rect, health, color);
 			});
 }
 
@@ -348,6 +343,14 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 		default:
 			return std::make_pair(0.0, SDL_FLIP_NONE);
 	}
+}
+
+void RenderManager::DrawColorTexture(const ObjRectangle rect, const unsigned int color)
+{
+	const SDL_Rect dstRect = RectToSdlRect(rect);
+	SDL_Texture* colorTexture = CreateColorTexture(color);
+	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &dstRect);
+	SDL_DestroyTexture(colorTexture);
 }
 
 void RenderManager::DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, const Direction dir) const

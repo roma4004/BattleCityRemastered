@@ -31,22 +31,12 @@ void BonusEffectManager::Subscribe()
 	{
 		this->OnHelmetBonus(name, effectDuration);
 	});
-
 	_events->AddListener("BonusShovel", _name, [this](const std::string& fraction, const milliseconds effectDuration)
 	{
 		this->OnBonusShovelPickup(fraction, effectDuration);
 	});
-	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank)
-	{
-		if (!tank)
-		{
-			return;
-		}
 
-		const std::string tankName{tank->GetName()};
-		const std::string tankFraction{tank->GetFraction()};
-		this->ApplyBonusEffectsTo(tankName, tankFraction); //NOTE: continue effects after respawn
-	});
+	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank) { this->OnSpawnEnabled(tank); });
 }
 
 void BonusEffectManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -229,4 +219,16 @@ size_t BonusEffectManager::TankNameToId(const std::string_view& name)
 	}
 
 	return static_cast<size_t>(-1);
+}
+
+void BonusEffectManager::OnSpawnEnabled(std::shared_ptr<Tank>& tank)
+{
+	if (!tank)
+	{
+		return;
+	}
+
+	const std::string tankName{tank->GetName()};
+	const std::string tankFraction{tank->GetFraction()};
+	this->ApplyBonusEffectsTo(tankName, tankFraction);//NOTE: continue effects after respawn
 }

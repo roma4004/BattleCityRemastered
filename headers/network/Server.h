@@ -60,11 +60,11 @@ public:
 
 	void ProcessNetworkCommands() const
 	{
-		for (const auto& session : _sessions)
+		for (const auto& session: _sessions)
 		{
 			if (session && session->IsSocketOpen())
 			{
-				session->GetCommandQueue().ProcessAll(); //TODO: refactor to session->ProcessCommandQueue()
+				session->GetCommandQueue().ProcessAll();//TODO: refactor to session->ProcessCommandQueue()
 			}
 		}
 	}

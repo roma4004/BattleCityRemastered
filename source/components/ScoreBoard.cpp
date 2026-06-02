@@ -34,10 +34,12 @@ void ScoreBoard::Subscribe()
 		this->_gameMode = newGameMode;
 	});
 
-	_events->AddListener("RespawnCountChangedTo", _name, [this](const std::string& objectName, const unsigned short respawnCount)
-	{
-		this->OnRespawnCountChanged(objectName, respawnCount);//TODO: extract from score to sidebar
-	});
+	_events->AddListener(
+			"RespawnCountChangedTo", _name,
+			[this](const std::string& objectName, const unsigned short respawnCount)
+			{
+				this->OnRespawnCountChanged(objectName, respawnCount);//TODO: extract from score to sidebar
+			});
 
 	if (_isScoreBoardDisplayed)
 	{

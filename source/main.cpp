@@ -21,7 +21,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 			"Resources/Images/menuSelectorP1.png",
 			"Resources/Images/XBoxCon.png",
 			"Resources/Images/PS5Con.png"
-	);
+			);
 	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
 	const std::unique_ptr<IGame> game = sdl->CreateGame();
 

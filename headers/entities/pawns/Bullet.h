@@ -26,7 +26,7 @@ class Bullet final : public Pawn, public IDrawable
 	void Enable();
 	void Disable() const;
 	void Reset(BulletResetProperty resetProperty);
-	
+
 protected:
 	void Subscribe() override;
 	void Unsubscribe() const override;
@@ -34,7 +34,8 @@ protected:
 	void TickUpdate(double deltaTime) override;
 
 public:
-	explicit Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre = {}, std::string author = "", bool enableByDefault = false);
+	explicit Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre = {}, std::string author = "",
+					bool enableByDefault = false);
 
 	~Bullet() override;
 
