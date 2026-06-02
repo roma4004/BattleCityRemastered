@@ -168,22 +168,26 @@ SDLEnvironment::~SDLEnvironment()
 
 	// Audio loading and play
 	{
-		if (const int result = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-			result < 0)
+		if (const int audioResult = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+			audioResult >= 0)
 		{
-			return std::make_unique<ConfigFailure>("Mix_OpenAudio Error", Mix_GetError());
+			if (levelStartedSound = {Mix_LoadWAV(introMusicPathName), Mix_FreeChunk};
+				levelStartedSound != nullptr)
+			{
+				if (const int playResult = Mix_PlayChannel(-1, levelStartedSound.get(), 0);
+					playResult == -1)
+				{
+					std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError() << '\n';
+				}
+			}
+			else
+			{
+				std::cout << "Mix_LoadWAV, can't load levelStarted.wav, sound off, " << Mix_GetError() << '\n';
+			}
 		}
-
-		if (levelStartedSound = {Mix_LoadWAV(introMusicPathName), Mix_FreeChunk};
-			levelStartedSound == nullptr)
+		else
 		{
-			return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
-		}
-
-		if (const int result = Mix_PlayChannel(-1, levelStartedSound.get(), 0);
-			result == -1)
-		{
-			return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
+			std::cout << "Mix_OpenAudio, can't initialize sound card, sound off, " << Mix_GetError() << '\n';
 		}
 	}
 
@@ -212,7 +216,7 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWi
 
 	constexpr int monitorIndex = -1;//NOTE: -1 mean use the default//TODO: move to userSettings
 	SDL_Rect bounds;
-	SDL_GetDisplayBounds(monitorIndex, &bounds);
+	SDL_GetDisplayBounds(monitorIndex, &bounds);//TODO: investigate errors: displayIndex must be in the range 0 - 1
 
 	SDL_Rect bordersSize;
 	SDL_GetWindowBordersSize(sdlWindow.get(), &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);

@@ -18,8 +18,6 @@
 //#include <fstream>
 #include <boost/uuid/uuid_io.hpp>
 
-//TODO: can't start game if no sound device on PC
-
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
