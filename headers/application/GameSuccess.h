@@ -21,6 +21,32 @@ class EventSystem;
 
 class GameSuccess final : public IGame
 {
+public:
+	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
+				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
+
+	~GameSuccess() override;
+
+	void MainLoop() override;
+
+	[[nodiscard]] int Result() const override;
+
+private:
+	void Subscribe();
+	void Unsubscribe() const;
+
+	void ResetBattlefieldTo(GameMode gameMode);
+	void PrevGameMode();
+	void NextGameMode();
+
+	void DisposeDeadObject();
+
+	void OnClientReady() const;
+
+	[[nodiscard]] GameMode GetCurrentGameMode() const;
+	void SetCurrentGameMode(GameMode selectedGameMode);
+	void OnGameModeChangedTo(GameMode newGameMode);
+
 	UPoint _windowSize{};
 	std::string _name{"Game"};
 
@@ -42,29 +68,4 @@ class GameSuccess final : public IGame
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
-
-	void Subscribe();
-	void Unsubscribe() const;
-
-	void ResetBattlefieldTo(GameMode gameMode);
-	void PrevGameMode();
-	void NextGameMode();
-
-	void DisposeDeadObject();
-
-	void OnClientReady() const;
-
-	void MainLoop() override;
-
-	[[nodiscard]] int Result() const override;
-
-	[[nodiscard]] GameMode GetCurrentGameMode() const;
-	void SetCurrentGameMode(GameMode selectedGameMode);
-	void OnGameModeChangedTo(GameMode newGameMode);
-
-public:
-	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
-
-	~GameSuccess() override;
 };

@@ -41,6 +41,10 @@ struct StatisticsData final
 	unsigned short bonusPickupByEnemyTeam{0};
 	unsigned short bonusPickupByPlayerOne{0};
 	unsigned short bonusPickupByPlayerTwo{0};
+
+	unsigned short bonusDestroyedByEnemyTeam{0};
+	unsigned short bonusDestroyedByPlayerOne{0};
+	unsigned short bonusDestroyedByPlayerTwo{0};
 };
 
 class GameStatistics final
@@ -72,6 +76,7 @@ class GameStatistics final
 	void OnBrickWallDied(const std::string& author, const std::string& fraction);
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
 	void OnBonusPickup(const std::string& author, const std::string& fraction);
+	void OnBonusDestroyed(const std::string& author, const std::string& fraction);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
@@ -113,4 +118,8 @@ public:
 	[[nodiscard]] unsigned short GetBonusPickupByEnemyTeam() const { return _data.bonusPickupByEnemyTeam; }
 	[[nodiscard]] unsigned short GetBonusPickupByPlayerOne() const { return _data.bonusPickupByPlayerOne; }
 	[[nodiscard]] unsigned short GetBonusPickupByPlayerTwo() const { return _data.bonusPickupByPlayerTwo; }
+
+	[[nodiscard]] unsigned short GetBonusDestroyedByEnemyTeam() const { return _data.bonusDestroyedByEnemyTeam; }
+	[[nodiscard]] unsigned short GetBonusDestroyedByPlayerOne() const { return _data.bonusDestroyedByPlayerOne; }
+	[[nodiscard]] unsigned short GetBonusDestroyedByPlayerTwo() const { return _data.bonusDestroyedByPlayerTwo; }
 };

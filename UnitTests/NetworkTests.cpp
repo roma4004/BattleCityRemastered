@@ -364,11 +364,11 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_" + nameOrigin + "OnBonusHelmet", "BonusStatusEventReplication",
+			"ClientReceived_" + nameOrigin + "BonusHelmet_Pickup", "BonusStatusEventReplication",
 			[&promise](const bool isEnable) { promise.set_value(isEnable); });
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_OnBonusHelmet", nameOrigin, isActiveOrigin);
+	events->EmitEvent("ServerSend_BonusHelmet_Pickup", nameOrigin, isActiveOrigin);
 	events->EmitEvent("Server_EndFrame");
 
 	const auto status = future.wait_for(std::chrono::milliseconds(1000));
@@ -380,7 +380,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	const auto isEnable = future.get();
 	EXPECT_EQ(isActiveOrigin, isEnable);
 
-	events->RemoveListener("ClientReceived_" + nameOrigin + "OnBonusHelmet", "BonusStatusEventReplication");
+	events->RemoveListener("ClientReceived_" + nameOrigin + "BonusHelmet_Pickup", "BonusStatusEventReplication");
 }
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)

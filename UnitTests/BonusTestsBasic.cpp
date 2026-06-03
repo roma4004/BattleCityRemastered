@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
 #include "components/input/InputProviderForPlayerOne.h"
+#include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Enemy.h"
@@ -86,19 +87,18 @@ protected:
 // Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusPickUp)
 {
-	const size_t size = _allObjects.size();
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
-	if (const auto bonus = _allObjects.back().get())
+	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 		EXPECT_FALSE(bonus->GetIsAlive());
-		EXPECT_LT(size, _allObjects.size());
 	}
 	else
 	{
@@ -111,16 +111,20 @@ TEST_F(BonusTest, BonusNotPickUp)
 {
 	if (auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		const size_t size = _allObjects.size();
 		player->SetPos(FPoint{.x = 0.f, .y = 0.f});
+
 		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-		if (const auto bonus = _allObjects.back().get())
+
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
-			EXPECT_NE(bonus->GetIsAlive(), false);
-			EXPECT_LT(size, _allObjects.size());
+			EXPECT_TRUE(bonus->GetIsAlive());
+
+			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+			EXPECT_TRUE(bonus->GetIsAlive());
 		}
 		else
 		{
@@ -133,8 +137,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 	EXPECT_TRUE(false);
 }
 
-//TODO: check if enemy pick up timer player team should freeze
-// Check that tank can pick up random bonus
+// Check that player can pick up Timer bonus and freeze enemy
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
@@ -178,7 +181,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank can pick up a random bonus
+// Check that player not pick up Timer bonus and enemies still move
 TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
@@ -221,7 +224,8 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 	EXPECT_TRUE(false);
 }
 
-TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
+//Check that player can pick up Helmet bonus and enemies can't damage player
+TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
@@ -232,7 +236,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-		if (const auto bonus = _allObjects.back().get())
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
 			EXPECT_EQ(bonus->GetIsAlive(), false);
 		}
@@ -278,6 +282,7 @@ TEST_F(BonusTest, HelmetPickUpBulletCantDamageTank)
 	EXPECT_TRUE(false);
 }
 
+//Check that player not pick up Helmet bonus and enemies can damage player
 TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 {
 	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
@@ -289,9 +294,9 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-		if (const auto bonus = _allObjects.back().get())
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
-			EXPECT_NE(bonus->GetIsAlive(), false);
+			EXPECT_TRUE(bonus->GetIsAlive());
 		}
 		else
 		{
@@ -332,6 +337,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	EXPECT_TRUE(false);
 }
 
+//Check that player pick up Grenade bonus and enemies got zero health
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
@@ -363,7 +369,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	if (const auto bonus = _allObjects.back().get())
+	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
 		EXPECT_EQ(bonus->GetIsAlive(), false);
 	}
@@ -375,6 +381,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	EXPECT_EQ(enemy->GetHealth(), 0);
 }
 
+//Check that not player pick up Grenade bonus and enemies remain full health
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
@@ -406,9 +413,9 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	if (const auto bonus = _allObjects.back().get())
+	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
-		EXPECT_NE(bonus->GetIsAlive(), false);
+		EXPECT_TRUE(bonus->GetIsAlive());
 	}
 	else
 	{
@@ -418,6 +425,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	EXPECT_EQ(enemy->GetHealth(), 100);
 }
 
+//Check that player pick up Tank bonus and got his extra life
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
@@ -426,17 +434,23 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
 	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
-	const auto bonus = _allObjects.back().get();
+	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
+	{
+		EXPECT_TRUE(bonus->GetIsAlive());
 
-	EXPECT_EQ(bonus->GetIsAlive(), true);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		EXPECT_FALSE(bonus->GetIsAlive());
 
-	EXPECT_EQ(bonus->GetIsAlive(), false);
+		EXPECT_LT(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
 
-	EXPECT_LT(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
+		return;
+	}
+
+	EXPECT_TRUE(false);
 }
 
+//Check that player not pick up Tank bonus and his life count remains the same
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
@@ -448,7 +462,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	if (const auto bonus = _allObjects.back().get())
+	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
 		EXPECT_NE(bonus->GetIsAlive(), false);
 	}
@@ -460,6 +474,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 	EXPECT_EQ(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
 }
 
+//Check that player pick up Star bonus and his tier increased
 TEST_F(BonusTest, StarPickUpTierIncrease)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -473,7 +488,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-		if (const auto bonus = _allObjects.back().get())
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
 			EXPECT_EQ(bonus->GetIsAlive(), false);
 		}
@@ -490,6 +505,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 	EXPECT_TRUE(false);
 }
 
+//Check that player not pick up Star bonus and his tier remains the same
 TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -503,9 +519,9 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-		if (const auto bonus = _allObjects.back().get())
+		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
-			EXPECT_NE(bonus->GetIsAlive(), false);
+			EXPECT_TRUE(bonus->GetIsAlive());
 		}
 		else
 		{
@@ -521,6 +537,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 }
 
 // NOTE: when player pick up shovel bonus fortressWalls become steelWalls for a while then return to regular brickWalls
+//Check that player pick up Shovel bonus and Fortress wall turns into Steel wall
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
@@ -539,8 +556,9 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 	EXPECT_TRUE(fortressWall->IsSteelWall());
 }
 
-//TODO: check that player can pickup bonus and rebuild fortress and skip if space spawn not available
-TEST_F(BonusTest, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
+//TODO: add new tests, that count bricks and check that player can pickup bonus and rebuild fortress and skip if space spawn not available
+//Check that player not pick up Shovel bonus and his Fortress wall remain the same
+TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 {
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
 							  BonusType::Shovel);

@@ -63,10 +63,17 @@ void GameStatistics::SubscribeHost()
 			});
 
 	_events->AddListener(
-			"Statistics_OnBonusPickup", _name,
+			"Statistics_BonusPickup", _name,
 			[this](const std::string& author, const std::string& fraction)
 			{
 				OnBonusPickup(author, fraction);
+			});
+
+	_events->AddListener(
+			"Statistics_BonusDestroyed", _name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				OnBonusDestroyed(author, fraction);
 			});
 }
 
@@ -90,7 +97,7 @@ void GameStatistics::UnsubscribeAsHost() const
 
 	_events->RemoveListener("Statistics_BrickWallDied", _name);
 	_events->RemoveListener("Statistics_SteelWallDied", _name);
-	_events->RemoveListener("Statistics_OnBonusPickup", _name);
+	_events->RemoveListener("Statistics_BonusPickup", _name);
 }
 
 void GameStatistics::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_Statistics", _name); }
@@ -150,9 +157,13 @@ void GameStatistics::OnClientStatisticsChange(const std::string& type, const std
 	{
 		OnSteelWallDied(author, fraction);
 	}
-	else if (type == "OnBonusPickup")
+	else if (type == "BonusPickup")
 	{
 		OnBonusPickup(author, fraction);
+	}
+	else if (type == "BonusDestroyed")
+	{
+		OnBonusDestroyed(author, fraction);
 	}
 }
 
@@ -408,7 +419,31 @@ void GameStatistics::OnBonusPickup(const std::string& author, const std::string&
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "OnBonusPickup", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "BonusPickup", author, fraction);
+	}
+}
+
+void GameStatistics::OnBonusDestroyed(const std::string& author, const std::string& fraction)
+{
+	if (fraction.starts_with("Enemy"))
+	{
+		++_data.bonusDestroyedByEnemyTeam;
+	}
+	else if (fraction.starts_with("Player"))
+	{
+		if (author.ends_with("1"))
+		{
+			++_data.bonusDestroyedByPlayerOne;
+		}
+		else if (author.ends_with("2"))
+		{
+			++_data.bonusDestroyedByPlayerTwo;
+		}
+	}
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_Statistics", "BonusDestroyed", author, fraction);
 	}
 }
 

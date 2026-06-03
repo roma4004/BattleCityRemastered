@@ -109,17 +109,17 @@ void Tank::SubscribeAsClient()
 				this->Shot(uuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid, [this](const bool isActive)
+	_events->AddListener("ClientReceived_" + _name + "BonusHelmet_Pickup", _nameWithUuid, [this](const bool isActive)
 	{
 		this->_effects.isHelmetActive = isActive;
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_" + _name + "BonusStar_Pickup", _nameWithUuid, [this]()
 	{
 		this->OnBonusStar(this->_name);
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_" + _name + "BonusCaliber_Pickup", _nameWithUuid, [this]()
 	{
 		this->OnBonusCaliber(this->_name);
 	});
@@ -128,33 +128,33 @@ void Tank::SubscribeAsClient()
 void Tank::SubscribeBonus()
 {
 	_events->AddListener(
-			"BonusTimerStatusChange", _nameWithUuid,
+			"BonusTimer_StatusChange", _nameWithUuid,
 			[this](const std::string& fraction, const bool isActive)
 			{
 				this->OnBonusTimer(fraction, isActive);
 			});
 
 	_events->AddListener(
-			"BonusHelmetStatusChange", _nameWithUuid,
+			"BonusHelmet_StatusChange", _nameWithUuid,
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
 			});
 
 	_events->AddListener(
-			"BonusGrenade", _nameWithUuid,
+			"BonusGrenade_Pickup", _nameWithUuid,
 			[this](const std::string& /*author*/, const std::string& fraction)
 			{
 				this->OnBonusGrenade(fraction);
 			});
 
-	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
+	_events->AddListener("BonusStar_Pickup", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusStar(author);
 	});
 
 	_events->AddListener(
-			"BonusCaliber", _nameWithUuid,
+			"BonusCaliber_Pickup", _nameWithUuid,
 			[this](const std::string& author, const std::string& /*fraction*/)
 			{
 				this->OnBonusCaliber(author);
@@ -253,7 +253,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
+			_events->EmitEvent("ServerSend_BonusHelmet_Pickup", _name, isActive);
 		}
 	}
 }
@@ -286,7 +286,7 @@ void Tank::OnBonusStar(const std::string& author)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_OnStar", author);
+			_events->EmitEvent("ServerSend_BonusStar_Pickup", author);
 		}
 	}
 }
@@ -311,7 +311,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_OnCaliber", author);
+			_events->EmitEvent("ServerSend_BonusCaliber", author);
 		}
 	}
 }
@@ -340,7 +340,7 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
 	{
 		bonus->PickUpBonus(_name, _fraction);
-		_events->EmitEvent("Statistics_OnBonusPickup", _name, _fraction);
+		_events->EmitEvent("Statistics_BonusPickup", _name, _fraction);
 		//TODO: on destroy bonus emit PickUpBonus
 		object->TakeDamage(1);
 	}

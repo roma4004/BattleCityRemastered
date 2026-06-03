@@ -48,7 +48,7 @@ void RespawnManager::Subscribe()
 
 	_events->AddListener("TankDied", _name, [this](const buuid& uuid) { OnTankDied(uuid); });
 
-	_events->AddListener("BonusTank", _name, [this](const std::string& author, const std::string& /*fraction*/)
+	_events->AddListener("BonusTank_Pickup", _name, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusTank(author);
 	});
@@ -64,7 +64,7 @@ void RespawnManager::Subscribe()
 
 void RespawnManager::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_OnTank", _name, [this](const std::string& author)
+	_events->AddListener("ClientReceived_BonusTank_Pickup", _name, [this](const std::string& author)
 	{
 		this->OnBonusTank(author);
 	});
@@ -79,7 +79,7 @@ void RespawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RespawnManager::UnsubscribeAsClient() const
 {
-	_events->RemoveListener("ClientReceived_OnTank", _name);
+	_events->RemoveListener("ClientReceived_BonusTank_Pickup", _name);
 	_events->RemoveListener("ClientReceived_RespawnTank", _name);
 }
 
@@ -202,7 +202,7 @@ void RespawnManager::OnBonusTank(const std::string& author)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_OnTank", author);
+		_events->EmitEvent("ServerSend_BonusTank_Pickup", author);
 	}
 }
 

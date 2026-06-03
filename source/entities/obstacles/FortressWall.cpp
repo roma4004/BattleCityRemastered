@@ -74,9 +74,9 @@ void FortressWall::SubscribeAsClient()
 
 void FortressWall::SubscribeBonus()
 {
-	_events->AddListener("BonusShovelOnPlayerPickup", _nameWithUuid, [this]() { this->OnPlayerPickupShovel(); });
-	_events->AddListener("BonusShovelOnCooldownEnd", _nameWithUuid, [this]() { this->OnPlayerShovelCooldownEnd(); });
-	_events->AddListener("BonusShovelOnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
+	_events->AddListener("BonusShovel_OnPlayerPickup", _nameWithUuid, [this]() { this->OnPlayerPickupShovel(); });
+	_events->AddListener("BonusShovel_OnCooldownEnd", _nameWithUuid, [this]() { this->OnPlayerShovelCooldownEnd(); });
+	_events->AddListener("BonusShovel_OnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
 }
 
 void FortressWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

@@ -30,7 +30,7 @@ public:
 
 	void ApplyBonusEffectsTo(const std::string& tankName, const std::string& tankFraction);
 	void OnTimerBonus(const std::string& fraction, milliseconds effectDuration);
-	void OnHelmetBonus(const std::string& name, milliseconds effectDuration);
+	void OnHelmetBonusPickup(const std::string& name, milliseconds effectDuration);
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool isActive) const;
 	void StartTimer(Timer& timer, const std::string& event, const std::string& id, milliseconds effectDuration) const;
 	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;

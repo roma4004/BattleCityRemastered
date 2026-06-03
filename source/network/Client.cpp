@@ -424,16 +424,16 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 			switch (bonusType)
 			{
 				case BonusType::Helmet:
-					_events->EmitEvent("ClientReceived_" + name + "OnBonusHelmet", isEnable);
+					_events->EmitEvent("ClientReceived_" + name + "BonusHelmet_Pickup", isEnable);
 					break;
 				case BonusType::Star:
-					_events->EmitEvent("ClientReceived_" + name + "OnStar");
+					_events->EmitEvent("ClientReceived_" + name + "BonusStar_Pickup");
 					break;
 				case BonusType::Caliber:
-					_events->EmitEvent("ClientReceived_" + name + "OnCaliber");
+					_events->EmitEvent("ClientReceived_" + name + "BonusCaliber_Pickup");
 					break;
 				case BonusType::Tank:
-					_events->EmitEvent("ClientReceived_OnTank", name);
+					_events->EmitEvent("ClientReceived_BonusTank_Pickup", name);
 					break;
 				default: //TODO: add assert
 					break;

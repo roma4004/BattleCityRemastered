@@ -496,25 +496,25 @@ void Server::SubscribeBonus()
 		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
 	});
 
-	_events->AddListener("ServerSend_OnBonusHelmet", _name, [this](const std::string& name, const bool isActive)
+	_events->AddListener("ServerSend_BonusHelmet_Pickup", _name, [this](const std::string& name, const bool isActive)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Helmet, isActive));
 	});
 
-	_events->AddListener("ServerSend_OnStar", _name, [this](const std::string& name)
+	_events->AddListener("ServerSend_BonusStar_Pickup", _name, [this](const std::string& name)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Star));
 	});
 
-	_events->AddListener("ServerSend_OnCaliber", _name, [this](const std::string& name)
+	_events->AddListener("ServerSend_BonusCaliber_Pickup", _name, [this](const std::string& name)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Caliber));
 	});
 
-	_events->AddListener("ServerSend_OnTank", _name, [this](const std::string& name)
+	_events->AddListener("ServerSend_BonusTank_Pickup", _name, [this](const std::string& name)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Tank));

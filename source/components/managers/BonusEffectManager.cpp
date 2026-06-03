@@ -23,15 +23,15 @@ void BonusEffectManager::Subscribe()
 
 	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener("BonusTimer", _name, [this](const std::string& fraction, const milliseconds effectDuration)
+	_events->AddListener("BonusTimer_Pickup", _name, [this](const std::string& fraction, const milliseconds effectDuration)
 	{
 		this->OnTimerBonus(fraction, effectDuration);
 	});
-	_events->AddListener("BonusHelmet", _name, [this](const std::string& name, const milliseconds effectDuration)
+	_events->AddListener("BonusHelmet_Pickup", _name, [this](const std::string& name, const milliseconds effectDuration)
 	{
-		this->OnHelmetBonus(name, effectDuration);
+		this->OnHelmetBonusPickup(name, effectDuration);
 	});
-	_events->AddListener("BonusShovel", _name, [this](const std::string& fraction, const milliseconds effectDuration)
+	_events->AddListener("BonusShovel_Pickup", _name, [this](const std::string& fraction, const milliseconds effectDuration)
 	{
 		this->OnBonusShovelPickup(fraction, effectDuration);
 	});
@@ -85,7 +85,7 @@ void BonusEffectManager::OnTimerBonus(const std::string& fraction, const millise
 	}
 }
 
-void BonusEffectManager::OnHelmetBonus(const std::string& name, const milliseconds effectDuration)
+void BonusEffectManager::OnHelmetBonusPickup(const std::string& name, const milliseconds effectDuration)
 {
 	if (const size_t id{TankNameToId(name)};
 		id < _helmetSlots.size())
@@ -97,7 +97,7 @@ void BonusEffectManager::OnHelmetBonus(const std::string& name, const millisecon
 
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool isActive) const
 {
-	_events->EmitEvent("Bonus" + event + "StatusChange", id, isActive);
+	_events->EmitEvent("Bonus" + event + "_StatusChange", id, isActive);
 }
 
 void BonusEffectManager::StartTimer(Timer& timer, const std::string& event, const std::string& id,
@@ -146,7 +146,7 @@ void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 	if (_shovelPlayer.isActive && TimeUtils::IsCooldownFinish(_shovelPlayer.activateTime, _shovelPlayer.cooldown))
 	{
 		_shovelPlayer.isActive = false;
-		_events->EmitEvent("BonusShovelOnCooldownEnd");
+		_events->EmitEvent("BonusShovel_OnCooldownEnd");
 	}
 }
 
@@ -174,13 +174,13 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 		{
 			_shovelPlayer.cooldown = effectDuration;
 			_shovelPlayer.isActive = true;
-			_events->EmitEvent("BonusShovelOnPlayerPickup");
+			_events->EmitEvent("BonusShovel_OnPlayerPickup");
 		}
 	}
 	else if (fraction == "EnemyTeam")
 	{
 		_shovelPlayer.isActive = false;
-		_events->EmitEvent("BonusShovelOnEnemyPickup");
+		_events->EmitEvent("BonusShovel_OnEnemyPickup");
 	}
 
 	_shovelPlayer.activateTime = std::chrono::system_clock::now();

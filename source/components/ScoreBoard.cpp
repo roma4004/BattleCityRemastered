@@ -70,7 +70,7 @@ void ScoreBoard::Draw()
 
 void ScoreBoard::RenderStatistics() const
 {
-	const Point pos{.x = _pos.x + 180, .y = _pos.y + 140};
+	const Point pos{.x = _pos.x + 180, .y = _pos.y + 120};
 	constexpr unsigned int color = {0xff00ffff};
 
 	_events->EmitEvent("RenderText", Point{.x = pos.x - 60, .y = pos.y + 80}, color, "PRESS M TO SHOW MENU");
@@ -129,6 +129,11 @@ void ScoreBoard::RenderStatistics() const
 							_statistics->GetBonusPickupByPlayerOne(),
 							_statistics->GetBonusPickupByPlayerTwo(),
 							_statistics->GetBonusPickupByEnemyTeam());
+
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 360}, color, "BONUS DESTROYED",
+							_statistics->GetBonusDestroyedByPlayerOne(),
+							_statistics->GetBonusDestroyedByPlayerTwo(),
+							_statistics->GetBonusDestroyedByEnemyTeam());
 }
 
 void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,

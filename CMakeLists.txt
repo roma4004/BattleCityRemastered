@@ -422,6 +422,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
 
 set(UNIT_TESTS_FILES
         UnitTests/BonusTestsBasic.cpp
+        UnitTests/BonusTestsDestroy.cpp
         UnitTests/BonusTestsEnemy.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp

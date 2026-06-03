@@ -13,6 +13,8 @@ Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bul
 	{
 		Enable();
 	}
+
+	_fireCooldown = {std::chrono::milliseconds{500}};
 }
 
 Player::~Player() = default;

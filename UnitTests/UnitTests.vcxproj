@@ -112,6 +112,7 @@
     <ClCompile Include="..\source\utils\Logger.cpp" />
     <ClCompile Include="..\source\utils\UuidUtils.cpp" />
     <ClCompile Include="BonusTestsBasic.cpp" />
+    <ClCompile Include="BonusTestsDestroy.cpp" />
     <ClCompile Include="BonusTestsEnemy.cpp" />
     <ClCompile Include="BulletsTestsAdvanced.cpp" />
     <ClCompile Include="BulletsTestsBasic.cpp" />

@@ -172,7 +172,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 			&& (target->GetIsDestructible() || _calibre.tier > 2))
 		{
 			target->TakeDamage(_calibre.damage);
-			target->SendDamageStatistics(GetAuthor(), GetFraction());
+			target->SendDamageStatistics(GetAuthor(), GetFraction());//TODO: move send dmg stat to takeDamage
 			if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
 			{
 				SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());

@@ -12,5 +12,5 @@ BonusShovel::~BonusShovel() = default;
 
 void BonusShovel::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
 {
-	_events->EmitEvent(_name, fraction, _effectDuration);
+	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
 }

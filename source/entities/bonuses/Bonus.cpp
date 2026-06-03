@@ -85,10 +85,10 @@ void Bonus::TickUpdate(double /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(_name, author, fraction);
+	_events->EmitEvent("Statistics_BonusDestroyed", author, fraction);
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(_name, author, fraction);
+	_events->EmitEvent(_name + "_Pickup", author, fraction);
 }
