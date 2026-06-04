@@ -429,8 +429,8 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 	}
 	else
 	{
-		constexpr unsigned int colorGray = 0x808080;
-		color = colorGray;
+		constexpr unsigned int colorRed = 0xFF8080;
+		color = colorRed;
 	}
 
 	SetRenderDrawColor(color, 127);

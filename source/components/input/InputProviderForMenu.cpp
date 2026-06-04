@@ -33,6 +33,24 @@ void InputProviderForMenu::Subscribe()
 			this->ToggleMenuInputSubscription();
 		}
 	});
+
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
+	{
+		if (this->_gameMode == GameMode::Demo)
+		{
+			return;
+		}
+
+		if (isDisplayed && !_keys.pause)
+		{
+			this->TogglePause();
+		}
+
+		if (!isDisplayed && _keys.pause)
+		{
+			this->TogglePause();
+		}
+	});
 }
 
 void InputProviderForMenu::Unsubscribe() const { _events->RemoveAllListeners(_name); }

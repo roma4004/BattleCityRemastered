@@ -288,7 +288,7 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 
 void AnimationManager::Draw() const
 {
-	for (auto& object: _waterObjects)
+	for (const auto& object: _waterObjects)
 	{
 		if (object.markToDispose)
 		{
@@ -298,7 +298,7 @@ void AnimationManager::Draw() const
 		DrawObject(object);
 	}
 
-	for (auto& object: _tankObjects)
+	for (const auto& object: _tankObjects)
 	{
 		if (object.markToDispose)
 		{
@@ -308,7 +308,7 @@ void AnimationManager::Draw() const
 		DrawObject(object);
 	}
 
-	for (auto& object: _animatedObjects)
+	for (const auto& object: _animatedObjects)
 	{
 		if (object.markToDispose)
 		{
