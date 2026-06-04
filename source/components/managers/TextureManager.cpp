@@ -33,13 +33,6 @@ void TextureManager::Subscribe() const
 			{
 				this->DrawAnimation(rect, dir, step, scale, name, color);
 			});
-	_events->AddListener(
-			"DrawTankAnimation", _name,
-			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-				   const std::string& name, const unsigned int color)
-			{
-				this->DrawTankAnimation(rect, dir, step, scale, name, color);
-			});
 }
 
 void TextureManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -47,7 +40,15 @@ void TextureManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 {
 	ObjRectangle textureRect{};
-	if (name == "Bullet")//TODO: replace with enum TextureType
+	if (name.starts_with("Bonus"))
+	{
+		textureRect = GetBonusTextureRect(name);
+	}
+	else if (name.ends_with("Text"))
+	{
+		textureRect = GetTextTextureRect(name);
+	}
+	else if (name == "Bullet")//TODO: replace with enum TextureType
 	{
 		textureRect = _offset.bullet;
 	}
@@ -71,46 +72,6 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.ice;
 	}
-	else if (name == "BonusHelmet")
-	{
-		textureRect = _offset.bonusHelmet;
-	}
-	else if (name == "BonusTimer")
-	{
-		textureRect = _offset.bonusTimer;
-	}
-	else if (name == "BonusShovel")
-	{
-		textureRect = _offset.bonusShovel;
-	}
-	else if (name == "BonusStar")
-	{
-		textureRect = _offset.bonusStar;
-	}
-	else if (name == "BonusGrenade")
-	{
-		textureRect = _offset.bonusGrenade;
-	}
-	else if (name == "BonusTank")
-	{
-		textureRect = _offset.bonusTank;
-	}
-	else if (name == "BonusCaliber")
-	{
-		textureRect = _offset.bonusCaliber;
-	}
-	else if (name == "PauseText")
-	{
-		textureRect = _offset.pauseText;
-	}
-	else if (name == "GameOverText")
-	{
-		textureRect = _offset.gameOverText;
-	}
-	else if (name == "GameWonText")
-	{
-		textureRect = _offset.gameWonText;
-	}
 
 	return textureRect;
 }
@@ -118,15 +79,15 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
 {
 	ObjRectangle textureRect{};
-	if (name == "Enemy1" || name == "Enemy2" || name == "Enemy3" || name == "Enemy4")
+	if (name.starts_with("Enemy"))
 	{
 		textureRect = _offset.enemy;
 	}
-	else if (name == "Player1" || name == "CoopBot1")
+	else if (name.ends_with("1"))
 	{
 		textureRect = _offset.playerOne;
 	}
-	else if (name == "Player2" || name == "CoopBot2")
+	else if (name.ends_with("2"))
 	{
 		textureRect = _offset.playerTwo;
 	}
@@ -134,11 +95,71 @@ ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
 	return textureRect;
 }
 
+ObjRectangle TextureManager::GetBonusTextureRect(const std::string& name) const
+{
+	if (name.ends_with("Helmet"))
+	{
+		return _offset.bonusHelmet;
+	}
+	else if (name.ends_with("Timer"))
+	{
+		return _offset.bonusTimer;
+	}
+	else if (name.ends_with("Shovel"))
+	{
+		return _offset.bonusShovel;
+	}
+	else if (name.ends_with("Star"))
+	{
+		return _offset.bonusStar;
+	}
+	else if (name.ends_with("Grenade"))
+	{
+		return _offset.bonusGrenade;
+	}
+	else if (name.ends_with("Tank"))
+	{
+		return _offset.bonusTank;
+	}
+	else if (name.ends_with("Caliber"))
+	{
+		return _offset.bonusCaliber;
+	}
+
+	//TODO: add assert
+	return ObjRectangle{};
+}
+
+ObjRectangle TextureManager::GetTextTextureRect(const std::string& name) const
+{
+	if (name.starts_with("Pause"))
+	{
+		return _offset.pauseText;
+	}
+
+	if (name.starts_with("GameOver"))
+	{
+		return _offset.gameOverText;
+	}
+
+	if (name.starts_with("gameWon"))
+	{
+		return _offset.gameWonText;
+	}
+
+	//TODO: add assert
+	return ObjRectangle{};
+}
+
 ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect,
 												ObjRectangle& destRect) const
 {
 	ObjRectangle textureRect{};
-	if (name == "Water")
+	if (name.ends_with("1") || name.ends_with("2") || name.ends_with("3") || name.ends_with("4"))
+	{
+		textureRect = GetTankTextureRect(name);
+	}
+	else if (name == "Water")
 	{
 		textureRect = _offset.water;
 	}
@@ -191,29 +212,11 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 	textureRect.x += step * scale;
 	if (constexpr ObjRectangle defaultSdlRect{};
 		textureRect.x == defaultSdlRect.x
-		&& textureRect.y == defaultSdlRect.y
-		//TODO: incorrect float comparison in whole class
+		&& textureRect.y == defaultSdlRect.y//TODO: incorrect float comparison in whole class
 		&& textureRect.w == defaultSdlRect.w
 		&& textureRect.h == defaultSdlRect.h)
 	{
 		_events->EmitEvent("RenderColorTexture", rect, color);
-		//NOTE: fallback draw to non-texture, rectangle filled by color
-	}
-
-	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
-}
-
-void TextureManager::DrawTankAnimation(const ObjRectangle destRect, const Direction dir, const int step,
-									   const int scale, const std::string& name, const unsigned int color) const
-{
-	ObjRectangle textureRect = GetTankTextureRect(name);
-	textureRect.x += step * scale;
-	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x
-		&& textureRect.y == defaultSdlRect.y
-		&& textureRect.w == defaultSdlRect.w && textureRect.h == defaultSdlRect.h)
-	{
-		_events->EmitEvent("RenderColorTexture", destRect, color);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 

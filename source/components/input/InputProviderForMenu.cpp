@@ -30,7 +30,7 @@ void InputProviderForMenu::Subscribe()
 		if ((isDisplayed && !_keys.menuShow)
 			|| (!isDisplayed && _keys.menuShow))
 		{
-			ToggleMenuInputSubscription();
+			this->ToggleMenuInputSubscription();
 		}
 	});
 }
@@ -77,7 +77,7 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		DisableMenuInput();
 	}
 
-	_events->EmitEvent("ShowMenu", _keys.menuShow);
+	_events->EmitEvent("MenuShowed", _keys.menuShow);
 
 	_keys.reset = false;
 }

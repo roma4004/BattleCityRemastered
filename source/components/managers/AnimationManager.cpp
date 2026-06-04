@@ -34,18 +34,18 @@ void AnimationManager::Subscribe()
 
 	_events->AddListener(
 			"AnimationCreate", _name,
-			[this](const AnimationType& type, const ObjRectangle& rect, const std::string& objName)
+			[this](const AnimationType& type, const ObjRectangle& rect, const std::string& name)
 			{
-				this->CreateAnimation(type, rect, objName);
+				this->CreateAnimation(type, rect, name);
 			});
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
 	_events->AddListener(
 			"AnimationTankUpdate", _name,
-			[this](const std::string& objName, const ObjRectangle& rect, const Direction& dir)
+			[this](const std::string& name, const ObjRectangle& rect, const Direction& dir)
 			{
-				UpdateTank(objName, rect, dir);
+				UpdateTank(name, rect, dir);
 			});
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
 }
@@ -54,24 +54,24 @@ void AnimationManager::SubscribeAsHost()
 {
 	_events->AddListener(
 			"AnimationCreateTankExplosion", _name,
-			[this](const ObjRectangle rect, const std::string& objName)
+			[this](const ObjRectangle rect, const std::string& name)
 			{
-				this->CreateAnimation(AnimationType::Tank_Explosion, rect, objName);
+				this->CreateAnimation(AnimationType::Tank_Explosion, rect, name);
 			});
 
 	_events->AddListener(
 			"AnimationCreateBulletExplosion", _name,
-			[this](const ObjRectangle rect, const std::string& objName)
+			[this](const ObjRectangle rect, const std::string& name)
 			{
-				this->CreateAnimation(AnimationType::Bullet_Explosion, rect, objName);
+				this->CreateAnimation(AnimationType::Bullet_Explosion, rect, name);
 			});
 
 	//TODO: create client like subscription
 	_events->AddListener(
 			"AnimationCreateTank", _name,
-			[this](const ObjRectangle rect, const std::string& objName, const unsigned int color)
+			[this](const ObjRectangle rect, const std::string& name, const unsigned int color)
 			{
-				this->CreateAnimationTank(rect, objName, color);
+				this->CreateAnimationTank(rect, name, color);
 			});
 
 	_events->AddListener(
@@ -106,26 +106,26 @@ void AnimationManager::Reset()
 	_waterObjects.clear();
 }
 
-void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& objName)
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name)
 {
 	switch (type)
 	{
 		case AnimationType::Spawn_Animation:
-			Create("SpawnAnimation", rect, type, 3, 16, objName);
+			Create("SpawnAnimation", rect, type, 3, 16);
 			break;
 		case AnimationType::Bullet_Explosion:
-			Create("BulletExplosion", rect, type, 3, 16, objName);
+			Create("BulletExplosion", rect, type, 3, 16);
 			break;
 		case AnimationType::Tank_Explosion:
-			DeleteTankAnimation(objName);//TODO: fix tank explosion
-			Create("TankExplosion", rect, type, 2, 32, objName);
+			DeleteTankAnimation(name);//TODO: fix tank explosion
+			Create("TankExplosion", rect, type, 2, 32);
 			//TODO: should change limitOfFrame to 5?
 			break;
 		case AnimationType::Helmet_Animation:
-			Create("HelmetAnimation", rect, type, 2, 16, objName);
+			Create("HelmetAnimation", rect, type, 2, 16);
 			break;
 		case AnimationType::Bullet_Animation:
-			Create("BulletAnimation", rect, type, 2, 16, objName);
+			Create("BulletAnimation", rect, type, 2, 16);
 			break;
 		default:
 			break;
@@ -137,8 +137,7 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	constexpr unsigned int color{0};
 	constexpr auto type = AnimationType::Water_Animation;
 	constexpr bool isInfinite{true};
-	std::string objName = "Water";
-	_waterObjects.emplace_back(objName, rect, type, _events, 16, 1, objName, color, isInfinite);
+	_waterObjects.emplace_back("Water", rect, type, _events, 16, 1, color, isInfinite);
 
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
@@ -147,50 +146,47 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	}
 }
 
-void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::string objName, const unsigned int color)
+void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::string name, const unsigned int color)
 {
 	constexpr auto type{AnimationType::Tank_Animation};
-	const auto name{std::string("TankAnimation")};
 	constexpr bool isInfinite{true};
-	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, objName, color, isInfinite);
+	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, color, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName);
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name);
 	}
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							  const int limitOfFrames, const int scale, const std::string& objName,
-							  const bool isInfinite)
+							  const int limitOfFrames, const int scale, const bool isInfinite)
 {
 	constexpr int placeholderWhiteColor = 0xffffff;
-	_animatedObjects.emplace_back(name, rect, type, _events, limitOfFrames, scale, objName, placeholderWhiteColor,
-								  isInfinite);
+	_animatedObjects.emplace_back(name, rect, type, _events, limitOfFrames, scale, placeholderWhiteColor, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, objName);
+		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name);
 	}
 }
 
 void AnimationManager::Update()
 {
-	for (auto& animatedObj: _waterObjects)
+	for (auto& object: _waterObjects)
 	{
-		UpdateFrameInfinite(animatedObj, 20);
+		UpdateWaterFrame(object, 20);
 	}
 
-	for (auto& animatedObj: _animatedObjects)
+	for (auto& object: _animatedObjects)
 	{
-		switch (animatedObj.type)
+		switch (object.type)
 		{
 			case AnimationType::Spawn_Animation:
 			case AnimationType::Bullet_Explosion:
-				UpdateFrame(animatedObj, 20);
+				UpdateFrame(object, 20);
 				break;
 			case AnimationType::Tank_Explosion:
-				UpdateFrame(animatedObj, 30);
+				UpdateFrame(object, 30);
 				break;
 			//case AnimationType::Helmet_Animation:
 			//case AnimationType::Bullet_Animation:
@@ -200,70 +196,71 @@ void AnimationManager::Update()
 	}
 }
 
-void AnimationManager::UpdateFrame(AnimatedObject& obj, const int animationSpeed)
+void AnimationManager::UpdateFrame(AnimatedObject& object, const int animationSpeed)
 {
-	if (obj.markToDispose == false
-		&& ++obj.elapsedFrames % animationSpeed == 0)
+	if (object.markToDispose == false
+		&& ++object.elapsedFrames % animationSpeed == 0)
 	{
-		obj.elapsedFrames = 0;
-		if (++obj.animationFrame >= obj.limitOfFrames)
+		object.elapsedFrames = 0;
+		if (++object.animationFrame >= object.limitOfFrames)
 		{
-			if (obj.isInfinite == false)
+			if (object.isInfinite == false)
 			{
-				obj.markToDispose = true;
+				object.markToDispose = true;
 			}
-			obj.animationFrame = 0;
+
+			object.animationFrame = 0;
 		}
 	}
 }
 
-void AnimationManager::UpdateFrameInfinite(AnimatedObject& obj, const int animationSpeed)
+void AnimationManager::UpdateWaterFrame(AnimatedObject& object, const int animationSpeed)
 {
-	if (obj.markToDispose == false
-		&& ++obj.elapsedFrames % animationSpeed == 0)
+	if (object.markToDispose == false
+		&& ++object.elapsedFrames % animationSpeed == 0)
 	{
-		obj.elapsedFrames = 0;
-		if (++obj.animationFrame == obj.limitOfFrames)
+		object.elapsedFrames = 0;
+		if (++object.animationFrame == object.limitOfFrames)
 		{
-			obj.animationFrame = 0;
+			object.animationFrame = 0;
 		}
 	}
 }
 
-void AnimationManager::UpdateTank(const std::string& objName, const ObjRectangle& rect, const Direction& dir)
+void AnimationManager::UpdateTank(const std::string& name, const ObjRectangle& rect, const Direction& dir)
 {
-	for (AnimatedObject& animObj: _tankObjects)
+	for (auto& object: _tankObjects)
 	{
-		if (animObj.objName == objName)
+		if (object.name == name)
 		{
 			//Update tank animation position and dir
-			animObj.rect.x = rect.x;
-			animObj.rect.y = rect.y;
-			animObj.dir = dir;
+			object.rect.x = rect.x;
+			object.rect.y = rect.y;
+			object.dir = dir;
 
-			UpdateFrame(animObj, 2);
+			UpdateFrame(object, 2);
 			return;
 		}
 	}
 }
 
-void AnimationManager::DisableTankAnimation(const std::string& objName)
+void AnimationManager::DisableTankAnimation(const std::string& name)//TODO: add reuse flow for animation
 {
-	for (AnimatedObject& animObj: _tankObjects)
+	for (auto& object: _tankObjects)
 	{
-		if (animObj.objName == objName)
+		if (object.name == name)
 		{
-			animObj.markToDispose = true;
+			object.markToDispose = true;
 			return;
 		}
 	}
 }
 
-void AnimationManager::DeleteTankAnimation(const std::string& objName)
+void AnimationManager::DeleteTankAnimation(const std::string& name)
 {
-	std::erase_if(_tankObjects, [&objName](const auto& animObj)
+	std::erase_if(_tankObjects, [&name](const auto& object)
 	{
-		return animObj.objName == objName;
+		return object.name == name;
 	});
 }
 

@@ -8,7 +8,7 @@
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							   const std::shared_ptr<EventSystem>& events, const int frameLimit, const int scale,
-							   std::string objName, const unsigned int color, const bool isInfinite)
+							   const unsigned int color, const bool isInfinite)
 	: events(events)
 	, rect{rect}
 	, limitOfFrames{frameLimit}
@@ -18,7 +18,6 @@ AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect,
 	, scale{scale}
 	, name{name}
 	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())}
-	, objName(std::move(objName))
 {
 	Subscribe();
 }
@@ -49,34 +48,18 @@ void AnimatedObject::Unsubscribe() const
 
 void AnimatedObject::Draw() const
 {
-	if (type == AnimationType::Water_Animation)
+	if (events == nullptr)
 	{
-		if (events != nullptr)
-		{
-			events->EmitEvent("DrawAnimation", rect, Direction::UP, -animationFrame, scale, name, color);
-			//TODO: -animationFrame -> +animationFrame
-		}
+		return;
 	}
-	else if (name == "TankAnimation")
-	{
-		//for tanks
-		if (events != nullptr)
-		{
-			events->EmitEvent("DrawTankAnimation", rect, dir, animationFrame, scale, objName, color);
-		}
-	}//TODO: how to merge this branches
-	else
-	{
-		//bullets, explosions and other
-		if (events != nullptr)
-		{
-			events->EmitEvent("DrawAnimation", rect, Direction::UP, animationFrame, scale, name, color);
-		}
-	}
+
+	const int currenAnimationFrame = {type == AnimationType::Water_Animation ? -animationFrame : animationFrame};
+	//TODO: -animationFrame -> +animationFrame //TODO: move this logic to UpdateFrameInfinite
+	events->EmitEvent("DrawAnimation", rect, dir, currenAnimationFrame, scale, name, color);
 }
 
 void AnimatedObject::Disable() const { Unsubscribe(); };
-void AnimatedObject::Enable() { Subscribe(); };
+void AnimatedObject::Enable() const { Subscribe(); };
 
 // copy constructor
 AnimatedObject::AnimatedObject(const AnimatedObject& other)
@@ -96,7 +79,6 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	scale = other.scale;
 	name = other.name;
 	nameWithUuid = other.nameWithUuid;
-	objName = other.objName;
 
 	Enable();
 }
@@ -121,7 +103,6 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 	scale = other.scale;
 	name = std::move(other.name);
 	nameWithUuid = std::move(other.nameWithUuid);
-	objName = std::move(other.objName);
 
 	Enable();
 }
@@ -147,7 +128,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	scale = other.scale;
 	name = other.name;
 	nameWithUuid = other.nameWithUuid;
-	objName = other.objName;
 
 	Enable();
 
@@ -178,7 +158,6 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	scale = other.scale;
 	name = std::move(other.name);
 	nameWithUuid = std::move(other.nameWithUuid);
-	objName = std::move(other.objName);
 
 	Enable();
 

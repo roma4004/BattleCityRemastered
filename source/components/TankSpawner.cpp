@@ -66,9 +66,9 @@ void TankSpawner::Subscribe()
 
 				tank->Enable();
 				const ObjRectangle rect{tank->GetRect()};
-				const std::string objName{tank->GetName()};
+				const std::string name{tank->GetName()};
 				const unsigned int color{tank->GetColor()};
-				_events->EmitEvent("AnimationCreateTank", rect, objName, color);
+				_events->EmitEvent("AnimationCreateTank", rect, name, color);
 			});
 
 	_events->AddListener("RespawnTanks", _name, [this](const double /*deltaTime*/)

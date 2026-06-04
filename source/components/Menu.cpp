@@ -35,7 +35,7 @@ void Menu::Subscribe()
 		this->_selectedGameMode = newGameMode;
 	});
 
-	_events->AddListener("ShowMenu", _name, [this](const bool isDisplayed)
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
 	{
 		DisplayMenu(isDisplayed);
 	});

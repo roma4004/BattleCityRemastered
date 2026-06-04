@@ -35,17 +35,17 @@ public:
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);
-	void CreateAnimationTank(ObjRectangle rect, std::string objName, unsigned int color);
-	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& objName);
-	void DeleteTankAnimation(const std::string& objName);
+	void CreateAnimationTank(ObjRectangle rect, std::string name, unsigned int color);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
+	void DeleteTankAnimation(const std::string& name);
 
 private:
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
-				const std::string& objName, bool isInfinite = {});
+				bool isInfinite = {});
 	void Update();
-	static void UpdateFrame(AnimatedObject& obj, int animationSpeed);
-	static void UpdateFrameInfinite(AnimatedObject& obj, int animationSpeed);
-	void UpdateTank(const std::string& objName, const ObjRectangle& rect, const Direction& dir);
-	void DisableTankAnimation(const std::string& objName);
+	static void UpdateFrame(AnimatedObject& object, int animationSpeed);
+	static void UpdateWaterFrame(AnimatedObject& object, int animationSpeed);
+	void UpdateTank(const std::string& name, const ObjRectangle& rect, const Direction& dir);
+	void DisableTankAnimation(const std::string& name);
 	void AnimationSeqDisposer();
 };

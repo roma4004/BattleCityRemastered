@@ -25,7 +25,6 @@ public:
 	int scale{};
 	std::string name{};
 	std::string nameWithUuid{};
-	std::string objName{};
 
 	void Draw() const;
 
@@ -33,8 +32,8 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
-				   const std::shared_ptr<EventSystem>& events, int frameLimit, int scale,
-				   std::string objName, unsigned int color, bool isInfinite = {});
+				   const std::shared_ptr<EventSystem>& events, int frameLimit, int scale, unsigned int color,
+				   bool isInfinite = {});
 
 	~AnimatedObject();
 
@@ -42,7 +41,7 @@ public:
 	void Unsubscribe() const;
 
 	void Disable() const;
-	void Enable();
+	void Enable() const;
 
 	AnimatedObject& operator=(const AnimatedObject& other);
 	AnimatedObject& operator=(AnimatedObject&& other) noexcept;

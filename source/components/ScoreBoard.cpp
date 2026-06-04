@@ -47,7 +47,7 @@ void ScoreBoard::Subscribe()
 	}
 
 	//NOTE: avoid showing score and menu at the same time
-	_events->AddListener("ShowMenu", _name, [this](const bool isDisplayed)
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
 	{
 		if (isDisplayed)
 		{
