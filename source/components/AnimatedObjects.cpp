@@ -68,7 +68,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	return *this;
 }
 
-//TODO: recheck all move flow and dispose flow
 // move assignment
 AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 {

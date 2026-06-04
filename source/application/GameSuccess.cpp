@@ -50,8 +50,6 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
-	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
-	//TODO: add host\client branch subscription
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -72,11 +70,6 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 	_events->EmitEvent("Reset");
 
 	SetCurrentGameMode(gameMode);
-
-	if (gameMode == GameMode::PlayAsClient || gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
-	}
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
@@ -221,14 +214,18 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
+		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
+		_events->AddListener("ServerReceive_ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
+		_events->RemoveListener("ServerReceive_ClientReadyToStartGame", _name);
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else
 	{
+		_events->RemoveListener("ServerReceive_ClientReadyToStartGame", _name);
 		_networkNode = nullptr;
 	}
 }

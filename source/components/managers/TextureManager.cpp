@@ -185,16 +185,18 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 	return textureRect;
 }
 
+// Check if the absolute difference is within the allowed error margin
+static bool AreEqualAbsolute(float a, float b, float epsilon = 1e-5f) { return std::fabs(a - b) <= epsilon; }
 
 void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name) const
 {
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x//TODO: fix correct float conversion
-		&& textureRect.y == defaultSdlRect.y
-		&& textureRect.w == defaultSdlRect.w
-		&& textureRect.h == defaultSdlRect.h)
+		AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
+		&& AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
+		&& AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
+		&& AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
 		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
@@ -210,10 +212,10 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
 	textureRect.x += step * scale;
 	if (constexpr ObjRectangle defaultSdlRect{};
-		textureRect.x == defaultSdlRect.x
-		&& textureRect.y == defaultSdlRect.y//TODO: incorrect float comparison in whole class
-		&& textureRect.w == defaultSdlRect.w
-		&& textureRect.h == defaultSdlRect.h)
+		AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
+		&& AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
+		&& AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
+		&& AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
 		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color

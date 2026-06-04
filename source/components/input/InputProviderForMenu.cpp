@@ -36,17 +36,14 @@ void InputProviderForMenu::Subscribe()
 
 	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
 	{
-		if (this->_gameMode == GameMode::Demo)
+		if (this->_gameMode == GameMode::Demo
+			|| this->_gameMode == GameMode::PlayAsHost)
 		{
 			return;
 		}
 
-		if (isDisplayed && !_keys.pause)
-		{
-			this->TogglePause();
-		}
-
-		if (!isDisplayed && _keys.pause)
+		if (isDisplayed && !_keys.pause
+			|| !isDisplayed && _keys.pause)
 		{
 			this->TogglePause();
 		}

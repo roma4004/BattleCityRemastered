@@ -16,7 +16,7 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& 
 	, _calibre{calibre}
 	, _allObjects{allObjects} {}
 
-//NOTE: Never user for bullets
+//NOTE: Never user for bullets but used for tanks
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(double /*deltaTime*/) const { return {}; }
 
 ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
@@ -35,7 +35,6 @@ ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 
 	if (_direction == Direction::LEFT)
 	{
-		//TODO: write bullet test that can damage tank from all sides
 		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
 	}
 

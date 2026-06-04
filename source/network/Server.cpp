@@ -137,11 +137,11 @@ void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
 		{
 			if (signalName == "ClientSend_ReadyToPlay")
 			{
-				_events->EmitEvent("ClientReadyToStartGame");
+				_events->EmitEvent("ServerReceive_ClientReadyToStartGame");
 			}
 			else
 			{
-				_events->EmitEvent("ClientReceived_" + signalName);
+				_events->EmitEvent("ServerReceive_" + signalName);//NOTE: Other not used now
 			}
 		});
 	}
