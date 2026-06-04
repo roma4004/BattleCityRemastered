@@ -19,6 +19,7 @@ AnimatedObject::~AnimatedObject() = default;
 AnimatedObject::AnimatedObject(const AnimatedObject& other)
 {
 	rect = other.rect;
+	dir = other.dir;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -34,6 +35,7 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 {
 	rect = other.rect;
+	dir = other.dir;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -52,6 +54,7 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 		return *this;
 
 	rect = other.rect;
+	dir = other.dir;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
@@ -73,6 +76,7 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 		return *this;
 
 	rect = other.rect;
+	dir = other.dir;
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
