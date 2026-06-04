@@ -48,6 +48,8 @@ void AnimationManager::Subscribe()
 				UpdateTank(name, rect, dir);
 			});
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
+
+	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
 void AnimationManager::SubscribeAsHost()
@@ -136,7 +138,7 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 {
 	constexpr auto type = AnimationType::Water_Animation;
 	constexpr bool isInfinite{true};
-	_waterObjects.emplace_back("Water", rect, type, _events, 16, 1, isInfinite);
+	_waterObjects.emplace_back("Water", rect, type, 16, 1, isInfinite);
 
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
@@ -149,7 +151,7 @@ void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::s
 {
 	constexpr auto type{AnimationType::Tank_Animation};
 	constexpr bool isInfinite{true};
-	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, isInfinite);
+	_tankObjects.emplace_back(name, rect, type, 2, 16, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -160,7 +162,7 @@ void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::s
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							  const int limitOfFrames, const int scale, const bool isInfinite)
 {
-	_animatedObjects.emplace_back(name, rect, type, _events, limitOfFrames, scale, isInfinite);
+	_animatedObjects.emplace_back(name, rect, type, limitOfFrames, scale, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -274,6 +276,47 @@ void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 	{
 		return obj.markToDispose;
 	});
+}
+
+void AnimationManager::DrawObject(const AnimatedObject& object) const
+{
+	const int currenAnimationFrame = {object.type == AnimationType::Water_Animation
+										  ? -object.animationFrame//TODO: -animationFrame -> +animationFrame 
+										  : object.animationFrame};//TODO: move this logic to UpdateFrameInfinite
+	_events->EmitEvent("DrawAnimation", object.rect, object.dir, currenAnimationFrame, object.scale, object.name);
+}
+
+void AnimationManager::Draw() const
+{
+	for (auto& object: _waterObjects)
+	{
+		if (object.markToDispose)
+		{
+			continue;
+		}
+
+		DrawObject(object);
+	}
+
+	for (auto& object: _tankObjects)
+	{
+		if (object.markToDispose)
+		{
+			continue;
+		}
+
+		DrawObject(object);
+	}
+
+	for (auto& object: _animatedObjects)
+	{
+		if (object.markToDispose)
+		{
+			continue;
+		}
+
+		DrawObject(object);
+	}
 }
 
 //TODO: add reuse flow for explosions like bullet pool

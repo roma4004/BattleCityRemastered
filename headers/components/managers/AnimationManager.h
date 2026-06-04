@@ -48,4 +48,6 @@ private:
 	void UpdateTank(const std::string& name, const ObjRectangle& rect, const Direction& dir);
 	void DisableTankAnimation(const std::string& name);
 	void AnimationSeqDisposer();
+	void DrawObject(const AnimatedObject& object) const;
+	void Draw() const;
 };
