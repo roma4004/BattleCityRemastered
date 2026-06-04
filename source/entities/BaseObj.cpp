@@ -7,7 +7,6 @@
 BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	: _health(baseObjProperty.health)
 	, _uuid{baseObjProperty.uuid}
-	, _color(baseObjProperty.color)
 	, _name{std::move(baseObjProperty.name)}
 	, _fraction{std::move(baseObjProperty.fraction)}
 	, _rect{baseObjProperty.rect}
@@ -22,7 +21,6 @@ BaseObj::BaseObj(const BaseObj& other) = default;
 BaseObj::BaseObj(BaseObj&& other) noexcept
 	: _health(std::exchange(other._health, 0))
 	, _uuid(other._uuid)
-	, _color(std::exchange(other._color, 0))
 	, _name(other._name)
 	, _nameWithUuid(other._nameWithUuid)
 	, _fraction(other._fraction)
@@ -35,7 +33,6 @@ BaseObj& BaseObj::operator=(const BaseObj& other)
 {
 	if (this != &other)
 	{
-		_color = other._color;
 		_health = other._health;
 		_uuid = other._uuid;
 		_name = other._name;
@@ -52,7 +49,6 @@ BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
 {
 	if (this != &other)
 	{
-		_color = std::exchange(other._color, 0);
 		_health = std::exchange(other._health, 0);
 		_uuid = other._uuid;
 		_name = other._name;
@@ -108,10 +104,6 @@ void BaseObj::SetHeight(const float height) { _rect.h = height; }
 void BaseObj::MoveX(const float i) { _rect.x += i; }
 
 void BaseObj::MoveY(const float i) { _rect.y += i; }
-
-unsigned int BaseObj::GetColor() const { return _color; }
-
-void BaseObj::SetColor(const unsigned int color) { _color = color; }
 
 int BaseObj::GetHealth() const { return _health; }
 

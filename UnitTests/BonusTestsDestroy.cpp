@@ -30,9 +30,6 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
-	unsigned int _yellow{0xeaea00};
-	unsigned int _gray{0x808080};
-	unsigned int _bulletColor{0xffffff};
 	int _bulletHealth{1};
 	float _tankSize{};
 	float _gridSize{};
@@ -57,7 +54,6 @@ protected:
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = _yellow,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = std::move(name),
@@ -95,7 +91,6 @@ TEST_F(BonusTestsDestroy, BonusDestroy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	BaseObjProperty baseObjProperty{.rect = rect,
-									.color = _bulletColor,
 									.health = _bulletHealth,
 									.uuid = _uuid,
 									.name = name,
@@ -138,7 +133,6 @@ TEST_F(BonusTestsDestroy, BonusNotDestroy)
 	std::string author{"Enemy1"};
 	ObjRectangle rect{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	BaseObjProperty baseObjProperty{.rect = rect,
-									.color = _bulletColor,
 									.health = _bulletHealth,
 									.uuid = _uuid,
 									.name = std::move(name),
@@ -181,7 +175,6 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 	std::string author{"Player1"};
 	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .color = _bulletColor,
 										  .health = _bulletHealth,
 										  .uuid = _uuid,
 										  .name = std::move(name),
@@ -199,7 +192,7 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Timer);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
 	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
@@ -211,7 +204,6 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 		ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjPropertyEnemy{.rect = rectEnemy,
-											 .color = _gray,
 											 .health = _tankHealth,
 											 .uuid = _uuid,
 											 .name = "Enemy1",
@@ -254,7 +246,6 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 		std::string author{"Player1"};
 		ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-											  .color = _bulletColor,
 											  .health = _bulletHealth,
 											  .uuid = _uuid,
 											  .name = std::move(name),
@@ -272,8 +263,7 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-								  BonusType::Helmet);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
 		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
@@ -288,7 +278,6 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 			std::string author2{"Enemy1"};
 			ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.f, .y = 7.f, .w = 6.f, .h = 5.f};
 			BaseObjProperty baseObjPropertyBullet2{.rect = rectBullet2,
-												   .color = _bulletColor,
 												   .health = _bulletHealth,
 												   .uuid = _uuid,
 												   .name = std::move(name2),
@@ -329,7 +318,6 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 	std::string author{"Player1"};
 	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .color = _bulletColor,
 										  .health = _bulletHealth,
 										  .uuid = _uuid,
 										  .name = std::move(name),
@@ -347,12 +335,11 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Grenade);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 	const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get());
 
 	ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjPropertyEnemy{.rect = rectEnemy,
-										 .color = _gray,
 										 .health = _tankHealth,
 										 .uuid = _uuid,
 										 .name = "Enemy1",
@@ -395,7 +382,6 @@ TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 	std::string author{"Player1"};
 	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .color = _bulletColor,
 										  .health = _bulletHealth,
 										  .uuid = _uuid,
 										  .name = std::move(name),
@@ -413,7 +399,7 @@ TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Tank);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
 	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
@@ -441,7 +427,6 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 		std::string author{"Player1"};
 		ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-											  .color = _bulletColor,
 											  .health = _bulletHealth,
 											  .uuid = _uuid,
 											  .name = std::move(name),
@@ -459,7 +444,7 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 		_allObjects.emplace_back(
 				std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
 
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Star);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
 		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
@@ -486,7 +471,6 @@ TEST_F(BonusTestsDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 	std::string author{"Player1"};
 	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .color = _bulletColor,
 										  .health = _bulletHealth,
 										  .uuid = _uuid,
 										  .name = std::move(name),
@@ -504,7 +488,7 @@ TEST_F(BonusTestsDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Shovel);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get());
 
 	const auto fortressWall =

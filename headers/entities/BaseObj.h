@@ -17,7 +17,6 @@ class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public I
 
 protected:
 	buuid _uuid{};
-	unsigned int _color{0};
 	std::string _name{};
 	std::string _nameWithUuid{};
 	std::string _fraction{};
@@ -53,9 +52,6 @@ public:
 
 	void MoveX(float i);
 	void MoveY(float i);
-
-	[[nodiscard]] unsigned int GetColor() const;
-	void SetColor(unsigned int color);
 
 	[[nodiscard]] virtual int GetHealth() const;
 	virtual void SetHealth(int health);

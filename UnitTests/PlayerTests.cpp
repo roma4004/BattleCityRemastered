@@ -39,11 +39,9 @@ protected:
 	int _tankHealth{100};
 	float _tankSize{};
 	float _tankSpeed{142};
-	float _bulletSpeed{300.f};
 	float _gridSize{};
 	double _deltaTimeOneFrame{1.f / 60.f};
 	std::string _name = "Player1";
-	std::string _name2 = "Player2";
 	std::string _fraction = "PlayerTeam";
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
@@ -58,12 +56,10 @@ protected:
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
-		constexpr int yellow{0xeaea00};
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = yellow,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = _name,
@@ -530,11 +526,9 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 {
 	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
 	{
-		constexpr int green = 0x408000;
 		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = green,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = _name,

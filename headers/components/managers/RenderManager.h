@@ -68,13 +68,13 @@ class RenderManager
 
 	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
-	void DrawColorTexture(ObjRectangle rect, unsigned int color);
+	void DrawColorTexture(ObjRectangle rect);
 	void DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, Direction dir) const;
 
 	void GenerateFpsTextures();
 	void RenderFPS(size_t fps);
 
-	void DrawHealthBar(ObjRectangle rect, int health, unsigned int color) const;
+	void DrawHealthBar(ObjRectangle rect, int health) const;
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,

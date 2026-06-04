@@ -8,11 +8,10 @@
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							   const std::shared_ptr<EventSystem>& events, const int frameLimit, const int scale,
-							   const unsigned int color, const bool isInfinite)
+							   const bool isInfinite)
 	: events(events)
 	, rect{rect}
 	, limitOfFrames{frameLimit}
-	, color{color}
 	, type(type)
 	, isInfinite{isInfinite}
 	, scale{scale}
@@ -46,7 +45,7 @@ void AnimatedObject::Unsubscribe() const
 	}
 }
 
-void AnimatedObject::Draw() const
+void AnimatedObject::Draw() const //TODO: move draw to anim manager
 {
 	if (events == nullptr)
 	{
@@ -55,7 +54,7 @@ void AnimatedObject::Draw() const
 
 	const int currenAnimationFrame = {type == AnimationType::Water_Animation ? -animationFrame : animationFrame};
 	//TODO: -animationFrame -> +animationFrame //TODO: move this logic to UpdateFrameInfinite
-	events->EmitEvent("DrawAnimation", rect, dir, currenAnimationFrame, scale, name, color);
+	events->EmitEvent("DrawAnimation", rect, dir, currenAnimationFrame, scale, name);
 }
 
 void AnimatedObject::Disable() const { Unsubscribe(); };
@@ -72,7 +71,6 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
-	color = other.color;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -96,7 +94,6 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
-	color = other.color;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -121,7 +118,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
-	color = other.color;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -151,7 +147,6 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	animationFrame = other.animationFrame;
 	elapsedFrames = other.elapsedFrames;
 	limitOfFrames = other.limitOfFrames;
-	color = other.color;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;

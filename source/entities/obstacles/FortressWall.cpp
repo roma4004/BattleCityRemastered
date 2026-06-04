@@ -13,12 +13,7 @@
 
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
-	: BaseObj{BaseObjProperty{.rect = rect,
-							  .color = 0x924b00,
-							  .health = 1,
-							  .uuid = uuid,
-							  .name = "FortressWall",
-							  .fraction = "Neutral"}}
+	: BaseObj{BaseObjProperty{.rect = rect, .health = 1, .uuid = uuid, .name = "FortressWall", .fraction = "Neutral"}}
 	, _events{events}
 	, _allObjects{allObjects}
 	, _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}

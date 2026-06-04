@@ -29,9 +29,6 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
-	unsigned int _yellow{0xeaea00};
-	unsigned int _gray{0x808080};
-	unsigned int _bulletColor{0xffffff};
 	int _bulletHealth{1};
 	float _tankSize{};
 	float _gridSize{};
@@ -56,7 +53,6 @@ protected:
 
 		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = _yellow,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = std::move(name),
@@ -142,14 +138,12 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Timer);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Down", isPressed);
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = _gray,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = "Enemy1",
@@ -186,14 +180,12 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
 	if (dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Timer);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
 
 		ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = _gray,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = "Enemy1",
@@ -231,8 +223,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 	{
 		const int playerHealth = player->GetHealth();
 
-		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Down", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
@@ -250,7 +241,6 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 		std::string author{"Enemy1"};
 		ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = _bulletColor,
 										.health = _bulletHealth,
 										.uuid = _uuid,
 										.name = std::move(name),
@@ -289,8 +279,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 	{
 		const int playerHealth = player->GetHealth();
 
-		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor, BonusType::Helmet);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
@@ -308,7 +297,6 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 		std::string author{"Enemy1"};
 		ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
 		BaseObjProperty baseObjProperty{.rect = rect,
-										.color = _bulletColor,
 										.health = _bulletHealth,
 										.uuid = _uuid,
 										.name = std::move(name),
@@ -340,14 +328,12 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 //Check that player pick up Grenade bonus and enemies got zero health
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-							  BonusType::Grenade);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect,
-									.color = _gray,
 									.health = _tankHealth,
 									.uuid = _uuid,
 									.name = "Enemy1",
@@ -384,14 +370,12 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 //Check that not player pick up Grenade bonus and enemies remain full health
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-							  BonusType::Grenade);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Up", isPressed);
 
 	ObjRectangle rect{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect,
-									.color = _gray,
 									.health = _tankHealth,
 									.uuid = _uuid,
 									.name = "Enemy1",
@@ -428,8 +412,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 //Check that player pick up Tank bonus and got his extra life
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-							  BonusType::Tank);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
@@ -453,8 +436,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 //Check that player not pick up Tank bonus and his life count remains the same
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-							  BonusType::Tank);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Up", isPressed);
 
@@ -479,8 +461,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-								  BonusType::Star);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Down", isPressed);
 
@@ -510,8 +491,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
 	{
-		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-								  BonusType::Star);
+		_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
 
@@ -540,8 +520,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 //Check that player pick up Shovel bonus and Fortress wall turns into Steel wall
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-							  BonusType::Shovel);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
@@ -560,8 +539,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 //Check that player not pick up Shovel bonus and his Fortress wall remain the same
 TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 {
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, _bulletColor,
-							  BonusType::Shovel);
+	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Up", isPressed);
 

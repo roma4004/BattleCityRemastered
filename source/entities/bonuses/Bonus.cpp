@@ -7,10 +7,8 @@
 #include "utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-			 const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
-			 const BonusType bonusType)
+			 std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
 	: BaseObj{BaseObjProperty{.rect = rect,
-							  .color = color,
 							  .health = 1,
 							  .uuid = uuid,
 							  .name = std::move(name),
@@ -73,7 +71,7 @@ void Bonus::SubscribeAsClient()
 
 void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
+void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name); }
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {

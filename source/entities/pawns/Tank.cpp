@@ -88,7 +88,7 @@ void Tank::Subscribe()
 	{
 		if (!this->_effects.isHelmetActive)
 		{
-			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth(), this->GetColor());
+			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
 		}
 	});
 

@@ -13,7 +13,6 @@ struct BulletResetProperty
 
 	ObjRectangle rect{};
 	Direction dir{};
-	unsigned int color{};
 	int health{};
 	std::string author{};
 	std::string fraction{};

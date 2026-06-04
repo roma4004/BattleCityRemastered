@@ -14,7 +14,7 @@ class BonusCaliber final : public Bonus
 
 public:
 	BonusCaliber(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-				 unsigned int color, buuid uuid, GameMode gameMode);
+				 buuid uuid, GameMode gameMode);
 
 	~BonusCaliber() override;
 };

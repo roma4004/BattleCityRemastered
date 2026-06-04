@@ -4,14 +4,7 @@
 
 IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 				 const GameMode gameMode)
-	: Obstacle{rect,
-			   0x1e90ff,
-			   1,
-			   "Ice",
-			   events,
-			   uuid,
-			   gameMode,
-			   ObstacleType::Ice}
+	: Obstacle{rect, 1, "Ice", events, uuid, gameMode, ObstacleType::Ice}
 {
 	BaseObj::SetIsPassable(true);
 	BaseObj::SetIsDestructible(false);

@@ -67,8 +67,7 @@ void TankSpawner::Subscribe()
 				tank->Enable();
 				const ObjRectangle rect{tank->GetRect()};
 				const std::string name{tank->GetName()};
-				const unsigned int color{tank->GetColor()};
-				_events->EmitEvent("AnimationCreateTank", rect, name, color);
+				_events->EmitEvent("AnimationCreateTank", rect, name);
 			});
 
 	_events->AddListener("RespawnTanks", _name, [this](const double /*deltaTime*/)
@@ -150,7 +149,7 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 
 			constexpr int gray{0x808080};
 
-			SpawnTank(rect, gray, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+			SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 
 			return true;
 		}
@@ -180,11 +179,7 @@ bool TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
 
-		constexpr int yellow{0xeaea00};
-		constexpr int green{0x408000};
-		const unsigned int color = isFirst ? yellow : green;
-
-		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+		SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 
 		return true;
 	}
@@ -212,11 +207,7 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
 
-		constexpr int yellow{0xeaea00};
-		constexpr int green{0x408000};
-		const unsigned int color = type == TankType::COOP1 ? yellow : green;
-
-		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+		SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 	}
 }
 
@@ -353,12 +344,10 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 	return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type));
 }
 
-void TankSpawner::SpawnTank(const ObjRectangle rect, const unsigned int color, const int health,
-							const std::string& name, std::string fraction, const float speed, buuid uuid,
-							const TankType type, const bool skipDelay)
+void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std::string& name, std::string fraction,
+							const float speed, buuid uuid, const TankType type, const bool skipDelay)
 {
 	BaseObjProperty baseObjProperty{.rect = rect,
-									.color = color,
 									.health = health,
 									.uuid = uuid,
 									.name = name,

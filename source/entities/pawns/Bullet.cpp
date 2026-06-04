@@ -73,7 +73,7 @@ void Bullet::Unsubscribe() const
 	_events->RemoveAllListeners(_nameWithUuid);
 }
 
-void Bullet::Draw() const { _events->EmitEvent("DrawObj", _rect, _dir, _name, _color); }
+void Bullet::Draw() const { _events->EmitEvent("DrawObj", _rect, _dir, _name); }
 
 using buuid = boost::uuids::uuid;
 
@@ -108,7 +108,6 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	Disable();
 
 	SetRect(resetProperty.rect);
-	SetColor(resetProperty.color);
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
 

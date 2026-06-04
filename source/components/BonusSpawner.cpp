@@ -27,7 +27,6 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize}
 	, _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize}
 	, _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1}
-	, _distRandColor{0, std::numeric_limits<int>::max()}
 	, _lastTimeSpawn{std::chrono::system_clock::now()}
 	, _bonusSize{bonusSize}
 {
@@ -69,9 +68,8 @@ void BonusSpawner::SubscribeAsClient()
 			[this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
 				const auto size = static_cast<float>(_bonusSize);
-				const unsigned int color = RandUtils::GetRandNumber(_distRandColor);
 				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
-				SpawnBonus(rect, color, type, uuid);
+				SpawnBonus(rect, type, uuid);
 			});
 }
 
@@ -104,7 +102,7 @@ void BonusSpawner::Update()
 	}
 }
 
-void BonusSpawner::SpawnBonus(const ObjRectangle rect, const unsigned int color, const BonusType type, buuid uuid)
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buuid uuid)
 {
 	constexpr milliseconds lifetime{std::chrono::seconds{15}};
 	constexpr milliseconds duration{std::chrono::seconds{15}};
@@ -119,25 +117,25 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const unsigned int color,
 	switch (type)
 	{
 		case BonusType::Timer:
-			bonus = std::make_shared<BonusTimer>(rect, _events, lifetime, color, uuid, _gameMode, duration);
+			bonus = std::make_shared<BonusTimer>(rect, _events, lifetime, uuid, _gameMode, duration);
 			break;
 		case BonusType::Helmet:
-			bonus = std::make_shared<BonusHelmet>(rect, _events, lifetime, color, uuid, _gameMode, duration);
+			bonus = std::make_shared<BonusHelmet>(rect, _events, lifetime, uuid, _gameMode, duration);
 			break;
 		case BonusType::Grenade:
-			bonus = std::make_shared<BonusGrenade>(rect, _events, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusGrenade>(rect, _events, lifetime, uuid, _gameMode);
 			break;
 		case BonusType::Tank:
-			bonus = std::make_shared<BonusTank>(rect, _events, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusTank>(rect, _events, lifetime, uuid, _gameMode);
 			break;
 		case BonusType::Star:
-			bonus = std::make_shared<BonusStar>(rect, _events, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusStar>(rect, _events, lifetime, uuid, _gameMode);
 			break;
 		case BonusType::Shovel:
-			bonus = std::make_shared<BonusShovel>(rect, _events, lifetime, color, uuid, _gameMode, duration);
+			bonus = std::make_shared<BonusShovel>(rect, _events, lifetime, uuid, _gameMode, duration);
 			break;
 		case BonusType::Caliber:
-			bonus = std::make_shared<BonusCaliber>(rect, _events, lifetime, color, uuid, _gameMode);
+			bonus = std::make_shared<BonusCaliber>(rect, _events, lifetime, uuid, _gameMode);
 			break;
 		default:
 			break;
@@ -152,7 +150,6 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const unsigned int color,
 
 void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
-	const unsigned int color = RandUtils::GetRandNumber(_distRandColor);//TODO: remove color from bonus
 	const auto bonusType = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType));
-	SpawnBonus(rect, color, bonusType);
+	SpawnBonus(rect, bonusType);
 }

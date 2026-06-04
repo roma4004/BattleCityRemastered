@@ -35,7 +35,7 @@ public:
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);
-	void CreateAnimationTank(ObjRectangle rect, std::string name, unsigned int color);
+	void CreateAnimationTank(ObjRectangle rect, std::string name);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
 	void DeleteTankAnimation(const std::string& name);
 

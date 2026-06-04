@@ -114,7 +114,6 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		BulletResetProperty bulletResetProperty = {
 				.rect = rect,
 				.dir = _direction,
-				.color = 0xffffff,
 				.health = 1,
 				.author = _name,
 				.fraction = _fraction,

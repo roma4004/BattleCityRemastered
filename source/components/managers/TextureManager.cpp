@@ -22,16 +22,16 @@ void TextureManager::Subscribe() const
 	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
 	_events->AddListener(
 			"DrawObj", _name,
-			[this](const ObjRectangle rect, const Direction dir, const std::string& name, const unsigned int color)
+			[this](const ObjRectangle rect, const Direction dir, const std::string& name)
 			{
-				this->Draw(rect, dir, name, color);
+				this->Draw(rect, dir, name);
 			});
 	_events->AddListener(
 			"DrawAnimation", _name,
 			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-				   const std::string& name, const unsigned int color)
+				   const std::string& name)
 			{
-				this->DrawAnimation(rect, dir, step, scale, name, color);
+				this->DrawAnimation(rect, dir, step, scale, name);
 			});
 }
 
@@ -186,8 +186,7 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 }
 
 
-void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name,
-						  const unsigned int color) const
+void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name) const
 {
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
@@ -197,7 +196,7 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 		&& textureRect.w == defaultSdlRect.w
 		&& textureRect.h == defaultSdlRect.h)
 	{
-		_events->EmitEvent("RenderColorTexture", rect, color);
+		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
@@ -205,7 +204,7 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 }
 
 void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
-								   const std::string& name, const unsigned int color) const
+								   const std::string& name) const
 {
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
@@ -216,7 +215,7 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 		&& textureRect.w == defaultSdlRect.w
 		&& textureRect.h == defaultSdlRect.h)
 	{
-		_events->EmitEvent("RenderColorTexture", rect, color);
+		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 

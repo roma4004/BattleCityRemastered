@@ -69,9 +69,9 @@ void AnimationManager::SubscribeAsHost()
 	//TODO: create client like subscription
 	_events->AddListener(
 			"AnimationCreateTank", _name,
-			[this](const ObjRectangle rect, const std::string& name, const unsigned int color)
+			[this](const ObjRectangle rect, const std::string& name)
 			{
-				this->CreateAnimationTank(rect, name, color);
+				this->CreateAnimationTank(rect, name);
 			});
 
 	_events->AddListener(
@@ -134,10 +134,9 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 
 void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 {
-	constexpr unsigned int color{0};
 	constexpr auto type = AnimationType::Water_Animation;
 	constexpr bool isInfinite{true};
-	_waterObjects.emplace_back("Water", rect, type, _events, 16, 1, color, isInfinite);
+	_waterObjects.emplace_back("Water", rect, type, _events, 16, 1, isInfinite);
 
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
@@ -146,11 +145,11 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	}
 }
 
-void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::string name, const unsigned int color)
+void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::string name)
 {
 	constexpr auto type{AnimationType::Tank_Animation};
 	constexpr bool isInfinite{true};
-	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, color, isInfinite);
+	_tankObjects.emplace_back(name, rect, type, _events, 2, 16, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
@@ -161,8 +160,7 @@ void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::s
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							  const int limitOfFrames, const int scale, const bool isInfinite)
 {
-	constexpr int placeholderWhiteColor = 0xffffff;
-	_animatedObjects.emplace_back(name, rect, type, _events, limitOfFrames, scale, placeholderWhiteColor, isInfinite);
+	_animatedObjects.emplace_back(name, rect, type, _events, limitOfFrames, scale, isInfinite);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{

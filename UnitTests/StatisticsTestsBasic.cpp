@@ -28,11 +28,7 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{1};
-	unsigned int _yellow{0xffffff};
-	unsigned int _green{0x408000};
-	unsigned int _gray{0x808080};
 	int _bulletHealth{1};
-	unsigned int _bulletColor{0xffffff};
 	float _tankSize{};
 	float _tankSpeed{142.f};
 	double _deltaTimeOneFrame{1.f / 60.f};
@@ -40,7 +36,6 @@ protected:
 	std::string _name{"Player1"};
 	std::string _fraction{"PlayerTeam"};
 	std::string _name2{"Player2"};
-	// std::string _fraction2{"PlayerTeam"};
 	std::string _name3{"Enemy1"};
 	std::string _fraction3{"EnemyTeam"};
 	buuid _uuid{};
@@ -60,7 +55,6 @@ protected:
 
 		ObjRectangle rect1{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty{.rect = rect1,
-										.color = _yellow,
 										.health = _tankHealth,
 										.uuid = _uuid,
 										.name = _name,
@@ -77,7 +71,6 @@ protected:
 
 		ObjRectangle rect2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty2{.rect = rect2,
-										 .color = _green,
 										 .health = _tankHealth,
 										 .uuid = _uuid,
 										 .name = _name2,
@@ -94,7 +87,6 @@ protected:
 
 		ObjRectangle rect3{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty3{.rect = rect3,
-										 .color = _gray,
 										 .health = _tankHealth,
 										 .uuid = _uuid,
 										 .name = _name3,
@@ -136,7 +128,6 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -170,7 +161,6 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -210,7 +200,6 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -249,7 +238,6 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -283,7 +271,6 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -323,7 +310,6 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -361,7 +347,6 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 	ObjRectangle rect{.x = _calibre.size.x, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -401,7 +386,6 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -443,7 +427,6 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 					  .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -480,7 +463,6 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 					  .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -517,7 +499,6 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 					  .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -559,7 +540,6 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 					  .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -596,7 +576,6 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 					  .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -633,7 +612,6 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 					  .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -667,7 +645,6 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -692,7 +669,6 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _calibre.size.y + 1.f, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty2{
 			.rect = rect2,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name2),
@@ -731,7 +707,6 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -769,7 +744,6 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -807,7 +781,6 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -845,7 +818,6 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -884,7 +856,6 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -923,7 +894,6 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -958,7 +928,6 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -984,7 +953,6 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _calibre.size.y + 1.f, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty2{
 			.rect = rect2,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name2),
@@ -1017,7 +985,6 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -1042,7 +1009,6 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _calibre.size.y + 1.f, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty2{
 			.rect = rect2,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name2),
@@ -1077,7 +1043,6 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -1102,7 +1067,6 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _calibre.size.y + 1.f, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty2{
 			.rect = rect2,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name2),
@@ -1137,7 +1101,6 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name),
@@ -1162,7 +1125,6 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	ObjRectangle rect2{.x = 0.f, .y = _tankSize + _calibre.size.y + 1.f, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty2{
 			.rect = rect2,
-			.color = _bulletColor,
 			.health = _bulletHealth,
 			.uuid = _uuid,
 			.name = std::move(name2),

@@ -18,7 +18,6 @@ public:
 	int animationFrame{};
 	int elapsedFrames{};//TODO: Animation frame and the elapsed frame looks the same logically
 	int limitOfFrames{};
-	unsigned int color{};
 	AnimationType type{};
 	bool markToDispose{};
 	bool isInfinite{};
@@ -32,8 +31,7 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type,
-				   const std::shared_ptr<EventSystem>& events, int frameLimit, int scale, unsigned int color,
-				   bool isInfinite = {});
+				   const std::shared_ptr<EventSystem>& events, int frameLimit, int scale, bool isInfinite = {});
 
 	~AnimatedObject();
 

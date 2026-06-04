@@ -90,9 +90,9 @@ void RenderManager::Subscribe()
 	_events->AddListener("RenderGameOverText", _name, [this]() { DrawGameOverText(); });
 	_events->AddListener("RenderGameWonText", _name, [this]() { DrawGameWonText(); });
 
-	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect, const unsigned int color)
+	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect)
 	{
-		this->DrawColorTexture(rect, color);
+		this->DrawColorTexture(rect);
 	});
 
 	_events->AddListener(
@@ -106,9 +106,9 @@ void RenderManager::Subscribe()
 
 	_events->AddListener(
 			"RenderHealthBar", _name,
-			[this](const ObjRectangle rect, const int health, const unsigned int color)
+			[this](const ObjRectangle rect, const int health)
 			{
-				this->DrawHealthBar(rect, health, color);
+				this->DrawHealthBar(rect, health);
 			});
 }
 
@@ -154,7 +154,7 @@ void RenderManager::PregenerateMenuBackgroundPixels()
 	{
 		for (int x = 0; x < _width; ++x)
 		{
-			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency
+			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency gray
 			_menuBackground[y * _width + x] = menuColor;
 		}
 	}
@@ -345,10 +345,11 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 	}
 }
 
-void RenderManager::DrawColorTexture(const ObjRectangle rect, const unsigned int color)
+void RenderManager::DrawColorTexture(const ObjRectangle rect)
 {
 	const SDL_Rect dstRect = RectToSdlRect(rect);
-	SDL_Texture* colorTexture = CreateColorTexture(color);
+	constexpr unsigned int grayColor = 0x808080;
+	SDL_Texture* colorTexture = CreateColorTexture(grayColor);
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &dstRect);
 	SDL_DestroyTexture(colorTexture);
 }
@@ -403,7 +404,7 @@ void RenderManager::RenderFPS(const size_t fps)
 	SDL_RenderPresent(_renderer.get());
 }
 
-void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, const unsigned int color) const
+void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) const
 {
 	const int healthWidth = health / 3;
 	if (healthWidth <= 0)
@@ -414,6 +415,23 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, con
 									.y = static_cast<int>(rect.y) - 10,
 									.w = healthWidth,
 									.h = 5};
+
+	unsigned int color;
+	if (health > 70)
+	{
+		constexpr unsigned int colorGreen = 0x408000;
+		color = colorGreen;
+	}
+	else if (health > 30)
+	{
+		constexpr unsigned int colorYellow = 0xEAEA00;
+		color = colorYellow;
+	}
+	else
+	{
+		constexpr unsigned int colorGray = 0x808080;
+		color = colorGray;
+	}
 
 	SetRenderDrawColor(color, 127);
 

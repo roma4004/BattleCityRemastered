@@ -5,11 +5,10 @@
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 
-Obstacle::Obstacle(const ObjRectangle rect, const unsigned int color, const int health, std::string name,
+Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 				   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
 				   const ObstacleType obstacleType)
 	: BaseObj{BaseObjProperty{.rect = rect,
-							  .color = color,
 							  .health = health,
 							  .uuid = uuid,
 							  .name = std::move(name),
@@ -49,7 +48,7 @@ void Obstacle::SubscribeAsClient()
 
 void Obstacle::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
+void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name); }
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {

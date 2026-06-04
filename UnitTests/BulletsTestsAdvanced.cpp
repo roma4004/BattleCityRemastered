@@ -19,7 +19,6 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _bulletHealth{1};
-	unsigned int _bulletColor{0xffffff};
 	float _gridSize{1};
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 3, .size{.x = 6.f, .y = 5.f}};
@@ -37,7 +36,6 @@ protected:
 		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
-				.color = _bulletColor,
 				.health = _bulletHealth,
 				.uuid = _uuid,
 				.name = std::move(name),
