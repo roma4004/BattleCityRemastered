@@ -153,20 +153,14 @@ void RenderManager::Subscribe()
 				SDL_Texture* colorTexture = CreateColorTexture(gray);
 
 				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
-				DrawEnemyIcons();
 			});
 
-	_events->AddListener("DecrementEnemyIconsCount",_name, 
-			[this]()
-	{
-			this->numPictures--;
-	});
-
-	_events->AddListener("IncrementEnemyIconsCount",_name, 
-		[this]()
-{
-		this->numPictures++;
-});
+	_events->AddListener(
+		"RenderEnemyIcons", _name,
+		[this](int respawnCount)
+		{
+			this->DrawEnemyIcons(respawnCount);
+		});
 }
 
 void RenderManager::Unsubscribe() const
@@ -185,8 +179,8 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("EnableRightSideBar", _name);
 	_events->RemoveListener("DisableRightSideBar", _name);
 	_events->RemoveListener("RenderRightSideBar", _name);
-	_events->RemoveListener("DecrementEnemyIconsCount", _name);
-	_events->RemoveListener("IncrementEnemyIconsCount", _name);
+	_events->RemoveListener("RenderEnemyIcons", _name);
+	_events->RemoveListener("RespawnCountChangedTo", _name); 
 }
 
 void RenderManager::DrawPauseText() const
@@ -224,10 +218,11 @@ void RenderManager::DrawGameWonText() const
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
-void RenderManager::DrawRightSideBar() const
+void RenderManager::DrawRightSideBar()
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect{.x = 550, .y =162, .w = 120, .h = 85};
+	constexpr SDL_Rect rect {.x = 550, .y =162, .w = 120, .h = 85};
+
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.rightSideBar.x),
 							   .y = static_cast<int>(offset.rightSideBar.y),
 							   .w = static_cast<int>(offset.rightSideBar.w),
@@ -235,7 +230,7 @@ void RenderManager::DrawRightSideBar() const
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
 }
 
-void RenderManager::DrawEnemyIcons()
+void RenderManager::DrawEnemyIcons(int NumberOfIcons) const
 {
 	constexpr TextureOffset offset{};
 	SDL_Rect srcrect{
@@ -244,14 +239,26 @@ void RenderManager::DrawEnemyIcons()
 		static_cast<int>(offset.enemyDecal.w),
 		static_cast<int>(offset.enemyDecal.h)};
 
-	for (int i = 0; i < numPictures; ++i)
+	for (int i = 0; i < NumberOfIcons; ++i)
 	{
-		int row= i / columns;
-		const int col = i % columns;
-		x = leftUpCornerX + spacingX + col * (imageWidth + spacingX);
-		y = leftUpCornerY + spacingY + row * (imageHeight + spacingY);
+		const int columns = 2;
+		const int rows = NumberOfIcons / columns;
+		const int distanceBetweenColumns = 50;
+		const int verticalDistanceBetweenDecals = 150;
+		const ObjRectangle rect{.x = 680, .y = 65, .w = 20, .h = 40};
+		int imageWidth{static_cast<int>(rect.w)}, imageHeight{static_cast<int>(rect.h)};
 
-		SDL_Rect destRect = {x, y, imageWidth, imageHeight};
+		int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
+		int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
+		const int leftUpCornerX = 685;
+		const int leftUpCornerY = 95;
+
+		int row = i / columns;
+		const int col = i % columns;
+		int xAxis = leftUpCornerX + spacingX + col * (imageWidth + spacingX);
+		int yAxis = leftUpCornerY + spacingY + row * (imageHeight + spacingY);
+
+		SDL_Rect destRect = {xAxis, yAxis, imageWidth, imageHeight};
 		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &destRect);
 	}
 }

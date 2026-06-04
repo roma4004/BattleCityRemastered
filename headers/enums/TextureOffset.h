@@ -73,5 +73,5 @@ struct TextureOffset
 
 	//SideBar
 	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 220, .h = 600};
-	ObjRectangle enemyDecal{.x = 321, .y = 193, .w = 7, .h = 16}; //.x = 635, .y = 20, .w = 30, .h = 30
+	ObjRectangle enemyDecal{.x = 321, .y = 193, .w = 7, .h = 16};
 };

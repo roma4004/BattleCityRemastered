@@ -32,20 +32,6 @@ class RenderManager
 	int _windowHeight;
 	int _width;
 	int _padding;
-	int numPictures = 20;
-	const int columns = 2;
-	const int rows = numPictures / columns;
-	const int distanceBetweenColumns = 50;
-	const int verticalDistanceBetweenDecals = 200;
-	const SDL_Rect rect{.x = 650, .y = 60, .w = 20, .h = 40}; //positioning inside window
-	int imageWidth{rect.w}, imageHeight{rect.h};
-
-	int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
-	int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
-	const int leftUpCornerX = 685;
-	const int leftUpCornerY = 95;
-	int x{};
-	int y{};
 
 	UPoint _windowSize;
 	SDL_Rect _fpsRectangle{};
@@ -58,8 +44,8 @@ class RenderManager
 	void DrawPauseText() const;
 	void DrawGameOverText() const;
 	void DrawGameWonText() const;
-	void DrawRightSideBar() const;
-	void DrawEnemyIcons();
+	void DrawRightSideBar();
+	void DrawEnemyIcons(int NumberOfIcons) const;
 
 	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);

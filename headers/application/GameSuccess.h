@@ -34,6 +34,7 @@ class GameSuccess final : public IGame
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
+	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -65,7 +66,7 @@ class GameSuccess final : public IGame
 
 public:
 	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
+				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar);
 
 	~GameSuccess() override;
 };

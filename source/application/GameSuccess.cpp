@@ -28,7 +28,8 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-						 std::unique_ptr<RenderManager>& renderManager)
+						 std::unique_ptr<RenderManager>& renderManager,
+						 std::unique_ptr<RightSideBar>& rightSideBar)
 	: _windowSize{windowSize}
 	, _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
@@ -37,6 +38,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)}
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
 	, _renderManager{std::move(renderManager)}
+	, _rightSideBar{std::move(rightSideBar)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
@@ -192,6 +194,7 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent("PreDraw");
 			_events->EmitEvent("Draw");
 			_events->EmitEvent("PostDraw");
+
 			_events->EmitEvent("RenderRightSideBar");
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 

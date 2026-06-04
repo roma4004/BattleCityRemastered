@@ -23,7 +23,8 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 	auto menu = std::make_unique<Menu>(_windowSize, events);
 	auto renderManager = std::make_unique<RenderManager>(events, 
 		_renderer, _fpsFont, _logoTexture, _atlasTexture,_joyIcon, _windowSize);
+	auto rightSideBar = std::make_unique<RightSideBar>(_windowSize, events);
 
 	return std::make_unique<GameSuccess>(_windowSize, events, menu, 
-		_isVsyncOn, renderManager);
+		_isVsyncOn, renderManager, rightSideBar);
 }
