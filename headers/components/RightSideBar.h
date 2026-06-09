@@ -1,10 +1,9 @@
 ﻿#pragma once
 #include "Point.h"
+#include "enums/GameMode.h"
 
-#include <SDL_render.h>
 struct ObjRectangle;
 class EventSystem;
-class RenderManager;
 
 class RightSideBar
 {
@@ -15,15 +14,15 @@ class RightSideBar
 	int _enemiesRespawnCount{};
 	int _playerOneRespawnCount{};
 	int _playerTwoRespawnCount{};
+	int _currentStageNumber{1};
+	std::string _objectName{};
+	GameMode _gameMode{};
 
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 
-	void SendEnemyIconsData() const;
 	void Subscribe();
 	void Unsubscribe();
-	ObjRectangle GetRect() const;
 
 public:
 	RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>& events);

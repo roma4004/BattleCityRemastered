@@ -46,6 +46,9 @@ class RenderManager
 	void DrawGameWonText() const;
 	void DrawRightSideBar();
 	void DrawEnemyIcons(int NumberOfIcons) const;
+	void DrawPlayerOneIcons(int respawnCount) const;
+	void DrawPlayerTwoIcons(int respawnCount) const;
+	void DrawCurrentStage(int currentStageNumber) const;
 
 	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);

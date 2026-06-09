@@ -73,5 +73,8 @@ struct TextureOffset
 
 	//SideBar
 	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 220, .h = 600};
-	ObjRectangle enemyDecal{.x = 321, .y = 193, .w = 7, .h = 16};
+	ObjRectangle enemyIcon{.x = 321, .y = 193, .w = 7, .h = 16};
+	ObjRectangle playerOneIcon{.x = 376, .y = 135, .w = 18, .h = 18};
+	ObjRectangle playerTwoIcon{.x = 376, .y = 159, .w = 18, .h = 18};
+	ObjRectangle stageNumberFlag{.x = 375, .y = 182, .w = 18, .h = 18};
 };

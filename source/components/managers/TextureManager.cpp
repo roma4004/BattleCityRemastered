@@ -122,7 +122,7 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	}
 	else if (name == "EnemyDecal")
 	{
-		textureRect = _offset.enemyDecal;
+		textureRect = _offset.enemyIcon;
 	}
 
 	return textureRect;

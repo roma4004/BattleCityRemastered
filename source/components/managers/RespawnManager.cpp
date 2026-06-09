@@ -194,7 +194,9 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 void RespawnManager::TriggerLastPlayersLife()
 {
 	_respawnCount[1] = 0;
+	_events->EmitEvent("RespawnCountChangedTo", "Player1", _respawnCount[1]);
 	_respawnCount[2] = 0;
+	_events->EmitEvent("RespawnCountChangedTo", "Player2", _respawnCount[2]);
 }
 
 void RespawnManager::OnBonusTank(const std::string& author)

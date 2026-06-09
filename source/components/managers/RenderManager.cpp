@@ -144,22 +144,43 @@ void RenderManager::Subscribe()
 			});
 
 	_events->AddListener(
-			"RenderRightSideBar", _name,
-			[this]()
-			{
-				const ObjRectangle rect{.x = 625, .y = 0, .w = 220, .h = 600};
-				const SDL_Rect destRect = RectToSdlRect(rect);
-				constexpr int gray{0x808080};
-				SDL_Texture* colorTexture = CreateColorTexture(gray);
+		"RenderRightSideBar", _name,
+		[this]()
+		{
+			const ObjRectangle rect{.x = 625, .y = 0, .w = 220, .h = 600};
+			const SDL_Rect destRect = RectToSdlRect(rect);
+			constexpr int gray{0x808080};
+			SDL_Texture* colorTexture = CreateColorTexture(gray);
 
-				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
-			});
+			SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
+		});
 
 	_events->AddListener(
 		"RenderEnemyIcons", _name,
 		[this](int respawnCount)
 		{
 			this->DrawEnemyIcons(respawnCount);
+		});
+
+	_events->AddListener(
+		"RenderPlayerOneIcon", _name, 
+		[this](const int respawnCount)
+		{
+			this->DrawPlayerOneIcons(respawnCount);
+		});
+
+	_events->AddListener(
+		"RenderPlayerTwoIcon", _name, 
+		[this](const int respawnCount)
+		{
+			this->DrawPlayerTwoIcons(respawnCount);
+		});
+
+	_events->AddListener(
+		"RenderCurrentStageNumber", _name,
+		[this](const int currentStageNumber)
+		{
+			this->DrawCurrentStage(currentStageNumber);
 		});
 }
 
@@ -180,7 +201,9 @@ void RenderManager::Unsubscribe() const
 	_events->RemoveListener("DisableRightSideBar", _name);
 	_events->RemoveListener("RenderRightSideBar", _name);
 	_events->RemoveListener("RenderEnemyIcons", _name);
-	_events->RemoveListener("RespawnCountChangedTo", _name); 
+	_events->RemoveListener("RenderPlayerOneIcon", _name);
+	_events->RemoveListener("RenderPlayerTwoIcon", _name);
+	_events->RemoveListener("RenderCurrentStageNumber", _name); 
 }
 
 void RenderManager::DrawPauseText() const
@@ -234,23 +257,23 @@ void RenderManager::DrawEnemyIcons(int NumberOfIcons) const
 {
 	constexpr TextureOffset offset{};
 	SDL_Rect srcrect{
-		static_cast<int>(offset.enemyDecal.x),
-		static_cast<int>(offset.enemyDecal.y),
-		static_cast<int>(offset.enemyDecal.w),
-		static_cast<int>(offset.enemyDecal.h)};
+		static_cast<int>(offset.enemyIcon.x),
+		static_cast<int>(offset.enemyIcon.y),
+		static_cast<int>(offset.enemyIcon.w),
+		static_cast<int>(offset.enemyIcon.h)};
 
 	for (int i = 0; i < NumberOfIcons; ++i)
 	{
 		const int columns = 2;
 		const int rows = NumberOfIcons / columns;
-		const int distanceBetweenColumns = 50;
-		const int verticalDistanceBetweenDecals = 150;
-		const ObjRectangle rect{.x = 680, .y = 65, .w = 20, .h = 40};
+		const int distanceBetweenColumns = 80;
+		const int verticalDistanceBetweenDecals = 200;
+		const ObjRectangle rect{.x = 680, .y = 65, .w = 30, .h = 60};
 		int imageWidth{static_cast<int>(rect.w)}, imageHeight{static_cast<int>(rect.h)};
 
 		int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
 		int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
-		const int leftUpCornerX = 685;
+		const int leftUpCornerX = 675;
 		const int leftUpCornerY = 95;
 
 		int row = i / columns;
@@ -261,6 +284,45 @@ void RenderManager::DrawEnemyIcons(int NumberOfIcons) const
 		SDL_Rect destRect = {xAxis, yAxis, imageWidth, imageHeight};
 		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &destRect);
 	}
+}
+
+void RenderManager::DrawPlayerOneIcons(int respawnCount) const
+{
+	constexpr TextureOffset offset{};
+	SDL_Rect srcRect{
+		static_cast<int>(offset.playerOneIcon.x),
+		static_cast<int>(offset.playerOneIcon.y),
+		static_cast<int>(offset.playerOneIcon.w),
+		static_cast<int>(offset.playerOneIcon.h)};
+	constexpr SDL_Rect rect {.x = 679, .y =350, .w = 70, .h = 70};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	_events->EmitEvent("RenderText", Point{.x = 718, .y = 395}, 2, std::to_string(respawnCount));
+}
+
+void RenderManager::DrawPlayerTwoIcons(int respawnCount) const
+{
+	constexpr TextureOffset offset{};
+	SDL_Rect srcRect{
+		static_cast<int>(offset.playerTwoIcon.x),
+		static_cast<int>(offset.playerTwoIcon.y),
+		static_cast<int>(offset.playerTwoIcon.w),
+		static_cast<int>(offset.playerTwoIcon.h)};
+	constexpr SDL_Rect rect {.x = 679, .y =420, .w = 70, .h = 70};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	_events->EmitEvent("RenderText", Point{.x = 718, .y = 465}, 2, std::to_string(respawnCount));
+}
+
+void RenderManager::DrawCurrentStage(int currentStageNumber) const
+{
+	constexpr TextureOffset offset{};
+	SDL_Rect srcRect{
+		static_cast<int>(offset.stageNumberFlag.x),
+		static_cast<int>(offset.stageNumberFlag.y),
+		static_cast<int>(offset.stageNumberFlag.w),
+		static_cast<int>(offset.stageNumberFlag.h)};
+	constexpr SDL_Rect rect {.x = 679, .y =490, .w = 70, .h = 70};
+	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	_events->EmitEvent("RenderText", Point{.x = 718, .y = 543}, 2, std::to_string(currentStageNumber));
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()

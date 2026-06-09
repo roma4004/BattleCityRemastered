@@ -12,12 +12,27 @@ RightSideBar::RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>
 
 void RightSideBar::Subscribe()
 {
+	_events->AddListener(
+		"GameModeChangedTo", _name,
+		[this](const GameMode newGameMode)
+		{
+			this->_gameMode = newGameMode;
+		});
+
 	_events->AddListener("RenderRightSideBar", _name, [this]()
 	{
-		this->SendEnemyIconsData();
+		GameMode currentGameMode = this->_gameMode;
+
+		_events->EmitEvent("RenderEnemyIcons", _enemiesRespawnCount);
+		_events->EmitEvent("RenderCurrentStageNumber", _currentStageNumber);
+		_events->EmitEvent("RenderPlayerOneIcon", _playerOneRespawnCount);
+		if (currentGameMode != GameMode::OnePlayer)
+		{
+			_events->EmitEvent("RenderPlayerTwoIcon", _playerTwoRespawnCount);
+		}
 	});
 
-	_events->AddListener("RespawnCountChangedTo",_name, [this](const std::string& objectName, const int respawnCount)
+	_events->AddListener("RespawnCountChangedTo",_name, [this](const std::string& objectName, int respawnCount)
 	{
 		if (objectName.starts_with("Enemy"))
 		{
@@ -36,19 +51,9 @@ void RightSideBar::Subscribe()
 
 void RightSideBar::Unsubscribe()
 {
+	_events->RemoveListener("GameModeChangedTo", _name);
 	_events->RemoveListener("RenderRightSideBar", _name);
 	_events->RemoveListener("RespawnCountChangedTo",_name);
-}
-
-void RightSideBar::SendEnemyIconsData() const
-{
-	_events->EmitEvent("RenderEnemyIcons", _enemiesRespawnCount);
-}
-
-ObjRectangle RightSideBar::GetRect() const
-{
-	const ObjRectangle rect{.x = 625, .y = 0, .w = 220, .h = 600};
-	return rect;
 }
 
 RightSideBar::~RightSideBar()
