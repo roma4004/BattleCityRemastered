@@ -5,6 +5,7 @@
 #include "enums/TextureOffset.h"
 #include <SDL_rect.h>
 #include <SDL_render.h>
+#include <SDL_ttf.h>
 #include <ranges>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
@@ -41,7 +42,6 @@ RenderManager::~RenderManager()
 	Unsubscribe();
 	ClearFpsTextureCache();
 	ClearColorTextureCache();
-	_events->EmitEvent("DrawEnemyIcons");
 }
 
 void RenderManager::ClearColorTextureCache()
@@ -147,12 +147,7 @@ void RenderManager::Subscribe()
 		"RenderRightSideBar", _name,
 		[this]()
 		{
-			const ObjRectangle rect{.x = 625, .y = 0, .w = 220, .h = 600};
-			const SDL_Rect destRect = RectToSdlRect(rect);
-			constexpr int gray{0x808080};
-			SDL_Texture* colorTexture = CreateColorTexture(gray);
-
-			SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
+			this->DrawRightSideBar();
 		});
 
 	_events->AddListener(
@@ -244,13 +239,10 @@ void RenderManager::DrawGameWonText() const
 void RenderManager::DrawRightSideBar()
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect {.x = 550, .y =162, .w = 120, .h = 85};
+	SDL_Texture* colorTexture = CreateColorTexture(0x808080);
+	constexpr SDL_Rect rect {.x = 625, .y = 0, .w = 220, .h = 600};
 
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.rightSideBar.x),
-							   .y = static_cast<int>(offset.rightSideBar.y),
-							   .w = static_cast<int>(offset.rightSideBar.w),
-							   .h = static_cast<int>(offset.rightSideBar.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &rect);
 }
 
 void RenderManager::DrawEnemyIcons(int NumberOfIcons) const
@@ -296,7 +288,8 @@ void RenderManager::DrawPlayerOneIcons(int respawnCount) const
 		static_cast<int>(offset.playerOneIcon.h)};
 	constexpr SDL_Rect rect {.x = 679, .y =350, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
-	_events->EmitEvent("RenderText", Point{.x = 718, .y = 395}, 2, std::to_string(respawnCount));
+
+	TextToRender(Point{.x = 718, .y = 382}, IntToColor(2), respawnCount, fontLarge);
 }
 
 void RenderManager::DrawPlayerTwoIcons(int respawnCount) const
@@ -309,7 +302,8 @@ void RenderManager::DrawPlayerTwoIcons(int respawnCount) const
 		static_cast<int>(offset.playerTwoIcon.h)};
 	constexpr SDL_Rect rect {.x = 679, .y =420, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
-	_events->EmitEvent("RenderText", Point{.x = 718, .y = 465}, 2, std::to_string(respawnCount));
+
+	TextToRender(Point{.x = 718, .y = 452}, IntToColor(2), respawnCount, fontLarge);
 }
 
 void RenderManager::DrawCurrentStage(int currentStageNumber) const
@@ -322,7 +316,8 @@ void RenderManager::DrawCurrentStage(int currentStageNumber) const
 		static_cast<int>(offset.stageNumberFlag.h)};
 	constexpr SDL_Rect rect {.x = 679, .y =490, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
-	_events->EmitEvent("RenderText", Point{.x = 718, .y = 543}, 2, std::to_string(currentStageNumber));
+
+	TextToRender(Point{.x = 718, .y = 530}, IntToColor(2), currentStageNumber, fontLarge);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()
@@ -382,6 +377,32 @@ void RenderManager::DrawJoyIcon(Point pos) const
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value) const
 {
 	TextToRender(pos, color, std::to_string(value));
+}
+
+void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, int value, std::shared_ptr<TTF_Font> font) const
+{
+	if (!_font || !_renderer)
+	{
+		return;
+	}
+
+
+	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
+			TTF_RenderText_Solid(font.get(), std::to_string(value).c_str(), color), SDL_FreeSurface);
+	if (!surface)
+	{
+		return;
+	}
+
+	const std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)> texture(
+			SDL_CreateTextureFromSurface(_renderer.get(), surface.get()), SDL_DestroyTexture);
+	if (!texture)
+	{
+		return;
+	}
+
+	const SDL_Rect textRect{pos.x, pos.y, surface->w, surface->h};
+	SDL_RenderCopy(_renderer.get(), texture.get(), nullptr, &textRect);
 }
 
 void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text) const

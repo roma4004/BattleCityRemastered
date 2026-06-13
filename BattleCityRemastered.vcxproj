@@ -349,6 +349,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".aiignore" />
+    <Content Include="Resources\Fonts\arial.ttf" />
     <Content Include="Resources\Fonts\backup\bc7x7.ttf" />
     <Content Include="Resources\Fonts\backup\M10 battle cities.ttf" />
     <Content Include="Resources\Fonts\info.txt" />

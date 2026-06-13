@@ -37,6 +37,9 @@ class RenderManager
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
 	std::unordered_map<unsigned int, SDL_Texture*> _colorTextureCache;
+	std::shared_ptr<TTF_Font> fontSmall = {TTF_OpenFont("Resources/Fonts/arial.ttf", 16), TTF_CloseFont};
+	std::shared_ptr<TTF_Font> fontMedium = {TTF_OpenFont("Resources/Fonts/arial.ttf", 24), TTF_CloseFont};
+	std::shared_ptr<TTF_Font> fontLarge = {TTF_OpenFont("Resources/Fonts/arial.ttf", 32), TTF_CloseFont};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -61,6 +64,7 @@ class RenderManager
 	void DrawMenuLogo(Point pos) const;
 	void DrawJoyIcon(Point pos) const;
 	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
+	void TextToRender(const Point& pos, const SDL_Color& color, int value, std::shared_ptr<TTF_Font> font) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
 	void PregenerateMenuBackgroundTexture();
 

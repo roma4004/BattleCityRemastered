@@ -51,15 +51,15 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	// font init and loading
-	std::shared_ptr<TTF_Font> fpsFont{nullptr};
+	std::shared_ptr<TTF_Font> fontForUI{nullptr};
 	{
 		if (TTF_Init() == -1)
 		{
 			return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
 		}
 
-		if (fpsFont = {TTF_OpenFont(fpsFontPathName, 14), TTF_CloseFont};
-			fpsFont == nullptr)
+		if (fontForUI = {TTF_OpenFont(fpsFontPathName, 14), TTF_CloseFont};
+			fontForUI == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 		}
@@ -151,7 +151,7 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
-	return std::make_unique<ConfigSuccess>(windowSize, renderer, fpsFont, logoTexture, atlasTexture, joyIconTexture,
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, fontForUI, logoTexture, atlasTexture, joyIconTexture,
 										   isVsyncOn);
 }
 
