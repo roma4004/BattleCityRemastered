@@ -8,8 +8,8 @@ class EventSystem;
 
 class RightSideBar
 {
-	Point _pos;
-	UPoint _windowSize;
+	Point _pos{};
+	UPoint _windowSize{};
 	bool _isRightSideBarEnabled{false};
 	bool _isEnemyIconEnabled{false};
 	unsigned short _enemiesRespawnCount{};
