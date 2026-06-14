@@ -131,12 +131,12 @@ void RespawnManager::OnGameModeChange()
 
 void RespawnManager::SetPlayerNeedRespawn()
 {
-	constexpr size_t player1Id = static_cast<size_t>(TankType::PLAYER1);
+	constexpr auto player1Id = static_cast<size_t>(TankType::PLAYER1);
 	_slots[player1Id].isAvailable = true;
 
 	if (_gameMode != GameMode::OnePlayer)
 	{
-		constexpr size_t player2Id = static_cast<size_t>(TankType::PLAYER2);
+		constexpr auto player2Id = static_cast<size_t>(TankType::PLAYER2);
 		_slots[player2Id].isAvailable = true;
 	}
 }
@@ -171,12 +171,16 @@ std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)
 	return std::string{"Player2"};
 }
 
-void RespawnManager::ChangeRespawnCount(const unsigned short delta, RespawnCount type)
+void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 {
 	const auto id = static_cast<size_t>(type);
-	_respawnCount[id] += delta;
+	if (_respawnCount[id] > 0)
+	{
+		_respawnCount[id] += static_cast<unsigned short>(delta);
+	}
 
-	_events->EmitEvent("RespawnCountChangedTo", RespawnCountEnumToString(type), _respawnCount[id]);
+	const std::string respawnCount = RespawnCountEnumToString(type);
+	_events->EmitEvent("RespawnCountChangedTo", respawnCount, _respawnCount[id]);
 }
 
 void RespawnManager::TriggerLastPlayersLife()

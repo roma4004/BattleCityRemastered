@@ -102,7 +102,7 @@ std::string TankSpawner::GetCurrentTimeString()
 	const auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
 	std::tm timeInfo;
-	localtime_s(&timeInfo, &nowTime);
+	std::ignore = localtime_s(&timeInfo, &nowTime);
 
 	std::stringstream ss;
 	ss << std::put_time(&timeInfo, "%H:%M:%S") << '.'
@@ -146,8 +146,6 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 					<< "SpawnEnemy  UUID = " << uuidString
 					<< ", Name = " << name
 					<< '\n';
-
-			constexpr int gray{0x808080};
 
 			SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 

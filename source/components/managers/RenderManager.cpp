@@ -9,14 +9,15 @@
 #include <ranges>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-							 const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
-							 const std::shared_ptr<SDL_Texture>& atlas, const std::shared_ptr<SDL_Texture>& joyIcon,
-							 const std::shared_ptr<SDL_Texture>& xBoxHint, const std::shared_ptr<SDL_Texture>& pS5Hint,
-							 const UPoint windowSize)
+							 const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
+							 const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<SDL_Texture>& atlas,
+							 const std::shared_ptr<SDL_Texture>& joyIcon, const std::shared_ptr<SDL_Texture>& xBoxHint,
+							 const std::shared_ptr<SDL_Texture>& pS5Hint, const UPoint windowSize)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _renderer{renderer}
-	, _font{menuFont}
+	, _fontSmall{fontSmall}
+	, _fontMedium{fontMedium}
 	, _menuLogo{menuLogo}
 	, _atlas{atlas}
 	, _joyIcon{joyIcon}
@@ -77,10 +78,11 @@ void RenderManager::ClearFpsTextureCache()
 void RenderManager::Subscribe()
 {
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->ClearFrame(); });
-	_events->AddListener("RenderText", _name, [this](const Point pos, const unsigned int color, const std::string& text)
-	{
-		TextToRender(pos, IntToColor(color), text);
-	});
+	_events->AddListener("RenderText", _name,
+						 [this](const Point pos, const unsigned int color, const std::string& text)
+						 {
+							 TextToRender(pos, IntToColor(color), text);
+						 });
 
 	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawMenuBackground(pos); });
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
@@ -180,11 +182,10 @@ void RenderManager::DrawRightSideBar()
 void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{
-			.x = static_cast<int>(offset.enemyIcon.x),
-			.y = static_cast<int>(offset.enemyIcon.y),
-			.w = static_cast<int>(offset.enemyIcon.w),
-			.h = static_cast<int>(offset.enemyIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIcon.x),
+							   .y = static_cast<int>(offset.enemyIcon.y),
+							   .w = static_cast<int>(offset.enemyIcon.w),
+							   .h = static_cast<int>(offset.enemyIcon.h)};
 
 	for (int i = 0; i < numberOfIcons; ++i)
 	{
@@ -214,43 +215,40 @@ void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{
-			.x = static_cast<int>(offset.playerOneIcon.x),
-			.y = static_cast<int>(offset.playerOneIcon.y),
-			.w = static_cast<int>(offset.playerOneIcon.w),
-			.h = static_cast<int>(offset.playerOneIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.playerOneIcon.x),
+							   .y = static_cast<int>(offset.playerOneIcon.y),
+							   .w = static_cast<int>(offset.playerOneIcon.w),
+							   .h = static_cast<int>(offset.playerOneIcon.h)};
 	constexpr SDL_Rect rect{.x = 679, .y = 350, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 718, .y = 382}, IntToColor(2), respawnCount, fontLarge);
+	TextToRender(Point{.x = 715, .y = 390}, IntToColor(2), respawnCount, _fontMedium);
 }
 
 void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{
-			.x = static_cast<int>(offset.playerTwoIcon.x),
-			.y = static_cast<int>(offset.playerTwoIcon.y),
-			.w = static_cast<int>(offset.playerTwoIcon.w),
-			.h = static_cast<int>(offset.playerTwoIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.playerTwoIcon.x),
+							   .y = static_cast<int>(offset.playerTwoIcon.y),
+							   .w = static_cast<int>(offset.playerTwoIcon.w),
+							   .h = static_cast<int>(offset.playerTwoIcon.h)};
 	constexpr SDL_Rect rect{.x = 679, .y = 420, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 718, .y = 452}, IntToColor(2), respawnCount, fontLarge);
+	TextToRender(Point{.x = 715, .y = 460}, IntToColor(2), respawnCount, _fontMedium);
 }
 
 void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{
-			.x = static_cast<int>(offset.stageNumberFlag.x),
-			.y = static_cast<int>(offset.stageNumberFlag.y),
-			.w = static_cast<int>(offset.stageNumberFlag.w),
-			.h = static_cast<int>(offset.stageNumberFlag.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.stageNumberFlag.x),
+							   .y = static_cast<int>(offset.stageNumberFlag.y),
+							   .w = static_cast<int>(offset.stageNumberFlag.w),
+							   .h = static_cast<int>(offset.stageNumberFlag.h)};
 	constexpr SDL_Rect rect{.x = 679, .y = 490, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 718, .y = 530}, IntToColor(2), currentStageNumber, fontLarge);
+	TextToRender(Point{.x = 715, .y = 535}, IntToColor(2), currentStageNumber, _fontMedium);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()
@@ -354,7 +352,7 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,
 								 const std::shared_ptr<TTF_Font>& font) const
 {
-	if (!_font || !_renderer)
+	if (!_fontSmall || !_renderer)
 	{
 		return;
 	}
@@ -380,13 +378,13 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const
 
 void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text) const
 {
-	if (!_font || !_renderer)
+	if (!_fontSmall || !_renderer)
 	{
 		return;
 	}
 
 	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(_font.get(), text.c_str(), color), SDL_FreeSurface);
+			TTF_RenderText_Solid(_fontSmall.get(), text.c_str(), color), SDL_FreeSurface);
 	if (!surface)
 	{
 		return;
@@ -511,7 +509,7 @@ void RenderManager::GenerateFpsTextures()
 		std::string text = std::to_string(i);
 		constexpr SDL_Color textColor = {.r = 140, .g = 0, .b = 255, .a = 255};
 
-		SDL_Surface* surface = TTF_RenderText_Solid(_font.get(), text.c_str(), textColor);
+		SDL_Surface* surface = TTF_RenderText_Solid(_fontSmall.get(), text.c_str(), textColor);
 		if (!surface)
 		{
 			SDL_Log("Failed to create surface for FPS %d: %s", i, SDL_GetError());

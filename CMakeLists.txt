@@ -273,6 +273,7 @@ set(SOURCE_FILES
         source/components/Map.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
+        source/components/RightSideBar.cpp
         source/components/ScoreBoard.cpp
         source/components/TankSpawner.cpp
         source/components/input/InputProviderForMenu.cpp

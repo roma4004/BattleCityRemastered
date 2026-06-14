@@ -53,15 +53,22 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	// font init and loading
-	std::shared_ptr<TTF_Font> font{nullptr};
+	std::shared_ptr<TTF_Font> fontSmall{nullptr};
+	std::shared_ptr<TTF_Font> fontMedium{nullptr};
 	{
 		if (TTF_Init() == -1)
 		{
 			return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
 		}
 
-		if (font = {TTF_OpenFont(fontPathName, 14), TTF_CloseFont};
-			font == nullptr)
+		if (fontSmall = {TTF_OpenFont(fontPathName, 14), TTF_CloseFont};
+			fontSmall == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
+		}
+
+		if (fontMedium = {TTF_OpenFont(fontPathName, 24), TTF_CloseFont};
+			fontMedium == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 		}
@@ -191,8 +198,8 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
-	return std::make_unique<ConfigSuccess>(windowSize, renderer, font, logoTexture, atlasTexture, joyIconTexture,
-										   xBoxHintTexture, pS5HintTexture, isVsyncOn);
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, fontSmall, fontMedium, logoTexture, atlasTexture,
+										   joyIconTexture, xBoxHintTexture, pS5HintTexture, isVsyncOn);
 }
 
 [[nodiscard]]

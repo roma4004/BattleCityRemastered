@@ -2,6 +2,7 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
+#include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
