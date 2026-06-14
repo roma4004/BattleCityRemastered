@@ -5,16 +5,13 @@
 namespace network::commands
 {
 ClientHandler::ClientHandler(const std::shared_ptr<EventSystem>& events)
-	: ClientHandler("127.0.0.1", "1234", events) {}
+	: ClientHandler(std::string("127.0.0.1"), 1234, events) {}
 
-ClientHandler::ClientHandler(const std::string& host, const std::string& port,
-							 const std::shared_ptr<EventSystem>& events)
+ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: _events{events}
-	// _socket(_ioContext),
 	, _name{"ClientHandler"}
 	, _client{std::make_shared<Client>(_ioContext, host, port, events)}
 {
-	// socket.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 1234));
 	_clientThread = std::thread([this]()
 	{
 		try
@@ -24,11 +21,13 @@ ClientHandler::ClientHandler(const std::string& host, const std::string& port,
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << "thread " << e.what() << '\n';
+			std::cerr << "ClientHandler thread " << e.what() << '\n';
+			//TODO: write error to file
 		}
 		catch (...)
 		{
-			std::cerr << "thread error ..." << '\n';
+			std::cerr << "ClientHandler thread error ..." << '\n';
+			//TODO: write error to file
 		}
 	});
 

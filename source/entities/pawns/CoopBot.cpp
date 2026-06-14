@@ -30,7 +30,7 @@ void CoopBot::TickUpdate(const double deltaTime)
 			&& !dynamic_cast<FortressWall*>(obstacle)
 			&& !dynamic_cast<EagleTile*>(obstacle))
 		{
-			if (_shootDistance > _bulletDamageRadius + _bulletOffset)
+			if (_shootDistance > _calibre.damageRadius + _bulletOffset)
 			{
 				Shot();
 			}

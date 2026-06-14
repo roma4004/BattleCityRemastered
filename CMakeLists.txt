@@ -273,6 +273,7 @@ set(SOURCE_FILES
         source/components/Map.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
+        source/components/ScoreBoard.cpp
         source/components/TankSpawner.cpp
         source/components/input/InputProviderForMenu.cpp
         source/components/input/InputProviderForPlayerOne.cpp
@@ -319,6 +320,7 @@ set(SOURCE_FILES
         source/network/ServerHandler.cpp
         source/network/commands/AnimationCreate.cpp
         source/network/commands/BonusStatus.cpp
+        source/network/commands/GameStateChange.cpp
         source/network/commands/SignalEvent.cpp
         source/network/commands/TankOnOff.cpp
         source/network/commands/BonusDeSpawn.cpp
@@ -395,6 +397,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/ServerHandler.cpp
         source/network/commands/AnimationCreate.cpp
         source/network/commands/BonusStatus.cpp
+        source/network/commands/GameStateChange.cpp
         source/network/commands/SignalEvent.cpp
         source/network/commands/TankOnOff.cpp
         source/network/commands/BonusDeSpawn.cpp
@@ -419,6 +422,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
 
 set(UNIT_TESTS_FILES
         UnitTests/BonusTestsBasic.cpp
+        UnitTests/BonusTestsDestroy.cpp
         UnitTests/BonusTestsEnemy.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp
@@ -476,6 +480,8 @@ set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
 set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
 set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
+set(XBOX_CON_PATH_NAME         ${IMG_PATH}/XBoxCon.png)
+set(PS5_CON_PATH_NAME          ${IMG_PATH}/PS5Con.png)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
@@ -488,6 +494,14 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${JOY_ICON_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_CON_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_CON_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_CON_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_CON_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)

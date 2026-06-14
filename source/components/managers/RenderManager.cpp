@@ -10,15 +10,18 @@
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
 							 const std::shared_ptr<TTF_Font>& menuFont, const std::shared_ptr<SDL_Texture>& menuLogo,
-							 const std::shared_ptr<SDL_Texture>& atlasTexture,
-							 const std::shared_ptr<SDL_Texture>& joyIcon, UPoint windowSize)
+							 const std::shared_ptr<SDL_Texture>& atlas, const std::shared_ptr<SDL_Texture>& joyIcon,
+							 const std::shared_ptr<SDL_Texture>& xBoxHint, const std::shared_ptr<SDL_Texture>& pS5Hint,
+							 const UPoint windowSize)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _renderer{renderer}
 	, _font{menuFont}
 	, _menuLogo{menuLogo}
-	, _atlasTexture{atlasTexture}
+	, _atlas{atlas}
 	, _joyIcon{joyIcon}
+	, _xBoxHint{xBoxHint}
+	, _pS5Hint{pS5Hint}
 	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
@@ -79,68 +82,34 @@ void RenderManager::Subscribe()
 	});
 
 	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawBackground(pos); });
-
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
-
 	_events->AddListener("RenderMenuJoyIcon", _name, [this](const Point pos) { DrawJoyIcon(pos); });
+	_events->AddListener("RenderMenuXBoxHint", _name, [this](const Point pos) { DrawXBoxHint(pos); });
+	_events->AddListener("RenderMenuPS5Hint", _name, [this](const Point pos) { DrawPS5Hint(pos); });
 
-	_events->AddListener(
-			"RenderPauseText", _name,
-			[this]()
-			{
-				constexpr TextureOffset offset{};
-				constexpr SDL_Rect rect{.x = 135, .y = 142, .w = 300, .h = 75};
-
-				SDL_Rect srcRect{
-						static_cast<int>(offset.pauseText.x),
-						static_cast<int>(offset.pauseText.y),
-						static_cast<int>(offset.pauseText.w),
-						static_cast<int>(offset.pauseText.h)};
-				SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
-			});
-
-	_events->AddListener(
-			"RenderGameOverText", _name,
-			[this]()
-			{
-				constexpr TextureOffset offset{};
-				constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
-
-				SDL_Rect srcrect{
-						static_cast<int>(offset.gameOverText.x),
-						static_cast<int>(offset.gameOverText.y),
-						static_cast<int>(offset.gameOverText.w),
-						static_cast<int>(offset.gameOverText.h)};
-				SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &rect);
-			});
-
+	_events->AddListener("RenderPauseText", _name, [this]() { DrawPauseText(); });
+	_events->AddListener("RenderGameOverText", _name, [this]() { DrawGameOverText(); });
 	_events->AddListener("RenderGameWonText", _name, [this]() { DrawGameWonText(); });
 
-	_events->AddListener(
-			"RenderColorTexture", _name,
-			[this](const ObjRectangle rect, const unsigned int color)
-			{
-				const SDL_Rect destRect = RectToSdlRect(rect);
-
-				SDL_Texture* colorTexture = CreateColorTexture(color);
-
-				SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &destRect);
-			});
+	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect)
+	{
+		this->DrawColorTexture(rect);
+	});
 
 	_events->AddListener(
 			"RenderTexture", _name,
 			[this](const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir)
 			{
-				DrawTexture(textureRect, destRect, dir);
+				this->DrawTexture(textureRect, destRect, dir);
 			});
 
 	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });
 
 	_events->AddListener(
 			"RenderHealthBar", _name,
-			[this](const ObjRectangle rect, const int health, const unsigned int color)
+			[this](const ObjRectangle rect, const int health)
 			{
-				DrawHealthBar(rect, health, color);
+				this->DrawHealthBar(rect, health);
 			});
 
 	_events->AddListener(
@@ -179,61 +148,39 @@ void RenderManager::Subscribe()
 		});
 }
 
-void RenderManager::Unsubscribe() const
-{
-	_events->RemoveListener("PreTickUpdate", _name);
-	_events->RemoveListener("RenderText", _name);
-	_events->RemoveListener("RenderMenuBackground", _name);
-	_events->RemoveListener("RenderMenuLogo", _name);
-	_events->RemoveListener("RenderPauseText", _name);
-	_events->RemoveListener("RenderGameOverText", _name);
-	_events->RemoveListener("RenderColorTexture", _name);
-	_events->RemoveListener("RenderTexture", _name);
-	_events->RemoveListener("RenderFPS", _name);
-	_events->RemoveListener("RenderHealthBar", _name);
-	_events->RemoveListener("RenderGameWonText", _name);
-	_events->RemoveListener("EnableRightSideBar", _name);
-	_events->RemoveListener("DisableRightSideBar", _name);
-	_events->RemoveListener("RenderRightSideBar", _name);
-	_events->RemoveListener("RenderEnemyIcons", _name);
-	_events->RemoveListener("RenderPlayerOneIcon", _name);
-	_events->RemoveListener("RenderPlayerTwoIcon", _name);
-	_events->RemoveListener("RenderCurrentStageNumber", _name); 
-}
+void RenderManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RenderManager::DrawPauseText() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect{.x = 135, .y = 142, .w = 300, .h = 75};
-
+	constexpr SDL_Rect dstRect{.x = 135, .y = 142, .w = 300, .h = 75};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.pauseText.x),
 							   .y = static_cast<int>(offset.pauseText.y),
 							   .w = static_cast<int>(offset.pauseText.w),
 							   .h = static_cast<int>(offset.pauseText.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawGameOverText() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect{.x = 200, .y = 242, .w = 200, .h = 75};
-
+	constexpr SDL_Rect dstRect{.x = 200, .y = 152, .w = 200, .h = 75};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameOverText.x),
 							   .y = static_cast<int>(offset.gameOverText.y),
 							   .w = static_cast<int>(offset.gameOverText.w),
 							   .h = static_cast<int>(offset.gameOverText.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawGameWonText() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect rect{.x = 250, .y = 262, .w = 120, .h = 85};
+	constexpr SDL_Rect dstRect{.x = 250, .y = 152, .w = 120, .h = 85};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameWonText.x),
 							   .y = static_cast<int>(offset.gameWonText.y),
 							   .w = static_cast<int>(offset.gameWonText.w),
 							   .h = static_cast<int>(offset.gameWonText.h)};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawRightSideBar()
@@ -327,7 +274,7 @@ void RenderManager::PregenerateMenuBackgroundPixels()
 	{
 		for (int x = 0; x < _width; ++x)
 		{
-			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency
+			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency gray
 			_menuBackground[y * _width + x] = menuColor;
 		}
 	}
@@ -352,26 +299,64 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 }
 
 // blend menu panel and menu texture background
-void RenderManager::DrawBackground(Point pos) const
+void RenderManager::DrawBackground(const Point pos) const
 {
-	const SDL_Rect rect{pos.x, pos.y, _width, _height};
-
+	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = _width, .h = _height};
 	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
 	SDL_RenderCopy(_renderer.get(), _backgroundTexture.get(), nullptr, &rect);
 }
 
-void RenderManager::DrawMenuLogo(Point pos) const
+void RenderManager::DrawMenuLogo(const Point pos) const
 {
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
-
 	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
 }
 
-void RenderManager::DrawJoyIcon(Point pos) const
+void RenderManager::DrawJoyIcon(const Point pos) const
 {
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
-
 	SDL_RenderCopy(_renderer.get(), _joyIcon.get(), nullptr, &rect);
+}
+
+void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const
+{
+	SDL_RenderCopy(_renderer.get(), texture, &srcRect, &dstRect);
+}
+
+void RenderManager::DrawXBoxHint(const Point pos) const
+{
+	RenderCopyWithClipping(_xBoxHint.get(), {.x = 935, .y = 365, .w = 65, .h = 65},
+						   {.x = pos.x - 65, .y = pos.y + 93, .w = 25, .h = 25});//View button
+
+	RenderCopyWithClipping(_xBoxHint.get(), {.x = 1115, .y = 365, .w = 65, .h = 65},
+						   {.x = pos.x - 65, .y = pos.y + 123, .w = 25, .h = 25});//Menu button
+
+	RenderCopyWithClipping(_xBoxHint.get(), {.x = 1330, .y = 270, .w = 95, .h = 95},
+						   {.x = pos.x - 65, .y = pos.y + 153, .w = 25, .h = 25});//Y button
+
+	RenderCopyWithClipping(_xBoxHint.get(), {.x = 790, .y = 490, .w = 220, .h = 220},
+						   {.x = pos.x - 65, .y = pos.y + 183, .w = 25, .h = 25});//Dpad button
+
+	RenderCopyWithClipping(_xBoxHint.get(), {.x = 1330, .y = 435, .w = 95, .h = 95},
+						   {.x = pos.x - 65, .y = pos.y + 213, .w = 25, .h = 25});//A button
+}
+
+void RenderManager::DrawPS5Hint(const Point pos) const
+{
+	RenderCopyWithClipping(_pS5Hint.get(), {.x = 330, .y = 123, .w = 40, .h = 70},
+						   {.x = pos.x + 10, .y = pos.y - 60, .w = 25, .h = 30});//Create button
+
+	RenderCopyWithClipping(_pS5Hint.get(), {.x = 780, .y = 123, .w = 40, .h = 70},
+						   {.x = pos.x + 10, .y = pos.y - 28, .w = 25, .h = 30});//Options button
+
+	RenderCopyWithClipping(_pS5Hint.get(), {.x = 838, .y = 163, .w = 75, .h = 75},
+						   {.x = pos.x + 10, .y = pos.y + 5, .w = 25, .h = 25});//Triangle button
+
+	RenderCopyWithClipping(_pS5Hint.get(), {.x = 185, .y = 185, .w = 180, .h = 180},
+						   {.x = pos.x + 10, .y = pos.y + 33, .w = 25, .h = 25});//Dpad button
+
+	RenderCopyWithClipping(_pS5Hint.get(), {.x = 838, .y = 305, .w = 75, .h = 75},
+						   {.x = pos.x + 10, .y = pos.y + 63, .w = 25, .h = 25});//Cross button
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value) const
@@ -426,7 +411,7 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 		return;
 	}
 
-	const SDL_Rect textRect{pos.x, pos.y, surface->w, surface->h};
+	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = surface->w, .h = surface->h};
 	SDL_RenderCopy(_renderer.get(), texture.get(), nullptr, &textRect);
 }
 
@@ -438,19 +423,19 @@ void RenderManager::PregenerateMenuBackgroundTexture()
 			SDL_DestroyTexture);
 	SDL_SetTextureBlendMode(_backgroundTexture.get(), SDL_BLENDMODE_BLEND);
 
-	const SDL_Rect rect{_padding, _padding, _width, _height};
+	const SDL_Rect rect{.x = _padding, .y = _padding, .w = _width, .h = _height};
 	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
 {
-	return SDL_Rect{static_cast<int>(rect.x),
-					static_cast<int>(rect.y),
-					static_cast<int>(rect.w),
-					static_cast<int>(rect.h)};
+	return SDL_Rect{.x = static_cast<int>(rect.x),
+					.y = static_cast<int>(rect.y),
+					.w = static_cast<int>(rect.w),
+					.h = static_cast<int>(rect.h)};
 }
 
-void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency = 255) const
+void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency) const
 {
 	const Uint8 r = (color >> 16) & 0xFF;
 	const Uint8 g = (color >> 8) & 0xFF;
@@ -467,8 +452,8 @@ SDL_Texture* RenderManager::CreateColorTexture(const unsigned int color)
 		return it->second;
 	}
 
-	SDL_Texture* colorTexture =
-			SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 1, 1);
+	SDL_Texture* colorTexture = SDL_CreateTexture(
+			_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 1, 1);
 
 	SDL_SetRenderTarget(_renderer.get(), colorTexture);
 
@@ -506,15 +491,22 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 	}
 }
 
-void RenderManager::DrawTexture(const ObjRectangle& textureRect, const ObjRectangle& destRect,
-								const Direction dir) const
+void RenderManager::DrawColorTexture(const ObjRectangle rect)
+{
+	const SDL_Rect dstRect = RectToSdlRect(rect);
+	constexpr unsigned int grayColor = 0x808080;
+	SDL_Texture* colorTexture = CreateColorTexture(grayColor);
+	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &dstRect);
+	SDL_DestroyTexture(colorTexture);
+}
+
+void RenderManager::DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, const Direction dir) const
 {
 	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
-
-	const SDL_Rect sdlTextureRect = RectToSdlRect(textureRect);
-	const SDL_Rect sldDestRect = RectToSdlRect(destRect);
-	SDL_RenderCopyEx(_renderer.get(), _atlasTexture.get(), &sdlTextureRect, &sldDestRect, angle, nullptr, flip);
+	const SDL_Rect srcRect = RectToSdlRect(texture);
+	const SDL_Rect dstRect = RectToSdlRect(dest);
+	SDL_RenderCopyEx(_renderer.get(), _atlas.get(), &srcRect, &dstRect, angle, nullptr, flip);
 }
 
 void RenderManager::GenerateFpsTextures()
@@ -524,7 +516,7 @@ void RenderManager::GenerateFpsTextures()
 	for (size_t i = 0u; i <= 1000u; ++i)
 	{
 		std::string text = std::to_string(i);
-		constexpr SDL_Color textColor = {140, 0, 255, 255};
+		constexpr SDL_Color textColor = {.r = 140, .g = 0, .b = 255, .a = 255};
 
 		SDL_Surface* surface = TTF_RenderText_Solid(_font.get(), text.c_str(), textColor);
 		if (!surface)
@@ -558,7 +550,7 @@ void RenderManager::RenderFPS(const size_t fps)
 	SDL_RenderPresent(_renderer.get());
 }
 
-void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, const unsigned int color) const
+void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) const
 {
 	const int healthWidth = health / 3;
 	if (healthWidth <= 0)
@@ -569,6 +561,23 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health, con
 									.y = static_cast<int>(rect.y) - 10,
 									.w = healthWidth,
 									.h = 5};
+
+	unsigned int color;
+	if (health > 70)
+	{
+		constexpr unsigned int colorGreen = 0x408000;
+		color = colorGreen;
+	}
+	else if (health > 30)
+	{
+		constexpr unsigned int colorYellow = 0xEAEA00;
+		color = colorYellow;
+	}
+	else
+	{
+		constexpr unsigned int colorRed = 0xFF8080;
+		color = colorRed;
+	}
 
 	SetRenderDrawColor(color, 127);
 

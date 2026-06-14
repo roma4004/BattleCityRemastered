@@ -24,15 +24,11 @@ protected:
 	BonusType _bonusType{};
 
 	void TickUpdate(double deltaTime) override;
-
 	void Draw() const override;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 
 public:
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-		  unsigned int color, std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
+		  std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
 
 	~Bonus() override;
 
@@ -41,6 +37,7 @@ public:
 	void SubscribeAsClient();
 
 	void Unsubscribe() const;
-	void UnsubscribeAsHost() const;
-	void UnsubscribeAsClient() const;
+
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 };

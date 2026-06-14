@@ -8,25 +8,26 @@ namespace network::commands
 {
 class ServerHandler : public INetworkNode
 {
-	std::shared_ptr<EventSystem> _events{nullptr};
-	boost::asio::io_context _ioContext{};
-	std::string _name{};
-	std::thread _serverThread{};
-	Server _server;
-
 public:
 	explicit ServerHandler(const std::shared_ptr<EventSystem>& events);
-	ServerHandler(const std::string& host, const std::string& port, const std::shared_ptr<EventSystem>& events);
+	ServerHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events);
 
 	~ServerHandler() override;
-
-	void Subscribe();
-	void Unsubscribe() const;
 
 	void ProcessNetworkCommands() override
 	{
 		_server.ProcessNetworkCommands();
 	}
+
+private:
+	void Subscribe();
+	void Unsubscribe() const;
+
+	std::shared_ptr<EventSystem> _events{nullptr};
+	boost::asio::io_context _ioContext{};
+	std::string _name{};
+	std::thread _serverThread{};
+	Server _server;
 };
 
 }//namespace network::commands

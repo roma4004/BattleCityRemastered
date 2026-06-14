@@ -11,14 +11,16 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFontName, const char* logoName,
-							   const char* introMusicName, const char* textureCollection, const char* joyIcon)
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFont, const char* logo, const char* introMusic,
+							   const char* atlas, const char* joyIcon, const char* xBoxCon, const char* pS5Con)
 	: windowSize{windowSize}
-	, fpsFontPathName{fpsFontName}
-	, logoPathName{logoName}
-	, introMusicPathName{introMusicName}
-	, textureAtlasPath{textureCollection}
-	, joyIconPathName{joyIcon} {}
+	, fpsFontPathName{fpsFont}
+	, logoPathName{logo}
+	, introMusicPathName{introMusic}
+	, textureAtlasPath{atlas}
+	, joyIconPathName{joyIcon}
+	, xBoxHintPathName{xBoxCon}
+	, pS5HintPathName{pS5Con} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -104,6 +106,40 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
+	// texture XBox controls hint loading
+	std::shared_ptr<SDL_Texture> xBoxHintTexture{nullptr};
+	{
+		std::shared_ptr<SDL_Surface> xBoxHintSurface{nullptr};
+		if (xBoxHintSurface = {IMG_Load(xBoxHintPathName), SDL_FreeSurface};
+			xBoxHintSurface == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG XBoxHint Loading Error", IMG_GetError());
+		}
+
+		if (xBoxHintTexture = {SDL_CreateTextureFromSurface(renderer.get(), xBoxHintSurface.get()), SDL_DestroyTexture};
+			xBoxHintTexture == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG XBoxHint Texture Creating Error", IMG_GetError());
+		}
+	}
+
+	// texture PS5 controls hint loading
+	std::shared_ptr<SDL_Texture> pS5HintTexture{nullptr};
+	{
+		std::shared_ptr<SDL_Surface> pS5HintSurface{nullptr};
+		if (pS5HintSurface = {IMG_Load(pS5HintPathName), SDL_FreeSurface};
+			pS5HintSurface == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG PS5Hint Loading Error", IMG_GetError());
+		}
+
+		if (pS5HintTexture = {SDL_CreateTextureFromSurface(renderer.get(), pS5HintSurface.get()), SDL_DestroyTexture};
+			pS5HintTexture == nullptr)
+		{
+			return std::make_unique<ConfigFailure>("IMG PS5Hint Texture Creating Error", IMG_GetError());
+		}
+	}
+
 	// texture atlas loading
 	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};
 	{
@@ -132,35 +168,39 @@ SDLEnvironment::~SDLEnvironment()
 
 	// Audio loading and play
 	{
-		if (const int result = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-			result < 0)
+		if (const int audioResult = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+			audioResult >= 0)
 		{
-			return std::make_unique<ConfigFailure>("Mix_OpenAudio Error", Mix_GetError());
+			if (levelStartedSound = {Mix_LoadWAV(introMusicPathName), Mix_FreeChunk};
+				levelStartedSound != nullptr)
+			{
+				if (const int playResult = Mix_PlayChannel(-1, levelStartedSound.get(), 0);
+					playResult == -1)
+				{
+					std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError() << '\n';
+				}
+			}
+			else
+			{
+				std::cout << "Mix_LoadWAV, can't load levelStarted.wav, sound off, " << Mix_GetError() << '\n';
+			}
 		}
-
-		if (levelStartedSound = {Mix_LoadWAV(introMusicPathName), Mix_FreeChunk};
-			levelStartedSound == nullptr)
+		else
 		{
-			return std::make_unique<ConfigFailure>("Mix_LoadWAV levelStarted.wav load Error", Mix_GetError());
-		}
-
-		if (const int result = Mix_PlayChannel(-1, levelStartedSound.get(), 0);
-			result == -1)
-		{
-			return std::make_unique<ConfigFailure>("Mix_PlayChannel levelStarted.wav play Error", Mix_GetError());
+			std::cout << "Mix_OpenAudio, can't initialize sound card, sound off, " << Mix_GetError() << '\n';
 		}
 	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fontForUI, logoTexture, atlasTexture, joyIconTexture,
-										   isVsyncOn);
+										   xBoxHintTexture, pS5HintTexture, isVsyncOn);
 }
 
-[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(
-		UPoint& windowSizeHalf) const
+[[nodiscard]]
+std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow(UPoint& windowSizeHalf) const
 {
 	const auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_SHOWN;
-	const SDL_Rect rect{100, 100, static_cast<int>(windowSize.x), static_cast<int>(windowSize.y)};
+	const SDL_Rect rect{.x = 100, .y = 100, .w = static_cast<int>(windowSize.x), .h = static_cast<int>(windowSize.y)};
 	windowSizeHalf = {.x = static_cast<size_t>(rect.w / 2), .y = static_cast<size_t>(rect.h / 2)};
 
 	return {SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
@@ -176,7 +216,7 @@ SDLEnvironment::~SDLEnvironment()
 
 	constexpr int monitorIndex = -1;//NOTE: -1 mean use the default//TODO: move to userSettings
 	SDL_Rect bounds;
-	SDL_GetDisplayBounds(monitorIndex, &bounds);
+	SDL_GetDisplayBounds(monitorIndex, &bounds);//TODO: investigate errors: displayIndex must be in the range 0 - 1
 
 	SDL_Rect bordersSize;
 	SDL_GetWindowBordersSize(sdlWindow.get(), &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);

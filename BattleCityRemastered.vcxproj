@@ -164,6 +164,7 @@
     <ClCompile Include="source\components\Map.cpp" />
     <ClCompile Include="source\components\Menu.cpp" />
     <ClCompile Include="source\components\ObstacleSpawner.cpp" />
+    <ClCompile Include="source\components\ScoreBoard.cpp" />
     <ClCompile Include="source\components\RightSideBar.cpp" />
     <ClCompile Include="source\components\TankSpawner.cpp" />
     <ClCompile Include="source\components\input\InputProviderForMenu.cpp" />
@@ -200,6 +201,7 @@
     <ClCompile Include="source\network\ClientHandler.cpp" />
     <ClCompile Include="source\network\commands\AnimationCreate.cpp" />
     <ClCompile Include="source\network\commands\BonusStatus.cpp" />
+    <ClCompile Include="source\network\commands\GameStateChange.cpp" />
     <ClCompile Include="source\network\commands\SignalEvent.cpp" />
     <ClCompile Include="source\network\commands\TankOnOff.cpp" />
     <ClCompile Include="source\network\Server.cpp" />
@@ -237,11 +239,14 @@
     <ClInclude Include="headers\components\managers\SpawnManager.h" />
     <ClInclude Include="headers\components\managers\StateManager.h" />
     <ClInclude Include="headers\components\managers\TextureManager.h" />
+    <ClInclude Include="headers\components\ScoreBoard.h" />
+    <ClInclude Include="headers\entities\BulletCalibre.h" />
     <ClInclude Include="headers\components\RightSideBar.h" />
     <ClInclude Include="headers\enums\AnimationType.h" />
     <ClInclude Include="headers\enums\GameState.h" />
     <ClInclude Include="headers\network\commands\AnimationCreate.h" />
     <ClInclude Include="headers\network\commands\BonusStatus.h" />
+    <ClInclude Include="headers\network\commands\GameStateChange.h" />
     <ClInclude Include="headers\network\commands\SignalEvent.h" />
     <ClInclude Include="headers\network\commands\TankOnOff.h" />
     <ClInclude Include="headers\Point.h" />
@@ -358,13 +363,11 @@
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Fonts\info.txt" />
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
-    <Content Include="Resources\Images\controlMenuPauseSelect.png" />
-    <Content Include="Resources\Images\controlP1_2.png" />
-    <Content Include="Resources\Images\controlP2_4.png" />
-    <Content Include="Resources\Images\JoyIcon.png" />
     <Content Include="Resources\Images\menuSelectorP2.png" />
     <Content Include="Resources\Images\menuSelectorP1.png" />
+    <Content Include="Resources\Images\PS5Con.png" />
     <Content Include="Resources\Images\SpriteSheet.png" />
+    <Content Include="Resources\Images\XBoxCon.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BattleCityRemastered.rc" />

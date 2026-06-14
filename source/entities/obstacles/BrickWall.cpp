@@ -4,14 +4,7 @@
 
 BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect,
-			   0x924b00,
-			   1,
-			   {"BrickWall"},
-			   events,
-			   uuid,
-			   gameMode,
-			   ObstacleType::Brick}
+	: Obstacle{rect, 1, {"BrickWall"}, events, uuid, gameMode, ObstacleType::Brick}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);

@@ -2,6 +2,7 @@
 
 #include "../BonusEffectProperty.h"
 #include "Pawn.h"
+#include "entities/BulletCalibre.h"
 
 struct UPoint;
 class PlayerTest;
@@ -15,19 +16,10 @@ class Tank : public Pawn
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-	int _bulletDamage{15};
-	float _bulletSpeed{300.f};//TODO: move outside this class to bullet caliber stats class and DI into constructor
-	std::vector<std::shared_ptr<BaseObj>> _touchedObstacles;
-
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 
-	void Subscribe() override;
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
-
-	void Unsubscribe() const override;
-	void UnsubscribeAsClient() const override;
-	void UnsubscribeBonus() const;
 
 	void OnBonusTimer(const std::string& fraction, bool isActive);
 	void OnBonusHelmet(const std::string& name, bool isActive);
@@ -38,21 +30,21 @@ class Tank : public Pawn
 	void OnClientTankOnOff(buuid uuid, bool isEnable);
 
 protected:
-	FPoint _bulletSize{.x = 9.f, .y = 9.f};
-	double _bulletDamageRadius{18.f};
+	BulletCalibre _calibre{};
 	milliseconds _fireCooldown{std::chrono::seconds{1}};
 	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire{};
+
+	void Subscribe() override;
+	void Unsubscribe() const override;
 
 	// bonuses
 	BonusEffectProperty _effects{};
 
 	void Shot(buuid withUuid = {}) const;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 
 	void TickUpdate(double deltaTime) override = 0;
-
-	void TakeDamage(int damage) override;
 
 	virtual void Enable();
 	virtual void Disable() const;
@@ -61,6 +53,9 @@ public:
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
 
 	~Tank() override;
+
+	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void TakeDamage(int damage) override;
 
 	[[nodiscard]] int GetTier() const;
 

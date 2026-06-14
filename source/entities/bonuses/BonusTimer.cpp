@@ -3,14 +3,14 @@
 #include "enums/BonusType.h"
 
 BonusTimer::BonusTimer(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events,
-					   const milliseconds lifeTime, const unsigned int color, const buuid uuid, const GameMode gameMode,
+					   const milliseconds lifeTime, const buuid uuid, const GameMode gameMode,
 					   const milliseconds duration)
-	: Bonus{rect, events, lifeTime, color, "BonusTimer", uuid, gameMode, BonusType::Timer}
+	: Bonus{rect, events, lifeTime, "BonusTimer", uuid, gameMode, BonusType::Timer}
 	, _effectDuration{duration} {}
 
 BonusTimer::~BonusTimer() = default;
 
 void BonusTimer::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
 {
-	_events->EmitEvent(_name, fraction, _effectDuration);
+	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
 }

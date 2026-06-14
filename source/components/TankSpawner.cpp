@@ -5,7 +5,6 @@
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
-#include "components/managers/BonusEffectManager.h"
 #include "components/managers/RespawnManager.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
@@ -17,19 +16,20 @@
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
 #include "utils/Logger.h"
+#include "utils/RandUtils.h"
+#include "utils/TimeUtils.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
 #include <boost/uuid/uuid.hpp>
 #include <iostream>
 #include <memory>
 
-//TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 TankSpawner::TankSpawner(const UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 						 const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize}
 	, _allObjects{allObjects}
 	, _events{events}
-	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)}	
+	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, windowSize, GameMode::Demo)}
 	, _respawnManager{std::make_shared<RespawnManager>(events)}
 //TODO: extract tank spawner to respawn manager as sub component
 {
@@ -43,6 +43,8 @@ TankSpawner::~TankSpawner()
 
 void TankSpawner::Subscribe()
 {
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+
 	//TODO: reuse existing tanks when game mode changed
 	_events->AddListener(
 			"GameModeChangedTo", _name,
@@ -64,9 +66,8 @@ void TankSpawner::Subscribe()
 
 				tank->Enable();
 				const ObjRectangle rect{tank->GetRect()};
-				const std::string objName{tank->GetName()};
-				const unsigned int color{tank->GetColor()};
-				_events->EmitEvent("AnimationCreateTank", rect, objName, color);
+				const std::string name{tank->GetName()};
+				_events->EmitEvent("AnimationCreateTank", rect, name);
 			});
 
 	_events->AddListener("RespawnTanks", _name, [this](const double /*deltaTime*/)
@@ -85,20 +86,14 @@ void TankSpawner::SubscribeAsClient()
 			});
 }
 
-void TankSpawner::Unsubscribe() const
-{
-	_events->RemoveListener("GameModeChangedTo", _name);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	_events->RemoveListener("SpawnEnabled", _name);
-	_events->RemoveListener("RespawnTanks", _name);
-}
+void TankSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
+
+void TankSpawner::Reset()
+{
+	_enemySpawnTimer = {};
+}
 
 std::string TankSpawner::GetCurrentTimeString()
 {
@@ -120,15 +115,19 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 							 const bool skipDelay)
 {
 	const float gridOffset{static_cast<float>(_windowSize.y) / 50.f};
-	const float size{gridOffset * 3};
+	const float tankSize{gridOffset * 3};
 	const static std::vector<ObjRectangle> spawnPos{{
-			{.x = gridOffset * 16.f - size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 32.f - size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 16.f + size * 2.f, .y = 0, .w = size, .h = size},
-			{.x = gridOffset * 32.f + size * 2.f, .y = 0, .w = size, .h = size}}};
+			{.x = gridOffset * 16.f - tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize},
+			{.x = gridOffset * 32.f - tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize},
+			{.x = gridOffset * 16.f + tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize},
+			{.x = gridOffset * 32.f + tankSize * 2.f, .y = 0, .w = tankSize, .h = tankSize}}};
 
-	for (const auto& rect: spawnPos)
+	for (int i = 0; i < 4; ++i)
 	{
+		std::uniform_int_distribution<> distRandId{0, static_cast<int>(spawnPos.size() - 1)};
+		const int randId = RandUtils::GetRandNumber(distRandId);
+		const auto& rect = spawnPos[randId];
+
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{
 			return ColliderUtils::IsCollide(rect, object->GetRect());
@@ -150,7 +149,7 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 
 			constexpr int gray{0x808080};
 
-			SpawnTank(rect, gray, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+			SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 
 			return true;
 		}
@@ -180,13 +179,7 @@ bool TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int he
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
 
-		constexpr int yellow{0xeaea00};
-		constexpr int green{0x408000};
-		const unsigned int color = isFirst ? yellow : green;
-
-		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, type, skipDelay);
-		//_events->EmitEvent("BonusHelmet", "Player1", std::chrono::milliseconds(5000000)); // Debug for win-condition
-		//_events->EmitEvent("PlayersTeamIsWon"); // Debug for win-condition
+		SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 
 		return true;
 	}
@@ -214,11 +207,7 @@ void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int h
 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 				<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
 
-		constexpr int yellow{0xeaea00};
-		constexpr int green{0x408000};
-		const unsigned int color = type == TankType::COOP1 ? yellow : green;
-
-		SpawnTank(rect, color, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+		SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 	}
 }
 
@@ -266,7 +255,8 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 {
 	for (size_t i = 0; i < _respawnManager->_slots.size(); ++i)
 	{
-		if (_respawnManager->_slots[i].isAvailable)
+		const auto& slot = _respawnManager->_slots[i];
+		if (slot.isAvailable)
 		{
 			switch (const auto type = static_cast<TankType>(i))
 			{
@@ -274,17 +264,21 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					RespawnEnemyTanks(type, _respawnManager->_slots[i].uuid, skipDelay);
+					if (skipDelay || TimeUtils::IsCooldownFinish(_enemySpawnTimer.activateTime,
+																 _enemySpawnTimer.cooldown))
+					{
+						_enemySpawnTimer.cooldown = milliseconds{5000};
+						_enemySpawnTimer.activateTime = std::chrono::system_clock::now();
+						RespawnEnemyTanks(type, slot.uuid, skipDelay);
+					}
 					break;
 				case TankType::PLAYER1:
 				case TankType::PLAYER2:
-					RespawnPlayerTeam(type, _respawnManager->_slots[i].uuid, skipDelay);
+					RespawnPlayerTeam(type, slot.uuid, skipDelay);
 					break;
 				default:
 					break;
 			}
-			_respawnManager->_slots[i].isAvailable = false;
-			break;
 		}
 	}
 }
@@ -350,12 +344,10 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 	return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type));
 }
 
-void TankSpawner::SpawnTank(const ObjRectangle rect, const unsigned int color, const int health,
-							const std::string& name, std::string fraction, const float speed, buuid uuid,
-							const TankType type, const bool skipDelay)
+void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std::string& name, std::string fraction,
+							const float speed, buuid uuid, const TankType type, const bool skipDelay)
 {
 	BaseObjProperty baseObjProperty{.rect = rect,
-									.color = color,
 									.health = health,
 									.uuid = uuid,
 									.name = name,

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Pawn.h"
+#include "entities/BulletCalibre.h"
 #include "interfaces/IDrawable.h"
 #include <boost/uuid/uuid.hpp>
 #include <string>
@@ -19,33 +20,28 @@ class Bullet final : public Pawn, public IDrawable
 	using buuid = boost::uuids::uuid;
 
 	std::string _author{};
-	double _bulletDamageRadius{14.f};
-	int _damage{0};
-	std::vector<std::shared_ptr<BaseObj>> _bulletTargets{};
+	BulletCalibre _calibre{};
 
-	void Subscribe() override;
 	void SubscribeAsClient() override;
-
-	void Unsubscribe() const override;
-	void UnsubscribeAsClient() const override;
-
 	void Enable();
 	void Disable() const;
+	void Reset(BulletResetProperty resetProperty);
 
+protected:
+	void Subscribe() override;
+	void Unsubscribe() const override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
 
-	void Reset(BulletResetProperty resetProperty);
-
 public:
-	explicit Bullet(PawnProperty pawnProperty);
-	Bullet(PawnProperty pawnProperty, int damage, double aoeRadius, std::string author, bool enableByDefault = false);
+	explicit Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre = {}, std::string author = "",
+					bool enableByDefault = false);
 
 	~Bullet() override;
 
 	[[nodiscard]] int GetDamage() const;
 
-	[[nodiscard]] double GetBulletDamageRadius() const;
+	[[nodiscard]] double GetDamageRadius() const;
 
 	[[nodiscard]] std::string GetAuthor() const;
 

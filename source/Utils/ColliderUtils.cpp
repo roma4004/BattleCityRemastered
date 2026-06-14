@@ -5,19 +5,25 @@
 
 bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) noexcept
 {
+	auto greaterThan = [](const float a, const float b)
+	{
+		constexpr float COLLISION_EPSILON = 0.01f;
+		return a > b + COLLISION_EPSILON;
+	};
+
 	// Check if one rectangle is to the right of the other
-	if (r1.x > r2.x + r2.w || r2.x > r1.x + r1.w)
+	if (greaterThan(r1.x, r2.x + r2.w) || greaterThan(r2.x, r1.x + r1.w))
 	{
 		return false;
 	}
 
 	// Check if one rectangle is above the other
-	if (r1.y > r2.y + r2.h || r2.y > r1.y + r1.h)
+	if (greaterThan(r1.y, r2.y + r2.h) || greaterThan(r2.y, r1.y + r1.h))
 	{
 		return false;
 	}
 
-	// If neither of the above conditions are met, the rectangles overlap
+	// If neither of the above conditions is matched, the rectangles overlap
 	return true;
 }
 

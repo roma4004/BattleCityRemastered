@@ -18,15 +18,9 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _bulletHealth{1};
-	unsigned int _bulletColor{0xffffff};
-	int _bulletDamage{1};
 	float _tankSize{};
-	// float _tankSpeed{142.f};
-	float _bulletSpeed{300.f};
-	float _bulletWidth{6.f};
-	float _bulletHeight{5.f};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	double _bulletDamageRadius{12.0};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -44,7 +38,7 @@ protected:
 		const std::string fraction{"PlayerTeam"};
 		const std::string author{"Player1"};
 		// ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
-		CreateBullet(name, fraction, author, 0.f, _bulletHeight, Direction::DOWN);
+		CreateBullet(name, fraction, author, 0.f, _calibre.size.y, Direction::DOWN);
 	}
 
 	void TearDown() override
@@ -54,10 +48,9 @@ protected:
 
 	void CreateBullet(std::string name, std::string fraction, std::string author, float x, float y, Direction dir)
 	{
-		ObjRectangle rect2{.x = x, .y = y, .w = _bulletWidth, .h = _bulletHeight};
+		ObjRectangle rect2{.x = x, .y = y, .w = _calibre.size.x, .h = _calibre.size.y};
 		BaseObjProperty baseObjProperty2{
 				.rect = rect2,
-				.color = _bulletColor,
 				.health = _bulletHealth,
 				.uuid = _uuid,
 				.name = std::move(name),
@@ -67,16 +60,14 @@ protected:
 				.allObjects = &_allObjects,
 				.events = _events,
 				.tier = 1,
-				.speed = _bulletSpeed,
+				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = dir,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(
-						std::move(pawnProperty2), _bulletDamage, _bulletDamageRadius, std::move(author),
-						enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author), enableByDefault));
 	}
 };
 
@@ -85,7 +76,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 	const std::string name{"Bullet2"};
 	const std::string fraction{"EnemyTeam"};
 	const std::string author{"Enemy1"};
-	CreateBullet(name, fraction, author, 0.f, _bulletHeight + 1, Direction::UP);
+	CreateBullet(name, fraction, author, 0.f, _calibre.size.y + 1, Direction::UP);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
@@ -101,7 +92,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 	const std::string name{"Bullet2"};
 	const std::string fraction{"PlayerTeam"};
 	const std::string author{"Player2"};
-	CreateBullet(name, fraction, author, 0.f, _bulletHeight + 1, Direction::UP);
+	CreateBullet(name, fraction, author, 0.f, _calibre.size.y + 1, Direction::UP);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);

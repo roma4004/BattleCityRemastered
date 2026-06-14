@@ -113,7 +113,7 @@ bool Bot::HandleSideObstacles(const Direction dir, const std::vector<std::shared
 
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 {
-	LineOfSight lineOfSight(_rect, _windowSize, _bulletSize, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _windowSize, _calibre.size, _allObjects, this);
 
 	const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
 	if (HandleSideObstacles(Direction::UP, upSideObstacles))
@@ -153,7 +153,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.y - (nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight());
-			_bulletOffset = _bulletSize.y;
+			_bulletOffset = _calibre.size.y;
 		}
 	}
 
@@ -163,7 +163,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = _rect.x - (nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth());
-			_bulletOffset = _bulletSize.x;
+			_bulletOffset = _calibre.size.x;
 		}
 	}
 
@@ -173,7 +173,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
-			_bulletOffset = _bulletSize.y;
+			_bulletOffset = _calibre.size.y;
 		}
 	}
 
@@ -183,7 +183,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 			nearestSeenObstacle && nearestSeenObstacle != nullptr)
 		{
 			_shootDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
-			_bulletOffset = _bulletSize.x;
+			_bulletOffset = _calibre.size.x;
 		}
 	}
 
@@ -196,6 +196,11 @@ void Bot::SetRandomDirection(const double deltaTime)
 		!freePath.empty())
 	{
 		const int max = static_cast<int>(freePath.size() - 1);
+		if (max == -1)
+		{
+			return;
+		}
+
 		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
 		SetDirection(freePath[pathIndex]);
 	}
@@ -203,18 +208,29 @@ void Bot::SetRandomDirection(const double deltaTime)
 
 void Bot::TickUpdate(const double deltaTime)
 {
+	std::vector<std::shared_ptr<BaseObj>> outCollisions;
+	Direction oldDir{GetDirection()};
+	bool isNewDir{false};
 	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot auto change dir
 	{
 		SetRandomDirection(deltaTime);
+		isNewDir = oldDir != GetDirection();
 
 		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
 		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
-	if (const bool isMove = Pawn::Move(deltaTime);
+	if (const bool isMove = Pawn::Move(outCollisions, deltaTime, isNewDir);
 		!isMove)
 	{
 		SetRandomDirection(deltaTime);// NOTE: change dir it can't move
+
 		_lastTimeTurn = std::chrono::system_clock::now();
+	}
+
+	if (!outCollisions.empty())
+	{
+		HandleBonusPickUp(outCollisions.front());
+		outCollisions.clear();
 	}
 }

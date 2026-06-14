@@ -6,43 +6,52 @@
 enum class GameMode : char8_t;
 class EventSystem;
 
+struct StatisticsData final
+{
+	unsigned short bulletHitByEnemy{0};
+	unsigned short bulletHitByPlayerOne{0};
+	unsigned short bulletHitByPlayerTwo{0};
+
+	unsigned short enemyHitByFriendlyFire{0};
+	unsigned short enemyHitByPlayerOne{0};
+	unsigned short enemyHitByPlayerTwo{0};
+
+	unsigned short playerOneHitFriendlyFire{0};
+	unsigned short playerOneHitByEnemyTeam{0};
+
+	unsigned short playerTwoHitFriendlyFire{0};
+	unsigned short playerTwoHitByEnemyTeam{0};
+
+	unsigned short enemyDiedByFriendlyFire{0};
+	unsigned short enemyDiedByPlayerOne{0};
+	unsigned short enemyDiedByPlayerTwo{0};
+
+	unsigned short playerOneDiedByFriendlyFire{0};
+	unsigned short playerTwoDiedByFriendlyFire{0};
+	unsigned short playerDiedByEnemyTeam{0};
+
+	unsigned short brickWallDiedByEnemyTeam{0};
+	unsigned short brickWallDiedByPlayerOne{0};
+	unsigned short brickWallDiedByPlayerTwo{0};
+
+	unsigned short steelWallDiedByEnemyTeam{0};
+	unsigned short steelWallDiedByPlayerOne{0};
+	unsigned short steelWallDiedByPlayerTwo{0};
+
+	unsigned short bonusPickupByEnemyTeam{0};
+	unsigned short bonusPickupByPlayerOne{0};
+	unsigned short bonusPickupByPlayerTwo{0};
+
+	unsigned short bonusDestroyedByEnemyTeam{0};
+	unsigned short bonusDestroyedByPlayerOne{0};
+	unsigned short bonusDestroyedByPlayerTwo{0};
+};
+
 class GameStatistics final
 {
-	//TODO: fix desync in statistics
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-
-	// TODO: use std::atomic when multithreading is used
-	int _bulletHitByEnemy{0};
-	int _bulletHitByPlayerOne{0};
-	int _bulletHitByPlayerTwo{0};
-
-	int _enemyHitByFriendlyFire{0};
-	int _enemyHitByPlayerOne{0};
-	int _enemyHitByPlayerTwo{0};
-
-	int _playerOneHitFriendlyFire{0};
-	int _playerOneHitByEnemyTeam{0};
-
-	int _playerTwoHitFriendlyFire{0};
-	int _playerTwoHitByEnemyTeam{0};
-
-	int _enemyDiedByFriendlyFire{0};
-	int _enemyDiedByPlayerOne{0};
-	int _enemyDiedByPlayerTwo{0};
-
-	int _playerOneDiedByFriendlyFire{0};
-	int _playerTwoDiedByFriendlyFire{0};
-	int _playerDiedByEnemyTeam{0};
-
-	int _brickWallDiedByEnemyTeam{0};
-	int _brickWallDiedByPlayerOne{0};
-	int _brickWallDiedByPlayerTwo{0};
-
-	int _steelWallDiedByEnemyTeam{0};
-	int _steelWallDiedByPlayerOne{0};
-	int _steelWallDiedByPlayerTwo{0};
-
+	StatisticsData _data{};
 	GameMode _gameMode{};
 
 	void Subscribe();
@@ -66,6 +75,8 @@ class GameStatistics final
 	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
 	void OnBrickWallDied(const std::string& author, const std::string& fraction);
 	void OnSteelWallDied(const std::string& author, const std::string& fraction);
+	void OnBonusPickup(const std::string& author, const std::string& fraction);
+	void OnBonusDestroyed(const std::string& author, const std::string& fraction);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
@@ -74,33 +85,41 @@ public:
 
 	void Reset();
 
-	[[nodiscard]] int GetBulletHitByEnemy() const { return _bulletHitByEnemy; }
-	[[nodiscard]] int GetBulletHitByPlayerOne() const { return _bulletHitByPlayerOne; }
-	[[nodiscard]] int GetBulletHitByPlayerTwo() const { return _bulletHitByPlayerTwo; }
+	[[nodiscard]] unsigned short GetBulletHitByEnemy() const { return _data.bulletHitByEnemy; }
+	[[nodiscard]] unsigned short GetBulletHitByPlayerOne() const { return _data.bulletHitByPlayerOne; }
+	[[nodiscard]] unsigned short GetBulletHitByPlayerTwo() const { return _data.bulletHitByPlayerTwo; }
 
-	[[nodiscard]] int GetEnemyHitByFriendlyFire() const { return _enemyHitByFriendlyFire; }
-	[[nodiscard]] int GetEnemyHitByPlayerOne() const { return _enemyHitByPlayerOne; }
-	[[nodiscard]] int GetEnemyHitByPlayerTwo() const { return _enemyHitByPlayerTwo; }
+	[[nodiscard]] unsigned short GetEnemyHitByFriendlyFire() const { return _data.enemyHitByFriendlyFire; }
+	[[nodiscard]] unsigned short GetEnemyHitByPlayerOne() const { return _data.enemyHitByPlayerOne; }
+	[[nodiscard]] unsigned short GetEnemyHitByPlayerTwo() const { return _data.enemyHitByPlayerTwo; }
 
-	[[nodiscard]] int GetPlayerOneHitFriendlyFire() const { return _playerOneHitFriendlyFire; }
-	[[nodiscard]] int GetPlayerOneHitByEnemyTeam() const { return _playerOneHitByEnemyTeam; }
+	[[nodiscard]] unsigned short GetPlayerOneHitFriendlyFire() const { return _data.playerOneHitFriendlyFire; }
+	[[nodiscard]] unsigned short GetPlayerOneHitByEnemyTeam() const { return _data.playerOneHitByEnemyTeam; }
 
-	[[nodiscard]] int GetPlayerTwoHitFriendlyFire() const { return _playerTwoHitFriendlyFire; }
-	[[nodiscard]] int GetPlayerTwoHitByEnemyTeam() const { return _playerTwoHitByEnemyTeam; }
+	[[nodiscard]] unsigned short GetPlayerTwoHitFriendlyFire() const { return _data.playerTwoHitFriendlyFire; }
+	[[nodiscard]] unsigned short GetPlayerTwoHitByEnemyTeam() const { return _data.playerTwoHitByEnemyTeam; }
 
-	[[nodiscard]] int GetEnemyDiedByFriendlyFire() const { return _enemyDiedByFriendlyFire; }
-	[[nodiscard]] int GetEnemyDiedByPlayerOne() const { return _enemyDiedByPlayerOne; }
-	[[nodiscard]] int GetEnemyDiedByPlayerTwo() const { return _enemyDiedByPlayerTwo; }
+	[[nodiscard]] unsigned short GetEnemyDiedByFriendlyFire() const { return _data.enemyDiedByFriendlyFire; }
+	[[nodiscard]] unsigned short GetEnemyDiedByPlayerOne() const { return _data.enemyDiedByPlayerOne; }
+	[[nodiscard]] unsigned short GetEnemyDiedByPlayerTwo() const { return _data.enemyDiedByPlayerTwo; }
 
-	[[nodiscard]] int GetPlayerOneDiedByFriendlyFire() const { return _playerOneDiedByFriendlyFire; }
-	[[nodiscard]] int GetPlayerTwoDiedByFriendlyFire() const { return _playerTwoDiedByFriendlyFire; }
-	[[nodiscard]] int GetPlayerDiedByEnemyTeam() const { return _playerDiedByEnemyTeam; }
+	[[nodiscard]] unsigned short GetPlayerOneDiedByFriendlyFire() const { return _data.playerOneDiedByFriendlyFire; }
+	[[nodiscard]] unsigned short GetPlayerTwoDiedByFriendlyFire() const { return _data.playerTwoDiedByFriendlyFire; }
+	[[nodiscard]] unsigned short GetPlayerDiedByEnemyTeam() const { return _data.playerDiedByEnemyTeam; }
 
-	[[nodiscard]] int GetBrickWallDiedByEnemyTeam() const { return _brickWallDiedByEnemyTeam; }
-	[[nodiscard]] int GetBrickWallDiedByPlayerOne() const { return _brickWallDiedByPlayerOne; }
-	[[nodiscard]] int GetBrickWallDiedByPlayerTwo() const { return _brickWallDiedByPlayerTwo; }
+	[[nodiscard]] unsigned short GetBrickWallDiedByEnemyTeam() const { return _data.brickWallDiedByEnemyTeam; }
+	[[nodiscard]] unsigned short GetBrickWallDiedByPlayerOne() const { return _data.brickWallDiedByPlayerOne; }
+	[[nodiscard]] unsigned short GetBrickWallDiedByPlayerTwo() const { return _data.brickWallDiedByPlayerTwo; }
 
-	[[nodiscard]] int GetSteelWallDiedByEnemyTeam() const { return _steelWallDiedByEnemyTeam; }
-	[[nodiscard]] int GetSteelWallDiedByPlayerOne() const { return _steelWallDiedByPlayerOne; }
-	[[nodiscard]] int GetSteelWallDiedByPlayerTwo() const { return _steelWallDiedByPlayerTwo; }
+	[[nodiscard]] unsigned short GetSteelWallDiedByEnemyTeam() const { return _data.steelWallDiedByEnemyTeam; }
+	[[nodiscard]] unsigned short GetSteelWallDiedByPlayerOne() const { return _data.steelWallDiedByPlayerOne; }
+	[[nodiscard]] unsigned short GetSteelWallDiedByPlayerTwo() const { return _data.steelWallDiedByPlayerTwo; }
+
+	[[nodiscard]] unsigned short GetBonusPickupByEnemyTeam() const { return _data.bonusPickupByEnemyTeam; }
+	[[nodiscard]] unsigned short GetBonusPickupByPlayerOne() const { return _data.bonusPickupByPlayerOne; }
+	[[nodiscard]] unsigned short GetBonusPickupByPlayerTwo() const { return _data.bonusPickupByPlayerTwo; }
+
+	[[nodiscard]] unsigned short GetBonusDestroyedByEnemyTeam() const { return _data.bonusDestroyedByEnemyTeam; }
+	[[nodiscard]] unsigned short GetBonusDestroyedByPlayerOne() const { return _data.bonusDestroyedByPlayerOne; }
+	[[nodiscard]] unsigned short GetBonusDestroyedByPlayerTwo() const { return _data.bonusDestroyedByPlayerTwo; }
 };

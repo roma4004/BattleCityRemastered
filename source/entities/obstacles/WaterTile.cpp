@@ -4,14 +4,7 @@
 
 WaterTile::WaterTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect,
-			   0x1e90ff,
-			   1,
-			   "Water",
-			   events,
-			   uuid,
-			   gameMode,
-			   ObstacleType::Water}
+	: Obstacle{rect, 1, "Water", events, uuid, gameMode, ObstacleType::Water}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(false);

@@ -1,6 +1,7 @@
 #include "behavior/ShootingBeh.h"
 #include "Point.h"
 #include "components/BulletPool.h"
+#include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Tank.h"
@@ -9,22 +10,16 @@
 #include <memory>
 // #include <boost/uuid/uuid_io.hpp>
 
-ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, float& bulletSpeed,
-						 int& bulletDamage, int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize,
-						 std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<BulletPool>& bulletPool)
+ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
+						 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
-	, _speed{speed}
-	, _bulletSpeed{bulletSpeed}
-	, _bulletDamage{bulletDamage}
-	, _bulletDamageRadius{damageRadius}
-	, _tier{tier}
-	, _bulletSize{bulletSize}
 	, _windowSize{windowSize}
 	, _name{name}
 	, _fraction{fraction}
+	, _calibre{calibre}
 	, _allObjects{allObjects}
 	, _bulletPool{bulletPool} {}
 
@@ -72,8 +67,8 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	const float tankBottomY = _rect.Bottom();
 	const FPoint tankCenter = {.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
 
-	const float bulletWidth = _bulletSize.x;
-	const float bulletHeight = _bulletSize.y;
+	const float bulletWidth = _calibre.size.x;
+	const float bulletHeight = _calibre.size.y;
 	const FPoint bulletHalf = {.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
 	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
@@ -118,17 +113,13 @@ buuid ShootingBeh::Shot(const buuid uuid)
 	{
 		BulletResetProperty bulletResetProperty = {
 				.rect = rect,
-				.damage = _bulletDamage,
 				.dir = _direction,
-				.aoeRadius = _bulletDamageRadius,
-				.color = 0xffffff,
 				.health = 1,
-				.speed = _bulletSpeed,
-				.tier = _tier,
 				.author = _name,
 				.fraction = _fraction,
 				//TODO: replace fraction with enum
-				.uuid = uuid
+				.uuid = uuid,
+				.calibre = _calibre,
 		};
 
 		//TODO: skip bullet set guid on client if bullet not create but get from bullet pool

@@ -29,7 +29,7 @@ void Enemy::TickUpdate(const double deltaTime)
 			&& (obstacle->GetIsDestructible() || _tier > 2)
 			&& !obstacle->GetIsPenetrable())// skip water, ice, bush(Grass)
 		{
-			if (_shootDistance > _bulletDamageRadius + _bulletOffset)//TODO: cover this by test
+			if (_shootDistance > _calibre.damageRadius + _bulletOffset)//TODO: cover this by test
 			{
 				Shot();
 			}

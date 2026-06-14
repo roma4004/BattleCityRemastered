@@ -4,7 +4,6 @@
 #include "enums/RespawnCount.h"
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
-#include <algorithm>
 #include <boost/uuid/uuid.hpp>
 #include <memory>
 
@@ -40,16 +39,16 @@ void RespawnManager::Subscribe()
 			{
 				this->_gameMode = newGameMode;
 
-				_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+				this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
 
-				OnGameModeChange();
+				this->OnGameModeChange();
 			});
 
 	_events->AddListener("TankSpawn", _name, [this](const buuid& uuid) { OnTankSpawn(uuid); });
 
 	_events->AddListener("TankDied", _name, [this](const buuid& uuid) { OnTankDied(uuid); });
 
-	_events->AddListener("BonusTank", _name, [this](const std::string& author, const std::string& /*fraction*/)
+	_events->AddListener("BonusTank_Pickup", _name, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusTank(author);
 	});
@@ -65,7 +64,7 @@ void RespawnManager::Subscribe()
 
 void RespawnManager::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_OnTank", _name, [this](const std::string& author)
+	_events->AddListener("ClientReceived_BonusTank_Pickup", _name, [this](const std::string& author)
 	{
 		this->OnBonusTank(author);
 	});
@@ -76,26 +75,11 @@ void RespawnManager::SubscribeAsClient()
 	});
 }
 
-void RespawnManager::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("TankSpawn", _name);
-	_events->RemoveListener("TankDied", _name);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	_events->RemoveListener("BonusTank", _name);
-	_events->RemoveListener("SetSlotNeedRespawn", _name);
-	_events->RemoveListener("PlayersBaseFinished", _name);
-}
+void RespawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RespawnManager::UnsubscribeAsClient() const
 {
-	_events->RemoveListener("ClientReceived_OnTank", _name);
+	_events->RemoveListener("ClientReceived_BonusTank_Pickup", _name);
 	_events->RemoveListener("ClientReceived_RespawnTank", _name);
 }
 
@@ -126,6 +110,11 @@ void RespawnManager::ResetRespawnStat()
 	{
 		isAvailable = false;
 	}
+
+	_enemiesSpawnCount = 0;
+	_enemiesDeathCount = 0;
+	_playersSpawnCount = 0;
+	_playersDeathCount = 0;
 }
 
 void RespawnManager::ResetSpawn()
@@ -182,7 +171,7 @@ std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)
 	return std::string{"Player2"};
 }
 
-void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
+void RespawnManager::ChangeRespawnCount(const unsigned short delta, RespawnCount type)
 {
 	const auto id = static_cast<size_t>(type);
 	_respawnCount[id] += delta;
@@ -216,7 +205,7 @@ void RespawnManager::OnBonusTank(const std::string& author)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_OnTank", author);
+		_events->EmitEvent("ServerSend_BonusTank_Pickup", author);
 	}
 }
 
@@ -231,9 +220,7 @@ void RespawnManager::OnClientRespawn(const TankType type)
 			ChangeRespawnCount(-1, RespawnCount::ENEMY_ALL);
 			break;
 		case TankType::PLAYER1:
-		// case TankType::COOP1:
 		case TankType::PLAYER2:
-		// case TankType::COOP2:
 			ChangeRespawnCount(-1, type == TankType::PLAYER1
 									   ? RespawnCount::PLAYER_ONE
 									   : RespawnCount::PLAYER_TWO);
@@ -283,6 +270,10 @@ void RespawnManager::EnemyDied(const bool isAvailable)
 	if (isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
 	{
 		_events->EmitEvent("PlayersTeamIsWon");
+		if (_gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_PlayersTeamIsWon");
+		}
 	}
 }
 
@@ -292,6 +283,10 @@ void RespawnManager::PlayerDied(const bool isAvailable)
 	if (isAvailable == false && _playersSpawnCount == _playersDeathCount)
 	{
 		_events->EmitEvent("EnemiesTeamIsWon");
+		if (_gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_EnemiesTeamIsWon");
+		}
 	}
 }
 

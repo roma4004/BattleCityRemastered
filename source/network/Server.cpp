@@ -9,6 +9,7 @@
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Dispose.h"
 #include "network/commands/FortressChange.h"
+#include "network/commands/GameStateChange.h"
 #include "network/commands/HealthChange.h"
 #include "network/commands/KeyStateChange.h"
 #include "network/commands/ObstacleSpawn.h"
@@ -136,11 +137,11 @@ void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
 		{
 			if (signalName == "ClientSend_ReadyToPlay")
 			{
-				_events->EmitEvent("ClientReadyToStartGame");
+				_events->EmitEvent("ServerReceive_ClientReadyToStartGame");
 			}
 			else
 			{
-				_events->EmitEvent("ClientReceived_" + signalName);
+				_events->EmitEvent("ServerReceive_" + signalName);//NOTE: Other not used now
 			}
 		});
 	}
@@ -237,7 +238,7 @@ void Session::DoWrite(const std::string& message)
 	{
 		if (!_socket.is_open())
 		{
-			std::cerr << "Socket is not open. Cannot write.";
+			std::cerr << "Session Socket is not open. Cannot write.";
 			return;
 		}
 
@@ -255,11 +256,11 @@ void Session::DoWrite(const std::string& message)
 			{
 				if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
 				{
-					std::cout << "Connection closed normally" << '\n';
+					std::cout << "Session Connection closed normally" << '\n';
 				}
 				else
 				{
-					std::cerr << "Write error: " << ec.message() << '\n';
+					std::cerr << "Session Write error: " << ec.message() << '\n';
 					//TODO: need handle close connection and delete session
 				}
 
@@ -272,18 +273,19 @@ void Session::DoWrite(const std::string& message)
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Exception in DoWrite: " << e.what() << '\n';
+		std::cerr << "Session Exception in DoWrite: " << e.what() << '\n';
+		//TODO: write error to file
 	}
 	catch (...)
 	{
-		std::cerr << "error ..." << '\n';
+		std::cerr << "Session error ..." << '\n';
+		//TODO: write error to file
 	}
 }
 
-Server::Server(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
+Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
-	: _acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host).to_v4(),
-										 static_cast<unsigned short>(std::stoul(port))))
+	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}
 	, _name{"Server"}
 	, _batch{std::make_shared<CommandBatch>()}
@@ -293,26 +295,28 @@ Server::Server(boost::asio::io_context& ioContext, const std::string& host, cons
 	Subscribe();
 }
 
+//TODO: check the flow after network game choose local mode to clean all then to choose network again successful
 void Server::StartSendThread()
 {
-	_isRunning = true;
+	_isRunning.store(true);
 	_sendThread = std::thread([this]()
 	{
-		while (_isRunning)
+		while (this->_isRunning.load())
 		{
 			std::shared_ptr<CommandBatch> batch;
 			{
-				std::unique_lock<std::mutex> lock(_sendQueueMutex);
-				_sendCondition.wait(lock, [this] { return !_sendQueue.empty() || !_isRunning; });
+				std::unique_lock<std::mutex> lock(this->_sendQueueMutex);
+				this->_sendCondition.wait(
+						lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning.load(); });
 
-				if (!_isRunning)
+				if (!this->_isRunning.load())
 					break;
 
-				if (_sendQueue.empty())
+				if (this->_sendQueue.empty())
 					continue;
 
-				batch = _sendQueue.front();
-				_sendQueue.pop();
+				batch = this->_sendQueue.front();
+				this->_sendQueue.pop();
 			}
 
 			if (batch && !batch->IsEmpty())
@@ -323,11 +327,16 @@ void Server::StartSendThread()
 				}
 				catch (const std::exception& e)
 				{
-					std::cerr << "Exception in send thread: " << e.what() << '\n';
+					std::cerr << "Server Exception in send thread: " << e.what() << '\n';
 
 					// retry send
-					std::scoped_lock lock(_sendQueueMutex);
-					_sendQueue.push(batch);
+					std::scoped_lock lock(this->_sendQueueMutex);
+					this->_sendQueue.push(batch);
+				}
+				catch (...)
+				{
+					std::cerr << "Server thread error ..." << '\n';
+					//TODO: write error to file
 				}
 			}
 		}
@@ -338,7 +347,7 @@ void Server::StopSendThread()
 {
 	{
 		std::scoped_lock lock(_sendQueueMutex);
-		_isRunning = false;
+		_isRunning.store(false);
 	}
 
 	_sendCondition.notify_one();
@@ -366,16 +375,34 @@ void Server::Subscribe()
 {
 	_events->AddListener("Server_EndFrame", _name, [this]()
 	{
-		std::scoped_lock lock(_batchWriteMutex, _sendQueueMutex);
-		_sendQueue.emplace(_batch);
+		auto batch{std::make_shared<CommandBatch>()};
+		{
+			std::scoped_lock lock(_batchWriteMutex);
+			std::swap(batch, _batch);
+		}
+		{
+			std::scoped_lock lock(_sendQueueMutex);
+			_sendQueue.emplace(batch);
+		}
 		_sendCondition.notify_one();
-		_batch = std::make_shared<CommandBatch>();
 	});
 
-	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPaused)
+	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPause)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPaused));
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPause));
+	});
+
+	_events->AddListener("ServerSend_PlayersTeamIsWon", _name, [this]()
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<GameStateChange>("PlayersTeamIsWon"));
+	});
+
+	_events->AddListener("ServerSend_EnemiesTeamIsWon", _name, [this]()
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<GameStateChange>("EnemiesTeamIsWon"));
 	});
 
 	_events->AddListener(
@@ -427,13 +454,11 @@ void Server::Subscribe()
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
 			});
-	//TODO: write obstacle dispose
 
 	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
 			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
 			{
-				//TODO: fix multiple spawn bullet explosion animation
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name));
 			});
@@ -471,65 +496,32 @@ void Server::SubscribeBonus()
 		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
 	});
 
-	_events->AddListener("ServerSend_OnBonusHelmet", _name, [this](const std::string& name, const bool isActive)
+	_events->AddListener("ServerSend_BonusHelmet_Pickup", _name, [this](const std::string& name, const bool isActive)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Helmet, isActive));
 	});
 
-	_events->AddListener("ServerSend_OnStar", _name, [this](const std::string& name)
+	_events->AddListener("ServerSend_BonusStar_Pickup", _name, [this](const std::string& name)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Star));
 	});
 
-	_events->AddListener("ServerSend_OnCaliber", _name, [this](const std::string& name)
+	_events->AddListener("ServerSend_BonusCaliber_Pickup", _name, [this](const std::string& name)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Caliber));
 	});
 
-	_events->AddListener("ServerSend_OnTank", _name, [this](const std::string& name)
+	_events->AddListener("ServerSend_BonusTank_Pickup", _name, [this](const std::string& name)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Tank));
 	});
 }
 
-void Server::Unsubscribe() const
-{
-	_events->RemoveListener("Server_EndFrame", _name);
-	_events->RemoveListener("ServerSend_Pause_Status", _name);
-
-	_events->RemoveListener("ServerSend_Pos", _name);
-	_events->RemoveListener("ServerSend_Shot", _name);
-	_events->RemoveListener("ServerSend_Health", _name);
-	_events->RemoveListener("ServerSend_Dispose", _name);
-
-	_events->RemoveListener("ServerSend_Statistics", _name);
-	_events->RemoveListener("ServerSend_RespawnTank", _name);
-	_events->RemoveListener("ServerSend_ObstacleSpawn", _name);
-
-	_events->RemoveListener("ServerSend_AnimationCreate", _name);
-
-	_events->RemoveListener("ServerSend_OnTankOnOff", _name);
-
-	UnsubscribeBonus();
-}
-
-void Server::UnsubscribeBonus() const
-{
-	_events->RemoveListener("ServerSend_BonusSpawn", _name);
-	_events->RemoveListener("ServerSend_BonusDeSpawn", _name);
-
-	_events->RemoveListener("ServerSend_FortressChange", _name);
-
-	_events->RemoveListener("ServerSend_OnBonusHelmet", _name);
-
-	_events->RemoveListener("ServerSend_OnStar", _name);
-	_events->RemoveListener("ServerSend_OnCaliber", _name);
-	_events->RemoveListener("ServerSend_OnTank", _name);
-}
+void Server::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void Server::DoAccept()
 {

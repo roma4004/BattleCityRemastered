@@ -1,5 +1,6 @@
 #include "entities/obstacles/FortressWall.h"
 #include "components/EventSystem.h"
+#include "entities/BaseObjProperty.h"
 #include "entities/Pawns/Pawn.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
@@ -12,7 +13,7 @@
 
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
-	: BaseObj{rect, 0x924b00, 1, uuid, "FortressWall", "Neutral"}
+	: BaseObj{BaseObjProperty{.rect = rect, .health = 1, .uuid = uuid, .name = "FortressWall", .fraction = "Neutral"}}
 	, _events{events}
 	, _allObjects{allObjects}
 	, _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}
@@ -68,32 +69,12 @@ void FortressWall::SubscribeAsClient()
 
 void FortressWall::SubscribeBonus()
 {
-	_events->AddListener("BonusShovelOnPlayerPickup", _nameWithUuid, [this]() { this->OnPlayerPickupShovel(); });
-	_events->AddListener("BonusShovelOnCooldownEnd", _nameWithUuid, [this]() { this->OnPlayerShovelCooldownEnd(); });
-	_events->AddListener("BonusShovelOnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
+	_events->AddListener("BonusShovel_OnPlayerPickup", _nameWithUuid, [this]() { this->OnPlayerPickupShovel(); });
+	_events->AddListener("BonusShovel_OnCooldownEnd", _nameWithUuid, [this]() { this->OnPlayerShovelCooldownEnd(); });
+	_events->AddListener("BonusShovel_OnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
 }
 
-void FortressWall::Unsubscribe() const
-{
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	UnsubscribeBonus();
-}
-
-void FortressWall::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_FortressChange", _nameWithUuid);
-}
-
-void FortressWall::UnsubscribeBonus() const
-{
-	_events->RemoveListener("BonusShovelOnPlayerPickup", _nameWithUuid);
-	_events->RemoveListener("BonusShovelOnCooldownEnd", _nameWithUuid);
-	_events->RemoveListener("BonusShovelOnEnemyPickup", _nameWithUuid);
-}
+void FortressWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {

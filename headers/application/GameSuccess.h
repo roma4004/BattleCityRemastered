@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Point.h"
+#include "components/ScoreBoard.h"
 #include "components/RightSideBar.h"
 #include "components/managers/BonusEffectManager.h"
-#include "components/managers/RenderManager.h"
 #include "interfaces/IGame.h"
 #include <chrono>
 
@@ -23,28 +23,17 @@ class RightSideBar;
 
 class GameSuccess final : public IGame
 {
-	UPoint _windowSize{};
-	std::string _name{"Game"};
+public:
+	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
+				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
 
-	std::unique_ptr<INetworkNode> _networkNode{nullptr};
-	std::unique_ptr<Menu> _menu{nullptr};
-	std::unique_ptr<TextureManager> _textureManager{nullptr};
-	std::unique_ptr<StateManager> _stateManager{nullptr};
-	std::unique_ptr<UserInput> _userInput{nullptr};
-	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
-	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
-	std::unique_ptr<RenderManager> _renderManager{nullptr};
-	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
-	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	~GameSuccess() override;
 
-	std::shared_ptr<EventSystem> _events{nullptr};
-	//TODO: modify only under mutex lock (main and network thread can add)
-	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+	void MainLoop() override;
 
-	GameMode _selectedGameMode{};
-	GameMode _gameMode{};
-	double _deltaTime{};
+	[[nodiscard]] int Result() const override;
 
+private:
 	void Subscribe();
 	void Unsubscribe() const;
 
@@ -56,17 +45,30 @@ class GameSuccess final : public IGame
 
 	void OnClientReady() const;
 
-	void MainLoop() override;
-
-	[[nodiscard]] int Result() const override;
-
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
 	void OnGameModeChangedTo(GameMode newGameMode);
 
-public:
-	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar);
+	UPoint _windowSize{};
+	std::string _name{"Game"};
 
-	~GameSuccess() override;
+	std::unique_ptr<INetworkNode> _networkNode{nullptr};
+	std::unique_ptr<Menu> _menu{nullptr};
+	std::unique_ptr<TextureManager> _textureManager{nullptr};
+	std::unique_ptr<StateManager> _stateManager{nullptr};
+	std::unique_ptr<UserInput> _userInput{nullptr};
+	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
+	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
+	std::unique_ptr<RenderManager> _renderManager{nullptr};
+	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
+	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
+
+	std::shared_ptr<EventSystem> _events{nullptr};
+	//TODO: modify only under mutex lock (main and network thread can add)
+	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+
+	GameMode _selectedGameMode{};
+	GameMode _gameMode{};
+	double _deltaTime{};
 };

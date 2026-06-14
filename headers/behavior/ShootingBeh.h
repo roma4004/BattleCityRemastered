@@ -1,9 +1,11 @@
 #pragma once
 
+#include "entities/BulletCalibre.h"
 #include "interfaces/IShootable.h"
 #include <functional>
 #include <memory>
 
+struct BulletCalibre;
 enum class Direction : char8_t;
 struct FPoint;
 struct UPoint;
@@ -19,15 +21,10 @@ class ShootingBeh final : public IShootable
 	buuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
-	float& _speed;
-	float& _bulletSpeed;
-	int& _bulletDamage;
-	double& _bulletDamageRadius;
-	int& _tier;
-	FPoint& _bulletSize;
 	UPoint& _windowSize;
 	std::string& _name;
 	std::string& _fraction;
+	BulletCalibre& _calibre;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -39,10 +36,9 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
-	ShootingBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, float& bulletSpeed, int& bulletDamage,
-				int& tier, double& damageRadius, FPoint& bulletSize, UPoint& windowSize, std::string& name,
+	ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
 				std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				const std::shared_ptr<BulletPool>& bulletPool);
+				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre);
 
 	~ShootingBeh() override;
 

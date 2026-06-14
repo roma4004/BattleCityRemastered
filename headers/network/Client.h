@@ -18,15 +18,19 @@ using boost::asio::ip::tcp;
 class Client final : public std::enable_shared_from_this<Client>
 {
 public:
-	Client(boost::asio::io_context& ioContext, const std::string& host, const std::string& port,
+	Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Client();
 
+	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
+
+private:
 	void Subscribe();
 	void Unsubscribe() const;
 
 	void ReadResponse();
+	void TryConnect();
 
 	void SendKeyState(const std::string& key, bool state);
 	void OnPositionChange(const std::shared_ptr<Command>& command);
@@ -35,6 +39,7 @@ public:
 	void OnDispose(const std::shared_ptr<Command>& command);
 	void OnStatisticsChange(const std::shared_ptr<Command>& command);
 	void OnKeyStateChange(const std::shared_ptr<Command>& command);
+	void OnGameStateChange(const std::shared_ptr<Command>& command);
 	void OnFortressChange(const std::shared_ptr<Command>& command);
 	void OnBonusSpawn(const std::shared_ptr<Command>& command);
 	void OnBonusDeSpawn(const std::shared_ptr<Command>& command);
@@ -48,14 +53,17 @@ public:
 	void ProcessReceivedData(const std::string& archiveData);
 	void SendCommand(const std::shared_ptr<Command>& command);
 
-	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
-
-private:
 	tcp::socket _socket;
+	boost::asio::steady_timer _reconnectTimer;
+	tcp::endpoint _endpoint;
 	boost::asio::streambuf _readBuffer{};
 	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name{};
 	network::NetworkCommandQueue _commandQueue;
+	bool _isConnected{false};
+	int _reconnectAttempts{0};
+	static constexpr int MaxReconnectAttempts{10};
+	static constexpr int ReconnectDelayMs{500};
 };
 }//namespace network::commands

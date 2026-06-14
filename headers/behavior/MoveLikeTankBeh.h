@@ -21,29 +21,28 @@ class MoveLikeTankBeh final : public IMoveBeh
 	UPoint& _windowSize;//TODO: subscribe on windows size change
 	std::string& _name;
 	std::string& _fraction;
-	std::vector<std::shared_ptr<BaseObj>>& _touchedObstacles;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
-
 	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
+	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetTouchedObjects(double deltaTime) const;
+	[[nodiscard]] ObjRectangle GetNextPosRect(double deltaTime) const;
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
-	[[nodiscard]] bool MoveLeft(double deltaTime) override;
-	[[nodiscard]] bool MoveRight(double deltaTime) override;
-	[[nodiscard]] bool MoveUp(double deltaTime) override;
-	[[nodiscard]] bool MoveDown(double deltaTime) override;
+protected:
+	[[nodiscard]] bool MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
 
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
-					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>& touchedObstacles,
-					std::vector<std::shared_ptr<BaseObj>>* allObjects);
+					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeTankBeh() override = default;
 
-	[[nodiscard]] bool Move(double deltaTime) override;
+	[[nodiscard]] bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
 
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
 };

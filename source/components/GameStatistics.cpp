@@ -2,7 +2,6 @@
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 
-//TODO: write statistics for pickuped bonuses
 GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
 	: _name{"Statistics"}
 	, _events{events}
@@ -61,6 +60,20 @@ void GameStatistics::SubscribeHost()
 			{
 				OnSteelWallDied(author, fraction);
 			});
+
+	_events->AddListener(
+			"Statistics_BonusPickup", _name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				OnBonusPickup(author, fraction);
+			});
+
+	_events->AddListener(
+			"Statistics_BonusDestroyed", _name,
+			[this](const std::string& author, const std::string& fraction)
+			{
+				OnBonusDestroyed(author, fraction);
+			});
 }
 
 void GameStatistics::SubscribeAsClient()
@@ -73,12 +86,7 @@ void GameStatistics::SubscribeAsClient()
 			});
 }
 
-void GameStatistics::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
-
-	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
-}
+void GameStatistics::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void GameStatistics::UnsubscribeAsHost() const
 {
@@ -88,6 +96,7 @@ void GameStatistics::UnsubscribeAsHost() const
 
 	_events->RemoveListener("Statistics_BrickWallDied", _name);
 	_events->RemoveListener("Statistics_SteelWallDied", _name);
+	_events->RemoveListener("Statistics_BonusPickup", _name);
 }
 
 void GameStatistics::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_Statistics", _name); }
@@ -147,23 +156,31 @@ void GameStatistics::OnClientStatisticsChange(const std::string& type, const std
 	{
 		OnSteelWallDied(author, fraction);
 	}
+	else if (type == "BonusPickup")
+	{
+		OnBonusPickup(author, fraction);
+	}
+	else if (type == "BonusDestroyed")
+	{
+		OnBonusDestroyed(author, fraction);
+	}
 }
 
 void GameStatistics::OnBulletHit(const std::string& author, const std::string& fraction)
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_bulletHitByEnemy;
+		++_data.bulletHitByEnemy;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1"))
 		{
-			++_bulletHitByPlayerOne;
+			++_data.bulletHitByPlayerOne;
 		}
 		else if (author.ends_with("2"))
 		{
-			++_bulletHitByPlayerTwo;
+			++_data.bulletHitByPlayerTwo;
 		}
 	}
 
@@ -177,17 +194,17 @@ void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fr
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_enemyHitByFriendlyFire;
+		++_data.enemyHitByFriendlyFire;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1"))
 		{
-			++_enemyHitByPlayerOne;
+			++_data.enemyHitByPlayerOne;
 		}
 		else if (author.ends_with("2"))
 		{
-			++_enemyHitByPlayerTwo;
+			++_data.enemyHitByPlayerTwo;
 		}
 	}
 
@@ -201,13 +218,13 @@ void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_playerOneHitByEnemyTeam;
+		++_data.playerOneHitByEnemyTeam;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
-			++_playerOneHitFriendlyFire;
+			++_data.playerOneHitFriendlyFire;
 		}
 	}
 
@@ -221,13 +238,13 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_playerTwoHitByEnemyTeam;
+		++_data.playerTwoHitByEnemyTeam;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
-			++_playerTwoHitFriendlyFire;
+			++_data.playerTwoHitFriendlyFire;
 		}
 	}
 
@@ -257,17 +274,17 @@ void GameStatistics::OnEnemyDied(const std::string& author, const std::string& f
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_enemyDiedByFriendlyFire;
+		++_data.enemyDiedByFriendlyFire;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1"))
 		{
-			++_enemyDiedByPlayerOne;
+			++_data.enemyDiedByPlayerOne;
 		}
 		else if (author.ends_with("2"))
 		{
-			++_enemyDiedByPlayerTwo;
+			++_data.enemyDiedByPlayerTwo;
 		}
 	}
 
@@ -281,13 +298,13 @@ void GameStatistics::OnPlayerOneDied(const std::string& author, const std::strin
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_playerDiedByEnemyTeam;
+		++_data.playerDiedByEnemyTeam;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
-			++_playerOneDiedByFriendlyFire;
+			++_data.playerOneDiedByFriendlyFire;
 		}
 	}
 
@@ -301,13 +318,13 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_playerDiedByEnemyTeam;
+		++_data.playerDiedByEnemyTeam;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
-			++_playerTwoDiedByFriendlyFire;
+			++_data.playerTwoDiedByFriendlyFire;
 		}
 	}
 
@@ -337,17 +354,17 @@ void GameStatistics::OnBrickWallDied(const std::string& author, const std::strin
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_brickWallDiedByEnemyTeam;
+		++_data.brickWallDiedByEnemyTeam;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1"))
 		{
-			++_brickWallDiedByPlayerOne;
+			++_data.brickWallDiedByPlayerOne;
 		}
 		else if (author.ends_with("2"))
 		{
-			++_brickWallDiedByPlayerTwo;
+			++_data.brickWallDiedByPlayerTwo;
 		}
 	}
 
@@ -361,17 +378,17 @@ void GameStatistics::OnSteelWallDied(const std::string& author, const std::strin
 {
 	if (fraction.starts_with("Enemy"))
 	{
-		++_steelWallDiedByEnemyTeam;
+		++_data.steelWallDiedByEnemyTeam;
 	}
 	else if (fraction.starts_with("Player"))
 	{
 		if (author.ends_with("1"))
 		{
-			++_steelWallDiedByPlayerOne;
+			++_data.steelWallDiedByPlayerOne;
 		}
 		else if (author.ends_with("2"))
 		{
-			++_steelWallDiedByPlayerTwo;
+			++_data.steelWallDiedByPlayerTwo;
 		}
 	}
 
@@ -381,31 +398,52 @@ void GameStatistics::OnSteelWallDied(const std::string& author, const std::strin
 	}
 }
 
-void GameStatistics::Reset()
+void GameStatistics::OnBonusPickup(const std::string& author, const std::string& fraction)
 {
-	_bulletHitByEnemy = 0;
-	_bulletHitByPlayerOne = 0;
-	_bulletHitByPlayerTwo = 0;
+	if (fraction.starts_with("Enemy"))
+	{
+		++_data.bonusPickupByEnemyTeam;
+	}
+	else if (fraction.starts_with("Player"))
+	{
+		if (author.ends_with("1"))
+		{
+			++_data.bonusPickupByPlayerOne;
+		}
+		else if (author.ends_with("2"))
+		{
+			++_data.bonusPickupByPlayerTwo;
+		}
+	}
 
-	_enemyHitByFriendlyFire = 0;
-	_enemyHitByPlayerOne = 0;
-	_enemyHitByPlayerTwo = 0;
-
-	_playerOneHitFriendlyFire = 0;
-	_playerOneHitByEnemyTeam = 0;
-
-	_playerTwoHitFriendlyFire = 0;
-	_playerTwoHitByEnemyTeam = 0;
-
-	_enemyDiedByFriendlyFire = 0;
-	_enemyDiedByPlayerOne = 0;
-	_enemyDiedByPlayerTwo = 0;
-
-	_playerOneDiedByFriendlyFire = 0;
-	_playerTwoDiedByFriendlyFire = 0;
-	_playerDiedByEnemyTeam = 0;
-
-	_brickWallDiedByEnemyTeam = 0;
-	_brickWallDiedByPlayerOne = 0;
-	_brickWallDiedByPlayerTwo = 0;
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_Statistics", "BonusPickup", author, fraction);
+	}
 }
+
+void GameStatistics::OnBonusDestroyed(const std::string& author, const std::string& fraction)
+{
+	if (fraction.starts_with("Enemy"))
+	{
+		++_data.bonusDestroyedByEnemyTeam;
+	}
+	else if (fraction.starts_with("Player"))
+	{
+		if (author.ends_with("1"))
+		{
+			++_data.bonusDestroyedByPlayerOne;
+		}
+		else if (author.ends_with("2"))
+		{
+			++_data.bonusDestroyedByPlayerTwo;
+		}
+	}
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_Statistics", "BonusDestroyed", author, fraction);
+	}
+}
+
+void GameStatistics::Reset() { _data = {}; }

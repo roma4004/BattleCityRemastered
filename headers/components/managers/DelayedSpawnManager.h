@@ -31,4 +31,5 @@ public:
 
 	void PreTickUpdate(double deltaTime);
 	void Disposer();
+	void SpawnDelayStart(std::shared_ptr<Tank>& tank, milliseconds delay);
 };

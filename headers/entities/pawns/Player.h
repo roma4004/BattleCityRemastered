@@ -11,14 +11,15 @@ class Player final : public Tank
 
 	std::unique_ptr<IInputProvider> _inputProvider{};
 
+protected:
 	void TickUpdate(double deltaTime) override;
+
+	void Enable() override;
+	void Disable() const override;
 
 public:
 	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
 		   std::unique_ptr<IInputProvider> inputProvider, bool enableByDefault = false);
 
 	~Player() override;
-
-	void Enable() override;
-	void Disable() const override;
 };

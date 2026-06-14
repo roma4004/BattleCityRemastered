@@ -2,6 +2,8 @@
 
 #include "Point.h"
 #include "managers/RespawnManager.h"
+#include "utils/Timer.h"
+#include <random>
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
@@ -29,7 +31,7 @@ class TankSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
-
+	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
 
 	void Subscribe();
@@ -37,13 +39,14 @@ class TankSpawner final
 
 	void Unsubscribe() const;
 	void UnsubscribeAsClient() const;
+	void Reset();
 
 	bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
 	bool SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
-	void SpawnTank(ObjRectangle rect, unsigned int color, int health, const std::string& name, std::string fraction,
-				   float speed, buuid uuid, TankType type, bool skipDelay = false);
+	void SpawnTank(ObjRectangle rect, int health, const std::string& name, std::string fraction, float speed,
+				   buuid uuid, TankType type, bool skipDelay = false);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
 

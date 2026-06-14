@@ -15,9 +15,6 @@ class Pawn : public BaseObj, public ITickUpdatable
 {
 	using buuid = boost::uuids::uuid;
 
-	virtual void UnsubscribeAsHost() const;
-	virtual void UnsubscribeAsClient() const;
-
 	virtual void SubscribeAsHost();
 	virtual void SubscribeAsClient();
 
@@ -56,6 +53,7 @@ public:
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);
 
-	[[nodiscard]] virtual bool Move(double deltaTime);
+	[[nodiscard]]
+	virtual bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime, bool isDirectionChange);
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 };

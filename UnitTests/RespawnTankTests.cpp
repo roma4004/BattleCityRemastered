@@ -139,10 +139,10 @@ TEST_F(TankSpawnerTest, PlayerTwoDiedRespawnCount)
 TEST_F(TankSpawnerTest, EnemyRunOutRespawnPoints)
 {
 	const int respawnCount = _tankSpawner->GetEnemyRespawnCount();
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
 
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < respawnCount; ++i)
 	{
+		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
 		constexpr bool skipDelay = true;
 		_tankSpawner->RespawnTanks(skipDelay);
 		_allObjects.pop_back();

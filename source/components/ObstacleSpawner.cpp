@@ -60,17 +60,7 @@ void ObstacleSpawner::SubscribeAsClient()
 			});
 }
 
-void ObstacleSpawner::Unsubscribe() const
-{
-	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("LoadMap", _name);
-	_events->RemoveListener("SpawnObstacle", _name);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-}
+void ObstacleSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void ObstacleSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_ObstacleSpawn", _name); }
 

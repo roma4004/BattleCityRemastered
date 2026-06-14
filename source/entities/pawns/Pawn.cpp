@@ -59,27 +59,7 @@ void Pawn::SubscribeTickUpdate()
 
 void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate", _nameWithUuid); }
 
-void Pawn::Unsubscribe() const
-{
-	// std::cout << "[" << "Pawn::Unsubscribe()" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
-
-	_gameMode == GameMode::PlayAsClient ? Pawn::UnsubscribeAsClient() : Pawn::UnsubscribeAsHost();
-}
-
-void Pawn::UnsubscribeAsHost() const
-{
-	UnsubscribeTickUpdate();
-}
-
-void Pawn::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _name + "Pos", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid);
-}
+void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void Pawn::TakeDamage(const int damage)
 {
@@ -101,13 +81,16 @@ float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
 
-bool Pawn::Move(const double deltaTime)
+bool Pawn::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime, bool isDirectionChange)
 {
-	const bool isMove = _moveBeh->Move(deltaTime);
-	if (isMove)
+	const bool isMove = _moveBeh->Move(outCollisions, deltaTime);
+
+	if (isDirectionChange || isMove)
 	{
+		//NOTE: dir can change outside
 		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
 
+		//NOTE: pos can change in this method
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
 			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);

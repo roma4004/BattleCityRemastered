@@ -6,10 +6,9 @@
 namespace network::commands
 {
 ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
-	: ServerHandler("127.0.0.1", "1234", events) {}
+	: ServerHandler(std::string("127.0.0.1"), 1234, events) {}
 
-ServerHandler::ServerHandler(const std::string& host, const std::string& port,
-							 const std::shared_ptr<EventSystem>& events)
+ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: _events{events}
 	, _name{"ServerHandler"}
 	, _server{_ioContext, host, port, events}
@@ -23,11 +22,13 @@ ServerHandler::ServerHandler(const std::string& host, const std::string& port,
 		}
 		catch (std::exception& e)
 		{
-			std::cerr << "thread " << e.what() << '\n';
+			std::cerr << "ServerHandler thread " << e.what() << '\n';
+			//TODO: write error to file
 		}
 		catch (...)
 		{
-			std::cerr << "thread error ..." << '\n';
+			std::cerr << "ServerHandler thread error ..." << '\n';
+			//TODO: write error to file
 		}
 	});
 

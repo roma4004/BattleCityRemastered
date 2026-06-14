@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Point.h"
+#include "entities/BulletCalibre.h"
 #include "interfaces/IMoveBeh.h"
 #include <boost/uuid/uuid.hpp>
-#include <functional>
 #include <memory>
 
 // enum class Direction : char8_t;
@@ -19,32 +19,28 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	buuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
-	float& _speed;
-	double& _bulletDamageRadius;
 	UPoint& _windowSize;
-	std::vector<std::shared_ptr<BaseObj>>& _bulletTargets;
+	BulletCalibre _calibre{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
-
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
-
-	[[nodiscard]] bool Move(double deltaTime) override;
-	[[nodiscard]] bool MoveLeft(double deltaTime) override;
-	[[nodiscard]] bool MoveRight(double deltaTime) override;
-	[[nodiscard]] bool MoveUp(double deltaTime) override;
-	[[nodiscard]] bool MoveDown(double deltaTime) override;
-
-	[[nodiscard]] ObjRectangle GetBulletPathRect(double deltaTime) const;
+	[[nodiscard]] ObjRectangle GetNextPos(double deltaTime) const;
 	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
+protected:
+	[[nodiscard]] bool MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+
 public:
-	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, double& damageRadius,
-					  UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
+	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, const BulletCalibre& calibre,
 					  std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;
 
+	[[nodiscard]] bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
 };

@@ -1,14 +1,18 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-			 const unsigned int color, std::string name, const buuid uuid, const GameMode gameMode,
-			 const BonusType bonusType)
-	: BaseObj{rect, color, 1, uuid, std::move(name), "Neutral"}
+			 std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
+	: BaseObj{BaseObjProperty{.rect = rect,
+							  .health = 1,
+							  .uuid = uuid,
+							  .name = std::move(name),
+							  .fraction = "Neutral"}}
 	, _creationTime{std::chrono::system_clock::now()}
 	, _events{events}
 	, _lifetime{lifeTime}
@@ -65,28 +69,13 @@ void Bonus::SubscribeAsClient()
 	});
 }
 
-void Bonus::Unsubscribe() const
-{
-	_gameMode == GameMode::PlayAsClient ? UnsubscribeAsClient() : UnsubscribeAsHost();
+void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
-
-void Bonus::UnsubscribeAsHost() const
-{
-	_events->RemoveListener("TickUpdate", _nameWithUuid);
-}
-
-void Bonus::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_BonusDeSpawn", _name);
-}
-
-void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name, _color); }
+void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name); }
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
+	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))//TODO: extract to BonusEffectManager
 	{
 		SetIsAlive(false);
 	}
@@ -94,10 +83,10 @@ void Bonus::TickUpdate(double /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(_name, author, fraction);
+	_events->EmitEvent("Statistics_BonusDestroyed", author, fraction);
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(_name, author, fraction);
+	_events->EmitEvent(_name + "_Pickup", author, fraction);
 }

@@ -4,176 +4,162 @@
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
+#include <algorithm>
 #include <memory>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid,
-									 double& damageRadius, UPoint& windowSize,
-									 std::vector<std::shared_ptr<BaseObj>>& bulletTargets,
-									 std::vector<std::shared_ptr<BaseObj>>* allObjects)
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize,
+									 const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
-	, _speed{speed}
-	, _bulletDamageRadius{damageRadius}
 	, _windowSize{windowSize}
-	, _bulletTargets{bulletTargets}
+	, _calibre{calibre}
 	, _allObjects{allObjects} {}
 
-//NOTE: Never user for bullets
+//NOTE: Never user for bullets but used for tanks
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(double /*deltaTime*/) const { return {}; }
 
-ObjRectangle MoveLikeBulletBeh::GetBulletPathRect(const double deltaTime) const
+ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 {
-	const float speed = _speed * static_cast<float>(deltaTime);
+	const float speed = _calibre.speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
 	if (_direction == Direction::UP)
 	{
-		return {.x = x, .y = y - speed, .w = w, .h = h + speed};
+		return ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
 	if (_direction == Direction::DOWN)
 	{
-		return {.x = x, .y = y, .w = w, .h = h + speed};
+		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
 	}
 
 	if (_direction == Direction::LEFT)
 	{
-		//TODO: write bullet test that can damage tank from all sides
-		return {.x = x - speed, .y = y, .w = w + speed, .h = h};
+		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
 	}
 
 	//_direction == RIGHT
-	return {.x = x, .y = y, .w = w + speed, .h = h};
+	return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
 }
 
 FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 {
-	const float speed = _speed * static_cast<float>(deltaTime);
+	const float speed = _calibre.speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
 	if (_direction == Direction::UP)
 	{
-		return {.x = x, .y = y - speed};
+		return FPoint{.x = x, .y = y - speed};
 	}
 
 	if (_direction == Direction::DOWN)
 	{
-		return {.x = x, .y = y + speed};
+		return FPoint{.x = x, .y = y + speed};
 	}
 
 	if (_direction == Direction::LEFT)
 	{
-		return {.x = x - speed, .y = y};//TODO: write bullet test that can damage tank from all sides
+		return FPoint{.x = x - speed, .y = y};//TODO: write bullet test that can damage tank from all sides
 	}
 
 	//_direction == Direction::RIGHT
-	return {.x = x + speed, .y = y};
+	return FPoint{.x = x + speed, .y = y};
 }
 
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
 {
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)//TODO: std::all_of
+	const ObjRectangle nextPosRect = GetNextPos(deltaTime);
+
+	return std::ranges::none_of(*_allObjects, [uuid = _uuid, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		if (_uuid == object->GetUuid())
-		{
-			continue;
-		}
-
-		if (ColliderUtils::IsCollide(GetBulletPathRect(deltaTime), object->GetRect()))
-		{
-			if (!object->GetIsPenetrable())
-			{
-				return false;
-				//TODO: fix move to a bonus though water
-			}
-		}
-	}
-
-	return true;
+		return uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(nextPosRect, object->GetRect())
+			   && !object->GetIsPenetrable();
+	});
 }
 
-bool MoveLikeBulletBeh::Move(const double deltaTime)
+bool MoveLikeBulletBeh::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
-	const float speed = _speed * static_cast<float>(deltaTime);
+	const float speed = _calibre.speed * static_cast<float>(deltaTime);
 	const Direction direction = _direction;
 	if (direction == Direction::UP && _rect.y - speed >= 0.0f)
 	{
-		return MoveUp(deltaTime);
+		return MoveUp(outCollisions, deltaTime);
 	}
 
 	if (direction == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_windowSize.y))
 	{
-		return MoveDown(deltaTime);
+		return MoveDown(outCollisions, deltaTime);
 	}
 
 	if (direction == Direction::LEFT && _rect.x - speed >= 0.0f)
 	{
-		return MoveLeft(deltaTime);
+		return MoveLeft(outCollisions, deltaTime);
 	}
 
 	if (constexpr int sideBarWidth = 175;//TODO: move sidebar width to params
 		direction == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_windowSize.x) - sideBarWidth)
 	{
-		return MoveRight(deltaTime);
+		return MoveRight(outCollisions, deltaTime);
 	}
 
 	// Self-destroy with deal damage when the edge of windows is reached
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveLeft(const double deltaTime)
+bool MoveLikeBulletBeh::MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.x += -_speed * static_cast<float>(deltaTime);
+		_rect.x += -_calibre.speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveRight(const double deltaTime)
+bool MoveLikeBulletBeh::MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.x += _speed * static_cast<float>(deltaTime);
+		_rect.x += _calibre.speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveUp(const double deltaTime)
+bool MoveLikeBulletBeh::MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.y += -_speed * static_cast<float>(deltaTime);
+		_rect.y += -_calibre.speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveDown(const double deltaTime)
+bool MoveLikeBulletBeh::MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
 {
 	if (IsCanMove(deltaTime))
 	{
-		_rect.y += _speed * static_cast<float>(deltaTime);
+		_rect.y += _calibre.speed * static_cast<float>(deltaTime);
 
 		return true;
 	}
 
-	_bulletTargets = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
 
 	return false;
 }
@@ -181,23 +167,13 @@ bool MoveLikeBulletBeh::MoveDown(const double deltaTime)
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(const FPoint blowCenter) const
 {
-	std::vector<std::shared_ptr<BaseObj>> aoeCollisions{};
-	constexpr int defaultCollisionReserve{5};
-	aoeCollisions.reserve(defaultCollisionReserve);
+	const Circle circle{.center = blowCenter, .radius = _calibre.damageRadius};
 
-	const Circle circle{.center = blowCenter, .radius = _bulletDamageRadius};
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	auto collisions = *_allObjects | std::views::filter([this, &circle](const std::shared_ptr<BaseObj>& obj)
 	{
-		if (_uuid == object->GetUuid())
-		{
-			continue;
-		}
+		return obj->GetUuid() != _uuid
+			   && ColliderUtils::IsCollide(circle, obj->GetRect());
+	});
 
-		if (ColliderUtils::IsCollide(circle, object->GetRect()))
-		{
-			aoeCollisions.emplace_back(object);
-		}
-	}
-
-	return aoeCollisions;
+	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
 }

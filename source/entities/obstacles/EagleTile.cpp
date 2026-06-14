@@ -4,14 +4,7 @@
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect,
-			   0x1e90ff,
-			   1,
-			   "Eagle",
-			   events,
-			   uuid,
-			   gameMode,
-			   ObstacleType::Eagle}
+	: Obstacle{rect, 1, "Eagle", events, uuid, gameMode, ObstacleType::Eagle}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -32,7 +25,4 @@ void EagleTile::Subscribe()
 	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
-void EagleTile::Unsubscribe() const
-{
-	_events->RemoveListener("Draw", _nameWithUuid);
-}
+void EagleTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

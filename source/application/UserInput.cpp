@@ -25,17 +25,12 @@ UserInput::~UserInput()
 
 void UserInput::Subscribe()
 {
-	_events->AddListener("Pause_Status", _name, [this](const bool newPauseStatus) { this->_isPause = newPauseStatus; });
+	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
 	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
 }
 
-void UserInput::Unsubscribe() const
-{
-	_events->RemoveListener("Pause_Status", _name);
-	_events->RemoveListener("Tab_Released", _name);
-	_events->RemoveListener("PreTickUpdate", _name);
-}
+void UserInput::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {
@@ -132,8 +127,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		// const int rowSize = env.windowWidth; ???
 
 		if (x < 1 || y < 1
-			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1)
-			{}
+			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1) {}
 	}
 }
 
@@ -235,6 +229,10 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 				break;
 			case SDL_CONTROLLER_BUTTON_Y:
 				_events->EmitEvent(controllerTag + "_Y", isPressed);
+				if (isPressed == false)
+				{
+					_events->EmitEvent("Tab_Released");
+				}
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
 				_events->EmitEvent(controllerTag + "_Move_Up", isPressed);

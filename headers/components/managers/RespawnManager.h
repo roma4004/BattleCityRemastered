@@ -17,7 +17,7 @@ class RespawnManager final
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
-	std::vector<int> _respawnCount{20, 3, 3};
+	std::vector<unsigned short> _respawnCount{20, 3, 3};
 
 	struct SpawnSlot
 	{
@@ -26,10 +26,10 @@ class RespawnManager final
 	};
 
 	GameMode _gameMode{};
-	int _enemiesSpawnCount{0};
-	int _enemiesDeathCount{0};
-	int _playersSpawnCount{0};
-	int _playersDeathCount{0};
+	unsigned short _enemiesSpawnCount{0};
+	unsigned short _enemiesDeathCount{0};
+	unsigned short _playersSpawnCount{0};
+	unsigned short _playersDeathCount{0};
 
 	void OnBonusTank(const std::string& author);
 	void OnClientRespawn(TankType type);
@@ -48,7 +48,7 @@ class RespawnManager final
 	void OnGameModeChange();
 
 	static std::string RespawnCountEnumToString(RespawnCount type);
-	void ChangeRespawnCount(int delta, RespawnCount type);
+	void ChangeRespawnCount(unsigned short delta, RespawnCount type);
 	void TriggerLastPlayersLife();
 
 	void OnTankSpawn(const buuid& uuid);

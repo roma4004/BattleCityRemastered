@@ -18,16 +18,10 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
-	int _bulletDamage{1};
 	int _bulletHealth{1};
-	unsigned int _bulletColor{0xffffff};
-	FPoint _bulletSize;
-	float _bulletSpeed{300.f};
 	float _gridSize{1};
-	float _bulletWidth{6.f};
-	float _bulletHeight{5.f};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	double _bulletDamageRadius{12.0};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 3, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -35,15 +29,13 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
-		_bulletSize = FPoint{.x = 6.f, .y = 5.f};
 
 		std::string name{"Bullet1"};
 		std::string fraction{"PlayerTeam"};
 		std::string author{"Player1"};
-		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _bulletSize.x, .h = _bulletSize.y};
+		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
-				.color = _bulletColor,
 				.health = _bulletHealth,
 				.uuid = _uuid,
 				.name = std::move(name),
@@ -53,7 +45,7 @@ protected:
 				.allObjects = &_allObjects,
 				.events = _events,
 				.tier = 3,
-				.speed = _bulletSpeed,
+				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
@@ -61,9 +53,7 @@ protected:
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(
-						std::move(pawnProperty), _bulletDamage, _bulletDamageRadius, std::move(author),
-						enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
 	}
 
 	void TearDown() override
@@ -76,7 +66,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
 	if (/*auto&& bullet = */dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
-		ObjRectangle wallRect = {.x = 0.f, .y = _bulletSize.y + 1, .w = _gridSize, .h = _gridSize};
+		ObjRectangle wallRect = {.x = 0.f, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameMode));
 
 		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))

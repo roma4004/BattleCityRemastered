@@ -2,6 +2,7 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
+#include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/RenderManager.h"
@@ -9,7 +10,6 @@
 #include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
-#define ASIO_STANDALONE //NOTE: must be above network
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
@@ -17,12 +17,6 @@
 #include <memory>
 //#include <fstream>
 #include <boost/uuid/uuid_io.hpp>
-
-//#ifdef _WIN32
-//#define _WIN32_WINNT 0x0A00
-//#endif
-
-//TODO: can't start game if no sound device on PC
 
 class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
@@ -40,12 +34,14 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _renderManager{std::move(renderManager)}
 	, _rightSideBar{std::move(rightSideBar)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(windowSize, events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
 	ResetBattlefieldTo(GameMode::Demo);
+	_events->EmitEvent("ShowMenu", true);
 }
 
 GameSuccess::~GameSuccess()
@@ -56,7 +52,6 @@ GameSuccess::~GameSuccess()
 void GameSuccess::Subscribe()
 {
 	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
-	_events->AddListener("ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
 	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
 	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
@@ -67,16 +62,7 @@ void GameSuccess::Subscribe()
 	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
 }
 
-void GameSuccess::Unsubscribe() const
-{
-	_events->RemoveListener("PreviousGameMode", _name);
-	_events->RemoveListener("ClientReadyToStartGame", _name);
-	_events->RemoveListener("NextGameMode", _name);
-	_events->RemoveListener("ResetBattlefield", _name);
-	_events->RemoveListener("GameModeChangedTo", _name);//TODO: add host\client branch subscription
-	_events->RemoveListener("PostTickUpdate", _name);
-	_events->RemoveListener("DeltaTime", _name);
-}
+void GameSuccess::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {
@@ -85,16 +71,11 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 
 	_events->EmitEvent("Reset");
 
-	if (gameMode == GameMode::PlayAsClient || gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
-	}
-
 	SetCurrentGameMode(gameMode);
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("LoadMap");
+		_events->EmitEvent("LoadMap");//TODO: move to obstacle spawner which should spawn when unpause 
 	}
 
 	if (gameMode == GameMode::PlayAsClient)
@@ -238,15 +219,18 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
+		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
+		_events->AddListener("ServerReceive_ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
+		_events->RemoveListener("ServerReceive_ClientReadyToStartGame", _name);
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else
 	{
+		_events->RemoveListener("ServerReceive_ClientReadyToStartGame", _name);
 		_networkNode = nullptr;
 	}
 }
-

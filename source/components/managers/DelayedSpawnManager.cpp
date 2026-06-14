@@ -19,25 +19,10 @@ void DelayedSpawnManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
-	_events->AddListener(
-			"SpawnDelayStart", _name,
-			[this](std::shared_ptr<Tank> tank, const milliseconds delay)
-			{
-				if (!tank)
-				{
-					return;
-				}
-
-				if (delay == milliseconds(0))
-				{
-					this->_events->EmitEvent("SpawnEnabled", tank);
-					// NOTE: immediate call, for tests
-				}
-				else
-				{
-					this->_spawnDelays.emplace_back(tank, Timer{delay, std::chrono::system_clock::now()});
-				}
-			});
+	_events->AddListener("SpawnDelayStart", _name, [this](std::shared_ptr<Tank> tank, const milliseconds delay)
+	{
+		this->SpawnDelayStart(tank, delay);
+	});
 
 	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
 
@@ -78,4 +63,22 @@ void DelayedSpawnManager::Disposer()
 	{
 		return delay.timer.isActive == false;
 	});
+}
+
+void DelayedSpawnManager::SpawnDelayStart(std::shared_ptr<Tank>& tank, const milliseconds delay)
+{
+	if (!tank)
+	{
+		return;
+	}
+
+	if (delay == milliseconds{0})
+	{
+		this->_events->EmitEvent("SpawnEnabled", tank);
+		// NOTE: immediate call, for tests
+	}
+	else
+	{
+		this->_spawnDelays.emplace_back(tank, Timer{delay, std::chrono::system_clock::now()});
+	}
 }

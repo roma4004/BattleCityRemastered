@@ -3,8 +3,10 @@
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "entities/BulletCalibre.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include "interfaces/IPickupableBonus.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
 	: Pawn{std::move(pawnProperty)}
@@ -14,11 +16,14 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	BaseObj::SetIsPenetrable(false);
 
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction,
-												 _touchedObstacles, _allObjects);
-
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _speed, _uuid, _bulletSpeed, _bulletDamage, _tier,
-												 _bulletDamageRadius, _bulletSize, _windowSize, _name, _fraction,
-												 _allObjects, bulletPool);
+												 _allObjects);
+	_calibre = BulletCalibre{.speed = 300.f,
+							 .damage = 15,
+							 .damageRadius = 18.f,
+							 .tier = _tier,
+							 .size{.x = 9.f, .y = 9.f}};
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _windowSize, _name, _fraction, _allObjects,
+												 bulletPool, _calibre);
 
 	if (enableByDefault)
 	{
@@ -37,14 +42,14 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	}
 
 	_events->AddListener(
-				"BonusHelmet_EffectOnOff", _nameWithUuid,
-				[this](const bool isEnabled, const std::string& name)
+			"BonusHelmet_EffectOnOff", _nameWithUuid,
+			[this](const bool isEnabled, const std::string& name)
+			{
+				if (name == this->_name)
 				{
-					if (name == this->_name)
-					{
-						this->_effects.isHelmetActive = isEnabled;
-					}
-				});
+					this->_effects.isHelmetActive = isEnabled;
+				}
+			});
 
 	_events->AddListener(
 			"BonusTimer_EffectOnOff", _nameWithUuid,
@@ -83,7 +88,7 @@ void Tank::Subscribe()
 	{
 		if (!this->_effects.isHelmetActive)
 		{
-			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth(), this->GetColor());
+			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
 		}
 	});
 
@@ -104,17 +109,17 @@ void Tank::SubscribeAsClient()
 				this->Shot(uuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid, [this](const bool isActive)
+	_events->AddListener("ClientReceived_" + _name + "BonusHelmet_Pickup", _nameWithUuid, [this](const bool isActive)
 	{
 		this->_effects.isHelmetActive = isActive;
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnStar", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_" + _name + "BonusStar_Pickup", _nameWithUuid, [this]()
 	{
 		this->OnBonusStar(this->_name);
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_" + _name + "BonusCaliber_Pickup", _nameWithUuid, [this]()
 	{
 		this->OnBonusCaliber(this->_name);
 	});
@@ -123,33 +128,33 @@ void Tank::SubscribeAsClient()
 void Tank::SubscribeBonus()
 {
 	_events->AddListener(
-			"BonusTimerStatusChange", _nameWithUuid,
+			"BonusTimer_StatusChange", _nameWithUuid,
 			[this](const std::string& fraction, const bool isActive)
 			{
 				this->OnBonusTimer(fraction, isActive);
 			});
 
 	_events->AddListener(
-			"BonusHelmetStatusChange", _nameWithUuid,
+			"BonusHelmet_StatusChange", _nameWithUuid,
 			[this](const std::string& name, const bool isActive)
 			{
 				this->OnBonusHelmet(name, isActive);
 			});
 
 	_events->AddListener(
-			"BonusGrenade", _nameWithUuid,
+			"BonusGrenade_Pickup", _nameWithUuid,
 			[this](const std::string& /*author*/, const std::string& fraction)
 			{
 				this->OnBonusGrenade(fraction);
 			});
 
-	_events->AddListener("BonusStar", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
+	_events->AddListener("BonusStar_Pickup", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusStar(author);
 	});
 
 	_events->AddListener(
-			"BonusCaliber", _nameWithUuid,
+			"BonusCaliber_Pickup", _nameWithUuid,
 			[this](const std::string& author, const std::string& /*fraction*/)
 			{
 				this->OnBonusCaliber(author);
@@ -159,41 +164,7 @@ void Tank::SubscribeBonus()
 void Tank::Unsubscribe() const
 {
 	Pawn::Unsubscribe();
-
-	_events->RemoveListener("PostDraw", _nameWithUuid);
-
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		UnsubscribeAsClient();
-	}
-
-	UnsubscribeBonus();
-
-	// NOTE: should be in destructor to be able to unsubscribe in this case
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		_events->RemoveListener("ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid);
-	}
-
-	_events->RemoveListener("BonusHelmet_EffectOnOff", _nameWithUuid);
-	_events->RemoveListener("BonusTimer_EffectOnOff", _nameWithUuid);	
-}
-
-void Tank::UnsubscribeAsClient() const
-{
-	_events->RemoveListener("ClientReceived_" + _name + "Shot", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnBonusHelmet", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnStar", _nameWithUuid);
-	_events->RemoveListener("ClientReceived_" + _name + "OnCaliber", _nameWithUuid);
-}
-
-void Tank::UnsubscribeBonus() const
-{
-	_events->RemoveListener("BonusTimerStatusChange", _nameWithUuid);
-	_events->RemoveListener("BonusHelmetStatusChange", _nameWithUuid);
-	_events->RemoveListener("BonusGrenade", _nameWithUuid);
-	_events->RemoveListener("BonusStar", _nameWithUuid);
-	_events->RemoveListener("BonusCaliber", _nameWithUuid);
+	_events->RemoveAllListeners(_nameWithUuid);
 }
 
 void Tank::Enable()
@@ -239,25 +210,25 @@ void Tank::Shot(const buuid withUuid) const
 	}
 }
 
-float Tank::GetBulletWidth() const { return _bulletSize.x; }
+float Tank::GetBulletWidth() const { return _calibre.size.x; }
 
-void Tank::SetBulletWidth(const float bulletWidth) { _bulletSize.x = bulletWidth; }
+void Tank::SetBulletWidth(const float bulletWidth) { _calibre.size.x = bulletWidth; }
 
-float Tank::GetBulletHeight() const { return _bulletSize.y; }
+float Tank::GetBulletHeight() const { return _calibre.size.y; }
 
-void Tank::SetBulletHeight(const float bulletHeight) { _bulletSize.y = bulletHeight; }
+void Tank::SetBulletHeight(const float bulletHeight) { _calibre.size.y = bulletHeight; }
 
-float Tank::GetBulletSpeed() const { return _bulletSpeed; }
+float Tank::GetBulletSpeed() const { return _calibre.speed; }
 
-void Tank::SetBulletSpeed(const float bulletSpeed) { _bulletSpeed = bulletSpeed; }
+void Tank::SetBulletSpeed(const float bulletSpeed) { _calibre.speed = bulletSpeed; }
 
-int Tank::GetBulletDamage() const { return _bulletDamage; }
+int Tank::GetBulletDamage() const { return _calibre.damage; }
 
-void Tank::SetBulletDamage(const int bulletDamage) { _bulletDamage = bulletDamage; }
+void Tank::SetBulletDamage(const int bulletDamage) { _calibre.damage = bulletDamage; }
 
-double Tank::GetBulletDamageRadius() const { return _bulletDamageRadius; }
+double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
 
-void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _bulletDamageRadius = bulletDamageRadius; }
+void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
 
 void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
 {
@@ -280,10 +251,9 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	{
 		_effects.isHelmetActive = isActive;
 
-		//TODO: move replication to bonusEffectManager
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_OnBonusHelmet", _name, isActive);
+			_events->EmitEvent("ServerSend_BonusHelmet_Pickup", _name, isActive);
 		}
 	}
 }
@@ -309,14 +279,14 @@ void Tank::OnBonusStar(const std::string& author)
 		++_tier;
 
 		_speed *= 1.10f;
-		_bulletSpeed *= 1.10f;
-		_bulletDamage += 15;
+		_calibre.speed *= 1.10f;
+		_calibre.damage += 15;
+		_calibre.damageRadius *= 1.25f;
 		_fireCooldown -= milliseconds{150};
-		_bulletDamageRadius *= 1.25f;
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_OnStar", author);
+			_events->EmitEvent("ServerSend_BonusStar_Pickup", author);
 		}
 	}
 }
@@ -334,14 +304,14 @@ void Tank::OnBonusCaliber(const std::string& author)
 		_tier += 3;
 
 		_speed *= 1.30f;
-		_bulletSpeed *= 1.30f;
-		_bulletDamage += 45;
+		_calibre.speed *= 1.30f;
+		_calibre.damage += 45;
+		_calibre.damageRadius *= 1.75f;
 		_fireCooldown -= milliseconds{450};
-		_bulletDamageRadius *= 1.75f;
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_OnCaliber", author);
+			_events->EmitEvent("ServerSend_BonusCaliber", author);
 		}
 	}
 }
@@ -362,5 +332,16 @@ void Tank::SendDamageStatistics(const std::string& author, const std::string& fr
 	{
 		//TODO: move to event from statistic when last tank died
 		_events->EmitEvent("Statistics_TankDied", _name, author, fraction);
+	}
+}
+
+void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
+{
+	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
+	{
+		bonus->PickUpBonus(_name, _fraction);
+		_events->EmitEvent("Statistics_BonusPickup", _name, _fraction);
+		//TODO: on destroy bonus emit PickUpBonus
+		object->TakeDamage(1);
 	}
 }

@@ -25,27 +25,23 @@ class Menu final
 	int _playerOneRepawnCount{3};
 	int _playerTwoRespawnCount{3};
 	GameMode _selectedGameMode{};
-	bool _isMenuDisplayed{true};
+	bool _isMenuDisplayed{false};
 
 	void Subscribe();
 	void Unsubscribe() const;
 
-	void RenderStatistics(Point pos) const;
-	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, int player1, int player2,
-								 int enemy = -1) const;
-	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
-								 const std::string& text3) const;
-	void DrawTextLine(Point& posText, bool isSelected, std::string text) const;
-	void DrawText() const;
-
-	void OnRespawnCountChanged(const std::string& objectName, int respawnCount);
+	void DrawTextLine(Point& posText, std::string text) const;
+	void DrawMenuText() const;
+	void DrawMenuLine(Point& posText, bool isSelected, std::string text) const;
+	void DrawControlHints() const;
+	void DisplayMenu(bool isDisplayed);
 
 public:
 	Menu(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
 
 	~Menu();
 
-	void DrawMenu();
+	void Draw();
 
 	[[nodiscard]] MenuKeys GetKeysStats() const { return _input->GetKeysStats(); }
 };

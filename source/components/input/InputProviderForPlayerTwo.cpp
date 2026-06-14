@@ -19,14 +19,7 @@ void InputProviderForPlayerTwo::Subscribe()
 
 }
 
-void InputProviderForPlayerTwo::Unsubscribe() const
-{
-	_events->RemoveListener("P2_Move_Up", _name);
-	_events->RemoveListener("P2_Move_Left", _name);
-	_events->RemoveListener("P2_Move_Down", _name);
-	_events->RemoveListener("P2_Move_Right", _name);
-	_events->RemoveListener("P2_Fire", _name);
-}
+void InputProviderForPlayerTwo::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void InputProviderForPlayerTwo::Enable()
 {
