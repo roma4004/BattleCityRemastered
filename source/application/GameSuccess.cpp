@@ -19,6 +19,7 @@
 #include <boost/uuid/uuid_io.hpp>
 
 class BaseObj;
+
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
@@ -32,9 +33,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)}
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
 	, _renderManager{std::move(renderManager)}
-	, _rightSideBar{std::move(rightSideBar)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(windowSize, events)}
+	, _rightSideBar{std::move(rightSideBar)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {

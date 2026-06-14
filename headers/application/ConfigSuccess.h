@@ -10,7 +10,7 @@ class ConfigSuccess final : public IConfig
 	UPoint _windowSize{};
 
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<TTF_Font> _fpsFont{nullptr};
+	std::shared_ptr<TTF_Font> _font{nullptr};
 	std::shared_ptr<SDL_Texture> _logo{nullptr};
 	std::shared_ptr<SDL_Texture> _atlas{nullptr};
 	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
@@ -26,7 +26,7 @@ public:
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
 	ConfigSuccess(UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
-				  const std::shared_ptr<TTF_Font>& fpsFont, const std::shared_ptr<SDL_Texture>& logo,
+				  const std::shared_ptr<TTF_Font>& font, const std::shared_ptr<SDL_Texture>& logo,
 				  const std::shared_ptr<SDL_Texture>& atlas, const std::shared_ptr<SDL_Texture>& joyIcon,
 				  const std::shared_ptr<SDL_Texture>& xBoxHint, const std::shared_ptr<SDL_Texture>& pS5Hint,
 				  bool isVsyncOn);

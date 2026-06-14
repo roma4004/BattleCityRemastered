@@ -11,10 +11,10 @@ class RightSideBar
 	UPoint _windowSize;
 	bool _isRightSideBarEnabled{false};
 	bool _isEnemyIconEnabled{false};
-	int _enemiesRespawnCount{};
-	int _playerOneRespawnCount{};
-	int _playerTwoRespawnCount{};
-	int _currentStageNumber{1};
+	unsigned short _enemiesRespawnCount{};
+	unsigned short _playerOneRespawnCount{};
+	unsigned short _playerTwoRespawnCount{};
+	unsigned short _stageNumber{1};
 	std::string _objectName{};
 	GameMode _gameMode{};
 
@@ -22,7 +22,7 @@ class RightSideBar
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	void Subscribe();
-	void Unsubscribe();
+	void Unsubscribe() const;
 
 public:
 	RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>& events);

@@ -50,10 +50,10 @@ class RenderManager
 	void DrawGameOverText() const;
 	void DrawGameWonText() const;
 	void DrawRightSideBar();
-	void DrawEnemyIcons(int NumberOfIcons) const;
-	void DrawPlayerOneIcons(int respawnCount) const;
-	void DrawPlayerTwoIcons(int respawnCount) const;
-	void DrawCurrentStage(int currentStageNumber) const;
+	void DrawEnemyIcons(int numberOfIcons) const;
+	void DrawPlayerOneIcons(unsigned short respawnCount) const;
+	void DrawPlayerTwoIcons(unsigned short respawnCount) const;
+	void DrawStageNumber(unsigned short currentStageNumber) const;
 
 	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
@@ -69,7 +69,7 @@ class RenderManager
 	void DrawXBoxHint(Point pos) const;
 	void DrawPS5Hint(Point pos) const;
 	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
-	void TextToRender(const Point& pos, const SDL_Color& color, int value, std::shared_ptr<TTF_Font> font) const;
+	void TextToRender(const Point& pos, const SDL_Color& color, int value, const std::shared_ptr<TTF_Font>& font) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
 	void PregenerateMenuBackgroundTexture();
 

@@ -176,8 +176,7 @@ void RespawnManager::ChangeRespawnCount(const unsigned short delta, RespawnCount
 	const auto id = static_cast<size_t>(type);
 	_respawnCount[id] += delta;
 
-	const std::string tankIconType = RespawnCountEnumToString(type);
-	_events->EmitEvent("RespawnCountChangedTo", tankIconType, _respawnCount[id]);
+	_events->EmitEvent("RespawnCountChangedTo", RespawnCountEnumToString(type), _respawnCount[id]);
 }
 
 void RespawnManager::TriggerLastPlayersLife()

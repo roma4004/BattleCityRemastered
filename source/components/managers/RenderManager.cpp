@@ -105,47 +105,32 @@ void RenderManager::Subscribe()
 
 	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });
 
-	_events->AddListener(
-			"RenderHealthBar", _name,
-			[this](const ObjRectangle rect, const int health)
-			{
-				this->DrawHealthBar(rect, health);
-			});
+	_events->AddListener("RenderHealthBar", _name, [this](const ObjRectangle rect, const int health)
+	{
+		this->DrawHealthBar(rect, health);
+	});
 
-	_events->AddListener(
-		"RenderRightSideBar", _name,
-		[this]()
-		{
-			this->DrawRightSideBar();
-		});
+	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
 
-	_events->AddListener(
-		"RenderEnemyIcons", _name,
-		[this](int respawnCount)
-		{
-			this->DrawEnemyIcons(respawnCount);
-		});
+	_events->AddListener("RenderEnemyIcons", _name, [this](const unsigned short respawnCount)
+	{
+		this->DrawEnemyIcons(respawnCount);
+	});
 
-	_events->AddListener(
-		"RenderPlayerOneIcon", _name, 
-		[this](const int respawnCount)
-		{
-			this->DrawPlayerOneIcons(respawnCount);
-		});
+	_events->AddListener("RenderPlayerOneIcon", _name, [this](const unsigned short respawnCount)
+	{
+		this->DrawPlayerOneIcons(respawnCount);
+	});
 
-	_events->AddListener(
-		"RenderPlayerTwoIcon", _name, 
-		[this](const int respawnCount)
-		{
-			this->DrawPlayerTwoIcons(respawnCount);
-		});
+	_events->AddListener("RenderPlayerTwoIcon", _name, [this](const unsigned short respawnCount)
+	{
+		this->DrawPlayerTwoIcons(respawnCount);
+	});
 
-	_events->AddListener(
-		"RenderCurrentStageNumber", _name,
-		[this](const int currentStageNumber)
-		{
-			this->DrawCurrentStage(currentStageNumber);
-		});
+	_events->AddListener("RenderStageNumber", _name, [this](const unsigned short stageNumber)
+	{
+		this->DrawStageNumber(stageNumber);
+	});
 }
 
 void RenderManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -185,84 +170,84 @@ void RenderManager::DrawGameWonText() const
 
 void RenderManager::DrawRightSideBar()
 {
-	constexpr TextureOffset offset{};
 	SDL_Texture* colorTexture = CreateColorTexture(0x808080);
-	constexpr SDL_Rect rect {.x = 625, .y = 0, .w = 220, .h = 600};
+	constexpr SDL_Rect rect{.x = 625, .y = 0, .w = 220, .h = 600};
 
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &rect);
 }
 
-void RenderManager::DrawEnemyIcons(int NumberOfIcons) const
+void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 {
 	constexpr TextureOffset offset{};
-	SDL_Rect srcrect{
-		static_cast<int>(offset.enemyIcon.x),
-		static_cast<int>(offset.enemyIcon.y),
-		static_cast<int>(offset.enemyIcon.w),
-		static_cast<int>(offset.enemyIcon.h)};
+	constexpr SDL_Rect srcRect{
+			.x = static_cast<int>(offset.enemyIcon.x),
+			.y = static_cast<int>(offset.enemyIcon.y),
+			.w = static_cast<int>(offset.enemyIcon.w),
+			.h = static_cast<int>(offset.enemyIcon.h)};
 
-	for (int i = 0; i < NumberOfIcons; ++i)
+	for (int i = 0; i < numberOfIcons; ++i)
 	{
-		const int columns = 2;
-		const int rows = NumberOfIcons / columns;
-		const int distanceBetweenColumns = 80;
-		const int verticalDistanceBetweenDecals = 200;
-		const ObjRectangle rect{.x = 680, .y = 65, .w = 30, .h = 60};
-		int imageWidth{static_cast<int>(rect.w)}, imageHeight{static_cast<int>(rect.h)};
+		constexpr int columns = 2;
+		constexpr int rows = 10;
+		constexpr int distanceBetweenColumns = 80;
+		constexpr int verticalDistanceBetweenDecals = 200;
+		constexpr ObjRectangle rect{.x = 680, .y = 65, .w = 30, .h = 60};
+		constexpr int imageWidth{static_cast<int>(rect.w)};
+		constexpr int imageHeight{static_cast<int>(rect.h)};
 
-		int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
-		int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
-		const int leftUpCornerX = 675;
-		const int leftUpCornerY = 95;
+		constexpr int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
+		constexpr int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
+		constexpr int leftUpCornerX = 675;
+		constexpr int leftUpCornerY = 95;
 
-		int row = i / columns;
+		const int row = i / columns;
 		const int col = i % columns;
-		int xAxis = leftUpCornerX + spacingX + col * (imageWidth + spacingX);
-		int yAxis = leftUpCornerY + spacingY + row * (imageHeight + spacingY);
+		const int xAxis = leftUpCornerX + spacingX + col * (imageWidth + spacingX);
+		const int yAxis = leftUpCornerY + spacingY + row * (imageHeight + spacingY);
 
-		SDL_Rect destRect = {xAxis, yAxis, imageWidth, imageHeight};
-		SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcrect, &destRect);
+		SDL_Rect destRect = {.x = xAxis, .y = yAxis, .w = imageWidth, .h = imageHeight};
+		SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &destRect);
 	}
 }
 
-void RenderManager::DrawPlayerOneIcons(int respawnCount) const
+void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 {
 	constexpr TextureOffset offset{};
-	SDL_Rect srcRect{
-		static_cast<int>(offset.playerOneIcon.x),
-		static_cast<int>(offset.playerOneIcon.y),
-		static_cast<int>(offset.playerOneIcon.w),
-		static_cast<int>(offset.playerOneIcon.h)};
-	constexpr SDL_Rect rect {.x = 679, .y =350, .w = 70, .h = 70};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	constexpr SDL_Rect srcRect{
+			.x = static_cast<int>(offset.playerOneIcon.x),
+			.y = static_cast<int>(offset.playerOneIcon.y),
+			.w = static_cast<int>(offset.playerOneIcon.w),
+			.h = static_cast<int>(offset.playerOneIcon.h)};
+	constexpr SDL_Rect rect{.x = 679, .y = 350, .w = 70, .h = 70};
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
 	TextToRender(Point{.x = 718, .y = 382}, IntToColor(2), respawnCount, fontLarge);
 }
 
-void RenderManager::DrawPlayerTwoIcons(int respawnCount) const
+void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 {
 	constexpr TextureOffset offset{};
-	SDL_Rect srcRect{
-		static_cast<int>(offset.playerTwoIcon.x),
-		static_cast<int>(offset.playerTwoIcon.y),
-		static_cast<int>(offset.playerTwoIcon.w),
-		static_cast<int>(offset.playerTwoIcon.h)};
-	constexpr SDL_Rect rect {.x = 679, .y =420, .w = 70, .h = 70};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	constexpr SDL_Rect srcRect{
+			.x = static_cast<int>(offset.playerTwoIcon.x),
+			.y = static_cast<int>(offset.playerTwoIcon.y),
+			.w = static_cast<int>(offset.playerTwoIcon.w),
+			.h = static_cast<int>(offset.playerTwoIcon.h)};
+	constexpr SDL_Rect rect{.x = 679, .y = 420, .w = 70, .h = 70};
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
 	TextToRender(Point{.x = 718, .y = 452}, IntToColor(2), respawnCount, fontLarge);
 }
 
-void RenderManager::DrawCurrentStage(int currentStageNumber) const
+void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) const
 {
 	constexpr TextureOffset offset{};
-	SDL_Rect srcRect{
-		static_cast<int>(offset.stageNumberFlag.x),
-		static_cast<int>(offset.stageNumberFlag.y),
-		static_cast<int>(offset.stageNumberFlag.w),
-		static_cast<int>(offset.stageNumberFlag.h)};
-	constexpr SDL_Rect rect {.x = 679, .y =490, .w = 70, .h = 70};
-	SDL_RenderCopy(_renderer.get(), _atlasTexture.get(), &srcRect, &rect);
+	constexpr SDL_Rect srcRect{
+			.x = static_cast<int>(offset.stageNumberFlag.x),
+			.y = static_cast<int>(offset.stageNumberFlag.y),
+			.w = static_cast<int>(offset.stageNumberFlag.w),
+			.h = static_cast<int>(offset.stageNumberFlag.h)};
+	constexpr SDL_Rect rect{.x = 679, .y = 490, .w = 70, .h = 70};
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
 	TextToRender(Point{.x = 718, .y = 530}, IntToColor(2), currentStageNumber, fontLarge);
 }
@@ -364,7 +349,8 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const
 	TextToRender(pos, color, std::to_string(value));
 }
 
-void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, int value, std::shared_ptr<TTF_Font> font) const
+void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,
+								 const std::shared_ptr<TTF_Font>& font) const
 {
 	if (!_font || !_renderer)
 	{
@@ -386,7 +372,7 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, int v
 		return;
 	}
 
-	const SDL_Rect textRect{pos.x, pos.y, surface->w, surface->h};
+	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = surface->w, .h = surface->h};
 	SDL_RenderCopy(_renderer.get(), texture.get(), nullptr, &textRect);
 }
 

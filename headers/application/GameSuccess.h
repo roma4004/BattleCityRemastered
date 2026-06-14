@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Point.h"
-#include "components/ScoreBoard.h"
-#include "components/RightSideBar.h"
-#include "components/managers/BonusEffectManager.h"
 #include "interfaces/IGame.h"
 #include <chrono>
 
@@ -19,13 +16,16 @@ class FramePerSecondManager;
 class SpawnManager;
 class RenderManager;
 class EventSystem;
+class BonusEffectManager;
+class ScoreBoard;
 class RightSideBar;
 
 class GameSuccess final : public IGame
 {
 public:
 	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager);
+				bool isVsyncOn, std::unique_ptr<RenderManager>& renderManager,
+				std::unique_ptr<RightSideBar>& rightSideBar);
 
 	~GameSuccess() override;
 

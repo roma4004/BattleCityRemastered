@@ -11,10 +11,10 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* fpsFont, const char* logo, const char* introMusic,
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* font, const char* logo, const char* introMusic,
 							   const char* atlas, const char* joyIcon, const char* xBoxCon, const char* pS5Con)
 	: windowSize{windowSize}
-	, fpsFontPathName{fpsFont}
+	, fontPathName{font}
 	, logoPathName{logo}
 	, introMusicPathName{introMusic}
 	, textureAtlasPath{atlas}
@@ -53,15 +53,15 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	// font init and loading
-	std::shared_ptr<TTF_Font> fontForUI{nullptr};
+	std::shared_ptr<TTF_Font> font{nullptr};
 	{
 		if (TTF_Init() == -1)
 		{
 			return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
 		}
 
-		if (fontForUI = {TTF_OpenFont(fpsFontPathName, 14), TTF_CloseFont};
-			fontForUI == nullptr)
+		if (font = {TTF_OpenFont(fontPathName, 14), TTF_CloseFont};
+			font == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 		}
@@ -191,7 +191,7 @@ SDLEnvironment::~SDLEnvironment()
 		}
 	}
 
-	return std::make_unique<ConfigSuccess>(windowSize, renderer, fontForUI, logoTexture, atlasTexture, joyIconTexture,
+	return std::make_unique<ConfigSuccess>(windowSize, renderer, font, logoTexture, atlasTexture, joyIconTexture,
 										   xBoxHintTexture, pS5HintTexture, isVsyncOn);
 }
 
