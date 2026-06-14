@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Point.h"
 #include "enums/GameMode.h"
+#include <memory>
 
 struct ObjRectangle;
 class EventSystem;
@@ -23,6 +24,8 @@ class RightSideBar
 
 	void Subscribe();
 	void Unsubscribe() const;
+	void Draw() const;
+	void OnRespawnCountChangedTo(const std::string& objectName, unsigned short respawnCount);
 
 public:
 	RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>& events);

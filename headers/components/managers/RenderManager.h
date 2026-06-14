@@ -23,17 +23,16 @@ class RenderManager
 	std::shared_ptr<TTF_Font> _font{nullptr};
 	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
 	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
-	std::shared_ptr<SDL_Texture> _backgroundTexture{nullptr};
 	std::shared_ptr<SDL_Texture> _atlas{nullptr};
 	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
 	std::shared_ptr<SDL_Texture> _xBoxHint{nullptr};
 	std::shared_ptr<SDL_Texture> _pS5Hint{nullptr};
 	std::shared_ptr<unsigned int[]> _menuBackground{nullptr};
 
-	int _height;
+	int _menuHeight;
 	int _windowHeight;
-	int _width;
-	int _padding;
+	int _menuWidth;
+	int _menuPadding;
 
 	UPoint _windowSize;
 	SDL_Rect _fpsRectangle{};
@@ -62,7 +61,7 @@ class RenderManager
 	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
 	void SetRenderDrawColor(unsigned int color, Uint8 transparency = 255) const;
 
-	void DrawBackground(Point pos) const;
+	void DrawMenuBackground(Point pos) const;
 	void DrawMenuLogo(Point pos) const;
 	void DrawJoyIcon(Point pos) const;
 	void RenderCopyWithClipping(SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect dstRect) const;

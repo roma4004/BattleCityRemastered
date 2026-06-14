@@ -2,12 +2,17 @@
 #include "Components/EventSystem.h"
 #include "components/managers/RenderManager.h"
 
-RightSideBar::RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+RightSideBar::RightSideBar(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize}
 	, _name{std::string("RightSideBar")}
 	, _events{events}
 {
 	Subscribe();
+}
+
+RightSideBar::~RightSideBar()
+{
+	Unsubscribe();
 }
 
 void RightSideBar::Subscribe()
@@ -17,46 +22,42 @@ void RightSideBar::Subscribe()
 		this->_gameMode = newGameMode;
 	});
 
-	_events->AddListener("RenderRightSideBar", _name, [this]()
-	{
-		GameMode currentGameMode = this->_gameMode;
-
-		_events->EmitEvent("RenderEnemyIcons", _enemiesRespawnCount);
-		_events->EmitEvent("RenderStageNumber", _stageNumber);
-		_events->EmitEvent("RenderPlayerOneIcon", _playerOneRespawnCount);
-		if (currentGameMode != GameMode::OnePlayer)
-		{
-			_events->EmitEvent("RenderPlayerTwoIcon", _playerTwoRespawnCount);
-		}
-	});
+	_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
 
 	_events->AddListener(
 			"RespawnCountChangedTo", _name,
 			[this](const std::string& objectName, const unsigned short respawnCount)
 			{
-				if (objectName.starts_with("Enemy"))
-				{
-					this->_enemiesRespawnCount = respawnCount;
-				}
-				else if (objectName.ends_with("1"))
-				{
-					this->_playerOneRespawnCount = respawnCount;
-				}
-				else if (objectName.ends_with("2"))
-				{
-					this->_playerTwoRespawnCount = respawnCount;
-				}
+				OnRespawnCountChangedTo(objectName, respawnCount);
 			});
 }
 
-void RightSideBar::Unsubscribe() const
+void RightSideBar::Unsubscribe() const { _events->RemoveAllListeners(_name); }
+
+void RightSideBar::Draw() const
 {
-	_events->RemoveListener("GameModeChangedTo", _name);
-	_events->RemoveListener("RenderRightSideBar", _name);
-	_events->RemoveListener("RespawnCountChangedTo", _name);
+	_events->EmitEvent("RenderRightSideBar");
+	_events->EmitEvent("RenderEnemyIcons", _enemiesRespawnCount);
+	_events->EmitEvent("RenderStageNumber", _stageNumber);
+	_events->EmitEvent("RenderPlayerOneIcon", _playerOneRespawnCount);
+	if (_gameMode != GameMode::OnePlayer)
+	{
+		_events->EmitEvent("RenderPlayerTwoIcon", _playerTwoRespawnCount);
+	}
 }
 
-RightSideBar::~RightSideBar()
+void RightSideBar::OnRespawnCountChangedTo(const std::string& objectName, const unsigned short respawnCount)
 {
-	Unsubscribe();
+	if (objectName.starts_with("Enemy"))
+	{
+		_enemiesRespawnCount = respawnCount;
+	}
+	else if (objectName.ends_with("1"))
+	{
+		_playerOneRespawnCount = respawnCount;
+	}
+	else if (objectName.ends_with("2"))
+	{
+		_playerTwoRespawnCount = respawnCount;
+	}
 }

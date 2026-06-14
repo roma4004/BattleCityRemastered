@@ -177,7 +177,6 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent("Draw");
 			_events->EmitEvent("PostDraw");
 
-			_events->EmitEvent("RenderRightSideBar");
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("PreDrawUserInterface");

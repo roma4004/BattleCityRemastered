@@ -29,12 +29,13 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const s
 
 	Subscribe();
 
-	_padding = 25;
+	//TODO: move menu init to separated method and separated menuParams structure
+	_menuPadding = 25;
 	const auto windowWidth = static_cast<unsigned int>(windowSize.x);
 	_windowHeight = static_cast<int>(windowSize.y);
-	_height = _windowHeight - _padding * 3;
+	_menuHeight = _windowHeight - _menuPadding * 3;
 	constexpr int sideBarWidth = 228;
-	_width = static_cast<int>(windowWidth) - sideBarWidth - _padding;
+	_menuWidth = static_cast<int>(windowWidth) - sideBarWidth - _menuPadding;
 
 	PregenerateMenuBackgroundPixels();
 	PregenerateMenuBackgroundTexture();
@@ -81,7 +82,7 @@ void RenderManager::Subscribe()
 		TextToRender(pos, IntToColor(color), text);
 	});
 
-	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawBackground(pos); });
+	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawMenuBackground(pos); });
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
 	_events->AddListener("RenderMenuJoyIcon", _name, [this](const Point pos) { DrawJoyIcon(pos); });
 	_events->AddListener("RenderMenuXBoxHint", _name, [this](const Point pos) { DrawXBoxHint(pos); });
@@ -254,13 +255,14 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 
 void RenderManager::PregenerateMenuBackgroundPixels()
 {
-	_menuBackground = std::make_shared<unsigned int[]>(static_cast<size_t>(_height) * static_cast<size_t>(_width));
-	for (int y = 0; y < _height; ++y)
+	_menuBackground = std::make_shared<unsigned int[]>(
+			static_cast<size_t>(_menuHeight) * static_cast<size_t>(_menuWidth));
+	for (int y = 0; y < _menuHeight; ++y)
 	{
-		for (int x = 0; x < _width; ++x)
+		for (int x = 0; x < _menuWidth; ++x)
 		{
 			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency gray
-			_menuBackground[y * _width + x] = menuColor;
+			_menuBackground[y * _menuWidth + x] = menuColor;
 		}
 	}
 }
@@ -284,11 +286,11 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 }
 
 // blend menu panel and menu texture background
-void RenderManager::DrawBackground(const Point pos) const
+void RenderManager::DrawMenuBackground(const Point pos) const
 {
-	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = _width, .h = _height};
-	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
-	SDL_RenderCopy(_renderer.get(), _backgroundTexture.get(), nullptr, &rect);
+	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = _menuWidth, .h = _menuHeight};
+	SDL_UpdateTexture(_menuBackgroundTexture.get(), &rect, _menuBackground.get(), _menuWidth << 2);
+	SDL_RenderCopy(_renderer.get(), _menuBackgroundTexture.get(), nullptr, &rect);
 }
 
 void RenderManager::DrawMenuLogo(const Point pos) const
@@ -404,13 +406,18 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 void RenderManager::PregenerateMenuBackgroundTexture()
 {
 	// SDL_SetRenderDrawBlendMode(_renderer.get(), SDL_BLENDMODE_BLEND);
-	_backgroundTexture = std::shared_ptr<SDL_Texture>(
-			SDL_CreateTexture(_renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, _width, _height),
+	_menuBackgroundTexture = std::shared_ptr<SDL_Texture>(
+			SDL_CreateTexture(
+					_renderer.get(),
+					SDL_PIXELFORMAT_ARGB8888,
+					SDL_TEXTUREACCESS_TARGET,
+					_menuWidth,
+					_menuHeight),
 			SDL_DestroyTexture);
-	SDL_SetTextureBlendMode(_backgroundTexture.get(), SDL_BLENDMODE_BLEND);
+	SDL_SetTextureBlendMode(_menuBackgroundTexture.get(), SDL_BLENDMODE_BLEND);
 
-	const SDL_Rect rect{.x = _padding, .y = _padding, .w = _width, .h = _height};
-	SDL_UpdateTexture(_backgroundTexture.get(), &rect, _menuBackground.get(), _width << 2);
+	const SDL_Rect rect{.x = _menuPadding, .y = _menuPadding, .w = _menuWidth, .h = _menuHeight};
+	SDL_UpdateTexture(_menuBackgroundTexture.get(), &rect, _menuBackground.get(), _menuWidth << 2);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
