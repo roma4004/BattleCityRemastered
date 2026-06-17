@@ -177,13 +177,11 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent("PreDraw");
 			_events->EmitEvent("Draw");
 			_events->EmitEvent("PostDraw");
-
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
 			_events->EmitEvent("PreDrawUserInterface");
 			_events->EmitEvent("DrawUserInterface");
 			_events->EmitEvent("PostDrawUserInterface");
-
 
 			if (_gameMode == GameMode::PlayAsHost)
 			{
