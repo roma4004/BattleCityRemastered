@@ -115,6 +115,10 @@ void RenderManager::Subscribe()
 
 	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
 
+	_events->AddListener("RenderRightSideBarCloth", _name, [this]()
+	{
+		this->DrawRightSideBarCloth();
+	});
 	_events->AddListener("RenderEnemyIcons", _name, [this](const unsigned short respawnCount)
 	{
 		this->DrawEnemyIcons(respawnCount);
@@ -179,6 +183,17 @@ void RenderManager::DrawRightSideBar()
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &rect);
 }
 
+void RenderManager::DrawRightSideBarCloth() const
+{
+	constexpr TextureOffset offset{};
+	constexpr SDL_Rect dstRect{.x = 677, .y = 62, .w = 75, .h = 272};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.rightSideBarCloth.x),
+							   .y = static_cast<int>(offset.rightSideBarCloth.y),
+							   .w = static_cast<int>(offset.rightSideBarCloth.w),
+							   .h = static_cast<int>(offset.rightSideBarCloth.h)};
+	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
+}
+
 void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 {
 	constexpr TextureOffset offset{};
@@ -190,16 +205,16 @@ void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 	for (int i = 0; i < numberOfIcons; ++i)
 	{
 		constexpr int columns = 2;
-		constexpr int rows = 10;
-		constexpr int distanceBetweenColumns = 80;
-		constexpr int verticalDistanceBetweenDecals = 200;
+		const int rows = 10;
+		constexpr int distanceBetweenColumns = 70;
+		constexpr int verticalDistanceBetweenDecals = 230;
 		constexpr ObjRectangle rect{.x = 680, .y = 65, .w = 30, .h = 60};
 		constexpr int imageWidth{static_cast<int>(rect.w)};
 		constexpr int imageHeight{static_cast<int>(rect.h)};
 
 		constexpr int spacingX = (distanceBetweenColumns - (columns * imageWidth)) / (columns + 1);
-		constexpr int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
-		constexpr int leftUpCornerX = 675;
+		const int spacingY = (verticalDistanceBetweenDecals - (rows * imageHeight)) / (rows + 1);
+		constexpr int leftUpCornerX = 680;
 		constexpr int leftUpCornerY = 95;
 
 		const int row = i / columns;
@@ -219,7 +234,7 @@ void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 							   .y = static_cast<int>(offset.playerOneIcon.y),
 							   .w = static_cast<int>(offset.playerOneIcon.w),
 							   .h = static_cast<int>(offset.playerOneIcon.h)};
-	constexpr SDL_Rect rect{.x = 679, .y = 350, .w = 70, .h = 70};
+	constexpr SDL_Rect rect{.x = 680, .y = 350, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
 	TextToRender(Point{.x = 715, .y = 390}, IntToColor(2), respawnCount, _fontMedium);
@@ -232,7 +247,7 @@ void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 							   .y = static_cast<int>(offset.playerTwoIcon.y),
 							   .w = static_cast<int>(offset.playerTwoIcon.w),
 							   .h = static_cast<int>(offset.playerTwoIcon.h)};
-	constexpr SDL_Rect rect{.x = 679, .y = 420, .w = 70, .h = 70};
+	constexpr SDL_Rect rect{.x = 680, .y = 420, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
 	TextToRender(Point{.x = 715, .y = 460}, IntToColor(2), respawnCount, _fontMedium);
@@ -245,7 +260,7 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 							   .y = static_cast<int>(offset.stageNumberFlag.y),
 							   .w = static_cast<int>(offset.stageNumberFlag.w),
 							   .h = static_cast<int>(offset.stageNumberFlag.h)};
-	constexpr SDL_Rect rect{.x = 679, .y = 490, .w = 70, .h = 70};
+	constexpr SDL_Rect rect{.x = 680, .y = 490, .w = 70, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
 	TextToRender(Point{.x = 715, .y = 535}, IntToColor(2), currentStageNumber, _fontMedium);
