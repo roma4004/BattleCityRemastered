@@ -76,5 +76,5 @@ struct TextureOffset
 	ObjRectangle enemyIcon{.x = 321, .y = 193, .w = 7, .h = 7};
 	ObjRectangle playerOneIcon{.x = 375, .y = 135, .w = 19, .h = 18};
 	ObjRectangle playerTwoIcon{.x = 375, .y = 159, .w = 19, .h = 18};
-	ObjRectangle stageNumberFlag{.x = 375, .y = 182, .w = 18, .h = 18};
+	ObjRectangle stageNumberFlag{.x = 375, .y = 182, .w = 18, .h = 28};
 };

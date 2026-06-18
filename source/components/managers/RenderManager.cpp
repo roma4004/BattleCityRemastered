@@ -255,10 +255,10 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 							   .y = static_cast<int>(offset.stageNumberFlag.y),
 							   .w = static_cast<int>(offset.stageNumberFlag.w),
 							   .h = static_cast<int>(offset.stageNumberFlag.h)};
-	constexpr SDL_Rect rect{.x = 680, .y = 490, .w = 71, .h = 70};
+	constexpr SDL_Rect rect{.x = 680, .y = 490, .w = 71, .h = 95};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 715, .y = 535}, IntToColor(2), currentStageNumber, _fontMedium);
+	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2), currentStageNumber, _fontMedium);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()
