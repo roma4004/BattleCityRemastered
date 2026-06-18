@@ -2,7 +2,6 @@
 
 #include "Point.h"
 #include <SDL_render.h>
-#include <SDL_ttf.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -10,6 +9,7 @@
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct ObjRectangle;
+struct TTF_Font;
 class EventSystem;
 
 class RenderManager
@@ -64,9 +64,8 @@ class RenderManager
 	void RenderCopyWithClipping(SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect dstRect) const;
 	void DrawXBoxHint(Point pos) const;
 	void DrawPS5Hint(Point pos) const;
-	void TextToRender(const Point& pos, const SDL_Color& color, int value) const;
-	void TextToRender(const Point& pos, const SDL_Color& color, int value, const std::shared_ptr<TTF_Font>& font) const;
-	void TextToRender(Point pos, SDL_Color color, const std::string& text) const;
+	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
+	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
 	void PregenerateMenuBackgroundTexture();
 
 	void ClearFrame() const;
