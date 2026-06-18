@@ -232,7 +232,8 @@ void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 	constexpr SDL_Rect rect{.x = 680, .y = 350, .w = 71, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 718, .y = 390}, IntToColor(2), respawnCount, _fontMedium);
+	constexpr bool isMediumFontSize = true;
+	TextToRender(Point{.x = 718, .y = 390}, IntToColor(2), respawnCount, isMediumFontSize);
 }
 
 void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
@@ -245,7 +246,8 @@ void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 	constexpr SDL_Rect rect{.x = 680, .y = 420, .w = 71, .h = 70};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 718, .y = 460}, IntToColor(2), respawnCount, _fontMedium);
+	constexpr bool isMediumFontSize = true;
+	TextToRender(Point{.x = 718, .y = 460}, IntToColor(2), respawnCount, isMediumFontSize);
 }
 
 void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) const
@@ -258,7 +260,8 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 	constexpr SDL_Rect rect{.x = 680, .y = 490, .w = 71, .h = 95};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &rect);
 
-	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2), currentStageNumber, _fontMedium);
+	constexpr bool isMediumFontSize = true;
+	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2), currentStageNumber, isMediumFontSize);
 }
 
 void RenderManager::PregenerateMenuBackgroundPixels()
@@ -354,47 +357,23 @@ void RenderManager::DrawPS5Hint(const Point pos) const
 						   {.x = pos.x + 10, .y = pos.y + 63, .w = 25, .h = 25});//Cross button
 }
 
-void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value) const
-{
-	TextToRender(pos, color, std::to_string(value));
-}
-
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,
-								 const std::shared_ptr<TTF_Font>& font) const
+								 const bool isMediumFontSize = false) const
 {
-	if (!_fontSmall || !_renderer)
-	{
-		return;
-	}
-
-
-	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(font.get(), std::to_string(value).c_str(), color), SDL_FreeSurface);
-	if (!surface)
-	{
-		return;
-	}
-
-	const std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)> texture(
-			SDL_CreateTextureFromSurface(_renderer.get(), surface.get()), SDL_DestroyTexture);
-	if (!texture)
-	{
-		return;
-	}
-
-	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = surface->w, .h = surface->h};
-	SDL_RenderCopy(_renderer.get(), texture.get(), nullptr, &textRect);
+	TextToRender(pos, color, std::to_string(value), isMediumFontSize);
 }
 
-void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text) const
+void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text,
+								 const bool isMediumFontSize) const
 {
-	if (!_fontSmall || !_renderer)
+	if (!_fontMedium || !_fontSmall || !_renderer)
 	{
 		return;
 	}
 
+	const auto currentFont = isMediumFontSize ? _fontMedium.get() : _fontSmall.get();
 	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(_fontSmall.get(), text.c_str(), color), SDL_FreeSurface);
+			TTF_RenderText_Solid(currentFont, text.c_str(), color), SDL_FreeSurface);
 	if (!surface)
 	{
 		return;
