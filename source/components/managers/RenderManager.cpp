@@ -186,10 +186,10 @@ void RenderManager::DrawRightSideBarCloth() const
 {
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect dstRect{.x = 680, .y = 60, .w = 71, .h = 277};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.rightSideBarCloth.x),
-							   .y = static_cast<int>(offset.rightSideBarCloth.y),
-							   .w = static_cast<int>(offset.rightSideBarCloth.w),
-							   .h = static_cast<int>(offset.rightSideBarCloth.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyDecalBackground.x),
+							   .y = static_cast<int>(offset.enemyDecalBackground.y),
+							   .w = static_cast<int>(offset.enemyDecalBackground.w),
+							   .h = static_cast<int>(offset.enemyDecalBackground.h)};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
 }
 

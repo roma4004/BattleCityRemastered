@@ -72,7 +72,7 @@ struct TextureOffset
 
 	//SideBar
 	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 220, .h = 600};
-	ObjRectangle rightSideBarCloth{.x = 375, .y = 23, .w = 18, .h = 82};
+	ObjRectangle enemyDecalBackground{.x = 375, .y = 23, .w = 18, .h = 82};
 	ObjRectangle enemyIcon{.x = 321, .y = 193, .w = 7, .h = 7};
 	ObjRectangle playerOneIcon{.x = 375, .y = 135, .w = 19, .h = 18};
 	ObjRectangle playerTwoIcon{.x = 375, .y = 159, .w = 19, .h = 18};
