@@ -78,11 +78,10 @@ void RenderManager::ClearFpsTextureCache()
 void RenderManager::Subscribe()
 {
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->ClearFrame(); });
-	_events->AddListener("RenderText", _name,
-						 [this](const Point pos, const unsigned int color, const std::string& text)
-						 {
-							 TextToRender(pos, IntToColor(color), text);
-						 });
+	_events->AddListener("RenderText", _name, [this](const Point pos, const unsigned int color, const std::string& text)
+	{
+		TextToRender(pos, IntToColor(color), text);
+	});
 
 	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawMenuBackground(pos); });
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });

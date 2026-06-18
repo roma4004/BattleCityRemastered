@@ -30,6 +30,5 @@ std::unique_ptr<IGame> ConfigSuccess::CreateGame()
 														 _joyIcon, _xBoxHint, _pS5Hint, _windowSize);
 	auto rightSideBar = std::make_unique<RightSideBar>(_windowSize, events);
 
-	return std::make_unique<GameSuccess>(_windowSize, events, menu,
-										 _isVsyncOn, renderManager, rightSideBar);
+	return std::make_unique<GameSuccess>(_windowSize, events, menu, _isVsyncOn, renderManager, rightSideBar);
 }

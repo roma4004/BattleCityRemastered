@@ -28,5 +28,6 @@ class RightSideBar
 
 public:
 	RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+
 	~RightSideBar();
 };
