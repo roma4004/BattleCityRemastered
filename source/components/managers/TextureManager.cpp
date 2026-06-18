@@ -80,6 +80,22 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.enemyIcon;
 	}
+	else if (name == "RightSideBarCloth")
+	{
+		textureRect = _offset.rightSideBarCloth;
+	}
+	else if (name == "PlayerOneIcon")
+	{
+		textureRect = _offset.playerOneIcon;
+	}
+	else if (name == "PlayerTwoIcon")
+	{
+		textureRect = _offset.playerTwoIcon;
+	}
+	else if (name == "StageNumberFlag")
+	{
+		textureRect = _offset.stageNumberFlag;
+	}
 
 	return textureRect;
 }
