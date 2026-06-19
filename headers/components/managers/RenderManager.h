@@ -45,7 +45,7 @@ class RenderManager
 	void DrawGameOverText() const;
 	void DrawGameWonText() const;
 	void DrawRightSideBar();
-	void DrawRightSideBarCloth() const;
+	void DrawenemyDecalBackground() const;
 	void DrawEnemyIcons(int numberOfIcons) const;
 	void DrawPlayerOneIcons(unsigned short respawnCount) const;
 	void DrawPlayerTwoIcons(unsigned short respawnCount) const;

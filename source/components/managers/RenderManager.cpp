@@ -114,9 +114,9 @@ void RenderManager::Subscribe()
 
 	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
 
-	_events->AddListener("RenderRightSideBarCloth", _name, [this]()
+	_events->AddListener("RenderEnemyDecalBackground", _name, [this]()
 	{
-		this->DrawRightSideBarCloth();
+		this->DrawenemyDecalBackground();
 	});
 	_events->AddListener("RenderEnemyIcons", _name, [this](const unsigned short respawnCount)
 	{
@@ -182,7 +182,7 @@ void RenderManager::DrawRightSideBar()
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &rect);
 }
 
-void RenderManager::DrawRightSideBarCloth() const
+void RenderManager::DrawenemyDecalBackground() const
 {
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect dstRect{.x = 680, .y = 60, .w = 71, .h = 277};
