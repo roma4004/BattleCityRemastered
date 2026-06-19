@@ -1,6 +1,5 @@
 ﻿#include "Components/RightSideBar.h"
 #include "Components/EventSystem.h"
-#include "components/managers/RenderManager.h"
 
 RightSideBar::RightSideBar(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	: _windowSize{windowSize}
