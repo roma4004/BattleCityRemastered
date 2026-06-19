@@ -165,6 +165,7 @@
     <ClCompile Include="source\components\Menu.cpp" />
     <ClCompile Include="source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="source\components\ScoreBoard.cpp" />
+    <ClCompile Include="source\components\RightSideBar.cpp" />
     <ClCompile Include="source\components\TankSpawner.cpp" />
     <ClCompile Include="source\components\input\InputProviderForMenu.cpp" />
     <ClCompile Include="source\components\input\InputProviderForPlayerOne.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="headers\components\managers\TextureManager.h" />
     <ClInclude Include="headers\components\ScoreBoard.h" />
     <ClInclude Include="headers\entities\BulletCalibre.h" />
+    <ClInclude Include="headers\components\RightSideBar.h" />
     <ClInclude Include="headers\enums\AnimationType.h" />
     <ClInclude Include="headers\enums\GameState.h" />
     <ClInclude Include="headers\network\commands\AnimationCreate.h" />
@@ -355,8 +357,6 @@
     <Content Include="Resources\Fonts\backup\bc7x7.ttf" />
     <Content Include="Resources\Fonts\backup\M10 battle cities.ttf" />
     <Content Include="Resources\Fonts\info.txt" />
-    <Content Include="Resources\Fonts\misc\FONTLOG-e017.txt" />
-    <Content Include="Resources\Fonts\misc\LICENSE-65f9.txt" />
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Fonts\info.txt" />
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />

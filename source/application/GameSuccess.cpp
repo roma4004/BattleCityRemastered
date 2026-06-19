@@ -2,6 +2,7 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
+#include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
@@ -19,10 +20,12 @@
 #include <boost/uuid/uuid_io.hpp>
 
 class BaseObj;
+
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-						 std::unique_ptr<RenderManager>& renderManager)
+						 std::unique_ptr<RenderManager>& renderManager,
+						 std::unique_ptr<RightSideBar>& rightSideBar)
 	: _windowSize{windowSize}
 	, _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
@@ -33,6 +36,7 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(windowSize, events)}
+	, _rightSideBar{std::move(rightSideBar)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {

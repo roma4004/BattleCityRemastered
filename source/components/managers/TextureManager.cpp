@@ -72,6 +72,30 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.ice;
 	}
+	else if (name == "RightSideBar")
+	{
+		textureRect = _offset.rightSideBar;
+	}
+	else if (name == "EnemyIcon")
+	{
+		textureRect = _offset.enemyIcon;
+	}
+	else if (name == "EnemyIconBackground")
+	{
+		textureRect = _offset.enemyIconBackground;
+	}
+	else if (name == "PlayerOneIcon")
+	{
+		textureRect = _offset.playerOneIcon;
+	}
+	else if (name == "PlayerTwoIcon")
+	{
+		textureRect = _offset.playerTwoIcon;
+	}
+	else if (name == "StageNumberFlag")
+	{
+		textureRect = _offset.stageNumberFlag;
+	}
 
 	return textureRect;
 }

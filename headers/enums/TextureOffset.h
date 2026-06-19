@@ -69,4 +69,12 @@ struct TextureOffset
 	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};
 	ObjRectangle gameOverText{.x = 288, .y = 183, .w = 32, .h = 18};
 	ObjRectangle gameWonText{.x = 375, .y = 183, .w = 18, .h = 17};
+
+	//SideBar
+	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 220, .h = 600};
+	ObjRectangle enemyIconBackground{.x = 375, .y = 23, .w = 18, .h = 82};
+	ObjRectangle enemyIcon{.x = 321, .y = 193, .w = 7, .h = 7};
+	ObjRectangle playerOneIcon{.x = 375, .y = 135, .w = 19, .h = 18};
+	ObjRectangle playerTwoIcon{.x = 375, .y = 159, .w = 19, .h = 18};
+	ObjRectangle stageNumberFlag{.x = 375, .y = 182, .w = 18, .h = 28};
 };

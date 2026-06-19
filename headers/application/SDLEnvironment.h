@@ -17,7 +17,7 @@ struct SDLEnvironment final
 
 	UPoint windowSize{};
 
-	const char* fpsFontPathName{nullptr};
+	const char* fontPathName{nullptr};
 	const char* logoPathName{nullptr};
 	const char* introMusicPathName{nullptr};
 	const char* textureAtlasPath{nullptr};
@@ -27,7 +27,7 @@ struct SDLEnvironment final
 
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
-	SDLEnvironment(UPoint windowSize, const char* fpsFont, const char* logo, const char* introMusic, const char* atlas,
+	SDLEnvironment(UPoint windowSize, const char* font, const char* logo, const char* introMusic, const char* atlas,
 				   const char* joyIcon, const char* xBoxCon, const char* pS5Con);
 
 	~SDLEnvironment();
