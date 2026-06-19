@@ -37,7 +37,7 @@ void RightSideBar::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 void RightSideBar::Draw() const
 {
 	_events->EmitEvent("RenderRightSideBar");
-	_events->EmitEvent("RenderEnemyDecalBackground");
+	_events->EmitEvent("RenderEnemyIconBackground");
 	_events->EmitEvent("RenderEnemyIcons", _enemiesRespawnCount);
 	_events->EmitEvent("RenderStageNumber", _stageNumber);
 	_events->EmitEvent("RenderPlayerOneIcon", _playerOneRespawnCount);

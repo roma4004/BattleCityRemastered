@@ -76,13 +76,13 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.rightSideBar;
 	}
-	else if (name == "EnemyDecal")
+	else if (name == "EnemyIcon")
 	{
 		textureRect = _offset.enemyIcon;
 	}
-	else if (name == "EnemyDecalBackground")
+	else if (name == "EnemyIconBackground")
 	{
-		textureRect = _offset.enemyDecalBackground;
+		textureRect = _offset.enemyIconBackground;
 	}
 	else if (name == "PlayerOneIcon")
 	{

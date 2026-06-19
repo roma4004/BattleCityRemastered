@@ -114,9 +114,9 @@ void RenderManager::Subscribe()
 
 	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
 
-	_events->AddListener("RenderEnemyDecalBackground", _name, [this]()
+	_events->AddListener("RenderEnemyIconBackground", _name, [this]()
 	{
-		this->DrawenemyDecalBackground();
+		this->DrawEnemyIconBackground();
 	});
 	_events->AddListener("RenderEnemyIcons", _name, [this](const unsigned short respawnCount)
 	{
@@ -182,14 +182,14 @@ void RenderManager::DrawRightSideBar()
 	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &rect);
 }
 
-void RenderManager::DrawenemyDecalBackground() const
+void RenderManager::DrawEnemyIconBackground() const
 {
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect dstRect{.x = 680, .y = 60, .w = 71, .h = 277};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyDecalBackground.x),
-							   .y = static_cast<int>(offset.enemyDecalBackground.y),
-							   .w = static_cast<int>(offset.enemyDecalBackground.w),
-							   .h = static_cast<int>(offset.enemyDecalBackground.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIconBackground.x),
+							   .y = static_cast<int>(offset.enemyIconBackground.y),
+							   .w = static_cast<int>(offset.enemyIconBackground.w),
+							   .h = static_cast<int>(offset.enemyIconBackground.h)};
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
 }
 
