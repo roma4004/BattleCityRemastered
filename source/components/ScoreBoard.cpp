@@ -95,27 +95,27 @@ void ScoreBoard::RenderStatistics() const
 							_statistics->GetPlayerOneHitByEnemyTeam(),
 							_statistics->GetPlayerTwoHitByEnemyTeam());
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 220}, color, "TANK KILLS",
-							_statistics->GetEnemyDiedByPlayerOne(),
-							_statistics->GetEnemyDiedByPlayerTwo(),
-							_statistics->GetPlayerDiedByEnemyTeam());
-
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 240}, color, "ENEMY HIT BY",
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 220}, color, "ENEMY HIT BY",
 							_statistics->GetEnemyHitByPlayerOne(),
 							_statistics->GetEnemyHitByPlayerTwo(),
 							_statistics->GetEnemyHitByFriendlyFire());
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 260}, color, "FRIEND HIT FRIEND",
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 240}, color, "TANK KILLS",
+							_statistics->GetEnemyDiedByPlayerOne(),
+							_statistics->GetEnemyDiedByPlayerTwo(),
+							_statistics->GetPlayerDiedByEnemyTeam());
+
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 260}, color, "FRIENDLY HITS",
 							_statistics->GetPlayerOneHitFriendlyFire(),
 							_statistics->GetPlayerTwoHitFriendlyFire(),
 							_statistics->GetEnemyHitByFriendlyFire());
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 280}, color, "FRIEND KILLS FRIEND",
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 280}, color, "FRIENDLY KILLS",
 							_statistics->GetPlayerOneDiedByFriendlyFire(),
 							_statistics->GetPlayerTwoDiedByFriendlyFire(),
 							_statistics->GetEnemyDiedByFriendlyFire());
 
-	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICKS KILLS",
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 300}, color, "BRICK KILLS",
 							_statistics->GetBrickWallDiedByPlayerOne(),
 							_statistics->GetBrickWallDiedByPlayerTwo(),
 							_statistics->GetBrickWallDiedByEnemyTeam());

@@ -52,11 +52,10 @@ struct TextureOffset
 	ObjRectangle spawnAnim{.x = 256, .y = 96, .w = 16, .h = 16};// 4 step animation 16x16
 	ObjRectangle smallExplosion{.x = 256, .y = 128, .w = 16, .h = 16};// 3 step animation 16x16
 	ObjRectangle bigExplosion{.x = 304, .y = 128, .w = 32, .h = 32};// 2 steps 32x32
+	ObjRectangle helmetAnimationFrame{.x = 256, .y = 144, .w = 16, .h = 16};// 2 step animation 16x16, left -> right
 
 	//Bonuses
 	ObjRectangle bonusHelmet{.x = 256, .y = 112, .w = 16, .h = 16};
-	ObjRectangle helmetAnimationFrame{.x = 352, .y = 112, .w = 16, .h = 16};// 2 step animation 16x16, left -> right
-
 	ObjRectangle bonusTimer{.x = 272, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusShovel{.x = 288, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusStar{.x = 304, .y = 112, .w = 16, .h = 16};

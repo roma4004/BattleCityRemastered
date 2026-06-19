@@ -11,14 +11,14 @@ namespace network::commands
 KeyStateChange::KeyStateChange()
 	: Command{CommandType::KEY_STATE_CHANGE} {}
 
-KeyStateChange::KeyStateChange(std::string keyState, const bool isEnable)
+KeyStateChange::KeyStateChange(std::string keyState, const bool isPressed)
 	: Command{CommandType::KEY_STATE_CHANGE}
 	, _keyState{std::move(keyState)}
-	, _isEnable{isEnable} {}
+	, _isPressed{isPressed} {}
 
 std::string KeyStateChange::GetKeyState() const noexcept { return _keyState; }
 
-bool KeyStateChange::GetIsEnable() const noexcept { return _isEnable; }
+bool KeyStateChange::GetIsEnable() const noexcept { return _isPressed; }
 
 const char* KeyStateChange::GetClassNameW() const noexcept { return "KeyStateChange"; }
 }//namespace network::commands

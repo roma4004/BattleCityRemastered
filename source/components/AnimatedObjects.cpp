@@ -13,6 +13,16 @@ AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect,
 	, name{name}
 	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())} {}
 
+AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
+							   const int frameLimit, const int scale, const bool isInfinite, const std::string& nameWithUuid)
+	: rect{rect}
+	, limitOfFrames{frameLimit}
+	, type(type)
+	, isInfinite{isInfinite}
+	, scale{scale}
+	, name{name}
+	, nameWithUuid{name + "_" + nameWithUuid} {}
+
 AnimatedObject::~AnimatedObject() = default;
 
 // copy constructor

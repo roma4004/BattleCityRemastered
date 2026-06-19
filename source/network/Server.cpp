@@ -465,10 +465,10 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_OnTankOnOff", _name,
-			[this](const buuid& uuid, const bool isEnabled, std::string name)
+			[this](const buuid& uuid, const bool isEnable, std::string name)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<TankOnOff>(uuid, isEnabled, std::move(name)));
+				_batch->AddCommand(std::make_shared<TankOnOff>(uuid, isEnable, std::move(name)));
 			});
 
 	SubscribeBonus();

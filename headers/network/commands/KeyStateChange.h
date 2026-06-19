@@ -12,14 +12,14 @@ class KeyStateChange : public Command
 	friend class boost::serialization::access;
 
 	std::string _keyState{};
-	bool _isEnable{};
+	bool _isPressed{};
 
 public:
 	//for deserialization
 	KeyStateChange();
 
 	//for serialization
-	KeyStateChange(std::string keyState, bool isEnable);
+	KeyStateChange(std::string keyState, bool isPressed);
 
 	~KeyStateChange() override = default;
 
@@ -37,7 +37,7 @@ void KeyStateChange::serialize(Archive& ar, const unsigned int)
 {
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _keyState;
-	ar & _isEnable;
+	ar & _isPressed;
 }
 }//namespace network::commands
 

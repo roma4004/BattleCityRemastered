@@ -35,6 +35,8 @@ public:
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
 	void CreateAnimationWater(ObjRectangle rect);
+	void CreateHelmetAnimation(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames,
+							   int scale, const std::string& nameWithUuid);
 	void CreateAnimationTank(ObjRectangle rect, std::string name);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
 	void DeleteTankAnimation(const std::string& name);
@@ -46,6 +48,9 @@ private:
 	static void UpdateFrame(AnimatedObject& object, int animationSpeed);
 	static void UpdateWaterFrame(AnimatedObject& object, int animationSpeed);
 	void UpdateTank(const std::string& name, const ObjRectangle& rect, const Direction& dir);
+	void UpdateHelmetEffectPosition(const std::string& name, const ObjRectangle& rect);
+	void DeleteHelmetAnimation(const std::string& nameWithUuid);
+	void OnHelmetEffect(const std::string& name, bool isActive);
 	void DisableTankAnimation(const std::string& name);
 	void AnimationSeqDisposer();
 	void DrawObject(const AnimatedObject& object) const;
