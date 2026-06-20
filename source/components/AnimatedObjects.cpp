@@ -14,7 +14,8 @@ AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect,
 	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())} {}
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							   const int frameLimit, const int scale, const bool isInfinite, const std::string& nameWithUuid)
+							   const int frameLimit, const int scale, const bool isInfinite,
+							   const std::string& nameWithUuid)
 	: rect{rect}
 	, limitOfFrames{frameLimit}
 	, type(type)

@@ -2,9 +2,9 @@
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
-#include "interfaces/IMoveBeh.h"
+#include "interfaces/IMoveBeh.h" //NOTE: required for std::unique_ptr<IMoveBeh> Pawn::_moveBeh
 #include "utils/UuidUtils.h"
-// #include <iostream>
+#include <iostream>
 
 Pawn::Pawn(PawnProperty pawnProperty)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)}
@@ -20,9 +20,9 @@ Pawn::Pawn(PawnProperty pawnProperty)
 	{
 		_uuid = UuidUtils::GetRandomUuid();
 	}
+
 	_uuidStr = UuidUtils::GetStringUuid(_uuid);
 }
-
 
 Pawn::~Pawn() = default;
 
@@ -80,25 +80,6 @@ void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
-
-bool Pawn::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime, bool isDirectionChange)
-{
-	const bool isMove = _moveBeh->Move(outCollisions, deltaTime);
-
-	if (isDirectionChange || isMove)
-	{
-		//NOTE: dir can change outside
-		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
-
-		//NOTE: pos can change in this method
-		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
-		{
-			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), GetDirection(), _uuid);
-		}
-	}
-
-	return isMove;
-}
 
 void Pawn::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
 {

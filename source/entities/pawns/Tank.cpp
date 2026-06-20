@@ -6,6 +6,7 @@
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
@@ -148,10 +149,12 @@ void Tank::SubscribeBonus()
 				this->OnBonusGrenade(fraction);
 			});
 
-	_events->AddListener("BonusStar_Pickup", _nameWithUuid, [this](const std::string& author, const std::string& /*fraction*/)
-	{
-		this->OnBonusStar(author);
-	});
+	_events->AddListener(
+			"BonusStar_Pickup", _nameWithUuid,
+			[this](const std::string& author, const std::string& /*fraction*/)
+			{
+				this->OnBonusStar(author);
+			});
 
 	_events->AddListener(
 			"BonusCaliber_Pickup", _nameWithUuid,

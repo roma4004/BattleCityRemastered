@@ -1,9 +1,12 @@
 #include "behavior/MoveLikeTankBeh.h"
+#include "components/EventSystem.h"
 #include "components/LineOfSight.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
+#include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
+#include "utils/ColliderUtils.h"
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
@@ -190,42 +193,110 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight(const Direction dir)
 	return nearestSeenObstacle;
 }
 
+std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
+{
+	std::vector<Direction> freePath;
+
+	constexpr int defaultCollisionReserve{4};
+	freePath.reserve(defaultCollisionReserve);
+
+	const float speed = _speed * static_cast<float>(deltaTime);
+	const auto [x, y, w, h] = _rect;
+	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
+	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
+	const ObjRectangle tankNextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
+	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
+
+	bool isFreeUp{true};
+	bool isFreeDown{true};
+	bool isFreeLeft{true};
+	bool isFreeRight{true};
+
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	{
+		if (_uuid == object->GetUuid())
+		{
+			continue;
+		}
+
+		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUp, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeUp = false; }
+		}
+
+		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDown, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeDown = false; }
+		}
+
+		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLeft, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeLeft = false; }
+		}
+
+		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRight, object->GetRect()))
+		{
+			if (!object->GetIsPassable()) { isFreeRight = false; }
+		}
+	}
+
+	if (isFreeUp)
+	{
+		freePath.emplace_back(Direction::UP);
+	}
+
+	if (isFreeDown)
+	{
+		freePath.emplace_back(Direction::DOWN);
+	}
+
+	if (isFreeLeft)
+	{
+		freePath.emplace_back(Direction::LEFT);
+	}
+
+	if (isFreeRight)
+	{
+		freePath.emplace_back(Direction::RIGHT);
+	}
+
+	return freePath;
+}
+
 void Bot::SetRandomDirection(const double deltaTime)
 {
-	if (const std::vector<Direction> freePath = _moveBeh->GetFreePathSides(deltaTime);
+	if (const std::vector<Direction> freePath = GetFreePathSides(deltaTime);
 		!freePath.empty())
 	{
 		const int max = static_cast<int>(freePath.size() - 1);
-		if (max == -1)
-		{
-			return;
-		}
-
 		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
 		SetDirection(freePath[pathIndex]);
+
+		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
+		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 }
 
 void Bot::TickUpdate(const double deltaTime)
 {
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
-	Direction oldDir{GetDirection()};
-	bool isNewDir{false};
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot auto change dir
+	const Direction oldDir{_dir};
+
+	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot can change direction by timer
 	{
 		SetRandomDirection(deltaTime);
-		isNewDir = oldDir != GetDirection();
-
-		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
-		_lastTimeTurn = std::chrono::system_clock::now();
 	}
 
-	if (const bool isMove = Pawn::Move(outCollisions, deltaTime, isNewDir);
-		!isMove)
+	const bool isMove = _moveBeh->Move(_dir, deltaTime, outCollisions);
+	if (!isMove)
 	{
-		SetRandomDirection(deltaTime);// NOTE: change dir it can't move
+		SetRandomDirection(deltaTime);// NOTE: bot will change their direction if it can't move
+	}
 
-		_lastTimeTurn = std::chrono::system_clock::now();
+	if (isMove || oldDir != _dir)
+	{
+		//TODO: let the animation manager work with string view
+		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), _dir);
 	}
 
 	if (!outCollisions.empty())

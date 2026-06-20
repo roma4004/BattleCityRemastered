@@ -46,13 +46,10 @@ void AnimationManager::Subscribe()
 			[this](const std::string& name, const ObjRectangle& rect, const Direction& dir)
 			{
 				UpdateTank(name, rect, dir);
-				if (!name.starts_with("Bullet"))//TODO: fix sending update from bullets, should be from tank only
-				{
-					UpdateHelmetEffectPosition(name, rect);
-				}
+				UpdateHelmetEffectPosition(name, rect);
 			});
 	_events->AddListener(
-		"BonusHelmet_StatusChange", _name,
+			"BonusHelmet_StatusChange", _name,
 			[this](const std::string& name, const bool isEnable)
 			{
 				OnHelmetEffect(name, isEnable);
@@ -158,7 +155,7 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 }
 
 void AnimationManager::CreateHelmetAnimation(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							  const int limitOfFrames, const int scale, const std::string& nameWithUuid)
+											 const int limitOfFrames, const int scale, const std::string& nameWithUuid)
 {
 	constexpr bool isInfinite{true};
 	_animatedObjects.emplace_back(name, rect, type, limitOfFrames, scale, isInfinite, nameWithUuid);
@@ -272,7 +269,6 @@ void AnimationManager::UpdateHelmetEffectPosition(const std::string& name, const
 {
 	std::string objectNameWithUuid{};
 	for (auto& object: _tankObjects)
-			
 	{
 		if (object.name == name)
 		{

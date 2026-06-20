@@ -1,7 +1,9 @@
 #include "entities/pawns/Player.h"
+#include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "interfaces/IInputProvider.h"
+#include "interfaces/IMoveBeh.h"
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
@@ -33,6 +35,24 @@ void Player::Disable() const
 	_inputProvider->Disable();
 }
 
+void Player::Move(const Direction direction, const double deltaTime,
+				  std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+{
+	const Direction oldDir = GetDirection();
+	const bool isNewDir = oldDir != direction;
+	if (isNewDir)
+	{
+		SetDirection(direction);
+	}
+
+	if (const bool isMove = _moveBeh->Move(direction, deltaTime, outCollisions);
+		isNewDir || isMove)
+	{
+		//TODO: let the animation manager work with string view
+		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+	}
+}
+
 void Player::TickUpdate(const double deltaTime)
 {
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
@@ -41,47 +61,19 @@ void Player::TickUpdate(const double deltaTime)
 	// move
 	if (up)
 	{
-		const Direction oldDir = GetDirection();
-		const bool isNewDir = oldDir != Direction::UP;
-		if (isNewDir)
-		{
-			SetDirection(Direction::UP);
-		}
-
-		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
+		Move(Direction::UP, deltaTime, outCollisions);
 	}
 	else if (left)
 	{
-		const Direction oldDir = GetDirection();
-		const bool isNewDir = oldDir != Direction::LEFT;
-		if (isNewDir)
-		{
-			SetDirection(Direction::LEFT);
-		}
-
-		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
+		Move(Direction::LEFT, deltaTime, outCollisions);
 	}
 	else if (down)
 	{
-		const Direction oldDir = GetDirection();
-		const bool isNewDir = oldDir != Direction::DOWN;
-		if (isNewDir)
-		{
-			SetDirection(Direction::DOWN);
-		}
-
-		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
+		Move(Direction::DOWN, deltaTime, outCollisions);
 	}
 	else if (right)
 	{
-		const Direction oldDir = GetDirection();
-		const bool isNewDir = oldDir != Direction::RIGHT;
-		if (isNewDir)
-		{
-			SetDirection(Direction::RIGHT);
-		}
-
-		std::ignore = Pawn::Move(outCollisions, deltaTime, isNewDir);
+		Move(Direction::RIGHT, deltaTime, outCollisions);
 	}
 
 	if (!outCollisions.empty())

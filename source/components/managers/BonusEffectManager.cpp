@@ -23,18 +23,22 @@ void BonusEffectManager::Subscribe()
 
 	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
 
-	_events->AddListener("BonusTimer_Pickup", _name, [this](const std::string& fraction, const milliseconds effectDuration)
-	{
-		this->OnTimerBonus(fraction, effectDuration);
-	});
+	_events->AddListener(
+			"BonusTimer_Pickup", _name,
+			[this](const std::string& fraction, const milliseconds effectDuration)
+			{
+				this->OnTimerBonus(fraction, effectDuration);
+			});
 	_events->AddListener("BonusHelmet_Pickup", _name, [this](const std::string& name, const milliseconds effectDuration)
 	{
 		this->OnHelmetBonusPickup(name, effectDuration);
 	});
-	_events->AddListener("BonusShovel_Pickup", _name, [this](const std::string& fraction, const milliseconds effectDuration)
-	{
-		this->OnBonusShovelPickup(fraction, effectDuration);
-	});
+	_events->AddListener(
+			"BonusShovel_Pickup", _name,
+			[this](const std::string& fraction, const milliseconds effectDuration)
+			{
+				this->OnBonusShovelPickup(fraction, effectDuration);
+			});
 
 	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank) { this->OnSpawnEnabled(tank); });
 }

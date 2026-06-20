@@ -16,6 +16,7 @@ protected:
 
 	void Enable() override;
 	void Disable() const override;
+	void Move(Direction direction, double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions);
 
 public:
 	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,

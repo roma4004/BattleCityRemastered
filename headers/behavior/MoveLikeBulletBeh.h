@@ -18,7 +18,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 	buuid& _uuid;
 	ObjRectangle& _rect;
-	Direction& _direction;
+	Direction& _dir;
 	UPoint& _windowSize;
 	BulletCalibre _calibre{};
 
@@ -30,10 +30,10 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
 protected:
-	[[nodiscard]] bool MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
-	[[nodiscard]] bool MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
-	[[nodiscard]] bool MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
-	[[nodiscard]] bool MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
+	[[nodiscard]] bool MoveLeft(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	[[nodiscard]] bool MoveUp(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	[[nodiscard]] bool MoveDown(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, const BulletCalibre& calibre,
@@ -41,6 +41,6 @@ public:
 
 	~MoveLikeBulletBeh() override = default;
 
-	[[nodiscard]] bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime) override;
-	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const override;
+	[[nodiscard]]
+	bool Move(Direction dir, double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 };

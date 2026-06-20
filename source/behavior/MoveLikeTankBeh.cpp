@@ -81,76 +81,6 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const d
 	// | std::ranges::to<std::vector>();
 }
 
-std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime) const
-{
-	std::vector<Direction> freePath;
-
-	constexpr int defaultCollisionReserve{4};
-	freePath.reserve(defaultCollisionReserve);
-
-	const float speed = _speed * static_cast<float>(deltaTime);
-	const auto [x, y, w, h] = _rect;
-	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
-	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
-	const ObjRectangle tankNextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
-	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
-
-	bool isFreeUp{true};
-	bool isFreeDown{true};
-	bool isFreeLeft{true};
-	bool isFreeRight{true};
-
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
-	{
-		if (_uuid == object->GetUuid())
-		{
-			continue;
-		}
-
-		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUp, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeUp = false; }
-		}
-
-		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDown, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeDown = false; }
-		}
-
-		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLeft, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeLeft = false; }
-		}
-
-		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRight, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeRight = false; }
-		}
-	}
-
-	if (isFreeUp)
-	{
-		freePath.emplace_back(Direction::UP);
-	}
-
-	if (isFreeDown)
-	{
-		freePath.emplace_back(Direction::DOWN);
-	}
-
-	if (isFreeLeft)
-	{
-		freePath.emplace_back(Direction::LEFT);
-	}
-
-	if (isFreeRight)
-	{
-		freePath.emplace_back(Direction::RIGHT);
-	}
-
-	return freePath;
-}
-
 // inline float Distance(const FPoint a, const FPoint b)
 // {
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
@@ -188,33 +118,33 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
 	// return distance;
 }
 
-bool MoveLikeTankBeh::Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
+bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
+						   std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const auto currentDirection = _direction;
-	if (currentDirection == Direction::UP)
+	if (dir == Direction::UP)
 	{
-		return MoveUp(outCollisions, deltaTime);
+		return MoveUp(deltaTime, outCollisions);
 	}
 
-	if (currentDirection == Direction::LEFT)
+	if (dir == Direction::LEFT)
 	{
-		return MoveLeft(outCollisions, deltaTime);
+		return MoveLeft(deltaTime, outCollisions);
 	}
 
-	if (currentDirection == Direction::DOWN)
+	if (dir == Direction::DOWN)
 	{
-		return MoveDown(outCollisions, deltaTime);
+		return MoveDown(deltaTime, outCollisions);
 	}
 
-	if (currentDirection == Direction::RIGHT)
+	if (dir == Direction::RIGHT)
 	{
-		return MoveRight(outCollisions, deltaTime);
+		return MoveRight(deltaTime, outCollisions);
 	}
 
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
+bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime); _rect.x - speed >= 0.f)
 	{
@@ -246,7 +176,7 @@ bool MoveLikeTankBeh::MoveLeft(std::vector<std::shared_ptr<BaseObj>>& outCollisi
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
+bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
@@ -280,7 +210,7 @@ bool MoveLikeTankBeh::MoveRight(std::vector<std::shared_ptr<BaseObj>>& outCollis
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
+bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime); _rect.y - speed >= 0.0f)
 	{
@@ -312,7 +242,7 @@ bool MoveLikeTankBeh::MoveUp(std::vector<std::shared_ptr<BaseObj>>& outCollision
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveDown(std::vector<std::shared_ptr<BaseObj>>& outCollisions, const double deltaTime)
+bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))

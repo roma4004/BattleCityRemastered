@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../BaseObj.h"
 #include "Point.h"
+#include "../BaseObj.h"
 #include "interfaces/ITickUpdatable.h"
 
 struct PawnProperty;
@@ -17,6 +17,8 @@ class Pawn : public BaseObj, public ITickUpdatable
 
 	virtual void SubscribeAsHost();
 	virtual void SubscribeAsClient();
+
+	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 
 protected:
 	float _speed{};
@@ -39,7 +41,7 @@ protected:
 	void TickUpdate(double deltaTime) override = 0;
 
 public:
-	Pawn(PawnProperty pawnProperty);
+	explicit Pawn(PawnProperty pawnProperty);
 
 	~Pawn() override;
 
@@ -52,8 +54,4 @@ public:
 
 	[[nodiscard]] float GetSpeed() const;
 	void SetSpeed(float speed);
-
-	[[nodiscard]]
-	virtual bool Move(std::vector<std::shared_ptr<BaseObj>>& outCollisions, double deltaTime, bool isDirectionChange);
-	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 };

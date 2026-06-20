@@ -44,8 +44,6 @@ protected:
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 
-	void TickUpdate(double deltaTime) override = 0;
-
 	virtual void Enable();
 	virtual void Disable() const;
 

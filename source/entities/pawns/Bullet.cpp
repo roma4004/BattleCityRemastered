@@ -7,6 +7,7 @@
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
@@ -134,11 +135,16 @@ void Bullet::TickUpdate(const double deltaTime)
 	if (GetIsAlive())//TODO: maybe for all add check isAlive
 	{
 		std::vector<std::shared_ptr<BaseObj>> outCollisions;
-		constexpr bool isNewDir{false};
-		if (!Pawn::Move(outCollisions, deltaTime, isNewDir))
+		const bool isMove = _moveBeh->Move(_dir, deltaTime, outCollisions);
+		if (!isMove)
 		{
 			DealDamage(outCollisions);
 			outCollisions.clear();
+		}
+
+		if (isMove && _gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
 		}
 	}
 }

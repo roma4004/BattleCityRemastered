@@ -30,6 +30,7 @@ protected:
 	[[nodiscard]] bool ActIfBonusSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
 	[[nodiscard]] bool HandleSideObstacles(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Direction dir);
+	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const;
 	void SetRandomDirection(double deltaTime);
 
 	void TickUpdate(double deltaTime) override;
