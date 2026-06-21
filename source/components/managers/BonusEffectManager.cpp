@@ -1,6 +1,7 @@
 #include "components/managers/BonusEffectManager.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Tank.h"
+#include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
 BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& events)
@@ -21,7 +22,11 @@ void BonusEffectManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
-	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->OnGameModeChangedTo(newGameMode);
+	});
 
 	_events->AddListener(
 			"BonusTimer_Pickup", _name,
@@ -54,27 +59,19 @@ void BonusEffectManager::Reset()
 	_helmetSlotsTankNames = {{}, {}, {}, {}, {}, {}};
 }
 
-void BonusEffectManager::ApplyBonusEffectsTo(const std::string& tankName, const std::string& tankFraction)
+void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const std::string& tankName, const std::string& tankFraction)
 {
 	if (tankFraction == "EnemyTeam")
 	{
-		_events->EmitEvent("BonusTimer_EffectOnOff", _timerEnemy.isActive, tankName);
+		_events->EmitEvent("BonusTimer_ReApplyOnSpawn", _timerEnemy.isActive, tankName);
 	}
 	else if (tankFraction == "PlayerTeam")
 	{
-		_events->EmitEvent("BonusTimer_EffectOnOff", _timerPlayer.isActive, tankName);
+		_events->EmitEvent("BonusTimer_ReApplyOnSpawn", _timerPlayer.isActive, tankName);
 	}
 
-	const size_t typeId = TankNameToId(tankName);
-	_events->EmitEvent("BonusHelmet_EffectOnOff", _helmetSlots[typeId].isActive, tankName);
-
-	if (const size_t id{TankNameToId(tankName)};
-		id < _helmetSlots.size())
-	{
-		_helmetSlotsTankNames[id] = tankName;
-		constexpr milliseconds effectDuration{std::chrono::seconds{5}};
-		StartTimer(_helmetSlots[id], "Helmet", tankName, effectDuration);
-	}
+	constexpr milliseconds effectDuration{std::chrono::seconds{5}};
+	OnHelmetBonusPickup(tankName, effectDuration);
 }
 
 void BonusEffectManager::OnTimerBonus(const std::string& fraction, const milliseconds effectDuration)
@@ -126,7 +123,7 @@ void BonusEffectManager::FinishTimer(Timer& timer, const std::string& event, con
 	OnBonusStatusChange(event, id, timer.isActive);
 }
 
-void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
+void BonusEffectManager::PreTickUpdate(const double /*deltaTime*/)
 {
 	if (_timerEnemy.isActive && TimeUtils::IsCooldownFinish(_timerEnemy.activateTime, _timerEnemy.cooldown))
 	{
@@ -234,5 +231,10 @@ void BonusEffectManager::OnSpawnEnabled(std::shared_ptr<Tank>& tank)
 
 	const std::string tankName{tank->GetName()};
 	const std::string tankFraction{tank->GetFraction()};
-	this->ApplyBonusEffectsTo(tankName, tankFraction);//NOTE: continue effects after respawn
+	ApplyBonusEffectsOnSpawnTo(tankName, tankFraction);//NOTE: continue effects after respawn
+}
+
+void BonusEffectManager::OnGameModeChangedTo(const GameMode newGameMode)
+{
+	this->_gameMode = newGameMode;
 }

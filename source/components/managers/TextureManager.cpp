@@ -205,7 +205,7 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 	{
 		textureRect = _offset.spawnAnim;
 	}
-	else if (name == "HelmetAnimation")
+	else if (name.ends_with("HelmetAnimation"))
 	{
 		textureRect = _offset.helmetAnimationFrame;
 	}

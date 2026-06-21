@@ -4,6 +4,7 @@
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
+#include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
@@ -297,6 +298,11 @@ void Bot::TickUpdate(const double deltaTime)
 	{
 		//TODO: let the animation manager work with string view
 		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), _dir);
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
+		}
 	}
 
 	if (!outCollisions.empty())

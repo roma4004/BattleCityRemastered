@@ -40,20 +40,18 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 				{
 					this->OnClientTankOnOff(uuid, isEnable);
 				});
+
+		_events->AddListener(
+				"ClientReceived_" + _name + "Pos",
+				_nameWithUuid,
+				[this](const FPoint newPos, const Direction dir, const buuid& uuid)
+				{
+					this->OnClientChangePos(newPos, dir, uuid);
+				});
 	}
 
 	_events->AddListener(
-			"BonusHelmet_EffectOnOff", _nameWithUuid,
-			[this](const bool isEnabled, const std::string& name)
-			{
-				if (name == this->_name)
-				{
-					this->_effects.isHelmetActive = isEnabled;
-				}
-			});
-
-	_events->AddListener(
-			"BonusTimer_EffectOnOff", _nameWithUuid,
+			"BonusTimer_ReApplyOnSpawn", _nameWithUuid,
 			[this](const bool isEnabled, const std::string& name)
 			{
 				if (name == this->_name)
@@ -112,7 +110,7 @@ void Tank::SubscribeAsClient()
 
 	_events->AddListener("ClientReceived_" + _name + "BonusHelmet_Pickup", _nameWithUuid, [this](const bool isActive)
 	{
-		this->_effects.isHelmetActive = isActive;
+		this->OnBonusHelmet(this->_name, isActive);
 	});
 
 	_events->AddListener("ClientReceived_" + _name + "BonusStar_Pickup", _nameWithUuid, [this]()
@@ -254,6 +252,8 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	{
 		_effects.isHelmetActive = isActive;
 
+		_events->EmitEvent("BonusHelmet_AnimationChange", _name, isActive);
+
 		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent("ServerSend_BonusHelmet_Pickup", _name, isActive);
@@ -347,4 +347,18 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 		//TODO: on destroy bonus emit PickUpBonus
 		object->TakeDamage(1);
 	}
+}
+
+void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
+{
+	if (uuid != _uuid)//TODO: check maybe never true
+	{
+		return;
+	}
+
+	SetDirection(dir);
+	SetPos(newPos);
+
+	//NOTE: fix for tank truck animation tick
+	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
 }

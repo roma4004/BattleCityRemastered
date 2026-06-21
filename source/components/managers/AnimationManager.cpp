@@ -45,17 +45,18 @@ void AnimationManager::Subscribe()
 			"AnimationTankUpdate", _name,
 			[this](const std::string& name, const ObjRectangle& rect, const Direction& dir)
 			{
-				UpdateTank(name, rect, dir);
-				UpdateHelmetEffectPosition(name, rect);
+				this->UpdateTank(name, rect, dir);
+				this->UpdateHelmetEffectPosition(name, rect);
 			});
 	_events->AddListener(
-			"BonusHelmet_StatusChange", _name,
+			"BonusHelmet_AnimationChange", _name,
 			[this](const std::string& name, const bool isEnable)
 			{
-				OnHelmetEffect(name, isEnable);
+				this->OnHelmetEffect(name, isEnable);
 			});
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
 
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
+	//TODO: do not add new helmet animation if we already have for this tank
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
 
@@ -130,9 +131,6 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 			Create("TankExplosion", rect, type, 2, 32);
 			//TODO: should change limitOfFrame to 5?
 			break;
-		case AnimationType::Helmet_Animation:
-			CreateHelmetAnimation("HelmetAnimation", rect, type, 2, 16, name);
-			break;
 		case AnimationType::Bullet_Animation:
 			Create("BulletAnimation", rect, type, 2, 16);
 			break;
@@ -150,33 +148,27 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Water_Animation, rect, "Water");
+		_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Water_Animation, rect, "Water");
 	}
 }
 
-void AnimationManager::CreateHelmetAnimation(const std::string& name, const ObjRectangle rect, const AnimationType type,
-											 const int limitOfFrames, const int scale, const std::string& nameWithUuid)
+void AnimationManager::CreateHelmetAnimation(const ObjRectangle rect, const std::string& name)
 {
+	constexpr auto type{AnimationType::Helmet_Animation};
 	constexpr bool isInfinite{true};
-	_animatedObjects.emplace_back(name, rect, type, limitOfFrames, scale, isInfinite, nameWithUuid);
-
-	//TODO: extract to higher layer
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Helmet_Animation, rect, "Helmet");
-	}
+	constexpr int limitOfFrames{2};
+	constexpr int scale{16};
+	const std::string helmetAnimation{"HelmetAnimation"};
+	_animatedObjects.emplace_back(name + helmetAnimation, rect, type, limitOfFrames, scale, isInfinite);
 }
 
-void AnimationManager::CreateAnimationTank(const ObjRectangle rect, const std::string name)
+void AnimationManager::CreateAnimationTank(const ObjRectangle rect, std::string name)
 {
 	constexpr auto type{AnimationType::Tank_Animation};
 	constexpr bool isInfinite{true};
-	_tankObjects.emplace_back(name, rect, type, 2, 16, isInfinite);
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name);
-	}
+	constexpr int limitOfFrames{2};
+	constexpr int scale{16};
+	_tankObjects.emplace_back(name, rect, type, limitOfFrames, scale, isInfinite);
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
@@ -186,7 +178,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		this->_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name);
+		_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name);
 	}
 }
 
@@ -199,17 +191,21 @@ void AnimationManager::Update()
 
 	for (auto& object: _animatedObjects)
 	{
+		if (object.markToDispose)
+		{
+			continue;
+		}
+
 		switch (object.type)
 		{
 			case AnimationType::Spawn_Animation:
 			case AnimationType::Bullet_Explosion:
+			case AnimationType::Helmet_Animation:
 				UpdateFrame(object, 20);
 				break;
 			case AnimationType::Tank_Explosion:
 				UpdateFrame(object, 30);
 				break;
-			case AnimationType::Helmet_Animation:
-				UpdateFrame(object, 20);
 			//case AnimationType::Bullet_Animation:
 			default:
 				break;
@@ -252,7 +248,7 @@ void AnimationManager::UpdateTank(const std::string& name, const ObjRectangle& r
 {
 	for (auto& object: _tankObjects)
 	{
-		if (object.name == name)
+		if (object.name.ends_with(name))
 		{
 			//Update tank animation position and dir
 			object.rect.x = rect.x;
@@ -260,87 +256,79 @@ void AnimationManager::UpdateTank(const std::string& name, const ObjRectangle& r
 			object.dir = dir;
 
 			UpdateFrame(object, 2);
-			return;
 		}
 	}
 }
 
 void AnimationManager::UpdateHelmetEffectPosition(const std::string& name, const ObjRectangle& rect)
 {
-	std::string objectNameWithUuid{};
-	for (auto& object: _tankObjects)
-	{
-		if (object.name == name)
-		{
-			objectNameWithUuid = object.nameWithUuid;
-			break;
-		}
-	}
-
 	for (auto& object: _animatedObjects)
 	{
-		if (object.nameWithUuid.ends_with(objectNameWithUuid))
+		if (object.markToDispose == false
+			&& object.type == AnimationType::Helmet_Animation
+			&& object.name.starts_with(name))
 		{
 			//Update helmet animation position
 			object.rect.x = rect.x;
 			object.rect.y = rect.y;
+		}
+	}
+}
+
+void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnable)
+{
+	if (!isEnable)
+	{
+		DeleteHelmetAnimation(name);
+	}
+	else
+	{
+		for (const auto& object: _tankObjects)
+		{
+			if (object.type == AnimationType::Tank_Animation && object.name != name)
+			{
+				continue;
+			}
+
+			CreateHelmetAnimation(object.rect, name);
 
 			return;
 		}
+
+		std::cout << "AnimationManager [DEBUG] Fail to CreateHelmetAnimation: " << "name = " << name << std::endl;
+		CreateHelmetAnimation({}, name);
 	}
 }
 
-void AnimationManager::OnHelmetEffect(const std::string& name, const bool isActive)
-{
-	for (const auto& object: _tankObjects)
-	{
-		if (object.name != name)
-		{
-			continue;
-		}
-
-		if (isActive)
-		{
-			CreateAnimation(AnimationType::Helmet_Animation, object.rect, object.nameWithUuid);
-		}
-		else
-		{
-			DeleteHelmetAnimation(object.nameWithUuid);
-		}
-
-		break;
-	}
-}
-
-void AnimationManager::DisableTankAnimation(const std::string& name)//TODO: add reuse flow for animation
-{
-	for (auto& object: _tankObjects)
-	{
-		if (object.name == name)
-		{
-			object.markToDispose = true;
-			return;
-		}
-	}
-}
+// void AnimationManager::DisableTankAnimation(const std::string& name)//TODO: add reuse flow for animation
+// {
+// 	for (auto& object: _tankObjects)
+// 	{
+// 		if (object.name == name)
+// 		{
+// 			object.markToDispose = true;
+// 			return;
+// 		}
+// 	}
+// }
 
 void AnimationManager::DeleteTankAnimation(const std::string& name)
 {
 	std::erase_if(_tankObjects, [&name](const auto& object)
 	{
-		return object.name == name;
+		return object.name.ends_with(name);
 	});
 }
 
-void AnimationManager::DeleteHelmetAnimation(const std::string& nameWithUuid)
+void AnimationManager::DeleteHelmetAnimation(const std::string& name)
 {
-	for (auto& animatedObject: _animatedObjects)
+	for (auto& object: _animatedObjects)
 	{
-		if (animatedObject.nameWithUuid.ends_with(nameWithUuid))
+		if (object.markToDispose == false
+			&& object.type == AnimationType::Helmet_Animation
+			&& object.name.starts_with(name))
 		{
-			animatedObject.markToDispose = true;
-
-			break;
+			object.markToDispose = true;
 		}
 	}
 }
@@ -353,9 +341,9 @@ void AnimationManager::DeleteHelmetAnimation(const std::string& nameWithUuid)
 //  cut here     |
 void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 {
-	std::erase_if(_animatedObjects, [](const auto& obj)
+	std::erase_if(_animatedObjects, [](const auto& object)
 	{
-		return obj.markToDispose;
+		return object.markToDispose;
 	});
 }
 

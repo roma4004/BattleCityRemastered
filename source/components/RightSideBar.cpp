@@ -38,12 +38,12 @@ void RightSideBar::Draw() const
 	_events->EmitEvent("RenderRightSideBar");
 	_events->EmitEvent("RenderEnemyIconBackground");
 	_events->EmitEvent("RenderEnemyIcons", _enemiesRespawnCount);
-	_events->EmitEvent("RenderStageNumber", _stageNumber);
 	_events->EmitEvent("RenderPlayerOneIcon", _playerOneRespawnCount);
 	if (_gameMode != GameMode::OnePlayer)
 	{
 		_events->EmitEvent("RenderPlayerTwoIcon", _playerTwoRespawnCount);
 	}
+	_events->EmitEvent("RenderStageNumber", _stageNumber);
 }
 
 void RightSideBar::OnRespawnCountChangedTo(const std::string& objectName, const unsigned short respawnCount)

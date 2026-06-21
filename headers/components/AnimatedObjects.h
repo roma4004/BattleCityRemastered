@@ -26,9 +26,6 @@ public:
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, int frameLimit, int scale,
 				   bool isInfinite = {});
 
-	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, int frameLimit, int scale,
-				   bool isInfinite, const std::string& nameWithUuid);
-
 	~AnimatedObject();
 
 	AnimatedObject& operator=(const AnimatedObject& other);

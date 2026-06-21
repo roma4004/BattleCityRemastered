@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
+#include "enums/GameMode.h"
 #include "interfaces/IInputProvider.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/TimeUtils.h"
@@ -50,6 +51,11 @@ void Player::Move(const Direction direction, const double deltaTime,
 	{
 		//TODO: let the animation manager work with string view
 		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
+		}
 	}
 }
 

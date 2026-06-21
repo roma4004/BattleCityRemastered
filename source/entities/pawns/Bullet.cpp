@@ -66,6 +66,13 @@ void Bullet::SubscribeAsClient()
 
 				this->SetIsAlive(false);
 			});
+	_events->AddListener(
+			"ClientReceived_" + _name + "Pos",
+			_nameWithUuid,
+			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
+			{
+				OnClientChangePos(newPos, dir, uuid);
+			});
 }
 
 void Bullet::Unsubscribe() const
@@ -188,4 +195,15 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	TakeDamage(_calibre.damage);
 
 	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
+}
+
+void Bullet::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
+{
+	if (uuid != _uuid)//TODO: check maybe never true
+	{
+		return;
+	}
+
+	SetDirection(dir);
+	SetPos(newPos);
 }

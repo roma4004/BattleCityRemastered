@@ -37,6 +37,7 @@ class RenderManager
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
 	std::unordered_map<unsigned int, SDL_Texture*> _colorTextureCache;
+	std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> _colorTexture{nullptr, nullptr};
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -44,7 +45,7 @@ class RenderManager
 	void DrawPauseText() const;
 	void DrawGameOverText() const;
 	void DrawGameWonText() const;
-	void DrawRightSideBar();
+	void DrawRightSideBar() const;
 	void DrawEnemyIconBackground() const;
 	void DrawEnemyIcons(int numberOfIcons) const;
 	void DrawPlayerOneIcons(unsigned short respawnCount) const;
@@ -74,7 +75,7 @@ class RenderManager
 
 	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
-	void DrawColorTexture(ObjRectangle rect);
+	void DrawColorTexture(ObjRectangle rect) const;
 	void DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, Direction dir) const;
 
 	void GenerateFpsTextures();

@@ -18,8 +18,6 @@ class Pawn : public BaseObj, public ITickUpdatable
 	virtual void SubscribeAsHost();
 	virtual void SubscribeAsClient();
 
-	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
-
 protected:
 	float _speed{};
 	std::string _uuidStr{};

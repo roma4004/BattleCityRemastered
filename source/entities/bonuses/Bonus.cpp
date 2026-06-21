@@ -58,7 +58,7 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_BonusDeSpawn", _name, [this](const buuid& uuid)
+	_events->AddListener("ClientReceived_BonusDeSpawn", _nameWithUuid, [this](const buuid& uuid)
 	{
 		if (uuid != this->_uuid)
 		{
@@ -90,4 +90,9 @@ void Bonus::SendDamageStatistics(const std::string& author, const std::string& f
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(_name + "_Pickup", author, fraction);
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_" + _name + "_Pickup", author, true);
+	}
 }

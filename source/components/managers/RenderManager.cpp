@@ -40,6 +40,9 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const s
 
 	PregenerateMenuBackgroundPixels();
 	PregenerateMenuBackgroundTexture();
+
+	constexpr unsigned int grayColor = 0x808080;
+	_colorTexture = {CreateColorTexture(grayColor), SDL_DestroyTexture};
 }
 
 RenderManager::~RenderManager()
@@ -111,28 +114,20 @@ void RenderManager::Subscribe()
 	{
 		this->DrawHealthBar(rect, health);
 	});
-
 	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
-
-	_events->AddListener("RenderEnemyIconBackground", _name, [this]()
-	{
-		this->DrawEnemyIconBackground();
-	});
+	_events->AddListener("RenderEnemyIconBackground", _name, [this]() { this->DrawEnemyIconBackground(); });
 	_events->AddListener("RenderEnemyIcons", _name, [this](const unsigned short respawnCount)
 	{
 		this->DrawEnemyIcons(respawnCount);
 	});
-
 	_events->AddListener("RenderPlayerOneIcon", _name, [this](const unsigned short respawnCount)
 	{
 		this->DrawPlayerOneIcons(respawnCount);
 	});
-
 	_events->AddListener("RenderPlayerTwoIcon", _name, [this](const unsigned short respawnCount)
 	{
 		this->DrawPlayerTwoIcons(respawnCount);
 	});
-
 	_events->AddListener("RenderStageNumber", _name, [this](const unsigned short stageNumber)
 	{
 		this->DrawStageNumber(stageNumber);
@@ -174,13 +169,7 @@ void RenderManager::DrawGameWonText() const
 	SDL_RenderCopy(_renderer.get(), _atlas.get(), &srcRect, &dstRect);
 }
 
-void RenderManager::DrawRightSideBar()
-{
-	SDL_Texture* colorTexture = CreateColorTexture(0x808080);
-	constexpr SDL_Rect rect{.x = 625, .y = 0, .w = 220, .h = 600};
-
-	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &rect);
-}
+void RenderManager::DrawRightSideBar() const { DrawColorTexture(TextureOffset{}.rightSideBar); }
 
 void RenderManager::DrawEnemyIconBackground() const
 {
@@ -470,13 +459,10 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 	}
 }
 
-void RenderManager::DrawColorTexture(const ObjRectangle rect)
+void RenderManager::DrawColorTexture(const ObjRectangle rect) const
 {
 	const SDL_Rect dstRect = RectToSdlRect(rect);
-	constexpr unsigned int grayColor = 0x808080;
-	SDL_Texture* colorTexture = CreateColorTexture(grayColor);
-	SDL_RenderCopy(_renderer.get(), colorTexture, nullptr, &dstRect);
-	SDL_DestroyTexture(colorTexture);
+	SDL_RenderCopy(_renderer.get(), _colorTexture.get(), nullptr, &dstRect);
 }
 
 void RenderManager::DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, const Direction dir) const

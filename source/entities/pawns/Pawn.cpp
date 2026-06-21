@@ -4,7 +4,7 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h" //NOTE: required for std::unique_ptr<IMoveBeh> Pawn::_moveBeh
 #include "utils/UuidUtils.h"
-#include <iostream>
+// #include <iostream>
 
 Pawn::Pawn(PawnProperty pawnProperty)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)}
@@ -35,14 +35,6 @@ void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener(
-			"ClientReceived_" + _name + "Pos",
-			_nameWithUuid,
-			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
-			{
-				OnClientChangePos(newPos, dir, uuid);
-			});
-
 	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
 	{
 		this->SetHealth(health);
@@ -80,17 +72,3 @@ void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 float Pawn::GetSpeed() const { return _speed; }
 
 void Pawn::SetSpeed(const float speed) { _speed = speed; }
-
-void Pawn::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
-{
-	if (uuid != _uuid)//TODO: check maybe never true
-	{
-		return;
-	}
-
-	SetDirection(dir);
-	SetPos(newPos);
-
-	//NOTE: fix for tank truck animation tick
-	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
-}

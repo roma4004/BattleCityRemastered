@@ -43,6 +43,7 @@ protected:
 	void Shot(buuid withUuid = {}) const;
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
+	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 
 	virtual void Enable();
 	virtual void Disable() const;

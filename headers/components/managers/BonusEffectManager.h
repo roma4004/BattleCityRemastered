@@ -15,6 +15,7 @@ class BonusEffectManager
 	std::vector<Timer> _helmetSlots{};
 	std::vector<std::string> _helmetSlotsTankNames{};
 	std::string _name{};
+	GameMode _gameMode{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
@@ -28,7 +29,7 @@ public:
 
 	void Reset();
 
-	void ApplyBonusEffectsTo(const std::string& tankName, const std::string& tankFraction);
+	void ApplyBonusEffectsOnSpawnTo(const std::string& tankName, const std::string& tankFraction);
 	void OnTimerBonus(const std::string& fraction, milliseconds effectDuration);
 	void OnHelmetBonusPickup(const std::string& name, milliseconds effectDuration);
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool isActive) const;
@@ -36,9 +37,10 @@ public:
 	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
 	void OnSpawnEnabled(std::shared_ptr<Tank>& tank);
+	void OnGameModeChangedTo(GameMode newGameMode);
 	static size_t TankNameToId(const std::string_view& name);
 
-	void TickUpdate(double deltaTime);
+	void PreTickUpdate(double deltaTime);
 
 	[[nodiscard]] Timer GetTimerEnemy() const;
 	[[nodiscard]] Timer GetTimerPlayer() const;

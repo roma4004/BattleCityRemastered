@@ -1,6 +1,7 @@
 #include "entities/Bonuses/BonusTimer.h"
 #include "components/EventSystem.h"
 #include "enums/BonusType.h"
+#include "enums/GameMode.h"
 
 BonusTimer::BonusTimer(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events,
 					   const milliseconds lifeTime, const buuid uuid, const GameMode gameMode,
@@ -10,7 +11,12 @@ BonusTimer::BonusTimer(const ObjRectangle& rect, const std::shared_ptr<EventSyst
 
 BonusTimer::~BonusTimer() = default;
 
-void BonusTimer::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
+void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_" + _name + "_Pickup", author, true);
+	}
 }
