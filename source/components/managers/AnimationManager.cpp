@@ -55,7 +55,7 @@ void AnimationManager::Subscribe()
 				this->OnHelmetEffect(name, isEnable);
 			});
 
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
+	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
 	//TODO: do not add new helmet animation if we already have for this tank
 	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
 }
@@ -82,6 +82,8 @@ void AnimationManager::SubscribeAsHost()
 			[this](const ObjRectangle rect, const std::string& name)
 			{
 				this->CreateAnimationTank(rect, name);
+				this->OnHelmetEffect(name, true);
+				//TODO: reuse animation
 			});
 
 	_events->AddListener(
@@ -283,20 +285,31 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 	}
 	else
 	{
-		for (const auto& object: _tankObjects)
+		for (auto& tankObject: _tankObjects)
 		{
-			if (object.type == AnimationType::Tank_Animation && object.name != name)
+			if (tankObject.type == AnimationType::Tank_Animation && tankObject.name != name)
 			{
 				continue;
 			}
 
-			CreateHelmetAnimation(object.rect, name);
+			//enable and update if exist
+			for (auto& animatedObject: _animatedObjects)
+			{
+				if (animatedObject.type == AnimationType::Helmet_Animation && animatedObject.name.starts_with(name))
+				{
+					animatedObject.markToDispose = false;
+					animatedObject.rect.x = tankObject.rect.x;
+					animatedObject.rect.y = tankObject.rect.y;
 
+					return;
+				}
+			}
+
+			CreateHelmetAnimation(tankObject.rect, name);
 			return;
 		}
 
 		std::cout << "AnimationManager [DEBUG] Fail to CreateHelmetAnimation: " << "name = " << name << std::endl;
-		CreateHelmetAnimation({}, name);
 	}
 }
 

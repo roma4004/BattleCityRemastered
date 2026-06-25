@@ -22,7 +22,7 @@ void BonusEffectManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
-	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
+	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->OnGameModeChangedTo(newGameMode);
@@ -123,7 +123,7 @@ void BonusEffectManager::FinishTimer(Timer& timer, const std::string& event, con
 	OnBonusStatusChange(event, id, timer.isActive);
 }
 
-void BonusEffectManager::PreTickUpdate(const double /*deltaTime*/)
+void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 {
 	if (_timerEnemy.isActive && TimeUtils::IsCooldownFinish(_timerEnemy.activateTime, _timerEnemy.cooldown))
 	{
