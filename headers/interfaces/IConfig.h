@@ -3,6 +3,8 @@
 #include "IGame.h"
 #include <memory>
 
+enum class GameMode : char8_t;
+
 class IConfig
 {
 public:
@@ -12,7 +14,7 @@ public:
 
 	virtual ~IConfig() = default;
 
-	[[nodiscard]] virtual std::unique_ptr<IGame> CreateGame() = 0;
+	[[nodiscard]] virtual std::unique_ptr<IGame> CreateGame(GameMode gameMode) = 0;
 
 	IConfig& operator=(const IConfig& other) = delete;
 	IConfig& operator=(IConfig&& other) noexcept = delete;

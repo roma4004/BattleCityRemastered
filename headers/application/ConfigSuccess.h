@@ -5,6 +5,8 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+enum class GameMode : char8_t;
+
 class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{};
@@ -34,7 +36,7 @@ public:
 
 	~ConfigSuccess() override = default;
 
-	[[nodiscard]] std::unique_ptr<IGame> CreateGame() override;
+	[[nodiscard]] std::unique_ptr<IGame> CreateGame(GameMode gameMode) override;
 
 	ConfigSuccess& operator=(const ConfigSuccess& other) = delete;
 	ConfigSuccess& operator=(ConfigSuccess&& other) noexcept = delete;

@@ -16,6 +16,7 @@ struct SDLEnvironment final
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 
 	UPoint windowSize{};
+	UPoint windowPos{};
 
 	const char* fontPathName{nullptr};
 	const char* logoPathName{nullptr};
@@ -27,8 +28,8 @@ struct SDLEnvironment final
 
 	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
 
-	SDLEnvironment(UPoint windowSize, const char* font, const char* logo, const char* introMusic, const char* atlas,
-				   const char* joyIcon, const char* xBoxCon, const char* pS5Con);
+	SDLEnvironment(UPoint windowSize, UPoint windowPos, const char* font, const char* logo, const char* introMusic, const char* atlas,
+	               const char* joyIcon, const char* xBoxCon, const char* pS5Con);
 
 	~SDLEnvironment();
 

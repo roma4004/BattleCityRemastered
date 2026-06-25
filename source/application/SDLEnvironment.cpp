@@ -11,16 +11,18 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(const UPoint windowSize, const char* font, const char* logo, const char* introMusic,
-							   const char* atlas, const char* joyIcon, const char* xBoxCon, const char* pS5Con)
+SDLEnvironment::SDLEnvironment(const UPoint windowSize, const UPoint windowPos, const char* font, const char* logo,
+                               const char* introMusic,
+                               const char* atlas, const char* joyIcon, const char* xBoxCon, const char* pS5Con)
 	: windowSize{windowSize}
-	, fontPathName{font}
-	, logoPathName{logo}
-	, introMusicPathName{introMusic}
-	, textureAtlasPath{atlas}
-	, joyIconPathName{joyIcon}
-	, xBoxHintPathName{xBoxCon}
-	, pS5HintPathName{pS5Con} {}
+	  , windowPos{windowPos}
+	  , fontPathName{font}
+	  , logoPathName{logo}
+	  , introMusicPathName{introMusic}
+	  , textureAtlasPath{atlas}
+	  , joyIconPathName{joyIcon}
+	  , xBoxHintPathName{xBoxCon}
+	  , pS5HintPathName{pS5Con} {}
 
 SDLEnvironment::~SDLEnvironment()
 {
@@ -199,7 +201,7 @@ SDLEnvironment::~SDLEnvironment()
 	}
 
 	return std::make_unique<ConfigSuccess>(windowSize, renderer, fontSmall, fontMedium, logoTexture, atlasTexture,
-										   joyIconTexture, xBoxHintTexture, pS5HintTexture, isVsyncOn);
+	                                       joyIconTexture, xBoxHintTexture, pS5HintTexture, isVsyncOn);
 }
 
 [[nodiscard]]
@@ -207,7 +209,8 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWi
 {
 	const auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_SHOWN;
-	const SDL_Rect rect{.x = 100, .y = 100, .w = static_cast<int>(windowSize.x), .h = static_cast<int>(windowSize.y)};
+	const SDL_Rect rect{.x = static_cast<int>(windowPos.x), .y = static_cast<int>(windowPos.y),
+	                    .w = static_cast<int>(windowSize.x), .h = static_cast<int>(windowSize.y)};
 	windowSizeHalf = {.x = static_cast<size_t>(rect.w / 2), .y = static_cast<size_t>(rect.h / 2)};
 
 	return {SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
@@ -231,8 +234,8 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWi
 	if constexpr (monitorIndex != -1)
 	{
 		SDL_SetWindowPosition(sdlWindow.get(),
-							  static_cast<int>(bounds.x + bounds.w / 2 - windowSizeHalf.x / 2),
-							  static_cast<int>(bounds.y + bounds.h / 2 - windowSizeHalf.y / 2 - bordersSize.y));
+		                      static_cast<int>(bounds.x + bounds.w / 2 - windowSizeHalf.x / 2),
+		                      static_cast<int>(bounds.y + bounds.h / 2 - windowSizeHalf.y / 2 - bordersSize.y));
 	}
 
 	return {SDL_CreateRenderer(sdlWindow.get(), monitorIndex, renderFlags), SDL_DestroyRenderer};

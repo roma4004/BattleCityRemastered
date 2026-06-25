@@ -25,7 +25,8 @@ class BaseObj;
 GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
 						 std::unique_ptr<RenderManager>& renderManager,
-						 std::unique_ptr<RightSideBar>& rightSideBar)
+						 std::unique_ptr<RightSideBar>& rightSideBar,
+						 GameMode gameMode)
 	: _windowSize{windowSize}
 	, _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
@@ -41,9 +42,13 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
-
-	ResetBattlefieldTo(GameMode::Demo);
-	_events->EmitEvent("ShowMenu", true);
+	
+	ResetBattlefieldTo(gameMode);
+	
+	if (gameMode == GameMode::Demo)
+	{
+		_events->EmitEvent("ShowMenu", true);
+	}
 }
 
 GameSuccess::~GameSuccess()
