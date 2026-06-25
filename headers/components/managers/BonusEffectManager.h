@@ -40,7 +40,7 @@ public:
 	void OnGameModeChangedTo(GameMode newGameMode);
 	static size_t TankNameToId(const std::string_view& name);
 
-	void PreTickUpdate(double deltaTime);
+	void TickUpdate(double deltaTime);
 
 	[[nodiscard]] Timer GetTimerEnemy() const;
 	[[nodiscard]] Timer GetTimerPlayer() const;
