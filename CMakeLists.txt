@@ -258,6 +258,7 @@ include_directories(headers)
 set(SOURCE_FILES
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
+        source/application/GameConfig.cpp
         source/application/GameFailure.cpp
         source/application/GameSuccess.cpp
         source/application/SDLEnvironment.cpp

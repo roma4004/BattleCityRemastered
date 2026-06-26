@@ -4,6 +4,7 @@
 #include "interfaces/IConfig.h"
 #include "interfaces/IGame.h"
 #include "utils/NetworkLogger.h"
+#include <../headers/application/GameConfig.h>
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
@@ -14,10 +15,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto gameMode{GameMode::Demo};
 	
-	constexpr UPoint windowSize{.x = 800, .y = 600};
-	UPoint windowPos{.x = 100, .y = 100};
+	GameConfig gameConfig{"D:\\Projects\\BattleCity\\x64\\Debug\\config.ini"};
 	
-	//TODO make config.ini and parser for it 
+	UPoint windowSize{
+		.x = gameConfig.pTreeIni.get<unsigned>("Window.width"),
+		.y = gameConfig.pTreeIni.get<unsigned>("Window.height")};
+	
+	UPoint windowPos{
+		.x = gameConfig.pTreeIni.get<unsigned>("Window.posX"),
+		.y = gameConfig.pTreeIni.get<unsigned>("Window.posY")};
+	
 	if (argc == 2)
     {
 		if (const std::string arg{argv[1]}; arg.ends_with("host"))

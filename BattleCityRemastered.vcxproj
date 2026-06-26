@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClCompile Include="source\application\ConfigFailure.cpp" />
     <ClCompile Include="source\application\ConfigSuccess.cpp" />
+    <ClCompile Include="source\application\GameConfig.cpp" />
     <ClCompile Include="source\application\GameFailure.cpp" />
     <ClCompile Include="source\application\GameSuccess.cpp" />
     <ClCompile Include="source\application\SDLEnvironment.cpp" />
@@ -228,6 +229,7 @@
     <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\application\GameConfig.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\components\AnimatedObjects.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
