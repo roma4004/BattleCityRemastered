@@ -20,23 +20,24 @@ Already done:
 * shooting with reload timer (reusing bullets instance),
 * destroying tanks/obstacles, indestructible obstacles and water that can't be passed but bullets traverse above it,
 * destroying bullet phisics obstacles, mean that bullet have explosion radius to cause AOE damage,
-* tank heath bar,
+* tank heath bar(with color gradation),
 * enemy's AI and coop AI,
 * animated menu with game modes and pause,
 * respawning tank and bonuses,
-* pickupable bonuses (spawn every 60sec in random location), variations the original game like so:
+* pickupable bonuses, even enemy can pickup bonus. Spawned every 60 sec in random location. Variations from the original game like:
   * Grenade (destroy enemy team tank),
   * Helmet (temporary invincibility, for 15 sec),
   * Shovel (temporarу turns brick walls around the fortress to steel and repair destroyed parts, for 15 sec),
   * Star (increases tank power, when pick up more than 2 can destroy steel walls),
   * Tank (extra life),
   * Timer (freeze enemy team, for 15 sec)
-* all bonuses also can be pickupable for an enemy team with the opposite effect,
-* network multiplayer (playing from two game sparated process, one start as host, other as client. )
+* network multiplayer (playing from two game process, one will start as host, other as client). Hotseat also available from local game.
+* intro music
 * textures and animation based on original, with some small difference and extendings
-* end game (win\lose condition) with score board with statistics
+* animation: tankSpawn, BonusHelmet effect, bullet explosion, tank explosion 
+* end game (win\lose condition) with score board (statistics)
 * controling keys hint
-* swaping controls of players (gamePads included), that alow you to use playerTwo control scheme for playing playerOne (TAB key)
+* swaping controls of players (gamePads included), allow you to use playerTwo control scheme for playing playerOne (TAB key)
 * side bar with respawn counters and level number (just like in oiginal)
 * auto-activating bonusHelmet for 5 second for each tank on its spawn
 * animation of Helmet bonus on tank (health bar also hide to visualize it)
