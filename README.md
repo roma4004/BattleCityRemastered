@@ -70,15 +70,15 @@ Used design patterns:
 TODO roadmap:
 * (in progress) parsing console argument to run host process and client process at the same time, with setting window position,
 * (in progress) save/load settings into config ini file,
+* (in progress) SDL_Mixer for sound (only start music ready),
 * visualize time left for timers like bonusHelmet and bonusTimer,
 * settings screen, that alow you control volume of sound and music, enable vSync and other stuff,
 * ice and bushes logic,
-* bonus that allow you destroy obstacles while moveing, get bigger tank and bullet, ability limited by time,
-* bonus ship from some version of original game that alow you cross rivers,
+* new unique bonuses:
+  at least bonus that allow you destroy obstacles while moveing, get bigger tank and bullet, ability limited by time,
+  at least bonus ship from some version of original game that alow you cross rivers,
 * network multiplayer lobby system,
-* SDL_Mixer for sound (in progress, one start music),
 * Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
-* new unique bonuses,
 * QuadTree for collision detection (yea it will be overkill),
 * Thread Pool even for faster "update" and "draw",
 * maybe rewrite for DOTs using
