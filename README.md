@@ -15,7 +15,7 @@ and game over example in multiplayer, with score board
 <img width="2402" height="950" alt="зображення" src="https://github.com/user-attachments/assets/f1b888f9-a6da-4132-b2d9-87f290be8c5f" />
 
 
-Already done:
+Already done (more than 20 features):
 * moving (for both players on one keyboard, with gamepad support, tested on Xbox and PlayStation controllers)
 * shooting with reload timer (reusing bullets instance),
 * destroying tanks/obstacles, indestructible obstacles and water that can't be passed but bullets traverse above it,
@@ -38,7 +38,7 @@ Already done:
 * end game (win\lose condition) with score board (statistics)
 * controling keys hint
 * swaping controls of players (gamePads included), allow you to use playerTwo control scheme for playing playerOne (TAB key)
-* side bar with respawn counters and level number (just like in oiginal)
+* right side bar with respawn counters and level number (just like in oiginal)
 * auto-activating bonusHelmet for 5 second for each tank on its spawn
 * animation of Helmet bonus on tank (health bar also hide to visualize it)
 
@@ -77,8 +77,7 @@ TODO roadmap:
 * new unique bonuses:
   at least bonus that allow you destroy obstacles while moveing, get bigger tank and bullet, ability limited by time,
   at least bonus ship from some version of original game that alow you cross rivers,
-* network multiplayer lobby system,
-* Entity Component System(in progress, have few behavior classses like component, more incoming and universal system planing),
-* QuadTree for collision detection (yea it will be overkill),
-* Thread Pool even for faster "update" and "draw",
+* lobby system for network multiplayer,
+* QuadTree for collision detection (yea it will be overkill, but cool for stydy),
+* Thread Pool for faster "update" and "draw",
 * maybe rewrite for DOTs using
