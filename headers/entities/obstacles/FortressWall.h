@@ -28,9 +28,9 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 
 	void Unsubscribe() const;
 
-	void OnShovelCooldownEnd();
-
 	void OnEnemyPickupShovel();
+	void OnPlayerPickupShovel();
+	void OnShovelCooldownEnd();
 
 public:
 	FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
@@ -39,8 +39,6 @@ public:
 	~FortressWall() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void OnPlayerPickupShovel();
-	//TODO: move to private section after rewrite unit test ShovelPickUpByEnemyThenFortressWallSteelWallHide
 
 	[[nodiscard]] std::string_view GetName() const override;
 	[[nodiscard]] buuid GetUuid() const override;

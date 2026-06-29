@@ -64,12 +64,12 @@ protected:
 
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
-	if (Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (const Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameMode));
 
-		if (const auto steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
+		if (SteelWall* steelWall = dynamic_cast<SteelWall*>(_allObjects.back().get()))
 		{
 			steelWall->SetHealth(1);
 			EXPECT_EQ(steelWall->GetHealth(), 1);

@@ -97,7 +97,6 @@ void FortressWall::OnEnemyPickupShovel()
 	}
 }
 
-//TODO: should be private and friend bonusShovel to activate
 // NOTE: call when player team bonus pick up
 void FortressWall::OnPlayerPickupShovel()
 {
