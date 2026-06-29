@@ -56,7 +56,7 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void TakeDamage(int damage) override;
 
-	[[nodiscard]] int GetTier() const;
+	[[nodiscard]] unsigned GetTier() const;
 
 	[[nodiscard]] float GetBulletWidth() const;
 	void SetBulletWidth(float bulletWidth);

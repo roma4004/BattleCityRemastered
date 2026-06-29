@@ -14,9 +14,4 @@ BonusTimer::~BonusTimer() = default;
 void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent("ServerSend_" + _name + "_Pickup", author, true);
-	}
 }

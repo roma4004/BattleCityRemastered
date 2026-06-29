@@ -68,7 +68,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
@@ -353,7 +353,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank don't move when shooting
+// Check that tank doesn't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -537,7 +537,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
@@ -696,7 +696,7 @@ TEST_F(PlayerTest, PlayerTeamWon)
 		_allObjects.clear();
 	}
 
-	EXPECT_TRUE(isGameWon);
+	EXPECT_TRUE(isGameWon);//TODO: investigate why (on cmake tests) sometimes player can't win
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
 }

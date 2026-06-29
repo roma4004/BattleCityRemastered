@@ -21,7 +21,7 @@ protected:
 	int _bulletHealth{1};
 	float _gridSize{1};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 3, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 3u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -44,7 +44,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 3,
+				.tier = _calibre.tier,
 				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -64,7 +64,7 @@ protected:
 
 TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 {
-	if (/*auto&& bullet = */dynamic_cast<Bullet*>(_allObjects.back().get()))
+	if (Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		ObjRectangle wallRect = {.x = 0.f, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
 		_allObjects.emplace_back(std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameMode));
@@ -73,10 +73,19 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 		{
 			steelWall->SetHealth(1);
 			EXPECT_EQ(steelWall->GetHealth(), 1);
+			EXPECT_EQ(bullet->GetTier(), 3u);
 
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_EQ(steelWall->GetHealth(), 0);
 		}
+		else
+		{
+			EXPECT_FALSE(true);
+		}
+	}
+	else
+	{
+		EXPECT_FALSE(true);
 	}
 }

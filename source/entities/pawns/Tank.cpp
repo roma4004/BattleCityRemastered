@@ -101,6 +101,10 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
+	//TODO: remove + _name +  from eventName
+	//TODO: rename ClientReceived_ to ClientIn
+	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event
+	//TODO: refactor to ClientReceived_ "Shot" to just "Shot" and move bot timers to handle outside bot tank,
 	_events->AddListener(
 			"ClientReceived_" + _name + "Shot", _nameWithUuid, [this](const Direction dir, const buuid& uuid)
 			{
@@ -198,7 +202,7 @@ void Tank::TakeDamage(const int damage)
 	}
 }
 
-int Tank::GetTier() const { return _tier; }
+unsigned Tank::GetTier() const { return _tier; }
 
 void Tank::Shot(const buuid withUuid) const
 {
@@ -285,6 +289,7 @@ void Tank::OnBonusStar(const std::string& author)
 		_calibre.speed *= 1.10f;
 		_calibre.damage += 15;
 		_calibre.damageRadius *= 1.25f;
+		_calibre.tier = _tier;
 		_fireCooldown -= milliseconds{150};
 
 		if (_gameMode == GameMode::PlayAsHost)
@@ -310,6 +315,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 		_calibre.speed *= 1.30f;
 		_calibre.damage += 45;
 		_calibre.damageRadius *= 1.75f;
+		_calibre.tier = _tier;
 		_fireCooldown -= milliseconds{450};
 
 		if (_gameMode == GameMode::PlayAsHost)

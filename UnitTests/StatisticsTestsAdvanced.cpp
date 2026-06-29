@@ -20,7 +20,7 @@ protected:
 	int _bulletHealth{1};
 	float _tankSize{};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -59,7 +59,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty2),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = dir,

@@ -24,7 +24,8 @@ Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulle
 		//TODO: move timer check to timerManager and onEvent change the class field bool isOnCooldown{false};
 		//TODO: cover this by test, _shootDistance check
 		//TODO: refactor to separated flag isClearToFire mean safe distance
-		////TODO: cover this by test, that we can't shoot if on cooldown
+		//TODO: cover this by test, that we can't shoot if on cooldown
+		//TODO: cover pickup bonusTank after lose fortress
 		if (!TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown)
 			|| _shootDistance < _calibre.damageRadius + _bulletOffset)
 		{

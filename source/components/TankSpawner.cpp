@@ -354,7 +354,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
 							  .allObjects = _allObjects,
 							  .events = _events,
-							  .tier = 1,
+							  .tier = 1u,
 							  .speed = speed,
 							  .windowSize = _windowSize,
 							  .dir = Direction::UP,
