@@ -6,33 +6,46 @@
 //TODO: fix enemy stuck in bricks(local game) looks like 1 pixel issue when finding free path
 //TODO: if enemy see bullets they should try or prioritize move aside
 Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
-	: Bot{std::move(pawnProperty), bulletPool, enableByDefault} {}
+	: Bot{std::move(pawnProperty), bulletPool, enableByDefault}
+{
+	m_shouldShootStrategy = [this](const std::shared_ptr<BaseObj>& obj)
+	{
+		if (obj == nullptr)
+		{
+			return false;
+		}
+
+		//TODO: cover this by test, that ally was seen and not shoot him
+		if (IsAlly(obj))
+		{
+			return false;
+		}
+
+		//TODO: move timer check to timerManager and onEvent change the class field bool isOnCooldown{false};
+		//TODO: cover this by test, _shootDistance check
+		//TODO: refactor to separated flag isClearToFire mean safe distance
+		////TODO: cover this by test, that we can't shoot if on cooldown
+		if (!TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown)
+			|| _shootDistance < _calibre.damageRadius + _bulletOffset)
+		{
+			return false;
+		}
+
+		//TODO: cover this by test, that enemy was seen and shoot him
+		if (IsOpponent(obj))
+		{
+			return true;
+		}
+
+		//TODO: rename Grass to BushesTile
+		if ((obj->GetIsDestructible() || _tier > 2u)
+			&& !obj->GetIsPenetrable())// skip water, ice, bush(Grass)
+		{
+			return true;
+		}
+
+		return false;
+	};
+}
 
 Enemy::~Enemy() = default;
-
-void Enemy::TickUpdate(const double deltaTime)
-{
-	Bot::TickUpdate(deltaTime);
-
-	// shot
-	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
-	{
-		const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight(GetDirection());
-
-		if (!nearestSeenObstacle || IsAlly(nearestSeenObstacle))
-		{
-			return;
-		}
-
-		if (const auto obstacle = nearestSeenObstacle.get();
-			obstacle
-			&& (obstacle->GetIsDestructible() || _tier > 2)
-			&& !obstacle->GetIsPenetrable())// skip water, ice, bush(Grass)
-		{
-			if (_shootDistance > _calibre.damageRadius + _bulletOffset)//TODO: cover this by test
-			{
-				Shot();
-			}
-		}
-	}
-}
