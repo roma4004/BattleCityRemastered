@@ -40,7 +40,12 @@ void FortressWall::Subscribe()
 		SubscribeAsClient();
 	}
 
-	SubscribeBonus();
+	_events->AddListener(
+			"BonusShovel_StatusChange", _nameWithUuid,
+			[this](const std::string& fraction, const bool isActive)
+			{
+				this->OnBonusShovel(fraction, isActive);
+			});
 }
 
 void FortressWall::SubscribeAsClient()
@@ -57,7 +62,7 @@ void FortressWall::SubscribeAsClient()
 					}
 					else if (state == "ToBrick")
 					{
-						this->OnPlayerShovelCooldownEnd();
+						this->OnShovelCooldownEnd();
 					}
 					else if (state == "ToSteel")
 					{
@@ -65,13 +70,6 @@ void FortressWall::SubscribeAsClient()
 					}
 				}
 			});
-}
-
-void FortressWall::SubscribeBonus()
-{
-	_events->AddListener("BonusShovel_OnPlayerPickup", _nameWithUuid, [this]() { this->OnPlayerPickupShovel(); });
-	_events->AddListener("BonusShovel_OnCooldownEnd", _nameWithUuid, [this]() { this->OnPlayerShovelCooldownEnd(); });
-	_events->AddListener("BonusShovel_OnEnemyPickup", _nameWithUuid, [this]() { this->OnEnemyPickupShovel(); });
 }
 
 void FortressWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
@@ -88,19 +86,14 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 	}
 }
 
-void FortressWall::OnPlayerShovelCooldownEnd()
+// NOTE: call when enemy team pickup bonus
+void FortressWall::OnEnemyPickupShovel()
 {
-	if (GetHealth() > 0)
-	{
-		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
-		{
-			_obstacle = std::make_unique<BrickWall>(_rect, _events, _uuid, _gameMode);
-		}
+	_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-		if (_gameMode == GameMode::PlayAsHost)
-		{
-			_events->EmitEvent("ServerSend_FortressChange", "ToBrick", _uuid);
-		}
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
 	}
 }
 
@@ -127,6 +120,32 @@ void FortressWall::OnPlayerPickupShovel()
 			_events->EmitEvent("ServerSend_FortressChange", "ToSteel", _uuid);
 		}
 	}
+}
+
+void FortressWall::OnShovelCooldownEnd()
+{
+	if (GetHealth() > 0)
+	{
+		if (std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle))
+		{
+			_obstacle = std::make_unique<BrickWall>(_rect, _events, _uuid, _gameMode);
+		}
+
+		if (_gameMode == GameMode::PlayAsHost)
+		{
+			_events->EmitEvent("ServerSend_FortressChange", "ToBrick", _uuid);
+		}
+	}
+}
+
+void FortressWall::OnBonusShovel(const std::string& fraction, const bool isActive)
+{
+	if (fraction == "EnemyTeam")
+	{
+		OnEnemyPickupShovel();
+	}
+
+	isActive ? OnPlayerPickupShovel() : OnShovelCooldownEnd();
 }
 
 void FortressWall::TakeDamage(const int damage)
@@ -161,17 +180,6 @@ bool FortressWall::IsBrickWall() const
 bool FortressWall::IsSteelWall() const
 {
 	return std::holds_alternative<std::unique_ptr<SteelWall>>(_obstacle);
-}
-
-// NOTE: call when enemy team pickup bonus
-void FortressWall::OnEnemyPickupShovel()
-{
-	_obstacle = std::unique_ptr<BrickWall>(nullptr);
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
-	}
 }
 
 bool FortressWall::GetIsPassable() const

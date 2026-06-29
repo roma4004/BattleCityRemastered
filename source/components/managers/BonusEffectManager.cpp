@@ -34,9 +34,9 @@ void BonusEffectManager::Subscribe()
 			{
 				this->OnTimerBonus(fraction, effectDuration);
 			});
-	_events->AddListener("BonusHelmet_Pickup", _name, [this](const std::string& name, const milliseconds effectDuration)
+	_events->AddListener("BonusHelmet_Pickup", _name, [this](const std::string& author, const milliseconds effectDuration)
 	{
-		this->OnHelmetBonusPickup(name, effectDuration);
+		this->OnHelmetBonusPickup(author, effectDuration);
 	});
 	_events->AddListener(
 			"BonusShovel_Pickup", _name,
@@ -86,13 +86,13 @@ void BonusEffectManager::OnTimerBonus(const std::string& fraction, const millise
 	}
 }
 
-void BonusEffectManager::OnHelmetBonusPickup(const std::string& name, const milliseconds effectDuration)
+void BonusEffectManager::OnHelmetBonusPickup(const std::string& author, const milliseconds effectDuration)
 {
-	if (const size_t id{TankNameToId(name)};
-		id < _helmetSlots.size())
+	if (const size_t timerId{TankNameToId(author)};
+		timerId < _helmetSlots.size())
 	{
-		_helmetSlotsTankNames[id] = name;
-		StartTimer(_helmetSlots[id], "Helmet", name, effectDuration);
+		_helmetSlotsTankNames[timerId] = author;
+		StartTimer(_helmetSlots[timerId], "Helmet", author, effectDuration);
 	}
 }
 
@@ -167,24 +167,12 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 {
 	if (fraction == "PlayerTeam")
 	{
-		if (_shovelPlayer.isActive)
-		{
-			_shovelPlayer.cooldown += effectDuration;
-		}
-		else
-		{
-			_shovelPlayer.cooldown = effectDuration;
-			_shovelPlayer.isActive = true;
-			_events->EmitEvent("BonusShovel_OnPlayerPickup");
-		}
+		StartTimer(_shovelPlayer, "Shovel", fraction, effectDuration);
 	}
-	else if (fraction == "EnemyTeam")
+	else if (fraction == "EnemyTeam") //NOTE: enemy pickup should disable player shovel instantly
 	{
-		_shovelPlayer.isActive = false;
-		_events->EmitEvent("BonusShovel_OnEnemyPickup");
+		FinishTimer(_shovelPlayer, "Shovel", fraction);
 	}
-
-	_shovelPlayer.activateTime = std::chrono::system_clock::now();
 }
 
 size_t BonusEffectManager::TankNameToId(const std::string_view& name)
