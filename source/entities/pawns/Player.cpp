@@ -49,12 +49,12 @@ void Player::Move(const Direction direction, const double deltaTime,
 	if (const bool isMove = _moveBeh->Move(direction, deltaTime, outCollisions);
 		isNewDir || isMove)
 	{
-		//TODO: let the animation manager work with string view
-		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
 }

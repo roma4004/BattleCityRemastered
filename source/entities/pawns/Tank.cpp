@@ -366,5 +366,5 @@ void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 	SetPos(newPos);
 
 	//NOTE: fix for tank truck animation tick
-	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+	_events->EmitEvent("AnimationTankUpdate", GetName(), newPos, dir);
 }
