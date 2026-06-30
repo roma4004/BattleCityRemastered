@@ -23,7 +23,7 @@ protected:
 	//LOS
 	float _obstacleDistance{};
 	float _bulletOffset{};
-	[[nodiscard]] std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;
+	std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;
 
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] bool IsAlly(const std::shared_ptr<BaseObj>& obstacle) const;

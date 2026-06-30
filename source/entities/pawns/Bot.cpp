@@ -215,7 +215,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 			nearestSeenObstacle = downSideObstacles.front();
 		}
 
-		_obstacleDistance = nearestSeenObstacle->GetY() - _rect.y + _rect.h;
+		_obstacleDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
 		_bulletOffset = _calibre.size.y;
 	}
 
@@ -227,7 +227,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 			nearestSeenObstacle = rightSideObstacles.front();
 		}
 
-		_obstacleDistance = nearestSeenObstacle->GetX() - _rect.x + _rect.w;
+		_obstacleDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
 		_bulletOffset = _calibre.size.x;
 	}
 
