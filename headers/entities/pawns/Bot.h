@@ -7,6 +7,7 @@
 struct BonusEffectProperty;
 class EventSystem;
 class BulletPool;
+class LineOfSight;
 
 class Bot : public Tank
 {
@@ -20,21 +21,23 @@ protected:
 	milliseconds _turnDuration{std::chrono::seconds(2)};
 
 	//LOS
-	float _shootDistance{};
+	float _obstacleDistance{};
 	float _bulletOffset{};
-	std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootStrategy;
+	[[nodiscard]] std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;
 
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] bool IsAlly(const std::shared_ptr<BaseObj>& obstacle) const;
 	[[nodiscard]] static bool IsBonus(const std::shared_ptr<BaseObj>& obstacle);
-	[[nodiscard]] static bool IsFreePathToBonus(const std::vector<std::shared_ptr<BaseObj>>& sideObstacles);
-	[[nodiscard]] bool ChangeDirIfOpponentSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
-	[[nodiscard]] bool ChangeDirIfBonusSeen(Direction dir, const std::shared_ptr<BaseObj>& nearestObstacle);
-	[[nodiscard]] bool EnemySideCheck(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
-	[[nodiscard]] bool BonusSideCheck(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
-	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight(Direction dir);
+	[[nodiscard]] bool ChangeDirIfSeenBonus(Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
+	[[nodiscard]] bool ChangeDirIfSeenOpponent(Direction dir,
+											   const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
+	[[nodiscard]] std::shared_ptr<BaseObj> EnemyLookup(LineOfSight& lineOfSight, Direction& dir);
+	[[nodiscard]] std::shared_ptr<BaseObj> BonusLookup(LineOfSight& lineOfSight, Direction& dir);
+	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight();
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const;
+
 	void SetRandomDirection(double deltaTime);
+	bool ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const;
 
 	void TickUpdate(double deltaTime) override;
 
