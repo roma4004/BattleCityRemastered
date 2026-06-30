@@ -13,6 +13,11 @@ CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& b
 			return false;
 		}
 
+		if (IsAlly(obj))
+		{
+			return false;
+		}
+
 		if ((obj->GetIsDestructible() || _tier > 2u)
 			&& !obj->GetIsPenetrable()// skip water, ice, bush(Grass)
 			&& !std::dynamic_pointer_cast<FortressWall>(obj)
