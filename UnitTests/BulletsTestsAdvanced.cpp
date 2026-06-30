@@ -1,6 +1,5 @@
 ﻿#include "Point.h"
 #include "components/EventSystem.h"
-#include "entities/obstacles/FortressWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"

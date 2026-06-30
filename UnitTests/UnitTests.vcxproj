@@ -114,6 +114,7 @@
     <ClCompile Include="BonusTestsBasic.cpp" />
     <ClCompile Include="BonusTestsDestroy.cpp" />
     <ClCompile Include="BonusTestsEnemy.cpp" />
+    <ClCompile Include="BotTests.cpp" />
     <ClCompile Include="BulletsTestsAdvanced.cpp" />
     <ClCompile Include="BulletsTestsBasic.cpp" />
     <ClCompile Include="NetworkTests.cpp" />

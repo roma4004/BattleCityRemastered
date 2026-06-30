@@ -381,6 +381,7 @@ void Bot::TickUpdate(const double deltaTime)
 		if (ShouldShootOpponent(nearestSeenObstacle)
 			|| m_shouldShootToObstacleStrategy(nearestSeenObstacle))
 		{
+			//TODO: add feature for bots chance to shoot to obstacle
 			//TODO: move timer check to timerManager and onEvent change the class field bool isOnCooldown{false};
 			//TODO: cover this by test, _shootDistance check
 			//TODO: refactor to separated flag isClearToFire mean safe distance

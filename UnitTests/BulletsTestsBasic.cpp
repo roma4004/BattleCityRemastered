@@ -304,7 +304,6 @@ TEST_F(BulletTest, BulletDamageTank)
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	const float tankSize = gridSize * 3;// for better turns
 	constexpr int tankHealth = 1;
-	constexpr int gray = 0x808080;
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};

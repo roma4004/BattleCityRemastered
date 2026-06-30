@@ -425,6 +425,7 @@ set(UNIT_TESTS_FILES
         UnitTests/BonusTestsBasic.cpp
         UnitTests/BonusTestsDestroy.cpp
         UnitTests/BonusTestsEnemy.cpp
+        UnitTests/BotTests.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp
         UnitTests/NetworkTests.cpp
