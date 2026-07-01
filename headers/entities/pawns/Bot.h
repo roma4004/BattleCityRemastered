@@ -16,9 +16,8 @@ class Bot : public Tank
 
 protected:
 	std::uniform_int_distribution<> _distTurnRate{};
-	//TODO: move to random manager one event on start and then get random by type
-	std::chrono::time_point<std::chrono::system_clock> _lastTimeTurn{};
-	milliseconds _turnDuration{std::chrono::seconds(2)};
+	//TODO: move _distTurnRate to random manager one event on start and then get random by type
+	Timer _randomChangeDirTimer{};
 
 	//LOS
 	float _obstacleDistance{};

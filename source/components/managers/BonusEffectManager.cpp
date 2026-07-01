@@ -146,8 +146,7 @@ void BonusEffectManager::TickUpdate(const double /*deltaTime*/)
 
 	if (_shovelPlayer.isActive && TimeUtils::IsCooldownFinish(_shovelPlayer.activateTime, _shovelPlayer.cooldown))
 	{
-		_shovelPlayer.isActive = false;
-		_events->EmitEvent("BonusShovel_OnCooldownEnd");
+		FinishTimer(_shovelPlayer, "Shovel", "PlayerTeam");
 	}
 }
 

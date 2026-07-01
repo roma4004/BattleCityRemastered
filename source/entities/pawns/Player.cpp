@@ -17,7 +17,7 @@ Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bul
 		Enable();
 	}
 
-	_fireCooldown = {std::chrono::milliseconds{500}};
+	_shootTimer.cooldown = std::chrono::milliseconds{500};
 }
 
 Player::~Player() = default;
@@ -61,6 +61,11 @@ void Player::Move(const Direction direction, const double deltaTime,
 
 void Player::TickUpdate(const double deltaTime)
 {
+	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
+	{
+		_shootTimer.isActive = false;
+	}
+
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
@@ -89,7 +94,7 @@ void Player::TickUpdate(const double deltaTime)
 	}
 
 	// shot
-	if (shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
+	if (shot && !_shootTimer.isActive)
 	{
 		Shot();
 	}

@@ -14,7 +14,11 @@
 Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
 	: Tank{std::move(pawnProperty), bulletPool, enableByDefault}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
-	, _lastTimeTurn{std::chrono::system_clock::now()} {}
+{
+	_shootTimer.cooldown = std::chrono::seconds{1};
+	_randomChangeDirTimer.cooldown = std::chrono::seconds{2};
+	_randomChangeDirTimer.Reset();
+}
 
 Bot::~Bot() = default;
 
@@ -69,14 +73,13 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 		//Check free path to bonus
 		if (directionObstacles.empty() == false && IsBonus(directionObstacles.front()))
 		{
-			if (dir != GetDirection() && TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))
+			if (dir != GetDirection() && !_randomChangeDirTimer.isActive)
 			{
 				SetDirection(dir);
 
-				_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
-				_lastTimeTurn = std::chrono::system_clock::now();
+				_randomChangeDirTimer.Reset(milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
 
-				return true;//TODO: cover this by test, that bonus was seen and change dir to him
+				return true;
 			}
 		}
 	}
@@ -89,11 +92,11 @@ bool Bot::ChangeDirIfSeenOpponent(const Direction dir, const std::vector<std::sh
 	if (sideObstacle.empty() == false
 		&& IsOpponent(sideObstacle.front()))
 	{
-		if (dir != GetDirection() && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
+		if (dir != GetDirection() && !_shootTimer.isActive)
 		{
 			SetDirection(dir);
 
-			return true;//TODO: cover this by test, that enemy was seen and change dir to him
+			return true;
 		}
 	}
 
@@ -313,8 +316,7 @@ void Bot::SetRandomDirection(const double deltaTime)
 		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
 		SetDirection(freePath[pathIndex]);
 
-		_turnDuration = milliseconds(RandUtils::GetRandNumber(_distTurnRate));
-		_lastTimeTurn = std::chrono::system_clock::now();
+		_randomChangeDirTimer.Reset(milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
 	}
 }
 
@@ -343,10 +345,20 @@ bool Bot::ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const
 
 void Bot::TickUpdate(const double deltaTime)
 {
+	if (_randomChangeDirTimer.isActive && _randomChangeDirTimer.IsCooldownFinish())
+	{
+		_randomChangeDirTimer.isActive = false;
+	}
+
+	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
+	{
+		_shootTimer.isActive = false;
+	}
+
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const Direction oldDir{_dir};
 
-	if (TimeUtils::IsCooldownFinish(_lastTimeTurn, _turnDuration))// NOTE: bot can change direction by timer
+	if (!_randomChangeDirTimer.isActive)// NOTE: bot can change direction by timer
 	{
 		SetRandomDirection(deltaTime);
 	}
@@ -375,8 +387,7 @@ void Bot::TickUpdate(const double deltaTime)
 	}
 
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();
-	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown)
-		&& _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
+	if (!_shootTimer.isActive && _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 	{
 		if (ShouldShootOpponent(nearestSeenObstacle)
 			|| m_shouldShootToObstacleStrategy(nearestSeenObstacle))

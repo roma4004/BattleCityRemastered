@@ -204,15 +204,16 @@ void Tank::TakeDamage(const int damage)
 
 unsigned Tank::GetTier() const { return _tier; }
 
-void Tank::Shot(const buuid withUuid) const
+void Tank::Shot(const buuid withUuid)
 {
-	_lastTimeFire = std::chrono::system_clock::now();
 	const buuid bulletUuid = _shootingBeh->Shot(withUuid);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_Shot", _name, GetDirection(), bulletUuid);
 	}
+
+	_shootTimer.Reset();
 }
 
 float Tank::GetBulletWidth() const { return _calibre.size.x; }
@@ -290,7 +291,7 @@ void Tank::OnBonusStar(const std::string& author)
 		_calibre.damage += 15;
 		_calibre.damageRadius *= 1.25f;
 		_calibre.tier = _tier;
-		_fireCooldown -= milliseconds{150};
+		_shootTimer.cooldown -= milliseconds{150};
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
@@ -316,7 +317,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 		_calibre.damage += 45;
 		_calibre.damageRadius *= 1.75f;
 		_calibre.tier = _tier;
-		_fireCooldown -= milliseconds{450};
+		_shootTimer.cooldown -= milliseconds{450};
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
