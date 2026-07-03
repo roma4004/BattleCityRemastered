@@ -13,7 +13,7 @@ CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& b
 			return false;
 		}
 
-		if (IsAlly(obj))
+		if (IsAlly(obj) || IsBonus(obj))
 		{
 			return false;
 		}

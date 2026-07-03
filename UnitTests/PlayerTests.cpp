@@ -696,7 +696,7 @@ TEST_F(PlayerTest, PlayerTeamWon)
 		_allObjects.clear();
 	}
 
-	EXPECT_TRUE(isGameWon);//TODO: investigate why (on cmake tests) sometimes player can't win
+	EXPECT_TRUE(isGameWon);//TODO: investigate why sometimes player can't win
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
 }

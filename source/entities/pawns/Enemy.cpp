@@ -13,7 +13,7 @@ Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulle
 			return false;
 		}
 
-		if (IsAlly(obj))
+		if (IsAlly(obj) || IsBonus(obj))
 		{
 			return false;
 		}

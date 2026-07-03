@@ -73,7 +73,7 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 		//Check free path to bonus
 		if (directionObstacles.empty() == false && IsBonus(directionObstacles.front()))
 		{
-			if (dir != GetDirection() && !_randomChangeDirTimer.isActive)
+			if (dir != GetDirection())
 			{
 				SetDirection(dir);
 
