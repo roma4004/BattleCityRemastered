@@ -11,7 +11,7 @@ BonusShovel::BonusShovel(const ObjRectangle& rect, const std::shared_ptr<EventSy
 
 BonusShovel::~BonusShovel() = default;
 
-void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
+void BonusShovel::PickUpBonus(const std::string& /*author*/, const std::string& fraction)
 {
 	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
 }
