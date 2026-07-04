@@ -53,15 +53,23 @@ TEST_F(NetworkTest, PosEventReplication)
 	events->EmitEvent("ServerSend_Pos", name, posOrigin, directionOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
-	// ASSERT_EQ(future.valid(), true);
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
 
-	// ASSERT_EQ(future._Is_ready(), true);
-
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto& [posReplicated, dirReplicated, uuidReplicated] = future.get();
 
 	EXPECT_EQ(posOrigin, posReplicated);
@@ -92,12 +100,23 @@ TEST_F(NetworkTest, ShotEventReplication)
 	events->EmitEvent("ServerSend_Shot", name, direction, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto [dirReplicated, uuidReplicated] = future.get();
 
 	EXPECT_EQ(direction, dirReplicated);
@@ -131,12 +150,23 @@ TEST_F(NetworkTest, HealthEventReplication)
 	events->EmitEvent("ServerSend_Health", name, healthOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto healthReplicated = future.get();
 	EXPECT_EQ(healthOrigin, healthReplicated);
 
@@ -163,12 +193,23 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	events->EmitEvent("ServerSend_Dispose", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
@@ -196,12 +237,23 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	events->EmitEvent("ServerSend_Statistics", "BulletHit", "author", "fraction");
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto& [type, author, fraction] = future.get();
 	EXPECT_EQ("BulletHit", type);
 	EXPECT_EQ("author", author);
@@ -255,25 +307,56 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	events->EmitEvent("ServerSend_FortressChange", "ToSteel", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	auto statusDied = futureDied.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(statusDied, std::future_status::ready);
-	// ASSERT_EQ(statusDied._Is_ready(), true);
-	//TODO: refactor this, is ready not compile only in this test, for other its compile and work fine,
-	//best solution remove timeout and write like asyncAwait of some results.
-	
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
+
+		if (status = futureDied.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto& [stateDied, uuidDied] = futureDied.get();
 	EXPECT_EQ("Died", stateDied);
 	EXPECT_EQ(_uuid, uuidDied);
 
-	const auto statusToBrick = futureToBrick.wait_for(std::chrono::milliseconds(1000));
+	auto statusToBrick = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
+
+		if (statusToBrick = futureToBrick.wait_for(checkInterval);
+			statusToBrick == std::future_status::ready)
+		{
+			break;
+		}
+	}
 	ASSERT_EQ(statusToBrick, std::future_status::ready);
 	const auto& [stateToBrick, uuidToBrick] = futureToBrick.get();
 	EXPECT_EQ("ToBrick", stateToBrick);
 	EXPECT_EQ(_uuid, uuidToBrick);
 
-	const auto statusToSteel = futureToSteel.wait_for(std::chrono::milliseconds(1000));
+	auto statusToSteel = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
+
+		if (statusToSteel = futureToSteel.wait_for(checkInterval);
+			statusToSteel == std::future_status::ready)
+		{
+			break;
+		}
+	}
 	ASSERT_EQ(statusToSteel, std::future_status::ready);
 	const auto& [stateToSteel, uuidToSteel] = futureToSteel.get();
 	EXPECT_EQ("ToSteel", stateToSteel);
@@ -306,12 +389,23 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	events->EmitEvent("ServerSend_BonusSpawn", pos, type, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto& [posReplicated, typeReplicated, uuid] = future.get();
 	EXPECT_EQ(pos, posReplicated);
 	EXPECT_EQ(type, typeReplicated);
@@ -339,12 +433,23 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
@@ -371,12 +476,23 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	events->EmitEvent("ServerSend_BonusHelmet_Pickup", nameOrigin, isActiveOrigin);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	const auto isEnable = future.get();
 	EXPECT_EQ(isActiveOrigin, isEnable);
 
@@ -408,12 +524,23 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	events->EmitEvent("ServerSend_ObstacleSpawn", rectOrigin, obstacleType, _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	const auto status = future.wait_for(std::chrono::milliseconds(1000));
-	events->EmitEvent("NetCommandUpdate", 1.0);
-	events->EmitEvent("PreTickUpdate", 1.0);
-	// ASSERT_EQ(status, std::future_status::ready);
-	// ASSERT_EQ(future._Is_ready(), true);
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
 
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
 	auto [rect, type, uuid] = future.get();
 	EXPECT_EQ(rectOrigin.x, rect.x);
 	EXPECT_EQ(rectOrigin.y, rect.y);
@@ -469,16 +596,28 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	}
 	events->EmitEvent("Server_EndFrame");
 
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	if (bricksRect.size() == bricksRectReplicated.size())
 		for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 		{
 			auto future = promises[i].get_future();
-			const auto status = future.wait_for(std::chrono::milliseconds(10000));
-			events->EmitEvent("NetCommandUpdate", 1.0);
-			events->EmitEvent("PreTickUpdate", 1.0);
-			// ASSERT_EQ(status, std::future_status::ready);
-			// ASSERT_EQ(future._Is_ready(), true);
 
+			auto status = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (status = future.wait_for(checkInterval);
+					status == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(status, std::future_status::ready);
 			auto [rect, type, uuid] = future.get();
 			auto [x, y, w, h] = bricksRect[i];
 			EXPECT_FLOAT_EQ(x, rect.x);
@@ -526,15 +665,26 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	}
 	events->EmitEvent("Server_EndFrame");
 
+	constexpr std::chrono::milliseconds totalTimeout{1000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	for (size_t i = 0u; i < tankTypes.size(); ++i)
 	{
 		auto future = promises[i].get_future();
-		const auto status = future.wait_for(std::chrono::milliseconds(1000));
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
-		// ASSERT_EQ(status, std::future_status::ready);
-		// ASSERT_EQ(future._Is_ready(), true);
+		auto status = std::future_status::timeout;
+		while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+		{
+			events->EmitEvent("NetCommandUpdate", 1.0);
+			events->EmitEvent("PreTickUpdate", 1.0);
 
+			if (status = future.wait_for(checkInterval);
+				status == std::future_status::ready)
+			{
+				break;
+			}
+		}
+
+		ASSERT_EQ(status, std::future_status::ready);
 		const auto& [typeReplicated, uuid] = future.get();
 		EXPECT_EQ(tankTypes[i], typeReplicated);
 		EXPECT_EQ(_uuid, uuid);

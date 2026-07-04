@@ -483,7 +483,7 @@ void RenderManager::GenerateFpsTextures()
 		std::string text = std::to_string(i);
 		constexpr SDL_Color textColor = {.r = 140, .g = 0, .b = 255, .a = 255};
 
-		SDL_Surface* surface = TTF_RenderText_Solid(_fontSmall.get(), text.c_str(), textColor);
+		SDL_Surface* surface = TTF_RenderText_Solid(_fontMedium.get(), text.c_str(), textColor);
 		if (!surface)
 		{
 			SDL_Log("Failed to create surface for FPS %d: %s", i, SDL_GetError());

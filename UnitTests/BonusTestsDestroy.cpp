@@ -35,7 +35,7 @@ protected:
 	float _gridSize{};
 	float _tankSpeed{142};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -62,7 +62,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
@@ -99,7 +99,7 @@ TEST_F(BonusTestsDestroy, BonusDestroy)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -141,7 +141,7 @@ TEST_F(BonusTestsDestroy, BonusNotDestroy)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::RIGHT,
@@ -183,7 +183,7 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 			.baseObjProperty = std::move(baseObjPropertyBullet),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -212,7 +212,7 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 				.baseObjProperty = std::move(baseObjPropertyEnemy),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -254,7 +254,7 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 				.baseObjProperty = std::move(baseObjPropertyBullet),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -286,7 +286,7 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 					.baseObjProperty = std::move(baseObjPropertyBullet2),
 					.allObjects = &_allObjects,
 					.events = _events,
-					.tier = 1,
+					.tier = 1u,
 					.speed = _tankSpeed,
 					.windowSize = _windowSize,
 					.dir = Direction::LEFT,
@@ -326,7 +326,7 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 			.baseObjProperty = std::move(baseObjPropertyBullet),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -348,7 +348,7 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 			.baseObjProperty = std::move(baseObjPropertyEnemy),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -390,7 +390,7 @@ TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 			.baseObjProperty = std::move(baseObjPropertyBullet),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -435,7 +435,7 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 				.baseObjProperty = std::move(baseObjPropertyBullet),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -448,12 +448,12 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 
 		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 		{
-			EXPECT_EQ(player->GetTier(), 1);
+			EXPECT_EQ(player->GetTier(), 1u);
 			EXPECT_TRUE(bonus->GetIsAlive());
 
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(player->GetTier(), 1);
+			EXPECT_EQ(player->GetTier(), 1u);
 			EXPECT_FALSE(bonus->GetIsAlive());
 
 			return;
@@ -479,7 +479,7 @@ TEST_F(BonusTestsDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 			.baseObjProperty = std::move(baseObjPropertyBullet),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,

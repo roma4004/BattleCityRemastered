@@ -101,6 +101,10 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
+	//TODO: remove + _name +  from eventName
+	//TODO: rename ClientReceived_ to ClientIn
+	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event
+	//TODO: refactor to ClientReceived_ "Shot" to just "Shot" and move bot timers to handle outside bot tank,
 	_events->AddListener(
 			"ClientReceived_" + _name + "Shot", _nameWithUuid, [this](const Direction dir, const buuid& uuid)
 			{
@@ -198,17 +202,18 @@ void Tank::TakeDamage(const int damage)
 	}
 }
 
-int Tank::GetTier() const { return _tier; }
+unsigned Tank::GetTier() const { return _tier; }
 
-void Tank::Shot(const buuid withUuid) const
+void Tank::Shot(const buuid withUuid)
 {
-	_lastTimeFire = std::chrono::system_clock::now();
 	const buuid bulletUuid = _shootingBeh->Shot(withUuid);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_Shot", _name, GetDirection(), bulletUuid);
 	}
+
+	_shootTimer.Reset();
 }
 
 float Tank::GetBulletWidth() const { return _calibre.size.x; }
@@ -285,7 +290,8 @@ void Tank::OnBonusStar(const std::string& author)
 		_calibre.speed *= 1.10f;
 		_calibre.damage += 15;
 		_calibre.damageRadius *= 1.25f;
-		_fireCooldown -= milliseconds{150};
+		_calibre.tier = _tier;
+		_shootTimer.cooldown -= milliseconds{150};
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
@@ -310,7 +316,8 @@ void Tank::OnBonusCaliber(const std::string& author)
 		_calibre.speed *= 1.30f;
 		_calibre.damage += 45;
 		_calibre.damageRadius *= 1.75f;
-		_fireCooldown -= milliseconds{450};
+		_calibre.tier = _tier;
+		_shootTimer.cooldown -= milliseconds{450};
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
@@ -360,5 +367,5 @@ void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 	SetPos(newPos);
 
 	//NOTE: fix for tank truck animation tick
-	_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+	_events->EmitEvent("AnimationTankUpdate", GetName(), newPos, dir);
 }

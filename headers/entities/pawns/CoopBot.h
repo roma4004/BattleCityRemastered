@@ -6,8 +6,6 @@ class BulletPool;
 
 class CoopBot final : public Bot
 {
-	void TickUpdate(double deltaTime) override;
-
 public:
 	CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
 

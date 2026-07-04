@@ -16,5 +16,8 @@ struct Timer
 
 	~Timer();
 
-	bool IsCooldownFinish() const;
+	[[nodiscard]] bool IsCooldownFinish() const;
+
+	void Reset();
+	void Reset(milliseconds newCooldown);
 };

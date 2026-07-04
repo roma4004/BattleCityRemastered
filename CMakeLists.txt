@@ -293,7 +293,7 @@ set(SOURCE_FILES
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
         source/entities/Obstacles/EagleTile.cpp
-        source/entities/Obstacles/GrassTile.cpp
+        source/entities/Obstacles/BushTile.cpp
         source/entities/Obstacles/IceTile.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
@@ -381,7 +381,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/entities/obstacles/BrickWall.cpp
         source/entities/obstacles/EagleTile.cpp
         source/entities/obstacles/FortressWall.cpp
-        source/entities/obstacles/GrassTile.cpp
+        source/entities/obstacles/BushTile.cpp
         source/entities/obstacles/IceTile.cpp
         source/entities/obstacles/Obstacle.cpp
         source/entities/obstacles/SteelWall.cpp
@@ -426,6 +426,7 @@ set(UNIT_TESTS_FILES
         UnitTests/BonusTestsBasic.cpp
         UnitTests/BonusTestsDestroy.cpp
         UnitTests/BonusTestsEnemy.cpp
+        UnitTests/BotTests.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp
         UnitTests/NetworkTests.cpp

@@ -185,7 +185,7 @@
     <ClCompile Include="source\entities\obstacles\BrickWall.cpp" />
     <ClCompile Include="source\entities\obstacles\EagleTile.cpp" />
     <ClCompile Include="source\entities\obstacles\FortressWall.cpp" />
-    <ClCompile Include="source\entities\obstacles\GrassTile.cpp" />
+    <ClCompile Include="source\entities\obstacles\BushTile.cpp" />
     <ClCompile Include="source\entities\obstacles\IceTile.cpp" />
     <ClCompile Include="source\entities\obstacles\Obstacle.cpp" />
     <ClCompile Include="source\entities\obstacles\SteelWall.cpp" />
@@ -292,7 +292,7 @@
     <ClInclude Include="headers\entities\obstacles\BrickWall.h" />
     <ClInclude Include="headers\entities\obstacles\EagleTile.h" />
     <ClInclude Include="headers\entities\obstacles\FortressWall.h" />
-    <ClInclude Include="headers\entities\obstacles\GrassTile.h" />
+    <ClInclude Include="headers\entities\obstacles\BushTile.h" />
     <ClInclude Include="headers\entities\obstacles\IceTile.h" />
     <ClInclude Include="headers\entities\obstacles\Obstacle.h" />
     <ClInclude Include="headers\entities\obstacles\SteelWall.h" />

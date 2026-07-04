@@ -21,7 +21,7 @@ class Pawn : public BaseObj, public ITickUpdatable
 protected:
 	float _speed{};
 	std::string _uuidStr{};
-	int _tier{1};
+	unsigned _tier{1};
 	UPoint _windowSize{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};

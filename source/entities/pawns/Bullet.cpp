@@ -1,7 +1,7 @@
 ﻿#include "entities/pawns/Bullet.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
-#include "entities/obstacles/GrassTile.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -179,7 +179,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	for (const auto& target: objectList)
 	{
 		if (target && !dynamic_cast<WaterTile*>(target.get())
-			&& !dynamic_cast<GrassTile*>(target.get())
+			&& !dynamic_cast<BushTile*>(target.get())
 			&& !dynamic_cast<IceTile*>(target.get())
 			&& (target->GetIsDestructible() || _calibre.tier > 2))
 		{

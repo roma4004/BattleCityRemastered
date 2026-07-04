@@ -17,7 +17,7 @@ Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bul
 		Enable();
 	}
 
-	_fireCooldown = {std::chrono::milliseconds{500}};
+	_shootTimer.cooldown = std::chrono::milliseconds{500};
 }
 
 Player::~Player() = default;
@@ -49,18 +49,23 @@ void Player::Move(const Direction direction, const double deltaTime,
 	if (const bool isMove = _moveBeh->Move(direction, deltaTime, outCollisions);
 		isNewDir || isMove)
 	{
-		//TODO: let the animation manager work with string view
-		_events->EmitEvent("AnimationTankUpdate", std::string(GetName()), GetPos(), GetDirection());
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
 }
 
 void Player::TickUpdate(const double deltaTime)
 {
+	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
+	{
+		_shootTimer.isActive = false;
+	}
+
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
@@ -89,7 +94,7 @@ void Player::TickUpdate(const double deltaTime)
 	}
 
 	// shot
-	if (shot && TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
+	if (shot && !_shootTimer.isActive)
 	{
 		Shot();
 	}

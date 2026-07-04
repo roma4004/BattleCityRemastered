@@ -2,38 +2,32 @@
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/pawns/PawnProperty.h"
-#include "utils/TimeUtils.h"
 
 CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
-	: Bot{std::move(pawnProperty), bulletPool, enableByDefault} {}
+	: Bot{std::move(pawnProperty), bulletPool, enableByDefault}
+{
+	m_shouldShootToObstacleStrategy = [this](const std::shared_ptr<BaseObj>& obj)
+	{
+		if (obj == nullptr)
+		{
+			return false;
+		}
+
+		if (IsAlly(obj) || IsBonus(obj))
+		{
+			return false;
+		}
+
+		if ((obj->GetIsDestructible() || _tier > 2u)
+			&& !obj->GetIsPenetrable()// skip water, ice, bush
+			&& !std::dynamic_pointer_cast<FortressWall>(obj)
+			&& !std::dynamic_pointer_cast<EagleTile>(obj))
+		{
+			return true;
+		}
+
+		return false;
+	};
+}
 
 CoopBot::~CoopBot() = default;
-
-void CoopBot::TickUpdate(const double deltaTime)
-{
-	Bot::TickUpdate(deltaTime);
-
-	// shot
-	if (TimeUtils::IsCooldownFinish(_lastTimeFire, _fireCooldown))
-	{
-		const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight(GetDirection());
-
-		if (!nearestSeenObstacle || IsAlly(nearestSeenObstacle))
-		{
-			return;
-		}
-
-		if (const auto obstacle = nearestSeenObstacle.get();
-			obstacle
-			&& (obstacle->GetIsDestructible() || _tier > 2)
-			&& !obstacle->GetIsPenetrable()// skip water, ice, bush(Grass) //TODO: rename Grass to BushesTile
-			&& !dynamic_cast<FortressWall*>(obstacle)
-			&& !dynamic_cast<EagleTile*>(obstacle))
-		{
-			if (_shootDistance > _calibre.damageRadius + _bulletOffset)
-			{
-				Shot();
-			}
-		}
-	}
-}

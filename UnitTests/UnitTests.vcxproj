@@ -97,7 +97,7 @@
     <ClCompile Include="..\source\entities\obstacles\BrickWall.cpp" />
     <ClCompile Include="..\source\entities\obstacles\EagleTile.cpp" />
     <ClCompile Include="..\source\entities\obstacles\FortressWall.cpp" />
-    <ClCompile Include="..\source\entities\obstacles\GrassTile.cpp" />
+    <ClCompile Include="..\source\entities\obstacles\BushTile.cpp" />
     <ClCompile Include="..\source\entities\obstacles\IceTile.cpp" />
     <ClCompile Include="..\source\entities\obstacles\Obstacle.cpp" />
     <ClCompile Include="..\source\entities\obstacles\SteelWall.cpp" />
@@ -114,6 +114,7 @@
     <ClCompile Include="BonusTestsBasic.cpp" />
     <ClCompile Include="BonusTestsDestroy.cpp" />
     <ClCompile Include="BonusTestsEnemy.cpp" />
+    <ClCompile Include="BotTests.cpp" />
     <ClCompile Include="BulletsTestsAdvanced.cpp" />
     <ClCompile Include="BulletsTestsBasic.cpp" />
     <ClCompile Include="NetworkTests.cpp" />

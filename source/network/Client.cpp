@@ -59,7 +59,7 @@ void Client::TryConnect()
 	{
 		if (!ec)
 		{
-			std::cout << "Client connected successfully" << '\n';
+			// std::cout << "Client connected successfully" << '\n';
 			_reconnectAttempts = 0;
 			_isConnected = true;
 			this->ReadResponse();

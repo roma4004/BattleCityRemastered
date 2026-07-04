@@ -3,6 +3,7 @@
 #include "../BonusEffectProperty.h"
 #include "Pawn.h"
 #include "entities/BulletCalibre.h"
+#include "utils/Timer.h"
 
 struct UPoint;
 class PlayerTest;
@@ -31,8 +32,7 @@ class Tank : public Pawn
 
 protected:
 	BulletCalibre _calibre{};
-	milliseconds _fireCooldown{std::chrono::seconds{1}};
-	mutable std::chrono::time_point<std::chrono::system_clock> _lastTimeFire{};
+	Timer _shootTimer{};
 
 	void Subscribe() override;
 	void Unsubscribe() const override;
@@ -40,7 +40,7 @@ protected:
 	// bonuses
 	BonusEffectProperty _effects{};
 
-	void Shot(buuid withUuid = {}) const;
+	void Shot(buuid withUuid = {});
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
@@ -56,7 +56,7 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void TakeDamage(int damage) override;
 
-	[[nodiscard]] int GetTier() const;
+	[[nodiscard]] unsigned GetTier() const;
 
 	[[nodiscard]] float GetBulletWidth() const;
 	void SetBulletWidth(float bulletWidth);

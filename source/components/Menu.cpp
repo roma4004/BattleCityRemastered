@@ -80,7 +80,7 @@ void Menu::DrawTextLine(Point& posText, std::string text) const
 
 void Menu::DrawMenuText() const
 {
-	Point relativePosText{.x = _pos.x + 180, .y = _pos.y + 140};
+	Point relativePosText{.x = _pos.x + 180, .y = _pos.y + 145};
 	if (relativePosText.y >= _windowHeight)
 	{
 		return;
@@ -101,11 +101,12 @@ void Menu::DrawControlHints() const
 		return;
 	}
 
-	_events->EmitEvent("RenderMenuXBoxHint", Point{.x = relativePos.x + 240, .y = relativePos.y - 40});
-	_events->EmitEvent("RenderMenuPS5Hint", Point{.x = relativePos.x + 280, .y = relativePos.y + 110});
+	constexpr int yBaseLineForControls = 150;
+	_events->EmitEvent("RenderMenuXBoxHint", Point{.x = relativePos.x + 240, .y = relativePos.y});
+	_events->EmitEvent("RenderMenuPS5Hint", Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls});
 
-	Point posText{.x = _pos.x + 40, .y = _pos.y + 310};
-	DrawTextLine(posText, "Controls: P1/P2 | XBox  | PS");
+	Point posText{.x = _pos.x + 40, .y = _pos.y + yBaseLineForControls + 200};
+	DrawTextLine(posText, "Controls: P1/P2    XBox      PS");
 	DrawTextLine(posText, "Pause       P      View    Create");
 	DrawTextLine(posText, "Menu        M      Menu    Options");
 	DrawTextLine(posText, "Swap       TAB     Y       Triangle");

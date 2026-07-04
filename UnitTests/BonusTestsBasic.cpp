@@ -34,7 +34,7 @@ protected:
 	float _gridSize{};
 	float _tankSpeed{142};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -61,7 +61,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
@@ -152,7 +152,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -194,7 +194,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -249,7 +249,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::LEFT,
@@ -305,7 +305,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::LEFT,
@@ -342,7 +342,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -384,7 +384,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _tankSpeed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
@@ -465,7 +465,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Down", isPressed);
 
-		EXPECT_EQ(player->GetTier(), 1);
+		EXPECT_EQ(player->GetTier(), 1u);
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -478,7 +478,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 			EXPECT_TRUE(false);
 		}
 
-		EXPECT_EQ(player->GetTier(), 2);
+		EXPECT_EQ(player->GetTier(), 2u);
 
 		return;
 	}
@@ -495,7 +495,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 		constexpr bool isPressed{true};
 		_events->EmitEvent("P1_Move_Up", isPressed);
 
-		EXPECT_EQ(player->GetTier(), 1);
+		EXPECT_EQ(player->GetTier(), 1u);
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -508,7 +508,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 			EXPECT_TRUE(false);
 		}
 
-		EXPECT_EQ(player->GetTier(), 1);
+		EXPECT_EQ(player->GetTier(), 1u);
 
 		return;
 	}

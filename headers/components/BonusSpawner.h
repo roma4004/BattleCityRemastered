@@ -39,6 +39,7 @@ class BonusSpawner final
 	void UnsubscribeAsClient() const;
 
 	void Update();
+	void Reset();
 
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,

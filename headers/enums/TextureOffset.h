@@ -43,10 +43,10 @@ struct TextureOffset
 	ObjRectangle eagle{.x = 304, .y = 32, .w = 16, .h = 16};
 	ObjRectangle brick{.x = 256, .y = 64, .w = 8, .h = 8};
 	ObjRectangle steel{.x = 256, .y = 16, .w = 8, .h = 8};
-	ObjRectangle grass{.x = 272, .y = 32, .w = 8, .h = 8};
+	ObjRectangle bush{.x = 272, .y = 32, .w = 8, .h = 8};
 	ObjRectangle ice{.x = 288, .y = 32, .w = 8, .h = 8};
 	//ObjRectangle water{264, 80, 8, 8}; // waterflow right - > left
-	ObjRectangle water{.x = 272, .y = 80, .w = 8, .h = 8};// waterflow left  - > right
+	ObjRectangle water{.x = 272, .y = 80, .w = 8, .h = 8};// waterflow left - > right
 
 	//Explosions and spawn , left to right,
 	ObjRectangle spawnAnim{.x = 256, .y = 96, .w = 16, .h = 16};// 4 step animation 16x16

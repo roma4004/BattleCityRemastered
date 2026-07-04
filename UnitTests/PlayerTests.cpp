@@ -16,6 +16,8 @@
 #include "enums/TankType.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "entities/obstacles/EagleTile.h"
+#include "utils/UuidUtils.h"
+
 #include "gtest/gtest.h"
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
@@ -68,7 +70,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
@@ -353,7 +355,7 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	EXPECT_TRUE(false);
 }
 
-// Check that tank don't move when shooting
+// Check that tank doesn't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
 	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
@@ -537,7 +539,7 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,
@@ -675,30 +677,89 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 // Check that Player's team can win
 TEST_F(PlayerTest, PlayerTeamWon)
 {
+	_allObjects.clear();
+
 	bool isGameWon{false};
+
+	std::vector<std::pair<int, boost::uuids::uuid>> howManySpawnCounters;
+	howManySpawnCounters.reserve(4);
+	_events->AddListener("TankSpawn", _name, [&howManySpawnCounters](const boost::uuids::uuid& uuid)
+	{
+		auto it = std::ranges::find_if(howManySpawnCounters,
+									   [&uuid](const std::pair<int, boost::uuids::uuid>& p) {
+										   return p.second == uuid;
+									   });
+
+		if (it != howManySpawnCounters.end())
+		{
+			it->first++; // Increment count if UUID found
+		}
+		else
+		{
+			howManySpawnCounters.emplace_back(1, uuid); // Add new entry if UUID not found
+		}
+	});
+
+	std::vector<std::pair<int, boost::uuids::uuid>> howManyDiedCounters;
+	howManyDiedCounters.reserve(4);
+	_events->AddListener("TankDied", _name, [&howManyDiedCounters](const boost::uuids::uuid& uuid)
+	{
+		auto it = std::ranges::find_if(howManyDiedCounters,
+									   [&uuid](const std::pair<int, boost::uuids::uuid>& p) {
+										   return p.second == uuid;
+									   });
+
+		if (it != howManyDiedCounters.end())
+		{
+			it->first++; // Increment count if UUID found
+		}
+		else
+		{
+			howManyDiedCounters.emplace_back(1, uuid); // Add new entry if UUID not found
+		}
+	});
+
 	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
 	{
 		isGameWon = true;
 	});
-
+	
+	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
 	for (int i = 0; i < 5; ++i)
 	{
+		_allObjects.clear();
+		EXPECT_EQ(_allObjects.size(), 0);
+
 		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
 		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
 		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
 		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
 
+		EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20 - i * 4);
 		_tankSpawner->RespawnTanks(true);
-		_tankSpawner->RespawnTanks(true);
-		_tankSpawner->RespawnTanks(true);
-		_tankSpawner->RespawnTanks(true);
-
-		_allObjects.clear();
+		EXPECT_EQ(_allObjects.size(), 4);
+		std::cout << "End of respawn round" << (i+1) << std::endl;
 	}
 
+	_allObjects.clear();
+
+	for (const auto howManySpawnCounter: howManySpawnCounters)
+	{
+		std::cout << "UUID: " << UuidUtils::GetStringUuid(howManySpawnCounter.second) << ", Count spawn: " << howManySpawnCounter.first << std::endl;
+	}
+
+	for (const auto howManyDiedCounter: howManyDiedCounters)
+	{
+		std::cout << "UUID: " << UuidUtils::GetStringUuid(howManyDiedCounter.second) << ", Count died: " << howManyDiedCounter.first << std::endl;
+	}
+
+	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 0);
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
+	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
 	EXPECT_TRUE(isGameWon);
 
 	_events->RemoveListener("PlayersTeamIsWon", _name);
+	_events->RemoveListener("TankDied", _name);
 }
 
 // Player team lose with broken base

@@ -24,7 +24,7 @@ protected:
 	int _bulletHealth{1};
 	float _gridSize{1};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -48,7 +48,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -304,7 +304,6 @@ TEST_F(BulletTest, BulletDamageTank)
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	const float tankSize = gridSize * 3;// for better turns
 	constexpr int tankHealth = 1;
-	constexpr int gray = 0x808080;
 	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 
 	ObjRectangle rect{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};
@@ -317,7 +316,7 @@ TEST_F(BulletTest, BulletDamageTank)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 1,
+			.tier = 1u,
 			.speed = _calibre.speed,
 			.windowSize = _windowSize,
 			.dir = Direction::UP,
@@ -354,7 +353,7 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _calibre.speed,
 				.windowSize = _windowSize,
 				.dir = Direction::UP,

@@ -37,6 +37,7 @@ BonusSpawner::~BonusSpawner() { Unsubscribe(); }
 
 void BonusSpawner::Subscribe()
 {
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
 	{
 		this->_gameMode = newGameMode;
@@ -112,6 +113,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 		uuid = UuidUtils::GetRandomUuid();
 	}
 
+//TODO: fix star bonus steel destroy
 	std::shared_ptr<Bonus> bonus{nullptr};
 
 	switch (type)
@@ -152,4 +154,9 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 {
 	const auto bonusType = static_cast<BonusType>(RandUtils::GetRandNumber(_distSpawnType));
 	SpawnBonus(rect, bonusType);
+}
+
+void BonusSpawner::Reset()
+{
+	_lastTimeSpawn = std::chrono::system_clock::now();
 }

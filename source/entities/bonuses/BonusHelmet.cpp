@@ -14,9 +14,4 @@ BonusHelmet::~BonusHelmet() = default;
 void BonusHelmet::PickUpBonus(const std::string& author, const std::string& /*fraction*/)
 {
 	_events->EmitEvent(_name + "_Pickup", author, _effectDuration);
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent("ServerSend_" + _name + "_Pickup", author, true);
-	}
 }

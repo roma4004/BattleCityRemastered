@@ -6,7 +6,7 @@
 struct ObjRectangle;
 class EventSystem;
 
-class GrassTile final : public Obstacle
+class BushTile final : public Obstacle
 {
 	using buuid = boost::uuids::uuid;
 
@@ -14,7 +14,7 @@ class GrassTile final : public Obstacle
 	void Unsubscribe() const override;
 
 public:
-	GrassTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
+	BushTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
-	~GrassTile() override;
+	~BushTile() override;
 };

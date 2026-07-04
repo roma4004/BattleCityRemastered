@@ -1,16 +1,16 @@
-#include "components/managers/BonusEffectManager.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
-#include "enums/BonusType.h"
-#include "enums/Direction.h"
-#include "enums/GameMode.h"
-// #include "input/InputProviderForPlayerOne.h"
+#include "components/input/InputProviderForPlayerOne.h"
+#include "components/managers/BonusEffectManager.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
-// #include "pawns/Player.h"
+#include "entities/pawns/Player.h"
+#include "enums/BonusType.h"
+#include "enums/Direction.h"
+#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -62,7 +62,7 @@ protected:
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = &_allObjects,
 				.events = _events,
-				.tier = 1,
+				.tier = 1u,
 				.speed = _tankSpeed,
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
@@ -79,9 +79,8 @@ protected:
 };
 
 
-// NOTE: when the enemy picks up shovel bonus fortressWalls hide (destroyed behavior)
-
-TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
+// NOTE: when the enemy picks up bonusShovel, then fortressWalls hide (destroy) brick walls around it
+TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 {
 	_allObjects.emplace_back(
 			std::make_shared<FortressWall>(
@@ -100,23 +99,61 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallBrickHide)
 	EXPECT_EQ(fortressWall->GetHealth(), -1);
 }
 
-// NOTE: when player pick up shovel bonus fortressWalls become steelWalls (BonusShovelSwitch),
-//       then enemy pick up shovel bonus fortressWalls should hide (destroy)
-TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressWallSteelWallHide)
+// NOTE: player pickup bonusShovel, then fortressWalls become steelWalls (BonusShovel_Pickup),
+//       then enemy pickup bonusShovel, then fortressWalls should hide (destroy) steel walls around it
+TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 {
-	_allObjects.emplace_back(
-			std::make_shared<FortressWall>(
-					ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _tankSize, .h = _tankSize}, _events, &_allObjects,
-					_uuid, _gameMode));
-	if (const auto fortressWall = dynamic_cast<FortressWall*>(_allObjects.back().get()))
-	{
-		EXPECT_TRUE(fortressWall->IsBrickWall());
-		fortressWall->OnPlayerPickupShovel();
-		//TODO: rewrite scenario P1 firstly pick up bonus shovel, then create enemy that pick up bonus shovel
-		EXPECT_TRUE(fortressWall->IsSteelWall());
+	//creating player
+	std::string name = "Player1";
+	std::string fraction = "PlayerTeam";
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 
-		_bonusSpawner->SpawnBonus(
-				{.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
+	const ObjRectangle playerRect{.x = _tankSize * 2.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	BaseObjProperty baseObjProperty{.rect = playerRect,
+									.health = _tankHealth,
+									.uuid = _uuid,
+									.name = std::move(name),
+									.fraction = std::move(fraction)};
+	PawnProperty pawnProperty{
+			.baseObjProperty = std::move(baseObjProperty),
+			.allObjects = &_allObjects,
+			.events = _events,
+			.tier = 1u,
+			.speed = _tankSpeed,
+			.windowSize = _windowSize,
+			.dir = Direction::DOWN,
+			.gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+
+	_allObjects.reserve(4);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+	bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+
+	//creating FortressWall
+	const ObjRectangle fortressRect{.x = _tankSize * 3.f + 1.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
+	auto fortressWall = std::make_shared<FortressWall>(fortressRect, _events, &_allObjects, _uuid, _gameMode);
+	_allObjects.emplace_back(fortressWall);
+
+	if (fortressWall)
+	{
+		//creating bonuses
+		const ObjRectangle enemyBonusRect = {.x = 0.f, .y = _tankSize + 3.f, .w = _tankSize, .h = _tankSize};
+
+		_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);
+		const ObjRectangle playerBonusRect = {.x = _tankSize * 2.f,
+											  .y = _tankSize * 2.f + _tankSize + 1.f,
+											  .w = _tankSize,
+											  .h = _tankSize};
+		_bonusSpawner->SpawnBonus(playerBonusRect, BonusType::Shovel);
+
+		EXPECT_TRUE(fortressWall->IsBrickWall());
+
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		_allObjects.pop_back();//NOTE: to avoid second pickup by player same bonus
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_NE(fortressWall->GetHealth(), 0);

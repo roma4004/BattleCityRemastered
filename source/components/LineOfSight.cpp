@@ -1,5 +1,6 @@
 #include "components/LineOfSight.h"
 #include "Point.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/WaterTile.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
@@ -61,11 +62,16 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 			continue;
 		}
 
-		// tank cannot pass water, so we need to skip water when we find enemy to shoot
+		// tank cannot pass water (if not pickup BonusShip), so we need to skip water when we find opponent to shoot
 		// but when we search for bonus, we should not skip water to avoid moving to bonus through water.
-		const bool isWater = dynamic_cast<WaterTile*>(object.get());
+		//TODO: check in test that bot can't see bonus behind the water, and not try to move on to it
+		const bool isWater = dynamic_cast<WaterTile*>(object.get()) != nullptr;
+		const bool isBush = dynamic_cast<BushTile*>(object.get()) != nullptr;
 		const bool isPenetrable = object->GetIsPenetrable();
-		if (!object->GetIsPassable() && (!isPenetrable || (isWater && !isWaterSkip)))
+		const bool isPassable = object->GetIsPassable();
+		if (isBush
+			|| (isWater && !isWaterSkip)
+			|| (/*!isPassable &&*/ !isPenetrable))
 		{
 			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::UP)], object->GetRect()))
 			{
