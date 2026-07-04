@@ -56,7 +56,7 @@ Used technologies:
 * EventSystem,
 * SDL2, SDL2_TTF, SDL2_Image, SDL2_Mixer,
 * Boost (serialization, asio, property_tree/ini),
-* google unit tests (100+ tests),
+* google unit tests (150+ tests),
 * NuGet dependencies for *.sln and lib source for CMake, so it can be compiled for both CMake (CLion) or *.sln project (Rider, Visual Studio)
 
 Used design patterns:
