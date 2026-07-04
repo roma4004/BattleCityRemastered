@@ -91,8 +91,8 @@ protected:
 	}
 };
 
-// Check that bot changes direction to the opponent
-TEST_F(BotTest, ChangeDirectionIfOponentSeen)
+// Check that bots change direction to the opponent
+TEST_F(BotTest, BotsChangeDirectionIfOponentSeen)
 {
 	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
 	{
@@ -136,7 +136,7 @@ TEST_F(BotTest, ChangeDirectionIfOponentSeen)
 }
 
 // Check that bots change their direction to the bonus
-TEST_F(BotTest, ChangeDirectionIfBonusSeenAndNoOneShoot)
+TEST_F(BotTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 {
 	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
 	{
@@ -182,8 +182,8 @@ TEST_F(BotTest, ChangeDirectionIfBonusSeenAndNoOneShoot)
 	EXPECT_TRUE(false);
 }
 
-// Check that bot does not change direction if it can't see the bonus
-TEST_F(BotTest, NoChangeDirIfBonusOutsideLineOfSight)
+// Check that Coop bot does not change direction if it can't see the bonus
+TEST_F(BotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 {
 	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
 	{
