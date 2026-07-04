@@ -9,20 +9,24 @@
 #include <ranges>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-							 const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
+							 GameConfig& gameConfig,
+							 std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
+							 std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox,
+							 const std::shared_ptr<TTF_Font>& fontSmall,
+							 const std::shared_ptr<TTF_Font>& fontMedium,
 							 const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<SDL_Texture>& atlas,
-							 const std::shared_ptr<SDL_Texture>& joyIcon, const std::shared_ptr<SDL_Texture>& xBoxHint,
-							 const std::shared_ptr<SDL_Texture>& pS5Hint, const UPoint windowSize)
+							 const std::shared_ptr<SDL_Texture>& joyIcon, const UPoint windowSize)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _renderer{renderer}
+	, _gameConfig{gameConfig}
+	, _buttonTexturesPS5{buttonTexturesPS5}
+	, _buttonTexturesXBox{buttonTexturesXBox}
 	, _fontSmall{fontSmall}
 	, _fontMedium{fontMedium}
 	, _menuLogo{menuLogo}
 	, _atlas{atlas}
 	, _joyIcon{joyIcon}
-	, _xBoxHint{xBoxHint}
-	, _pS5Hint{pS5Hint}
 	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
@@ -309,40 +313,29 @@ void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect 
 	SDL_RenderCopy(_renderer.get(), texture, &srcRect, &dstRect);
 }
 
+void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) const
+{
+	SDL_RenderCopy(_renderer.get(), texture, nullptr, &dstRect);
+}
+
 void RenderManager::DrawXBoxHint(const Point pos) const
 {
-	RenderCopyWithClipping(_xBoxHint.get(), {.x = 935, .y = 365, .w = 65, .h = 65},
-						   {.x = pos.x - 65, .y = pos.y + 93, .w = 25, .h = 25});//View button
-
-	RenderCopyWithClipping(_xBoxHint.get(), {.x = 1115, .y = 365, .w = 65, .h = 65},
-						   {.x = pos.x - 65, .y = pos.y + 123, .w = 25, .h = 25});//Menu button
-
-	RenderCopyWithClipping(_xBoxHint.get(), {.x = 1330, .y = 270, .w = 95, .h = 95},
-						   {.x = pos.x - 65, .y = pos.y + 153, .w = 25, .h = 25});//Y button
-
-	RenderCopyWithClipping(_xBoxHint.get(), {.x = 790, .y = 490, .w = 220, .h = 220},
-						   {.x = pos.x - 65, .y = pos.y + 183, .w = 25, .h = 25});//Dpad button
-
-	RenderCopyWithClipping(_xBoxHint.get(), {.x = 1330, .y = 435, .w = 95, .h = 95},
-						   {.x = pos.x - 65, .y = pos.y + 213, .w = 25, .h = 25});//A button
+	RenderCopy(_buttonTexturesXBox[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
+	RenderCopy(_buttonTexturesXBox[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
+	RenderCopy(_buttonTexturesXBox[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
+	RenderCopy(_buttonTexturesXBox[0].get(), {.x = pos.x - 75, .y = pos.y + 183, .w = 30, .h = 30});//Dpad button
+	RenderCopy(_buttonTexturesXBox[1].get(), {.x = pos.x - 75, .y = pos.y + 63, .w = 30, .h = 30});//Home button
+	RenderCopy(_buttonTexturesXBox[4].get(), {.x = pos.x - 75, .y = pos.y + 213, .w = 30, .h = 30});//A button
 }
 
 void RenderManager::DrawPS5Hint(const Point pos) const
 {
-	RenderCopyWithClipping(_pS5Hint.get(), {.x = 330, .y = 123, .w = 40, .h = 70},
-						   {.x = pos.x + 10, .y = pos.y - 60, .w = 25, .h = 30});//Create button
-
-	RenderCopyWithClipping(_pS5Hint.get(), {.x = 780, .y = 123, .w = 40, .h = 70},
-						   {.x = pos.x + 10, .y = pos.y - 28, .w = 25, .h = 30});//Options button
-
-	RenderCopyWithClipping(_pS5Hint.get(), {.x = 838, .y = 163, .w = 75, .h = 75},
-						   {.x = pos.x + 10, .y = pos.y + 5, .w = 25, .h = 25});//Triangle button
-
-	RenderCopyWithClipping(_pS5Hint.get(), {.x = 185, .y = 185, .w = 180, .h = 180},
-						   {.x = pos.x + 10, .y = pos.y + 33, .w = 25, .h = 25});//Dpad button
-
-	RenderCopyWithClipping(_pS5Hint.get(), {.x = 838, .y = 305, .w = 75, .h = 75},
-						   {.x = pos.x + 10, .y = pos.y + 63, .w = 25, .h = 25});//Cross button
+	RenderCopy(_buttonTexturesPS5[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
+	RenderCopy(_buttonTexturesPS5[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
+	RenderCopy(_buttonTexturesPS5[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
+	RenderCopy(_buttonTexturesPS5[2].get(), {.x = pos.x, .y = pos.y + 33, .w = 30, .h = 30});//Dpad button
+	RenderCopy(_buttonTexturesPS5[3].get(), {.x = pos.x, .y = pos.y - 90, .w = 30, .h = 30});//Home button
+	RenderCopy(_buttonTexturesPS5[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,

@@ -364,9 +364,23 @@
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Images\menuSelectorP2.png" />
     <Content Include="Resources\Images\menuSelectorP1.png" />
-    <Content Include="Resources\Images\PS5Con.png" />
+    <Content Include="Resources\Images\PS5_Buttons\- A Message from the Creator.txt" />
+    <Content Include="Resources\Images\PS5_Buttons\Create.png" />
+    <Content Include="Resources\Images\PS5_Buttons\Cross.png" />
+    <Content Include="Resources\Images\PS5_Buttons\D-Pad.png" />
+    <Content Include="Resources\Images\PS5_Buttons\Home.png" />
+    <Content Include="Resources\Images\PS5_Buttons\LICENSE.txt" />
+    <Content Include="Resources\Images\PS5_Buttons\Options.png" />
+    <Content Include="Resources\Images\PS5_Buttons\Triangle.png" />
     <Content Include="Resources\Images\SpriteSheet.png" />
-    <Content Include="Resources\Images\XBoxCon.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\- A Message from the Creator.txt" />
+    <Content Include="Resources\Images\Xbox_Buttons\A.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\D-Pad.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\Home.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\LICENSE.txt" />
+    <Content Include="Resources\Images\Xbox_Buttons\Menu.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\View.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\Y.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BattleCityRemastered.rc" />

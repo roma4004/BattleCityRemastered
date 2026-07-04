@@ -15,7 +15,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto gameMode{GameMode::Demo};
 	
-	GameConfig gameConfig{"D:\\Projects\\BattleCity\\x64\\Debug\\config.ini"};
+	GameConfig gameConfig{"x64\\Debug\\config.ini"};
 	
 	UPoint windowSize{
 		.x = gameConfig.pTreeIni.get<unsigned>("Window.width"),
@@ -38,13 +38,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		}
     }
 	
-	auto sdlEnv = SDLEnvironment(
+	auto sdlEnv = SDLEnvironment(//TODO: refactor to std::filesystem::path and ResourceManager 
 			windowSize,
 			windowPos,
-			"Resources/Fonts/PressStart2P-vaV7.ttf",//TODO: refactor to std::filesystem::path and ResourceManager 
-			"Resources/Images/Title.png",
-			"Resources/Sounds/levelStarted.wav",
-			"Resources/Images/SpriteSheet.png",
+			gameConfig,
 			"Resources/Images/menuSelectorP1.png",
 			"Resources/Images/XBoxCon.png",
 			"Resources/Images/PS5Con.png"

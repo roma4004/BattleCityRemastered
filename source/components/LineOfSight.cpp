@@ -68,10 +68,9 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 		const bool isWater = dynamic_cast<WaterTile*>(object.get()) != nullptr;
 		const bool isBush = dynamic_cast<BushTile*>(object.get()) != nullptr;
 		const bool isPenetrable = object->GetIsPenetrable();
-		const bool isPassable = object->GetIsPassable();
 		if (isBush
 			|| (isWater && !isWaterSkip)
-			|| (/*!isPassable &&*/ !isPenetrable))
+			|| !isPenetrable)
 		{
 			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::UP)], object->GetRect()))
 			{

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameConfig.h"
 #include "Point.h"
 #include "interfaces/IConfig.h"
 #include <SDL.h>
@@ -10,15 +11,15 @@ enum class GameMode : char8_t;
 class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{};
-
+	GameConfig& gameConfig;
+	std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5;
+	std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox;
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
 	std::shared_ptr<TTF_Font> _fontSmall{nullptr};
 	std::shared_ptr<TTF_Font> _fontMedium{nullptr};
 	std::shared_ptr<SDL_Texture> _logo{nullptr};
 	std::shared_ptr<SDL_Texture> _atlas{nullptr};
-	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
-	std::shared_ptr<SDL_Texture> _xBoxHint{nullptr};
-	std::shared_ptr<SDL_Texture> _pS5Hint{nullptr};
+	std::shared_ptr<SDL_Texture> _selectorIcon{nullptr};
 
 	//user settings
 	bool _isVsyncOn{};//TODO: should be load from config file or default value
@@ -28,11 +29,14 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
+	ConfigSuccess(UPoint windowSize, GameConfig& gameConfig,
+				  std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
+				  std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox,
+				  const std::shared_ptr<SDL_Renderer>& renderer,
 				  const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
 				  const std::shared_ptr<SDL_Texture>& logo, const std::shared_ptr<SDL_Texture>& atlas,
-				  const std::shared_ptr<SDL_Texture>& joyIcon, const std::shared_ptr<SDL_Texture>& xBoxHint,
-				  const std::shared_ptr<SDL_Texture>& pS5Hint, bool isVsyncOn);
+				  const std::shared_ptr<SDL_Texture>& selectorIcon,
+				  bool isVsyncOn);
 
 	~ConfigSuccess() override = default;
 

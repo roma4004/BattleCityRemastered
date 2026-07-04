@@ -3,7 +3,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-
 GameConfig::GameConfig(const std::string& filePath)
 {
 	LoadIni(filePath);
@@ -40,6 +39,26 @@ void GameConfig::DefaultInitIni(const std::string& filePath)
 		pTreeIni.put("Sound.onOff", true);
 
 		pTreeIni.put("Control.swap", false);
+
+		pTreeIni.put("Fonts.BattleCity", "Resources/Fonts/PressStart2P-vaV7.ttf");
+		pTreeIni.put("Images.Logo", "Resources/Images/Title.png");
+		pTreeIni.put("Music.LevelStarted", "Resources/Sounds/levelStarted.wav");
+		pTreeIni.put("Images.SpriteSheet", "Resources/Images/SpriteSheet.png");
+		pTreeIni.put("Images.MenuSelectorP1", "Resources/Images/menuSelectorP1.png");
+
+		pTreeIni.put("Images.PS5_Create", "Resources/Images/PS5_Buttons/Create.png");
+		pTreeIni.put("Images.PS5_Cross", "Resources/Images/PS5_Buttons/Cross.png");
+		pTreeIni.put("Images.PS5_D-Pad", "Resources/Images/PS5_Buttons/D-Pad.png");
+		pTreeIni.put("Images.PS5_Home", "Resources/Images/PS5_Buttons/Home.png");
+		pTreeIni.put("Images.PS5_Options", "Resources/Images/PS5_Buttons/Options.png");
+		pTreeIni.put("Images.PS5_Triangle", "Resources/Images/PS5_Buttons/Triangle.png");
+
+		pTreeIni.put("Images.XBox_D-Pad", "Resources/Images/XBox_Buttons/D-Pad.png");
+		pTreeIni.put("Images.XBox_Home", "Resources/Images/XBox_Buttons/Home.png");
+		pTreeIni.put("Images.XBox_Menu", "Resources/Images/XBox_Buttons/Menu.png");
+		pTreeIni.put("Images.XBox_View", "Resources/Images/XBox_Buttons/View.png");
+		pTreeIni.put("Images.XBox_A", "Resources/Images/XBox_Buttons/A.png");
+		pTreeIni.put("Images.XBox_Y", "Resources/Images/XBox_Buttons/Y.png");
 	}
 	catch (const boost::property_tree::ptree_bad_data& err)
 	{
