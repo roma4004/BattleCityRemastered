@@ -40,7 +40,7 @@ void Map::MapCreation(const float gridSize) const
 					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Water);
 					break;
 				case 6:
-					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Grass);
+					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Bush);
 					break;
 				case 7:
 					_events->EmitEvent("SpawnObstacle", rect, ObstacleType::Ice);

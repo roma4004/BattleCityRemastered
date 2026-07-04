@@ -19,7 +19,7 @@ CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& b
 		}
 
 		if ((obj->GetIsDestructible() || _tier > 2u)
-			&& !obj->GetIsPenetrable()// skip water, ice, bush(Grass)
+			&& !obj->GetIsPenetrable()// skip water, ice, bush
 			&& !std::dynamic_pointer_cast<FortressWall>(obj)
 			&& !std::dynamic_pointer_cast<EagleTile>(obj))
 		{
