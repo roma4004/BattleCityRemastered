@@ -247,7 +247,7 @@ TEST_F(BotTest, EnemyShootToCoop)
 {
 	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
 	{
-		coopBot->SetPos(FPoint{.x = 0.f, .y = _tankSize * 2.f});
+		coopBot->SetPos(FPoint{.x = 0.f, .y = _tankSize * 3.f});
 		coopBot->SetDirection(Direction::UP);
 
 		// Spawn enemy in line of sight
@@ -707,7 +707,7 @@ TEST_F(BotTest, EnemyTooCloseToShootTheBrick)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// Check that Coop can shoot at Steel wall if have enough tier
+// Check that Coop can shoot at Steel wall if he can destroy it
 TEST_F(BotTest, CoopShootToSteel)
 {
 	_allObjects.clear();
@@ -745,7 +745,7 @@ TEST_F(BotTest, CoopShootToSteel)
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
 
-// Check that enemy can shoot at Steel wall if have enough tier
+// Check that enemy can shoot at Steel wall if he can destroy it
 TEST_F(BotTest, EnemyShootToSteel)
 {
 	_allObjects.clear();
@@ -1202,11 +1202,427 @@ TEST_F(BotTest, EnemyShootToIce)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
+// Check that Enemy can shoot at Player that been behind water
+TEST_F(BotTest, EnemyShootToPlayerBehindWater)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::DOWN,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn Water
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_LT(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 4);
+}
+
+// Check that Enemy can shoot at Player that been in the water (in case of BonusShip was pickup)
+TEST_F(BotTest, EnemyShootToPlayerInTheWater)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::DOWN,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn Water
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_LT(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 4);
+}
+
+// Check that Enemy can shoot at Player that been behind Ice
+TEST_F(BotTest, EnemyShootToPlayerBehindIce)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::DOWN,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn Ice
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_LT(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 4);
+}
+
+// Check that Enemy can shoot at Player that been in the Ice
+TEST_F(BotTest, EnemyShootToPlayerInTheIce)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::DOWN,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn Ice
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_LT(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 4);
+}
+
 //TODO: implement other bot tests
 
-// TEST_F(BotTest, NoReactionEnemyToPlayerBehindBrickWall)
-// TEST_F(BotTest, NoReactionEnemyToPlayerBehindSteelWall)
-// TEST_F(BotTest, NoReactionEnemyToPlayerBehindFortressWall)
-// TEST_F(BotTest, NoReactionEnemyToPlayerBehindInTheBush)
-// TEST_F(BotTest, ShootReactionEnemyToPlayerBehindWater)
-// TEST_F(BotTest, ShootReactionEnemyToPlayerBehindIce)
+// Check that Enemy can shoot at Player that been behind BrickWall
+TEST_F(BotTest, EnemyNoShootToPlayerBrickWall)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::RIGHT,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn BrickWall
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_EQ(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 3);
+}
+
+// Check that Enemy can shoot at Player that been behind SteelWall
+TEST_F(BotTest, EnemyNoShootToPlayerSteelWall)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::RIGHT,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn SteelWall
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_EQ(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 3);
+}
+
+// Check that Enemy can shoot at Player that been behind FortressWall
+TEST_F(BotTest, EnemyNoShootToPlayerFortressWall)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::RIGHT,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn FortressWall
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<FortressWall>(rect, _events, &_allObjects, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_EQ(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 3);
+}
+
+// Check that Enemy can shoot at Player that been behind Bush
+TEST_F(BotTest, EnemyNoShootToPlayerBehindBush)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::DOWN,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn Bush
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_EQ(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 3);
+}
+
+// Check that Enemy can shoot at Player that been in the Bush
+TEST_F(BotTest, EnemyNoShootToPlayerInTheBush)
+{
+	_allObjects.clear();
+
+	// Spawn enemy
+	const ObjRectangle rectEnemy = {.x = 0.f, .y = 0, .w = _tankSize, .h = _tankSize};
+	const BaseObjProperty baseObjProperty = {.rect = rectEnemy,
+											 .health = 1,
+											 .name = "Enemy1",
+											 .fraction = "EnemyTeam"};
+	PawnProperty pawnProperty{.baseObjProperty = baseObjProperty,
+							  .allObjects = &_allObjects,
+							  .events = _events,
+							  .tier = 1u,
+							  .speed = _tankSpeed,
+							  .windowSize = _windowSize,
+							  .dir = Direction::DOWN,
+							  .gameMode = _gameMode};
+	constexpr bool enableByDefault{true};
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+
+	// Spawn Bush
+	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
+
+	// Spawn player aligned enemy in line of sight
+	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
+	pawnProperty.baseObjProperty.rect = rectPlayer;
+	pawnProperty.baseObjProperty.name = "Player1";
+	pawnProperty.baseObjProperty.fraction = "PlayerTeam";
+	pawnProperty.dir = Direction::UP;
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
+	_allObjects.emplace_back(
+			std::make_shared<Player>(
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+
+	const size_t sizeBefore = _allObjects.size();
+	EXPECT_EQ(sizeBefore, 3);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const size_t sizeAfter = _allObjects.size();
+	EXPECT_EQ(sizeBefore, sizeAfter);
+	EXPECT_EQ(sizeAfter, 3);
+}

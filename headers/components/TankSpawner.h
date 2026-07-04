@@ -52,6 +52,7 @@ class TankSpawner final
 
 	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
 	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
+	void RespawnTank(TankType type, buuid uuid, bool skipDelay);
 	[[nodiscard]] static std::string GetCurrentTimeString();
 
 	void OnClientRespawn(TankType type, buuid uuid);
