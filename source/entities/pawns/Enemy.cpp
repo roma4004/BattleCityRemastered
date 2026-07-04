@@ -18,9 +18,8 @@ Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulle
 			return false;
 		}
 
-		//TODO: rename Grass to BushesTile
 		if ((obj->GetIsDestructible() || _tier > 2u)
-			&& !obj->GetIsPenetrable())// skip water, ice, bush(Grass)
+			&& !obj->GetIsPenetrable())// skip water, ice, bush
 		{
 			return true;
 		}

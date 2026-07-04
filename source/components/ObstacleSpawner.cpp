@@ -5,7 +5,7 @@
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
-#include "entities/obstacles/GrassTile.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
@@ -90,8 +90,8 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 		case ObstacleType::Eagle:
 			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
 			break;
-		case ObstacleType::Grass:
-			obstacle = std::make_shared<GrassTile>(rect, _events, uuid, _gameMode);
+		case ObstacleType::Bush:
+			obstacle = std::make_shared<BushTile>(rect, _events, uuid, _gameMode);
 			break;
 		case ObstacleType::Ice:
 			obstacle = std::make_shared<IceTile>(rect, _events, uuid, _gameMode);

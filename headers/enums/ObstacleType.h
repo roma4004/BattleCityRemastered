@@ -9,7 +9,7 @@ enum class ObstacleType : char8_t
 	Eagle,
 	Fortress,
 	Water,
-	Grass,
+	Bush,
 	Ice,
 
 	lastId

@@ -64,9 +64,9 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = _offset.steel;
 	}
-	else if (name == "Grass")
+	else if (name == "Bush")
 	{
-		textureRect = _offset.grass;
+		textureRect = _offset.bush;
 	}
 	else if (name == "Ice")
 	{
