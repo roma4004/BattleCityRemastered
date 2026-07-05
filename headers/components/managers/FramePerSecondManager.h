@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 class EventSystem;
 
@@ -16,7 +17,7 @@ class FramePerSecondManager
 	unsigned int _targetFps{60};
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
-	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time via subscribe
+	boost::property_tree::ptree& _pTreeIni;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -24,7 +25,7 @@ class FramePerSecondManager
 	void CountFpsAndDeltaTime();
 
 public:
-	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, bool isVsyncOn);
+	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, boost::property_tree::ptree& pTreeIni);
 
 	~FramePerSecondManager();
 };

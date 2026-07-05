@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Point.h"
-#include "application/GameConfig.h"
-
 #include <SDL_render.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <boost/property_tree/ptree.hpp>
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
@@ -20,7 +19,7 @@ class RenderManager
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	GameConfig& _gameConfig;
+	boost::property_tree::ptree& _pTreeIni;
 	std::vector<std::shared_ptr<SDL_Texture>>& _buttonTexturesPS5;
 	std::vector<std::shared_ptr<SDL_Texture>>& _buttonTexturesXBox;
 
@@ -29,7 +28,7 @@ class RenderManager
 	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
 	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
 	std::shared_ptr<SDL_Texture> _atlas{nullptr};
-	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
+	std::shared_ptr<SDL_Texture> _selectorIcon{nullptr};
 	std::shared_ptr<unsigned int[]> _menuBackground{nullptr};
 
 	int _menuHeight{};
@@ -65,7 +64,7 @@ class RenderManager
 
 	void DrawMenuBackground(Point pos) const;
 	void DrawMenuLogo(Point pos) const;
-	void DrawJoyIcon(Point pos) const;
+	void DrawSelectorIcon(Point pos) const;
 	void RenderCopyWithClipping(SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect dstRect) const;
 	void RenderCopy(SDL_Texture* texture, SDL_Rect dstRect) const;
 	void DrawXBoxHint(Point pos) const;
@@ -90,12 +89,11 @@ class RenderManager
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-				  GameConfig& gameConfig, std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
+				  boost::property_tree::ptree& pTreeIni, std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
 				  std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox,
 				  const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
 				  const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<SDL_Texture>& atlas,
-				  const std::shared_ptr<SDL_Texture>& joyIcon,
-				  UPoint windowSize);
+				  const std::shared_ptr<SDL_Texture>& selectorIcon, UPoint windowSize);
 
 	~RenderManager();
 };

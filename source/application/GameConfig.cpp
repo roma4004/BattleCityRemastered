@@ -29,13 +29,14 @@ void GameConfig::DefaultInitIni(const std::string& filePath)
 {
 	try
 	{
-		pTreeIni.put("Window.width", 800u);
-		pTreeIni.put("Window.height", 600u);
-		pTreeIni.put("Window.posX", 100u);
-		pTreeIni.put("Window.posY", 100u);
+		pTreeIni.put("Window.width", 800);
+		pTreeIni.put("Window.height", 600);
+		pTreeIni.put("Window.posX", 100);
+		pTreeIni.put("Window.posY", 100);
 		pTreeIni.put("Window.vsync", false);
+		pTreeIni.put("Window.MonitorNumber", 1);
 
-		pTreeIni.put("Sound.volume", 100u);
+		pTreeIni.put("Sound.volume", 100);
 		pTreeIni.put("Sound.onOff", true);
 
 		pTreeIni.put("Control.swap", false);

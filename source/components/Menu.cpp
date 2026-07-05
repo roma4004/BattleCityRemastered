@@ -65,7 +65,7 @@ void Menu::DrawMenuLine(Point& posText, bool isSelected, std::string text) const
 {
 	if (isSelected)
 	{
-		_events->EmitEvent("RenderMenuJoyIcon", Point{.x = posText.x - 35, .y = posText.y - 10});
+		_events->EmitEvent("RenderMenuSelectorIcon", Point{.x = posText.x - 35, .y = posText.y - 10});
 	}
 
 	DrawTextLine(posText, std::move(text));

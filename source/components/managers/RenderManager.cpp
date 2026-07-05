@@ -9,29 +9,29 @@
 #include <ranges>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-							 GameConfig& gameConfig,
+							 boost::property_tree::ptree& pTreeIni,
 							 std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
 							 std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox,
-							 const std::shared_ptr<TTF_Font>& fontSmall,
-							 const std::shared_ptr<TTF_Font>& fontMedium,
+							 const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
 							 const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<SDL_Texture>& atlas,
-							 const std::shared_ptr<SDL_Texture>& joyIcon, const UPoint windowSize)
+							 const std::shared_ptr<SDL_Texture>& selectorIcon, const UPoint windowSize)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _renderer{renderer}
-	, _gameConfig{gameConfig}
+	, _pTreeIni{pTreeIni}
 	, _buttonTexturesPS5{buttonTexturesPS5}
 	, _buttonTexturesXBox{buttonTexturesXBox}
 	, _fontSmall{fontSmall}
 	, _fontMedium{fontMedium}
 	, _menuLogo{menuLogo}
 	, _atlas{atlas}
-	, _joyIcon{joyIcon}
+	, _selectorIcon{selectorIcon}
 	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
 	GenerateFpsTextures();
 
+	//TODO: SDL_SetWindowTitle(gameConfig.sdlWindow.get(), "current GameMode");
 	Subscribe();
 
 	//TODO: move menu init to separated method and separated menuParams structure
@@ -92,7 +92,7 @@ void RenderManager::Subscribe()
 
 	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawMenuBackground(pos); });
 	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
-	_events->AddListener("RenderMenuJoyIcon", _name, [this](const Point pos) { DrawJoyIcon(pos); });
+	_events->AddListener("RenderMenuSelectorIcon", _name, [this](const Point pos) { DrawSelectorIcon(pos); });
 	_events->AddListener("RenderMenuXBoxHint", _name, [this](const Point pos) { DrawXBoxHint(pos); });
 	_events->AddListener("RenderMenuPS5Hint", _name, [this](const Point pos) { DrawPS5Hint(pos); });
 
@@ -302,10 +302,10 @@ void RenderManager::DrawMenuLogo(const Point pos) const
 	SDL_RenderCopy(_renderer.get(), _menuLogo.get(), nullptr, &rect);
 }
 
-void RenderManager::DrawJoyIcon(const Point pos) const
+void RenderManager::DrawSelectorIcon(const Point pos) const
 {
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
-	SDL_RenderCopy(_renderer.get(), _joyIcon.get(), nullptr, &rect);
+	SDL_RenderCopy(_renderer.get(), _selectorIcon.get(), nullptr, &rect);
 }
 
 void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const

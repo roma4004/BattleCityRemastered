@@ -11,7 +11,7 @@ enum class GameMode : char8_t;
 class ConfigSuccess final : public IConfig
 {
 	UPoint _windowSize{};
-	GameConfig& gameConfig;
+	boost::property_tree::ptree& _pTreeIni;
 	std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5;
 	std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox;
 	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
@@ -21,22 +21,18 @@ class ConfigSuccess final : public IConfig
 	std::shared_ptr<SDL_Texture> _atlas{nullptr};
 	std::shared_ptr<SDL_Texture> _selectorIcon{nullptr};
 
-	//user settings
-	bool _isVsyncOn{};//TODO: should be load from config file or default value
-
 public:
 	ConfigSuccess() = delete;
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, GameConfig& gameConfig,
+	ConfigSuccess(UPoint windowSize, boost::property_tree::ptree& pTreeIni,
 				  std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
 				  std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox,
 				  const std::shared_ptr<SDL_Renderer>& renderer,
 				  const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
 				  const std::shared_ptr<SDL_Texture>& logo, const std::shared_ptr<SDL_Texture>& atlas,
-				  const std::shared_ptr<SDL_Texture>& selectorIcon,
-				  bool isVsyncOn);
+				  const std::shared_ptr<SDL_Texture>& selectorIcon);
 
 	~ConfigSuccess() override = default;
 

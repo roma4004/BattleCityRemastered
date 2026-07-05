@@ -22,17 +22,16 @@
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-						 std::unique_ptr<RenderManager>& renderManager,
-						 std::unique_ptr<RightSideBar>& rightSideBar,
+GameSuccess::GameSuccess(const UPoint windowSize, boost::property_tree::ptree& pTreeIni,
+						 const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
+						 std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar,
 						 GameMode gameMode)
 	: _windowSize{windowSize}
 	, _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
 	, _stateManager{std::make_unique<StateManager>(events)}
 	, _userInput{std::make_unique<UserInput>(windowSize, events)}
-	, _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(events, pTreeIni)}
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
@@ -42,9 +41,9 @@ GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSys
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
-	
+
 	ResetBattlefieldTo(gameMode);
-	
+
 	if (gameMode == GameMode::Demo)
 	{
 		_events->EmitEvent("ShowMenu", true);

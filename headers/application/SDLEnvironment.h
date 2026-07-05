@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GameConfig.h"
 #include "Point.h"
 #include <SDL.h>//NOTE: do not replace with forward declaration, required for minGW
 #include <SDL_mixer.h>
 #include <memory>
+#include <boost/property_tree/ptree.hpp>
 
 struct UPoint;
 
@@ -16,24 +16,19 @@ struct SDLEnvironment final
 	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelStartedSound{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 
-	UPoint windowSize{};
-	UPoint windowPos{};
+	UPoint& windowSize;
+	UPoint& windowPos;
+	UPoint windowsPosOffset;
 
-	GameConfig& gameConfig;
+	boost::property_tree::ptree& pTreeIni;
 	std::vector<std::shared_ptr<SDL_Texture>> buttonTexturesPS5;
 	std::vector<std::shared_ptr<SDL_Texture>> buttonTexturesXBox;
-	const char* selectorIconPathName{nullptr};
-	const char* xBoxHintPathName{nullptr};
-	const char* pS5HintPathName{nullptr};
 
-	bool isVsyncOn{false};//TODO: add input as constructor parameter and export to gameSuccess
-
-	SDLEnvironment(UPoint windowSize, UPoint windowPos, GameConfig& gameConfig, const char* selectorIcon,
-				   const char* xBoxCon, const char* pS5Con);
+	SDLEnvironment(UPoint& windowSize, UPoint& windowPos, UPoint& windowsPosOffset, boost::property_tree::ptree& pTreeIni);
 	~SDLEnvironment();
 
 	[[nodiscard]] std::unique_ptr<IConfig> Init();
 
-	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow(UPoint& windowSizeHalf) const;
-	std::shared_ptr<SDL_Renderer> InitRender(UPoint& windowSizeHalf) const;
+	[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow() const;
+	[[nodiscard]] std::shared_ptr<SDL_Renderer> InitRender() const;
 };

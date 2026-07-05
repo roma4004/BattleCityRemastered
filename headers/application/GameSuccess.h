@@ -3,6 +3,7 @@
 #include "Point.h"
 #include "interfaces/IGame.h"
 #include <chrono>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 enum class GameMode : char8_t;
 class INetworkNode;
@@ -23,11 +24,9 @@ class RightSideBar;
 class GameSuccess final : public IGame
 {
 public:
-	GameSuccess(UPoint windowSize, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-	            bool isVsyncOn,
-	            std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar,
-	            GameMode gameMode);
-	
+	GameSuccess(UPoint windowSize, boost::property_tree::ptree& pTreeIni, const std::shared_ptr<EventSystem>& events,
+				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
+				std::unique_ptr<RightSideBar>& rightSideBar, GameMode gameMode);
 	~GameSuccess() override;
 
 	void MainLoop() override;

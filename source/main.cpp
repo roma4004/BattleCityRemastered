@@ -7,45 +7,41 @@
 #include <../headers/application/GameConfig.h>
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
+int main(int argc, char* argv[])
 {
 	NetworkLogger::SetConsoleLogging(true);
 	NetworkLogger::SetFileLogging(true, "network_log.txt");
 	NetworkLogger::SetVerbosityLevel(1);
 
 	auto gameMode{GameMode::Demo};
-	
-	GameConfig gameConfig{"x64\\Debug\\config.ini"};
-	
+
+	GameConfig gameConfig{"x64\\Debug\\config.ini"};//TODO: refactor to std::filesystem::path and ResourceManager 
+
 	UPoint windowSize{
-		.x = gameConfig.pTreeIni.get<unsigned>("Window.width"),
-		.y = gameConfig.pTreeIni.get<unsigned>("Window.height")};
-	
+			.x = gameConfig.pTreeIni.get<unsigned>("Window.width", 800u),
+			.y = gameConfig.pTreeIni.get<unsigned>("Window.height", 600u)};
+
 	UPoint windowPos{
-		.x = gameConfig.pTreeIni.get<unsigned>("Window.posX"),
-		.y = gameConfig.pTreeIni.get<unsigned>("Window.posY")};
-	
+			.x = gameConfig.pTreeIni.get<unsigned>("Window.posX", 100u),
+			.y = gameConfig.pTreeIni.get<unsigned>("Window.posY", 100u)};
+
+	UPoint windowsPosOffset{};
+
 	if (argc == 2)
-    {
+	{
 		if (const std::string arg{argv[1]}; arg.ends_with("host"))
 		{
 			gameMode = GameMode::PlayAsHost;
+			windowsPosOffset.x -= windowSize.x / 2;//TODO: input argument windowPos and windowSize
 		}
 		else if (arg.ends_with("client"))
 		{
 			gameMode = GameMode::PlayAsClient;
-			windowPos.x = windowPos.x + windowSize.x + 20;
+			windowsPosOffset.x += windowSize.x / 2;
 		}
-    }
-	
-	auto sdlEnv = SDLEnvironment(//TODO: refactor to std::filesystem::path and ResourceManager 
-			windowSize,
-			windowPos,
-			gameConfig,
-			"Resources/Images/menuSelectorP1.png",
-			"Resources/Images/XBoxCon.png",
-			"Resources/Images/PS5Con.png"
-			);
+	}
+
+	auto sdlEnv = SDLEnvironment(windowSize, windowPos, windowsPosOffset, gameConfig.pTreeIni);
 	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
 	const std::unique_ptr<IGame> game = sdl->CreateGame(gameMode);
 

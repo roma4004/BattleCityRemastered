@@ -2,11 +2,12 @@
 #include "components/EventSystem.h"
 #include <cmath>//NOTE: need for cmake build
 #include <thread>
+#include <boost/property_tree/ptree.hpp>
 
-FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const bool isVsyncOn)
+FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, boost::property_tree::ptree& pTreeIni)
 	: _name{"FramePerSecondManager"}
 	, _events{events}
-	, _isVsyncOn{isVsyncOn}
+	, _pTreeIni{pTreeIni}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 
@@ -37,7 +38,8 @@ void FramePerSecondManager::Unsubscribe() const { _events->RemoveAllListeners(_n
 
 void FramePerSecondManager::CountFpsAndDeltaTime()
 {
-	if (!_isVsyncOn)
+	if (const bool isVsyncOn = _pTreeIni.get<bool>("Window.vsync", false);
+		!isVsyncOn)
 	{
 		const auto currentFrameDuration = std::chrono::duration<double>(
 				std::chrono::high_resolution_clock::now() - _startFrameTime);
