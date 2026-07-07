@@ -92,7 +92,9 @@ bool Bot::ChangeDirIfSeenOpponent(const Direction dir, const std::vector<std::sh
 	if (sideObstacle.empty() == false
 		&& IsOpponent(sideObstacle.front()))
 	{
-		if (dir != GetDirection() && !_shootTimer.isActive)
+		if (dir != GetDirection()
+			&& !_shootTimer.isActive
+			&& _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 		{
 			SetDirection(dir);
 

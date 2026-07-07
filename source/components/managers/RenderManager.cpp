@@ -26,7 +26,7 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const s
 	, _menuLogo{menuLogo}
 	, _atlas{atlas}
 	, _selectorIcon{selectorIcon}
-	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 80, .y = 20, .w = 40, .h = 40}
+	, _fpsRectangle{.x = static_cast<int>(windowSize.x) - 105, .y = 15, .w = 40, .h = 40}
 //TODO: dynamic adjust and resize
 {
 	GenerateFpsTextures();

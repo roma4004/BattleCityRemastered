@@ -51,7 +51,7 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 				std::this_thread::sleep_for(timeToWait - std::chrono::milliseconds(1));
 			}
 
-			while ((std::chrono::high_resolution_clock::now() - _startFrameTime) < _targetFrameDuration)
+			while (std::chrono::high_resolution_clock::now() - _startFrameTime < _targetFrameDuration)
 			{
 				std::this_thread::yield();
 			}

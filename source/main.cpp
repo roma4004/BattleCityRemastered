@@ -7,7 +7,7 @@
 #include <../headers/application/GameConfig.h>
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
-int main(int argc, char* argv[])
+int main(const int argc, char* argv[])
 {
 	NetworkLogger::SetConsoleLogging(true);
 	NetworkLogger::SetFileLogging(true, "network_log.txt");

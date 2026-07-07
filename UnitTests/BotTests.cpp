@@ -234,7 +234,7 @@ TEST_F(BotTest, CoopShootToEnemy)
 
 		const size_t sizeAfter = _allObjects.size();
 		EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-		EXPECT_EQ(sizeAfter, 4);
+		EXPECT_EQ(sizeAfter, 4); //TODO: investigate on cmake we have 3 instead of 4
 
 		return;
 	}
@@ -1626,3 +1626,8 @@ TEST_F(BotTest, EnemyNoShootToPlayerInTheBush)
 	EXPECT_EQ(sizeBefore, sizeAfter);
 	EXPECT_EQ(sizeAfter, 3);
 }
+
+//TODO: check in test that bot can't see bonus behind the water, and not try to move on to it
+//TODO: check in test that bot can't see bonus behind the bushes, and not try to move on to it
+//TODO: check in test that bot can see bonus behind the ice, and try to move on to it
+//TODO: check in test that bot can see bonus in the ice, and try to move on to it
