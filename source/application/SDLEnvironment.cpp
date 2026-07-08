@@ -12,7 +12,7 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(UPoint& windowSize, UPoint& windowPos, UPoint& windowsPosOffset,
+SDLEnvironment::SDLEnvironment(UPoint& windowSize, UPoint& windowPos, const UPoint& windowsPosOffset,
 							   boost::property_tree::ptree& pTreeIni)
 	: windowSize{windowSize}
 	, windowPos{windowPos}

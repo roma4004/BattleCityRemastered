@@ -28,6 +28,8 @@ CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& b
 
 		return false;
 	};
+
+	_shootTimer.cooldown = std::chrono::milliseconds{500};
 }
 
 CoopBot::~CoopBot() = default;

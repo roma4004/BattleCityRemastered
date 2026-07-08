@@ -24,7 +24,7 @@ struct SDLEnvironment final
 	std::vector<std::shared_ptr<SDL_Texture>> buttonTexturesPS5;
 	std::vector<std::shared_ptr<SDL_Texture>> buttonTexturesXBox;
 
-	SDLEnvironment(UPoint& windowSize, UPoint& windowPos, UPoint& windowsPosOffset, boost::property_tree::ptree& pTreeIni);
+	SDLEnvironment(UPoint& windowSize, UPoint& windowPos, const UPoint& windowsPosOffset, boost::property_tree::ptree& pTreeIni);
 	~SDLEnvironment();
 
 	[[nodiscard]] std::unique_ptr<IConfig> Init();
