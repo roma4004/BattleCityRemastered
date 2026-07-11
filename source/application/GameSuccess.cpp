@@ -1,4 +1,5 @@
 #include "application/GameSuccess.h"
+#include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
@@ -22,20 +23,18 @@
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(const UPoint windowSize, boost::property_tree::ptree& pTreeIni,
-						 const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
+GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
 						 std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar,
 						 GameMode gameMode)
-	: _windowSize{windowSize}
-	, _menu{std::move(menu)}
-	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
+	: _menu{std::move(menu)}
+	, _textureManager(std::make_unique<TextureManager>(gameConfig.windowSize, events))
 	, _stateManager{std::make_unique<StateManager>(events)}
-	, _userInput{std::make_unique<UserInput>(windowSize, events)}
-	, _fpsManager{std::make_unique<FramePerSecondManager>(events, pTreeIni)}
-	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
+	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
+	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig.windowSize)}
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
-	, _scoreBoard{std::make_unique<ScoreBoard>(windowSize, events)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
 	, _rightSideBar{std::move(rightSideBar)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}

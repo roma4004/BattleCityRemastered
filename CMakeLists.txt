@@ -175,6 +175,12 @@ set(BOOST_SUBMODULES
     libs/utility
     libs/winapi
     libs/uuid
+    libs/property_tree
+    libs/any
+    libs/type_index
+    libs/container_hash
+    libs/multi_index
+    libs/tuple
     tools/boost_install"
 )#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
@@ -483,8 +489,21 @@ set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
 set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
 set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
-set(XBOX_CON_PATH_NAME         ${IMG_PATH}/XBoxCon.png)
-set(PS5_CON_PATH_NAME          ${IMG_PATH}/PS5Con.png)
+
+set(PS5_BTN_CREATE_PATH_NAME   ${IMG_PATH}/PS5_Buttons/Create.png)
+set(PS5_BTN_CROSS_PATH_NAME    ${IMG_PATH}/PS5_Buttons/Cross.png)
+set(PS5_BTN_D-PAD_PATH_NAME    ${IMG_PATH}/PS5_Buttons/D-Pad.png)
+set(PS5_BTN_HOME_PATH_NAME     ${IMG_PATH}/PS5_Buttons/Home.png)
+set(PS5_BTN_OPTIONS_PATH_NAME  ${IMG_PATH}/PS5_Buttons/Options.png)
+set(PS5_BTN_TRIANGLE_PATH_NAME ${IMG_PATH}/PS5_Buttons/Triangle.png)
+
+set(XBOX_BTN_D-PAD_PATH_NAME   ${IMG_PATH}/XBox_Buttons/D-Pad.png)
+set(XBOX_BTN_HOME_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Home.png)
+set(XBOX_BTN_MENU_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Menu.png)
+set(XBOX_BTN_VIEW_PATH_NAME    ${IMG_PATH}/XBox_Buttons/View.png)
+set(XBOX_BTN_A_PATH_NAME       ${IMG_PATH}/XBox_Buttons/A.png)
+set(XBOX_BTN_Y_PATH_NAME       ${IMG_PATH}/XBox_Buttons/Y.png)
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
@@ -497,14 +516,60 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${JOY_ICON_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_CON_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_CON_PATH_NAME}")
+        "../${PS5_BTN_CREATE_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CREATE_PATH_NAME}")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_CON_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_CON_PATH_NAME}")
+        "../${PS5_BTN_CROSS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CROSS_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_D-PAD_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_D-PAD_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_HOME_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_HOME_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_OPTIONS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_OPTIONS_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_TRIANGLE_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_TRIANGLE_PATH_NAME}")
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_D-PAD_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_D-PAD_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_HOME_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_HOME_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_MENU_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_MENU_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_VIEW_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_VIEW_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_A_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_A_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_Y_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_Y_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)

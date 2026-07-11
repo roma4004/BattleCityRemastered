@@ -14,14 +14,13 @@ class Bot : public Tank
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-protected:
 	std::uniform_int_distribution<> _distTurnRate{};
-	//TODO: move _distTurnRate to random manager one event on start and then get random by type
 	Timer _randomChangeDirTimer{};
 
-	//LOS
 	float _obstacleDistance{};
 	float _bulletOffset{};
+
+protected:
 	std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;
 
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;

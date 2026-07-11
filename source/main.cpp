@@ -1,10 +1,9 @@
-#include "Point.h"
+#include "application/GameConfig.h"
 #include "application/SDLEnvironment.h"
 #include "enums/GameMode.h"
 #include "interfaces/IConfig.h"
 #include "interfaces/IGame.h"
 #include "utils/NetworkLogger.h"
-#include <../headers/application/GameConfig.h>
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main(const int argc, char* argv[])
@@ -15,33 +14,25 @@ int main(const int argc, char* argv[])
 
 	auto gameMode{GameMode::Demo};
 
-	GameConfig gameConfig{"x64\\Debug\\config.ini"};//TODO: refactor to std::filesystem::path and ResourceManager 
-
-	UPoint windowSize{
-			.x = gameConfig.pTreeIni.get<unsigned>("Window.width", 800u),
-			.y = gameConfig.pTreeIni.get<unsigned>("Window.height", 600u)};
-
-	UPoint windowPos{
-			.x = gameConfig.pTreeIni.get<unsigned>("Window.posX", 100u),
-			.y = gameConfig.pTreeIni.get<unsigned>("Window.posY", 100u)};
-
-	UPoint windowsPosOffset{};
+	GameConfig gameConfig{"config.ini"};//TODO: refactor to std::filesystem::path and ResourceManager 
 
 	if (argc == 2)
 	{
+		//TODO: input argument windowPos and windowSize as parameter to gameConfig
 		if (const std::string arg{argv[1]}; arg.ends_with("host"))
 		{
 			gameMode = GameMode::PlayAsHost;
-			windowsPosOffset.x -= windowSize.x / 2;//TODO: input argument windowPos and windowSize
+			gameConfig.ApplyWindowOffsetAsHost();
 		}
 		else if (arg.ends_with("client"))
 		{
 			gameMode = GameMode::PlayAsClient;
-			windowsPosOffset.x += windowSize.x / 2;
+			gameConfig.ApplyWindowOffsetAsClient();
+			//TODO: add feature mute intro music when start as client, to play only from host
 		}
 	}
 
-	auto sdlEnv = SDLEnvironment(windowSize, windowPos, windowsPosOffset, gameConfig.pTreeIni);
+	auto sdlEnv = SDLEnvironment(gameConfig);
 	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
 	const std::unique_ptr<IGame> game = sdl->CreateGame(gameMode);
 

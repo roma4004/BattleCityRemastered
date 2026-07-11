@@ -5,30 +5,22 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <boost/property_tree/ptree.hpp>
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct ObjRectangle;
 struct TTF_Font;
 class EventSystem;
+class GameConfig;
 
 class RenderManager
 {
 	std::string _name{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	boost::property_tree::ptree& _pTreeIni;
-	std::vector<std::shared_ptr<SDL_Texture>>& _buttonTexturesPS5;
-	std::vector<std::shared_ptr<SDL_Texture>>& _buttonTexturesXBox;
+	GameConfig& _gameConfig;
 
-	std::shared_ptr<TTF_Font> _fontSmall{nullptr};
-	std::shared_ptr<TTF_Font> _fontMedium{nullptr};
-	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
 	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
-	std::shared_ptr<SDL_Texture> _atlas{nullptr};
-	std::shared_ptr<SDL_Texture> _selectorIcon{nullptr};
 	std::shared_ptr<unsigned int[]> _menuBackground{nullptr};
 
 	int _menuHeight{};
@@ -36,7 +28,6 @@ class RenderManager
 	int _menuWidth{};
 	int _menuPadding{};
 
-	UPoint _windowSize{};
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
 	std::unordered_map<unsigned int, SDL_Texture*> _colorTextureCache;
@@ -88,12 +79,7 @@ class RenderManager
 	void DrawHealthBar(ObjRectangle rect, int health) const;
 
 public:
-	RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-				  boost::property_tree::ptree& pTreeIni, std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesPS5,
-				  std::vector<std::shared_ptr<SDL_Texture>>& buttonTexturesXBox,
-				  const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
-				  const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<SDL_Texture>& atlas,
-				  const std::shared_ptr<SDL_Texture>& selectorIcon, UPoint windowSize);
+	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	~RenderManager();
 };

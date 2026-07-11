@@ -1,9 +1,9 @@
 #pragma once
 
 #include <chrono>
-#include <boost/property_tree/ptree_fwd.hpp>
 
 class EventSystem;
+class GameConfig;
 
 class FramePerSecondManager
 {
@@ -17,7 +17,7 @@ class FramePerSecondManager
 	unsigned int _targetFps{60};
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
-	boost::property_tree::ptree& _pTreeIni;
+	GameConfig& _gameConfig;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -25,7 +25,7 @@ class FramePerSecondManager
 	void CountFpsAndDeltaTime();
 
 public:
-	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, boost::property_tree::ptree& pTreeIni);
+	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	~FramePerSecondManager();
 };
