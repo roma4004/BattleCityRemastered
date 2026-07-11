@@ -345,11 +345,11 @@ void Bot::SetRandomDirection(const double deltaTime)
 	if (const std::vector<Direction> freePath = GetFreePathSides(deltaTime);
 		!freePath.empty())
 	{
-		const int max = static_cast<int>(freePath.size() - 1);
-		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
+		const int max{static_cast<int>(freePath.size() - 1)};
+		const int pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution{0, max})};
 		SetDirection(freePath[pathIndex]);
 
-		_randomChangeDirTimer.Reset(milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
+		_randomChangeDirTimer.Reset(milliseconds{RandUtils::GetRandNumber(_distTurnRate)});
 	}
 }
 
@@ -360,14 +360,11 @@ bool Bot::ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const
 		return false;
 	}
 
-	//TODO: cover this by test, that ally was seen and not shoot him
 	if (IsAlly(obj))
 	{
 		return false;
 	}
 
-	//TODO: cover pickup bonusTank after lose fortress
-	//TODO: cover this by test, that enemy was seen and shoot him
 	if (IsOpponent(obj))
 	{
 		return true;
@@ -426,7 +423,6 @@ void Bot::TickUpdate(const double deltaTime)
 			|| m_shouldShootToObstacleStrategy(nearestSeenObstacle))
 		{
 			//TODO: add feature for bots chance to shoot to obstacle
-			//TODO: move timer check to timerManager and onEvent change the class field bool isOnCooldown{false};
 			//TODO: cover this by test, _shootDistance check
 			//TODO: refactor to separated flag isClearToFire mean safe distance
 			//TODO: cover this by test, that we can't shoot if on cooldown

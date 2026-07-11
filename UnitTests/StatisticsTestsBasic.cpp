@@ -44,7 +44,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);		
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -697,7 +697,10 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 {
-	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
+	ObjRectangle brickWallRect{.x = 0.f,
+							   .y = _tankSize + _calibre.size.y + 1,
+							   .w = _calibre.size.x,
+							   .h = _calibre.size.y};
 
 	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _events, _uuid, _gameMode));
 
@@ -734,7 +737,10 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 {
-	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
+	ObjRectangle brickWallRect{.x = 0.f,
+							   .y = _tankSize + _calibre.size.y + 1,
+							   .w = _calibre.size.x,
+							   .h = _calibre.size.y};
 
 	_allObjects.emplace_back(std::make_shared<BrickWall>(brickWallRect, _events, _uuid, _gameMode));
 
@@ -808,7 +814,10 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 {
-	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
+	ObjRectangle brickWallRect{.x = 0.f,
+							   .y = _tankSize + _calibre.size.y + 1,
+							   .w = _calibre.size.x,
+							   .h = _calibre.size.y};
 
 	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _events, _uuid, _gameMode));
 
@@ -846,7 +855,10 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 {
-	ObjRectangle brickWallRect{.x = 0.f, .y = _tankSize + _calibre.size.y + 1, .w = _calibre.size.x, .h = _calibre.size.y};
+	ObjRectangle brickWallRect{.x = 0.f,
+							   .y = _tankSize + _calibre.size.y + 1,
+							   .w = _calibre.size.x,
+							   .h = _calibre.size.y};
 
 	_allObjects.emplace_back(std::make_shared<SteelWall>(brickWallRect, _events, _uuid, _gameMode));
 
@@ -1167,7 +1179,8 @@ TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 		const auto bonusOne = dynamic_cast<Bonus*>(_allObjects.back().get());
 		if (bonusOne)
 		{
-			_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+			_bonusSpawner->SpawnRandomBonus(
+					{.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 		}
 
 		if (const auto bonusTwo = dynamic_cast<Bonus*>(_allObjects.back().get()))
@@ -1208,7 +1221,10 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 		const auto bonusOne = dynamic_cast<Bonus*>(_allObjects.back().get());
 		if (bonusOne)
 		{
-			_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+			_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.f,
+											 .y = _tankSize + 1.f,
+											 .w = _tankSize,
+											 .h = _tankSize});
 		}
 
 		if (const auto bonusTwo = dynamic_cast<Bonus*>(_allObjects.back().get()))
@@ -1218,7 +1234,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
 			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
 			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-		
+
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
@@ -1286,7 +1302,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
 			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
 			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-		
+
 			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 			EXPECT_TRUE(bonus->GetIsAlive());

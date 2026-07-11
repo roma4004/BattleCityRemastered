@@ -90,7 +90,7 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 		// 		<< ", Direction=" << static_cast<int>(dir)
 		// 		<< ", Fraction=" << fraction
 		// 		<< ", UUID=" << bullet->GetUuid()
-		// 		<< std::endl;
+		// 		<< '\n';
 	}
 
 	return bulletAsBase;
@@ -113,7 +113,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 		// 		<< "Bullet RETURNED to pool and Bullet pool size =" << _bullets.size()
 		// 		<< ", Author=" << bulletCast->GetAuthor()
 		// 		<< ", UUID=" << bulletCast->GetUuid()
-		// 		<< std::endl;
+		// 		<< '\n';
 
 		bulletCast->Disable();
 		_bullets.emplace(std::shared_ptr<BaseObj>(bullet, [this](BaseObj* b)
@@ -133,7 +133,7 @@ void BulletPool::Clear()
 	// std::cout << "[" << GetCurrentTimeString() << "] "
 	// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 		<< "Bullet pool CLEARED, bullets in pool: " << _bullets.size()
-	// 		<< std::endl;
+	// 		<< '\n';
 
 	while (!_bullets.empty())
 	{

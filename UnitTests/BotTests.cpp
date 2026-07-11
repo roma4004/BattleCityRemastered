@@ -533,8 +533,8 @@ TEST_F(BotTest, CoopNoShootToPlayer1)
 	EXPECT_TRUE(false);
 }
 
-// check that enemy don't shoot the enemy tanks
-TEST_F(BotTest, EnemyNoShootToEnemy)
+// check that enemy don't shoot the allied tanks
+TEST_F(BotTest, EnemyNoShootToAllied)
 {
 	_allObjects.clear();//TODO: split to separated test file coop and enemy bot tests, to prevent clearing
 
@@ -568,8 +568,8 @@ TEST_F(BotTest, EnemyNoShootToEnemy)
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
 
-// check that enemy don't shoot the enemy tanks even if too close to them
-TEST_F(BotTest, EnemyNoShootToAllyIfTooClose)
+// check that enemy doesn't shoot the allied tanks even if too close to them
+TEST_F(BotTest, EnemyNoShootToAlliedIfTooClose)
 {
 	_allObjects.clear();//TODO: split to separated test file coop and enemy bot tests, to prevent clearing
 

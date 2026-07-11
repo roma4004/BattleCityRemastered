@@ -128,7 +128,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		// std::cout << "[" << "bullet->Reset" << "] "
 		// 			<< ", name=" << bullet->GetName()
 		// 			<< ", UUID=" << UuidUtils::ToStringUuid(bullet->GetUuid())
-		// 			<< std::endl;
+		// 			<< '\n';
 	}
 
 	if (bulletAsBase != nullptr)

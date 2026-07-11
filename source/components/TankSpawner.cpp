@@ -150,7 +150,7 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 
 	if (freeSpawnPosCopy.empty())
 	{
-		std::cout << "no space for enemy tank spawn id " << static_cast<int>(type) << std::endl;
+		std::cout << "no space for enemy tank spawn id " << static_cast<int>(type) << '\n';
 		return false;
 	}
 

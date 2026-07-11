@@ -37,7 +37,7 @@ Bullet::~Bullet()
 	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
+	// 			<< '\n';
 	Unsubscribe();
 }
 
@@ -106,7 +106,7 @@ void Bullet::Disable() const
 	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
+	// 			<< '\n';
 
 	Unsubscribe();
 }

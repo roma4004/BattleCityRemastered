@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/Timer.h"
 #include <boost/uuid/uuid.hpp>
 #include <random>
 
@@ -25,8 +26,7 @@ class BonusSpawner final
 	std::uniform_int_distribution<> _distSpawnPosX{};
 	std::uniform_int_distribution<> _distSpawnType{};
 
-	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};// Bonus spawn time
-	std::chrono::system_clock::time_point _lastTimeSpawn{};
+	Timer _spawnTimer;
 	int _bonusSize{};
 	GameMode _gameMode{};
 

@@ -27,7 +27,7 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize}
 	, _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize}
 	, _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1}
-	, _lastTimeSpawn{std::chrono::system_clock::now()}
+	, _spawnTimer{std::chrono::seconds{60}, std::chrono::system_clock::now()}
 	, _bonusSize{bonusSize}
 {
 	Subscribe();
@@ -82,10 +82,7 @@ void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener("Client
 
 void BonusSpawner::Update()
 {
-	//TODO: extract to timer manager to subscribe here,
-	//      instead of update each frame and in timer manager update only timer queue,
-	//      instead of poke each timer and check if there enabled or ends
-	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))
+	if (_spawnTimer.IsCooldownFinish())
 	{
 		const auto size = static_cast<float>(_bonusSize);
 		const auto x = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosX));
@@ -100,6 +97,8 @@ void BonusSpawner::Update()
 		{
 			SpawnRandomBonus(rect);
 		}
+
+		_spawnTimer.Reset();
 	}
 }
 
@@ -113,7 +112,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 		uuid = UuidUtils::GetRandomUuid();
 	}
 
-//TODO: fix star bonus steel destroy
+	//TODO: fix star bonus steel destroy
 	std::shared_ptr<Bonus> bonus{nullptr};
 
 	switch (type)
@@ -146,7 +145,6 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 	if (bonus)
 	{
 		_allObjects->emplace_back(bonus);
-		_lastTimeSpawn = std::chrono::system_clock::now();
 	}
 }
 
@@ -158,5 +156,5 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 
 void BonusSpawner::Reset()
 {
-	_lastTimeSpawn = std::chrono::system_clock::now();
+	_spawnTimer.Reset();
 }
