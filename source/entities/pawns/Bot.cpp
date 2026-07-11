@@ -89,12 +89,21 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 bool Bot::ChangeDirIfSeenOpponent(const Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle)
 {
-	if (sideObstacle.empty() == false
-		&& IsOpponent(sideObstacle.front()))
+	if (_shootTimer.isActive || sideObstacle.empty())
 	{
-		if (dir != GetDirection()
-			&& !_shootTimer.isActive
-			&& _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
+		return false;
+	}
+
+	if (const auto& nearestSeenObstacle = sideObstacle.front();
+		IsOpponent(nearestSeenObstacle))
+	{
+		if (dir == GetDirection())
+		{
+			return false;
+		}
+
+		UpdateShootDistance(dir, nearestSeenObstacle);
+		if (_obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 		{
 			SetDirection(dir);
 
@@ -171,6 +180,33 @@ std::shared_ptr<BaseObj> Bot::BonusLookup(LineOfSight& lineOfSight, Direction& d
 	return {};
 }
 
+void Bot::UpdateShootDistance(const Direction dir, const std::shared_ptr<BaseObj>& nearestSeenObstacle)
+{
+	if (dir == Direction::UP)
+	{
+		_obstacleDistance = _rect.y - nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight();
+		_bulletOffset = _calibre.size.y;
+	}
+
+	if (dir == Direction::LEFT)
+	{
+		_obstacleDistance = _rect.x - nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth();
+		_bulletOffset = _calibre.size.x;
+	}
+
+	if (dir == Direction::DOWN)
+	{
+		_obstacleDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
+		_bulletOffset = _calibre.size.y;
+	}
+
+	if (dir == Direction::RIGHT)
+	{
+		_obstacleDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
+		_bulletOffset = _calibre.size.x;
+	}
+}
+
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 {
 	LineOfSight lineOfSight(_rect, _windowSize, _calibre.size, _allObjects, this);
@@ -188,52 +224,47 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	// 	Shot();
 	// }
 
-	if (const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
-		dir == Direction::UP && !upSideObstacles.empty())
+	if (nearestSeenObstacle != nullptr)
 	{
-		if (nearestSeenObstacle == nullptr)
+		return nearestSeenObstacle;
+	}
+
+	//finding obstacle to shoot if no priority target
+	if (dir == Direction::UP)
+	{
+		if (const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
+			!upSideObstacles.empty())
 		{
 			nearestSeenObstacle = upSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = _rect.y - nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight();
-		_bulletOffset = _calibre.size.y;
 	}
-
-	if (const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
-		dir == Direction::LEFT && !leftSideObstacles.empty())
+	else if (dir == Direction::LEFT)
 	{
-		if (nearestSeenObstacle == nullptr)
+		if (const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
+			!leftSideObstacles.empty())
 		{
 			nearestSeenObstacle = leftSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = _rect.x - nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth();
-		_bulletOffset = _calibre.size.x;
 	}
-
-	if (const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
-		dir == Direction::DOWN && !downSideObstacles.empty())
+	else if (dir == Direction::DOWN)
 	{
-		if (nearestSeenObstacle == nullptr)
+		if (const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
+			!downSideObstacles.empty())
 		{
 			nearestSeenObstacle = downSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
-		_bulletOffset = _calibre.size.y;
 	}
-
-	if (const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
-		dir == Direction::RIGHT && !rightSideObstacles.empty())
+	else if (dir == Direction::RIGHT)
 	{
-		if (nearestSeenObstacle == nullptr)
+		if (const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
+			!rightSideObstacles.empty())
 		{
 			nearestSeenObstacle = rightSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
-		_bulletOffset = _calibre.size.x;
 	}
 
 	return nearestSeenObstacle;

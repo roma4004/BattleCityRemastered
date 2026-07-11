@@ -32,6 +32,9 @@ protected:
 											   const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
 	[[nodiscard]] std::shared_ptr<BaseObj> EnemyLookup(LineOfSight& lineOfSight, Direction& dir);
 	[[nodiscard]] std::shared_ptr<BaseObj> BonusLookup(LineOfSight& lineOfSight, Direction& dir);
+
+	void UpdateShootDistance(Direction dir, const std::shared_ptr<BaseObj>& nearestSeenObstacle);
+
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight();
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const;
 

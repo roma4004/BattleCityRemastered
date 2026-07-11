@@ -234,7 +234,7 @@ TEST_F(BotTest, CoopShootToEnemy)
 
 		const size_t sizeAfter = _allObjects.size();
 		EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-		EXPECT_EQ(sizeAfter, 4); //TODO: investigate on cmake we have 3 instead of 4
+		EXPECT_EQ(sizeAfter, 4);//TODO: investigate on cmake we have 3 instead of 4
 
 		return;
 	}
@@ -1390,10 +1390,8 @@ TEST_F(BotTest, EnemyShootToPlayerInTheIce)
 	EXPECT_EQ(sizeAfter, 4);
 }
 
-//TODO: implement other bot tests
-
 // Check that Enemy can shoot at Player that been behind BrickWall
-TEST_F(BotTest, EnemyNoShootToPlayerBrickWall)
+TEST_F(BotTest, EnemyNoShootToPlayerBehindBrickWall)
 {
 	_allObjects.clear();
 
@@ -1440,7 +1438,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBrickWall)
 }
 
 // Check that Enemy can shoot at Player that been behind SteelWall
-TEST_F(BotTest, EnemyNoShootToPlayerSteelWall)
+TEST_F(BotTest, EnemyNoShootToPlayerBehindSteelWall)
 {
 	_allObjects.clear();
 
@@ -1487,7 +1485,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerSteelWall)
 }
 
 // Check that Enemy can shoot at Player that been behind FortressWall
-TEST_F(BotTest, EnemyNoShootToPlayerFortressWall)
+TEST_F(BotTest, EnemyNoShootToPlayerBehindFortressWall)
 {
 	_allObjects.clear();
 
@@ -1627,7 +1625,278 @@ TEST_F(BotTest, EnemyNoShootToPlayerInTheBush)
 	EXPECT_EQ(sizeAfter, 3);
 }
 
-//TODO: check in test that bot can't see bonus behind the water, and not try to move on to it
-//TODO: check in test that bot can't see bonus behind the bushes, and not try to move on to it
-//TODO: check in test that bot can see bonus behind the ice, and try to move on to it
-//TODO: check in test that bot can see bonus in the ice, and try to move on to it
+// Check that both Bots can't see bonus that behind water
+TEST_F(BotTest, EnemyCantSeeBonusBehindWater)
+{
+	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
+	{
+		coopBot->SetDirection(Direction::RIGHT);
+
+		// Spawn Water
+		_allObjects.emplace_back(
+				std::make_shared<WaterTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Bonus
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize});
+
+		// Spawn Water
+		_allObjects.emplace_back(
+				std::make_shared<WaterTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 4.f + 3.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Enemy
+		ObjRectangle rect{.x = 0.f, .y = _tankSize * 5.f + 40.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = "Enemy1",
+										.fraction = "EnemyTeam"};
+		PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
+								  .allObjects = &_allObjects,
+								  .events = _events,
+								  .tier = 1u,
+								  .speed = _calibre.speed,
+								  .windowSize = _windowSize,
+								  .dir = Direction::RIGHT,
+								  .gameMode = _gameMode};
+
+		constexpr bool enableByDefault{true};
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		_allObjects.emplace_back(enemy);
+
+		const Direction startDirCoop = coopBot->GetDirection();
+		const Direction startDirEnemy = enemy->GetDirection();
+		const size_t sizeBefore = _allObjects.size();
+
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		const Direction endDirCoop = coopBot->GetDirection();
+		const Direction endDirEnemy = enemy->GetDirection();
+
+		EXPECT_EQ(sizeBefore, _allObjects.size());
+		EXPECT_EQ(startDirCoop, endDirCoop);
+		EXPECT_EQ(startDirEnemy, endDirEnemy);
+		EXPECT_EQ(endDirCoop, Direction::RIGHT);
+		EXPECT_EQ(endDirEnemy, Direction::RIGHT);
+
+		return;
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that both Bots can't see bonus that behind Bush
+TEST_F(BotTest, EnemyCantSeeBonusBehindBush)
+{
+	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
+	{
+		coopBot->SetDirection(Direction::RIGHT);
+
+		// Spawn Bush
+		_allObjects.emplace_back(
+				std::make_shared<BushTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Bonus
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize});
+
+		// Spawn Bush
+		_allObjects.emplace_back(
+				std::make_shared<BushTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 4.f + 3.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Enemy
+		ObjRectangle rect{.x = 0.f, .y = _tankSize * 5.f + 40.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = "Enemy1",
+										.fraction = "EnemyTeam"};
+		PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
+								  .allObjects = &_allObjects,
+								  .events = _events,
+								  .tier = 1u,
+								  .speed = _calibre.speed,
+								  .windowSize = _windowSize,
+								  .dir = Direction::RIGHT,
+								  .gameMode = _gameMode};
+
+		constexpr bool enableByDefault{true};
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		_allObjects.emplace_back(enemy);
+
+		const Direction startDirCoop = coopBot->GetDirection();
+		const Direction startDirEnemy = enemy->GetDirection();
+		const size_t sizeBefore = _allObjects.size();
+
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		const Direction endDirCoop = coopBot->GetDirection();
+		const Direction endDirEnemy = enemy->GetDirection();
+
+		EXPECT_EQ(sizeBefore, _allObjects.size());
+		EXPECT_EQ(startDirCoop, endDirCoop);
+		EXPECT_EQ(startDirEnemy, endDirEnemy);
+		EXPECT_EQ(endDirCoop, Direction::RIGHT);
+		EXPECT_EQ(endDirEnemy, Direction::RIGHT);
+
+		return;
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that both Bots can see bonus that behind Ice
+TEST_F(BotTest, EnemyCanSeeBonusBehindIce)
+{
+	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
+	{
+		coopBot->SetDirection(Direction::RIGHT);
+
+		// Spawn Ice
+		_allObjects.emplace_back(
+				std::make_shared<IceTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Bonus
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize});
+
+		// Spawn Ice
+		_allObjects.emplace_back(
+				std::make_shared<IceTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 4.f + 3.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Enemy
+		ObjRectangle rect{.x = 0.f, .y = _tankSize * 5.f + 40.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = "Enemy1",
+										.fraction = "EnemyTeam"};
+		PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
+								  .allObjects = &_allObjects,
+								  .events = _events,
+								  .tier = 1u,
+								  .speed = _calibre.speed,
+								  .windowSize = _windowSize,
+								  .dir = Direction::RIGHT,
+								  .gameMode = _gameMode};
+
+		constexpr bool enableByDefault{true};
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		_allObjects.emplace_back(enemy);
+
+		const Direction startDirCoop = coopBot->GetDirection();
+		const Direction startDirEnemy = enemy->GetDirection();
+		const size_t sizeBefore = _allObjects.size();
+
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		const Direction endDirCoop = coopBot->GetDirection();
+		const Direction endDirEnemy = enemy->GetDirection();
+
+		EXPECT_EQ(sizeBefore, _allObjects.size());
+		EXPECT_NE(startDirCoop, endDirCoop);
+		EXPECT_NE(startDirEnemy, endDirEnemy);
+		EXPECT_EQ(endDirCoop, Direction::DOWN);
+		EXPECT_EQ(endDirEnemy, Direction::UP);
+
+		return;
+	}
+
+	EXPECT_TRUE(false);
+}
+
+// Check that both Bots can see bonus that in the Ice
+TEST_F(BotTest, EnemyCanSeeBonusInTheIce)
+{
+	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
+	{
+		coopBot->SetDirection(Direction::RIGHT);
+
+		// Spawn Ice
+		_allObjects.emplace_back(
+				std::make_shared<IceTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Ice
+		_allObjects.emplace_back(
+				std::make_shared<IceTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 3.f + 1.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Bonus
+		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 3.f + 2.f, .w = _tankSize, .h = _tankSize});
+
+		// Spawn Ice
+		_allObjects.emplace_back(
+				std::make_shared<IceTile>(
+						ObjRectangle{.x = 0.f, .y = _tankSize * 4.f + 3.f, .w = _tankSize, .h = _tankSize},
+						_events,
+						_uuid,
+						_gameMode));
+
+		// Spawn Enemy
+		ObjRectangle rect{.x = 0.f, .y = _tankSize * 5.f + 40.f, .w = _tankSize, .h = _tankSize};
+		BaseObjProperty baseObjProperty{.rect = rect,
+										.health = _tankHealth,
+										.uuid = _uuid,
+										.name = "Enemy1",
+										.fraction = "EnemyTeam"};
+		PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
+								  .allObjects = &_allObjects,
+								  .events = _events,
+								  .tier = 1u,
+								  .speed = _calibre.speed,
+								  .windowSize = _windowSize,
+								  .dir = Direction::RIGHT,
+								  .gameMode = _gameMode};
+
+		constexpr bool enableByDefault{true};
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		_allObjects.emplace_back(enemy);
+
+		const Direction startDirCoop = coopBot->GetDirection();
+		const Direction startDirEnemy = enemy->GetDirection();
+		const size_t sizeBefore = _allObjects.size();
+
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		const Direction endDirCoop = coopBot->GetDirection();
+		const Direction endDirEnemy = enemy->GetDirection();
+
+		EXPECT_EQ(sizeBefore, _allObjects.size());
+		EXPECT_NE(startDirCoop, endDirCoop);
+		EXPECT_NE(startDirEnemy, endDirEnemy);
+		EXPECT_EQ(endDirCoop, Direction::DOWN);
+		EXPECT_EQ(endDirEnemy, Direction::UP);
+
+		return;
+	}
+
+	EXPECT_TRUE(false);
+}
