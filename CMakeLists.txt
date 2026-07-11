@@ -32,9 +32,9 @@ set(SDL2_IMG_TAG "release-2.8.8")
 set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(SDL2_MXR_TAG "release-2.8.1")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
-set(BOOST_VERSION "1.87.0")
-string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE "${BOOST_VERSION}")
-set(BOOST_TAG "boost-${BOOST_VERSION}")
+set(BOOST_VERSION "1.91.0")
+string(REPLACE "." "_" BOOST_PATH "${BOOST_VERSION}")
+set(BOOST_GIT_TAG "boost-${BOOST_VERSION}-1")#TODO: remove -1 from tag because now ver 1.91.0-1
 set(SDL2_MIXER_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE)
 
@@ -164,7 +164,7 @@ set(BOOST_SUBMODULES
     libs/numeric
     libs/optional
     libs/predef
-    libs/preprocessor
+    libs/preprocessor 
     libs/serialization
     libs/smart_ptr
     libs/spirit
@@ -181,13 +181,15 @@ set(BOOST_SUBMODULES
     libs/container_hash
     libs/multi_index
     libs/tuple
+    libs/describe
+    libs/mp11
     tools/boost_install"
 )#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     ExternalProject_Add(Boost
             GIT_REPOSITORY ${BOOST_URL}
-            GIT_TAG ${BOOST_TAG}
+            GIT_TAG ${BOOST_GIT_TAG}
             GIT_PROGRESS 1
             GIT_SHALLOW 1
             GIT_SHALLOW TRUE
@@ -195,8 +197,8 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
             GIT_SUBMODULES ${BOOST_SUBMODULES} # load only specified submodules instead of all
             PREFIX boost
             DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}
-            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_VERSION_UNDERSCORE}
-#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_VERSION_UNDERSCORE}_build
+            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}
+#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}_build
             INSTALL_DIR ${DEP_DOWNLOAD_DIR}/boost_install
 #            TMP_DIR Boost/tmp
 #            STAMP_DIR Boost/stamp
@@ -207,9 +209,9 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 #            LOG_INSTALL ON
 
 #            PATCH_COMMAND ./bootstrap.sh gcc
-            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization,uuid
+            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
 #            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization --with-uuid -j${ThreadAmount} -d+2 stage install
+            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
             BUILD_IN_SOURCE 1
             INSTALL_COMMAND ""
             DOWNLOAD_EXTRACT_TIMESTAMP true
