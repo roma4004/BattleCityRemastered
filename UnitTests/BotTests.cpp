@@ -210,7 +210,7 @@ TEST_F(BotTest, CoopShootToEnemy)
 	if (const auto coopBot = dynamic_cast<CoopBot*>(_allObjects.front().get()))
 	{
 		// Spawn enemy in line of sight
-		ObjRectangle rectEnemy = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+		ObjRectangle rectEnemy = {.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
 		BaseObjProperty baseObjProperty = {.rect = rectEnemy,
 										   .health = 1,
 										   .name = "Enemy1",
@@ -234,7 +234,7 @@ TEST_F(BotTest, CoopShootToEnemy)
 
 		const size_t sizeAfter = _allObjects.size();
 		EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-		EXPECT_EQ(sizeAfter, 4);//TODO: investigate on cmake we have 3 instead of 4
+		EXPECT_EQ(sizeAfter, 4);
 
 		return;
 	}
