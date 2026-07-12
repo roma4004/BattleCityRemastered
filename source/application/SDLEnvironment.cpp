@@ -128,7 +128,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesPS5.push_back(texture);
+			gameConfig.ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -151,7 +151,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesPS5.push_back(texture);
+			gameConfig.ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -174,7 +174,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesPS5.push_back(texture);
+			gameConfig.ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -197,7 +197,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesPS5.push_back(texture);
+			gameConfig.ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -220,7 +220,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesPS5.push_back(texture);
+			gameConfig.ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -243,7 +243,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesPS5.push_back(texture);
+			gameConfig.ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -268,7 +268,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesXBox.push_back(texture);
+			gameConfig.xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -291,7 +291,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesXBox.push_back(texture);
+			gameConfig.xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -314,7 +314,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesXBox.push_back(texture);
+			gameConfig.xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -337,7 +337,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesXBox.push_back(texture);
+			gameConfig.xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -360,7 +360,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesXBox.push_back(texture);
+			gameConfig.xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -383,7 +383,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.buttonTexturesXBox.push_back(texture);
+			gameConfig.xboxTextures.push_back(texture);
 		}
 		else
 		{

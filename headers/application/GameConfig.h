@@ -6,7 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <boost/property_tree/ptree.hpp> //TODO: update cmake and nuget boost to boost-1.91.0-1
+#include <boost/property_tree/ptree.hpp>
 
 class GameConfig
 {
@@ -23,6 +23,7 @@ public:
 	UPoint windowSize{};
 	UPoint windowPos{};
 	UPoint windowsPosOffset{};
+	size_t sideBarWidth{228u};
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
@@ -33,8 +34,8 @@ public:
 	std::shared_ptr<SDL_Texture> logoTexture{nullptr};
 	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};
 	std::shared_ptr<SDL_Texture> selectorIconTexture{nullptr};
-	std::vector<std::shared_ptr<SDL_Texture>> buttonTexturesPS5;
-	std::vector<std::shared_ptr<SDL_Texture>> buttonTexturesXBox;
+	std::vector<std::shared_ptr<SDL_Texture>> ps5Textures;
+	std::vector<std::shared_ptr<SDL_Texture>> xboxTextures;
 
 	std::shared_ptr<SDL_Surface> logoSurface{nullptr};
 	std::shared_ptr<SDL_Surface> atlasSurface{nullptr};

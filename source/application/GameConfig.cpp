@@ -40,7 +40,7 @@ void GameConfig::DefaultInitIni(const std::string& filePath)
 		Set("Window.posX", 100u);
 		Set("Window.posY", 100u);
 		Set("Window.vsync", false);
-		Set("Window.MonitorNumber", 1);
+		Set("Window.MonitorNumber", 1u);
 
 		Set("Sound.volume", 100u);
 		Set("Sound.onOff", true);

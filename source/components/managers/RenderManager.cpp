@@ -7,7 +7,6 @@
 #include <SDL_rect.h>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
-#include <ranges>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _name{"RenderManager"}
@@ -21,19 +20,7 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameCon
 	//TODO: SDL_SetWindowTitle(gameConfig.sdlWindow.get(), "current GameMode");
 	Subscribe();
 
-	//TODO: move menu init to separated method and separated menuParams structure
-	_menuPadding = 25;
-	const auto windowWidth = static_cast<unsigned int>(gameConfig.windowSize.x);
-	_windowHeight = static_cast<int>(gameConfig.windowSize.y);
-	_menuHeight = _windowHeight - _menuPadding * 3;
-	constexpr int sideBarWidth = 228;
-	_menuWidth = static_cast<int>(windowWidth) - sideBarWidth - _menuPadding;
-
-	PregenerateMenuBackgroundPixels();
-	PregenerateMenuBackgroundTexture();
-
-	constexpr unsigned int grayColor = 0x808080;
-	_colorTexture = {CreateColorTexture(grayColor), SDL_DestroyTexture};
+	InitMenu(gameConfig);
 }
 
 RenderManager::~RenderManager()
@@ -243,19 +230,6 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2), currentStageNumber, isMediumFontSize);
 }
 
-void RenderManager::PregenerateMenuBackgroundPixels()
-{
-	_menuBackground = std::make_shared<unsigned int[]>(
-			static_cast<size_t>(_menuHeight) * static_cast<size_t>(_menuWidth));
-	for (int y = 0; y < _menuHeight; ++y)
-	{
-		for (int x = 0; x < _menuWidth; ++x)
-		{
-			constexpr unsigned int menuColor = 0x91808080;// Alpha channel set to 0x80 for semi-transparency gray
-			_menuBackground[y * _menuWidth + x] = menuColor;
-		}
-	}
-}
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 {
@@ -266,7 +240,7 @@ SDL_Color RenderManager::IntToColor(const unsigned int color)
 {
 	return SDL_Color{.r = static_cast<Uint8>((color >> 16) & 0xFF),
 					 .g = static_cast<Uint8>((color >> 8) & 0xFF),
-					 .b = static_cast<Uint8>(color & 0xFF),
+					 .b = static_cast<Uint8>((color) & 0xFF),
 					 .a = static_cast<Uint8>((color >> 24) & 0xFF)};
 }
 
@@ -278,9 +252,13 @@ unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, cons
 // blend menu panel and menu texture background
 void RenderManager::DrawMenuBackground(const Point pos) const
 {
-	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = _menuWidth, .h = _menuHeight};
-	SDL_UpdateTexture(_menuBackgroundTexture.get(), &rect, _menuBackground.get(), _menuWidth << 2);
-	SDL_RenderCopy(_gameConfig.renderer.get(), _menuBackgroundTexture.get(), nullptr, &rect);
+	const SDL_Rect rect{.x = pos.x,
+						.y = pos.y,
+						.w = static_cast<int>(_menuParams.panelSize.x),
+						.h = static_cast<int>(_menuParams.panelSize.y)};
+	const int pitch = static_cast<int>(_menuParams.panelSize.x << 2ul);
+	SDL_UpdateTexture(_menuParams.backgroundTexture.get(), &rect, _menuParams.backgroundPixelArray.get(), pitch);
+	SDL_RenderCopy(_gameConfig.renderer.get(), _menuParams.backgroundTexture.get(), nullptr, &rect);
 }
 
 void RenderManager::DrawMenuLogo(const Point pos) const
@@ -307,22 +285,22 @@ void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) con
 
 void RenderManager::DrawXBoxHint(const Point pos) const
 {
-	RenderCopy(_gameConfig.buttonTexturesXBox[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
-	RenderCopy(_gameConfig.buttonTexturesXBox[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
-	RenderCopy(_gameConfig.buttonTexturesXBox[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
-	RenderCopy(_gameConfig.buttonTexturesXBox[0].get(), {.x = pos.x - 75, .y = pos.y + 183, .w = 30, .h = 30});//Dpad button
-	RenderCopy(_gameConfig.buttonTexturesXBox[1].get(), {.x = pos.x - 75, .y = pos.y + 63, .w = 30, .h = 30});//Home button
-	RenderCopy(_gameConfig.buttonTexturesXBox[4].get(), {.x = pos.x - 75, .y = pos.y + 213, .w = 30, .h = 30});//A button
+	RenderCopy(_gameConfig.xboxTextures[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
+	RenderCopy(_gameConfig.xboxTextures[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
+	RenderCopy(_gameConfig.xboxTextures[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
+	RenderCopy(_gameConfig.xboxTextures[0].get(), {.x = pos.x - 75, .y = pos.y + 183, .w = 30, .h = 30});//Dpad button
+	RenderCopy(_gameConfig.xboxTextures[1].get(), {.x = pos.x - 75, .y = pos.y + 63, .w = 30, .h = 30});//Home button
+	RenderCopy(_gameConfig.xboxTextures[4].get(), {.x = pos.x - 75, .y = pos.y + 213, .w = 30, .h = 30});//A button
 }
 
 void RenderManager::DrawPS5Hint(const Point pos) const
 {
-	RenderCopy(_gameConfig.buttonTexturesPS5[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
-	RenderCopy(_gameConfig.buttonTexturesPS5[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
-	RenderCopy(_gameConfig.buttonTexturesPS5[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
-	RenderCopy(_gameConfig.buttonTexturesPS5[2].get(), {.x = pos.x, .y = pos.y + 33, .w = 30, .h = 30});//Dpad button
-	RenderCopy(_gameConfig.buttonTexturesPS5[3].get(), {.x = pos.x, .y = pos.y - 90, .w = 30, .h = 30});//Home button
-	RenderCopy(_gameConfig.buttonTexturesPS5[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
+	RenderCopy(_gameConfig.ps5Textures[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
+	RenderCopy(_gameConfig.ps5Textures[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
+	RenderCopy(_gameConfig.ps5Textures[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
+	RenderCopy(_gameConfig.ps5Textures[2].get(), {.x = pos.x, .y = pos.y + 33, .w = 30, .h = 30});//Dpad button
+	RenderCopy(_gameConfig.ps5Textures[3].get(), {.x = pos.x, .y = pos.y - 90, .w = 30, .h = 30});//Home button
+	RenderCopy(_gameConfig.ps5Textures[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,
@@ -356,23 +334,6 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 
 	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = surface->w, .h = surface->h};
 	SDL_RenderCopy(_gameConfig.renderer.get(), texture.get(), nullptr, &textRect);
-}
-
-void RenderManager::PregenerateMenuBackgroundTexture()
-{
-	// SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);
-	_menuBackgroundTexture = std::shared_ptr<SDL_Texture>(
-			SDL_CreateTexture(
-					_gameConfig.renderer.get(),
-					SDL_PIXELFORMAT_ARGB8888,
-					SDL_TEXTUREACCESS_TARGET,
-					_menuWidth,
-					_menuHeight),
-			SDL_DestroyTexture);
-	SDL_SetTextureBlendMode(_menuBackgroundTexture.get(), SDL_BLENDMODE_BLEND);
-
-	const SDL_Rect rect{.x = _menuPadding, .y = _menuPadding, .w = _menuWidth, .h = _menuHeight};
-	SDL_UpdateTexture(_menuBackgroundTexture.get(), &rect, _menuBackground.get(), _menuWidth << 2);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
@@ -434,9 +395,9 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 			return std::make_pair(0.0, SDL_FLIP_VERTICAL);
 		case Direction::RIGHT:
 			return std::make_pair(90.0, SDL_FLIP_NONE);
-		default:
-			return std::make_pair(0.0, SDL_FLIP_NONE);
 	}
+
+	return std::make_pair(0.0, SDL_FLIP_NONE);
 }
 
 void RenderManager::DrawColorTexture(const ObjRectangle rect) const
@@ -451,7 +412,8 @@ void RenderManager::DrawTexture(const ObjRectangle& texture, const ObjRectangle&
 	auto [angle, flip] = GetRotateAndAngleAndFlip(dir);
 	const SDL_Rect srcRect = RectToSdlRect(texture);
 	const SDL_Rect dstRect = RectToSdlRect(dest);
-	SDL_RenderCopyEx(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect, angle, nullptr, flip);
+	SDL_RenderCopyEx(
+			_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect, angle, nullptr, flip);
 }
 
 void RenderManager::GenerateFpsTextures()
@@ -531,4 +493,12 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 	SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);//set new blendMode type
 	SDL_RenderFillRect(_gameConfig.renderer.get(), &healthBarRect);
 	SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), blendMode);//restore blendMode type
+}
+
+void RenderManager::InitMenu(const GameConfig& gameConfig)
+{
+	_menuParams.Init(gameConfig.windowSize, gameConfig.sideBarWidth, gameConfig.renderer);
+
+	constexpr unsigned int grayColor = 0x808080;
+	_colorTexture = {CreateColorTexture(grayColor), SDL_DestroyTexture};
 }

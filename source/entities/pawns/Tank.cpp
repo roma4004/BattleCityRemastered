@@ -85,6 +85,7 @@ void Tank::Subscribe()
 
 	_events->AddListener("PostDraw", _nameWithUuid, [this]()
 	{
+		//TODO: add feature hide health bar when we touch bushes
 		if (!this->_effects.isHelmetActive)
 		{
 			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());

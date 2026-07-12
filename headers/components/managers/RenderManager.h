@@ -20,13 +20,59 @@ class RenderManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig& _gameConfig;
 
-	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
-	std::shared_ptr<unsigned int[]> _menuBackground{nullptr};
+	struct MenuParams
+	{
+		UPoint panelSize{};
+		size_t padding{};
+		std::shared_ptr<unsigned int[]> backgroundPixelArray{nullptr};
+		std::shared_ptr<SDL_Texture> backgroundTexture{nullptr};
 
-	int _menuHeight{};
-	int _windowHeight{};
-	int _menuWidth{};
-	int _menuPadding{};
+		void Init(const UPoint windowSize, const size_t sideBarWidth, const std::shared_ptr<SDL_Renderer>& renderer)
+		{
+			padding = 25;
+			panelSize = UPoint{.x = windowSize.x - sideBarWidth - padding,
+							  .y = windowSize.y - padding * 3u};
+
+			PregenerateBackgroundPixels();
+			PregenerateBackgroundTexture(renderer);
+		}
+
+		void PregenerateBackgroundPixels()
+		{
+			backgroundPixelArray = std::make_shared<unsigned int[]>(panelSize.y * panelSize.x);
+			for (size_t y = 0; y < panelSize.y; ++y)
+			{
+				for (size_t x = 0; x < panelSize.x; ++x)
+				{
+					const int i = static_cast<int>(y * panelSize.x + x);
+					constexpr unsigned int menuColor = 0x91808080;// Alpha channel 0x80 for semi-transparency gray
+					backgroundPixelArray[i] = menuColor;
+				}
+			}
+		}
+
+		void PregenerateBackgroundTexture(const std::shared_ptr<SDL_Renderer>& renderer)
+		{
+			// SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);
+			backgroundTexture = std::shared_ptr<SDL_Texture>(SDL_CreateTexture(
+																	 renderer.get(),
+																	 SDL_PIXELFORMAT_ARGB8888,
+																	 SDL_TEXTUREACCESS_TARGET,
+																	 static_cast<int>(panelSize.x),
+																	 static_cast<int>(panelSize.y)),
+															 SDL_DestroyTexture);
+			SDL_SetTextureBlendMode(backgroundTexture.get(), SDL_BLENDMODE_BLEND);
+
+			const SDL_Rect rect{.x = static_cast<int>(padding),
+								.y = static_cast<int>(padding),
+								.w = static_cast<int>(panelSize.x),
+								.h = static_cast<int>(panelSize.y)};
+			const int pitch = static_cast<int>(panelSize.x << 2ul);
+			SDL_UpdateTexture(backgroundTexture.get(), &rect, backgroundPixelArray.get(), pitch);
+		}
+	};
+
+	MenuParams _menuParams{};
 
 	SDL_Rect _fpsRectangle{};
 	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
@@ -62,7 +108,6 @@ class RenderManager
 	void DrawPS5Hint(Point pos) const;
 	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
-	void PregenerateMenuBackgroundTexture();
 
 	void ClearFrame() const;
 	void ClearColorTextureCache();
@@ -77,6 +122,7 @@ class RenderManager
 	void RenderFPS(size_t fps);
 
 	void DrawHealthBar(ObjRectangle rect, int health) const;
+	void InitMenu(const GameConfig& gameConfig);
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
