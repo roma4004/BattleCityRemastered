@@ -16,9 +16,9 @@ class StateManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	GameMode _gameMode{};
-	bool _isPause{false};
-	bool _isGameOver{false};
-	bool _isGameWon{false};
+	bool _isPause{};
+	bool _isGameOver{};
+	bool _isGameWon{};
 
 	void Subscribe();
 	void Unsubscribe() const;

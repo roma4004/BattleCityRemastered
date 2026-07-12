@@ -206,7 +206,7 @@ void Tank::TakeDamage(const int damage)
 	}
 }
 
-unsigned Tank::GetTier() const { return _tier; }
+unsigned int Tank::GetTier() const { return _tier; }
 
 void Tank::Shot(const buuid withUuid)
 {

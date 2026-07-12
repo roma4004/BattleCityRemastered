@@ -45,7 +45,7 @@ class RenderManager
 				for (size_t x = 0; x < panelSize.x; ++x)
 				{
 					const int i = static_cast<int>(y * panelSize.x + x);
-					constexpr unsigned int menuColor = 0x91808080;// Alpha channel 0x80 for semi-transparency gray
+					constexpr unsigned int menuColor = 0x91808080u;// Alpha channel 0x80 for semi-transparency gray
 					backgroundPixelArray[i] = menuColor;
 				}
 			}

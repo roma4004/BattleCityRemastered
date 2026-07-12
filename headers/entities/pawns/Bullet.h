@@ -52,7 +52,7 @@ public:
 
 	void TakeDamage(int damage) override;
 
-	[[nodiscard]] int GetTier() const;
+	[[nodiscard]] unsigned int GetTier() const;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);

@@ -49,7 +49,7 @@ void Menu::Draw()
 	// first time animation, slow scrolling from bottom corner to vertical center
 	if (constexpr unsigned int yOffsetEnd = 0u; _yOffsetStart > yOffsetEnd)
 	{
-		_yOffsetStart -= 3;
+		_yOffsetStart -= 3u;
 	}
 
 	_pos.x = _padding;
@@ -73,7 +73,7 @@ void Menu::DrawMenuLine(Point& posText, bool isSelected, std::string text) const
 
 void Menu::DrawTextLine(Point& posText, std::string text) const
 {
-	constexpr unsigned int color = {0xffffffff};
+	constexpr unsigned int color = {0xffffffffu};
 	_events->EmitEvent("RenderText", posText, color, text);
 	posText.y += 30;
 }

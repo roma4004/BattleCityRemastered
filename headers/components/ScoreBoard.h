@@ -21,9 +21,9 @@ class ScoreBoard final
 	bool _isScoreBoardDisplayed{false};
 
 	//TODO: extract to separate sidebar class
-	unsigned short _enemyRespawnCount{20};
-	unsigned short _playerOneRepawnCount{3};
-	unsigned short _playerTwoRespawnCount{3};
+	unsigned short _enemyRespawnCount{20u};
+	unsigned short _playerOneRepawnCount{3u};
+	unsigned short _playerTwoRespawnCount{3u};
 	GameMode _gameMode{};
 
 	void Subscribe();

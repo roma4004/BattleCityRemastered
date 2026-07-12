@@ -8,43 +8,43 @@ class EventSystem;
 
 struct StatisticsData final
 {
-	unsigned short bulletHitByEnemy{0};
-	unsigned short bulletHitByPlayerOne{0};
-	unsigned short bulletHitByPlayerTwo{0};
+	unsigned short bulletHitByEnemy{};
+	unsigned short bulletHitByPlayerOne{};
+	unsigned short bulletHitByPlayerTwo{};
 
-	unsigned short enemyHitByFriendlyFire{0};
-	unsigned short enemyHitByPlayerOne{0};
-	unsigned short enemyHitByPlayerTwo{0};
+	unsigned short enemyHitByFriendlyFire{};
+	unsigned short enemyHitByPlayerOne{};
+	unsigned short enemyHitByPlayerTwo{};
 
-	unsigned short playerOneHitFriendlyFire{0};
-	unsigned short playerOneHitByEnemyTeam{0};
+	unsigned short playerOneHitFriendlyFire{};
+	unsigned short playerOneHitByEnemyTeam{};
 
-	unsigned short playerTwoHitFriendlyFire{0};
-	unsigned short playerTwoHitByEnemyTeam{0};
+	unsigned short playerTwoHitFriendlyFire{};
+	unsigned short playerTwoHitByEnemyTeam{};
 
-	unsigned short enemyDiedByFriendlyFire{0};
-	unsigned short enemyDiedByPlayerOne{0};
-	unsigned short enemyDiedByPlayerTwo{0};
+	unsigned short enemyDiedByFriendlyFire{};
+	unsigned short enemyDiedByPlayerOne{};
+	unsigned short enemyDiedByPlayerTwo{};
 
-	unsigned short playerOneDiedByFriendlyFire{0};
-	unsigned short playerTwoDiedByFriendlyFire{0};
-	unsigned short playerDiedByEnemyTeam{0};
+	unsigned short playerOneDiedByFriendlyFire{};
+	unsigned short playerTwoDiedByFriendlyFire{};
+	unsigned short playerDiedByEnemyTeam{};
 
-	unsigned short brickWallDiedByEnemyTeam{0};
-	unsigned short brickWallDiedByPlayerOne{0};
-	unsigned short brickWallDiedByPlayerTwo{0};
+	unsigned short brickWallDiedByEnemyTeam{};
+	unsigned short brickWallDiedByPlayerOne{};
+	unsigned short brickWallDiedByPlayerTwo{};
 
-	unsigned short steelWallDiedByEnemyTeam{0};
-	unsigned short steelWallDiedByPlayerOne{0};
-	unsigned short steelWallDiedByPlayerTwo{0};
+	unsigned short steelWallDiedByEnemyTeam{};
+	unsigned short steelWallDiedByPlayerOne{};
+	unsigned short steelWallDiedByPlayerTwo{};
 
-	unsigned short bonusPickupByEnemyTeam{0};
-	unsigned short bonusPickupByPlayerOne{0};
-	unsigned short bonusPickupByPlayerTwo{0};
+	unsigned short bonusPickupByEnemyTeam{};
+	unsigned short bonusPickupByPlayerOne{};
+	unsigned short bonusPickupByPlayerTwo{};
 
-	unsigned short bonusDestroyedByEnemyTeam{0};
-	unsigned short bonusDestroyedByPlayerOne{0};
-	unsigned short bonusDestroyedByPlayerTwo{0};
+	unsigned short bonusDestroyedByEnemyTeam{};
+	unsigned short bonusDestroyedByPlayerOne{};
+	unsigned short bonusDestroyedByPlayerTwo{};
 };
 
 class GameStatistics final

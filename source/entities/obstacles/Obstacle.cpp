@@ -52,15 +52,19 @@ void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	if (const auto health = GetHealth();
-		health < 1)
+	if (GetHealth() < 1)
 	{
 		_events->EmitEvent("Statistics_" + _name + "Died", author, fraction);
-
-		//TODO: move this to onHealthChange
-		if (_gameMode == GameMode::PlayAsHost)
-		{
-			_events->EmitEvent("ServerSend_Health", _name, health, _uuid);
-		}
 	}
 }
+
+void Obstacle::TakeDamage(const int damage)
+{
+	BaseObj::TakeDamage(damage);
+
+	if (_gameMode == GameMode::PlayAsHost)
+	{
+		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
+	}
+}
+

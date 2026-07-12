@@ -14,7 +14,7 @@ class FramePerSecondManager
 	std::chrono::high_resolution_clock::time_point _startFrameTime{};
 	double _deltaTime{};
 	double _fpsAccumulatedTime{};
-	unsigned int _targetFps{60};
+	unsigned int _targetFps{60u};
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
 	GameConfig& _gameConfig;

@@ -15,7 +15,7 @@ class RightSideBar
 	unsigned short _enemiesRespawnCount{};
 	unsigned short _playerOneRespawnCount{};
 	unsigned short _playerTwoRespawnCount{};
-	unsigned short _stageNumber{1};
+	unsigned short _stageNumber{1u};
 	GameMode _gameMode{};
 
 	std::string _name{};

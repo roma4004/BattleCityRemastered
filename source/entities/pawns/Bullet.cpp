@@ -172,7 +172,7 @@ void Bullet::TakeDamage(const int damage)
 	Pawn::TakeDamage(damage);
 }
 
-int Bullet::GetTier() const { return _calibre.tier; }
+unsigned int Bullet::GetTier() const { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
@@ -181,12 +181,13 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		if (target && !dynamic_cast<WaterTile*>(target.get())
 			&& !dynamic_cast<BushTile*>(target.get())
 			&& !dynamic_cast<IceTile*>(target.get())
-			&& (target->GetIsDestructible() || _calibre.tier > 2))
+			&& (target->GetIsDestructible() || _calibre.tier > 2u))
 		{
 			target->TakeDamage(_calibre.damage);
 			target->SendDamageStatistics(GetAuthor(), GetFraction());//TODO: move send dmg stat to takeDamage
 			if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
 			{
+				//NOTE: sending statistics in case another bullet hits this bullet
 				SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
 			}
 		}

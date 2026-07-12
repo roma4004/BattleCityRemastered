@@ -835,13 +835,13 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 3,
+			.tier = 3u,
 			.speed = _calibre.speed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_calibre.tier = 3;
+	_calibre.tier = 3u;
 
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
@@ -876,13 +876,13 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 3,
+			.tier = 3u,
 			.speed = _calibre.speed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_calibre.tier = 3;
+	_calibre.tier = 3u;
 
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
@@ -914,13 +914,13 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = &_allObjects,
 			.events = _events,
-			.tier = 3,
+			.tier = 3u,
 			.speed = _calibre.speed,
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_calibre.tier = 3;
+	_calibre.tier = 3u;
 
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));

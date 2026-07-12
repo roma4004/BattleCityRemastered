@@ -199,7 +199,7 @@ void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
 
 	constexpr bool isMediumFontSize = true;
-	TextToRender(Point{.x = 718, .y = 390}, IntToColor(2), respawnCount, isMediumFontSize);
+	TextToRender(Point{.x = 718, .y = 390}, IntToColor(2u), respawnCount, isMediumFontSize);
 }
 
 void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
@@ -213,7 +213,7 @@ void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
 
 	constexpr bool isMediumFontSize = true;
-	TextToRender(Point{.x = 718, .y = 460}, IntToColor(2), respawnCount, isMediumFontSize);
+	TextToRender(Point{.x = 718, .y = 460}, IntToColor(2u), respawnCount, isMediumFontSize);
 }
 
 void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) const
@@ -227,26 +227,26 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
 
 	constexpr bool isMediumFontSize = true;
-	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2), currentStageNumber, isMediumFontSize);
+	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2u), currentStageNumber, isMediumFontSize);
 }
 
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 {
-	return (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b;
+	return (color.a << 24u) | (color.r << 16u) | (color.g << 8u) | color.b;
 }
 
 SDL_Color RenderManager::IntToColor(const unsigned int color)
 {
-	return SDL_Color{.r = static_cast<Uint8>((color >> 16) & 0xFF),
-					 .g = static_cast<Uint8>((color >> 8) & 0xFF),
-					 .b = static_cast<Uint8>((color) & 0xFF),
-					 .a = static_cast<Uint8>((color >> 24) & 0xFF)};
+	return SDL_Color{.r = static_cast<Uint8>((color >> 16u) & 0xFFu),
+					 .g = static_cast<Uint8>((color >> 8u) & 0xFFu),
+					 .b = static_cast<Uint8>((color) & 0xFFu),
+					 .a = static_cast<Uint8>((color >> 24u) & 0xFFu)};
 }
 
 unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
 {
-	return (a << 24) | (r << 16) | (g << 8) | b;
+	return (a << 24u) | (r << 16u) | (g << 8u) | b;
 }
 
 // blend menu panel and menu texture background
@@ -346,9 +346,9 @@ inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
 
 void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency) const
 {
-	const Uint8 r = (color >> 16) & 0xFF;
-	const Uint8 g = (color >> 8) & 0xFF;
-	const Uint8 b = color & 0xFF;
+	const Uint8 r = (color >> 16u) & 0xFFu;
+	const Uint8 g = (color >> 8u) & 0xFFu;
+	const Uint8 b = color & 0xFFu;
 	const Uint8 a = transparency;
 
 	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
@@ -472,21 +472,21 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 	unsigned int color;
 	if (health > 70)
 	{
-		constexpr unsigned int colorGreen = 0x408000;
+		constexpr unsigned int colorGreen = 0x408000u;
 		color = colorGreen;
 	}
 	else if (health > 30)
 	{
-		constexpr unsigned int colorYellow = 0xEAEA00;
+		constexpr unsigned int colorYellow = 0xEAEA00u;
 		color = colorYellow;
 	}
 	else
 	{
-		constexpr unsigned int colorRed = 0xFF8080;
+		constexpr unsigned int colorRed = 0xFF8080u;
 		color = colorRed;
 	}
 
-	SetRenderDrawColor(color, 127);
+	SetRenderDrawColor(color, 127u);
 
 	SDL_BlendMode blendMode;
 	SDL_GetRenderDrawBlendMode(_gameConfig.renderer.get(), &blendMode);//backup blendMode type
@@ -499,6 +499,6 @@ void RenderManager::InitMenu(const GameConfig& gameConfig)
 {
 	_menuParams.Init(gameConfig.windowSize, gameConfig.sideBarWidth, gameConfig.renderer);
 
-	constexpr unsigned int grayColor = 0x808080;
+	constexpr unsigned int grayColor = 0x808080u;
 	_colorTexture = {CreateColorTexture(grayColor), SDL_DestroyTexture};
 }

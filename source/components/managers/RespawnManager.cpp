@@ -174,7 +174,7 @@ std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)
 void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 {
 	const auto id = static_cast<size_t>(type);
-	if (_respawnCount[id] > 0)
+	if (_respawnCount[id] > 0u)
 	{
 		_respawnCount[id] += static_cast<unsigned short>(delta);
 	}
