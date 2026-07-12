@@ -4,10 +4,12 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/BulletCalibre.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
+#include "utils/ColliderUtils.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
 	: Pawn{std::move(pawnProperty)}
@@ -85,11 +87,12 @@ void Tank::Subscribe()
 
 	_events->AddListener("PostDraw", _nameWithUuid, [this]()
 	{
-		//TODO: add feature hide health bar when we touch bushes
-		if (!this->_effects.isHelmetActive)
+		if (this->_effects.isHelmetActive || this->_effects.isTouchTheBushes)
 		{
-			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
+			return;
 		}
+
+		this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
 	});
 
 	if (_gameMode == GameMode::PlayAsClient)
@@ -369,4 +372,16 @@ void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 
 	//NOTE: fix for tank truck animation tick
 	_events->EmitEvent("AnimationTankUpdate", GetName(), newPos, dir);
+}
+
+bool Tank::IsTouchBush() const
+{
+	auto bushCollisionsFilter = *_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	{
+		return _uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(_rect, object->GetRect())
+			   && dynamic_cast<BushTile*>(object.get()) != nullptr;
+	});
+
+	return !bushCollisionsFilter.empty();
 }

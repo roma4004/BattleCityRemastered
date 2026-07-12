@@ -44,6 +44,7 @@ protected:
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
+	bool IsTouchBush() const;
 
 	virtual void Enable();
 	virtual void Disable() const;

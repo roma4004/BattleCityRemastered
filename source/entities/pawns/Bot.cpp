@@ -416,6 +416,8 @@ void Bot::TickUpdate(const double deltaTime)
 		outCollisions.clear();
 	}
 
+	_effects.isTouchTheBushes = IsTouchBush();
+
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();
 	if (!_shootTimer.isActive && _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 	{

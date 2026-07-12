@@ -57,6 +57,8 @@ void Player::Move(const Direction direction, const double deltaTime,
 			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
+
+	_effects.isTouchTheBushes = IsTouchBush();
 }
 
 void Player::TickUpdate(const double deltaTime)

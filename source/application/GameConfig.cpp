@@ -14,7 +14,7 @@ GameConfig::GameConfig(const std::string& filePath)
 					   .y = Get<unsigned>("Window.posY", 100u)};
 }
 
-GameConfig::~GameConfig() = default;
+GameConfig::~GameConfig() = default; //TODO: investigate exception, rewrite destructor
 
 void GameConfig::LoadIni(const std::string& filePath)
 {
