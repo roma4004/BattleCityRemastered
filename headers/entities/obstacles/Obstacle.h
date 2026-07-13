@@ -32,5 +32,5 @@ public:
 
 	//BaseObj overrides
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void TakeDamage(int damage) override;
+	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 };

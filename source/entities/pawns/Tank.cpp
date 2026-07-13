@@ -198,11 +198,11 @@ void Tank::Disable() const
 	}
 }
 
-void Tank::TakeDamage(const int damage)
+void Tank::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	if (!_effects.isHelmetActive)
 	{
-		Pawn::TakeDamage(damage);
+		Pawn::TakeDamage(damage, damageAuthor, damageFraction);
 	}
 }
 
@@ -274,7 +274,7 @@ void Tank::OnBonusGrenade(const std::string& fraction)
 {
 	if (fraction != _fraction)
 	{
-		TakeDamage(GetHealth());
+		TakeDamage(GetHealth(), "Grenade", fraction);
 	}
 }
 
@@ -351,12 +351,10 @@ void Tank::SendDamageStatistics(const std::string& author, const std::string& fr
 
 void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 {
-	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
+	if (auto* bonus = dynamic_cast<IPickupableBonus*>(object.get()))
 	{
 		bonus->PickUpBonus(_name, _fraction);
-		_events->EmitEvent("Statistics_BonusPickup", _name, _fraction);
-		//TODO: on destroy bonus emit PickUpBonus
-		object->TakeDamage(1);
+		object->TakeDamage(1, _name, _fraction);
 	}
 }
 

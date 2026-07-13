@@ -167,33 +167,48 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 	_events->EmitEvent("Statistics_BulletHit", author, fraction);
 }
 
-void Bullet::TakeDamage(const int damage)
+void Bullet::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
-	Pawn::TakeDamage(damage);
+	Pawn::TakeDamage(damage, damageAuthor, damageFraction);
 }
 
 unsigned int Bullet::GetTier() const { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
+	bool isBulletHitBullet{false};
 	for (const auto& target: objectList)
 	{
-		if (target && !dynamic_cast<WaterTile*>(target.get())
-			&& !dynamic_cast<BushTile*>(target.get())
-			&& !dynamic_cast<IceTile*>(target.get())
-			&& (target->GetIsDestructible() || _calibre.tier > 2u))
+		if (target == nullptr)
 		{
-			target->TakeDamage(_calibre.damage);
-			target->SendDamageStatistics(GetAuthor(), GetFraction());//TODO: move send dmg stat to takeDamage
-			if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
+			continue;
+		}
+
+		auto* baseObj = target.get();
+		if (dynamic_cast<WaterTile*>(baseObj) != nullptr
+			|| dynamic_cast<BushTile*>(baseObj) != nullptr
+			|| dynamic_cast<IceTile*>(baseObj) != nullptr)
+		{
+			continue;
+		}
+
+		if (target->GetIsDestructible() || _calibre.tier > 2u)
+		{
+			target->TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
+			if (const auto* otherBullet = dynamic_cast<Bullet*>(baseObj))
 			{
-				//NOTE: sending statistics in case another bullet hits this bullet
-				SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
+				isBulletHitBullet = true;
+				//NOTE: in case another bullet hits this bullet, we take damage from another bullet and send statistics
+				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor(), otherBullet->GetFraction());
 			}
 		}
 	}
 
-	TakeDamage(_calibre.damage);
+	if (isBulletHitBullet == false)
+	{
+		//NOTE: call BaseObj::TakeDamage to skip statistic unnecessary record
+		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
+	}
 
 	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
 }

@@ -53,9 +53,11 @@ void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate",
 
 void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Pawn::TakeDamage(const int damage)
+void Pawn::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
-	BaseObj::TakeDamage(damage);
+	BaseObj::TakeDamage(damage, damageAuthor, damageFraction);
+
+	SendDamageStatistics(damageAuthor, damageFraction);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{

@@ -58,13 +58,14 @@ void Obstacle::SendDamageStatistics(const std::string& author, const std::string
 	}
 }
 
-void Obstacle::TakeDamage(const int damage)
+void Obstacle::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
-	BaseObj::TakeDamage(damage);
+	BaseObj::TakeDamage(damage, damageAuthor, damageFraction);
+
+	SendDamageStatistics(damageAuthor, damageFraction);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
 	}
 }
-

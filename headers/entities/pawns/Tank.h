@@ -55,7 +55,9 @@ public:
 	~Tank() override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void TakeDamage(int damage) override;
+
+	//BaseObj overrides
+	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

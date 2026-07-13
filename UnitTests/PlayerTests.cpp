@@ -730,6 +730,7 @@ TEST_F(PlayerTest, PlayerTeamWon)
 	});
 
 	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
+	EXPECT_FALSE(isGameWon);
 	for (int i = 0; i < 5; ++i)
 	{
 		_allObjects.clear();
@@ -911,6 +912,9 @@ TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
 
 	_tankSpawner->RespawnTanks(true);
 	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
+
+	EXPECT_FALSE(isGameLose);
+
 	_allObjects.pop_back();
 	_allObjects.pop_back();
 
@@ -927,6 +931,8 @@ TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
 	{
 		isGameLose = true;
 	});
+
+	EXPECT_FALSE(isGameLose);
 
 	for (int i = 0; i < 3; ++i)
 	{
