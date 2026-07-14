@@ -354,7 +354,6 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 	if (auto* bonus = dynamic_cast<IPickupableBonus*>(object.get()))
 	{
 		bonus->PickUpBonus(_name, _fraction);
-		object->TakeDamage(1, _name, _fraction);
 	}
 }
 

@@ -1,4 +1,3 @@
-#include "../packages/sdl2.nuget.2.32.8/build/native/include/SDL_events.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"

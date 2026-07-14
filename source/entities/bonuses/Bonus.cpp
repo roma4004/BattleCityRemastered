@@ -90,4 +90,5 @@ void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent("Statistics_BonusPickup", author, fraction);
 	_events->EmitEvent(_name + "_Pickup", author, fraction);
+	TakeDamage(GetHealth(), _name, _fraction);
 }

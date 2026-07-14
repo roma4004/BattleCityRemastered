@@ -15,4 +15,5 @@ void BonusTimer::PickUpBonus(const std::string& author, const std::string& fract
 {
 	_events->EmitEvent("Statistics_BonusPickup", author, fraction);
 	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
+	TakeDamage(GetHealth(), _name, _fraction);
 }
