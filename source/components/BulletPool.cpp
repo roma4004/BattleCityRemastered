@@ -48,6 +48,8 @@ void BulletPool::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { Clear(); });
 
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { _gameMode = newGameMode; });
+
+	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
 }
 
 void BulletPool::Unsubscribe() const

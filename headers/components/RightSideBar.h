@@ -9,7 +9,6 @@ class EventSystem;
 class RightSideBar
 {
 	Point _pos{};
-	UPoint _windowSize{};
 	bool _isRightSideBarEnabled{false};
 	bool _isEnemyIconEnabled{false};
 	unsigned short _enemiesRespawnCount{};
@@ -27,7 +26,7 @@ class RightSideBar
 	void OnRespawnCountChangedTo(const std::string& objectName, unsigned short respawnCount);
 
 public:
-	RightSideBar(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+	explicit RightSideBar(const std::shared_ptr<EventSystem>& events);
 
 	~RightSideBar();
 };

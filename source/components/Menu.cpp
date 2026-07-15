@@ -14,7 +14,7 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 {
 	Subscribe();
 
-	_padding = 25;
+	_padding = 25; //TODO: combine with same menu padding in renderManager when draw background
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 

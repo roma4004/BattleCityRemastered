@@ -27,9 +27,9 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 						 std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar,
 						 GameMode gameMode)
 	: _menu{std::move(menu)}
-	, _textureManager(std::make_unique<TextureManager>(gameConfig.windowSize, events))
+	, _textureManager(std::make_unique<TextureManager>(events))
 	, _stateManager{std::make_unique<StateManager>(events)}
-	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events)}
+	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events, gameConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig.windowSize)}
 	, _renderManager{std::move(renderManager)}

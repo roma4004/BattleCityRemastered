@@ -44,6 +44,8 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
+	SDL_SetRenderDrawBlendMode(gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);
+
 	// font init and loading
 	{
 		const auto fontPathName(
@@ -425,11 +427,11 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		{
 			const auto introMusicPathName(
 					gameConfig.Get<std::string>("Music.LevelStarted", "Music.LevelStarted path from config.ini"));
-			if (gameConfig.levelStartedSound = {Mix_LoadWAV(introMusicPathName.c_str()), Mix_FreeChunk};
-				gameConfig.levelStartedSound != nullptr)
+			if (gameConfig.levelIntroMusic = {Mix_LoadWAV(introMusicPathName.c_str()), Mix_FreeChunk};
+				gameConfig.levelIntroMusic != nullptr)
 			{
 				//TODO: move to soundManager
-				if (const int playResult = Mix_PlayChannel(-1, gameConfig.levelStartedSound.get(), 0);
+				if (const int playResult = Mix_PlayChannel(-1, gameConfig.levelIntroMusic.get(), 0);
 					playResult == -1)
 				{
 					std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError() << '\n';
@@ -452,7 +454,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow() const
 {
 	const auto title = "Battle City remastered";
-	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_SHOWN;
+	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
 	const SDL_Rect rect{.x = static_cast<int>(gameConfig.windowPos.x),
 						.y = static_cast<int>(gameConfig.windowPos.y),
 						.w = static_cast<int>(gameConfig.windowSize.x),

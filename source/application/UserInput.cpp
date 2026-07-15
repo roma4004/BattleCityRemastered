@@ -1,15 +1,17 @@
 #include "application/UserInput.h"
+#include "application/GameConfig.h"
 #include "application/GameSuccess.h"
 #include "components/EventSystem.h"
 #include <SDL_events.h>
 #include <SDL_gamecontroller.h>
+#include <SDL_render.h>
 #include <algorithm>
 #include <iostream>
-#include <ranges>
 
-UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _windowSize{windowSize}
 	, _events{events}
+	, _gameConfig{gameConfig}
 {
 	Subscribe();
 
@@ -308,6 +310,15 @@ void UserInput::Update()
 			_isShutdown = true;
 		}
 
+		//TODO: WIP, need scale for game objects and shift pos after winSizeChange
+		// if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		// {
+		// 	const unsigned int newWidth = static_cast<unsigned int>(event.window.data1);
+		// 	const unsigned int newHeight = static_cast<unsigned int>(event.window.data2);
+		// 	const UPoint point{.x = newWidth, .y = newHeight};
+		// 	_events->EmitEvent("WindowSizeChangedTo", point);
+		// 	SDL_RenderSetLogicalSize(_gameConfig.renderer.get(), event.window.data1, event.window.data2);
+		// }
 		WindowsMoveEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);

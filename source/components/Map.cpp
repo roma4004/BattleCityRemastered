@@ -8,11 +8,11 @@ Map::Map(const std::shared_ptr<EventSystem>& events)
 
 Map::~Map() = default;
 
-void Map::MapCreation(const float gridSize) const
+void Map::ParseAndCreateObstacle(const float gridSize) const
 {
-	for (int vertical = 0; vertical < 52; ++vertical)
+	for (size_t vertical = 0ul; vertical < 52ul; ++vertical)
 	{
-		for (int horizontal = 0; horizontal < 50; ++horizontal)
+		for (size_t horizontal = 0ul; horizontal < 50ul; ++horizontal)
 		{
 			const float x = static_cast<float>(vertical) * gridSize;
 			const float y = static_cast<float>(horizontal) * gridSize;

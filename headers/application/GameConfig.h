@@ -11,7 +11,7 @@
 class GameConfig
 {
 public:
-	explicit GameConfig(const std::string& filePath);
+	explicit GameConfig(std::string filePath);
 	~GameConfig();
 
 	void LoadIni(const std::string& filePath);
@@ -23,13 +23,13 @@ public:
 	UPoint windowSize{};
 	UPoint windowPos{};
 	UPoint windowsPosOffset{};
-	size_t sideBarWidth{228u};
+	size_t sideBarWidth{175u};
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::shared_ptr<TTF_Font> fontSmall{nullptr};
 	std::shared_ptr<TTF_Font> fontMedium{nullptr};
-	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelStartedSound{nullptr, nullptr}; //TODO: soundManager
+	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelIntroMusic{nullptr, nullptr}; //TODO: soundManager
 
 	std::shared_ptr<SDL_Texture> logoTexture{nullptr};
 	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};
@@ -81,4 +81,5 @@ public:
 
 private:
 	boost::property_tree::ptree _pTreeIni;
+	std::string _filePath;
 };

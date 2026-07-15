@@ -4,7 +4,6 @@
 #include "components/EventSystem.h"
 #include "enums/Direction.h"
 #include "enums/TextureOffset.h"
-#include <SDL_rect.h>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
 
@@ -12,8 +11,7 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameCon
 	: _name{"RenderManager"}
 	, _events{events}
 	, _gameConfig{gameConfig}
-	, _fpsRectangle{.x = static_cast<int>(gameConfig.windowSize.x) - 105, .y = 15, .w = 40, .h = 40}
-//TODO: dynamic adjust and resize
+	, _fpsRectangle{CalcFpsPos(gameConfig.windowSize)}
 {
 	GenerateFpsTextures();
 
@@ -32,11 +30,12 @@ RenderManager::~RenderManager()
 
 void RenderManager::ClearColorTextureCache()
 {
-	for (const auto& texture: _colorTextureCache | std::views::values)
+	for (auto& texture: _colorTextureCache | std::views::values)
 	{
-		if (texture)
+		if (texture != nullptr)
 		{
-			SDL_DestroyTexture(texture);
+			SDL_DestroyTexture(texture.get());
+			texture = nullptr;
 		}
 	}
 
@@ -45,11 +44,12 @@ void RenderManager::ClearColorTextureCache()
 
 void RenderManager::ClearFpsTextureCache()
 {
-	for (const auto& texture: _fpsTextures | std::views::values)
+	for (auto& texture: _fpsTextures | std::views::values)
 	{
-		if (texture)
+		if (texture != nullptr)
 		{
-			SDL_DestroyTexture(texture);
+			SDL_DestroyTexture(texture.get());
+			texture = nullptr;
 		}
 	}
 
@@ -110,6 +110,12 @@ void RenderManager::Subscribe()
 	{
 		this->DrawStageNumber(stageNumber);
 	});
+
+	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
+	{
+		this->_gameConfig.windowSize = newSize;//TODO: find better place for this responsibility
+		this->_fpsRectangle = CalcFpsPos(newSize);
+	});
 }
 
 void RenderManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -147,12 +153,25 @@ void RenderManager::DrawGameWonText() const
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect);
 }
 
-void RenderManager::DrawRightSideBar() const { DrawColorTexture(TextureOffset{}.rightSideBar); }
+void RenderManager::DrawRightSideBar() const
+{
+	SDL_Rect backgroundRect{RectToSdlRect(TextureOffset{}.rightSideBar)};
+	backgroundRect.x = static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth);
+	constexpr unsigned int color{0xFF808080u};
+	constexpr Uint8 a{(color >> 24u) & 0xFFu};
+	constexpr Uint8 r{(color >> 16u) & 0xFFu};
+	constexpr Uint8 g{(color >> 8u) & 0xFFu};
+	constexpr Uint8 b{(color >> 0u) & 0xFFu};
+	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
+	SDL_RenderFillRect(_gameConfig.renderer.get(), &backgroundRect);
+}
 
 void RenderManager::DrawEnemyIconBackground() const
 {
 	constexpr TextureOffset offset{};
-	constexpr SDL_Rect dstRect{.x = 680, .y = 60, .w = 71, .h = 277};
+	constexpr int padding{55};
+	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const SDL_Rect dstRect{.x = posX, .y = 60, .w = 71, .h = 277};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIconBackground.x),
 							   .y = static_cast<int>(offset.enemyIconBackground.y),
 							   .w = static_cast<int>(offset.enemyIconBackground.w),
@@ -171,19 +190,19 @@ void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 	for (int i = 0; i < numberOfIcons; ++i)
 	{
 		constexpr int columns{2};
-		constexpr int leftUpCornerX{685};
-		constexpr int leftUpCornerY{65};
-		constexpr int imageWidth{30};
-		constexpr int imageHeight{25};
-		constexpr int spacingX = 1;
-		constexpr int spacingY = 2;
+		constexpr int iconBackgroundPadding{55};
+		constexpr int iconPadding{iconBackgroundPadding + 5};
+		const Point startPos{.x = static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + iconPadding,
+							 .y = 65};
+		constexpr Point imageSize{.x = 30, .y = 25};
+		constexpr Point padding{.x = 1, .y = 2};
 
-		const int row = i / columns;
-		const int col = i % columns;
-		const int xAxis = leftUpCornerX + col * (imageWidth + spacingX);
-		const int yAxis = leftUpCornerY + row * (imageHeight + spacingY);
+		const int row{i / columns};
+		const int col{i % columns};
+		const int posX{startPos.x + col * (imageSize.x + padding.x)};
+		const int posY{startPos.y + row * (imageSize.y + padding.y)};
 
-		SDL_Rect destRect = {.x = xAxis, .y = yAxis, .w = imageWidth, .h = imageHeight};
+		SDL_Rect destRect = {.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
 		SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &destRect);
 	}
 }
@@ -195,11 +214,15 @@ void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 							   .y = static_cast<int>(offset.playerOneIcon.y),
 							   .w = static_cast<int>(offset.playerOneIcon.w),
 							   .h = static_cast<int>(offset.playerOneIcon.h)};
-	constexpr SDL_Rect rect{.x = 680, .y = 350, .w = 71, .h = 70};
+
+	constexpr int padding{55};
+	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const SDL_Rect rect{.x = posX, .y = 350, .w = 71, .h = 70};
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
 
-	constexpr bool isMediumFontSize = true;
-	TextToRender(Point{.x = 718, .y = 390}, IntToColor(2u), respawnCount, isMediumFontSize);
+	constexpr bool isMediumFontSize{true};
+	constexpr int textPadding{38};
+	TextToRender(Point{.x = posX + textPadding, .y = 390}, IntToColor(2u), respawnCount, isMediumFontSize);
 }
 
 void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
@@ -209,11 +232,15 @@ void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 							   .y = static_cast<int>(offset.playerTwoIcon.y),
 							   .w = static_cast<int>(offset.playerTwoIcon.w),
 							   .h = static_cast<int>(offset.playerTwoIcon.h)};
-	constexpr SDL_Rect rect{.x = 680, .y = 420, .w = 71, .h = 70};
+
+	constexpr int padding{55};
+	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const SDL_Rect rect{.x = posX, .y = 420, .w = 71, .h = 70};
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
 
-	constexpr bool isMediumFontSize = true;
-	TextToRender(Point{.x = 718, .y = 460}, IntToColor(2u), respawnCount, isMediumFontSize);
+	constexpr bool isMediumFontSize{true};
+	constexpr int textPadding{38};
+	TextToRender(Point{.x = posX + textPadding, .y = 460}, IntToColor(2u), respawnCount, isMediumFontSize);
 }
 
 void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) const
@@ -223,42 +250,49 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 							   .y = static_cast<int>(offset.stageNumberFlag.y),
 							   .w = static_cast<int>(offset.stageNumberFlag.w),
 							   .h = static_cast<int>(offset.stageNumberFlag.h)};
-	constexpr SDL_Rect rect{.x = 680, .y = 490, .w = 71, .h = 95};
+
+	constexpr int padding{55};
+	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const SDL_Rect rect{.x = posX, .y = 490, .w = 71, .h = 95};
 	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
 
-	constexpr bool isMediumFontSize = true;
-	TextToRender(Point{.x = 718, .y = 555}, IntToColor(2u), currentStageNumber, isMediumFontSize);
+	constexpr bool isMediumFontSize{true};
+	constexpr int textPadding{38};
+	TextToRender(Point{.x = posX + textPadding, .y = 555}, IntToColor(2u), currentStageNumber, isMediumFontSize);
 }
-
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 {
-	return (color.a << 24u) | (color.r << 16u) | (color.g << 8u) | color.b;
+	return (color.a << 24u) | (color.r << 16u) | (color.g << 8u) | (color.b << 0u);
 }
 
 SDL_Color RenderManager::IntToColor(const unsigned int color)
 {
 	return SDL_Color{.r = static_cast<Uint8>((color >> 16u) & 0xFFu),
 					 .g = static_cast<Uint8>((color >> 8u) & 0xFFu),
-					 .b = static_cast<Uint8>((color) & 0xFFu),
+					 .b = static_cast<Uint8>((color >> 0u) & 0xFFu),
 					 .a = static_cast<Uint8>((color >> 24u) & 0xFFu)};
 }
 
 unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
 {
-	return (a << 24u) | (r << 16u) | (g << 8u) | b;
+	return (a << 24u) | (r << 16u) | (g << 8u) | (b << 0u);
 }
 
 // blend menu panel and menu texture background
 void RenderManager::DrawMenuBackground(const Point pos) const
 {
-	const SDL_Rect rect{.x = pos.x,
-						.y = pos.y,
-						.w = static_cast<int>(_menuParams.panelSize.x),
-						.h = static_cast<int>(_menuParams.panelSize.y)};
-	const int pitch = static_cast<int>(_menuParams.panelSize.x << 2ul);
-	SDL_UpdateTexture(_menuParams.backgroundTexture.get(), &rect, _menuParams.backgroundPixelArray.get(), pitch);
-	SDL_RenderCopy(_gameConfig.renderer.get(), _menuParams.backgroundTexture.get(), nullptr, &rect);
+	const SDL_Rect backgroundRect{.x = pos.x + static_cast<int>(_menuParams.padding / 2u),
+								  .y = pos.y + static_cast<int>(_menuParams.padding / 2u),
+								  .w = static_cast<int>(_menuParams.panelSize.x),
+								  .h = static_cast<int>(_menuParams.panelSize.y)};
+	constexpr unsigned int color{0x91808080u};
+	constexpr Uint8 a{(color >> 24u) & 0xFFu};
+	constexpr Uint8 r{(color >> 16u) & 0xFFu};
+	constexpr Uint8 g{(color >> 8u) & 0xFFu};
+	constexpr Uint8 b{(color >> 0u) & 0xFFu};
+	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
+	SDL_RenderFillRect(_gameConfig.renderer.get(), &backgroundRect);
 }
 
 void RenderManager::DrawMenuLogo(const Point pos) const
@@ -354,17 +388,14 @@ void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 tra
 	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
 }
 
-SDL_Texture* RenderManager::CreateColorTexture(const unsigned int color)
+void RenderManager::CreateColorTexture(const unsigned int color)
 {
-	if (const auto it = _colorTextureCache.find(color); it != _colorTextureCache.end())
-	{
-		return it->second;
-	}
+	auto colorTexture{std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>(
+			SDL_CreateTexture(
+					_gameConfig.renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 1, 1),
+			SDL_DestroyTexture)};
 
-	SDL_Texture* colorTexture = SDL_CreateTexture(
-			_gameConfig.renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 1, 1);
-
-	SDL_SetRenderTarget(_gameConfig.renderer.get(), colorTexture);
+	SDL_SetRenderTarget(_gameConfig.renderer.get(), colorTexture.get());
 
 	SetRenderDrawColor(color);
 
@@ -372,14 +403,12 @@ SDL_Texture* RenderManager::CreateColorTexture(const unsigned int color)
 
 	SDL_SetRenderTarget(_gameConfig.renderer.get(), nullptr);
 
-	_colorTextureCache[color] = colorTexture;
-
-	return colorTexture;
+	_colorTextureCache.insert_or_assign(color, std::move(colorTexture));
 }
 
 void RenderManager::ClearFrame() const
 {
-	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), 0u, 0u, 0u, 255u);
 	SDL_RenderClear(_gameConfig.renderer.get());
 }
 
@@ -400,10 +429,14 @@ std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(cons
 	return std::make_pair(0.0, SDL_FLIP_NONE);
 }
 
-void RenderManager::DrawColorTexture(const ObjRectangle rect) const
+void RenderManager::DrawColorTexture(const ObjRectangle rect)
 {
 	const SDL_Rect dstRect = RectToSdlRect(rect);
-	SDL_RenderCopy(_gameConfig.renderer.get(), _colorTexture.get(), nullptr, &dstRect);
+	constexpr unsigned int grayColor = 0x808080u;
+	if (const auto it = _colorTextureCache.find(grayColor); it != _colorTextureCache.end())
+	{
+		SDL_RenderCopy(_gameConfig.renderer.get(), it->second.get(), nullptr, &dstRect);
+	}
 }
 
 void RenderManager::DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, const Direction dir) const
@@ -420,40 +453,46 @@ void RenderManager::GenerateFpsTextures()
 {
 	_fpsTextures.clear();
 
-	for (size_t i = 0u; i <= 1000u; ++i)
+	for (unsigned int i = 0u; i <= 1000u; ++i)
 	{
 		std::string text = std::to_string(i);
-		constexpr SDL_Color textColor = {.r = 140, .g = 0, .b = 255, .a = 255};
+		constexpr SDL_Color textColor = {.r = 140u, .g = 0u, .b = 255u, .a = 255u};
 
-		SDL_Surface* surface = TTF_RenderText_Solid(_gameConfig.fontMedium.get(), text.c_str(), textColor);
+		std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> surface{
+				TTF_RenderText_Solid(_gameConfig.fontMedium.get(), text.c_str(), textColor),
+				SDL_FreeSurface};
 		if (!surface)
 		{
-			SDL_Log("Failed to create surface for FPS %d: %s", i, SDL_GetError());
+			SDL_Log("Failed to create surface for FPS %u: %s", i, SDL_GetError());
 			continue;
 		}
 
-		SDL_Texture* texture = SDL_CreateTextureFromSurface(_gameConfig.renderer.get(), surface);
-		SDL_FreeSurface(surface);
-
+		std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> texture{
+				SDL_CreateTextureFromSurface(_gameConfig.renderer.get(), surface.get()),
+				SDL_DestroyTexture};
 		if (!texture)
 		{
-			SDL_Log("Failed to create texture for FPS %d: %s", i, SDL_GetError());
+			SDL_Log("Failed to create texture for FPS %u: %s", i, SDL_GetError());
 			continue;
 		}
 
-		_fpsTextures[i] = texture;
+		_fpsTextures.emplace(i, std::move(texture));
 	}
 }
 
 
-void RenderManager::RenderFPS(const size_t fps)
+void RenderManager::RenderFPS(const unsigned int fps)
 {
 	if (fps)
 	{
 		// Copy the texture with FPS to the renderer
-		SDL_RenderCopy(_gameConfig.renderer.get(), _fpsTextures[fps], nullptr, &_fpsRectangle);
+		if (const auto it = _fpsTextures.find(fps); it != _fpsTextures.end())
+		{
+			SDL_RenderCopy(_gameConfig.renderer.get(), it->second.get(), nullptr, &_fpsRectangle);
+		}
 	}
 
+	//TODO:extract to separated subscription
 	SDL_RenderPresent(_gameConfig.renderer.get());
 }
 
@@ -487,18 +526,22 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 	}
 
 	SetRenderDrawColor(color, 127u);
-
-	SDL_BlendMode blendMode;
-	SDL_GetRenderDrawBlendMode(_gameConfig.renderer.get(), &blendMode);//backup blendMode type
-	SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);//set new blendMode type
 	SDL_RenderFillRect(_gameConfig.renderer.get(), &healthBarRect);
-	SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), blendMode);//restore blendMode type
 }
 
 void RenderManager::InitMenu(const GameConfig& gameConfig)
 {
-	_menuParams.Init(gameConfig.windowSize, gameConfig.sideBarWidth, gameConfig.renderer);
+	_menuParams.Init(gameConfig.windowSize, gameConfig.sideBarWidth);
 
 	constexpr unsigned int grayColor = 0x808080u;
-	_colorTexture = {CreateColorTexture(grayColor), SDL_DestroyTexture};
+	CreateColorTexture(grayColor);
+}
+
+SDL_Rect RenderManager::CalcFpsPos(const UPoint& newSize)
+{
+	constexpr int rightPadding = 105;
+	constexpr int topPadding = 15;
+	constexpr int fpsSize = 40;
+	const int posX = static_cast<int>(newSize.x) - rightPadding;
+	return SDL_Rect{.x = posX, .y = topPadding, .w = fpsSize, .h = fpsSize};
 }

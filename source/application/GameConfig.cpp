@@ -3,9 +3,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-GameConfig::GameConfig(const std::string& filePath)
+GameConfig::GameConfig(std::string filePath)
+	: _filePath(std::move(filePath))
 {
-	LoadIni(filePath);
+	LoadIni(_filePath);
 
 	windowSize = UPoint{.x = Get<unsigned>("Window.width", 800u),
 						.y = Get<unsigned>("Window.height", 600u)};
@@ -14,7 +15,10 @@ GameConfig::GameConfig(const std::string& filePath)
 					   .y = Get<unsigned>("Window.posY", 100u)};
 }
 
-GameConfig::~GameConfig() = default; //TODO: investigate exception, rewrite destructor
+GameConfig::~GameConfig()
+{
+	SaveIni(_filePath);
+}; //TODO: investigate exception, rewrite destructor
 
 void GameConfig::LoadIni(const std::string& filePath)
 {

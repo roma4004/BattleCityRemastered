@@ -4,9 +4,8 @@
 #include "entities/pawns/Pawn.h"
 #include "enums/Direction.h"
 
-TextureManager::TextureManager(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _windowSize{windowSize}
-	, _animationManager{std::make_unique<AnimationManager>(events)}
+TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
+	: _animationManager{std::make_unique<AnimationManager>(events)}
 	, _events{events}
 {
 	Subscribe();

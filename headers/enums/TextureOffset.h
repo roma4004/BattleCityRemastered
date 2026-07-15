@@ -70,7 +70,7 @@ struct TextureOffset
 	ObjRectangle gameWonText{.x = 375, .y = 183, .w = 18, .h = 17};
 
 	//SideBar
-	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 220, .h = 600};
+	ObjRectangle rightSideBar{.x = 625, .y = 0, .w = 175, .h = 600};
 	ObjRectangle enemyIconBackground{.x = 375, .y = 23, .w = 18, .h = 82};
 	ObjRectangle enemyIcon{.x = 321, .y = 193, .w = 7, .h = 7};
 	ObjRectangle playerOneIcon{.x = 375, .y = 135, .w = 19, .h = 18};

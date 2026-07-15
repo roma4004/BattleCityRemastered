@@ -48,6 +48,8 @@ void ObstacleSpawner::Subscribe()
 	{
 		SpawnObstacle(rect, type);
 	});
+
+	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
 }
 
 void ObstacleSpawner::SubscribeAsClient()
@@ -114,9 +116,7 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 void ObstacleSpawner::LoadMap() const
 {
-	//Map creation
 	const float gridOffset = static_cast<float>(_windowSize.y) / 50.f;
-	//TODO: update window size via subscription onChange
-	const Map field{_events};
-	field.MapCreation(gridOffset);
+	const Map map{_events};
+	map.ParseAndCreateObstacle(gridOffset);
 }

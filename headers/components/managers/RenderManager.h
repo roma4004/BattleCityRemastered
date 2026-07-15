@@ -24,60 +24,21 @@ class RenderManager
 	{
 		UPoint panelSize{};
 		size_t padding{};
-		std::shared_ptr<unsigned int[]> backgroundPixelArray{nullptr};
-		std::shared_ptr<SDL_Texture> backgroundTexture{nullptr};
 
-		void Init(const UPoint windowSize, const size_t sideBarWidth, const std::shared_ptr<SDL_Renderer>& renderer)
+		void Init(const UPoint windowSize, const size_t sideBarWidth)
 		{
-			padding = 25;
-			panelSize = UPoint{.x = windowSize.x - sideBarWidth - padding,
-							  .y = windowSize.y - padding * 3u};
-
-			PregenerateBackgroundPixels();
-			PregenerateBackgroundTexture(renderer);
-		}
-
-		void PregenerateBackgroundPixels()
-		{
-			backgroundPixelArray = std::make_shared<unsigned int[]>(panelSize.y * panelSize.x);
-			for (size_t y = 0; y < panelSize.y; ++y)
-			{
-				for (size_t x = 0; x < panelSize.x; ++x)
-				{
-					const int i = static_cast<int>(y * panelSize.x + x);
-					constexpr unsigned int menuColor = 0x91808080u;// Alpha channel 0x80 for semi-transparency gray
-					backgroundPixelArray[i] = menuColor;
-				}
-			}
-		}
-
-		void PregenerateBackgroundTexture(const std::shared_ptr<SDL_Renderer>& renderer)
-		{
-			// SDL_SetRenderDrawBlendMode(_gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);
-			backgroundTexture = std::shared_ptr<SDL_Texture>(SDL_CreateTexture(
-																	 renderer.get(),
-																	 SDL_PIXELFORMAT_ARGB8888,
-																	 SDL_TEXTUREACCESS_TARGET,
-																	 static_cast<int>(panelSize.x),
-																	 static_cast<int>(panelSize.y)),
-															 SDL_DestroyTexture);
-			SDL_SetTextureBlendMode(backgroundTexture.get(), SDL_BLENDMODE_BLEND);
-
-			const SDL_Rect rect{.x = static_cast<int>(padding),
-								.y = static_cast<int>(padding),
-								.w = static_cast<int>(panelSize.x),
-								.h = static_cast<int>(panelSize.y)};
-			const int pitch = static_cast<int>(panelSize.x << 2ul);
-			SDL_UpdateTexture(backgroundTexture.get(), &rect, backgroundPixelArray.get(), pitch);
+			padding = 50;
+			panelSize = UPoint{.x = windowSize.x - sideBarWidth - padding * 2,
+							   .y = windowSize.y - padding * 2};
 		}
 	};
 
 	MenuParams _menuParams{};
 
 	SDL_Rect _fpsRectangle{};
-	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
-	std::unordered_map<unsigned int, SDL_Texture*> _colorTextureCache;
-	std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> _colorTexture{nullptr, nullptr};
+	// pregenerated fps texture
+	std::unordered_map<size_t, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _fpsTextures;	
+	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -92,7 +53,6 @@ class RenderManager
 	void DrawPlayerTwoIcons(unsigned short respawnCount) const;
 	void DrawStageNumber(unsigned short currentStageNumber) const;
 
-	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
 	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
 	[[nodiscard]] static unsigned int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
@@ -113,16 +73,18 @@ class RenderManager
 	void ClearColorTextureCache();
 	void ClearFpsTextureCache();
 
-	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
+	void CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
-	void DrawColorTexture(ObjRectangle rect) const;
+	void DrawColorTexture(ObjRectangle rect);
 	void DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, Direction dir) const;
 
 	void GenerateFpsTextures();
-	void RenderFPS(size_t fps);
+	void RenderFPS(unsigned int fps);
 
 	void DrawHealthBar(ObjRectangle rect, int health) const;
 	void InitMenu(const GameConfig& gameConfig);
+
+	[[nodiscard]] static SDL_Rect CalcFpsPos(const UPoint& newSize);
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);

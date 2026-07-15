@@ -1,9 +1,8 @@
 ﻿#include "Components/RightSideBar.h"
 #include "Components/EventSystem.h"
 
-RightSideBar::RightSideBar(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _windowSize{windowSize}
-	, _name{std::string("RightSideBar")}
+RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events)
+	: _name{std::string("RightSideBar")}
 	, _events{events}
 {
 	Subscribe();

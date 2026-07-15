@@ -74,6 +74,8 @@ void TankSpawner::Subscribe()
 	{
 		this->RespawnTanks();
 	});
+
+	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
 }
 
 void TankSpawner::SubscribeAsClient()

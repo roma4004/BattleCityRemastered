@@ -29,6 +29,8 @@ Pawn::~Pawn() = default;
 void Pawn::Subscribe()
 {
 	_gameMode == GameMode::PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
+
+	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
 }
 
 void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
@@ -64,8 +66,6 @@ void Pawn::TakeDamage(const int damage, const std::string& damageAuthor, const s
 		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
 	}
 }
-
-UPoint Pawn::GetWindowSize() const { return _windowSize; }
 
 Direction Pawn::GetDirection() const { return _dir; }
 

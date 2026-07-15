@@ -27,7 +27,7 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
+	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _tankHealth{100};
 	int _bulletHealth{1};
 	float _tankSize{};

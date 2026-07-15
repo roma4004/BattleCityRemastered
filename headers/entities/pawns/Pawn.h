@@ -46,8 +46,6 @@ public:
 	//BaseObj overrides
 	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
-	[[nodiscard]] UPoint GetWindowSize() const;
-
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);
 

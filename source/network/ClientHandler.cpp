@@ -5,7 +5,7 @@
 namespace network::commands
 {
 ClientHandler::ClientHandler(const std::shared_ptr<EventSystem>& events)
-	: ClientHandler(std::string("127.0.0.1"), 1234, events) {}
+	: ClientHandler(std::string("127.0.0.1"), 1234u, events) {}
 
 ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: _events{events}

@@ -16,7 +16,7 @@ class BulletTestAdvanced : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
+	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _bulletHealth{1};
 	float _gridSize{1};
 	double _deltaTimeOneFrame{1.f / 60.f};
