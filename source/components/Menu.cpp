@@ -1,13 +1,12 @@
 #include "components/Menu.h"
+#include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
-#include "components/GameStatistics.h"
 #include "enums/GameMode.h"
 
 Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)}
+	: _yOffsetStart{static_cast<int>(windowSize.y)}
 	, _events{events}
-	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _input{std::make_unique<InputProviderForMenu>(events)}
 	, _name{std::string("Menu")}
 	, _selectedGameMode{GameMode::OnePlayer}
@@ -47,13 +46,13 @@ void Menu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 void Menu::Draw()
 {
 	// first time animation, slow scrolling from bottom corner to vertical center
-	if (constexpr unsigned int yOffsetEnd = 0u; _yOffsetStart > yOffsetEnd)
+	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3u;
 	}
 
 	_pos.x = _padding;
-	_pos.y = static_cast<int>(_padding + _yOffsetStart);
+	_pos.y = _padding + _yOffsetStart;
 
 	_events->EmitEvent("RenderMenuBackground", _pos);
 	_events->EmitEvent("RenderMenuLogo", _pos);

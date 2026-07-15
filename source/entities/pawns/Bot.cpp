@@ -11,8 +11,8 @@
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
-Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, enableByDefault}
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig, const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {
 	_shootTimer.cooldown = std::chrono::seconds{1};

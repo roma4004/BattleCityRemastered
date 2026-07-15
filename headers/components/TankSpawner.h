@@ -17,6 +17,7 @@ class BulletPool;
 class EventSystem;
 class BonusEffectManager;
 class IInputProvider;
+class GameConfig;
 
 class TankSpawner final
 {
@@ -24,7 +25,6 @@ class TankSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"TankSpawner"};
-	UPoint _windowSize{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -33,6 +33,7 @@ class TankSpawner final
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
+	GameConfig& _gameConfig;
 
 	void Subscribe();
 	void SubscribeAsClient();
@@ -58,7 +59,7 @@ class TankSpawner final
 	void OnClientRespawn(TankType type, buuid uuid);
 
 public:
-	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 				const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner();

@@ -9,6 +9,7 @@ struct UPoint;
 class PlayerTest;
 class IShootable;
 class BulletPool;
+class GameConfig;
 
 class Tank : public Pawn
 {
@@ -44,13 +45,14 @@ protected:
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
+	void ApplyScaleToCalibre(float newScale);
 	bool IsTouchBush() const;
 
 	virtual void Enable();
 	virtual void Disable() const;
 
 public:
-	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig, bool enableByDefault = false);
 
 	~Tank() override;
 

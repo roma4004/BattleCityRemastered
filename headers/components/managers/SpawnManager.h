@@ -11,6 +11,7 @@ class DelayedSpawnManager;
 class BonusSpawner;
 class ObstacleSpawner;
 class TankSpawner;
+class GameConfig;
 
 class SpawnManager
 {
@@ -23,7 +24,7 @@ class SpawnManager
 
 public:
 	SpawnManager(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				 UPoint windowSize);
+				 GameConfig& gameConfig);
 
 	~SpawnManager();
 };

@@ -22,8 +22,19 @@ public:
 
 	UPoint windowSize{};
 	UPoint windowPos{};
+	UPoint windowSizeDefault{800, 600};
 	UPoint windowsPosOffset{};
 	size_t sideBarWidth{175u};
+	float scaleFactor{1.f};
+	float previousScaleFactor{1.f};
+	float gridSize{50.f};
+	float gridSizeDefault{50.f};
+	float gridOffset{600 / gridSize};
+	float tankSize{gridOffset * 3};
+	int bonusSize{static_cast<int>(gridOffset * 3)};
+	float tankSpeed{142};
+	float tankSpeedDefault{142};
+	int tankHealth{100};
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};

@@ -10,12 +10,11 @@ class InputProviderForMenu;
 class Menu final
 {
 	Point _pos;
-	int _windowHeight;
-	int _padding;
-	unsigned int _yOffsetStart{};
+	int _windowHeight{};
+	int _padding{};
+	int _yOffsetStart{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::unique_ptr<GameStatistics> _statistics{nullptr};//TODO: extract from menu when we have dedicated screen
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
 	std::string _name{};

@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
+#include "components/GameStatistics.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
@@ -18,7 +19,6 @@
 #include <iostream>
 #include <memory>
 //#include <fstream>
-#include <boost/uuid/uuid_io.hpp>
 
 class BaseObj;
 
@@ -31,10 +31,11 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 	, _stateManager{std::make_unique<StateManager>(events)}
 	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events, gameConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
-	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig.windowSize)}
+	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig)}
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
+	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _rightSideBar{std::move(rightSideBar)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}

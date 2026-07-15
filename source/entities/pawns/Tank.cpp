@@ -1,4 +1,5 @@
 #include "entities/pawns/Tank.h"
+#include "application/GameConfig.h"
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
@@ -7,11 +8,11 @@
 #include "entities/obstacles/BushTile.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
-#include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 
-Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		   const bool enableByDefault)
 	: Pawn{std::move(pawnProperty)}
 {
 	BaseObj::SetIsPassable(false);
@@ -25,6 +26,8 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 							 .damageRadius = 18.f,
 							 .tier = _tier,
 							 .size{.x = 9.f, .y = 9.f}};
+	ApplyScaleToCalibre(gameConfig.scaleFactor);
+
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _windowSize, _name, _fraction, _allObjects,
 												 bulletPool, _calibre);
 
@@ -94,6 +97,8 @@ void Tank::Subscribe()
 
 		this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
 	});
+
+	_events->AddListener("ScaleFactorChangedTo", _name, [this](const float newScale) { this->ApplyScaleToCalibre(newScale); });
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -381,4 +386,15 @@ bool Tank::IsTouchBush() const
 	});
 
 	return !bushCollisionsFilter.empty();
+}
+
+void Tank::ApplyScaleToCalibre(const float newScale)
+{
+	if (newScale == 1)
+		return;
+
+	this->_calibre.speed *= newScale;
+	this->_calibre.damageRadius *= newScale;
+	this->_calibre.size.x *= newScale;
+	this->_calibre.size.y *= newScale;
 }
