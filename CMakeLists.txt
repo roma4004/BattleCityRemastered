@@ -269,7 +269,7 @@ set(SOURCE_FILES
         source/application/GameConfig.cpp
         source/application/GameFailure.cpp
         source/application/GameSuccess.cpp
-        source/application/SDLEnvironment.cpp
+        source/application/SDL_Config.cpp
         source/application/UserInput.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp

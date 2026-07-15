@@ -7,7 +7,7 @@ ConfigFailure::ConfigFailure(std::string errorType, const char* errorDescription
 	: _error{std::move(errorType)}
 	, _description{errorDescription} {}
 
-std::unique_ptr<IGame> ConfigFailure::CreateGame(const GameMode /*gameMode*/)
+std::unique_ptr<IGame> ConfigFailure::CreateGame(const GameMode /*gameMode*/, SDL_Config& /*sdlConfig*/)
 {
 	std::cerr << _error << ": " << _description << '\n';
 

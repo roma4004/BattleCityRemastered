@@ -1,16 +1,18 @@
 #include "components/managers/RenderManager.h"
 #include "Point.h"
 #include "application/GameConfig.h"
+#include "application/SDL_Config.h"
 #include "components/EventSystem.h"
 #include "enums/Direction.h"
 #include "enums/TextureOffset.h"
 #include <SDL_render.h>
 #include <SDL_ttf.h>
 
-RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig)
 	: _name{"RenderManager"}
 	, _events{events}
 	, _gameConfig{gameConfig}
+	, _sdlConfig{sdlConfig}
 	, _fpsRectangle{CalcFpsPos(gameConfig.windowSize)}
 {
 	GenerateFpsTextures();
@@ -116,6 +118,10 @@ void RenderManager::Subscribe()
 		this->_gameConfig.windowSize = newSize;//TODO: find better place for this responsibility
 		this->_fpsRectangle = CalcFpsPos(newSize);
 		this->_healthBarScale *= static_cast<int>(newSize.y / _gameConfig.windowSizeDefault.y);
+
+		SDL_RenderSetLogicalSize(this->_sdlConfig.renderer.get(),
+								 static_cast<int>(newSize.x),
+								 static_cast<int>(newSize.y));
 	});
 }
 
@@ -129,7 +135,7 @@ void RenderManager::DrawPauseText() const
 							   .y = static_cast<int>(offset.pauseText.y),
 							   .w = static_cast<int>(offset.pauseText.w),
 							   .h = static_cast<int>(offset.pauseText.h)};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawGameOverText() const
@@ -140,7 +146,7 @@ void RenderManager::DrawGameOverText() const
 							   .y = static_cast<int>(offset.gameOverText.y),
 							   .w = static_cast<int>(offset.gameOverText.w),
 							   .h = static_cast<int>(offset.gameOverText.h)};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawGameWonText() const
@@ -151,7 +157,7 @@ void RenderManager::DrawGameWonText() const
 							   .y = static_cast<int>(offset.gameWonText.y),
 							   .w = static_cast<int>(offset.gameWonText.w),
 							   .h = static_cast<int>(offset.gameWonText.h)};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawRightSideBar() const
@@ -163,8 +169,8 @@ void RenderManager::DrawRightSideBar() const
 	constexpr Uint8 r{(color >> 16u) & 0xFFu};
 	constexpr Uint8 g{(color >> 8u) & 0xFFu};
 	constexpr Uint8 b{(color >> 0u) & 0xFFu};
-	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
-	SDL_RenderFillRect(_gameConfig.renderer.get(), &backgroundRect);
+	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
+	SDL_RenderFillRect(_sdlConfig.renderer.get(), &backgroundRect);
 }
 
 void RenderManager::DrawEnemyIconBackground() const
@@ -177,7 +183,7 @@ void RenderManager::DrawEnemyIconBackground() const
 							   .y = static_cast<int>(offset.enemyIconBackground.y),
 							   .w = static_cast<int>(offset.enemyIconBackground.w),
 							   .h = static_cast<int>(offset.enemyIconBackground.h)};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
 }
 
 void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
@@ -204,7 +210,7 @@ void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 		const int posY{startPos.y + row * (imageSize.y + padding.y)};
 
 		SDL_Rect destRect = {.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
-		SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &destRect);
+		SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &destRect);
 	}
 }
 
@@ -219,7 +225,7 @@ void RenderManager::DrawPlayerOneIcons(const unsigned short respawnCount) const
 	constexpr int padding{55};
 	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
 	const SDL_Rect rect{.x = posX, .y = 350, .w = 71, .h = 70};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
 
 	constexpr bool isMediumFontSize{true};
 	constexpr int textPadding{38};
@@ -237,7 +243,7 @@ void RenderManager::DrawPlayerTwoIcons(const unsigned short respawnCount) const
 	constexpr int padding{55};
 	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
 	const SDL_Rect rect{.x = posX, .y = 420, .w = 71, .h = 70};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
 
 	constexpr bool isMediumFontSize{true};
 	constexpr int textPadding{38};
@@ -255,7 +261,7 @@ void RenderManager::DrawStageNumber(const unsigned short currentStageNumber) con
 	constexpr int padding{55};
 	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
 	const SDL_Rect rect{.x = posX, .y = 490, .w = 71, .h = 95};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &rect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
 
 	constexpr bool isMediumFontSize{true};
 	constexpr int textPadding{38};
@@ -292,50 +298,50 @@ void RenderManager::DrawMenuBackground(const Point pos) const
 	constexpr Uint8 r{(color >> 16u) & 0xFFu};
 	constexpr Uint8 g{(color >> 8u) & 0xFFu};
 	constexpr Uint8 b{(color >> 0u) & 0xFFu};
-	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
-	SDL_RenderFillRect(_gameConfig.renderer.get(), &backgroundRect);
+	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
+	SDL_RenderFillRect(_sdlConfig.renderer.get(), &backgroundRect);
 }
 
 void RenderManager::DrawMenuLogo(const Point pos) const
 {
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.logoTexture.get(), nullptr, &rect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.logoTexture.get(), nullptr, &rect);
 }
 
 void RenderManager::DrawSelectorIcon(const Point pos) const
 {
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
-	SDL_RenderCopy(_gameConfig.renderer.get(), _gameConfig.selectorIconTexture.get(), nullptr, &rect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.selectorIconTexture.get(), nullptr, &rect);
 }
 
 void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const
 {
-	SDL_RenderCopy(_gameConfig.renderer.get(), texture, &srcRect, &dstRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), texture, &srcRect, &dstRect);
 }
 
 void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) const
 {
-	SDL_RenderCopy(_gameConfig.renderer.get(), texture, nullptr, &dstRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), texture, nullptr, &dstRect);
 }
 
 void RenderManager::DrawXBoxHint(const Point pos) const
 {
-	RenderCopy(_gameConfig.xboxTextures[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
-	RenderCopy(_gameConfig.xboxTextures[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
-	RenderCopy(_gameConfig.xboxTextures[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
-	RenderCopy(_gameConfig.xboxTextures[0].get(), {.x = pos.x - 75, .y = pos.y + 183, .w = 30, .h = 30});//Dpad button
-	RenderCopy(_gameConfig.xboxTextures[1].get(), {.x = pos.x - 75, .y = pos.y + 63, .w = 30, .h = 30});//Home button
-	RenderCopy(_gameConfig.xboxTextures[4].get(), {.x = pos.x - 75, .y = pos.y + 213, .w = 30, .h = 30});//A button
+	RenderCopy(_sdlConfig.xboxTextures[3].get(), {.x = pos.x - 75, .y = pos.y + 93, .w = 30, .h = 30});//View button
+	RenderCopy(_sdlConfig.xboxTextures[2].get(), {.x = pos.x - 75, .y = pos.y + 123, .w = 30, .h = 30});//Menu button
+	RenderCopy(_sdlConfig.xboxTextures[5].get(), {.x = pos.x - 75, .y = pos.y + 153, .w = 30, .h = 30});//Y button
+	RenderCopy(_sdlConfig.xboxTextures[0].get(), {.x = pos.x - 75, .y = pos.y + 183, .w = 30, .h = 30});//Dpad button
+	RenderCopy(_sdlConfig.xboxTextures[1].get(), {.x = pos.x - 75, .y = pos.y + 63, .w = 30, .h = 30});//Home button
+	RenderCopy(_sdlConfig.xboxTextures[4].get(), {.x = pos.x - 75, .y = pos.y + 213, .w = 30, .h = 30});//A button
 }
 
 void RenderManager::DrawPS5Hint(const Point pos) const
 {
-	RenderCopy(_gameConfig.ps5Textures[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
-	RenderCopy(_gameConfig.ps5Textures[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
-	RenderCopy(_gameConfig.ps5Textures[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
-	RenderCopy(_gameConfig.ps5Textures[2].get(), {.x = pos.x, .y = pos.y + 33, .w = 30, .h = 30});//Dpad button
-	RenderCopy(_gameConfig.ps5Textures[3].get(), {.x = pos.x, .y = pos.y - 90, .w = 30, .h = 30});//Home button
-	RenderCopy(_gameConfig.ps5Textures[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
+	RenderCopy(_sdlConfig.ps5Textures[0].get(), {.x = pos.x, .y = pos.y - 60, .w = 30, .h = 30});//Create button
+	RenderCopy(_sdlConfig.ps5Textures[4].get(), {.x = pos.x, .y = pos.y - 28, .w = 30, .h = 30});//Options button
+	RenderCopy(_sdlConfig.ps5Textures[5].get(), {.x = pos.x, .y = pos.y + 5, .w = 30, .h = 30});//Triangle button
+	RenderCopy(_sdlConfig.ps5Textures[2].get(), {.x = pos.x, .y = pos.y + 33, .w = 30, .h = 30});//Dpad button
+	RenderCopy(_sdlConfig.ps5Textures[3].get(), {.x = pos.x, .y = pos.y - 90, .w = 30, .h = 30});//Home button
+	RenderCopy(_sdlConfig.ps5Textures[1].get(), {.x = pos.x, .y = pos.y + 63, .w = 30, .h = 30});//Cross button
 }
 
 void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const int value,
@@ -347,12 +353,12 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const
 void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text,
 								 const bool isMediumFontSize) const
 {
-	if (!_gameConfig.fontMedium || !_gameConfig.fontSmall || !_gameConfig.renderer)
+	if (!_sdlConfig.fontMedium || !_sdlConfig.fontSmall || !_sdlConfig.renderer)
 	{
 		return;
 	}
 
-	const auto currentFont = isMediumFontSize ? _gameConfig.fontMedium.get() : _gameConfig.fontSmall.get();
+	const auto currentFont = isMediumFontSize ? _sdlConfig.fontMedium.get() : _sdlConfig.fontSmall.get();
 	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
 			TTF_RenderText_Solid(currentFont, text.c_str(), color), SDL_FreeSurface);
 	if (!surface)
@@ -361,14 +367,14 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 	}
 
 	const std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)> texture(
-			SDL_CreateTextureFromSurface(_gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture);
+			SDL_CreateTextureFromSurface(_sdlConfig.renderer.get(), surface.get()), SDL_DestroyTexture);
 	if (!texture)
 	{
 		return;
 	}
 
 	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = surface->w, .h = surface->h};
-	SDL_RenderCopy(_gameConfig.renderer.get(), texture.get(), nullptr, &textRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), texture.get(), nullptr, &textRect);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
@@ -386,31 +392,31 @@ void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 tra
 	const Uint8 b = color & 0xFFu;
 	const Uint8 a = transparency;
 
-	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), r, g, b, a);
+	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
 }
 
 void RenderManager::CreateColorTexture(const unsigned int color)
 {
 	auto colorTexture{std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>(
 			SDL_CreateTexture(
-					_gameConfig.renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 1, 1),
+					_sdlConfig.renderer.get(), SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 1, 1),
 			SDL_DestroyTexture)};
 
-	SDL_SetRenderTarget(_gameConfig.renderer.get(), colorTexture.get());
+	SDL_SetRenderTarget(_sdlConfig.renderer.get(), colorTexture.get());
 
 	SetRenderDrawColor(color);
 
-	SDL_RenderClear(_gameConfig.renderer.get());// Fill rect with color
+	SDL_RenderClear(_sdlConfig.renderer.get());// Fill rect with color
 
-	SDL_SetRenderTarget(_gameConfig.renderer.get(), nullptr);
+	SDL_SetRenderTarget(_sdlConfig.renderer.get(), nullptr);
 
 	_colorTextureCache.insert_or_assign(color, std::move(colorTexture));
 }
 
 void RenderManager::ClearFrame() const
 {
-	SDL_SetRenderDrawColor(_gameConfig.renderer.get(), 0u, 0u, 0u, 255u);
-	SDL_RenderClear(_gameConfig.renderer.get());
+	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), 0u, 0u, 0u, 255u);
+	SDL_RenderClear(_sdlConfig.renderer.get());
 }
 
 std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(const Direction dir)
@@ -436,7 +442,7 @@ void RenderManager::DrawColorTexture(const ObjRectangle rect)
 	constexpr unsigned int grayColor = 0x808080u;
 	if (const auto it = _colorTextureCache.find(grayColor); it != _colorTextureCache.end())
 	{
-		SDL_RenderCopy(_gameConfig.renderer.get(), it->second.get(), nullptr, &dstRect);
+		SDL_RenderCopy(_sdlConfig.renderer.get(), it->second.get(), nullptr, &dstRect);
 	}
 }
 
@@ -447,7 +453,7 @@ void RenderManager::DrawTexture(const ObjRectangle& texture, const ObjRectangle&
 	const SDL_Rect srcRect = RectToSdlRect(texture);
 	const SDL_Rect dstRect = RectToSdlRect(dest);
 	SDL_RenderCopyEx(
-			_gameConfig.renderer.get(), _gameConfig.atlasTexture.get(), &srcRect, &dstRect, angle, nullptr, flip);
+			_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect, angle, nullptr, flip);
 }
 
 void RenderManager::GenerateFpsTextures()
@@ -460,7 +466,7 @@ void RenderManager::GenerateFpsTextures()
 		constexpr SDL_Color textColor = {.r = 140u, .g = 0u, .b = 255u, .a = 255u};
 
 		std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> surface{
-				TTF_RenderText_Solid(_gameConfig.fontMedium.get(), text.c_str(), textColor),
+				TTF_RenderText_Solid(_sdlConfig.fontMedium.get(), text.c_str(), textColor),
 				SDL_FreeSurface};
 		if (!surface)
 		{
@@ -469,7 +475,7 @@ void RenderManager::GenerateFpsTextures()
 		}
 
 		std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> texture{
-				SDL_CreateTextureFromSurface(_gameConfig.renderer.get(), surface.get()),
+				SDL_CreateTextureFromSurface(_sdlConfig.renderer.get(), surface.get()),
 				SDL_DestroyTexture};
 		if (!texture)
 		{
@@ -489,12 +495,12 @@ void RenderManager::RenderFPS(const unsigned int fps)
 		// Copy the texture with FPS to the renderer
 		if (const auto it = _fpsTextures.find(fps); it != _fpsTextures.end())
 		{
-			SDL_RenderCopy(_gameConfig.renderer.get(), it->second.get(), nullptr, &_fpsRectangle);
+			SDL_RenderCopy(_sdlConfig.renderer.get(), it->second.get(), nullptr, &_fpsRectangle);
 		}
 	}
 
 	//TODO:extract to separated subscription
-	SDL_RenderPresent(_gameConfig.renderer.get());
+	SDL_RenderPresent(_sdlConfig.renderer.get());
 }
 
 void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) const
@@ -527,7 +533,7 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 	}
 
 	SetRenderDrawColor(color, 127u);
-	SDL_RenderFillRect(_gameConfig.renderer.get(), &healthBarRect);
+	SDL_RenderFillRect(_sdlConfig.renderer.get(), &healthBarRect);
 }
 
 void RenderManager::InitMenu(const GameConfig& gameConfig)

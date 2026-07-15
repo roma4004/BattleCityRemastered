@@ -1,5 +1,5 @@
 #include "application/GameConfig.h"
-#include "application/SDLEnvironment.h"
+#include "application/SDL_Config.h"
 #include "enums/GameMode.h"
 #include "interfaces/IConfig.h"
 #include "interfaces/IGame.h"
@@ -32,9 +32,9 @@ int main(const int argc, char* argv[])
 		}
 	}
 
-	auto sdlEnv = SDLEnvironment(gameConfig);
+	SDL_Config sdlEnv{gameConfig};
 	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
-	const std::unique_ptr<IGame> game = sdl->CreateGame(gameMode);
+	const std::unique_ptr<IGame> game = sdl->CreateGame(gameMode, sdlEnv);
 
 	game->MainLoop();
 

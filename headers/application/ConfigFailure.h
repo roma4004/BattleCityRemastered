@@ -4,6 +4,7 @@
 #include <string>
 
 enum class GameMode : char8_t;
+struct SDL_Config;
 
 class ConfigFailure final : public IConfig
 {
@@ -19,7 +20,7 @@ public:
 
 	~ConfigFailure() override = default;
 
-	[[nodiscard]] std::unique_ptr<IGame> CreateGame(GameMode gameMode) override;
+	[[nodiscard]] std::unique_ptr<IGame> CreateGame(GameMode gameMode, SDL_Config& sdlConfig) override;
 
 	ConfigFailure& operator=(const ConfigFailure& other) = delete;
 	ConfigFailure& operator=(ConfigFailure&& other) noexcept = delete;

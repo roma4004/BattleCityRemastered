@@ -1,4 +1,4 @@
-#include "application/SDLEnvironment.h"
+#include "application/SDL_Config.h"
 #include "application/ConfigFailure.h"
 #include "application/ConfigSuccess.h"
 #include "application/GameConfig.h"
@@ -12,10 +12,10 @@
 
 class IConfig;
 
-SDLEnvironment::SDLEnvironment(GameConfig& gameConfig)
+SDL_Config::SDL_Config(GameConfig& gameConfig)
 	: gameConfig{gameConfig} {}
 
-SDLEnvironment::~SDLEnvironment()
+SDL_Config::~SDL_Config()
 {
 	Mix_CloseAudio();
 	TTF_Quit();
@@ -23,7 +23,7 @@ SDLEnvironment::~SDLEnvironment()
 	SDL_Quit();
 }
 
-std::unique_ptr<IConfig> SDLEnvironment::Init() const
+std::unique_ptr<IConfig> SDL_Config::Init()
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
@@ -31,20 +31,20 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 	}
 
 	// creating window
-	if (gameConfig.sdlWindow = InitWindow();
-		gameConfig.sdlWindow == nullptr)
+	if (sdlWindow = InitWindow();
+		sdlWindow == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
 	}
 
 	// creating renderer
-	if (gameConfig.renderer = InitRender();
-		gameConfig.renderer == nullptr)
+	if (renderer = InitRender();
+		renderer == nullptr)
 	{
 		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
 	}
 
-	SDL_SetRenderDrawBlendMode(gameConfig.renderer.get(), SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
 
 	// font init and loading
 	{
@@ -55,14 +55,14 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
 		}
 
-		if (gameConfig.fontSmall = {TTF_OpenFont(fontPathName.c_str(), 14), TTF_CloseFont};
-			gameConfig.fontSmall == nullptr)
+		if (fontSmall = {TTF_OpenFont(fontPathName.c_str(), 14), TTF_CloseFont};
+			fontSmall == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 		}
 
-		if (gameConfig.fontMedium = {TTF_OpenFont(fontPathName.c_str(), 24), TTF_CloseFont};
-			gameConfig.fontMedium == nullptr)
+		if (fontMedium = {TTF_OpenFont(fontPathName.c_str(), 24), TTF_CloseFont};
+			fontMedium == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
 		}
@@ -78,16 +78,16 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 	{
 		const auto logoPathName(
 				gameConfig.Get<std::string>("Images.Logo", "Images.Logo path from config.ini"));
-		if (gameConfig.logoSurface = {IMG_Load(logoPathName.c_str()), SDL_FreeSurface};
-			gameConfig.logoSurface == nullptr)//TODO: Store all surface to recreate all texture if vsync change
+		if (logoSurface = {IMG_Load(logoPathName.c_str()), SDL_FreeSurface};
+			logoSurface == nullptr)//TODO: Store all surface to recreate all texture if vsync change
 		{
 			return std::make_unique<ConfigFailure>("IMG Logo Loading Error", IMG_GetError());
 		}
 
-		if (gameConfig.logoTexture = {
-					SDL_CreateTextureFromSurface(gameConfig.renderer.get(), gameConfig.logoSurface.get()),
+		if (logoTexture = {
+					SDL_CreateTextureFromSurface(renderer.get(), logoSurface.get()),
 					SDL_DestroyTexture};
-			gameConfig.logoTexture == nullptr)
+			logoTexture == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
 		}
@@ -98,16 +98,16 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		const auto selectorIconPathName(
 				gameConfig.Get<std::string>("Images.MenuSelectorP1",
 											"Images.MenuSelectorP1 path from config.ini"));
-		if (gameConfig.selectorIconSurface = {IMG_Load(selectorIconPathName.c_str()), SDL_FreeSurface};
-			gameConfig.selectorIconSurface == nullptr)
+		if (selectorIconSurface = {IMG_Load(selectorIconPathName.c_str()), SDL_FreeSurface};
+			selectorIconSurface == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG Selector Icon Loading Error", IMG_GetError());
 		}
 
-		if (gameConfig.selectorIconTexture = {
-					SDL_CreateTextureFromSurface(gameConfig.renderer.get(), gameConfig.selectorIconSurface.get()),
+		if (selectorIconTexture = {
+					SDL_CreateTextureFromSurface(renderer.get(), selectorIconSurface.get()),
 					SDL_DestroyTexture};
-			gameConfig.selectorIconTexture == nullptr)
+			selectorIconTexture == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG Selector Ion Texture Creating Error", IMG_GetError());
 		}
@@ -124,13 +124,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfacePS5.push_back(surface);
+		surfacePS5.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.ps5Textures.push_back(texture);
+			ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -147,13 +147,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfacePS5.push_back(surface);
+		surfacePS5.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.ps5Textures.push_back(texture);
+			ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -170,13 +170,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfacePS5.push_back(surface);
+		surfacePS5.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.ps5Textures.push_back(texture);
+			ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -193,13 +193,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfacePS5.push_back(surface);
+		surfacePS5.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.ps5Textures.push_back(texture);
+			ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -216,13 +216,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfacePS5.push_back(surface);
+		surfacePS5.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.ps5Textures.push_back(texture);
+			ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -239,13 +239,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfacePS5.push_back(surface);
+		surfacePS5.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.ps5Textures.push_back(texture);
+			ps5Textures.push_back(texture);
 		}
 		else
 		{
@@ -264,13 +264,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfaceXBox.push_back(surface);
+		surfaceXBox.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.xboxTextures.push_back(texture);
+			xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -287,13 +287,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfaceXBox.push_back(surface);
+		surfaceXBox.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.xboxTextures.push_back(texture);
+			xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -310,13 +310,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfaceXBox.push_back(surface);
+		surfaceXBox.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.xboxTextures.push_back(texture);
+			xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -333,13 +333,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfaceXBox.push_back(surface);
+		surfaceXBox.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.xboxTextures.push_back(texture);
+			xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -356,13 +356,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfaceXBox.push_back(surface);
+		surfaceXBox.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.xboxTextures.push_back(texture);
+			xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -379,13 +379,13 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
 		}
 
-		gameConfig.buttonSurfaceXBox.push_back(surface);
+		surfaceXBox.push_back(surface);
 
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), surface.get()), SDL_DestroyTexture};
+		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
 			texture != nullptr)
 		{
-			gameConfig.xboxTextures.push_back(texture);
+			xboxTextures.push_back(texture);
 		}
 		else
 		{
@@ -397,27 +397,27 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 	{
 		const auto textureAtlasPath(
 				gameConfig.Get<std::string>("Images.SpriteSheet", "Images.SpriteSheet path from config.ini"));
-		if (gameConfig.atlasSurface = {IMG_Load(textureAtlasPath.c_str()), SDL_FreeSurface};
-			gameConfig.atlasSurface == nullptr)
+		if (atlasSurface = {IMG_Load(textureAtlasPath.c_str()), SDL_FreeSurface};
+			atlasSurface == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG atlas Surface Loading Error", IMG_GetError());
 		}
 
-		const auto rawSurface = gameConfig.atlasSurface.get();
+		const auto rawSurface = atlasSurface.get();
 		if (const int result = SDL_SetColorKey(rawSurface, SDL_TRUE, SDL_MapRGB(rawSurface->format, 0, 0, 1));
 			result != 0)
 		{
 			return std::make_unique<ConfigFailure>("IMG atlas SetColorKey Error", SDL_GetError());
 		}
 
-		if (gameConfig.atlasTexture = {SDL_CreateTextureFromSurface(gameConfig.renderer.get(), rawSurface),
+		if (atlasTexture = {SDL_CreateTextureFromSurface(renderer.get(), rawSurface),
 									   SDL_DestroyTexture};
-			gameConfig.atlasTexture == nullptr)
+			atlasTexture == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
 		}
 
-		SDL_SetTextureBlendMode(gameConfig.atlasTexture.get(), SDL_BLENDMODE_BLEND);
+		SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
 	}
 
 	// Audio loading and play
@@ -427,11 +427,11 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 		{
 			const auto introMusicPathName(
 					gameConfig.Get<std::string>("Music.LevelStarted", "Music.LevelStarted path from config.ini"));
-			if (gameConfig.levelIntroMusic = {Mix_LoadWAV(introMusicPathName.c_str()), Mix_FreeChunk};
-				gameConfig.levelIntroMusic != nullptr)
+			if (levelIntroMusic = {Mix_LoadWAV(introMusicPathName.c_str()), Mix_FreeChunk};
+				levelIntroMusic != nullptr)
 			{
 				//TODO: move to soundManager
-				if (const int playResult = Mix_PlayChannel(-1, gameConfig.levelIntroMusic.get(), 0);
+				if (const int playResult = Mix_PlayChannel(-1, levelIntroMusic.get(), 0);
 					playResult == -1)
 				{
 					std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError() << '\n';
@@ -451,7 +451,7 @@ std::unique_ptr<IConfig> SDLEnvironment::Init() const
 	return std::make_unique<ConfigSuccess>(gameConfig);
 }
 
-std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWindow() const
+std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
 	const auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
@@ -463,7 +463,7 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDLEnvironment::InitWi
 	return {SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
 }
 
-std::shared_ptr<SDL_Renderer> SDLEnvironment::InitRender() const
+std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 {
 	Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
 	if (const bool vsync = gameConfig.Get<bool>("Window.vsync", false))
@@ -476,7 +476,7 @@ std::shared_ptr<SDL_Renderer> SDLEnvironment::InitRender() const
 	SDL_GetDisplayBounds(monitorIndex, &bounds);
 
 	SDL_Rect bordersSize;
-	SDL_Window* sdlWindowRaw = gameConfig.sdlWindow.get();
+	SDL_Window* sdlWindowRaw = sdlWindow.get();
 	SDL_GetWindowBordersSize(sdlWindowRaw, &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
 	if (monitorIndex != -1)

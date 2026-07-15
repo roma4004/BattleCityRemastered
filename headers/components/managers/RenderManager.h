@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 
+struct SDL_Config;
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct ObjRectangle;
@@ -19,6 +20,7 @@ class RenderManager
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig& _gameConfig;
+	SDL_Config& _sdlConfig;
 	int _healthBarScale{1};
 
 	struct MenuParams
@@ -88,7 +90,7 @@ class RenderManager
 	[[nodiscard]] static SDL_Rect CalcFpsPos(const UPoint& newSize);
 
 public:
-	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig);
 
 	~RenderManager();
 };

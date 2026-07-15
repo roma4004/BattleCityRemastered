@@ -19,10 +19,6 @@ class Menu final
 
 	std::string _name{};
 
-	//TODO: extract to separate sidebar class
-	int _enemyRespawnCount{20};
-	int _playerOneRepawnCount{3};
-	int _playerTwoRespawnCount{3};
 	GameMode _selectedGameMode{};
 	bool _isMenuDisplayed{false};
 

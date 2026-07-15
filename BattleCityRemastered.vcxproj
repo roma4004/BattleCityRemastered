@@ -143,7 +143,7 @@
     <ClCompile Include="source\application\GameConfig.cpp" />
     <ClCompile Include="source\application\GameFailure.cpp" />
     <ClCompile Include="source\application\GameSuccess.cpp" />
-    <ClCompile Include="source\application\SDLEnvironment.cpp" />
+    <ClCompile Include="source\application\SDL_Config.cpp" />
     <ClCompile Include="source\application\UserInput.cpp" />
     <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
@@ -256,7 +256,7 @@
     <ClInclude Include="headers\application\ConfigSuccess.h" />
     <ClInclude Include="headers\application\GameFailure.h" />
     <ClInclude Include="headers\application\GameSuccess.h" />
-    <ClInclude Include="headers\application\SDLEnvironment.h" />
+    <ClInclude Include="headers\application\SDL_Config.h" />
     <ClInclude Include="headers\application\UserInput.h" />
     <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
