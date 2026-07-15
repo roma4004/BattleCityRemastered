@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -24,6 +25,7 @@ protected:
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _tankHealth{100};
@@ -42,8 +44,8 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -69,7 +71,7 @@ protected:
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
@@ -128,7 +130,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 	bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 

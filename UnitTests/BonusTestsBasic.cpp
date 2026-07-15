@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
@@ -26,6 +27,7 @@ protected:
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _tankHealth{100};
@@ -42,8 +44,8 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
@@ -71,7 +73,7 @@ protected:
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
@@ -159,7 +161,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 				.gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault);
+		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault);
 
 		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -201,7 +203,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 				.gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault);
+		const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault);
 		//TODO: spawn with helmet or timer effect for test instead of bonus pickup in separated test
 
 		const FPoint enemyPos = enemy->GetPos();
@@ -349,7 +351,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 			.gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault);
+	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault);
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 
@@ -391,7 +393,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 			.gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault);
+	const auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault);
 
 	EXPECT_EQ(enemy->GetHealth(), 100);
 

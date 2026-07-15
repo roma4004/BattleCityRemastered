@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -38,6 +39,7 @@ protected:
 	std::shared_ptr<StateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -57,8 +59,8 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
 		_stateManager = std::make_shared<StateManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
@@ -82,7 +84,7 @@ protected:
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+				std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
@@ -113,7 +115,7 @@ TEST_F(BotTest, BotsChangeDirectionIfOponentSeen)
 				.gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
 		_allObjects.emplace_back(enemy);
 
 		const Direction startDirCoop = coopBot->GetDirection();
@@ -158,7 +160,7 @@ TEST_F(BotTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
 		_allObjects.emplace_back(enemy);
 
 		const Direction startDirCoop = coopBot->GetDirection();
@@ -225,7 +227,7 @@ TEST_F(BotTest, CoopShootToEnemy)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 		const size_t sizeBefore = _allObjects.size();
 		EXPECT_EQ(sizeBefore, 2);
@@ -266,7 +268,7 @@ TEST_F(BotTest, EnemyShootToCoop)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, enableByDefault));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 		const size_t sizeBefore = _allObjects.size();
 		EXPECT_EQ(sizeBefore, 2);
@@ -304,7 +306,7 @@ TEST_F(BotTest, EnemyShootToPlayer1)
 							  .gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
@@ -315,7 +317,7 @@ TEST_F(BotTest, EnemyShootToPlayer1)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2);
@@ -348,7 +350,7 @@ TEST_F(BotTest, EnemyShootToPlayer2)
 							  .gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
@@ -359,7 +361,7 @@ TEST_F(BotTest, EnemyShootToPlayer2)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2);
@@ -392,7 +394,7 @@ TEST_F(BotTest, EnemyNoShootToPlayer1IfTooClose)
 							  .gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 2.f + 7.f, .w = _tankSize, .h = _tankSize};
@@ -403,7 +405,7 @@ TEST_F(BotTest, EnemyNoShootToPlayer1IfTooClose)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2);
@@ -436,7 +438,7 @@ TEST_F(BotTest, EnemyNoShootToPlayer2IfTooClose)
 							  .gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn player aligned enemy in line of sight
 	const ObjRectangle rectPlayer = {.x = 0.f, .y = _tankSize * 2.f + 7.f, .w = _tankSize, .h = _tankSize};
@@ -447,7 +449,7 @@ TEST_F(BotTest, EnemyNoShootToPlayer2IfTooClose)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2);
@@ -481,7 +483,7 @@ TEST_F(BotTest, CoopNoShootToCoop)
 				.gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		_allObjects.emplace_back(std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+		_allObjects.emplace_back(std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 		const size_t sizeBefore = _allObjects.size();
 
@@ -519,7 +521,7 @@ TEST_F(BotTest, CoopNoShootToPlayer1)
 		constexpr bool enableByDefault{true};
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 		const size_t sizeBefore = _allObjects.size();
 
@@ -553,12 +555,12 @@ TEST_F(BotTest, EnemyNoShootToAllied)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn second enemy in line of sight of the first
 	const ObjRectangle rectEnemy2 = {.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
 	pawnProperty.baseObjProperty.rect = rectEnemy2;
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2);
@@ -588,12 +590,12 @@ TEST_F(BotTest, EnemyNoShootToAlliedIfTooClose)
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn second enemy in line of sight of the first
 	const ObjRectangle rectEnemy2 = {.x = 0.f, .y = _tankSize * 2.f + 6.f, .w = _tankSize, .h = _tankSize};
 	pawnProperty.baseObjProperty.rect = rectEnemy2;
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2);
@@ -643,7 +645,7 @@ TEST_F(BotTest, EnemyShootToBrick)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
@@ -695,7 +697,7 @@ TEST_F(BotTest, EnemyTooCloseToShootTheBrick)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize + 3.f, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
@@ -732,7 +734,7 @@ TEST_F(BotTest, CoopShootToSteel)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn SteelWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -765,7 +767,7 @@ TEST_F(BotTest, EnemyShootToSteel)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn SteelWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -802,7 +804,7 @@ TEST_F(BotTest, CoopNoShootToSteelIfTierTooLow)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
@@ -834,7 +836,7 @@ TEST_F(BotTest, EnemyNoShootToSteelIfTierTooLow)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn SteelWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -872,7 +874,7 @@ TEST_F(BotTest, CoopNoShootToEagle)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Eagle
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -905,7 +907,7 @@ TEST_F(BotTest, EnemyShootToEagle)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Eagle
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -943,7 +945,7 @@ TEST_F(BotTest, CoopNoShootToFortress)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn FortressWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -976,7 +978,7 @@ TEST_F(BotTest, EnemyShootToFortress)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn FortressWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1014,7 +1016,7 @@ TEST_F(BotTest, CoopNoShootToWater)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Water
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1047,7 +1049,7 @@ TEST_F(BotTest, EnemyShootToWater)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Water
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1085,7 +1087,7 @@ TEST_F(BotTest, CoopNoShootToBush)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Bush
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1118,7 +1120,7 @@ TEST_F(BotTest, EnemyShootToBush)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Bush
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1156,7 +1158,7 @@ TEST_F(BotTest, CoopNoShootToIce)
 
 	_allObjects.reserve(4);
 	_allObjects.emplace_back(
-			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, enableByDefault));
+			std::make_shared<CoopBot>(std::move(pawnProperty), _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Ice
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1189,7 +1191,7 @@ TEST_F(BotTest, EnemyShootToIce)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Ice
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
@@ -1222,7 +1224,7 @@ TEST_F(BotTest, EnemyShootToPlayerBehindWater)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Water
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1237,7 +1239,7 @@ TEST_F(BotTest, EnemyShootToPlayerBehindWater)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1269,7 +1271,7 @@ TEST_F(BotTest, EnemyShootToPlayerInTheWater)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Water
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1284,7 +1286,7 @@ TEST_F(BotTest, EnemyShootToPlayerInTheWater)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1316,7 +1318,7 @@ TEST_F(BotTest, EnemyShootToPlayerBehindIce)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Ice
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1331,7 +1333,7 @@ TEST_F(BotTest, EnemyShootToPlayerBehindIce)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1363,7 +1365,7 @@ TEST_F(BotTest, EnemyShootToPlayerInTheIce)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Ice
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1378,7 +1380,7 @@ TEST_F(BotTest, EnemyShootToPlayerInTheIce)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1410,7 +1412,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindBrickWall)
 							  .dir = Direction::RIGHT,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn BrickWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1425,7 +1427,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindBrickWall)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1457,7 +1459,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindSteelWall)
 							  .dir = Direction::RIGHT,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn SteelWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1472,7 +1474,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindSteelWall)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1504,7 +1506,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindFortressWall)
 							  .dir = Direction::RIGHT,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn FortressWall
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1519,7 +1521,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindFortressWall)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1551,7 +1553,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindBush)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Bush
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1566,7 +1568,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindBush)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1598,7 +1600,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerInTheBush)
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(pawnProperty, _bulletPool, _gameConfig, enableByDefault));
 
 	// Spawn Bush
 	const ObjRectangle rect = {.x = 0.f, .y = _tankSize * 2.f + 1.f, .w = _tankSize, .h = _tankSize};
@@ -1613,7 +1615,7 @@ TEST_F(BotTest, EnemyNoShootToPlayerInTheBush)
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
 	_allObjects.emplace_back(
 			std::make_shared<Player>(
-					std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+					std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3);
@@ -1668,7 +1670,7 @@ TEST_F(BotTest, EnemyCantSeeBonusBehindWater)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
 		_allObjects.emplace_back(enemy);
 
 		const Direction startDirCoop = coopBot->GetDirection();
@@ -1735,7 +1737,7 @@ TEST_F(BotTest, EnemyCantSeeBonusBehindBush)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
 		_allObjects.emplace_back(enemy);
 
 		const Direction startDirCoop = coopBot->GetDirection();
@@ -1802,7 +1804,7 @@ TEST_F(BotTest, EnemyCanSeeBonusBehindIce)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
 		_allObjects.emplace_back(enemy);
 
 		const Direction startDirCoop = coopBot->GetDirection();
@@ -1877,7 +1879,7 @@ TEST_F(BotTest, EnemyCanSeeBonusInTheIce)
 								  .gameMode = _gameMode};
 
 		constexpr bool enableByDefault{true};
-		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), enableByDefault);
+		auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
 		_allObjects.emplace_back(enemy);
 
 		const Direction startDirCoop = coopBot->GetDirection();

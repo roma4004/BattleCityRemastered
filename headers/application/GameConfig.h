@@ -8,11 +8,11 @@
 class GameConfig
 {
 public:
-	explicit GameConfig(std::string filePath);
+	GameConfig(std::string filePath, bool skipIniLoad = false);
 	~GameConfig();
 
 	void LoadIni(const std::string& filePath);
-	void DefaultInitIni(const std::string& filePath);
+	void DefaultInitIni();
 	void SaveIni(const std::string& filePath) const;
 	void ApplyWindowOffsetAsHost();
 	void ApplyWindowOffsetAsClient();

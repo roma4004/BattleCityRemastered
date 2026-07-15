@@ -356,6 +356,7 @@ set(SOURCE_FILES
 )
 
 set(SOURCE_FILES_FOR_UNIT_TESTS
+        source/application/GameConfig.cpp
         source/Utils/ColliderUtils.cpp
         source/Utils/TimeUtils.cpp
         source/behavior/MoveLikeBulletBeh.cpp

@@ -3,10 +3,17 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-GameConfig::GameConfig(std::string filePath)
+GameConfig::GameConfig(std::string filePath, const bool skipIniLoad)
 	: _filePath(std::move(filePath))
 {
-	LoadIni(_filePath);
+	if (skipIniLoad)
+	{
+		DefaultInitIni();
+	}
+	else
+	{
+		LoadIni(_filePath);
+	}
 
 	windowSize = UPoint{.x = Get<unsigned>("Window.width", 800u),
 						.y = Get<unsigned>("Window.height", 600u)};
@@ -32,10 +39,11 @@ void GameConfig::LoadIni(const std::string& filePath)
 		std::cout << err.what() << ", will be used default settings" << '\n';
 	}
 
-	DefaultInitIni(filePath);
+	DefaultInitIni();
+	SaveIni(filePath);
 }
 
-void GameConfig::DefaultInitIni(const std::string& filePath)
+void GameConfig::DefaultInitIni()
 {
 	try
 	{
@@ -86,8 +94,6 @@ void GameConfig::DefaultInitIni(const std::string& filePath)
 		// Catches critical out-of-memory errors
 		std::cerr << "Critical error: Out of memory! " << err.what() << '\n';
 	}
-
-	SaveIni(filePath);
 }
 
 //TODO: add feature save window last position

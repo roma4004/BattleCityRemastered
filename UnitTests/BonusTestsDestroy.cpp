@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
@@ -27,6 +28,7 @@ protected:
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
@@ -43,8 +45,8 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>(_windowSize, &_allObjects, _events);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_tankSpawner = std::make_shared<TankSpawner>( _gameConfig, &_allObjects, _events);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
@@ -72,7 +74,7 @@ protected:
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
@@ -217,7 +219,7 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, enableByDefault));
+		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, _gameConfig, enableByDefault));
 
 		if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get()))
 		{
@@ -353,7 +355,7 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
-	auto enemy = std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, enableByDefault);
+	auto enemy = std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, _gameConfig, enableByDefault);
 	_allObjects.emplace_back(enemy);
 
 	if (bonus != nullptr && enemy != nullptr)

@@ -1,4 +1,5 @@
 #include "Point.h"
+#include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/BrickWall.h"
@@ -19,6 +20,7 @@ class BulletTest : public testing::Test
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _bulletHealth{1};
@@ -323,7 +325,7 @@ TEST_F(BulletTest, BulletDamageTank)
 			.gameMode = _gameMode};
 
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool), enableByDefault));
+	_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnProperty), std::move(bulletPool), _gameConfig, enableByDefault));
 
 	const auto enemy = dynamic_cast<const Enemy*>(_allObjects.back().get());
 

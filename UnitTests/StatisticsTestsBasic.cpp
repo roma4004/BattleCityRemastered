@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -25,6 +26,7 @@ protected:
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{1};
@@ -45,7 +47,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _windowSize);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
@@ -106,12 +108,12 @@ protected:
 		_allObjects.reserve(5);
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), enableByDefault));
+						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), enableByDefault));
+						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), _gameConfig, enableByDefault));
 		_allObjects.emplace_back(
-				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, enableByDefault));
+				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
