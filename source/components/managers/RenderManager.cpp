@@ -115,6 +115,7 @@ void RenderManager::Subscribe()
 	{
 		this->_gameConfig.windowSize = newSize;//TODO: find better place for this responsibility
 		this->_fpsRectangle = CalcFpsPos(newSize);
+		this->_healthBarScale *= static_cast<int>(newSize.y / _gameConfig.windowSizeDefault.y);
 	});
 }
 
@@ -498,7 +499,7 @@ void RenderManager::RenderFPS(const unsigned int fps)
 
 void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) const
 {
-	const int healthWidth = health / 3;
+	const int healthWidth = (health / 3) * (_healthBarScale / 2);
 	if (healthWidth <= 0)
 		return;
 
