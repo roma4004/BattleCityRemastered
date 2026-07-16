@@ -987,20 +987,37 @@ TEST_F(PlayerTest, PlayerTeamLoseWithExtraLifeDeath)
 // Player team lose with broken base
 TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
+	_allObjects.clear();
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	bool isGameLose{false};
 	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
 
+	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
+	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
 	_tankSpawner->RespawnTanks(true);
+	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 16);
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 2);
+	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3); //game mode one player so second should not respawn
+
 	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
 	_allObjects.pop_back();//remove eagle
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 0);
+	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 0);
 
-	// Spawn bonus extra life
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
+	if (const auto player = dynamic_cast<Player*>(_allObjects.back().get()))
+	{
+		auto [x, y] = player->GetPos();//to relative spawn above player
+
+		// Spawn bonus extra life near player
+		_bonusSpawner->SpawnBonus({.x = x, .y = y - _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
+	}
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("P1_Move_Up", isPressed);
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 1);
 
 	_allObjects.pop_back();//remove bonus
 	_allObjects.pop_back();//remove player

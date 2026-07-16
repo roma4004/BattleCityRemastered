@@ -174,13 +174,15 @@ std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)
 void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 {
 	const auto id = static_cast<size_t>(type);
-	if (_respawnCount[id] > 0u)
+	if (const unsigned short respawnCount = _respawnCount[id];
+		delta > 0
+		|| delta < 0 && respawnCount + delta >= 0u)
 	{
 		_respawnCount[id] += static_cast<unsigned short>(delta);
 	}
 
-	const std::string respawnCount = RespawnCountEnumToString(type);
-	_events->EmitEvent("RespawnCountChangedTo", respawnCount, _respawnCount[id]);
+	const std::string who = RespawnCountEnumToString(type);
+	_events->EmitEvent("RespawnCountChangedTo", who, _respawnCount[id]);
 }
 
 void RespawnManager::TriggerLastPlayersLife()
