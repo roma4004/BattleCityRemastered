@@ -8,7 +8,7 @@
 class GameConfig
 {
 public:
-	GameConfig(std::string filePath, bool skipIniLoad = false);
+	explicit GameConfig(std::string filePath, bool skipIniLoad = false);
 	~GameConfig();
 
 	void LoadIni(const std::string& filePath);
@@ -16,7 +16,8 @@ public:
 	void SaveIni(const std::string& filePath) const;
 	void ApplyWindowOffsetAsHost();
 	void ApplyWindowOffsetAsClient();
-
+	
+	bool skipIniLoad{false};
 	UPoint windowSize{};
 	UPoint windowPos{};
 	UPoint windowSizeDefault{800, 600};

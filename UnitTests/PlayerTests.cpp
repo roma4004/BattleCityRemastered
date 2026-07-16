@@ -731,6 +731,8 @@ TEST_F(PlayerTest, PlayerTeamWon)
 	});
 
 	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
+	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
 	EXPECT_FALSE(isGameWon);
 	for (int i = 0; i < 5; ++i)
 	{

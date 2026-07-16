@@ -133,11 +133,16 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
-bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health,
-							 const bool skipDelay)
+ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 {
-	const float gridOffset{_gameConfig.gridOffset};
 	const float tankSize{_gameConfig.tankSize};
+	ObjRectangle rect{.x = -1.f, .y = -1.f, .w = tankSize, .h = tankSize};
+	if (type > TankType::ENEMY4)
+	{
+		return rect;
+	}
+
+	// const float gridOffset{_gameConfig.gridOffset};
 	const float battleFieldSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth)};
 
 	const int quartFieldSizeX = static_cast<int>(battleFieldSizeX / 4.f - tankSize);
@@ -145,27 +150,47 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 														   {quartFieldSizeX, quartFieldSizeX * 2},
 														   {quartFieldSizeX * 2, quartFieldSizeX * 3},
 														   {quartFieldSizeX * 3, quartFieldSizeX * 4}};
-	ObjRectangle rect{.x = -1, .y = -1, .w = tankSize, .h = tankSize};
 
-	const std::uniform_int_distribution<> distRandRange{0, static_cast<int>(spawnRanges.size() - 1)};
-	const int randomRange = RandUtils::GetRandNumber(distRandRange);
+
+	const int randomRange = static_cast<int>(type);
+	auto [minX, maxX] = spawnRanges[randomRange];
 	//TODO: refactor uniform to float
-	const std::uniform_int_distribution<> distRandX{static_cast<int>(spawnRanges[randomRange].first),
-													static_cast<int>(spawnRanges[randomRange].second)};
+	const std::uniform_int_distribution<> distRandX{static_cast<int>(minX), static_cast<int>(maxX)};
 	const int randomX = RandUtils::GetRandNumber(distRandX);
 
-	ObjRectangle possibleSpawnPos{.x = static_cast<float>(randomX), .y = 0, .w = tankSize, .h = tankSize};
-	auto isCollidePredicate = [&possibleSpawnPos](const auto& object)
+	ObjRectangle spawnPos{.x = static_cast<float>(randomX), .y = 0, .w = tankSize, .h = tankSize};
+	auto isCollidePredicate = [&spawnPos](const auto& object)
 	{
-		return ColliderUtils::IsCollide(possibleSpawnPos, object->GetRect());
+		return ColliderUtils::IsCollide(spawnPos, object->GetRect());
 	};
 
 	if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
 	{
-		rect = possibleSpawnPos;
+		rect = spawnPos;
+	}
+	else
+	{
+		float spawnX = minX;
+		while (spawnX < maxX)
+		{
+			spawnPos.x = spawnX;
+			if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+			{
+				rect = spawnPos;
+				break;
+			}
+			spawnX += tankSize / 2.f;
+		}
 	}
 
-	if (rect.y == -1)
+	return rect;
+}
+
+bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float speed, const int health,
+							 const bool skipDelay)
+{
+	const ObjRectangle rect = GetEnemyRandomPosX(type);
+	if (rect.y == -1.f)
 	{
 		return false;
 	}
@@ -187,87 +212,102 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 	return true;
 }
 
-bool TankSpawner::SpawnPlayer(ObjRectangle rect, const float speed, const int health, const buuid uuid,
+void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const int health, const buuid uuid,
 							  const TankType type, const bool skipDelay)
 {
-	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
-	{
-		return ColliderUtils::IsCollide(rect, object->GetRect());
-	});
+	const bool isFirst = type == TankType::PLAYER1;
+	const std::string name{isFirst ? "Player1" : "Player2"};
+	std::string fraction{"PlayerTeam"};
 
-	if (isFreeSpawnSpot)
-	{
-		const bool isFirst = type == TankType::PLAYER1;
-		const std::string name{isFirst ? "Player1" : "Player2"};
-		std::string fraction{"PlayerTeam"};
+	// Log tank spawn
+	const std::string uuidString = UuidUtils::GetStringUuid(uuid);
+	Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
+	std::cout << "[" << GetCurrentTimeString() << "] "
+			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
+			<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
 
-		// Log tank spawn
-		const std::string uuidString = UuidUtils::GetStringUuid(uuid);
-		Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
-		std::cout << "[" << GetCurrentTimeString() << "] "
-				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
-
-		SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
-
-		return true;
-	}
-
-	return false;
+	SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
 
-void TankSpawner::SpawnCoopBot(ObjRectangle rect, const float speed, const int health, const buuid uuid,
+void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const int health, const buuid uuid,
 							   const TankType type, const bool skipDelay)
 {
-	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
-	{
-		return ColliderUtils::IsCollide(rect, object->GetRect());
-	});
+	const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
+	std::string fraction{"PlayerTeam"};
 
-	if (isFreeSpawnSpot)
-	{
-		const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
-		std::string fraction{"PlayerTeam"};
+	// Log coop bot spawn
+	const std::string uuidString = UuidUtils::GetStringUuid(uuid);
+	Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
+	std::cout << "[" << GetCurrentTimeString() << "] "
+			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
+			<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
 
-		// Log coop bot spawn
-		const std::string uuidString = UuidUtils::GetStringUuid(uuid);
-		Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
-		std::cout << "[" << GetCurrentTimeString() << "] "
-				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-				<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
-
-		SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
-	}
+	SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
 
 void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const bool skipDelay)
 {
 	const bool isSuccessSpawn = SpawnEnemy(uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth, skipDelay);
-
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
 	}
 }
 
-void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const bool skipDelay)
+ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 {
 	const float windowSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth)};
 	const float windowSizeY{static_cast<float>(_gameConfig.windowSize.y)};
-	const float gridOffset{_gameConfig.gridOffset};
-	const float size{_gameConfig.tankSize};
+	// const float gridOffset{_gameConfig.gridOffset};
+	const float tankSize{_gameConfig.tankSize};
 
-	const bool isFirst = type == TankType::PLAYER1;
 	const std::pair<float, float> spawnRangePlayer1{0,
-													static_cast<int>(windowSizeX / 2.f - size * 3.25f)};
-	const std::pair<float, float> spawnRangePlayer2{static_cast<int>(windowSizeX / 2.f - size * 3.25f),
+													static_cast<int>(windowSizeX / 2.f - tankSize * 3.25f)};
+	const std::pair<float, float> spawnRangePlayer2{static_cast<int>(windowSizeX / 2.f + tankSize * 2.25f),
 													static_cast<int>(windowSizeX)};
 	auto [minX, maxX]{isFirst ? spawnRangePlayer1 : spawnRangePlayer2};
 
 	const std::uniform_int_distribution<> distRandId{static_cast<int>(minX), static_cast<int>(maxX)};
-	const int randX = RandUtils::GetRandNumber(distRandId);
+	const int randomX = RandUtils::GetRandNumber(distRandId);
 
-	const ObjRectangle rect{.x = static_cast<float>(randX), .y = windowSizeY - size, .w = size, .h = size};
+	ObjRectangle rect{.x = -1.f, .y = -1.f, .w = tankSize, .h = tankSize};
+	ObjRectangle spawnPos{.x = static_cast<float>(randomX), .y = windowSizeY - tankSize, .w = tankSize, .h = tankSize};
+	auto isCollidePredicate = [&spawnPos](const auto& object)
+	{
+		return ColliderUtils::IsCollide(spawnPos, object->GetRect());
+	};
+
+	if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+	{
+		rect = spawnPos;
+	}
+	else
+	{
+		float spawnX = minX;
+		while (spawnX < maxX)
+		{
+			spawnPos.x = spawnX;
+			if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+			{
+				rect = spawnPos;
+				break;
+			}
+
+			spawnX += tankSize / 2.f;
+		}
+	}
+
+	return rect;
+}
+
+void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const bool skipDelay)
+{
+	const bool isFirst = type == TankType::PLAYER1;
+	const ObjRectangle rect{GetPlayerRandomPosX(isFirst)};
+	if (rect.y == -1.f)
+	{
+		return;
+	}
 
 	if (_gameMode == GameMode::OnePlayer
 		|| _gameMode == GameMode::TwoPlayers
@@ -275,9 +315,8 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		|| _gameMode == GameMode::PlayAsClient
 		|| _gameMode == GameMode::CoopWithBot && isFirst)
 	{
-		const bool isSuccessSpawn = SpawnPlayer(rect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type,
-												skipDelay);
-		if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
+		SpawnPlayer(rect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
+		if (_gameMode == GameMode::PlayAsHost)
 		{
 			_events->EmitEvent("ServerSend_RespawnTank", type, uuid);
 		}

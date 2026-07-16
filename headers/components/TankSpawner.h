@@ -42,8 +42,9 @@ class TankSpawner final
 	void UnsubscribeAsClient() const;
 	void Reset();
 
-	bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
-	bool SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
+	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
+	[[nodiscard]] bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
 	void SpawnTank(ObjRectangle rect, int health, const std::string& name, std::string fraction, float speed,
@@ -52,6 +53,7 @@ class TankSpawner final
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
+	[[nodiscard]] ObjRectangle GetPlayerRandomPosX(bool isFirst) const;
 	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
 	void RespawnTank(TankType type, buuid uuid, bool skipDelay);
 	[[nodiscard]] static std::string GetCurrentTimeString();
