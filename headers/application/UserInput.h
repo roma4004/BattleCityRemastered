@@ -4,6 +4,7 @@
 #include "../components/input/MouseButton.h"
 #include "components/input/InputProviderForMenu.h"
 #include <SDL_gamecontroller.h>
+#include <SDL_rect.h>
 #include <chrono>
 #include <vector>
 
@@ -12,6 +13,13 @@ class EventSystem;
 
 class UserInput final
 {
+	struct SubTile
+	{
+		SDL_Rect rect;
+		GameMode gameMode;
+		bool isHovered = false;
+	};
+
 	using milliseconds = std::chrono::milliseconds;
 
 	MouseButtons _mouseButtons{};
@@ -19,6 +27,9 @@ class UserInput final
 	bool _isPause{false};
 	bool _isPauseBeforeDragNDrop{false};
 	bool _isMoving{false};
+	bool _isMenuDisplayed{false};
+	int _padding, _xTile, _yTile, _wTile, _hTile;
+	GameMode _selectedGameMode{};
 	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
 	UPoint _windowSize{};
@@ -27,7 +38,16 @@ class UserInput final
 	milliseconds _moveEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 
-	void MouseEvents(const SDL_Event& event);
+
+	SDL_Rect backMenuTilesRect;
+	SDL_Rect btnRectOnePlayer;
+	SDL_Rect btnRectTwoPlayers;
+	SDL_Rect btnRectCoopWithBot;
+	SDL_Rect btnRectPlayAsHost;
+	SDL_Rect btnRectPlayAsClient;
+	std::vector<SubTile>menuTiles;
+
+	void MouseEvents(const SDL_Event& event, const bool& isPressed);
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void KeyboardEvents(const SDL_Event& event) const;
 	void GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;

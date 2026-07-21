@@ -1,6 +1,7 @@
 #include "application/UserInput.h"
 #include "application/GameSuccess.h"
 #include "components/EventSystem.h"
+#include "enums/GameMode.h"
 #include <SDL_events.h>
 #include <SDL_gamecontroller.h>
 #include <algorithm>
@@ -14,6 +15,29 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 	Subscribe();
 
 	InitControllers();
+
+	_padding = 15; _xTile = 200; _yTile = 160; _wTile = 180; _hTile = 20;
+
+	btnRectOnePlayer = { _xTile, _yTile, _wTile, _hTile };
+	btnRectTwoPlayers = { _xTile, 180 + _padding, _wTile, _hTile };
+	btnRectCoopWithBot = { _xTile, 210 + _padding, _wTile, _hTile };
+	btnRectPlayAsHost = { _xTile, 240 + _padding, _wTile, _hTile };
+	btnRectPlayAsClient = { _xTile, 270 + _padding, _wTile, _hTile };
+	backMenuTilesRect = {180, 140, 240, 220};
+
+	SubTile RectOnePlayer { btnRectOnePlayer, GameMode::OnePlayer, false};
+	SubTile RectTwoPlayers {btnRectTwoPlayers, GameMode::TwoPlayers, false};
+	SubTile RectCoopWithBot {btnRectCoopWithBot, GameMode::CoopWithBot, false};
+	SubTile RectPlayAsHost {btnRectPlayAsHost, GameMode::PlayAsHost, false};
+	SubTile RectPlayAsClient {btnRectPlayAsClient, GameMode::PlayAsClient, false};
+	SubTile RectMenuTiles {backMenuTilesRect,GameMode::Demo, false};
+
+	menuTiles.push_back(RectMenuTiles);
+	menuTiles.push_back(RectOnePlayer);
+	menuTiles.push_back(RectTwoPlayers);
+	menuTiles.push_back(RectCoopWithBot);
+	menuTiles.push_back(RectPlayAsClient);
+	menuTiles.push_back(RectPlayAsHost);
 }
 
 UserInput::~UserInput()
@@ -28,6 +52,10 @@ void UserInput::Subscribe()
 	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
 	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
+{
+	_isMenuDisplayed = isDisplayed;
+});
 }
 
 void UserInput::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -99,13 +127,14 @@ void UserInput::OnWindowMoveStop()
 	}
 }
 
-void UserInput::MouseEvents(const SDL_Event& event)
+void UserInput::MouseEvents(const SDL_Event& event, const bool& isPressed)
 {
+	const std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
+	const std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
+
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
 		_mouseButtons.MouseLeftButton = true;
-		std::cout << "MouseLeftButton: "
-				<< "Down" << '\n';
 
 		return;
 	}
@@ -113,13 +142,12 @@ void UserInput::MouseEvents(const SDL_Event& event)
 	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		_mouseButtons.MouseLeftButton = false;
-		std::cout << "MouseLeftButton: "
-				<< "Up" << '\n';
+		_events->EmitEvent("Enter", true);
 
 		return;
 	}
 
-	if (event.type == SDL_MOUSEMOTION && _mouseButtons.MouseLeftButton)
+	if (event.type == SDL_MOUSEMOTION)
 	{
 		const Sint32 x = event.motion.x;
 		const Sint32 y = event.motion.y;
@@ -128,6 +156,36 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 		if (x < 1 || y < 1
 			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1) {}
+
+		if (_isMenuDisplayed)
+		{
+			SDL_Point mousePoint = {event.motion.x, event.motion.y};
+
+			if (SDL_PointInRect(&mousePoint, &backMenuTilesRect)) 
+			{
+				for (size_t i = 0; i < menuTiles.size(); ++i) 
+				{
+					bool cursorInside = SDL_PointInRect(&mousePoint, &menuTiles[i].rect);
+
+					if (cursorInside && !menuTiles[i].isHovered) 
+					{
+						menuTiles[i].isHovered = true;
+						_events->EmitEvent("GameModeSelectedWithMouse", menuTiles[i].gameMode);
+					}
+					else if (!cursorInside && menuTiles[i].isHovered) 
+					{
+						menuTiles[i].isHovered = false;
+					}
+				}
+			} 
+			else 
+			{
+				for (size_t i = 0; i < menuTiles.size(); ++i) 
+				{
+					if (menuTiles[i].isHovered) { menuTiles[i].isHovered = false; }
+				}
+			}
+		}
 	}
 }
 
@@ -309,7 +367,7 @@ void UserInput::Update()
 		}
 
 		WindowsMoveEvents(event);
-		MouseEvents(event);
+		MouseEvents(event, false);
 		KeyboardEvents(event);
 		GamepadEvents(event);
 	}

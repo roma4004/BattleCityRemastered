@@ -62,6 +62,11 @@ void GameSuccess::Subscribe()
 	});
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->DisposeDeadObject(); });
 	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
+	_events->AddListener("GameModeSelectedWithMouse", _name, [this](const GameMode newGameMode)
+	{
+		this->_selectedGameMode = newGameMode;
+		this->_events->EmitEvent("SelectedGameModeChangedTo", this->_selectedGameMode);
+	});
 }
 
 void GameSuccess::Unsubscribe() const { _events->RemoveAllListeners(_name); }
