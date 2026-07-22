@@ -17,7 +17,7 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 
 	InitControllers();
 
-	_menuTileDefault = {.x = 175, .y = 160, .w = 200, .h = 30};
+	_firstMenuMouseTileDefault = {.x = 175, .y = 160, .w = 200, .h = 30};
 	InitMouseHoverTiles({});
 }
 
@@ -140,7 +140,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		if (_isMenuDisplayed
 			&& SDL_PointInRect(&mouse, &_allTilesRect))
 		{
-			for (auto& [rect, gameMode]: menuTiles)
+			for (auto& [rect, gameMode]: _menuTiles)
 			{
 				if (SDL_PointInRect(&mouse, &rect)
 					&& _selectedGameMode != gameMode)
@@ -418,15 +418,15 @@ bool UserInput::IsSameController(const std::shared_ptr<SDL_GameController>& cont
 void UserInput::InitMouseHoverTiles(const Point menuPos)
 {
 	auto [x, y, w, h] = SDL_Rect{
-			.x = menuPos.x + _menuTileDefault.x,
-			.y = menuPos.y + _menuTileDefault.y,
-			.w = _menuTileDefault.w,
-			.h = _menuTileDefault.h
+			.x = menuPos.x + _firstMenuMouseTileDefault.x,
+			.y = menuPos.y + _firstMenuMouseTileDefault.y,
+			.w = _firstMenuMouseTileDefault.w,
+			.h = _firstMenuMouseTileDefault.h
 	};
 
 	_allTilesRect = {.x = x, .y = y, .w = w, .h = h * 5};
 
-	menuTiles = {
+	_menuTiles = {
 			{.rect = {.x = x, .y = y + h * 0, .w = w, .h = h}, .gameMode = GameMode::OnePlayer},
 			{.rect = {.x = x, .y = y + h * 1, .w = w, .h = h}, .gameMode = GameMode::TwoPlayers},
 			{.rect = {.x = x, .y = y + h * 2, .w = w, .h = h}, .gameMode = GameMode::CoopWithBot},

@@ -39,8 +39,8 @@ class UserInput final
 	SDL_Rect _menuPos{};
 	SDL_Rect _allTilesRect;
 	SDL_Rect _allTilesRectDefault;
-	SDL_Rect _menuTileDefault;
-	std::vector<SubTile> menuTiles;
+	SDL_Rect _firstMenuMouseTileDefault;
+	std::vector<SubTile> _menuTiles;
 
 	void MouseEvents(const SDL_Event& event);
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
