@@ -15,6 +15,7 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 
 	_padding = 25;
+	_pos.x = _padding;
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
@@ -50,10 +51,9 @@ void Menu::Draw()
 	if (constexpr unsigned int yOffsetEnd = 0u; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;
+		_pos.y = static_cast<int>(_padding + _yOffsetStart);
+		_events->EmitEvent("MenuPosChanged", _pos);
 	}
-
-	_pos.x = _padding;
-	_pos.y = static_cast<int>(_padding + _yOffsetStart);
 
 	_events->EmitEvent("RenderMenuBackground", _pos);
 	_events->EmitEvent("RenderMenuLogo", _pos);

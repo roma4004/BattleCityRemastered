@@ -17,7 +17,6 @@ class UserInput final
 	{
 		SDL_Rect rect;
 		GameMode gameMode;
-		bool isHovered = false;
 	};
 
 	using milliseconds = std::chrono::milliseconds;
@@ -26,9 +25,8 @@ class UserInput final
 	bool _isShutdown{false};
 	bool _isPause{false};
 	bool _isPauseBeforeDragNDrop{false};
-	bool _isMoving{false};
+	bool _isWindowMoving{false};
 	bool _isMenuDisplayed{false};
-	int _padding, _xTile, _yTile, _wTile, _hTile;
 	GameMode _selectedGameMode{};
 	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
@@ -38,16 +36,13 @@ class UserInput final
 	milliseconds _moveEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 
+	SDL_Rect _menuPos{};
+	SDL_Rect _allTilesRect;
+	SDL_Rect _allTilesRectDefault;
+	SDL_Rect _menuTileDefault;
+	std::vector<SubTile> menuTiles;
 
-	SDL_Rect backMenuTilesRect;
-	SDL_Rect btnRectOnePlayer;
-	SDL_Rect btnRectTwoPlayers;
-	SDL_Rect btnRectCoopWithBot;
-	SDL_Rect btnRectPlayAsHost;
-	SDL_Rect btnRectPlayAsClient;
-	std::vector<SubTile>menuTiles;
-
-	void MouseEvents(const SDL_Event& event, const bool& isPressed);
+	void MouseEvents(const SDL_Event& event);
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void KeyboardEvents(const SDL_Event& event) const;
 	void GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
@@ -64,6 +59,7 @@ class UserInput final
 	void SwapControllers();
 	std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
 	static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId);
+	void InitMouseHoverTiles(Point menuPos);
 
 public:
 	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events);

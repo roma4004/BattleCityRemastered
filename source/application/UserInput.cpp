@@ -9,35 +9,16 @@
 #include <ranges>
 
 UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _windowSize{windowSize}
+	: _selectedGameMode{GameMode::Demo}
+	, _windowSize{windowSize}
 	, _events{events}
 {
 	Subscribe();
 
 	InitControllers();
 
-	_padding = 15; _xTile = 200; _yTile = 160; _wTile = 180; _hTile = 20;
-
-	btnRectOnePlayer = { _xTile, _yTile, _wTile, _hTile };
-	btnRectTwoPlayers = { _xTile, 180 + _padding, _wTile, _hTile };
-	btnRectCoopWithBot = { _xTile, 210 + _padding, _wTile, _hTile };
-	btnRectPlayAsHost = { _xTile, 240 + _padding, _wTile, _hTile };
-	btnRectPlayAsClient = { _xTile, 270 + _padding, _wTile, _hTile };
-	backMenuTilesRect = {180, 140, 240, 220};
-
-	SubTile RectOnePlayer { btnRectOnePlayer, GameMode::OnePlayer, false};
-	SubTile RectTwoPlayers {btnRectTwoPlayers, GameMode::TwoPlayers, false};
-	SubTile RectCoopWithBot {btnRectCoopWithBot, GameMode::CoopWithBot, false};
-	SubTile RectPlayAsHost {btnRectPlayAsHost, GameMode::PlayAsHost, false};
-	SubTile RectPlayAsClient {btnRectPlayAsClient, GameMode::PlayAsClient, false};
-	SubTile RectMenuTiles {backMenuTilesRect,GameMode::Demo, false};
-
-	menuTiles.push_back(RectMenuTiles);
-	menuTiles.push_back(RectOnePlayer);
-	menuTiles.push_back(RectTwoPlayers);
-	menuTiles.push_back(RectCoopWithBot);
-	menuTiles.push_back(RectPlayAsClient);
-	menuTiles.push_back(RectPlayAsHost);
+	_menuTileDefault = {.x = 175, .y = 160, .w = 200, .h = 30};
+	InitMouseHoverTiles({});
 }
 
 UserInput::~UserInput()
@@ -52,10 +33,17 @@ void UserInput::Subscribe()
 	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
 	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
-	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
-{
-	_isMenuDisplayed = isDisplayed;
-});
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed) { _isMenuDisplayed = isDisplayed; });
+	_events->AddListener("MenuPosChanged", _name, [this](const Point& menuPos)
+	{
+		_allTilesRect = {
+				.x = _menuPos.x + _allTilesRectDefault.x,
+				.y = _menuPos.y + _allTilesRectDefault.y,
+				.w = _allTilesRectDefault.w,
+				.h = _allTilesRectDefault.h
+		};
+		InitMouseHoverTiles(menuPos);
+	});
 }
 
 void UserInput::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -64,9 +52,9 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {
 	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_MOVED)
 	{
-		if (!_isMoving)
+		if (!_isWindowMoving)
 		{
-			_isMoving = true;
+			_isWindowMoving = true;
 
 			if (!_isPause)
 			{
@@ -112,11 +100,11 @@ std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) con
 
 void UserInput::OnWindowMoveStop()
 {
-	if (_isMoving)
+	if (_isWindowMoving)
 	{
 		if (std::chrono::system_clock::now() - _lastMoveEventTime > _moveEndDelay)
 		{
-			_isMoving = false;
+			_isWindowMoving = false;
 
 			if (_isPauseBeforeDragNDrop)
 			{
@@ -127,62 +115,39 @@ void UserInput::OnWindowMoveStop()
 	}
 }
 
-void UserInput::MouseEvents(const SDL_Event& event, const bool& isPressed)
+void UserInput::MouseEvents(const SDL_Event& event)
 {
-	const std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
-	const std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
-
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+	if (event.button.button == SDL_BUTTON_LEFT)
 	{
-		_mouseButtons.MouseLeftButton = true;
+		if (event.type == SDL_MOUSEBUTTONDOWN)
+		{
+			_mouseButtons.MouseLeftButton = true;
+		}
 
-		return;
-	}
-
-	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
-	{
-		_mouseButtons.MouseLeftButton = false;
-		_events->EmitEvent("Enter", true);
+		if (event.type == SDL_MOUSEBUTTONUP)
+		{
+			_mouseButtons.MouseLeftButton = false;
+			_events->EmitEvent("Enter", true);
+		}
 
 		return;
 	}
 
 	if (event.type == SDL_MOUSEMOTION)
 	{
-		const Sint32 x = event.motion.x;
-		const Sint32 y = event.motion.y;
-		// std::cout << "x: " << x << " \t y: " << y << '\n';
-		// const int rowSize = env.windowWidth; ???
+		const SDL_Point mouse{.x = event.motion.x, .y = event.motion.y};
 
-		if (x < 1 || y < 1
-			|| x >= static_cast<Sint32>(_windowSize.x) - 1 && y >= static_cast<Sint32>(_windowSize.y) - 1) {}
-
-		if (_isMenuDisplayed)
+		if (_isMenuDisplayed
+			&& SDL_PointInRect(&mouse, &_allTilesRect))
 		{
-			SDL_Point mousePoint = {event.motion.x, event.motion.y};
-
-			if (SDL_PointInRect(&mousePoint, &backMenuTilesRect)) 
+			for (auto& [rect, gameMode]: menuTiles)
 			{
-				for (size_t i = 0; i < menuTiles.size(); ++i) 
+				if (SDL_PointInRect(&mouse, &rect)
+					&& _selectedGameMode != gameMode)
 				{
-					bool cursorInside = SDL_PointInRect(&mousePoint, &menuTiles[i].rect);
-
-					if (cursorInside && !menuTiles[i].isHovered) 
-					{
-						menuTiles[i].isHovered = true;
-						_events->EmitEvent("GameModeSelectedWithMouse", menuTiles[i].gameMode);
-					}
-					else if (!cursorInside && menuTiles[i].isHovered) 
-					{
-						menuTiles[i].isHovered = false;
-					}
-				}
-			} 
-			else 
-			{
-				for (size_t i = 0; i < menuTiles.size(); ++i) 
-				{
-					if (menuTiles[i].isHovered) { menuTiles[i].isHovered = false; }
+					_selectedGameMode = gameMode;
+					_events->EmitEvent("GameModeSelectedWithMouse", _selectedGameMode);
+					break;
 				}
 			}
 		}
@@ -191,40 +156,40 @@ void UserInput::MouseEvents(const SDL_Event& event, const bool& isPressed)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
-	const std::string KeyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
-	const std::string KeyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
+	const std::string keyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
+	const std::string keyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
 
 	switch (event.key.keysym.sym)
 	{
 		case SDLK_w:
-			_events->EmitEvent(KeyboardLeftSideTag + "_Move_Up", isPressed);
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Up", isPressed);
 			break;
 		case SDLK_UP:
-			_events->EmitEvent(KeyboardRightSideTag + "_Move_Up", isPressed);
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Up", isPressed);
 			break;
 		case SDLK_a:
-			_events->EmitEvent(KeyboardLeftSideTag + "_Move_Left", isPressed);
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Left", isPressed);
 			break;
 		case SDLK_LEFT:
-			_events->EmitEvent(KeyboardRightSideTag + "_Move_Left", isPressed);
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Left", isPressed);
 			break;
 		case SDLK_s:
-			_events->EmitEvent(KeyboardLeftSideTag + "_Move_Down", isPressed);
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Down", isPressed);
 			break;
 		case SDLK_DOWN:
-			_events->EmitEvent(KeyboardRightSideTag + "_Move_Down", isPressed);
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Down", isPressed);
 			break;
 		case SDLK_d:
-			_events->EmitEvent(KeyboardLeftSideTag + "_Move_Right", isPressed);
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Right", isPressed);
 			break;
 		case SDLK_RIGHT:
-			_events->EmitEvent(KeyboardRightSideTag + "_Move_Right", isPressed);
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Right", isPressed);
 			break;
 		case SDLK_SPACE:
-			_events->EmitEvent(KeyboardLeftSideTag + "_Fire", isPressed);
+			_events->EmitEvent(keyboardLeftSideTag + "_Fire", isPressed);
 			break;
 		case SDLK_RCTRL:
-			_events->EmitEvent(KeyboardRightSideTag + "_Fire", isPressed);
+			_events->EmitEvent(keyboardRightSideTag + "_Fire", isPressed);
 			break;
 		case SDLK_m:
 			if (isPressed == false)
@@ -367,7 +332,7 @@ void UserInput::Update()
 		}
 
 		WindowsMoveEvents(event);
-		MouseEvents(event, false);
+		MouseEvents(event);
 		KeyboardEvents(event);
 		GamepadEvents(event);
 	}
@@ -448,4 +413,24 @@ bool UserInput::IsSameController(const std::shared_ptr<SDL_GameController>& cont
 	}
 
 	return false;
+}
+
+void UserInput::InitMouseHoverTiles(const Point menuPos)
+{
+	auto [x, y, w, h] = SDL_Rect{
+			.x = menuPos.x + _menuTileDefault.x,
+			.y = menuPos.y + _menuTileDefault.y,
+			.w = _menuTileDefault.w,
+			.h = _menuTileDefault.h
+	};
+
+	_allTilesRect = {.x = x, .y = y, .w = w, .h = h * 5};
+
+	menuTiles = {
+			{.rect = {.x = x, .y = y + h * 0, .w = w, .h = h}, .gameMode = GameMode::OnePlayer},
+			{.rect = {.x = x, .y = y + h * 1, .w = w, .h = h}, .gameMode = GameMode::TwoPlayers},
+			{.rect = {.x = x, .y = y + h * 2, .w = w, .h = h}, .gameMode = GameMode::CoopWithBot},
+			{.rect = {.x = x, .y = y + h * 3, .w = w, .h = h}, .gameMode = GameMode::PlayAsHost},
+			{.rect = {.x = x, .y = y + h * 4, .w = w, .h = h}, .gameMode = GameMode::PlayAsClient}
+	};
 }
