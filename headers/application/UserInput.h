@@ -4,6 +4,7 @@
 #include "../components/input/MouseButton.h"
 #include "components/input/InputProviderForMenu.h"
 #include <SDL_gamecontroller.h>
+#include <SDL_rect.h>
 #include <chrono>
 #include <vector>
 
@@ -13,13 +14,21 @@ class GameConfig;
 
 class UserInput final
 {
+	struct SubTile
+	{
+		SDL_Rect rect;
+		GameMode gameMode;
+	};
+
 	using milliseconds = std::chrono::milliseconds;
 
 	MouseButtons _mouseButtons{};
 	bool _isShutdown{false};
 	bool _isPause{false};
 	bool _isPauseBeforeDragNDrop{false};
-	bool _isMoving{false};
+	bool _isWindowMoving{false};
+	bool _isMenuDisplayed{false};
+	GameMode _selectedGameMode{};
 	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
 	UPoint _windowSize{};
@@ -28,6 +37,11 @@ class UserInput final
 	milliseconds _moveEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 	GameConfig& _gameConfig;
+	SDL_Rect _menuPos{};
+	SDL_Rect _allTilesRect;
+	SDL_Rect _allTilesRectDefault;
+	SDL_Rect _firstMenuMouseTileDefault;
+	std::vector<SubTile> _menuTiles;
 
 	void MouseEvents(const SDL_Event& event);
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
@@ -47,6 +61,7 @@ class UserInput final
 	[[nodiscard]] std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
 	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller,
 											   SDL_JoystickID instanceId);
+	void InitMouseHoverTiles(Point menuPos);
 
 public:
 	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);

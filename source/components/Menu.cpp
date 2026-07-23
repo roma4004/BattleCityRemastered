@@ -14,6 +14,7 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 
 	_padding = 25;//TODO: combine with same menu padding in renderManager when draw background
+	_pos.x = _padding;
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
@@ -47,11 +48,10 @@ void Menu::Draw()
 	// first time animation, slow scrolling from bottom corner to vertical center
 	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
-		_yOffsetStart -= 3u;
+		_yOffsetStart -= 3;
+		_pos.y = static_cast<int>(_padding + _yOffsetStart);
+		_events->EmitEvent("MenuPosChanged", _pos);
 	}
-
-	_pos.x = _padding;
-	_pos.y = _padding + _yOffsetStart;
 
 	_events->EmitEvent("RenderMenuBackground", _pos);
 	_events->EmitEvent("RenderMenuLogo", _pos);
