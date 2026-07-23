@@ -1,4 +1,5 @@
 ﻿#include "entities/pawns/Bullet.h"
+#include "application/GameConfig.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/BushTile.h"
@@ -11,8 +12,9 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Bullet::Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre, std::string author, const bool enableByDefault)
-	: Pawn{std::move(pawnProperty)}
+Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
+			   const bool enableByDefault)
+	: Pawn{std::move(pawnProperty), gameConfig}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {
@@ -21,7 +23,7 @@ Bullet::Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre, std::str
 	BaseObj::SetIsPenetrable(false);
 
 	// NOTE: needed only for tests, TODO in test use tank shoot instead of creating bullet
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _windowSize, _calibre, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, _calibre, _allObjects);
 
 	if (enableByDefault)
 	{
@@ -37,7 +39,7 @@ Bullet::~Bullet()
 	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
+	// 			<< '\n';
 	Unsubscribe();
 }
 
@@ -106,7 +108,7 @@ void Bullet::Disable() const
 	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< std::endl;
+	// 			<< '\n';
 
 	Unsubscribe();
 }
@@ -120,7 +122,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	SetDirection(resetProperty.dir);
 
 	//TODO: write reset for MoveLikeBulletBeh
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _windowSize, resetProperty.calibre, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, resetProperty.calibre, _allObjects);
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_calibre = resetProperty.calibre;
@@ -167,32 +169,48 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 	_events->EmitEvent("Statistics_BulletHit", author, fraction);
 }
 
-void Bullet::TakeDamage(const int damage)
+void Bullet::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
-	Pawn::TakeDamage(damage);
+	Pawn::TakeDamage(damage, damageAuthor, damageFraction);
 }
 
-int Bullet::GetTier() const { return _calibre.tier; }
+unsigned int Bullet::GetTier() const { return _calibre.tier; }
 
 void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 {
+	bool isBulletHitBullet{false};
 	for (const auto& target: objectList)
 	{
-		if (target && !dynamic_cast<WaterTile*>(target.get())
-			&& !dynamic_cast<BushTile*>(target.get())
-			&& !dynamic_cast<IceTile*>(target.get())
-			&& (target->GetIsDestructible() || _calibre.tier > 2))
+		if (target == nullptr)
 		{
-			target->TakeDamage(_calibre.damage);
-			target->SendDamageStatistics(GetAuthor(), GetFraction());//TODO: move send dmg stat to takeDamage
-			if (const auto* otherBullet = dynamic_cast<Bullet*>(target.get()))
+			continue;
+		}
+
+		auto* baseObj = target.get();
+		if (dynamic_cast<WaterTile*>(baseObj) != nullptr
+			|| dynamic_cast<BushTile*>(baseObj) != nullptr
+			|| dynamic_cast<IceTile*>(baseObj) != nullptr)
+		{
+			continue;
+		}
+
+		if (target->GetIsDestructible() || _calibre.tier > 2u)
+		{
+			target->TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
+			if (const auto* otherBullet = dynamic_cast<Bullet*>(baseObj))
 			{
-				SendDamageStatistics(otherBullet->GetAuthor(), otherBullet->GetFraction());
+				isBulletHitBullet = true;
+				//NOTE: in case another bullet hits this bullet, we take damage from another bullet and send statistics
+				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor(), otherBullet->GetFraction());
 			}
 		}
 	}
 
-	TakeDamage(_calibre.damage);
+	if (isBulletHitBullet == false)
+	{
+		//NOTE: call BaseObj::TakeDamage to skip statistic unnecessary record
+		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
+	}
 
 	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
 }

@@ -10,6 +10,7 @@
 
 union SDL_Event;
 class EventSystem;
+class GameConfig;
 
 class UserInput final
 {
@@ -35,7 +36,7 @@ class UserInput final
 	std::chrono::system_clock::time_point _lastMoveEventTime{};
 	milliseconds _moveEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
-
+	GameConfig& _gameConfig;
 	SDL_Rect _menuPos{};
 	SDL_Rect _allTilesRect;
 	SDL_Rect _allTilesRectDefault;
@@ -57,12 +58,13 @@ class UserInput final
 	void ConnectController(const std::shared_ptr<SDL_GameController>& newController);
 	void DisconnectController(SDL_JoystickID instanceId);
 	void SwapControllers();
-	std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
-	static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId);
+	[[nodiscard]] std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
+	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller,
+											   SDL_JoystickID instanceId);
 	void InitMouseHoverTiles(Point menuPos);
 
 public:
-	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 	~UserInput();
 
 	void Update();

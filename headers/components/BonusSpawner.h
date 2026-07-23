@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/Timer.h"
 #include <boost/uuid/uuid.hpp>
 #include <random>
 
@@ -9,6 +10,7 @@ struct UPoint;
 struct ObjRectangle;
 class BaseObj;
 class EventSystem;
+class GameConfig;
 
 class BonusSpawner final
 {
@@ -24,10 +26,9 @@ class BonusSpawner final
 	std::uniform_int_distribution<> _distSpawnPosY{};
 	std::uniform_int_distribution<> _distSpawnPosX{};
 	std::uniform_int_distribution<> _distSpawnType{};
+	GameConfig& _gameConfig;
 
-	milliseconds _cooldownBonusSpawn{std::chrono::seconds{60}};// Bonus spawn time
-	std::chrono::system_clock::time_point _lastTimeSpawn{};
-	int _bonusSize{};
+	Timer _spawnTimer;
 	GameMode _gameMode{};
 
 	void Subscribe();
@@ -43,7 +44,7 @@ class BonusSpawner final
 
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				 UPoint windowSize, int sideBarWidth = 175, int bonusSize = 36);//TODO: bonus size should be in bonus.h
+				 GameConfig& gameConfig);
 
 	~BonusSpawner();
 

@@ -1,40 +1,25 @@
 #pragma once
 
-#include "Point.h"
 #include "interfaces/IConfig.h"
-#include <SDL.h>
-#include <SDL_ttf.h>
+
+enum class GameMode : char8_t;
+struct SDL_Config;
+class GameConfig;
 
 class ConfigSuccess final : public IConfig
 {
-	UPoint _windowSize{};
-
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<TTF_Font> _fontSmall{nullptr};
-	std::shared_ptr<TTF_Font> _fontMedium{nullptr};
-	std::shared_ptr<SDL_Texture> _logo{nullptr};
-	std::shared_ptr<SDL_Texture> _atlas{nullptr};
-	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
-	std::shared_ptr<SDL_Texture> _xBoxHint{nullptr};
-	std::shared_ptr<SDL_Texture> _pS5Hint{nullptr};
-
-	//user settings
-	bool _isVsyncOn{};//TODO: should be load from config file or default value
+	GameConfig& _gameConfig;
 
 public:
 	ConfigSuccess() = delete;
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
-				  const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
-				  const std::shared_ptr<SDL_Texture>& logo, const std::shared_ptr<SDL_Texture>& atlas,
-				  const std::shared_ptr<SDL_Texture>& joyIcon, const std::shared_ptr<SDL_Texture>& xBoxHint,
-				  const std::shared_ptr<SDL_Texture>& pS5Hint, bool isVsyncOn);
+	explicit ConfigSuccess(GameConfig& gameConfig);
 
 	~ConfigSuccess() override = default;
 
-	[[nodiscard]] std::unique_ptr<IGame> CreateGame() override;
+	[[nodiscard]] std::unique_ptr<IGame> CreateGame(GameMode gameMod, SDL_Config& sdlConfig) override;
 
 	ConfigSuccess& operator=(const ConfigSuccess& other) = delete;
 	ConfigSuccess& operator=(ConfigSuccess&& other) noexcept = delete;

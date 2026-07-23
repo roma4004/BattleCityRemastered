@@ -13,11 +13,10 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 							  .uuid = uuid,
 							  .name = std::move(name),
 							  .fraction = "Neutral"}}
-	, _creationTime{std::chrono::system_clock::now()}
-	, _events{events}
-	, _lifetime{lifeTime}
+	, _lifeTimeTimer{lifeTime, std::chrono::system_clock::now()}
 	, _gameMode{gameMode}
 	, _bonusType{bonusType}
+	, _events{events}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
@@ -75,9 +74,9 @@ void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {
-	if (TimeUtils::IsCooldownFinish(_creationTime, _lifetime))
-	//TODO: extract to BonusEffectManager and remove tickUpdate from bonus
+	if (_lifeTimeTimer.isActive && _lifeTimeTimer.IsCooldownFinish())
 	{
+		_lifeTimeTimer.isActive = false;
 		SetIsAlive(false);
 	}
 }
@@ -89,5 +88,10 @@ void Bonus::SendDamageStatistics(const std::string& author, const std::string& f
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(_name + "_Pickup", author, fraction);
+	if (GetIsAlive())
+	{
+		_events->EmitEvent("Statistics_BonusPickup", author, fraction);
+		_events->EmitEvent(_name + "_Pickup", author, fraction);
+		TakeDamage(GetHealth(), _name, _fraction);
+	}
 }

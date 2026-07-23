@@ -3,6 +3,7 @@
 #include <chrono>
 
 class EventSystem;
+class GameConfig;
 
 class FramePerSecondManager
 {
@@ -13,10 +14,10 @@ class FramePerSecondManager
 	std::chrono::high_resolution_clock::time_point _startFrameTime{};
 	double _deltaTime{};
 	double _fpsAccumulatedTime{};
-	unsigned int _targetFps{60};
+	unsigned int _targetFps{60u};
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
-	bool _isVsyncOn{false};//TODO: add settings inGame for tweak this in real time via subscribe
+	GameConfig& _gameConfig;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -24,7 +25,7 @@ class FramePerSecondManager
 	void CountFpsAndDeltaTime();
 
 public:
-	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, bool isVsyncOn);
+	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	~FramePerSecondManager();
 };

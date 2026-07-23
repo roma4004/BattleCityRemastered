@@ -10,20 +10,15 @@ class InputProviderForMenu;
 class Menu final
 {
 	Point _pos;
-	int _windowHeight;
-	int _padding;
-	unsigned int _yOffsetStart{};
+	int _windowHeight{};
+	int _padding{};
+	int _yOffsetStart{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::unique_ptr<GameStatistics> _statistics{nullptr};//TODO: extract from menu when we have dedicated screen
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
 	std::string _name{};
 
-	//TODO: extract to separate sidebar class
-	int _enemyRespawnCount{20};
-	int _playerOneRepawnCount{3};
-	int _playerTwoRespawnCount{3};
 	GameMode _selectedGameMode{};
 	bool _isMenuDisplayed{false};
 

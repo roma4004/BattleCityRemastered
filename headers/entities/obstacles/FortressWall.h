@@ -44,7 +44,8 @@ public:
 	[[nodiscard]] buuid GetUuid() const override;
 	void OnBonusShovel(const std::string& fraction, bool isActive);
 
-	void TakeDamage(int damage) override;
+	//BaseObj overrides
+	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
 	[[nodiscard]] bool IsBrickWall() const;
 	[[nodiscard]] bool IsSteelWall() const;

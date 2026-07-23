@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Point.h"
 #include "../BaseObj.h"
 #include "interfaces/ITickUpdatable.h"
 
@@ -10,6 +9,7 @@ enum class GameMode : char8_t;
 struct ObjRectangle;
 class IMoveBeh;
 class EventSystem;
+class GameConfig;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
@@ -21,13 +21,13 @@ class Pawn : public BaseObj, public ITickUpdatable
 protected:
 	float _speed{};
 	std::string _uuidStr{};
-	unsigned _tier{1};
-	UPoint _windowSize{};
+	unsigned int _tier{1u};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 	Direction _dir{};
 	GameMode _gameMode{};
+	GameConfig& _gameConfig;
 
 	virtual void Subscribe();
 	virtual void Unsubscribe() const;
@@ -39,13 +39,12 @@ protected:
 	void TickUpdate(double deltaTime) override = 0;
 
 public:
-	explicit Pawn(PawnProperty pawnProperty);
+	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig);
 
 	~Pawn() override;
 
-	void TakeDamage(int damage) override;
-
-	[[nodiscard]] UPoint GetWindowSize() const;
+	//BaseObj overrides
+	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);

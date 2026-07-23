@@ -140,9 +140,10 @@
   <ItemGroup>
     <ClCompile Include="source\application\ConfigFailure.cpp" />
     <ClCompile Include="source\application\ConfigSuccess.cpp" />
+    <ClCompile Include="source\application\GameConfig.cpp" />
     <ClCompile Include="source\application\GameFailure.cpp" />
     <ClCompile Include="source\application\GameSuccess.cpp" />
-    <ClCompile Include="source\application\SDLEnvironment.cpp" />
+    <ClCompile Include="source\application\SDL_Config.cpp" />
     <ClCompile Include="source\application\UserInput.cpp" />
     <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
@@ -228,6 +229,7 @@
     <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\application\GameConfig.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\components\AnimatedObjects.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
@@ -254,7 +256,7 @@
     <ClInclude Include="headers\application\ConfigSuccess.h" />
     <ClInclude Include="headers\application\GameFailure.h" />
     <ClInclude Include="headers\application\GameSuccess.h" />
-    <ClInclude Include="headers\application\SDLEnvironment.h" />
+    <ClInclude Include="headers\application\SDL_Config.h" />
     <ClInclude Include="headers\application\UserInput.h" />
     <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
@@ -362,9 +364,23 @@
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Images\menuSelectorP2.png" />
     <Content Include="Resources\Images\menuSelectorP1.png" />
-    <Content Include="Resources\Images\PS5Con.png" />
+    <Content Include="Resources\Images\PS5_Buttons\- A Message from the Creator.txt" />
+    <Content Include="Resources\Images\PS5_Buttons\Create.png" />
+    <Content Include="Resources\Images\PS5_Buttons\Cross.png" />
+    <Content Include="Resources\Images\PS5_Buttons\D-Pad.png" />
+    <Content Include="Resources\Images\PS5_Buttons\Home.png" />
+    <Content Include="Resources\Images\PS5_Buttons\LICENSE.txt" />
+    <Content Include="Resources\Images\PS5_Buttons\Options.png" />
+    <Content Include="Resources\Images\PS5_Buttons\Triangle.png" />
     <Content Include="Resources\Images\SpriteSheet.png" />
-    <Content Include="Resources\Images\XBoxCon.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\- A Message from the Creator.txt" />
+    <Content Include="Resources\Images\Xbox_Buttons\A.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\D-Pad.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\Home.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\LICENSE.txt" />
+    <Content Include="Resources\Images\Xbox_Buttons\Menu.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\View.png" />
+    <Content Include="Resources\Images\Xbox_Buttons\Y.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BattleCityRemastered.rc" />

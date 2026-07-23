@@ -3,7 +3,7 @@
 #include "enums/ObstacleType.h"
 
 BushTile::BushTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
-					 const GameMode gameMode)
+				   const GameMode gameMode)
 	: Obstacle{rect, 1, "Bush", events, uuid, gameMode, ObstacleType::Bush}
 {
 	BaseObj::SetIsPassable(true);

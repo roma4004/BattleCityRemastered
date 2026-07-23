@@ -24,18 +24,17 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 include(FetchContent)
 set(vendored_default FALSE)
 set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
-set(SDL2_TAG "release-2.32.8")
+set(SDL2_TAG "release-2.32.10")
 set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
 set(SDL2_TTF_TAG "release-2.24.0")
 set(SDL2_IMG_URL "https://github.com/libsdl-org/SDL_image.git")
-set(SDL2_IMG_TAG "release-2.8.8")
+set(SDL2_IMG_TAG "release-2.8.12")
 set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
-set(SDL2_MXR_TAG "release-2.8.1")
+set(SDL2_MXR_TAG "release-2.8.2")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
-set(BOOST_VERSION "1.87.0")
-string(REPLACE "." "_" BOOST_VERSION_UNDERSCORE "${BOOST_VERSION}")
-set(BOOST_TAG "boost-${BOOST_VERSION}")
-set(SDL2_MIXER_DOWNLOAD_URL "https://github.com/libsdl-org/SDL_mixer.git")
+set(BOOST_VERSION "1.91.0")
+string(REPLACE "." "_" BOOST_PATH "${BOOST_VERSION}")
+set(BOOST_GIT_TAG "boost-${BOOST_VERSION}-1")#TODO: remove -1 from tag because now ver 1.91.0-1
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE)
 
 cmake_policy(SET CMP0148 NEW)
@@ -164,7 +163,7 @@ set(BOOST_SUBMODULES
     libs/numeric
     libs/optional
     libs/predef
-    libs/preprocessor
+    libs/preprocessor 
     libs/serialization
     libs/smart_ptr
     libs/spirit
@@ -175,13 +174,21 @@ set(BOOST_SUBMODULES
     libs/utility
     libs/winapi
     libs/uuid
+    libs/property_tree
+    libs/any
+    libs/type_index
+    libs/container_hash
+    libs/multi_index
+    libs/tuple
+    libs/describe
+    libs/mp11
     tools/boost_install"
 )#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
 
 if (NOT EXISTS ${BOOST_SEMAPHORE})
     ExternalProject_Add(Boost
             GIT_REPOSITORY ${BOOST_URL}
-            GIT_TAG ${BOOST_TAG}
+            GIT_TAG ${BOOST_GIT_TAG}
             GIT_PROGRESS 1
             GIT_SHALLOW 1
             GIT_SHALLOW TRUE
@@ -189,8 +196,8 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
             GIT_SUBMODULES ${BOOST_SUBMODULES} # load only specified submodules instead of all
             PREFIX boost
             DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}
-            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_VERSION_UNDERSCORE}
-#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_VERSION_UNDERSCORE}_build
+            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}
+#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}_build
             INSTALL_DIR ${DEP_DOWNLOAD_DIR}/boost_install
 #            TMP_DIR Boost/tmp
 #            STAMP_DIR Boost/stamp
@@ -201,9 +208,9 @@ if (NOT EXISTS ${BOOST_SEMAPHORE})
 #            LOG_INSTALL ON
 
 #            PATCH_COMMAND ./bootstrap.sh gcc
-            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization,uuid
+            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
 #            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization --with-uuid -j${ThreadAmount} -d+2 stage install
+            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
             BUILD_IN_SOURCE 1
             INSTALL_COMMAND ""
             DOWNLOAD_EXTRACT_TIMESTAMP true
@@ -258,9 +265,10 @@ include_directories(headers)
 set(SOURCE_FILES
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
+        source/application/GameConfig.cpp
         source/application/GameFailure.cpp
         source/application/GameSuccess.cpp
-        source/application/SDLEnvironment.cpp
+        source/application/SDL_Config.cpp
         source/application/UserInput.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
@@ -347,6 +355,7 @@ set(SOURCE_FILES
 )
 
 set(SOURCE_FILES_FOR_UNIT_TESTS
+        source/application/GameConfig.cpp
         source/Utils/ColliderUtils.cpp
         source/Utils/TimeUtils.cpp
         source/behavior/MoveLikeBulletBeh.cpp
@@ -482,8 +491,21 @@ set(IMG_PATH                   Resources/Images)
 set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
 set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
 set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
-set(XBOX_CON_PATH_NAME         ${IMG_PATH}/XBoxCon.png)
-set(PS5_CON_PATH_NAME          ${IMG_PATH}/PS5Con.png)
+
+set(PS5_BTN_CREATE_PATH_NAME   ${IMG_PATH}/PS5_Buttons/Create.png)
+set(PS5_BTN_CROSS_PATH_NAME    ${IMG_PATH}/PS5_Buttons/Cross.png)
+set(PS5_BTN_D-PAD_PATH_NAME    ${IMG_PATH}/PS5_Buttons/D-Pad.png)
+set(PS5_BTN_HOME_PATH_NAME     ${IMG_PATH}/PS5_Buttons/Home.png)
+set(PS5_BTN_OPTIONS_PATH_NAME  ${IMG_PATH}/PS5_Buttons/Options.png)
+set(PS5_BTN_TRIANGLE_PATH_NAME ${IMG_PATH}/PS5_Buttons/Triangle.png)
+
+set(XBOX_BTN_D-PAD_PATH_NAME   ${IMG_PATH}/XBox_Buttons/D-Pad.png)
+set(XBOX_BTN_HOME_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Home.png)
+set(XBOX_BTN_MENU_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Menu.png)
+set(XBOX_BTN_VIEW_PATH_NAME    ${IMG_PATH}/XBox_Buttons/View.png)
+set(XBOX_BTN_A_PATH_NAME       ${IMG_PATH}/XBox_Buttons/A.png)
+set(XBOX_BTN_Y_PATH_NAME       ${IMG_PATH}/XBox_Buttons/Y.png)
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${LOGO_PATH_NAME}"
@@ -496,14 +518,60 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "../${JOY_ICON_PATH_NAME}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_CON_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_CON_PATH_NAME}")
+        "../${PS5_BTN_CREATE_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CREATE_PATH_NAME}")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_CON_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_CON_PATH_NAME}")
+        "../${PS5_BTN_CROSS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CROSS_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_D-PAD_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_D-PAD_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_HOME_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_HOME_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_OPTIONS_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_OPTIONS_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${PS5_BTN_TRIANGLE_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_TRIANGLE_PATH_NAME}")
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_D-PAD_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_D-PAD_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_HOME_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_HOME_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_MENU_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_MENU_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_VIEW_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_VIEW_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_A_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_A_PATH_NAME}")
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "../${XBOX_BTN_Y_PATH_NAME}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_Y_PATH_NAME}")
 
 set(LEVEL_STARTED_PATH                   Resources/Sounds)
 set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)

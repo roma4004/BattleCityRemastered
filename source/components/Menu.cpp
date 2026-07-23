@@ -1,20 +1,19 @@
 #include "components/Menu.h"
+#include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
-#include "components/GameStatistics.h"
 #include "enums/GameMode.h"
 
 Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _yOffsetStart{static_cast<unsigned int>(windowSize.y)}
+	: _yOffsetStart{static_cast<int>(windowSize.y)}
 	, _events{events}
-	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _input{std::make_unique<InputProviderForMenu>(events)}
 	, _name{std::string("Menu")}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
-	_padding = 25;
+	_padding = 25;//TODO: combine with same menu padding in renderManager when draw background
 	_pos.x = _padding;
 	_windowHeight = static_cast<int>(windowSize.y);
 }
@@ -44,11 +43,10 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-//TODO: optimize draw call with cache non changed text part
 void Menu::Draw()
 {
 	// first time animation, slow scrolling from bottom corner to vertical center
-	if (constexpr unsigned int yOffsetEnd = 0u; _yOffsetStart > yOffsetEnd)
+	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;
 		_pos.y = static_cast<int>(_padding + _yOffsetStart);
@@ -61,11 +59,11 @@ void Menu::Draw()
 	DrawControlHints();
 }
 
-void Menu::DrawMenuLine(Point& posText, bool isSelected, std::string text) const
+void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text) const
 {
 	if (isSelected)
 	{
-		_events->EmitEvent("RenderMenuJoyIcon", Point{.x = posText.x - 35, .y = posText.y - 10});
+		_events->EmitEvent("RenderMenuSelectorIcon", Point{.x = posText.x - 35, .y = posText.y - 10});
 	}
 
 	DrawTextLine(posText, std::move(text));
@@ -73,7 +71,7 @@ void Menu::DrawMenuLine(Point& posText, bool isSelected, std::string text) const
 
 void Menu::DrawTextLine(Point& posText, std::string text) const
 {
-	constexpr unsigned int color = {0xffffffff};
+	constexpr unsigned int color = {0xffffffffu};
 	_events->EmitEvent("RenderText", posText, color, text);
 	posText.y += 30;
 }
@@ -102,11 +100,11 @@ void Menu::DrawControlHints() const
 	}
 
 	constexpr int yBaseLineForControls = 150;
-	_events->EmitEvent("RenderMenuXBoxHint", Point{.x = relativePos.x + 240, .y = relativePos.y});
+	_events->EmitEvent("RenderMenuXBoxHint", Point{.x = relativePos.x + 245, .y = relativePos.y});
 	_events->EmitEvent("RenderMenuPS5Hint", Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls});
 
 	Point posText{.x = _pos.x + 40, .y = _pos.y + yBaseLineForControls + 200};
-	DrawTextLine(posText, "Controls: P1/P2    XBox      PS");
+	DrawTextLine(posText, "Controls: P1/P2    XBox    PS");
 	DrawTextLine(posText, "Pause       P      View    Create");
 	DrawTextLine(posText, "Menu        M      Menu    Options");
 	DrawTextLine(posText, "Swap       TAB     Y       Triangle");

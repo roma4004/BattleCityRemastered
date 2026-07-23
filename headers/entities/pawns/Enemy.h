@@ -7,7 +7,8 @@ class BulletPool;
 class Enemy final : public Bot
 {
 public:
-	Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
+	Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		  bool enableByDefault = false);
 
 	~Enemy() override;
 

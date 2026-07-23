@@ -71,7 +71,7 @@ void ScoreBoard::Draw()
 void ScoreBoard::RenderStatistics() const
 {
 	const Point pos{.x = _pos.x + 180, .y = _pos.y + 120};
-	constexpr unsigned int color = {0xff00ffff};
+	constexpr unsigned int color = {0xff00ffffu};
 
 	_events->EmitEvent("RenderText", Point{.x = pos.x - 60, .y = pos.y + 80}, color, "PRESS M TO SHOW MENU");
 	_events->EmitEvent("RenderText", Point{.x = pos.x - 20, .y = pos.y + 120}, color, "GAME STATISTICS:");

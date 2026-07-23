@@ -14,14 +14,13 @@ class Bot : public Tank
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-protected:
 	std::uniform_int_distribution<> _distTurnRate{};
-	//TODO: move _distTurnRate to random manager one event on start and then get random by type
 	Timer _randomChangeDirTimer{};
 
-	//LOS
 	float _obstacleDistance{};
 	float _bulletOffset{};
+
+protected:
 	std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;
 
 	[[nodiscard]] bool IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const;
@@ -32,6 +31,9 @@ protected:
 											   const std::vector<std::shared_ptr<BaseObj>>& sideObstacle);
 	[[nodiscard]] std::shared_ptr<BaseObj> EnemyLookup(LineOfSight& lineOfSight, Direction& dir);
 	[[nodiscard]] std::shared_ptr<BaseObj> BonusLookup(LineOfSight& lineOfSight, Direction& dir);
+
+	void UpdateShootDistance(Direction dir, const std::shared_ptr<BaseObj>& nearestSeenObstacle);
+
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight();
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const;
 
@@ -41,7 +43,8 @@ protected:
 	void TickUpdate(double deltaTime) override;
 
 public:
-	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, bool enableByDefault = false);
+	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		bool enableByDefault = false);
 
 	~Bot() override;
 };

@@ -1,4 +1,5 @@
 #include "application/UserInput.h"
+#include "application/GameConfig.h"
 #include "application/GameSuccess.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
@@ -6,12 +7,12 @@
 #include <SDL_gamecontroller.h>
 #include <algorithm>
 #include <iostream>
-#include <ranges>
 
-UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _selectedGameMode{GameMode::Demo}
 	, _windowSize{windowSize}
 	, _events{events}
+	, _gameConfig{gameConfig}
 {
 	Subscribe();
 
@@ -331,6 +332,17 @@ void UserInput::Update()
 			_isShutdown = true;
 		}
 
+		//TODO: WIP, need scale for game objects and shift pos after winSizeChange
+		// if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		// {
+		// 	constexpr int step{50};
+		// 	const auto newWidth = static_cast<unsigned int>(event.window.data1);
+		// 	const auto newHeight = static_cast<unsigned int>(event.window.data2);
+		// 	const auto snappedWidth = static_cast<unsigned int>(std::round(newWidth / step)) * step;
+		// 	const auto snappedHeight = static_cast<unsigned int>(std::round(newHeight / step)) * step;
+		// 	const UPoint point{.x = snappedWidth, .y = snappedHeight};
+		// 	_events->EmitEvent("WindowSizeChangedTo", point);
+		// }
 		WindowsMoveEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);

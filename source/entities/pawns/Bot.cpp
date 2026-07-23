@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
 #include "components/LineOfSight.h"
@@ -11,8 +12,9 @@
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
-Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, enableByDefault}
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		 const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {
 	_shootTimer.cooldown = std::chrono::seconds{1};
@@ -48,7 +50,7 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 	if (IsBonus(sideObstacle.front()))
 	{
-		LineOfSight bonusLineOfSight(_rect, _windowSize, _allObjects, this, false);
+		LineOfSight bonusLineOfSight(_rect, _gameConfig.windowSize, _allObjects, this, false);
 		const std::vector<std::shared_ptr<BaseObj>>& directionObstacles =
 				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
@@ -89,10 +91,21 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 bool Bot::ChangeDirIfSeenOpponent(const Direction dir, const std::vector<std::shared_ptr<BaseObj>>& sideObstacle)
 {
-	if (sideObstacle.empty() == false
-		&& IsOpponent(sideObstacle.front()))
+	if (_shootTimer.isActive || sideObstacle.empty())
 	{
-		if (dir != GetDirection() && !_shootTimer.isActive)
+		return false;
+	}
+
+	if (const auto& nearestSeenObstacle = sideObstacle.front();
+		IsOpponent(nearestSeenObstacle))
+	{
+		if (dir == GetDirection())
+		{
+			return false;
+		}
+
+		UpdateShootDistance(dir, nearestSeenObstacle);
+		if (_obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 		{
 			SetDirection(dir);
 
@@ -169,9 +182,36 @@ std::shared_ptr<BaseObj> Bot::BonusLookup(LineOfSight& lineOfSight, Direction& d
 	return {};
 }
 
+void Bot::UpdateShootDistance(const Direction dir, const std::shared_ptr<BaseObj>& nearestSeenObstacle)
+{
+	if (dir == Direction::UP)
+	{
+		_obstacleDistance = _rect.y - nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight();
+		_bulletOffset = _calibre.size.y;
+	}
+
+	if (dir == Direction::LEFT)
+	{
+		_obstacleDistance = _rect.x - nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth();
+		_bulletOffset = _calibre.size.x;
+	}
+
+	if (dir == Direction::DOWN)
+	{
+		_obstacleDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
+		_bulletOffset = _calibre.size.y;
+	}
+
+	if (dir == Direction::RIGHT)
+	{
+		_obstacleDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
+		_bulletOffset = _calibre.size.x;
+	}
+}
+
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 {
-	LineOfSight lineOfSight(_rect, _windowSize, _calibre.size, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _gameConfig.windowSize, _calibre.size, _allObjects, this);
 
 	auto dir = GetDirection();
 	std::shared_ptr<BaseObj> nearestSeenObstacle{EnemyLookup(lineOfSight, dir)};
@@ -186,52 +226,47 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	// 	Shot();
 	// }
 
-	if (const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
-		dir == Direction::UP && !upSideObstacles.empty())
+	if (nearestSeenObstacle != nullptr)
 	{
-		if (nearestSeenObstacle == nullptr)
+		return nearestSeenObstacle;
+	}
+
+	//finding obstacle to shoot if no priority target
+	if (dir == Direction::UP)
+	{
+		if (const auto& upSideObstacles = lineOfSight.GetUpSideObstacles();
+			!upSideObstacles.empty())
 		{
 			nearestSeenObstacle = upSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = _rect.y - nearestSeenObstacle->GetY() + nearestSeenObstacle->GetHeight();
-		_bulletOffset = _calibre.size.y;
 	}
-
-	if (const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
-		dir == Direction::LEFT && !leftSideObstacles.empty())
+	else if (dir == Direction::LEFT)
 	{
-		if (nearestSeenObstacle == nullptr)
+		if (const auto& leftSideObstacles = lineOfSight.GetLeftSideObstacles();
+			!leftSideObstacles.empty())
 		{
 			nearestSeenObstacle = leftSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = _rect.x - nearestSeenObstacle->GetX() + nearestSeenObstacle->GetWidth();
-		_bulletOffset = _calibre.size.x;
 	}
-
-	if (const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
-		dir == Direction::DOWN && !downSideObstacles.empty())
+	else if (dir == Direction::DOWN)
 	{
-		if (nearestSeenObstacle == nullptr)
+		if (const auto& downSideObstacles = lineOfSight.GetDownSideObstacles();
+			!downSideObstacles.empty())
 		{
 			nearestSeenObstacle = downSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = nearestSeenObstacle->GetY() - (_rect.y + _rect.h);
-		_bulletOffset = _calibre.size.y;
 	}
-
-	if (const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
-		dir == Direction::RIGHT && !rightSideObstacles.empty())
+	else if (dir == Direction::RIGHT)
 	{
-		if (nearestSeenObstacle == nullptr)
+		if (const auto& rightSideObstacles = lineOfSight.GetRightSideObstacles();
+			!rightSideObstacles.empty())
 		{
 			nearestSeenObstacle = rightSideObstacles.front();
+			UpdateShootDistance(dir, nearestSeenObstacle);
 		}
-
-		_obstacleDistance = nearestSeenObstacle->GetX() - (_rect.x + _rect.w);
-		_bulletOffset = _calibre.size.x;
 	}
 
 	return nearestSeenObstacle;
@@ -312,11 +347,11 @@ void Bot::SetRandomDirection(const double deltaTime)
 	if (const std::vector<Direction> freePath = GetFreePathSides(deltaTime);
 		!freePath.empty())
 	{
-		const int max = static_cast<int>(freePath.size() - 1);
-		const int pathIndex = RandUtils::GetRandNumber(std::uniform_int_distribution{0, max});
+		const int max{static_cast<int>(freePath.size() - 1)};
+		const int pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution{0, max})};
 		SetDirection(freePath[pathIndex]);
 
-		_randomChangeDirTimer.Reset(milliseconds(RandUtils::GetRandNumber(_distTurnRate)));
+		_randomChangeDirTimer.Reset(milliseconds{RandUtils::GetRandNumber(_distTurnRate)});
 	}
 }
 
@@ -327,14 +362,11 @@ bool Bot::ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const
 		return false;
 	}
 
-	//TODO: cover this by test, that ally was seen and not shoot him
 	if (IsAlly(obj))
 	{
 		return false;
 	}
 
-	//TODO: cover pickup bonusTank after lose fortress
-	//TODO: cover this by test, that enemy was seen and shoot him
 	if (IsOpponent(obj))
 	{
 		return true;
@@ -386,6 +418,8 @@ void Bot::TickUpdate(const double deltaTime)
 		outCollisions.clear();
 	}
 
+	_effects.isTouchTheBushes = IsTouchBush();
+
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();
 	if (!_shootTimer.isActive && _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
 	{
@@ -393,7 +427,6 @@ void Bot::TickUpdate(const double deltaTime)
 			|| m_shouldShootToObstacleStrategy(nearestSeenObstacle))
 		{
 			//TODO: add feature for bots chance to shoot to obstacle
-			//TODO: move timer check to timerManager and onEvent change the class field bool isOnCooldown{false};
 			//TODO: cover this by test, _shootDistance check
 			//TODO: refactor to separated flag isClearToFire mean safe distance
 			//TODO: cover this by test, that we can't shoot if on cooldown

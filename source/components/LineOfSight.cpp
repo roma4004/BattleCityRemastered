@@ -62,33 +62,36 @@ void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWate
 			continue;
 		}
 
+		ObjRectangle upSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::UP)];
+		ObjRectangle leftSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)];
+		ObjRectangle downSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)];
+		ObjRectangle rightSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)];
+
 		// tank cannot pass water (if not pickup BonusShip), so we need to skip water when we find opponent to shoot
 		// but when we search for bonus, we should not skip water to avoid moving to bonus through water.
-		//TODO: check in test that bot can't see bonus behind the water, and not try to move on to it
 		const bool isWater = dynamic_cast<WaterTile*>(object.get()) != nullptr;
 		const bool isBush = dynamic_cast<BushTile*>(object.get()) != nullptr;
 		const bool isPenetrable = object->GetIsPenetrable();
-		const bool isPassable = object->GetIsPassable();
 		if (isBush
 			|| (isWater && !isWaterSkip)
-			|| (/*!isPassable &&*/ !isPenetrable))
+			|| !isPenetrable)
 		{
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::UP)], object->GetRect()))
+			if (ColliderUtils::IsCollide(upSideRect, object->GetRect()))
 			{
 				_upSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::LEFT)], object->GetRect()))
+			if (ColliderUtils::IsCollide(leftSightRect, object->GetRect()))
 			{
 				_leftSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::DOWN)], object->GetRect()))
+			if (ColliderUtils::IsCollide(downSideRect, object->GetRect()))
 			{
 				_downSideObstacles.emplace_back(object);
 			}
 
-			if (ColliderUtils::IsCollide(_lineOfSightBoundaries[static_cast<int>(Direction::RIGHT)], object->GetRect()))
+			if (ColliderUtils::IsCollide(rightSightRect, object->GetRect()))
 			{
 				_rightSideObstacles.emplace_back(object);
 			}

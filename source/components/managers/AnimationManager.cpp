@@ -309,7 +309,7 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 			return;
 		}
 
-		std::cout << "AnimationManager [DEBUG] Fail to CreateHelmetAnimation: " << "name = " << name << std::endl;
+		std::cout << "AnimationManager [DEBUG] Fail to CreateHelmetAnimation: " << "name = " << name << '\n';
 	}
 }
 

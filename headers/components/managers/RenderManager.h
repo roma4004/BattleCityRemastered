@@ -6,38 +6,42 @@
 #include <string>
 #include <unordered_map>
 
+struct SDL_Config;
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct ObjRectangle;
 struct TTF_Font;
 class EventSystem;
+class GameConfig;
 
 class RenderManager
 {
 	std::string _name{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::shared_ptr<SDL_Renderer> _renderer{nullptr};
-	std::shared_ptr<TTF_Font> _fontSmall{nullptr};
-	std::shared_ptr<TTF_Font> _fontMedium{nullptr};
-	std::shared_ptr<SDL_Texture> _menuLogo{nullptr};
-	std::shared_ptr<SDL_Texture> _menuBackgroundTexture{nullptr};
-	std::shared_ptr<SDL_Texture> _atlas{nullptr};
-	std::shared_ptr<SDL_Texture> _joyIcon{nullptr};
-	std::shared_ptr<SDL_Texture> _xBoxHint{nullptr};
-	std::shared_ptr<SDL_Texture> _pS5Hint{nullptr};
-	std::shared_ptr<unsigned int[]> _menuBackground{nullptr};
+	GameConfig& _gameConfig;
+	SDL_Config& _sdlConfig;
+	int _healthBarScale{1};
 
-	int _menuHeight{};
-	int _windowHeight{};
-	int _menuWidth{};
-	int _menuPadding{};
+	struct MenuParams
+	{
+		UPoint panelSize{};
+		size_t padding{};
 
-	UPoint _windowSize{};
+		void Init(const UPoint windowSize, const size_t sideBarWidth)
+		{
+			padding = 50;
+			panelSize = UPoint{.x = windowSize.x - sideBarWidth - padding * 2,
+							   .y = windowSize.y - padding * 2};
+		}
+	};
+
+	MenuParams _menuParams{};
+
 	SDL_Rect _fpsRectangle{};
-	std::unordered_map<size_t, SDL_Texture*> _fpsTextures;// pregenerated fps texture
-	std::unordered_map<unsigned int, SDL_Texture*> _colorTextureCache;
-	std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> _colorTexture{nullptr, nullptr};
+	// pregenerated fps texture
+	std::unordered_map<size_t, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _fpsTextures;
+	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
 
 	void Subscribe();
 	void Unsubscribe() const;
@@ -52,7 +56,6 @@ class RenderManager
 	void DrawPlayerTwoIcons(unsigned short respawnCount) const;
 	void DrawStageNumber(unsigned short currentStageNumber) const;
 
-	void PregenerateMenuBackgroundPixels();
 	[[nodiscard]] static unsigned int ColorToInt(const SDL_Color& color);
 	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
 	[[nodiscard]] static unsigned int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
@@ -61,34 +64,33 @@ class RenderManager
 
 	void DrawMenuBackground(Point pos) const;
 	void DrawMenuLogo(Point pos) const;
-	void DrawJoyIcon(Point pos) const;
+	void DrawSelectorIcon(Point pos) const;
 	void RenderCopyWithClipping(SDL_Texture* texture, SDL_Rect srcRect, SDL_Rect dstRect) const;
+	void RenderCopy(SDL_Texture* texture, SDL_Rect dstRect) const;
 	void DrawXBoxHint(Point pos) const;
 	void DrawPS5Hint(Point pos) const;
 	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
-	void PregenerateMenuBackgroundTexture();
 
 	void ClearFrame() const;
 	void ClearColorTextureCache();
 	void ClearFpsTextureCache();
 
-	[[nodiscard]] SDL_Texture* CreateColorTexture(unsigned int color);
+	void CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
-	void DrawColorTexture(ObjRectangle rect) const;
+	void DrawColorTexture(ObjRectangle rect);
 	void DrawTexture(const ObjRectangle& texture, const ObjRectangle& dest, Direction dir) const;
 
 	void GenerateFpsTextures();
-	void RenderFPS(size_t fps);
+	void RenderFPS(unsigned int fps);
 
 	void DrawHealthBar(ObjRectangle rect, int health) const;
+	void InitMenu(const GameConfig& gameConfig);
+
+	[[nodiscard]] static SDL_Rect CalcFpsPos(const UPoint& newSize);
 
 public:
-	RenderManager(const std::shared_ptr<EventSystem>& events, const std::shared_ptr<SDL_Renderer>& renderer,
-				  const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
-				  const std::shared_ptr<SDL_Texture>& menuLogo, const std::shared_ptr<SDL_Texture>& atlas,
-				  const std::shared_ptr<SDL_Texture>& joyIcon, const std::shared_ptr<SDL_Texture>& xBoxHint,
-				  const std::shared_ptr<SDL_Texture>& pS5Hint, UPoint windowSize);
+	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig);
 
 	~RenderManager();
 };

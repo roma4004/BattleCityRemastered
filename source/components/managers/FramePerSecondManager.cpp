@@ -1,12 +1,13 @@
 #include "components/managers/FramePerSecondManager.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include <cmath>//NOTE: need for cmake build
 #include <thread>
 
-FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const bool isVsyncOn)
+FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _name{"FramePerSecondManager"}
 	, _events{events}
-	, _isVsyncOn{isVsyncOn}
+	, _gameConfig{gameConfig}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 
@@ -37,7 +38,8 @@ void FramePerSecondManager::Unsubscribe() const { _events->RemoveAllListeners(_n
 
 void FramePerSecondManager::CountFpsAndDeltaTime()
 {
-	if (!_isVsyncOn)
+	if (const bool isVsyncOn = _gameConfig.Get<bool>("Window.vsync", false);
+		!isVsyncOn)
 	{
 		const auto currentFrameDuration = std::chrono::duration<double>(
 				std::chrono::high_resolution_clock::now() - _startFrameTime);
@@ -49,7 +51,7 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 				std::this_thread::sleep_for(timeToWait - std::chrono::milliseconds(1));
 			}
 
-			while ((std::chrono::high_resolution_clock::now() - _startFrameTime) < _targetFrameDuration)
+			while (std::chrono::high_resolution_clock::now() - _startFrameTime < _targetFrameDuration)
 			{
 				std::this_thread::yield();
 			}

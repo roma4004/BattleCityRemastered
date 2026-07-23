@@ -8,8 +8,8 @@
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-			   std::unique_ptr<IInputProvider> inputProvider, const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, enableByDefault}
+			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig, const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
 	, _inputProvider{std::move(inputProvider)}
 {
 	if (enableByDefault)
@@ -57,6 +57,8 @@ void Player::Move(const Direction direction, const double deltaTime,
 			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
+
+	_effects.isTouchTheBushes = IsTouchBush();
 }
 
 void Player::TickUpdate(const double deltaTime)

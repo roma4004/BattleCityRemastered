@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
@@ -13,6 +14,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 
 	void SetUp() override
@@ -20,8 +22,8 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_allObjects.reserve(6);
 		constexpr UPoint windowSize{.x = 800, .y = 600};
-		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, windowSize, GameMode::OnePlayer);
-		_tankSpawner = std::make_shared<TankSpawner>(windowSize, &_allObjects, _events);
+		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 	}
 

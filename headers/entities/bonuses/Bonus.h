@@ -4,6 +4,7 @@
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
 #include "interfaces/ITickUpdatable.h"
+#include "utils/Timer.h"
 
 enum class GameMode : char8_t;
 enum class BonusType : char8_t;
@@ -15,13 +16,12 @@ class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IP
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-	std::chrono::system_clock::time_point _creationTime{};
+	Timer _lifeTimeTimer{};
+	GameMode _gameMode{};
+	BonusType _bonusType{};
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	milliseconds _lifetime{};
-	GameMode _gameMode{};
-	BonusType _bonusType{};
 
 	void TickUpdate(double deltaTime) override;
 	void Draw() const override;

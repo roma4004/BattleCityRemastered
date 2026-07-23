@@ -17,6 +17,7 @@ class BulletPool;
 class EventSystem;
 class BonusEffectManager;
 class IInputProvider;
+class GameConfig;
 
 class TankSpawner final
 {
@@ -24,7 +25,6 @@ class TankSpawner final
 	using buuid = boost::uuids::uuid;
 
 	std::string _name{"TankSpawner"};
-	UPoint _windowSize{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -33,6 +33,7 @@ class TankSpawner final
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
+	GameConfig& _gameConfig;
 
 	void Subscribe();
 	void SubscribeAsClient();
@@ -41,8 +42,9 @@ class TankSpawner final
 	void UnsubscribeAsClient() const;
 	void Reset();
 
-	bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
-	bool SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
+	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
+	[[nodiscard]] bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
 	void SpawnTank(ObjRectangle rect, int health, const std::string& name, std::string fraction, float speed,
@@ -51,6 +53,7 @@ class TankSpawner final
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
+	[[nodiscard]] ObjRectangle GetPlayerRandomPosX(bool isFirst) const;
 	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
 	void RespawnTank(TankType type, buuid uuid, bool skipDelay);
 	[[nodiscard]] static std::string GetCurrentTimeString();
@@ -58,7 +61,7 @@ class TankSpawner final
 	void OnClientRespawn(TankType type, buuid uuid);
 
 public:
-	TankSpawner(UPoint windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 				const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner();

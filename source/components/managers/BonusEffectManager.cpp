@@ -34,10 +34,12 @@ void BonusEffectManager::Subscribe()
 			{
 				this->OnTimerBonus(fraction, effectDuration);
 			});
-	_events->AddListener("BonusHelmet_Pickup", _name, [this](const std::string& author, const milliseconds effectDuration)
-	{
-		this->OnHelmetBonusPickup(author, effectDuration);
-	});
+	_events->AddListener(
+			"BonusHelmet_Pickup", _name,
+			[this](const std::string& author, const milliseconds effectDuration)
+			{
+				this->OnHelmetBonusPickup(author, effectDuration);
+			});
 	_events->AddListener(
 			"BonusShovel_Pickup", _name,
 			[this](const std::string& fraction, const milliseconds effectDuration)
@@ -168,7 +170,7 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 	{
 		StartTimer(_shovelPlayer, "Shovel", fraction, effectDuration);
 	}
-	else if (fraction == "EnemyTeam") //NOTE: enemy pickup should disable player shovel instantly
+	else if (fraction == "EnemyTeam")//NOTE: enemy pickup should disable player shovel instantly
 	{
 		FinishTimer(_shovelPlayer, "Shovel", fraction);
 	}

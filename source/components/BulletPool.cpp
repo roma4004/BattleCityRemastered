@@ -1,15 +1,17 @@
 #include "components/BulletPool.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
+#include "enums/GameMode.h"
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-					   const UPoint windowSize, const GameMode gameMode)
+					   GameConfig& gameConfig)
 	: _name{"BulletPool"}
-	, _windowSize{windowSize}
 	, _events{events}
 	, _allObjects{allObjects}
-	, _gameMode{gameMode}
+	, _gameMode{GameMode::Demo}
+	, _gameConfig{gameConfig}
 {
 	// Pre-generate 20 default bullets
 	// for (int i = 0; i < 20; ++i)
@@ -62,10 +64,9 @@ std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 	PawnProperty pawnProperty{.baseObjProperty = {},
 							  .allObjects = _allObjects,
 							  .events = _events,
-							  .windowSize = _windowSize,
 							  .gameMode = _gameMode};
 
-	return {new Bullet{std::move(pawnProperty)}, [this](Bullet* b) { ReturnBullet(b); }};
+	return {new Bullet{std::move(pawnProperty), _gameConfig}, [this](Bullet* b) { ReturnBullet(b); }};
 }
 
 std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
@@ -90,7 +91,7 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 		// 		<< ", Direction=" << static_cast<int>(dir)
 		// 		<< ", Fraction=" << fraction
 		// 		<< ", UUID=" << bullet->GetUuid()
-		// 		<< std::endl;
+		// 		<< '\n';
 	}
 
 	return bulletAsBase;
@@ -113,7 +114,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 		// 		<< "Bullet RETURNED to pool and Bullet pool size =" << _bullets.size()
 		// 		<< ", Author=" << bulletCast->GetAuthor()
 		// 		<< ", UUID=" << bulletCast->GetUuid()
-		// 		<< std::endl;
+		// 		<< '\n';
 
 		bulletCast->Disable();
 		_bullets.emplace(std::shared_ptr<BaseObj>(bullet, [this](BaseObj* b)
@@ -133,7 +134,7 @@ void BulletPool::Clear()
 	// std::cout << "[" << GetCurrentTimeString() << "] "
 	// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
 	// 		<< "Bullet pool CLEARED, bullets in pool: " << _bullets.size()
-	// 		<< std::endl;
+	// 		<< '\n';
 
 	while (!_bullets.empty())
 	{

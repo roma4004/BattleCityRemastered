@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Point.h"
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -10,6 +9,7 @@ enum class GameMode : char8_t;
 class Bullet;
 class BaseObj;
 class EventSystem;
+class GameConfig;
 
 class BulletPool final
 {
@@ -17,16 +17,16 @@ class BulletPool final
 
 	std::mutex _bulletsMutex{};
 	std::string _name{};
-	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 	std::queue<std::shared_ptr<BaseObj>> _bullets{};
 	GameMode _gameMode{};
-	bool _isClearing{false};
+	GameConfig& _gameConfig;
+	bool _isClearing{};
 
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-			   UPoint windowSize, GameMode gameMode);
+			   GameConfig& gameConfig);
 
 	~BulletPool();
 

@@ -1,34 +1,22 @@
 #include "application/ConfigSuccess.h"
+#include "application/GameConfig.h"
 #include "application/GameSuccess.h"
+#include "application/SDL_Config.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/managers/RenderManager.h"
-#include <SDL_ttf.h>
+#include "enums/GameMode.h"
 
-ConfigSuccess::ConfigSuccess(const UPoint windowSize, const std::shared_ptr<SDL_Renderer>& renderer,
-							 const std::shared_ptr<TTF_Font>& fontSmall, const std::shared_ptr<TTF_Font>& fontMedium,
-							 const std::shared_ptr<SDL_Texture>& logo, const std::shared_ptr<SDL_Texture>& atlas,
-							 const std::shared_ptr<SDL_Texture>& joyIcon, const std::shared_ptr<SDL_Texture>& xBoxHint,
-							 const std::shared_ptr<SDL_Texture>& pS5Hint, const bool isVsyncOn)
-	: _windowSize{windowSize}
-	, _renderer{renderer}
-	, _fontSmall{fontSmall}
-	, _fontMedium{fontMedium}
-	, _logo{logo}
-	, _atlas{atlas}
-	, _joyIcon{joyIcon}
-	, _xBoxHint{xBoxHint}
-	, _pS5Hint{pS5Hint}
-	, _isVsyncOn{isVsyncOn} {}
+ConfigSuccess::ConfigSuccess(GameConfig& gameConfig)
+	: _gameConfig{gameConfig} {}
 
-std::unique_ptr<IGame> ConfigSuccess::CreateGame()
+std::unique_ptr<IGame> ConfigSuccess::CreateGame(const GameMode gameMode, SDL_Config& sdlConfig)
 {
 	auto events = std::make_shared<EventSystem>();
-	auto menu = std::make_unique<Menu>(_windowSize, events);
-	auto renderManager = std::make_unique<RenderManager>(events, _renderer, _fontSmall, _fontMedium, _logo, _atlas,
-														 _joyIcon, _xBoxHint, _pS5Hint, _windowSize);
-	auto rightSideBar = std::make_unique<RightSideBar>(_windowSize, events);
+	auto menu = std::make_unique<Menu>(_gameConfig.windowSize, events);
+	auto renderManager = std::make_unique<RenderManager>(events, _gameConfig, sdlConfig);
+	auto rightSideBar = std::make_unique<RightSideBar>(events);
 
-	return std::make_unique<GameSuccess>(_windowSize, events, menu, _isVsyncOn, renderManager, rightSideBar);
+	return std::make_unique<GameSuccess>(_gameConfig, events, menu, renderManager, rightSideBar, gameMode);
 }

@@ -1,6 +1,8 @@
 #include "application/GameSuccess.h"
+#include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
+#include "components/GameStatistics.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
@@ -17,33 +19,36 @@
 #include <iostream>
 #include <memory>
 //#include <fstream>
-#include <boost/uuid/uuid_io.hpp>
 
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(const UPoint windowSize, const std::shared_ptr<EventSystem>& events,
-						 std::unique_ptr<Menu>& menu, const bool isVsyncOn,
-						 std::unique_ptr<RenderManager>& renderManager,
-						 std::unique_ptr<RightSideBar>& rightSideBar)
-	: _windowSize{windowSize}
-	, _menu{std::move(menu)}
-	, _textureManager(std::make_unique<TextureManager>(windowSize, events))
+GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
+						 std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
+						 std::unique_ptr<RightSideBar>& rightSideBar,
+						 const GameMode gameMode)
+	: _menu{std::move(menu)}
+	, _textureManager(std::make_unique<TextureManager>(events))
 	, _stateManager{std::make_unique<StateManager>(events)}
-	, _userInput{std::make_unique<UserInput>(windowSize, events)}
-	, _fpsManager{std::make_unique<FramePerSecondManager>(events, isVsyncOn)}
-	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, windowSize)}
+	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events, gameConfig)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
+	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig)}
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
-	, _scoreBoard{std::make_unique<ScoreBoard>(windowSize, events)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
+	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _rightSideBar{std::move(rightSideBar)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
 
-	ResetBattlefieldTo(GameMode::Demo);
-	_events->EmitEvent("ShowMenu", true);
+	ResetBattlefieldTo(gameMode);
+
+	if (gameMode == GameMode::Demo)
+	{
+		_events->EmitEvent("ShowMenu", true);
+	}
 }
 
 GameSuccess::~GameSuccess()

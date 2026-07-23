@@ -13,7 +13,6 @@ class EventSystem;
 class TextureManager final
 {
 	std::string _name{"TextureManager"};
-	UPoint _windowSize{};
 	TextureOffset _offset{};
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -32,7 +31,7 @@ class TextureManager final
 	[[nodiscard]] ObjRectangle GetTextTextureRect(const std::string& name) const;
 
 public:
-	TextureManager(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+	explicit TextureManager(const std::shared_ptr<EventSystem>& events);
 
 	~TextureManager();
 };

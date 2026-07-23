@@ -1,30 +1,35 @@
 #include "entities/pawns/Tank.h"
+#include "application/GameConfig.h"
 #include "behavior/MoveLikeTankBeh.h"
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "entities/BulletCalibre.h"
+#include "entities/obstacles/BushTile.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
-#include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
+#include "utils/ColliderUtils.h"
 
-Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const bool enableByDefault)
-	: Pawn{std::move(pawnProperty)}
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		   const bool enableByDefault)
+	: Pawn{std::move(pawnProperty), gameConfig}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction,
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
 												 _allObjects);
 	_calibre = BulletCalibre{.speed = 300.f,
 							 .damage = 15,
 							 .damageRadius = 18.f,
 							 .tier = _tier,
 							 .size{.x = 9.f, .y = 9.f}};
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _windowSize, _name, _fraction, _allObjects,
-												 bulletPool, _calibre);
+	ApplyScaleToCalibre(gameConfig.scaleFactor);
+
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _gameConfig.windowSize, _name, _fraction,
+												 _allObjects, bulletPool, _calibre);
 
 	if (enableByDefault)
 	{
@@ -85,10 +90,17 @@ void Tank::Subscribe()
 
 	_events->AddListener("PostDraw", _nameWithUuid, [this]()
 	{
-		if (!this->_effects.isHelmetActive)
+		if (this->_effects.isHelmetActive || this->_effects.isTouchTheBushes)
 		{
-			this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
+			return;
 		}
+
+		this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
+	});
+
+	_events->AddListener("ScaleFactorChangedTo", _name, [this](const float newScale)
+	{
+		this->ApplyScaleToCalibre(newScale);
 	});
 
 	if (_gameMode == GameMode::PlayAsClient)
@@ -194,15 +206,15 @@ void Tank::Disable() const
 	}
 }
 
-void Tank::TakeDamage(const int damage)
+void Tank::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	if (!_effects.isHelmetActive)
 	{
-		Pawn::TakeDamage(damage);
+		Pawn::TakeDamage(damage, damageAuthor, damageFraction);
 	}
 }
 
-unsigned Tank::GetTier() const { return _tier; }
+unsigned int Tank::GetTier() const { return _tier; }
 
 void Tank::Shot(const buuid withUuid)
 {
@@ -270,7 +282,7 @@ void Tank::OnBonusGrenade(const std::string& fraction)
 {
 	if (fraction != _fraction)
 	{
-		TakeDamage(GetHealth());
+		TakeDamage(GetHealth(), "Grenade", fraction);
 	}
 }
 
@@ -347,12 +359,9 @@ void Tank::SendDamageStatistics(const std::string& author, const std::string& fr
 
 void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 {
-	if (const auto bonus = dynamic_cast<IPickupableBonus*>(object.get()))
+	if (auto* bonus = dynamic_cast<IPickupableBonus*>(object.get()))
 	{
 		bonus->PickUpBonus(_name, _fraction);
-		_events->EmitEvent("Statistics_BonusPickup", _name, _fraction);
-		//TODO: on destroy bonus emit PickUpBonus
-		object->TakeDamage(1);
 	}
 }
 
@@ -368,4 +377,27 @@ void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 
 	//NOTE: fix for tank truck animation tick
 	_events->EmitEvent("AnimationTankUpdate", GetName(), newPos, dir);
+}
+
+bool Tank::IsTouchBush() const
+{
+	auto bushCollisionsFilter = *_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	{
+		return _uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(_rect, object->GetRect())
+			   && dynamic_cast<BushTile*>(object.get()) != nullptr;
+	});
+
+	return !bushCollisionsFilter.empty();
+}
+
+void Tank::ApplyScaleToCalibre(const float newScale)
+{
+	if (newScale == 1)
+		return;
+
+	this->_calibre.speed *= newScale;
+	this->_calibre.damageRadius *= newScale;
+	this->_calibre.size.x *= newScale;
+	this->_calibre.size.y *= newScale;
 }

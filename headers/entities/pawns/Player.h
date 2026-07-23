@@ -20,7 +20,7 @@ protected:
 
 public:
 	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-		   std::unique_ptr<IInputProvider> inputProvider, bool enableByDefault = false);
+		   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig, bool enableByDefault = false);
 
 	~Player() override;
 };

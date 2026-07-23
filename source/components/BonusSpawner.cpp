@@ -1,5 +1,6 @@
 #include "components/BonusSpawner.h"
 #include "Point.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/bonuses/BonusCaliber.h"
 #include "entities/bonuses/BonusGrenade.h"
@@ -20,15 +21,14 @@ class BaseObj;
 class EventSystem;
 
 BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
-						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const UPoint windowSize,
-						   const int sideBarWidth, const int bonusSize)
+						   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
-	, _distSpawnPosY{0, static_cast<int>(windowSize.y) - bonusSize}
-	, _distSpawnPosX{0, static_cast<int>(windowSize.x) - sideBarWidth - bonusSize}
+	, _distSpawnPosY{0, static_cast<int>(gameConfig.windowSize.y) - gameConfig.bonusSize}
+	, _distSpawnPosX{0, static_cast<int>(gameConfig.windowSize.x - gameConfig.sideBarWidth) - gameConfig.bonusSize}
 	, _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1}
-	, _lastTimeSpawn{std::chrono::system_clock::now()}
-	, _bonusSize{bonusSize}
+	, _gameConfig{gameConfig}
+	, _spawnTimer{std::chrono::seconds{60}, std::chrono::system_clock::now()}
 {
 	Subscribe();
 }
@@ -54,6 +54,16 @@ void BonusSpawner::Subscribe()
 		}
 	});
 
+	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
+	{
+		_distSpawnPosY = std::uniform_int_distribution<>{
+				0,
+				static_cast<int>(newSize.y) - _gameConfig.bonusSize};
+		_distSpawnPosX = std::uniform_int_distribution<>{
+				0,
+				static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
+	});
+
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
@@ -68,7 +78,7 @@ void BonusSpawner::SubscribeAsClient()
 			"ClientReceived_BonusSpawn", _name,
 			[this](const FPoint pos, const BonusType type, const buuid& uuid)
 			{
-				const auto size = static_cast<float>(_bonusSize);
+				const auto size = static_cast<float>(_gameConfig.bonusSize);
 				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
 				SpawnBonus(rect, type, uuid);
 			});
@@ -82,12 +92,9 @@ void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener("Client
 
 void BonusSpawner::Update()
 {
-	//TODO: extract to timer manager to subscribe here,
-	//      instead of update each frame and in timer manager update only timer queue,
-	//      instead of poke each timer and check if there enabled or ends
-	if (TimeUtils::IsCooldownFinish(_lastTimeSpawn, _cooldownBonusSpawn))
+	if (_spawnTimer.IsCooldownFinish())
 	{
-		const auto size = static_cast<float>(_bonusSize);
+		const auto size = static_cast<float>(_gameConfig.bonusSize);
 		const auto x = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosX));
 		const auto y = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosY));
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
@@ -99,6 +106,7 @@ void BonusSpawner::Update()
 		if (isFreeSpawnSpot)
 		{
 			SpawnRandomBonus(rect);
+			_spawnTimer.Reset();
 		}
 	}
 }
@@ -113,7 +121,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 		uuid = UuidUtils::GetRandomUuid();
 	}
 
-//TODO: fix star bonus steel destroy
+	//TODO: fix star bonus steel destroy
 	std::shared_ptr<Bonus> bonus{nullptr};
 
 	switch (type)
@@ -146,7 +154,6 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 	if (bonus)
 	{
 		_allObjects->emplace_back(bonus);
-		_lastTimeSpawn = std::chrono::system_clock::now();
 	}
 }
 
@@ -158,5 +165,5 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 
 void BonusSpawner::Reset()
 {
-	_lastTimeSpawn = std::chrono::system_clock::now();
+	_spawnTimer.Reset();
 }

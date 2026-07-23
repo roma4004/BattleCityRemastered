@@ -1,4 +1,5 @@
 #include "components/managers/SpawnManager.h"
+#include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/EventSystem.h"
 #include "components/ObstacleSpawner.h"
@@ -7,12 +8,12 @@
 
 //TODO: add spawn queue
 SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events,
-						   std::vector<std::shared_ptr<BaseObj>>* allObjects, UPoint windowSize)
+						   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig)
 	: _name{"SpawnDelayManager"}
 	, _events{events}
 	, _delayedSpawnManager{std::make_unique<DelayedSpawnManager>(events)}
-	, _bonusSpawner{std::make_unique<BonusSpawner>(events, allObjects, windowSize)}
-	, _obstacleSpawner{std::make_unique<ObstacleSpawner>(events, allObjects, windowSize)}
-	, _tankSpawner{std::make_unique<TankSpawner>(windowSize, allObjects, events)} {}
+	, _bonusSpawner{std::make_unique<BonusSpawner>(events, allObjects, gameConfig)}
+	, _obstacleSpawner{std::make_unique<ObstacleSpawner>(events, allObjects, gameConfig.windowSize)}
+	, _tankSpawner{std::make_unique<TankSpawner>(gameConfig, allObjects, events)} {}
 
 SpawnManager::~SpawnManager() = default;

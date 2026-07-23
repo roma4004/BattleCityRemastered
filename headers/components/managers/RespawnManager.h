@@ -1,7 +1,7 @@
 #pragma once
 
 #include "enums/RespawnCount.h"
-#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid.hpp>//TODO: fix cmake run need to rerun after project build (to download boost dependency)
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
@@ -17,19 +17,19 @@ class RespawnManager final
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	// TODO: use std::atomic when multithreading is used
-	std::vector<unsigned short> _respawnCount{20, 3, 3};
+	std::vector<unsigned short> _respawnCount{20u, 3u, 3u};
 
 	struct SpawnSlot
 	{
 		buuid uuid{};
-		bool isAvailable{false};
+		bool isAvailable{};
 	};
 
 	GameMode _gameMode{};
-	unsigned short _enemiesSpawnCount{0};
-	unsigned short _enemiesDeathCount{0};
-	unsigned short _playersSpawnCount{0};
-	unsigned short _playersDeathCount{0};
+	unsigned short _enemiesSpawnCount{};
+	unsigned short _enemiesDeathCount{};
+	unsigned short _playersSpawnCount{};
+	unsigned short _playersDeathCount{};
 
 	void OnBonusTank(const std::string& author);
 	void OnClientRespawn(TankType type);

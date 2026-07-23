@@ -18,7 +18,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	ObjRectangle& _rect;
 	Direction& _direction;
 	float& _speed;
-	UPoint& _windowSize;//TODO: subscribe on windows size change
+	UPoint& _windowSize;
 	std::string& _name;
 	std::string& _fraction;
 

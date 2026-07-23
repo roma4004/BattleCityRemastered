@@ -684,7 +684,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 			}
 		}
 
-		ASSERT_EQ(status, std::future_status::ready);
+		ASSERT_EQ(status, std::future_status::ready);//TODO: investigate some times failed
 		const auto& [typeReplicated, uuid] = future.get();
 		EXPECT_EQ(tankTypes[i], typeReplicated);
 		EXPECT_EQ(_uuid, uuid);

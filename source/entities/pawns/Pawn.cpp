@@ -1,4 +1,5 @@
 #include "entities/pawns/Pawn.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
@@ -6,15 +7,15 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Pawn::Pawn(PawnProperty pawnProperty)
+Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}
-	, _windowSize{pawnProperty.windowSize}
 	, _allObjects{pawnProperty.allObjects}
 	, _events{std::move(pawnProperty.events)}
 	, _dir{pawnProperty.dir}
 	, _gameMode{pawnProperty.gameMode}
+	, _gameConfig{gameConfig}
 {
 	if (_uuid == UuidUtils::GetNilUuid())
 	{
@@ -53,17 +54,17 @@ void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate",
 
 void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Pawn::TakeDamage(const int damage)
+void Pawn::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
-	BaseObj::TakeDamage(damage);
+	BaseObj::TakeDamage(damage, damageAuthor, damageFraction);
+
+	SendDamageStatistics(damageAuthor, damageFraction);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
 	}
 }
-
-UPoint Pawn::GetWindowSize() const { return _windowSize; }
 
 Direction Pawn::GetDirection() const { return _dir; }
 
