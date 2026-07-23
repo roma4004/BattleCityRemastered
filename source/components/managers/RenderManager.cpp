@@ -510,14 +510,19 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 {
 	const float pixelsPerHealthPoint = static_cast<float>(rect.w) / 100.0f;
 	const float healthWidth = static_cast<float>(health) * pixelsPerHealthPoint;
-	if (healthWidth <= 0)
+	if (healthWidth <= 0.f)
 		return;
 
-	const int offset = health > 100 ? (health - 100) / 2 : 0;
-	const SDL_Rect healthBarRect = {.x = static_cast<int>(rect.x) + 2 - offset / 3,
-									.y = static_cast<int>(rect.y) - 10,
-									.w = static_cast<int>(healthWidth),
-									.h = 5};
+	const int centerX = static_cast<int>(rect.x + rect.w / 2.f);
+	const int barWidthInt = static_cast<int>(healthWidth);
+	const int healthPosX = centerX - (barWidthInt / 2);
+
+	const SDL_Rect healthBarRect = {
+		.x = healthPosX,
+		.y = static_cast<int>(rect.y) - 10,
+		.w = barWidthInt,
+		.h = 5
+	};
 
 	unsigned int color;
 	if (health > 70)
