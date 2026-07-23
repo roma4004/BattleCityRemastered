@@ -5,6 +5,7 @@
 #include "interfaces/IGame.h"
 #include "utils/NetworkLogger.h"
 
+//TODO: migrate to vcpkg.json to update dependencies, because nuget version are outdated (sdl and boost old)
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main(const int argc, char* argv[])
 {

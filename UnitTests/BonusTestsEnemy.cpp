@@ -43,7 +43,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
@@ -66,7 +66,6 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
@@ -122,7 +121,6 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};

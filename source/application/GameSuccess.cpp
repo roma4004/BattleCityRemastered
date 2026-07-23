@@ -23,9 +23,10 @@
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events, std::unique_ptr<Menu>& menu,
-						 std::unique_ptr<RenderManager>& renderManager, std::unique_ptr<RightSideBar>& rightSideBar,
-						 GameMode gameMode)
+GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
+						 std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
+						 std::unique_ptr<RightSideBar>& rightSideBar,
+						 const GameMode gameMode)
 	: _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(events))
 	, _stateManager{std::make_unique<StateManager>(events)}

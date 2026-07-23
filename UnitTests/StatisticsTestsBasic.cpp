@@ -46,7 +46,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -67,7 +67,6 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 
@@ -83,7 +82,6 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 
@@ -99,7 +97,6 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 
@@ -111,7 +108,8 @@ protected:
 						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 		_allObjects.emplace_back(
 				std::make_shared<Player>(
-						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), _gameConfig, enableByDefault));
+						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), _gameConfig,
+						enableByDefault));
 		_allObjects.emplace_back(
 				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, _gameConfig, enableByDefault));
 	}
@@ -140,13 +138,13 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
 
@@ -173,13 +171,13 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
 
@@ -212,13 +210,13 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
 
@@ -250,13 +248,13 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
 
@@ -283,13 +281,13 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
 
@@ -322,13 +320,13 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
@@ -359,13 +357,13 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
 
@@ -398,13 +396,13 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
 
@@ -439,13 +437,13 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
 
@@ -475,13 +473,13 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
 
@@ -511,13 +509,13 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
 
@@ -552,13 +550,13 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
 
@@ -588,13 +586,13 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
 
@@ -624,13 +622,13 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
 
@@ -657,13 +655,13 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"PlayerTeam"};
@@ -681,12 +679,12 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author2), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author2),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -722,13 +720,13 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0);
 
@@ -762,13 +760,13 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0);
 
@@ -799,13 +797,13 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0);
 
@@ -839,14 +837,14 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 			.events = _events,
 			.tier = 3u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_calibre.tier = 3u;
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0);
 
@@ -880,14 +878,14 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 			.events = _events,
 			.tier = 3u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_calibre.tier = 3u;
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0);
 
@@ -918,14 +916,14 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 			.events = _events,
 			.tier = 3u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_calibre.tier = 3u;
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0);
 
@@ -952,14 +950,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
 			std::make_shared<Bullet>(
-					std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+					std::move(pawnProperty), _gameConfig, _calibre, std::move(author), enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"EnemyTeam"};
@@ -977,12 +974,12 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author2), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author2),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 
@@ -1009,13 +1006,13 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"PlayerTeam"};
@@ -1033,12 +1030,12 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author2), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author2),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
@@ -1067,13 +1064,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"EnemyTeam"};
@@ -1091,12 +1088,12 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author2), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author2),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
@@ -1125,13 +1122,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
+									 enableByDefault));
 
 	std::string name2{"Bullet2"};
 	std::string fraction2{"EnemyTeam"};
@@ -1149,12 +1146,12 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author2), enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author2),
+									 enableByDefault));
 
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);

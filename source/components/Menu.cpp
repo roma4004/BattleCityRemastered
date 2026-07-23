@@ -13,7 +13,7 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 {
 	Subscribe();
 
-	_padding = 25; //TODO: combine with same menu padding in renderManager when draw background
+	_padding = 25;//TODO: combine with same menu padding in renderManager when draw background
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
@@ -42,7 +42,6 @@ void Menu::Subscribe()
 
 void Menu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-//TODO: optimize draw call with cache non changed text part
 void Menu::Draw()
 {
 	// first time animation, slow scrolling from bottom corner to vertical center
@@ -60,7 +59,7 @@ void Menu::Draw()
 	DrawControlHints();
 }
 
-void Menu::DrawMenuLine(Point& posText, bool isSelected, std::string text) const
+void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text) const
 {
 	if (isSelected)
 	{

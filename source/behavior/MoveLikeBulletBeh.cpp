@@ -1,5 +1,6 @@
 #include "behavior/MoveLikeBulletBeh.h"
 #include "Circle.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
@@ -7,12 +8,12 @@
 #include <algorithm>
 #include <memory>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize,
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, GameConfig& gameConfig,
 									 const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _dir{dir}
-	, _windowSize{windowSize}
+	, _gameConfig{gameConfig}
 	, _calibre{calibre}
 	, _allObjects{allObjects} {}
 
@@ -83,7 +84,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 		return MoveUp(deltaTime, outCollisions);
 	}
 
-	if (dir == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_windowSize.y))
+	if (dir == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_gameConfig.windowSize.y))
 	{
 		return MoveDown(deltaTime, outCollisions);
 	}
@@ -94,7 +95,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 	}
 
 	if (size_t sideBarWidth = 175;//TODO: move sidebar width to params
-		dir == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_windowSize.x - sideBarWidth))
+		dir == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_gameConfig.windowSize.x - sideBarWidth))
 	{
 		return MoveRight(deltaTime, outCollisions);
 	}

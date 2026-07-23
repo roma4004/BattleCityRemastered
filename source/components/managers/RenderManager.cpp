@@ -358,6 +358,8 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 		return;
 	}
 
+	//TODO: optimize draw call with cache non changed text part
+	// save text surface in render field (lazy init)
 	const auto currentFont = isMediumFontSize ? _sdlConfig.fontMedium.get() : _sdlConfig.fontSmall.get();
 	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
 			TTF_RenderText_Solid(currentFont, text.c_str(), color), SDL_FreeSurface);
@@ -366,6 +368,8 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 		return;
 	}
 
+	//TODO: optimize draw call with cache non changed text part
+	// save text texture in render field (lazy init)
 	const std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)> texture(
 			SDL_CreateTextureFromSurface(_sdlConfig.renderer.get(), surface.get()), SDL_DestroyTexture);
 	if (!texture)

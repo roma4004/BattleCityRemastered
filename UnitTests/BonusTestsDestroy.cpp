@@ -44,8 +44,8 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
-		_tankSpawner = std::make_shared<TankSpawner>( _gameConfig, &_allObjects, _events);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
@@ -66,7 +66,6 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
@@ -103,11 +102,11 @@ TEST_F(BonusTestsDestroy, BonusDestroy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _calibre, author, enableByDefault));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, author, enableByDefault));
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize});
 
@@ -145,11 +144,11 @@ TEST_F(BonusTestsDestroy, BonusNotDestroy)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::RIGHT,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _calibre, author, enableByDefault));
+	_allObjects.emplace_back(
+			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, author, enableByDefault));
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize});
 
@@ -187,12 +186,11 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
@@ -216,10 +214,10 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
-		_allObjects.emplace_back(std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, _gameConfig, enableByDefault));
+		_allObjects.emplace_back(
+				std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, _gameConfig, enableByDefault));
 
 		if (const auto enemy = dynamic_cast<Enemy*>(_allObjects.back().get()))
 		{
@@ -258,12 +256,12 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author,
+										 enableByDefault));
 
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
@@ -290,11 +288,11 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 					.events = _events,
 					.tier = 1u,
 					.speed = _tankSpeed,
-					.windowSize = _windowSize,
 					.dir = Direction::LEFT,
 					.gameMode = _gameMode};
 			_allObjects.emplace_back(
-					std::make_shared<Bullet>(std::move(pawnPropertyBullet2), _calibre, author2, enableByDefault));
+					std::make_shared<Bullet>(std::move(pawnPropertyBullet2), _gameConfig, _calibre, author2,
+											 enableByDefault));
 
 			const int playerHealth = player->GetHealth();
 
@@ -330,12 +328,11 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 	const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get());
@@ -352,7 +349,6 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	auto enemy = std::make_shared<Enemy>(std::move(pawnPropertyEnemy), _bulletPool, _gameConfig, enableByDefault);
@@ -394,12 +390,11 @@ TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
@@ -439,12 +434,12 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author,
+										 enableByDefault));
 
 		_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
@@ -483,12 +478,11 @@ TEST_F(BonusTestsDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
 	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _calibre, author, enableByDefault));
+			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get());

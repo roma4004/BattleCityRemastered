@@ -52,7 +52,8 @@ protected:
 	virtual void Disable() const;
 
 public:
-	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig, bool enableByDefault = false);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		 bool enableByDefault = false);
 
 	~Tank() override;
 

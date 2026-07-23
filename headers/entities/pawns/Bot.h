@@ -43,7 +43,8 @@ protected:
 	void TickUpdate(double deltaTime) override;
 
 public:
-	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig, bool enableByDefault = false);
+	Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		bool enableByDefault = false);
 
 	~Bot() override;
 };

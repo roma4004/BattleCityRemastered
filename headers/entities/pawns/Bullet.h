@@ -11,6 +11,7 @@ struct UPoint;
 class EventSystem;
 class BulletPool;
 class ShootingBeh;
+class GameConfig;
 
 class Bullet final : public Pawn, public IDrawable
 {
@@ -34,8 +35,8 @@ protected:
 	void TickUpdate(double deltaTime) override;
 
 public:
-	explicit Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre = {}, std::string author = "",
-					bool enableByDefault = false);
+	Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre = {},
+		   std::string author = "", bool enableByDefault = false);
 
 	~Bullet() override;
 

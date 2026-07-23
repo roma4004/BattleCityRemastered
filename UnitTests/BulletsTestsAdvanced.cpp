@@ -1,4 +1,5 @@
 ﻿#include "Point.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
@@ -15,6 +16,7 @@ class BulletTestAdvanced : public testing::Test
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _bulletHealth{1};
@@ -45,14 +47,13 @@ protected:
 				.events = _events,
 				.tier = _calibre.tier,
 				.speed = _calibre.speed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author), enableByDefault));
 	}
 
 	void TearDown() override

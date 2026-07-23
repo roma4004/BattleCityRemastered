@@ -57,7 +57,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
+		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<StateManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
@@ -77,7 +77,6 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
@@ -110,7 +109,6 @@ TEST_F(BotTest, BotsChangeDirectionIfOponentSeen)
 				.events = _events,
 				.tier = 1u,
 				.speed = _calibre.speed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 
@@ -155,7 +153,6 @@ TEST_F(BotTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _calibre.speed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::DOWN,
 								  .gameMode = _gameMode};
 
@@ -222,7 +219,6 @@ TEST_F(BotTest, CoopShootToEnemy)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _tankSpeed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::UP,
 								  .gameMode = _gameMode};
 
@@ -263,7 +259,6 @@ TEST_F(BotTest, EnemyShootToCoop)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _tankSpeed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::DOWN,
 								  .gameMode = _gameMode};
 
@@ -301,7 +296,6 @@ TEST_F(BotTest, EnemyShootToPlayer1)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 
@@ -345,7 +339,6 @@ TEST_F(BotTest, EnemyShootToPlayer2)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 
@@ -389,7 +382,6 @@ TEST_F(BotTest, EnemyNoShootToPlayer1IfTooClose)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 
@@ -433,7 +425,6 @@ TEST_F(BotTest, EnemyNoShootToPlayer2IfTooClose)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 
@@ -478,7 +469,6 @@ TEST_F(BotTest, CoopNoShootToCoop)
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 
@@ -513,7 +503,6 @@ TEST_F(BotTest, CoopNoShootToPlayer1)
 				.events = _events,
 				.tier = 1u,
 				.speed = _tankSpeed,
-				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 
@@ -551,7 +540,6 @@ TEST_F(BotTest, EnemyNoShootToAllied)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -586,7 +574,6 @@ TEST_F(BotTest, EnemyNoShootToAlliedIfTooClose)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -641,7 +628,6 @@ TEST_F(BotTest, EnemyShootToBrick)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -693,7 +679,6 @@ TEST_F(BotTest, EnemyTooCloseToShootTheBrick)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -727,7 +712,6 @@ TEST_F(BotTest, CoopShootToSteel)
 			.events = _events,
 			.tier = 3u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -763,7 +747,6 @@ TEST_F(BotTest, EnemyShootToSteel)
 							  .events = _events,
 							  .tier = 3u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -797,7 +780,6 @@ TEST_F(BotTest, CoopNoShootToSteelIfTierTooLow)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -832,7 +814,6 @@ TEST_F(BotTest, EnemyNoShootToSteelIfTierTooLow)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -867,7 +848,6 @@ TEST_F(BotTest, CoopNoShootToEagle)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -903,7 +883,6 @@ TEST_F(BotTest, EnemyShootToEagle)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -938,7 +917,6 @@ TEST_F(BotTest, CoopNoShootToFortress)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -974,7 +952,6 @@ TEST_F(BotTest, EnemyShootToFortress)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1009,7 +986,6 @@ TEST_F(BotTest, CoopNoShootToWater)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1045,7 +1021,6 @@ TEST_F(BotTest, EnemyShootToWater)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1080,7 +1055,6 @@ TEST_F(BotTest, CoopNoShootToBush)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1116,7 +1090,6 @@ TEST_F(BotTest, EnemyShootToBush)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1151,7 +1124,6 @@ TEST_F(BotTest, CoopNoShootToIce)
 			.events = _events,
 			.tier = 1u,
 			.speed = _tankSpeed,
-			.windowSize = _windowSize,
 			.dir = Direction::DOWN,
 			.gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1187,7 +1159,6 @@ TEST_F(BotTest, EnemyShootToIce)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1220,7 +1191,6 @@ TEST_F(BotTest, EnemyShootToPlayerBehindWater)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1267,7 +1237,6 @@ TEST_F(BotTest, EnemyShootToPlayerInTheWater)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1314,7 +1283,6 @@ TEST_F(BotTest, EnemyShootToPlayerBehindIce)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1361,7 +1329,6 @@ TEST_F(BotTest, EnemyShootToPlayerInTheIce)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1408,7 +1375,6 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindBrickWall)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::RIGHT,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1455,7 +1421,6 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindSteelWall)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::RIGHT,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1502,7 +1467,6 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindFortressWall)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::RIGHT,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1549,7 +1513,6 @@ TEST_F(BotTest, EnemyNoShootToPlayerBehindBush)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1596,7 +1559,6 @@ TEST_F(BotTest, EnemyNoShootToPlayerInTheBush)
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = _tankSpeed,
-							  .windowSize = _windowSize,
 							  .dir = Direction::DOWN,
 							  .gameMode = _gameMode};
 	constexpr bool enableByDefault{true};
@@ -1665,7 +1627,6 @@ TEST_F(BotTest, EnemyCantSeeBonusBehindWater)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _calibre.speed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::RIGHT,
 								  .gameMode = _gameMode};
 
@@ -1732,7 +1693,6 @@ TEST_F(BotTest, EnemyCantSeeBonusBehindBush)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _calibre.speed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::RIGHT,
 								  .gameMode = _gameMode};
 
@@ -1799,7 +1759,6 @@ TEST_F(BotTest, EnemyCanSeeBonusBehindIce)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _calibre.speed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::RIGHT,
 								  .gameMode = _gameMode};
 
@@ -1874,7 +1833,6 @@ TEST_F(BotTest, EnemyCanSeeBonusInTheIce)
 								  .events = _events,
 								  .tier = 1u,
 								  .speed = _calibre.speed,
-								  .windowSize = _windowSize,
 								  .dir = Direction::RIGHT,
 								  .gameMode = _gameMode};
 

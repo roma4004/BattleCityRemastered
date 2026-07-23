@@ -1,4 +1,5 @@
 ﻿#include "entities/pawns/Bullet.h"
+#include "application/GameConfig.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/BushTile.h"
@@ -11,8 +12,9 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Bullet::Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre, std::string author, const bool enableByDefault)
-	: Pawn{std::move(pawnProperty)}
+Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
+			   const bool enableByDefault)
+	: Pawn{std::move(pawnProperty), gameConfig}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {
@@ -21,7 +23,7 @@ Bullet::Bullet(PawnProperty pawnProperty, const BulletCalibre& calibre, std::str
 	BaseObj::SetIsPenetrable(false);
 
 	// NOTE: needed only for tests, TODO in test use tank shoot instead of creating bullet
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _windowSize, _calibre, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, _calibre, _allObjects);
 
 	if (enableByDefault)
 	{
@@ -120,7 +122,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	SetDirection(resetProperty.dir);
 
 	//TODO: write reset for MoveLikeBulletBeh
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _windowSize, resetProperty.calibre, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, resetProperty.calibre, _allObjects);
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_calibre = resetProperty.calibre;

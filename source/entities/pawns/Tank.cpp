@@ -13,13 +13,13 @@
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
 		   const bool enableByDefault)
-	: Pawn{std::move(pawnProperty)}
+	: Pawn{std::move(pawnProperty), gameConfig}
 {
 	BaseObj::SetIsPassable(false);
 	BaseObj::SetIsDestructible(true);
 	BaseObj::SetIsPenetrable(false);
 
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _windowSize, _name, _fraction,
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
 												 _allObjects);
 	_calibre = BulletCalibre{.speed = 300.f,
 							 .damage = 15,
@@ -28,8 +28,8 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 							 .size{.x = 9.f, .y = 9.f}};
 	ApplyScaleToCalibre(gameConfig.scaleFactor);
 
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _windowSize, _name, _fraction, _allObjects,
-												 bulletPool, _calibre);
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _gameConfig.windowSize, _name, _fraction,
+												 _allObjects, bulletPool, _calibre);
 
 	if (enableByDefault)
 	{
@@ -98,7 +98,10 @@ void Tank::Subscribe()
 		this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
 	});
 
-	_events->AddListener("ScaleFactorChangedTo", _name, [this](const float newScale) { this->ApplyScaleToCalibre(newScale); });
+	_events->AddListener("ScaleFactorChangedTo", _name, [this](const float newScale)
+	{
+		this->ApplyScaleToCalibre(newScale);
+	});
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{

@@ -4,8 +4,8 @@
 #include <boost/property_tree/ini_parser.hpp>
 
 GameConfig::GameConfig(std::string filePath, const bool skipIniLoad)
-	: skipIniLoad{skipIniLoad},
-	  _filePath(std::move(filePath))
+	: skipIniLoad{skipIniLoad}
+	, _filePath(std::move(filePath))
 {
 	if (skipIniLoad)
 	{
@@ -29,7 +29,7 @@ GameConfig::~GameConfig()
 	{
 		SaveIni(_filePath);
 	}
-} //TODO: investigate exception, rewrite destructor
+}//TODO: investigate exception, rewrite destructor
 
 void GameConfig::LoadIni(const std::string& filePath)
 {

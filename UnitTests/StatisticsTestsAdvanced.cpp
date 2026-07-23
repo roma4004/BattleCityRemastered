@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "entities/pawns/Bullet.h"
@@ -15,6 +16,7 @@ class StatisticsTestAdvanced : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
+	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	UPoint _windowSize{.x = 800, .y = 600};
 	int _bulletHealth{1};
@@ -61,13 +63,12 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _calibre.speed,
-				.windowSize = _windowSize,
 				.dir = dir,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty2), _calibre, std::move(author), enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author), enableByDefault));
 	}
 };
 

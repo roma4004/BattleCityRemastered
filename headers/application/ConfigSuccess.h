@@ -15,7 +15,7 @@ public:
 	ConfigSuccess(const ConfigSuccess& other) = delete;
 	ConfigSuccess(ConfigSuccess&& other) noexcept = delete;
 
-	ConfigSuccess(GameConfig& gameConfig);
+	explicit ConfigSuccess(GameConfig& gameConfig);
 
 	~ConfigSuccess() override = default;
 

@@ -22,7 +22,7 @@ struct SDL_Config final
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::shared_ptr<TTF_Font> fontSmall{nullptr};
 	std::shared_ptr<TTF_Font> fontMedium{nullptr};
-	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelIntroMusic{nullptr, nullptr}; //TODO: soundManager
+	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelIntroMusic{nullptr, nullptr};//TODO: soundManager
 
 	std::shared_ptr<SDL_Texture> logoTexture{nullptr};
 	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};

@@ -45,7 +45,8 @@ class UserInput final
 	void DisconnectController(SDL_JoystickID instanceId);
 	void SwapControllers();
 	[[nodiscard]] std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
-	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller, SDL_JoystickID instanceId);
+	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller,
+											   SDL_JoystickID instanceId);
 
 public:
 	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);

@@ -411,7 +411,7 @@ std::unique_ptr<IConfig> SDL_Config::Init()
 		}
 
 		if (atlasTexture = {SDL_CreateTextureFromSurface(renderer.get(), rawSurface),
-									   SDL_DestroyTexture};
+							SDL_DestroyTexture};
 			atlasTexture == nullptr)
 		{
 			return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());

@@ -40,7 +40,7 @@ class RenderManager
 
 	SDL_Rect _fpsRectangle{};
 	// pregenerated fps texture
-	std::unordered_map<size_t, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _fpsTextures;	
+	std::unordered_map<size_t, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _fpsTextures;
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
 
 	void Subscribe();

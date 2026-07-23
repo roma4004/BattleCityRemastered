@@ -1,4 +1,5 @@
 #include "entities/pawns/Pawn.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
@@ -6,15 +7,15 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Pawn::Pawn(PawnProperty pawnProperty)
+Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig)
 	: BaseObj{std::move(pawnProperty.baseObjProperty)}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}
-	, _windowSize{pawnProperty.windowSize}
 	, _allObjects{pawnProperty.allObjects}
 	, _events{std::move(pawnProperty.events)}
 	, _dir{pawnProperty.dir}
 	, _gameMode{pawnProperty.gameMode}
+	, _gameConfig{gameConfig}
 {
 	if (_uuid == UuidUtils::GetNilUuid())
 	{
@@ -29,8 +30,6 @@ Pawn::~Pawn() = default;
 void Pawn::Subscribe()
 {
 	_gameMode == GameMode::PlayAsClient ? Pawn::SubscribeAsClient() : Pawn::SubscribeAsHost();
-
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
 }
 
 void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }

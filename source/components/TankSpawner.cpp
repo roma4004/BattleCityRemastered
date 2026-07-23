@@ -29,7 +29,7 @@ TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<Bas
 						 const std::shared_ptr<EventSystem>& events)
 	: _allObjects{allObjects}
 	, _events{events}
-	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig.windowSize, GameMode::Demo)}
+	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
 	, _respawnManager{std::make_shared<RespawnManager>(events)}
 	, _gameConfig{gameConfig}
 //TODO: extract tank spawner to respawn manager as sub component
@@ -78,11 +78,12 @@ void TankSpawner::Subscribe()
 
 	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
 	{
-		_gameConfig.previousScaleFactor = _gameConfig.scaleFactor;
-		_gameConfig.scaleFactor = static_cast<float>(newSize.y) / static_cast<float>(_gameConfig.windowSizeDefault.y);
-		_gameConfig.gridSize = _gameConfig.scaleFactor;
+		_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
+		const float newSizeY = static_cast<float>(newSize.y);
+		_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
+		_gameConfig.gridSize = _gameConfig.gridSizeDefault * _gameConfig.scaleFactor;
 
-		_gameConfig.gridOffset = _gameConfig.gridSizeDefault / _gameConfig.gridSize;
+		_gameConfig.gridOffset = (newSizeY * _gameConfig.scaleFactor) / _gameConfig.gridSize;
 		_gameConfig.tankSize = _gameConfig.gridOffset * 3.f;
 
 		_gameConfig.tankSpeed = _gameConfig.tankSpeed * _gameConfig.scaleFactor / 2.f;
@@ -91,7 +92,7 @@ void TankSpawner::Subscribe()
 
 		//TODO:scale health bar
 
-		//scale bullet calibre
+		//scale bullet caliber
 		_events->EmitEvent("ScaleFactorChangedTo", _gameConfig.scaleFactor);
 	});
 }
@@ -428,7 +429,6 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 							  .events = _events,
 							  .tier = 1u,
 							  .speed = speed,
-							  .windowSize = _gameConfig.windowSize,
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 

@@ -1,3 +1,4 @@
+#include "application/GameConfig.h"
 #include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
 #include "components/LineOfSight.h"
@@ -11,7 +12,8 @@
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 
-Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig, const bool enableByDefault)
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		 const bool enableByDefault)
 	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {
@@ -48,7 +50,7 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 	if (IsBonus(sideObstacle.front()))
 	{
-		LineOfSight bonusLineOfSight(_rect, _windowSize, _allObjects, this, false);
+		LineOfSight bonusLineOfSight(_rect, _gameConfig.windowSize, _allObjects, this, false);
 		const std::vector<std::shared_ptr<BaseObj>>& directionObstacles =
 				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
@@ -209,7 +211,7 @@ void Bot::UpdateShootDistance(const Direction dir, const std::shared_ptr<BaseObj
 
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 {
-	LineOfSight lineOfSight(_rect, _windowSize, _calibre.size, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _gameConfig.windowSize, _calibre.size, _allObjects, this);
 
 	auto dir = GetDirection();
 	std::shared_ptr<BaseObj> nearestSeenObstacle{EnemyLookup(lineOfSight, dir)};

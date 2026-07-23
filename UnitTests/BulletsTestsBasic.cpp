@@ -52,14 +52,13 @@ protected:
 				.events = _events,
 				.tier = 1u,
 				.speed = _calibre.speed,
-				.windowSize = _windowSize,
 				.dir = Direction::DOWN,
 				.gameMode = _gameMode};
 		constexpr bool enableByDefault{true};
 
 		_allObjects.reserve(4);
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author), enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author), enableByDefault));
 	}
 
 	void TearDown() override
@@ -306,7 +305,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
 	const float tankSize = gridSize * 3;// for better turns
 	constexpr int tankHealth = 1;
-	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _windowSize, _gameMode);
+	auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 
 	ObjRectangle rect{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};
 	BaseObjProperty baseObjProperty{.rect = rect,
@@ -320,7 +319,6 @@ TEST_F(BulletTest, BulletDamageTank)
 			.events = _events,
 			.tier = 1u,
 			.speed = _calibre.speed,
-			.windowSize = _windowSize,
 			.dir = Direction::UP,
 			.gameMode = _gameMode};
 
@@ -357,11 +355,10 @@ TEST_F(BulletTest, BulletToBulletDamageEachOther)
 				.events = _events,
 				.tier = 1u,
 				.speed = _calibre.speed,
-				.windowSize = _windowSize,
 				.dir = Direction::UP,
 				.gameMode = _gameMode};
 
-		_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _calibre, std::move(author)));
+		_allObjects.emplace_back(std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author)));
 
 		if (const auto bullet2 = dynamic_cast<const Bullet*>(_allObjects.back().get()))
 		{
