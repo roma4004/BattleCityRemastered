@@ -18,7 +18,7 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 
 	InitControllers();
 
-	_firstMenuMouseTileDefault = {.x = 175, .y = 160, .w = 200, .h = 30};
+	_firstMenuMouseTileDefault = {.x = 175, .y = 135, .w = 200, .h = 30};
 	InitMouseHoverTiles({});
 }
 

@@ -49,7 +49,7 @@ void Menu::Draw()
 	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;
-		_pos.y = static_cast<int>(_padding + _yOffsetStart);
+		_pos.y = _padding + _yOffsetStart;
 		_events->EmitEvent("MenuPosChanged", _pos);
 	}
 

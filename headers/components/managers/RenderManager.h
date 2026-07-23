@@ -6,11 +6,11 @@
 #include <string>
 #include <unordered_map>
 
-struct SDL_Config;
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct ObjRectangle;
 struct TTF_Font;
+struct SDL_Config;
 class EventSystem;
 class GameConfig;
 
