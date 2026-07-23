@@ -7,7 +7,7 @@ for studying new programmers.
 For me ins place to practice design patterns, game architecture in modern C++. 
 If you want to join or stydy with me, let me know in direct [Telegram/Dentair](https://t.me/Dentair).
 
-<img width="1205" height="951" alt="зображення" src="https://github.com/user-attachments/assets/bfe7bc87-41e1-4ec2-80f0-5610c52088da" />
+<img width="1201" height="948" alt="зображення" src="https://github.com/user-attachments/assets/cf1f9eea-8de7-4c58-b613-dd65f37728bc" />
 
 example of mutiplayer in two separated process, each controll one player (host is left with yellow player, and client right control green player)
 <img width="2405" height="949" alt="зображення" src="https://github.com/user-attachments/assets/24a10ff6-6629-47fc-af17-dcf0f26fc01d" />
