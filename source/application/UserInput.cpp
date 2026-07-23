@@ -313,11 +313,13 @@ void UserInput::Update()
 		//TODO: WIP, need scale for game objects and shift pos after winSizeChange
 		// if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 		// {
-		// 	const unsigned int newWidth = static_cast<unsigned int>(event.window.data1);
-		// 	const unsigned int newHeight = static_cast<unsigned int>(event.window.data2);
-		// 	const UPoint point{.x = newWidth, .y = newHeight};
+		// 	constexpr int step{50};
+		// 	const auto newWidth = static_cast<unsigned int>(event.window.data1);
+		// 	const auto newHeight = static_cast<unsigned int>(event.window.data2);
+		// 	const auto snappedWidth = static_cast<unsigned int>(std::round(newWidth / step)) * step;
+		// 	const auto snappedHeight = static_cast<unsigned int>(std::round(newHeight / step)) * step;
+		// 	const UPoint point{.x = snappedWidth, .y = snappedHeight};
 		// 	_events->EmitEvent("WindowSizeChangedTo", point);
-		// 	SDL_RenderSetLogicalSize(_gameConfig.renderer.get(), event.window.data1, event.window.data2);
 		// }
 		WindowsMoveEvents(event);
 		MouseEvents(event);
