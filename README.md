@@ -7,7 +7,7 @@ for studying new programmers.
 For me ins place to practice design patterns, game architecture in modern C++. 
 If you want to join or stydy with me, let me know in direct [Telegram/Dentair](https://t.me/Dentair).
 
-<img width="1205" height="951" alt="зображення" src="https://github.com/user-attachments/assets/bfe7bc87-41e1-4ec2-80f0-5610c52088da" />
+<img width="1201" height="948" alt="зображення" src="https://github.com/user-attachments/assets/cf1f9eea-8de7-4c58-b613-dd65f37728bc" />
 
 example of mutiplayer in two separated process, each controll one player (host is left with yellow player, and client right control green player)
 <img width="2405" height="949" alt="зображення" src="https://github.com/user-attachments/assets/24a10ff6-6629-47fc-af17-dcf0f26fc01d" />
@@ -41,7 +41,10 @@ Already done (more than 20 features):
 * right side bar with respawn counters and level number (just like in oiginal)
 * auto-activating bonusHelmet for 5 second for each tank on its spawn
 * animation of Helmet bonus on tank (health bar also hide to visualize it)
-
+* bushes logic that hide tanks from his oponents
+* in bushes tank hide their health bar
+* parsing console argument to run host process and client process at the same time, with shifted window position and network game mode started 
+* save/load settings into config ini file, with default creating ini file if not exist
 
 NOTE: For multiplayer game. 
 Its two separated process that allow to trully play with full visual replication via TCP/IP. 
@@ -56,7 +59,7 @@ Used technologies:
 * EventSystem,
 * SDL2, SDL2_TTF, SDL2_Image, SDL2_Mixer,
 * Boost (serialization, asio, property_tree/ini),
-* google unit tests (150+ tests),
+* google unit tests (170 tests),
 * NuGet dependencies for *.sln and lib source for CMake, so it can be compiled for both CMake (CLion) or *.sln project (Rider, Visual Studio)
 
 Used design patterns:
@@ -68,12 +71,11 @@ Used design patterns:
 * Flyweight pattern
 
 TODO roadmap:
-* (in progress) parsing console argument to run host process and client process at the same time, with setting window position,
-* (in progress) save/load settings into config ini file,
+* (in progress) settings screen, that alow you control volume of sound and music, enable vSync and other stuff,
+* (in progress) parsing console argument to set window position and size,
 * (in progress) SDL_Mixer for sound (only start music ready),
 * visualize time left for timers like bonusHelmet and bonusTimer,
-* settings screen, that alow you control volume of sound and music, enable vSync and other stuff,
-* ice and bushes logic,
+* ice logic,
 * new unique bonuses:
   at least bonus that allow you destroy obstacles while moveing, get bigger tank and bullet, ability limited by time,
   at least bonus ship from some version of original game that alow you cross rivers,
