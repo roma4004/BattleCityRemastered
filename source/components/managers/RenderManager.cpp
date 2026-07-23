@@ -117,7 +117,6 @@ void RenderManager::Subscribe()
 	{
 		this->_gameConfig.windowSize = newSize;//TODO: find better place for this responsibility
 		this->_fpsRectangle = CalcFpsPos(newSize);
-		this->_healthBarScale *= static_cast<int>(newSize.y / _gameConfig.windowSizeDefault.y);
 
 		SDL_RenderSetLogicalSize(this->_sdlConfig.renderer.get(),
 								 static_cast<int>(newSize.x),
@@ -509,14 +508,15 @@ void RenderManager::RenderFPS(const unsigned int fps)
 
 void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) const
 {
-	const int healthWidth = (health / 3) * (_healthBarScale / 2);
+	const float pixelsPerHealthPoint = static_cast<float>(rect.w) / 100.0f;
+	const float healthWidth = static_cast<float>(health) * pixelsPerHealthPoint;
 	if (healthWidth <= 0)
 		return;
 
 	const int offset = health > 100 ? (health - 100) / 2 : 0;
 	const SDL_Rect healthBarRect = {.x = static_cast<int>(rect.x) + 2 - offset / 3,
 									.y = static_cast<int>(rect.y) - 10,
-									.w = healthWidth,
+									.w = static_cast<int>(healthWidth),
 									.h = 5};
 
 	unsigned int color;

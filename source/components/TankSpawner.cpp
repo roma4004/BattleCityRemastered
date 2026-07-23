@@ -90,8 +90,6 @@ void TankSpawner::Subscribe()
 
 		_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
 
-		//TODO:scale health bar
-
 		//scale bullet caliber
 		_events->EmitEvent("ScaleFactorChangedTo", _gameConfig.scaleFactor);
 	});

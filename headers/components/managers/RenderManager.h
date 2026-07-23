@@ -21,7 +21,6 @@ class RenderManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig& _gameConfig;
 	SDL_Config& _sdlConfig;
-	int _healthBarScale{1};
 
 	struct MenuParams
 	{
