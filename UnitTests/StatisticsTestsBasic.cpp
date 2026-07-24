@@ -1,11 +1,9 @@
+#include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
-#include "components/input/InputProviderForPlayerOne.h"
-#include "components/input/InputProviderForPlayerTwo.h"
-#include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
@@ -28,18 +26,12 @@ protected:
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{1};
 	int _bulletHealth{1};
 	float _tankSize{};
 	float _tankSpeed{142.f};
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
-	std::string _name{"Player1"};
-	std::string _fraction{"PlayerTeam"};
-	std::string _name2{"Player2"};
-	std::string _name3{"Enemy1"};
-	std::string _fraction3{"EnemyTeam"};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -49,69 +41,10 @@ protected:
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
 
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-
-		ObjRectangle rect1{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{.rect = rect1,
-										.health = _tankHealth,
-										.uuid = _uuid,
-										.name = _name,
-										.fraction = _fraction};
-		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1u,
-				.speed = _tankSpeed,
-				.dir = Direction::UP,
-				.gameMode = _gameMode};
-
-		ObjRectangle rect2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty2{.rect = rect2,
-										 .health = _tankHealth,
-										 .uuid = _uuid,
-										 .name = _name2,
-										 .fraction = _fraction};
-		PawnProperty pawnProperty2{
-				.baseObjProperty = std::move(baseObjProperty2),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1u,
-				.speed = _tankSpeed,
-				.dir = Direction::UP,
-				.gameMode = _gameMode};
-
-		ObjRectangle rect3{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty3{.rect = rect3,
-										 .health = _tankHealth,
-										 .uuid = _uuid,
-										 .name = _name3,
-										 .fraction = _fraction3};
-		PawnProperty pawnProperty3{
-				.baseObjProperty = std::move(baseObjProperty3),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1u,
-				.speed = _tankSpeed,
-				.dir = Direction::DOWN,
-				.gameMode = _gameMode};
-
-		constexpr bool enableByDefault{true};
-
 		_allObjects.reserve(5);
-		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
-		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty2), _bulletPool, std::move(inputProvider2), _gameConfig,
-						enableByDefault));
-		_allObjects.emplace_back(
-				std::make_shared<Enemy>(std::move(pawnProperty3), _bulletPool, _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
@@ -122,10 +55,18 @@ protected:
 
 TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 {
+	// Spawn Player1
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -155,10 +96,18 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneHitByFriend)
 {
+	// Spawn Player1
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize / 2.f, .y = _tankSize + 1.f, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -188,16 +137,21 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 {
-	//TODO: remove this after moving test to separate file
-	_allObjects.pop_back();
-	auto backup = _allObjects.back();
-	_allObjects.clear();
-	_allObjects.emplace_back(backup);
+	// Spawn Player2
+	const ObjRectangle rectPlayer2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -227,15 +181,21 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 {
-	_allObjects.pop_back();
-	auto backup = _allObjects.back();
-	_allObjects.clear();
-	_allObjects.emplace_back(backup);
+	// Spawn Player2
+	const ObjRectangle rectPlayer2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -265,10 +225,18 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 {
+	// Spawn Player1
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -298,16 +266,21 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 {
-	//TODO: remove this after moving test to separate file
-	_allObjects.pop_back();
-	auto backup = _allObjects.back();
-	_allObjects.clear();
-	_allObjects.emplace_back(backup);
+	// Spawn Player2
+	const ObjRectangle rectPlayer2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -337,14 +310,18 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 {
-	//TODO: remove this after moving test to separate file
-	_allObjects.pop_back();
-	_allObjects.pop_back();
+	// Spawn Player1
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = _calibre.size.x, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _calibre.size.x, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -374,16 +351,21 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 {
-	//TODO: remove this after moving test to separate file
-	_allObjects.pop_back();
-	auto backup = _allObjects.back();
-	_allObjects.clear();
-	_allObjects.emplace_back(backup);
+	// Spawn Player2
+	const ObjRectangle rectPlayer2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = _tankSize + _tankSize / 2.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -413,18 +395,21 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByFriend)
 {
-	//TODO: remove this after moving test to separate file
-	auto backup = _allObjects.back();
-	_allObjects.clear();
-	_allObjects.emplace_back(backup);
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy2"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
-					  .y = _tankSize,
-					  .w = _calibre.size.x,
-					  .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -454,13 +439,21 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 {
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
-					  .y = _tankSize,
-					  .w = _calibre.size.x,
-					  .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -490,13 +483,21 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 {
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
-					  .y = _tankSize + 1,
-					  .w = _calibre.size.x,
-					  .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
+							.y = _tankSize + 1,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -526,18 +527,21 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 
 TEST_F(StatisticsTest, EnemyDiedByFriend)
 {
-	//TODO: remove this after moving test to separate file
-	auto backup = _allObjects.back();
-	_allObjects.clear();
-	_allObjects.emplace_back(backup);
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
 
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy2"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
-					  .y = _tankSize,
-					  .w = _calibre.size.x,
-					  .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -567,13 +571,21 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 {
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
-					  .y = _tankSize + 1,
-					  .w = _calibre.size.x,
-					  .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
+							.y = _tankSize + 1,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -603,13 +615,21 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 {
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = _tankSize * 2.f + 2.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
+
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
-					  .y = _tankSize,
-					  .w = _calibre.size.x,
-					  .h = _calibre.size.y};
+	const ObjRectangle rect{.x = _tankSize * 2.f + 2.f + _tankSize / 2.f,
+							.y = _tankSize,
+							.w = _calibre.size.x,
+							.h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -642,7 +662,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -707,7 +727,7 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -747,7 +767,7 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -784,7 +804,7 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -824,7 +844,7 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -865,7 +885,7 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -903,7 +923,7 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -937,7 +957,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 	std::string name{"Bullet1"};
 	std::string fraction{"EnemyTeam"};
 	std::string author{"Enemy1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -993,7 +1013,7 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -1051,7 +1071,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player1"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -1109,7 +1129,7 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 	std::string name{"Bullet1"};
 	std::string fraction{"PlayerTeam"};
 	std::string author{"Player2"};
-	ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle rect{.x = 0.f, .y = _tankSize, .w = _calibre.size.x, .h = _calibre.size.y};
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
 			.health = _bulletHealth,
@@ -1165,220 +1185,153 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 // Check that tank can pick up a random bonus with statistic count
 TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 {
-	{
-		auto enemy = _allObjects.back();
-		_allObjects.clear();
-		_allObjects.emplace_back(enemy);
-	}
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
 
-	if (auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos(FPoint{.x = 0.f, .y = 0.f});
-		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		const auto bonusOne = dynamic_cast<Bonus*>(_allObjects.back().get());
-		if (bonusOne)
-		{
-			_bonusSpawner->SpawnRandomBonus(
-					{.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		}
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-		if (const auto bonusTwo = dynamic_cast<Bonus*>(_allObjects.back().get()))
-		{
-			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_FALSE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 1);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 }
 
 // Check that tank can pick up a random bonus with statistic count
 TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 {
-	{
-		auto enemy = _allObjects.back();
-		_allObjects.clear();
-		_allObjects.emplace_back(enemy);
-	}
+	// Spawn Enemy
+	const ObjRectangle rectEnemy{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Enemy> enemyBot =
+			TestUtils::CreateTank<Enemy>(
+					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(enemyBot);
 
-	if (auto enemy = dynamic_cast<Enemy*>(_allObjects.front().get()))
-	{
-		enemy->SetPos(FPoint{.x = 0.f, .y = 0.f});
-		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 2 + 1.f, .w = _tankSize, .h = _tankSize});
-		const auto bonusOne = dynamic_cast<Bonus*>(_allObjects.back().get());
-		if (bonusOne)
-		{
-			_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.f,
-											 .y = _tankSize + 1.f,
-											 .w = _tankSize,
-											 .h = _tankSize});
-		}
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 2 + 1.f, .w = _tankSize, .h = _tankSize});
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-		if (const auto bonusTwo = dynamic_cast<Bonus*>(_allObjects.back().get()))
-		{
-			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_TRUE(bonusOne->GetIsAlive() && bonusTwo->GetIsAlive());
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 }
 
 // Check that tank can pick up a random bonus with statistic count
 TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 {
-	_allObjects.pop_back();
+	// Spawn Player1
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
 
-	if (auto playerOne = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		playerOne->SetPos(FPoint{.x = 0.f, .y = 0.f});
-		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Down", isPressed);
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
 
-		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
-		{
-			EXPECT_TRUE(bonus->GetIsAlive());
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_FALSE(bonus->GetIsAlive());
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 1);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 }
 
 // Check that tank can pick up a random bonus with statistic count
 TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 {
-	_allObjects.pop_back();
+	// Spawn Player1
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Up", isPressed);
 
-	if (auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos(FPoint{.x = 0.f, .y = 0.f});
+	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-		_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Up", isPressed);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 
-		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
-		{
-			EXPECT_TRUE(bonus->GetIsAlive());
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_TRUE(bonus->GetIsAlive());
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 }
 
 // Check that tank can pick up a random bonus with statistic count
 TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 {
-	_allObjects.pop_back();
+	// Spawn Player2
+	const ObjRectangle rectPlayer2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P2_Move_Down", isPressed);
 
-	if (auto playerTwo = dynamic_cast<Player*>(_allObjects.back().get()))
-	{
-		playerTwo->SetPos(FPoint{.x = _tankSize + 1.f, .y = 0.f});
-		_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P2_Move_Down", isPressed);
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
-		{
-			EXPECT_TRUE(bonus->GetIsAlive());
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_FALSE(bonus->GetIsAlive());
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 1);
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 1);
 }
 
 // Check that tank can pick up a random bonus with statistic count
 TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 {
-	_allObjects.pop_back();
+	// Spawn Player2
+	const ObjRectangle rectPlayer2{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P2_Move_Up", isPressed);
 
-	if (auto playerTwo = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		playerTwo->SetPos(FPoint{.x = _tankSize + 1.f, .y = 0.f});
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-		_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P2_Move_Up", isPressed);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 
-		if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
-		{
-			EXPECT_TRUE(bonus->GetIsAlive());
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_TRUE(bonus->GetIsAlive());
-			EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-			EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
 }

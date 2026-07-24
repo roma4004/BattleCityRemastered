@@ -11,7 +11,7 @@ class BaseObj;
 class Menu;
 class UserInput;
 class TextureManager;
-class StateManager;
+class GameStateManager;
 class FramePerSecondManager;
 class SpawnManager;
 class RenderManager;
@@ -56,7 +56,7 @@ private:
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::unique_ptr<TextureManager> _textureManager{nullptr};
-	std::unique_ptr<StateManager> _stateManager{nullptr};
+	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	std::unique_ptr<UserInput> _userInput{nullptr};
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<SpawnManager> _spawnManager{nullptr};

@@ -29,7 +29,7 @@ GameConfig::~GameConfig()
 	{
 		SaveIni(_filePath);
 	}
-}//TODO: investigate exception, rewrite destructor
+}
 
 void GameConfig::LoadIni(const std::string& filePath)
 {

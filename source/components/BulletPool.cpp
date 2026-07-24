@@ -14,13 +14,10 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<s
 	, _gameConfig{gameConfig}
 {
 	// Pre-generate 20 default bullets
-	// for (int i = 0; i < 20; ++i)
-	// {
-	// 	constexpr ObjRectangle rect{0, 0, 2, 2};
-	// 	auto bullet = CreateNewBullet(
-	// 			rect, 1, 0.0, 0xFFFFFF, 1, Direction::UP, 1.0f, "Default", "Default", 1);
-	// 	_bullets.push(bullet);
-	// }
+	for (size_t i = 0u; i < 20u; ++i)
+	{
+		_bullets.push(CreateNewBullet());
+	}
 
 	Subscribe();
 }

@@ -1,33 +1,21 @@
+#include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
-#include "components/input/InputProviderForPlayerOne.h"
-#include "components/input/InputProviderForPlayerTwo.h"
-#include "components/managers/StateManager.h"
+#include "components/managers/DelayedSpawnManager.h"
+#include "components/managers/GameStateManager.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/FortressWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
-#include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
-#include "enums/TankType.h"
-#include "components/managers/DelayedSpawnManager.h"
-#include "entities/obstacles/EagleTile.h"
-#include "entities/pawns/Enemy.h"
-#include "enums/BonusType.h"
-#include "utils/UuidUtils.h"
-
 #include "gtest/gtest.h"
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
-class EventSystem;
-class StateManager;
-class TankSpawner;
-class RespawnManager;
 
 class PlayerTest : public testing::Test
 {
@@ -37,19 +25,16 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
-	std::shared_ptr<StateManager> _stateManager{nullptr};
+	std::shared_ptr<GameStateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
 	int _tankHealth{100};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	std::string _name = "Player1";
-	std::string _fraction = "PlayerTeam";
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -58,34 +43,13 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
-		_stateManager = std::make_shared<StateManager>(_events);
+		_stateManager = std::make_shared<GameStateManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
-		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-
-		const ObjRectangle rect{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{.rect = rect,
-										.health = _tankHealth,
-										.uuid = _uuid,
-										.name = _name,
-										.fraction = _fraction};
-		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1u,
-				.speed = _tankSpeed,
-				.dir = Direction::UP,
-				.gameMode = _gameMode};
-		constexpr bool enableByDefault{true};
-
 		_allObjects.reserve(4);
-		_allObjects.emplace_back(
-				std::make_shared<Player>(
-						std::move(pawnProperty), _bulletPool, std::move(inputProvider), _gameConfig, enableByDefault));
 	}
 
 	void TearDown() override
@@ -97,936 +61,551 @@ protected:
 // Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		const auto windowHeight = static_cast<float>(_windowSize.y);
-		player->SetPos({.x = 0.f, .y = windowHeight - _tankSize});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Up", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		const FPoint endPos = player->GetPos();
-		EXPECT_NE(startPos.y, endPos.y);
-		EXPECT_EQ(startPos.x, endPos.x);
-		EXPECT_GT(startPos.y, endPos.y);
-		// EXPECT_CALL(*player, Move(1.f)).Times(1);
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can move inside the screen
-TEST_F(PlayerTest, TankMoveInSideScreenLeft)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		const auto windowWidth = static_cast<float>(_windowSize.x);
-		player->SetPos({.x = windowWidth - _tankSize, .y = 0.f});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Left", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		const FPoint endPos = player->GetPos();
-		EXPECT_NE(startPos.x, endPos.x);
-		EXPECT_EQ(startPos.y, endPos.y);
-		EXPECT_GT(startPos.x, endPos.x);
-		// EXPECT_CALL(*player, Move(1.f)).Times(1);
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can move inside the screen
-TEST_F(PlayerTest, TankMoveInSideScreenDown)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Down", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		const FPoint endPos = player->GetPos();
-		EXPECT_NE(startPos.y, endPos.y);
-		EXPECT_EQ(startPos.x, endPos.x);
-		EXPECT_LT(startPos.y, endPos.y);
-		// EXPECT_CALL(*player, Move(1.f)).Times(1);
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can move inside the screen
-TEST_F(PlayerTest, TankMoveInSideScreenRight)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Right", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		const FPoint endPos = player->GetPos();
-		EXPECT_NE(startPos.x, endPos.x);
-		EXPECT_EQ(startPos.y, endPos.y);
-		EXPECT_LT(startPos.x, endPos.x);
-		// EXPECT_CALL(*player, Move(1.f)).Times(1);
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank cannot move out of screen
-TEST_F(PlayerTest, TankMoveOutSideScreenUp)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Up", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank cannot move out of screen
-TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Left", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank cannot move out of screen
-TEST_F(PlayerTest, TankMoveOutSideScreenDown)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		const auto windowWidth = static_cast<float>(_windowSize.x);
-		const auto windowHeight = static_cast<float>(_windowSize.y);
-		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Down", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank cannot move out of screen
-TEST_F(PlayerTest, TankMoveOutSideScreenRight)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		const auto windowWidth = static_cast<float>(_windowSize.x);
-		const auto windowHeight = static_cast<float>(_windowSize.y);
-		player->SetPos({.x = windowWidth - _tankSize, .y = windowHeight - _tankSize});
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Right", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank set their position correctly
-TEST_F(PlayerTest, TankSetPos)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({});
-		const FPoint startPos = player->GetPos();
-
-		player->SetPos({.x = static_cast<float>(_windowSize.x), .y = static_cast<float>(_windowSize.y)});
-
-		EXPECT_LT(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank don't move when shooting
-TEST_F(PlayerTest, TankDontMoveWhenShotUp)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-						.y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(Direction::UP);
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank don't move when shooting
-TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-						.y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(Direction::LEFT);
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank don't move when shooting
-TEST_F(PlayerTest, TankDontMoveWhenShotDown)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-						.y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(Direction::DOWN);
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank doesn't move when shooting
-TEST_F(PlayerTest, TankDontMoveWhenShotRight)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) / 2.f,
-						.y = static_cast<float>(_windowSize.y) / 2.f});
-		player->SetDirection(Direction::RIGHT);
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can shoot inside the screen
-TEST_F(PlayerTest, TankShotInSideScreenDown)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		//success shot down test, try to create an inside screen bullet
-		player->SetDirection(Direction::DOWN);
-		const size_t size = _allObjects.size();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_LT(size, _allObjects.size());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can shoot inside the screen
-TEST_F(PlayerTest, TankShotInSideScreenRight)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		//success shot right test, try to create an inside screen bullet
-		const size_t size = _allObjects.size();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Right", isPressed);
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_LT(size, _allObjects.size());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can shoot inside the screen
-TEST_F(PlayerTest, TankShotInSideScreenUp)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-						.y = static_cast<float>(_windowSize.y) - _tankSize});
-		//success shot up test, try to create an inside screen bullet
-		const size_t size = _allObjects.size();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Up", isPressed);
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_LT(size, _allObjects.size());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can shoot inside the screen
-TEST_F(PlayerTest, TankShotInSideScreenLeft)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-						.y = static_cast<float>(_windowSize.y) - _tankSize});
-		//success shot left test, try to create an inside screen bullet
-		const size_t size = _allObjects.size();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Left", isPressed);
-		_events->EmitEvent("P1_Fire", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_LT(size, _allObjects.size());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can't shoot outside the screen
-TEST_F(PlayerTest, TankShotOutSideScreen)
-{
-	if (const auto player = dynamic_cast<Player*>(_allObjects.front().get()))
-	{
-		player->SetPos({.x = 0.f, .y = 0.f});
-		{
-			//fail the shot up test, try to create an outside screen bullet
-			const size_t size = _allObjects.size();
-
-			_events->EmitEvent("P1_Move_Up_Pressed");
-			_events->EmitEvent("P1_Fire_Pressed");
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(size, _allObjects.size());
-		}
-		{
-			//fail shot left test, try to create an outside screen bullet
-			const size_t size = _allObjects.size();
-
-			_events->EmitEvent("P1_Move_Left_Pressed");
-			_events->EmitEvent("P1_Fire_Pressed");
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(size, _allObjects.size());
-		}
-
-		player->SetPos({.x = static_cast<float>(_windowSize.x) - _tankSize,
-						.y = static_cast<float>(_windowSize.y) - _tankSize});
-		{
-			//fail the shot down test, try to create an outside screen bullet
-			const size_t size = _allObjects.size();
-
-			_events->EmitEvent("P1_Move_Down_Pressed");
-			_events->EmitEvent("P1_Fire_Pressed");
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(size, _allObjects.size());
-		}
-		{
-			//fail the shot right test, try to create an outside screen bullet
-			const size_t size = _allObjects.size();
-
-			_events->EmitEvent("P1_Move_Right_Pressed");
-			_events->EmitEvent("P1_Fire_Pressed");
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(size, _allObjects.size());
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can't move through tank
-TEST_F(PlayerTest, TankCantPassThroughTank)
-{
-	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
-	{
-		std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
-		ObjRectangle rect{.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
-		BaseObjProperty baseObjProperty{.rect = rect,
-										.health = _tankHealth,
-										.uuid = _uuid,
-										.name = _name,
-										.fraction = _fraction};
-		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1u,
-				.speed = _tankSpeed,
-				.dir = Direction::UP,
-				.gameMode = _gameMode};
-		_allObjects.emplace_back(
-				std::make_shared<Player>(std::move(pawnProperty), _bulletPool, std::move(inputProvider2), _gameConfig));
-
-		if (const auto player2 = dynamic_cast<const Player*>(_allObjects.back().get()))
-		{
-			//both players should failure, because they face each other blocking move each other
-			const FPoint playerStartPos = player->GetPos();
-			const FPoint player2StartPos = player2->GetPos();
-
-			constexpr bool isPressed{true};
-			_events->EmitEvent("P1_Move_Left", isPressed);
-			_events->EmitEvent("P2_Move_Up", isPressed);
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(playerStartPos, player->GetPos());
-			EXPECT_EQ(player2StartPos, player2->GetPos());
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can't move through brickWall
-TEST_F(PlayerTest, TankCantPassThroughBrickWall)
-{
-	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(
-				std::make_shared<BrickWall>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-						_gameMode));
-
-		//moveDown player should failure, because below we have a brickWall obstacle
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Down", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank cant move through steelWall
-TEST_F(PlayerTest, TankCantPassThroughSteelWall)
-{
-	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(
-				std::make_shared<SteelWall>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
-						_gameMode));
-
-		//moveDown player should failure, because below we have a steelWall obstacle
-		const FPoint startPos = player->GetPos();
-
-		constexpr bool isPressed{true};
-		_events->EmitEvent("P1_Move_Down", isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-		EXPECT_EQ(startPos, player->GetPos());
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank cant move through water
-TEST_F(PlayerTest, TankCantPassThroughWater)
-{
-	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(
-				std::make_shared<WaterTile>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
-						_events, _uuid, _gameMode));
-
-		if (dynamic_cast<WaterTile*>(_allObjects.back().get()))
-		{
-			//moveDown player should failure, because below we have a water obstacle
-			const FPoint startPos = player->GetPos();
-
-			constexpr bool isPressed{true};
-			_events->EmitEvent("P1_Move_Down", isPressed);
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(startPos, player->GetPos());
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that tank can't move through fortressWall
-TEST_F(PlayerTest, TankCantPassThroughfortressWall)
-{
-	if (const auto player = dynamic_cast<const Player*>(_allObjects.front().get()))
-	{
-		_allObjects.emplace_back(
-				std::make_shared<FortressWall>(
-						ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events,
-						&_allObjects, _uuid, _gameMode));
-
-		if (dynamic_cast<FortressWall*>(_allObjects.back().get()))
-		{
-			//moveDown player should failure, because below we have a fortressWall obstacle
-			const FPoint startPos = player->GetPos();
-
-			constexpr bool isPressed{true};
-			_events->EmitEvent("P1_Move_Down", isPressed);
-			_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-			EXPECT_EQ(startPos, player->GetPos());
-
-			return;
-		}
-	}
-
-	EXPECT_TRUE(false);
-}
-
-// Check that Player's team can win
-TEST_F(PlayerTest, PlayerTeamWon)
-{
-	_allObjects.clear();
-
-	bool isGameWon{false};
-
-	std::vector<std::pair<int, boost::uuids::uuid>> howManySpawnCounters;
-	howManySpawnCounters.reserve(4);
-	_events->AddListener("TankSpawn", _name, [&howManySpawnCounters](const boost::uuids::uuid& uuid)
-	{
-		const auto it = std::ranges::find_if(howManySpawnCounters, [&uuid](const std::pair<int, boost::uuids::uuid>& p)
-		{
-			return p.second == uuid;
-		});
-
-		if (it != howManySpawnCounters.end())
-		{
-			it->first++;// Increment count if UUID found
-		}
-		else
-		{
-			howManySpawnCounters.emplace_back(1, uuid);// Add new entry if UUID not found
-		}
-	});
-
-	std::vector<std::pair<int, boost::uuids::uuid>> howManyDiedCounters;
-	howManyDiedCounters.reserve(4);
-	_events->AddListener("TankDied", _name, [&howManyDiedCounters](const boost::uuids::uuid& uuid)
-	{
-		const auto it = std::ranges::find_if(howManyDiedCounters, [&uuid](const std::pair<int, boost::uuids::uuid>& p)
-		{
-			return p.second == uuid;
-		});
-
-		if (it != howManyDiedCounters.end())
-		{
-			it->first++;// Increment count if UUID found
-		}
-		else
-		{
-			howManyDiedCounters.emplace_back(1, uuid);// Add new entry if UUID not found
-		}
-	});
-
-	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
-	{
-		isGameWon = true;
-	});
-
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
-	EXPECT_FALSE(isGameWon);
-	for (int i = 0; i < 5; ++i)
-	{
-		_allObjects.clear();
-		EXPECT_EQ(_allObjects.size(), 0);
-
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
-
-		EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20 - i * 4);
-		_tankSpawner->RespawnTanks(true);
-		EXPECT_EQ(_allObjects.size(), 4);
-		std::cout << "End of respawn round" << (i + 1) << '\n';
-	}
-
-	_allObjects.clear();
-
-	for (const auto [spawnCount, uuid]: howManySpawnCounters)
-	{
-		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count spawn: " << spawnCount << '\n';
-	}
-
-	for (const auto [diedCount, uuid]: howManyDiedCounters)
-	{
-		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count died: " << diedCount << '\n';
-	}
-
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 0);
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
-	EXPECT_TRUE(isGameWon);
-
-	_events->RemoveListener("PlayersTeamIsWon", _name);
-	_events->RemoveListener("TankSpawn", _name);
-	_events->RemoveListener("TankDied", _name);
-}
-
-// Check that Player's team can win with enemy extra life
-TEST_F(PlayerTest, PlayerTeamWonWithEnemyExtraLife)
-{
-	_allObjects.clear();
-
-	bool isGameWon{false};
-
-	std::vector<std::pair<int, boost::uuids::uuid>> howManySpawnCounters;
-	howManySpawnCounters.reserve(4);
-	_events->AddListener("TankSpawn", _name, [&howManySpawnCounters](const boost::uuids::uuid& uuid)
-	{
-		const auto it = std::ranges::find_if(howManySpawnCounters, [&uuid](const std::pair<int, boost::uuids::uuid>& p)
-		{
-			return p.second == uuid;
-		});
-
-		if (it != howManySpawnCounters.end())
-		{
-			it->first++;// Increment count if UUID found
-		}
-		else
-		{
-			howManySpawnCounters.emplace_back(1, uuid);// Add new entry if UUID not found
-		}
-	});
-
-	std::vector<std::pair<int, boost::uuids::uuid>> howManyDiedCounters;
-	howManyDiedCounters.reserve(4);
-	_events->AddListener("TankDied", _name, [&howManyDiedCounters](const boost::uuids::uuid& uuid)
-	{
-		const auto it = std::ranges::find_if(howManyDiedCounters, [&uuid](const std::pair<int, boost::uuids::uuid>& p)
-		{
-			return p.second == uuid;
-		});
-
-		if (it != howManyDiedCounters.end())
-		{
-			it->first++;// Increment count if UUID found
-		}
-		else
-		{
-			howManyDiedCounters.emplace_back(1, uuid);// Add new entry if UUID not found
-		}
-	});
-
-	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
-	{
-		isGameWon = true;
-	});
-
-	// Spawn Enemy
-	ObjRectangle rect{.x = _tankSize * 3.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = _tankHealth,
-									.uuid = _uuid,
-									.name = "Enemy1",
-									.fraction = "EnemyTeam"};
-	BulletCalibre calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
-	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
-							  .allObjects = &_allObjects,
-							  .events = _events,
-							  .tier = 1u,
-							  .speed = calibre.speed,
-							  .dir = Direction::DOWN,
-							  .gameMode = _gameMode};
-
-	constexpr bool enableByDefault{true};
-	auto enemy = std::make_shared<Enemy>(std::move(pawnProperty), std::move(_bulletPool), _gameConfig, enableByDefault);
-	_allObjects.emplace_back(enemy);
-
-	// Spawn bonus extra life
-	_bonusSpawner->SpawnBonus(
-			{.x = _tankSize * 3.f, .y = _tankSize * 3.f + _tankSize + 1.f, .w = _tankSize, .h = _tankSize},
-			BonusType::Tank);
-
-	//let enemy pick up
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-	auto enemyRespawnRemain{_tankSpawner->GetEnemyRespawnCount()};
-	EXPECT_EQ(enemyRespawnRemain, 21);
-
-	for (int i = 0; i < 4; ++i)
-	{
-		_allObjects.clear();
-		EXPECT_EQ(_allObjects.size(), 0);
-
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
-		//TODO: non nesessary to do every time
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
-
-		EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 21 - i * 4);
-		_tankSpawner->RespawnTanks(true);
-		EXPECT_EQ(_allObjects.size(), 4);
-		std::cout << "End of respawn round" << (i + 1) << " with remain enemy respawn" << _tankSpawner->
-				GetEnemyRespawnCount() << '\n';
-	}
-
-	_allObjects.clear();
-	EXPECT_EQ(_allObjects.size(), 0);
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 5);
-
-	EXPECT_FALSE(isGameWon);//Check that we still not win
-
-	std::cout << "spawn extra life tank" << '\n';
-	_tankSpawner->RespawnTanks(true);//spawn 4 enemies
-	EXPECT_EQ(_allObjects.size(), 4);
-	_allObjects.pop_back();//remove one enemy tank	
-	_tankSpawner->RespawnTanks(true);//spawn use extra life
-	EXPECT_EQ(_allObjects.size(), 4);
-	_allObjects.clear();// remove all 4 enemy tank
-
-	for (const auto [spawnCount, uuid]: howManySpawnCounters)
-	{
-		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count spawn: " << spawnCount << '\n';
-	}
-
-	for (const auto [diedCount, uuid]: howManyDiedCounters)
-	{
-		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count died: " << diedCount << '\n';
-	}
-
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 0);
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
-	EXPECT_TRUE(isGameWon);
-
-	_events->RemoveListener("PlayersTeamIsWon", _name);
-	_events->RemoveListener("TankSpawn", _name);
-	_events->RemoveListener("TankDied", _name);
-}
-
-// Player team lose with broken base
-TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBase)
-{
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
-	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
-
-	_tankSpawner->RespawnTanks(true);
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
-
-	EXPECT_FALSE(isGameLose);
-
-	_allObjects.pop_back();
-	_allObjects.pop_back();
-
-	EXPECT_TRUE(isGameLose);
-
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-}
-
-// Player team lose with three deaths in a row
-TEST_F(PlayerTest, PlayerTeamLoseWithThreeDeath)
-{
-	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
-	{
-		isGameLose = true;
-	});
-
-	EXPECT_FALSE(isGameLose);
-
-	for (int i = 0; i < 3; ++i)
-	{
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-		_tankSpawner->RespawnTanks(true);
-		_allObjects.pop_back();
-	}
-
-	EXPECT_TRUE(isGameLose);
-
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-}
-
-// Player team lose with four deaths with extra life
-TEST_F(PlayerTest, PlayerTeamLoseWithExtraLifeDeath)
-{
-	bool isGameLose{false};
-	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
-
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
-	{
-		isGameLose = true;
-	});
-
-	// Spawn bonus extra life
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
-
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
-
-	for (size_t i = 0u; i < 3u; ++i)
-	{
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-		_tankSpawner->RespawnTanks(true);
-		_allObjects.pop_back();
-	}
-
-	EXPECT_FALSE(isGameLose);//Check that we still don't lose because of having extra life
-
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-	_tankSpawner->RespawnTanks(true);
-	_allObjects.pop_back();
-
-	EXPECT_TRUE(isGameLose);//Check that we lose after one death after
-
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-}
-
-// Player team lose with broken base
-TEST_F(PlayerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
-{
-	_allObjects.clear();
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
-	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
-
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
-	_tankSpawner->RespawnTanks(true);
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 16);
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 2);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3); //game mode one player so second should not respawn
-
-	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
-	_allObjects.pop_back();//remove eagle
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 0);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 0);
-
-	if (const auto player = dynamic_cast<Player*>(_allObjects.back().get()))
-	{
-		auto [x, y] = player->GetPos();//to relative spawn above player
-
-		// Spawn bonus extra life near player
-		_bonusSpawner->SpawnBonus({.x = x, .y = y - _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
-	}
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = 0.f, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Up", isPressed);
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 1);
+	const FPoint endPos = player->GetPos();
+	EXPECT_NE(startPos.y, endPos.y);
+	EXPECT_EQ(startPos.x, endPos.x);
+	EXPECT_GT(startPos.y, endPos.y);
+}
 
-	_allObjects.pop_back();//remove bonus
-	_allObjects.pop_back();//remove player
+// Check that tank can move inside the screen
+TEST_F(PlayerTest, TankMoveInSideScreenLeft)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
 
-	EXPECT_FALSE(isGameLose);
+	const FPoint startPos = player->GetPos();
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-	_tankSpawner->RespawnTanks(true);
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Left", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	_allObjects.pop_back();//remove player again (last extra life)
+	const FPoint endPos = player->GetPos();
+	EXPECT_NE(startPos.x, endPos.x);
+	EXPECT_EQ(startPos.y, endPos.y);
+	EXPECT_GT(startPos.x, endPos.x);
+}
 
-	EXPECT_TRUE(isGameLose);
+// Check that tank can move inside the screen
+TEST_F(PlayerTest, TankMoveInSideScreenDown)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
 
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const FPoint endPos = player->GetPos();
+	EXPECT_NE(startPos.y, endPos.y);
+	EXPECT_EQ(startPos.x, endPos.x);
+	EXPECT_LT(startPos.y, endPos.y);
+}
+
+// Check that tank can move inside the screen
+TEST_F(PlayerTest, TankMoveInSideScreenRight)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Right", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	const FPoint endPos = player->GetPos();
+	EXPECT_NE(startPos.x, endPos.x);
+	EXPECT_EQ(startPos.y, endPos.y);
+	EXPECT_LT(startPos.x, endPos.x);
+}
+
+// Check that tank cannot move out of screen
+TEST_F(PlayerTest, TankMoveOutSideScreenUp)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank cannot move out of screen
+TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Left", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank cannot move out of screen
+TEST_F(PlayerTest, TankMoveOutSideScreenDown)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
+								  .y = windowHeight - _tankSize,
+								  .w = _tankSize,
+								  .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank cannot move out of screen
+TEST_F(PlayerTest, TankMoveOutSideScreenRight)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
+								  .y = windowHeight - _tankSize,
+								  .w = _tankSize,
+								  .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Right", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank set their position correctly
+TEST_F(PlayerTest, TankSetPos)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	player->SetPos({.x = windowWidth, .y = windowHeight});
+
+	EXPECT_LT(startPos, player->GetPos());
+}
+
+// Check that tank don't move when shooting
+TEST_F(PlayerTest, TankDontMoveWhenShotUp)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank don't move when shooting
+TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank don't move when shooting
+TEST_F(PlayerTest, TankDontMoveWhenShotDown)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank doesn't move when shooting
+TEST_F(PlayerTest, TankDontMoveWhenShotRight)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank can shoot inside the screen
+TEST_F(PlayerTest, TankShotInSideScreenDown)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	//success shot down test, try to create an inside screen bullet
+	const size_t size = _allObjects.size();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_LT(size, _allObjects.size());
+}
+
+// Check that tank can shoot inside the screen
+TEST_F(PlayerTest, TankShotInSideScreenRight)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	//success shot right test, try to create an inside screen bullet
+	const size_t size = _allObjects.size();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Right", isPressed);
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_LT(size, _allObjects.size());
+}
+
+// Check that tank can shoot inside the screen
+TEST_F(PlayerTest, TankShotInSideScreenUp)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	//success shot up test, try to create an inside screen bullet
+	const size_t size = _allObjects.size();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_LT(size, _allObjects.size());
+}
+
+// Check that tank can shoot inside the screen
+TEST_F(PlayerTest, TankShotInSideScreenLeft)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::RIGHT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	//success shot left test, try to create an inside screen bullet
+	const size_t size = _allObjects.size();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Left", isPressed);
+	_events->EmitEvent("P1_Fire", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_LT(size, _allObjects.size());
+}
+
+// Check that tank can't shoot outside the screen
+TEST_F(PlayerTest, TankShotOutSideScreen)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	constexpr bool isPressed{true};
+	{
+		//fail the shot up test, try to create an outside screen bullet
+		const size_t size = _allObjects.size();
+
+		_events->EmitEvent("P1_Move_Up", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		EXPECT_EQ(size, _allObjects.size());
+	}
+	{
+		//fail shot left test, try to create an outside screen bullet
+		const size_t size = _allObjects.size();
+
+		_events->EmitEvent("P1_Move_Left", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		EXPECT_EQ(size, _allObjects.size());
+	}
+
+	player->SetPos({.x = static_cast<float>(_gameConfig.windowSize.x) - _tankSize,
+					.y = static_cast<float>(_gameConfig.windowSize.y) - _tankSize});
+	{
+		//fail the shot down test, try to create an outside screen bullet
+		const size_t size = _allObjects.size();
+
+		_events->EmitEvent("P1_Move_Down", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		EXPECT_EQ(size, _allObjects.size());
+	}
+	{
+		//fail the shot right test, try to create an outside screen bullet
+		const size_t size = _allObjects.size();
+
+		_events->EmitEvent("P1_Move_Right", isPressed);
+		_events->EmitEvent("P1_Fire", isPressed);
+		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+		EXPECT_EQ(size, _allObjects.size());
+	}
+}
+
+// Check that tank can't move through tank
+TEST_F(PlayerTest, TankCantPassThroughTank)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const ObjRectangle rectPlayer2 = {.x = 0, .y = _tankSize + 1, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player2 =
+			TestUtils::CreateTank<Player>(
+					rectPlayer2, _tankHealth, _uuid, "Player2", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player2);
+
+	//both players should failure, because they face each other blocking move each other
+	const FPoint playerStartPos = player->GetPos();
+	const FPoint player2StartPos = player2->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Left", isPressed);
+	_events->EmitEvent("P2_Move_Up", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(playerStartPos, player->GetPos());
+	EXPECT_EQ(player2StartPos, player2->GetPos());
+}
+
+// Check that tank can't move through brickWall
+TEST_F(PlayerTest, TankCantPassThroughBrickWall)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	_allObjects.emplace_back(
+			std::make_shared<BrickWall>(
+					ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
+					_gameMode));
+
+	//moveDown player should failure, because below we have a brickWall obstacle
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank cant move through steelWall
+TEST_F(PlayerTest, TankCantPassThroughSteelWall)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	_allObjects.emplace_back(
+			std::make_shared<SteelWall>(
+					ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid,
+					_gameMode));
+
+	//moveDown player should failure, because below we have a steelWall obstacle
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank cant move through water
+TEST_F(PlayerTest, TankCantPassThroughWater)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	auto waterTile = std::make_shared<WaterTile>(
+			ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize},
+			_events, _uuid, _gameMode);
+	_allObjects.emplace_back(waterTile);
+
+	//moveDown player should failure, because below we have a water obstacle
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that tank can't move through fortressWall
+TEST_F(PlayerTest, TankCantPassThroughfortressWall)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::UP, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	auto fortressWall = std::make_shared<FortressWall>(
+			ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events,
+			&_allObjects, _uuid, _gameMode);
+	_allObjects.emplace_back(fortressWall);
+
+	//moveDown player should failure, because below we have a fortressWall obstacle
+	const FPoint startPos = player->GetPos();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(startPos, player->GetPos());
 }

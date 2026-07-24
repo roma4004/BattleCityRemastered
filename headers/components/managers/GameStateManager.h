@@ -5,11 +5,11 @@
 #include <string>
 
 class EventSystem;
-class StateManager;
+class GameStateManager;
 
 enum class GameMode : char8_t;
 
-class StateManager
+class GameStateManager
 {
 	std::string _name{};
 
@@ -27,7 +27,7 @@ class StateManager
 	void Reset();
 
 public:
-	StateManager(const std::shared_ptr<EventSystem>& events);
+	explicit GameStateManager(const std::shared_ptr<EventSystem>& events);
 
-	~StateManager();
+	~GameStateManager();
 };

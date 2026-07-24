@@ -18,7 +18,6 @@ protected:
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800, .y = 600};
 	int _bulletHealth{1};
 	float _tankSize{};
 	double _deltaTimeOneFrame{1.f / 60.f};
@@ -30,16 +29,13 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const float gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
-
-		// std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(_events);
-		// std::unique_ptr<IInputProvider> inputProvider2 = std::make_unique<InputProviderForPlayerTwo>(_events);
 
 		const std::string name{"Bullet1"};
 		const std::string fraction{"PlayerTeam"};
 		const std::string author{"Player1"};
-		// ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
+		// const ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
 		CreateBullet(name, fraction, author, 0.f, _calibre.size.y, Direction::DOWN);
 	}
 
@@ -68,7 +64,8 @@ protected:
 		constexpr bool enableByDefault{true};
 
 		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author), enableByDefault));
+				std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author),
+										 enableByDefault));
 	}
 };
 

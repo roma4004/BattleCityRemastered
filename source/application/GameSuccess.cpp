@@ -8,9 +8,9 @@
 #include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
+#include "components/managers/GameStateManager.h"
 #include "components/managers/RenderManager.h"
 #include "components/managers/SpawnManager.h"
-#include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
@@ -29,7 +29,7 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 						 const GameMode gameMode)
 	: _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(events))
-	, _stateManager{std::make_unique<StateManager>(events)}
+	, _stateManager{std::make_unique<GameStateManager>(events)}
 	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events, gameConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig)}

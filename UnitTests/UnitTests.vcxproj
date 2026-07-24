@@ -43,7 +43,7 @@
     <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp" />
     <ClCompile Include="..\source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp" />
-    <ClCompile Include="..\source\components\managers\StateManager.cpp" />
+    <ClCompile Include="..\source\components\managers\GameStateManager.cpp" />
     <ClCompile Include="..\source\components\Map.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
@@ -115,17 +115,24 @@
     <ClCompile Include="BonusTestsBasic.cpp" />
     <ClCompile Include="BonusTestsDestroy.cpp" />
     <ClCompile Include="BonusTestsEnemy.cpp" />
-    <ClCompile Include="BotTests.cpp" />
+    <ClCompile Include="BotsTests.cpp" />
+    <ClCompile Include="CoopBotTests.cpp" />
     <ClCompile Include="BulletsTestsAdvanced.cpp" />
     <ClCompile Include="BulletsTestsBasic.cpp" />
+    <ClCompile Include="EnemyBotTests.cpp" />
     <ClCompile Include="NetworkTests.cpp" />
     <ClCompile Include="PlayerTests.cpp" />
     <ClCompile Include="RespawnTankTests.cpp" />
+    <ClCompile Include="GameStateManagerTests.cpp" />
     <ClCompile Include="StatisticsTestsAdvanced.cpp" />
     <ClCompile Include="StatisticsTestsBasic.cpp" />
+    <ClCompile Include="TestUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TestUtils.h" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

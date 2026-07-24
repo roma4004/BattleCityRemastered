@@ -3,7 +3,6 @@
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
-#include "enums/GameMode.h"
 #include "enums/TankType.h"
 #include "gtest/gtest.h"
 #include <memory>
@@ -21,7 +20,6 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_allObjects.reserve(6);
-		constexpr UPoint windowSize{.x = 800, .y = 600};
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);

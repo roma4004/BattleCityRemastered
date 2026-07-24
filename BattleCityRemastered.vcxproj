@@ -160,7 +160,7 @@
     <ClCompile Include="source\components\managers\RenderManager.cpp" />
     <ClCompile Include="source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="source\components\managers\SpawnManager.cpp" />
-    <ClCompile Include="source\components\managers\StateManager.cpp" />
+    <ClCompile Include="source\components\managers\GameStateManager.cpp" />
     <ClCompile Include="source\components\managers\TextureManager.cpp" />
     <ClCompile Include="source\components\Map.cpp" />
     <ClCompile Include="source\components\Menu.cpp" />
@@ -239,7 +239,7 @@
     <ClInclude Include="headers\components\managers\RespawnManager.h" />
     <ClInclude Include="headers\components\managers\DelayedSpawnManager.h" />
     <ClInclude Include="headers\components\managers\SpawnManager.h" />
-    <ClInclude Include="headers\components\managers\StateManager.h" />
+    <ClInclude Include="headers\components\managers\GameStateManager.h" />
     <ClInclude Include="headers\components\managers\TextureManager.h" />
     <ClInclude Include="headers\components\ScoreBoard.h" />
     <ClInclude Include="headers\entities\BulletCalibre.h" />

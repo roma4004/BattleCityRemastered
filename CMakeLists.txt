@@ -296,7 +296,7 @@ set(SOURCE_FILES
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnManager.cpp
         source/components/managers/DelayedSpawnManager.cpp
-        source/components/managers/StateManager.cpp
+        source/components/managers/GameStateManager.cpp
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
         source/entities/Obstacles/EagleTile.cpp
@@ -375,7 +375,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/managers/BonusEffectManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/DelayedSpawnManager.cpp
-        source/components/managers/StateManager.cpp
+        source/components/managers/GameStateManager.cpp
         source/components/Map.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
@@ -434,14 +434,18 @@ set(UNIT_TESTS_FILES
         UnitTests/BonusTestsBasic.cpp
         UnitTests/BonusTestsDestroy.cpp
         UnitTests/BonusTestsEnemy.cpp
-        UnitTests/BotTests.cpp
+        UnitTests/BotsTests.cpp
+        UnitTests/CoopBotTests.cpp
         UnitTests/BulletsTestsAdvanced.cpp
         UnitTests/BulletsTestsBasic.cpp
+        UnitTests/EnemyBotTests.cpp
         UnitTests/NetworkTests.cpp
         UnitTests/PlayerTests.cpp
         UnitTests/RespawnTankTests.cpp
+        UnitTests/GameStateManagerTests.cpp
         UnitTests/StatisticsTestsAdvanced.cpp
         UnitTests/StatisticsTestsBasic.cpp
+        UnitTests/TestUtils.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

@@ -455,7 +455,7 @@ std::unique_ptr<IConfig> SDL_Config::Init()
 
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
-	const auto title = "Battle City remastered";
+	constexpr auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
 	const SDL_Rect rect{.x = static_cast<int>(gameConfig.windowPos.x),
 						.y = static_cast<int>(gameConfig.windowPos.y),
