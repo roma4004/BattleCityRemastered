@@ -2,7 +2,6 @@
 #include "Point.h"
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <boost/property_tree/ptree.hpp>
 
 class GameConfig

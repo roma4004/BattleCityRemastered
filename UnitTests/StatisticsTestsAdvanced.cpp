@@ -1,3 +1,4 @@
+#include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
@@ -21,7 +22,6 @@ protected:
 	int _bulletHealth{1};
 	float _tankSize{};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -32,11 +32,7 @@ protected:
 		const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
 
-		const std::string name{"Bullet1"};
-		const std::string fraction{"PlayerTeam"};
-		const std::string author{"Player1"};
-		// const ObjRectangle rect{.x = 0.f, .y = _bulletHeight, .w = _bulletWidth, .h = _bulletHeight};
-		CreateBullet(name, fraction, author, 0.f, _calibre.size.y, Direction::DOWN);
+		CreateBullet({.x = 0.f, .y = 5.f}, Direction::DOWN, 1u, "Bullet1", "PlayerTeam", "Player1");
 	}
 
 	void TearDown() override
@@ -44,37 +40,29 @@ protected:
 		// Deinitialization or some cleanup operations
 	}
 
-	void CreateBullet(std::string name, std::string fraction, std::string author, float x, float y, Direction dir)
+	//TODO: use this style for others bullet creation
+	void CreateBullet(const FPoint pos, const Direction dir, const unsigned int tier, std::string name,
+					  std::string fraction,
+					  std::string author)
 	{
-		ObjRectangle rect2{.x = x, .y = y, .w = _calibre.size.x, .h = _calibre.size.y};
-		BaseObjProperty baseObjProperty2{
-				.rect = rect2,
-				.health = _bulletHealth,
-				.uuid = _uuid,
-				.name = std::move(name),
-				.fraction = std::move(fraction)};
-		PawnProperty pawnProperty2{
-				.baseObjProperty = std::move(baseObjProperty2),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = 1u,
-				.speed = _calibre.speed,
-				.dir = dir,
-				.gameMode = _gameMode};
-		constexpr bool enableByDefault{true};
-
-		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty2), _gameConfig, _calibre, std::move(author),
-										 enableByDefault));
+		const BulletCalibre calibre{.speed = 300.f,
+									.damage = 1,
+									.damageRadius = 12.0,
+									.tier = tier,
+									.size{.x = 6.f, .y = 5.f}};
+		// spawn Bullet
+		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
+		std::shared_ptr<Bullet> bullet =
+				TestUtils::CreateBullet(
+						rectBullet, _bulletHealth, _uuid, std::move(name), std::move(fraction), &_allObjects,
+						_events, calibre, dir, _gameMode, _gameConfig, std::move(author));
+		_allObjects.emplace_back(bullet);
 	}
 };
 
 TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
-	const std::string name{"Bullet2"};
-	const std::string fraction{"EnemyTeam"};
-	const std::string author{"Enemy1"};
-	CreateBullet(name, fraction, author, 0.f, _calibre.size.y + 1, Direction::UP);
+	CreateBullet({.x = 0.f, .y = 5.f + 1}, Direction::UP, 1u, "Bullet2", "EnemyTeam", "Enemy1");
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
@@ -87,10 +75,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 
 TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
-	const std::string name{"Bullet2"};
-	const std::string fraction{"PlayerTeam"};
-	const std::string author{"Player2"};
-	CreateBullet(name, fraction, author, 0.f, _calibre.size.y + 1, Direction::UP);
+	CreateBullet({.x = 0.f, .y = 5.f + 1}, Direction::UP, 1u, "Bullet2", "PlayerTeam", "Player2");
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);

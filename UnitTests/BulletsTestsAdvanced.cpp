@@ -1,9 +1,9 @@
 ﻿#include "Point.h"
+#include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
@@ -18,7 +18,6 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _bulletHealth{1};
 	float _gridSize{1};
 	double _deltaTimeOneFrame{1.f / 60.f};
@@ -29,32 +28,16 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
-
-		std::string name{"Bullet1"};
-		std::string fraction{"PlayerTeam"};
-		std::string author{"Player1"};
-		const ObjRectangle rect{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
-		BaseObjProperty baseObjProperty{
-				.rect = rect,
-				.health = _bulletHealth,
-				.uuid = _uuid,
-				.name = std::move(name),
-				.fraction = std::move(fraction)};
-		PawnProperty pawnProperty{
-				.baseObjProperty = std::move(baseObjProperty),
-				.allObjects = &_allObjects,
-				.events = _events,
-				.tier = _calibre.tier,
-				.speed = _calibre.speed,
-				.dir = Direction::DOWN,
-				.gameMode = _gameMode};
-		constexpr bool enableByDefault{true};
+		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 
 		_allObjects.reserve(4);
-		_allObjects.emplace_back(
-				std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
-										 enableByDefault));
+
+		const ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
+		std::shared_ptr<Bullet> bullet =
+				TestUtils::CreateBullet(
+						rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+						_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+		_allObjects.emplace_back(bullet);
 	}
 
 	void TearDown() override

@@ -62,26 +62,13 @@ protected:
 // Check that bullet can destroy a random bonus
 TEST_F(BonusTestsDestroy, BonusDestroy)
 {
-	std::string name{"Bullet1"};
-	std::string fraction{"EnemyTeam"};
-	std::string author{"Enemy1"};
-	constexpr ObjRectangle rect{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = _bulletHealth,
-									.uuid = _uuid,
-									.name = name,
-									.fraction = fraction};
-	PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, author, enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "EnemyTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Enemy1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize});
 
@@ -102,26 +89,13 @@ TEST_F(BonusTestsDestroy, BonusDestroy)
 // Check that bullet not destroy a random bonus
 TEST_F(BonusTestsDestroy, BonusNotDestroy)
 {
-	std::string name{"Bullet1"};
-	std::string fraction{"EnemyTeam"};
-	std::string author{"Enemy1"};
-	constexpr ObjRectangle rect{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = _bulletHealth,
-									.uuid = _uuid,
-									.name = std::move(name),
-									.fraction = std::move(fraction)};
-	PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::RIGHT,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, author, enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "EnemyTeam", &_allObjects,
+					_events, _calibre, Direction::RIGHT, _gameMode, _gameConfig, "Enemy1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize});
 
@@ -142,31 +116,19 @@ TEST_F(BonusTestsDestroy, BonusNotDestroy)
 //Check that player can destroy timer bonus and enemies still move
 TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 {
-	std::string name{"Bullet1"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .health = _bulletHealth,
-										  .uuid = _uuid,
-										  .name = std::move(name),
-										  .fraction = std::move(fraction)};
-	PawnProperty pawnPropertyBullet{
-			.baseObjProperty = std::move(baseObjPropertyBullet),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
+	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
@@ -184,6 +146,7 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 //Check that player can destroy helmet bonus and enemies still can damage player
 TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -191,52 +154,25 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
-	std::string name{"Bullet1"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .health = _bulletHealth,
-										  .uuid = _uuid,
-										  .name = std::move(name),
-										  .fraction = std::move(fraction)};
-	PawnProperty pawnPropertyBullet{
-			.baseObjProperty = std::move(baseObjPropertyBullet),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author,
-									 enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	std::string name2{"Bullet2"};
-	std::string fraction2{"EnemyTeam"};
-	std::string author2{"Enemy1"};
-	ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.f, .y = 7.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet2{.rect = rectBullet2,
-										   .health = _bulletHealth,
-										   .uuid = _uuid,
-										   .name = std::move(name2),
-										   .fraction = std::move(fraction2)};
-	PawnProperty pawnPropertyBullet2{
-			.baseObjProperty = std::move(baseObjPropertyBullet2),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::LEFT,
-			.gameMode = _gameMode};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet2), _gameConfig, _calibre, author2,
-									 enableByDefault));
+	// spawn Bullet2
+	const ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.f, .y = 7.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet2 =
+			TestUtils::CreateBullet(
+					rectBullet2, _bulletHealth, _uuid, "Bullet2", "EnemyTeam", &_allObjects,
+					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, "Enemy1");
+	_allObjects.emplace_back(bullet2);
 
 	const int playerHealth = player->GetHealth();
 
@@ -249,29 +185,17 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 //Check that player can destroy Grenade bonus and enemies still full health
 TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 {
-	std::string name{"Bullet1"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .health = _bulletHealth,
-										  .uuid = _uuid,
-										  .name = std::move(name),
-										  .fraction = std::move(fraction)};
-	PawnProperty pawnPropertyBullet{
-			.baseObjProperty = std::move(baseObjPropertyBullet),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
+	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
@@ -289,26 +213,13 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 //Check that player destroys Tank bonus and his life counts remain the same
 TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 {
-	std::string name{"Bullet1"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .health = _bulletHealth,
-										  .uuid = _uuid,
-										  .name = std::move(name),
-										  .fraction = std::move(fraction)};
-	PawnProperty pawnPropertyBullet{
-			.baseObjProperty = std::move(baseObjPropertyBullet),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
@@ -322,6 +233,7 @@ TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 //Check that player destroys Star bonus and his tier counts remain the same
 TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -329,27 +241,13 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
-	std::string name{"Bullet1"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .health = _bulletHealth,
-										  .uuid = _uuid,
-										  .name = std::move(name),
-										  .fraction = std::move(fraction)};
-	PawnProperty pawnPropertyBullet{
-			.baseObjProperty = std::move(baseObjPropertyBullet),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author,
-									 enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
@@ -363,26 +261,13 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 //Check that player destroys Shovel bonus and fortress brick remain the same
 TEST_F(BonusTestsDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
-	std::string name{"Bullet1"};
-	std::string fraction{"PlayerTeam"};
-	std::string author{"Player1"};
-	ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjPropertyBullet{.rect = rectBullet,
-										  .health = _bulletHealth,
-										  .uuid = _uuid,
-										  .name = std::move(name),
-										  .fraction = std::move(fraction)};
-	PawnProperty pawnPropertyBullet{
-			.baseObjProperty = std::move(baseObjPropertyBullet),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::DOWN,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnPropertyBullet), _gameConfig, _calibre, author, enableByDefault));
+	// spawn Bullet
+	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 	const auto fortressWall =

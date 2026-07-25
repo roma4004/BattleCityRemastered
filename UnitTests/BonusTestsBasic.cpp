@@ -29,7 +29,6 @@ protected:
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	UPoint _windowSize{.x = 800u, .y = 600u};
 	int _tankHealth{100};
 	int _bulletHealth{1};
 	float _tankSize{};
@@ -47,7 +46,7 @@ protected:
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
-		_gridSize = static_cast<float>(_windowSize.y) / 50.f;
+		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(4);
@@ -62,6 +61,7 @@ protected:
 // Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusPickUp)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -91,6 +91,7 @@ TEST_F(BonusTest, BonusPickUp)
 // Check that tank can pick up a random bonus
 TEST_F(BonusTest, BonusNotPickUp)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -120,6 +121,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 // Check that player can pick up Timer bonus and freeze enemy
 TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -131,6 +133,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
+	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
@@ -150,6 +153,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 // Check that player not pick up Timer bonus and enemies still move
 TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -161,6 +165,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
+	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
@@ -178,6 +183,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 //Check that player can pick up Helmet bonus and enemies can't damage player
 TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -192,25 +198,12 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	std::string name{"Bullet1"};
-	std::string fraction{"EnemyTeam"};
-	std::string author{"Enemy1"};
-	const ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = _bulletHealth,
-									.uuid = _uuid,
-									.name = std::move(name),
-									.fraction = std::move(fraction)};
-	PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::LEFT,
-			.gameMode = _gameMode};
-
-	auto bullet = std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author));
+	// spawn Bullet
+	const ObjRectangle rectBullet{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "EnemyTeam", &_allObjects,
+					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
@@ -221,6 +214,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 //Check that player not pick up Helmet bonus and enemies can damage player
 TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -235,28 +229,13 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	std::string name{"Bullet1"};
-	std::string fraction{"EnemyTeam"};
-	std::string author{"Enemy1"};
-	const ObjRectangle rect{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = _bulletHealth,
-									.uuid = _uuid,
-									.name = std::move(name),
-									.fraction = std::move(fraction)};
-	PawnProperty pawnProperty{
-			.baseObjProperty = std::move(baseObjProperty),
-			.allObjects = &_allObjects,
-			.events = _events,
-			.tier = 1u,
-			.speed = _tankSpeed,
-			.dir = Direction::LEFT,
-			.gameMode = _gameMode};
-	constexpr bool enableByDefault{true};
-
-	_allObjects.emplace_back(
-			std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig, _calibre, std::move(author),
-									 enableByDefault));
+	// spawn Bullet
+	const ObjRectangle rectBullet{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "EnemyTeam", &_allObjects,
+					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, "Enemy1");
+	_allObjects.emplace_back(bullet);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -266,6 +245,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 //Check that player pick up Grenade bonus and enemies got zero health
 TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -275,6 +255,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
+	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
@@ -294,6 +275,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 //Check that not player pick up Grenade bonus and enemies remain full health
 TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -303,6 +285,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Up", isPressed);
 
+	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
@@ -322,6 +305,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 //Check that player pick up Tank bonus and got his extra life
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -343,6 +327,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 //Check that player not pick up Tank bonus and his life count remains the same
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -364,6 +349,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 //Check that player pick up Star bonus and his tier increased
 TEST_F(BonusTest, StarPickUpTierIncrease)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -385,6 +371,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 //Check that player not pick up Star bonus and his tier remains the same
 TEST_F(BonusTest, StarNotPickUpTierTheSame)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -407,6 +394,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 //Check that player pick up Shovel bonus and Fortress wall turns into Steel wall
 TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -433,6 +421,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 //Check that player not pick up Shovel bonus and his Fortress wall remain the same
 TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 {
+	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
