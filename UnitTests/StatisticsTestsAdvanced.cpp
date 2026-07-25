@@ -42,8 +42,7 @@ protected:
 
 	//TODO: use this style for others bullet creation
 	void CreateBullet(const FPoint pos, const Direction dir, const unsigned int tier, std::string name,
-					  std::string fraction,
-					  std::string author)
+					  std::string fraction, std::string author)
 	{
 		const BulletCalibre calibre{.speed = 300.f,
 									.damage = 1,

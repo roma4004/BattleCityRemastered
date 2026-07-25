@@ -44,8 +44,7 @@ protected:
 	}
 };
 
-//TODO: extract to base object tests like set pos
-// Check that tank set their position correctly
+// Check that bullet set their position correctly
 TEST_F(BulletTest, BulletSetPos)
 {
 	// spawn Bullet
@@ -63,6 +62,25 @@ TEST_F(BulletTest, BulletSetPos)
 	bullet->SetPos({.x = windowWidth, .y = windowHeight});
 
 	EXPECT_LT(startPos, bullet->GetPos());
+}
+
+// Check that bullet set their direction correctly
+TEST_F(BulletTest, BulletSetDirection)
+{
+	// spawn Bullet
+	const ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
+
+	const Direction startDirection = bullet->GetDirection();
+
+	bullet->SetDirection(Direction::UP);
+
+	EXPECT_NE(startDirection, bullet->GetDirection());
+	EXPECT_EQ(Direction::UP, bullet->GetDirection());
 }
 
 // Check that a bullet can move inside the screen
@@ -166,7 +184,7 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 	}
 }
 
-// Check that a bullet can deal damage to another obstacle and self
+// Check that a bullet can deal damage to another obstacle
 TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 {
 	// spawn Bullet
@@ -182,16 +200,14 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveUp)
 	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode);
 	_allObjects.emplace_back(brickWall);
 
-	const int bulletHealth = bullet->GetHealth();
 	const int brickWallHealth = brickWall->GetHealth();
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_GT(bulletHealth, bullet->GetHealth());
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
-// Check that a bullet can deal damage to another obstacle and self
+// Check that a bullet can deal damage to another obstacle
 TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 {
 	// spawn Bullet
@@ -207,16 +223,14 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveLeft)
 	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode);
 	_allObjects.emplace_back(brickWall);
 
-	const int bulletHealth = bullet->GetHealth();
 	const int brickWallHealth = brickWall->GetHealth();
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_GT(bulletHealth, bullet->GetHealth());
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
-// Check that a bullet can deal damage to another obstacle and self
+// Check that a bullet can deal damage to another obstacle
 TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 {
 	// spawn Bullet
@@ -231,16 +245,15 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveDown)
 	const ObjRectangle rect{.x = 0.f, .y = 6.f, .w = _gridSize, .h = _gridSize};
 	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode);
 	_allObjects.emplace_back(brickWall);
-	const int bulletHealth = bullet->GetHealth();
+
 	const int brickWallHealth = brickWall->GetHealth();
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_GT(bulletHealth, bullet->GetHealth());
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
-// Check that a bullet can deal damage to another obstacle and self
+// Check that a bullet can deal damage to another obstacle
 TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 {
 	// spawn Bullet
@@ -256,15 +269,14 @@ TEST_F(BulletTest, BulletDamageBrickWhenMoveRight)
 	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode);
 	_allObjects.emplace_back(brickWall);
 
-	const int bulletHealth = bullet->GetHealth();
 	const int brickWallHealth = brickWall->GetHealth();
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_GT(bulletHealth, bullet->GetHealth());
 	EXPECT_GT(brickWallHealth, brickWall->GetHealth());
 }
 
+// Check that a bullet can deal damage to tank
 TEST_F(BulletTest, BulletDamageTank)
 {
 	// spawn Bullet
@@ -373,6 +385,7 @@ TEST_F(BulletTest, BulletCantDamageWater)
 	EXPECT_EQ(waterTileHealth, waterTile->GetHealth());
 }
 
+// Check that a bullet can deal damage to FortressWall
 TEST_F(BulletTest, BulletDamagefortressWall)
 {
 	// spawn Bullet
@@ -394,4 +407,28 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(fortressWall->GetHealth(), -1);
+}
+
+// Check that a bullet deal damage to self when hit something
+TEST_F(BulletTest, BulletHaveSelfDamageWhenHit)
+{
+	// spawn Bullet
+	const ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
+	std::shared_ptr<Bullet> bullet =
+			TestUtils::CreateBullet(
+					rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
+	_allObjects.emplace_back(bullet);
+
+	// spawn BrickWall
+	constexpr ObjRectangle rect{.x = 0.f, .y = 6.f, .w = 36, .h = 36};
+	auto brickWall = std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode);
+	_allObjects.emplace_back(brickWall);
+
+	bullet->SetHealth(1);
+	EXPECT_EQ(bullet->GetHealth(), 1);
+
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+
+	EXPECT_EQ(bullet->GetHealth(), 0);
 }

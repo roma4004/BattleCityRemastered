@@ -454,7 +454,7 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 	std::shared_ptr<Bullet> bullet2 =
 			TestUtils::CreateBullet(
 					rectBullet2, _bulletHealth, _uuid, "Bullet2", "PlayerTeam", &_allObjects,
-					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player2");
+					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet2);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);

@@ -253,6 +253,24 @@ TEST_F(PlayerTest, TankSetPos)
 	EXPECT_LT(startPos, player->GetPos());
 }
 
+// Check that tank set their direction correctly
+TEST_F(PlayerTest, TankSetDirection)
+{
+	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const Direction startDirection = player->GetDirection();
+
+	player->SetDirection(Direction::RIGHT);
+
+	EXPECT_NE(startDirection, player->GetDirection());
+	EXPECT_EQ(Direction::RIGHT, player->GetDirection());
+}
+
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
