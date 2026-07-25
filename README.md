@@ -41,12 +41,12 @@ Already reimplement(from scratch) features from original game title:
 8) Enemy can pickup bonus with oposite effect(inverse team logic) or self apply positive effect.
 9) Random bonus spawn each 60 sec, in random and free location,
 10) Bonus variations from the original game like:
-10.1) Grenade (destroy opponents team tank),
-10.2) Helmet (temporary invincibility, for 15 sec),
-10.3) Shovel (temporarу turns brick walls around the fortress to SteelWall and repair destroyed parts, then after 15 sec, they turns into brickWall. In case enemy pickup just destroy fortressWalls),
-10.4) Star (increases tank power, when pick up more than 2 can destroy steel walls),
-10.5) Tank (extra life),
-10.6) Timer (freeze enemy team, for 15 sec)
+  * Grenade (destroy opponents team tank),
+  * Helmet (temporary invincibility, for 15 sec),
+  * Shovel (temporarу turns brick walls around the fortress to SteelWall and repair destroyed parts, then after 15 sec, they turns into brickWall. In case enemy pickup just destroy fortressWalls),
+  * Star (increases tank power, when pick up more than 2 can destroy steel walls),
+  * Tank (extra life),
+  * Timer (freeze enemy team, for 15 sec)
 11) Intro music
 12) Textures and animation based on original, with some small difference and extendings
 13) Animation: tankSpawn, BonusHelmet effect, bullet explosion, tank explosion 
@@ -92,6 +92,7 @@ TODO roadmap:
   at least bonus that allow you destroy obstacles while moveing, get bigger tank and bullet, ability limited by time,
   at least bonus ship from some version of original game that alow you cross rivers,
 * lobby system for network multiplayer,
+* 4 players support in multiplayer,
 * QuadTree for collision detection (yea it will be overkill, but cool for stydy),
 * Thread Pool for faster "update" and "draw",
 * maybe rewrite for DOTs using
