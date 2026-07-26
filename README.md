@@ -28,6 +28,7 @@ Additional features or extended compare to the original title:
 10) save\load settings into config ini file, with default creating ini file if not exist
 11) In bushes tank hide their health bar
 12) Mouse support, GameMode selecting\start level
+13) extended ice logic, tanks on it have the velocity so they can drift even diagonaly
 
 Already reimplement(from scratch) features from original game title:
 1) Moving (for both players in one keyboard)
@@ -55,6 +56,7 @@ Already reimplement(from scratch) features from original game title:
 16) Auto-activating bonusHelmet for 5 second for each tank on its spawn
 17) Animation of Helmet bonus on tank (health bar also hide to visualize it)
 18) Bushes logic that hide tanks from his oponents
+19) Ice logic, tanks on it temporary continus driving after move input release
 
 
 NOTE: For multiplayer game. 
@@ -64,6 +66,7 @@ Game in host\client mode looks similar but with strict host authority, so clien 
   * Host will be on auto pause while awaiting client joining
   * Replicating all visual events (move, shot, died, spawn, statistics, animation)
   * Logic compute on host with acepting client inputs and partialy miroring back to client to create visual consequence 
+Hint: you can create BAT file, put there "game.exe -host && game.exe -client" and execute it, this will run both window at the same time, with offset, so windows will not cover each other.
 
 Used technologies:
 * C++20,
@@ -84,7 +87,6 @@ Used design patterns:
 TODO roadmap:
 * (in progress) settings screen, that alow you control volume of sound and music, enable vSync and other stuff,
 * (in progress) Mouse support in settings screen
-* (in progress) ice logic,
 * parsing console argument to set window position and size,
 * SDL_Mixer for sound (only start music ready),
 * visualize time left for timers like bonusHelmet and bonusTimer,
