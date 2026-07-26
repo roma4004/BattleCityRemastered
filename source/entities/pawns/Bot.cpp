@@ -412,6 +412,7 @@ void Bot::TickUpdate(const double deltaTime)
 		}
 	}
 
+	// TODO: cover by unit test isTouchTheIce and ice movement logic 
 	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
 		FPoint pos = GetPos();

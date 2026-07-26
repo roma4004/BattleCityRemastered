@@ -94,8 +94,8 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 		return MoveLeft(deltaTime, outCollisions);
 	}
 
-	if (size_t sideBarWidth = 175;//TODO: move sidebar width to params
-		dir == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_gameConfig.windowSize.x - sideBarWidth))
+	if (dir == Direction::RIGHT
+		&& _rect.Right() + speed <= static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth))
 	{
 		return MoveRight(deltaTime, outCollisions);
 	}

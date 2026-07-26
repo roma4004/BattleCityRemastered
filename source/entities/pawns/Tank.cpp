@@ -21,7 +21,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	BaseObj::SetIsPenetrable(false);
 
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
-												 _allObjects, _effects);
+												 _allObjects, _effects, gameConfig);
 	_calibre = BulletCalibre{.speed = 300.f,
 							 .damage = 15,
 							 .damageRadius = 18.f,

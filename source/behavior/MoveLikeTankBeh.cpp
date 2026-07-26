@@ -1,5 +1,6 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "Point.h"
+#include "application/GameConfig.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
@@ -9,7 +10,8 @@
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
 								 std::string& name, std::string& fraction,
-								 std::vector<std::shared_ptr<BaseObj>>* allObjects, BonusEffectProperty& effects)
+								 std::vector<std::shared_ptr<BaseObj>>* allObjects, BonusEffectProperty& effects,
+								 GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
@@ -18,6 +20,7 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& spee
 	, _windowSize{windowSize}
 	, _name{name}
 	, _fraction{fraction}
+	, _gameConfig{gameConfig}
 	, _allObjects{allObjects} {}
 
 ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direction dir) const
@@ -190,8 +193,7 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 
 bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
-	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
+	const float maxX = static_cast<float>(_windowSize.x - _gameConfig.sideBarWidth);
 	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Right() + speed < maxX)
 	{
@@ -371,8 +373,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 		isDrift = true;
 	}
 
-	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
-	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
+	const float maxX = static_cast<float>(_windowSize.x - _gameConfig.sideBarWidth);
 	if (_rightVelocity > speed)
 	{
 		if (_rightVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay

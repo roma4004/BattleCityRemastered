@@ -10,6 +10,7 @@
 struct BonusEffectProperty;
 class BaseObj;
 class Tank;
+class GameConfig;
 
 class MoveLikeTankBeh final : public IMoveBeh
 {
@@ -28,6 +29,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	UPoint& _windowSize;
 	std::string& _name;
 	std::string& _fraction;
+	GameConfig& _gameConfig;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -46,7 +48,7 @@ protected:
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
 					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-					BonusEffectProperty& effects);
+					BonusEffectProperty& effects, GameConfig& gameConfig);
 
 	~MoveLikeTankBeh() override = default;
 
