@@ -66,14 +66,6 @@ void Player::TickUpdate(const double deltaTime)
 		_shootTimer.isActive = false;
 	}
 
-	_effects.isTouchTheBushes = IsTouchBush();
-	if (const bool isTouchTheIce = IsTouchIce();
-		_effects.isTouchTheIce != isTouchTheIce)
-	{
-		_effects.isTouchTheIce = isTouchTheIce;
-		_moveBeh->ResetVelocity();
-	}
-
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
 	const auto [up, left, down, right, shot] = _inputProvider->GetKeysStats();
 
@@ -104,6 +96,14 @@ void Player::TickUpdate(const double deltaTime)
 		{
 			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
+	}
+
+	_effects.isTouchTheBushes = IsTouchBush();
+	if (const bool isTouchTheIce = IsTouchIce();
+		_effects.isTouchTheIce != isTouchTheIce)
+	{
+		_effects.isTouchTheIce = isTouchTheIce;
+		_moveBeh->ResetVelocity();
 	}
 
 	if (!outCollisions.empty())

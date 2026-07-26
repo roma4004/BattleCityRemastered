@@ -147,7 +147,8 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 
 bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = _speed * static_cast<float>(deltaTime); _rect.x - speed >= 0.f)
+	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+		_rect.x - speed >= 0.f)
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
@@ -155,11 +156,14 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 		{
 			if (_effects.isTouchTheIce)
 			{
-				_leftVelocity += speed * _driftMultiplicator;
+				if (_leftVelocity < _rect.w * _driftMultiplicator)// clamp max accumulated velocity
+				{
+					_leftVelocity += speed * _driftMultiplicator;
+				}
 			}
 			else
 			{
-				_rect.x -= std::floor(speed);
+				_rect.x -= speed;
 			}
 
 			return true;
@@ -188,7 +192,8 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 {
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
-	if (float speed = _speed * static_cast<float>(deltaTime); _rect.Right() + speed < maxX)
+	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+		_rect.Right() + speed < maxX)
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
@@ -196,11 +201,14 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 		{
 			if (_effects.isTouchTheIce)
 			{
-				_rightVelocity += speed * _driftMultiplicator;
+				if (_rightVelocity < _rect.w * _driftMultiplicator)// clamp max accumulated velocity
+				{
+					_rightVelocity += speed * _driftMultiplicator;
+				}
 			}
 			else
 			{
-				_rect.x += std::floor(speed);
+				_rect.x += speed;
 			}
 
 			return true;
@@ -227,7 +235,8 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 
 bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = _speed * static_cast<float>(deltaTime); _rect.y - speed >= 0.0f)
+	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+		_rect.y - speed >= 0.0f)
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
@@ -235,11 +244,14 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 		{
 			if (_effects.isTouchTheIce)
 			{
-				_upVelocity += speed * _driftMultiplicator;
+				if (_upVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
+				{
+					_upVelocity += speed * _driftMultiplicator;
+				}
 			}
 			else
 			{
-				_rect.y -= std::floor(speed);
+				_rect.y -= speed;
 			}
 
 			return true;
@@ -266,7 +278,7 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 
 bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = _speed * static_cast<float>(deltaTime);
+	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
 		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
 	{
 		constexpr float maxMoveStep = 8.0f;
@@ -275,11 +287,14 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 		{
 			if (_effects.isTouchTheIce)
 			{
-				_downVelocity += speed * _driftMultiplicator;
+				if (_downVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
+				{
+					_downVelocity += speed * _driftMultiplicator;
+				}
 			}
 			else
 			{
-				_rect.y += std::floor(speed);
+				_rect.y += speed;
 			}
 
 			return true;
@@ -307,49 +322,49 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 {
 	bool isDrift{false};
-	float speed = _speed * static_cast<float>(deltaTime);
-	if (_upVelocity > speed &&  _rect.y - speed >= 0.0f)
+	float speed = std::floor(_speed * static_cast<float>(deltaTime));
+	if (_upVelocity > speed)
 	{
-		if (_upVelocity > _rect.h / 2.f)//enabling drift if move more than two tank tile
+		if (_upVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
 		{
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::UP))
+		if (IsCanMove(deltaTime, Direction::UP) && _rect.y - speed >= 0.0f)
 		{
-			_rect.y -= std::floor(speed);
+			_rect.y -= speed;
 		}
 
 		_upVelocity -= speed;
 		isDrift = true;
 	}
 
-	if (_downVelocity > speed && _rect.Bottom() + speed < static_cast<float>(_windowSize.y))
+	if (_downVelocity > speed)
 	{
-		if (_downVelocity > _rect.h / 2.f)//enabling drift if move more than two tank tile
+		if (_downVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
 		{
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::DOWN))
+		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < static_cast<float>(_windowSize.y))
 		{
-			_rect.y += std::floor(speed);
+			_rect.y += speed;
 		}
 
 		_downVelocity -= speed;
 		isDrift = true;
 	}
 
-	if (_leftVelocity > speed && _rect.x - speed >= 0.f)
+	if (_leftVelocity > speed)
 	{
-		if (_leftVelocity > _rect.w / 2.f)//enabling drift if move more than two tank tile
+		if (_leftVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
 		{
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::LEFT))
+		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.f)
 		{
-			_rect.x -= std::floor(speed);
+			_rect.x -= speed;
 		}
 
 		_leftVelocity -= speed;
@@ -358,16 +373,16 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
-	if (_rightVelocity > speed && _rect.Right() + speed < maxX)
+	if (_rightVelocity > speed)
 	{
-		if (_rightVelocity > _rect.w / 2.f)//enabling drift if move more than two tank tile
+		if (_rightVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
 		{
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::RIGHT))
+		if (IsCanMove(deltaTime, Direction::RIGHT) && _rect.Right() + speed < maxX)
 		{
-			_rect.x += std::floor(speed);
+			_rect.x += speed;
 		}
 
 		_rightVelocity -= speed;

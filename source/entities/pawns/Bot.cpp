@@ -412,6 +412,17 @@ void Bot::TickUpdate(const double deltaTime)
 		}
 	}
 
+	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
+	{
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
+		}
+	}
+
 	if (!outCollisions.empty())
 	{
 		HandleBonusPickUp(outCollisions.front());
@@ -419,6 +430,12 @@ void Bot::TickUpdate(const double deltaTime)
 	}
 
 	_effects.isTouchTheBushes = IsTouchBush();
+	if (const bool isTouchTheIce = IsTouchIce();
+		_effects.isTouchTheIce != isTouchTheIce)
+	{
+		_effects.isTouchTheIce = isTouchTheIce;
+		_moveBeh->ResetVelocity();
+	}
 
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();
 	if (!_shootTimer.isActive && _obstacleDistance >= _calibre.damageRadius + _bulletOffset)
