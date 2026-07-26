@@ -147,7 +147,7 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 
 bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.x - speed >= 0.f)
 	{
 		constexpr float maxMoveStep = 8.0f;
@@ -163,7 +163,7 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 			}
 			else
 			{
-				_rect.x -= speed;
+				_rect.x -= std::floor(speed);
 			}
 
 			return true;
@@ -192,7 +192,7 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 {
 	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
 	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
-	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Right() + speed < maxX)
 	{
 		constexpr float maxMoveStep = 8.0f;
@@ -208,7 +208,7 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 			}
 			else
 			{
-				_rect.x += speed;
+				_rect.x += std::floor(speed);
 			}
 
 			return true;
@@ -235,7 +235,7 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 
 bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.y - speed >= 0.0f)
 	{
 		constexpr float maxMoveStep = 8.0f;
@@ -251,7 +251,7 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 			}
 			else
 			{
-				_rect.y -= speed;
+				_rect.y -= std::floor(speed);
 			}
 
 			return true;
@@ -278,7 +278,7 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 
 bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = std::floor(_speed * static_cast<float>(deltaTime));
+	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
 	{
 		constexpr float maxMoveStep = 8.0f;
@@ -294,7 +294,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 			}
 			else
 			{
-				_rect.y += speed;
+				_rect.y += std::floor(speed);
 			}
 
 			return true;
@@ -322,7 +322,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 {
 	bool isDrift{false};
-	float speed = std::floor(_speed * static_cast<float>(deltaTime));
+	float speed = _speed * static_cast<float>(deltaTime);
 	if (_upVelocity > speed)
 	{
 		if (_upVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
@@ -332,7 +332,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::UP) && _rect.y - speed >= 0.0f)
 		{
-			_rect.y -= speed;
+			_rect.y -= std::floor(speed);
 		}
 
 		_upVelocity -= speed;
@@ -348,7 +348,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < static_cast<float>(_windowSize.y))
 		{
-			_rect.y += speed;
+			_rect.y += std::floor(speed);
 		}
 
 		_downVelocity -= speed;
@@ -364,7 +364,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.f)
 		{
-			_rect.x -= speed;
+			_rect.x -= std::floor(speed);
 		}
 
 		_leftVelocity -= speed;
@@ -382,7 +382,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::RIGHT) && _rect.Right() + speed < maxX)
 		{
-			_rect.x += speed;
+			_rect.x += std::floor(speed);
 		}
 
 		_rightVelocity -= speed;
