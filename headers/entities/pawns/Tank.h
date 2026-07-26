@@ -46,7 +46,8 @@ protected:
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 	void ApplyScaleToCalibre(float newScale);
-	bool IsTouchBush() const;
+	[[nodiscard]] bool IsTouchBush() const;
+	[[nodiscard]] bool IsTouchIce() const;
 
 	virtual void Enable();
 	virtual void Disable() const;

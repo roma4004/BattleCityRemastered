@@ -9,36 +9,37 @@
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
 								 std::string& name, std::string& fraction,
-								 std::vector<std::shared_ptr<BaseObj>>* allObjects)
+								 std::vector<std::shared_ptr<BaseObj>>* allObjects, BonusEffectProperty& effects)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
 	, _speed{speed}
+	, _effects{effects}
 	, _windowSize{windowSize}
 	, _name{name}
 	, _fraction{fraction}
 	, _allObjects{allObjects} {}
 
-ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime) const
+ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direction dir) const
 {
 	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
 	const auto [x, y, w, h] = _rect;
-	if (_direction == Direction::UP)
+	if (dir == Direction::UP)
 	{
 		return ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
-	if (_direction == Direction::DOWN)
+	if (dir == Direction::DOWN)
 	{
 		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
 	}
 
-	if (_direction == Direction::LEFT)
+	if (dir == Direction::LEFT)
 	{
 		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
 	}
 
-	if (_direction == Direction::RIGHT)
+	if (dir == Direction::RIGHT)
 	{
 		return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
 	}
@@ -46,9 +47,9 @@ ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime) const
 	return ObjRectangle{};
 }
 
-bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
+bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir) const
 {
-	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime);
+	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime, dir);
 
 	return std::ranges::none_of(*_allObjects, [uuid = _uuid, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -60,7 +61,7 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime) const
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const double deltaTime) const
 {
-	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime);
+	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime, _direction);
 
 	auto collisions = *_allObjects | std::views::filter([this, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
@@ -150,9 +151,16 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime))
+		if (IsCanMove(deltaTime, _direction))
 		{
-			_rect.x -= std::floor(speed);
+			if (_effects.isTouchTheIce)
+			{
+				_leftVelocity += speed * _driftMultiplicator;
+			}
+			else
+			{
+				_rect.x -= std::floor(speed);
+			}
 
 			return true;
 		}
@@ -184,9 +192,16 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime))
+		if (IsCanMove(deltaTime, _direction))
 		{
-			_rect.x += std::floor(speed);
+			if (_effects.isTouchTheIce)
+			{
+				_rightVelocity += speed * _driftMultiplicator;
+			}
+			else
+			{
+				_rect.x += std::floor(speed);
+			}
 
 			return true;
 		}
@@ -216,9 +231,16 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime))
+		if (IsCanMove(deltaTime, _direction))
 		{
-			_rect.y -= std::floor(speed);
+			if (_effects.isTouchTheIce)
+			{
+				_upVelocity += speed * _driftMultiplicator;
+			}
+			else
+			{
+				_rect.y -= std::floor(speed);
+			}
 
 			return true;
 		}
@@ -249,9 +271,16 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime))
+		if (IsCanMove(deltaTime, _direction))
 		{
-			_rect.y += std::floor(speed);
+			if (_effects.isTouchTheIce)
+			{
+				_downVelocity += speed * _driftMultiplicator;
+			}
+			else
+			{
+				_rect.y += std::floor(speed);
+			}
 
 			return true;
 		}
@@ -273,4 +302,90 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 	}
 
 	return false;
+}
+
+bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
+{
+	bool isDrift{false};
+	float speed = _speed * static_cast<float>(deltaTime);
+	if (_upVelocity > speed &&  _rect.y - speed >= 0.0f)
+	{
+		if (_upVelocity > _rect.h / 2.f)//enabling drift if move more than two tank tile
+		{
+			speed /= _driftMultiplicator;//slow down if push the gas in drift
+		}
+
+		if (IsCanMove(deltaTime, Direction::UP))
+		{
+			_rect.y -= std::floor(speed);
+		}
+
+		_upVelocity -= speed;
+		isDrift = true;
+	}
+
+	if (_downVelocity > speed && _rect.Bottom() + speed < static_cast<float>(_windowSize.y))
+	{
+		if (_downVelocity > _rect.h / 2.f)//enabling drift if move more than two tank tile
+		{
+			speed /= _driftMultiplicator;//slow down if push the gas in drift
+		}
+
+		if (IsCanMove(deltaTime, Direction::DOWN))
+		{
+			_rect.y += std::floor(speed);
+		}
+
+		_downVelocity -= speed;
+		isDrift = true;
+	}
+
+	if (_leftVelocity > speed && _rect.x - speed >= 0.f)
+	{
+		if (_leftVelocity > _rect.w / 2.f)//enabling drift if move more than two tank tile
+		{
+			speed /= _driftMultiplicator;//slow down if push the gas in drift
+		}
+
+		if (IsCanMove(deltaTime, Direction::LEFT))
+		{
+			_rect.x -= std::floor(speed);
+		}
+
+		_leftVelocity -= speed;
+		isDrift = true;
+	}
+
+	constexpr int sideBarWidth = 175;//TODO: pass this as parameter in constructor
+	const float maxX = static_cast<float>(_windowSize.x) - sideBarWidth;
+	if (_rightVelocity > speed && _rect.Right() + speed < maxX)
+	{
+		if (_rightVelocity > _rect.w / 2.f)//enabling drift if move more than two tank tile
+		{
+			speed /= _driftMultiplicator;//slow down if push the gas in drift
+		}
+
+		if (IsCanMove(deltaTime, Direction::RIGHT))
+		{
+			_rect.x += std::floor(speed);
+		}
+
+		_rightVelocity -= speed;
+		isDrift = true;
+	}
+
+	if (isDrift)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void MoveLikeTankBeh::ResetVelocity()
+{
+	_upVelocity = 0.f;
+	_leftVelocity = 0.f;
+	_downVelocity = 0.f;
+	_rightVelocity = 0.f;
 }

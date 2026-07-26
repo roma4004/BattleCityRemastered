@@ -18,14 +18,14 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 	buuid& _uuid;
 	ObjRectangle& _rect;
-	Direction& _dir;
+	Direction& _direction;
 	GameConfig& _gameConfig;
 	BulletCalibre _calibre{};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
-	[[nodiscard]] bool IsCanMove(double deltaTime) const override;
+	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir) const override;
 	[[nodiscard]] ObjRectangle GetNextPos(double deltaTime) const;
 	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
@@ -43,4 +43,6 @@ public:
 
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime) override;
+	void ResetVelocity() override;
 };

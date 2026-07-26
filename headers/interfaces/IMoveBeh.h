@@ -8,7 +8,7 @@ class BaseObj;
 
 class IMoveBeh
 {
-	[[nodiscard]] virtual bool IsCanMove(double deltaTime) const = 0;
+	[[nodiscard]] virtual bool IsCanMove(double deltaTime, Direction dir) const = 0;
 
 protected:
 	[[nodiscard]] virtual bool MoveLeft(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
@@ -21,4 +21,6 @@ public:
 
 	[[nodiscard]] virtual bool Move(Direction direction, double deltaTime,
 									std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
+	[[nodiscard]] virtual bool ApplyMoveVelocity(double deltaTime) = 0;
+	virtual void ResetVelocity() = 0;
 };

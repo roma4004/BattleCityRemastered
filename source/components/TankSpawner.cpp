@@ -132,6 +132,7 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
+//TODO: fix max range tank can be spawn partially outside screen Coop and Enemy
 ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 {
 	const float tankSize{_gameConfig.tankSize};

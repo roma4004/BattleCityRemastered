@@ -57,8 +57,6 @@ void Player::Move(const Direction direction, const double deltaTime,
 			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
-
-	_effects.isTouchTheBushes = IsTouchBush();
 }
 
 void Player::TickUpdate(const double deltaTime)
@@ -66,6 +64,14 @@ void Player::TickUpdate(const double deltaTime)
 	if (_shootTimer.isActive && _shootTimer.IsCooldownFinish())
 	{
 		_shootTimer.isActive = false;
+	}
+
+	_effects.isTouchTheBushes = IsTouchBush();
+	if (const bool isTouchTheIce = IsTouchIce();
+		_effects.isTouchTheIce != isTouchTheIce)
+	{
+		_effects.isTouchTheIce = isTouchTheIce;
+		_moveBeh->ResetVelocity();
 	}
 
 	std::vector<std::shared_ptr<BaseObj>> outCollisions;
@@ -87,6 +93,17 @@ void Player::TickUpdate(const double deltaTime)
 	else if (right)
 	{
 		Move(Direction::RIGHT, deltaTime, outCollisions);
+	}
+
+	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
+	{
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
+		}
 	}
 
 	if (!outCollisions.empty())
