@@ -89,6 +89,7 @@ void Menu::DrawMenuText() const
 	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::CoopWithBot, "COOP WITH BOT");
 	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsHost, "PLAY AS HOST");
 	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsClient, "PLAY AS CLIENT");
+	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsClient, "OPTIONS");
 }
 
 void Menu::DrawControlHints() const

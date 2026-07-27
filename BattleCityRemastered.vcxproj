@@ -157,6 +157,7 @@
     <ClCompile Include="source\components\managers\BonusEffectManager.cpp" />
     <ClCompile Include="source\components\managers\DelayedSpawnManager.cpp" />
     <ClCompile Include="source\components\managers\FramePerSecondManager.cpp" />
+    <ClCompile Include="source\components\managers\Options.cpp" />
     <ClCompile Include="source\components\managers\RenderManager.cpp" />
     <ClCompile Include="source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="source\components\managers\SpawnManager.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="headers\components\managers\SpawnManager.h" />
     <ClInclude Include="headers\components\managers\StateManager.h" />
     <ClInclude Include="headers\components\managers\TextureManager.h" />
+    <ClInclude Include="headers\components\Options.h" />
     <ClInclude Include="headers\components\ScoreBoard.h" />
     <ClInclude Include="headers\entities\BulletCalibre.h" />
     <ClInclude Include="headers\components\RightSideBar.h" />
