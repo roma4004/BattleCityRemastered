@@ -292,7 +292,7 @@ void Tank::OnBonusStar(const std::string& author)
 	if (author == _name)
 	{
 		SetHealth(GetHealth() + 50);
-		if (_tier > 4)
+		if (_tier > 3)
 		{
 			return;
 		}

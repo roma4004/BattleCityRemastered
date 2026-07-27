@@ -121,7 +121,6 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 		uuid = UuidUtils::GetRandomUuid();
 	}
 
-	//TODO: fix star bonus steel destroy
 	std::shared_ptr<Bonus> bonus{nullptr};
 
 	switch (type)
