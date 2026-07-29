@@ -143,9 +143,9 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 	}
 
 	// const float gridOffset{_gameConfig.gridOffset};
-	const float battleFieldSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth)};
+	const float battleFieldSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) - tankSize};
 
-	const int quartFieldSizeX = static_cast<int>(battleFieldSizeX / 4.f - tankSize);
+	const int quartFieldSizeX = static_cast<int>(battleFieldSizeX / 4.f);
 	const std::vector<std::pair<float, float>> spawnRanges{{0, quartFieldSizeX},
 														   {quartFieldSizeX, quartFieldSizeX * 2},
 														   {quartFieldSizeX * 2, quartFieldSizeX * 3},
@@ -264,7 +264,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 	const std::pair<float, float> spawnRangePlayer1{0,
 													static_cast<int>(windowSizeX / 2.f - tankSize * 3.25f)};
 	const std::pair<float, float> spawnRangePlayer2{static_cast<int>(windowSizeX / 2.f + tankSize * 2.25f),
-													static_cast<int>(windowSizeX)};
+													static_cast<int>(windowSizeX - tankSize)};
 	auto [minX, maxX]{isFirst ? spawnRangePlayer1 : spawnRangePlayer2};
 
 	const std::uniform_int_distribution<> distRandId{static_cast<int>(minX), static_cast<int>(maxX)};
