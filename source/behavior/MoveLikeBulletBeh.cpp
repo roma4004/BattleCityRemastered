@@ -63,7 +63,7 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 	return FPoint{.x = x + speed, .y = y};
 }
 
-bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction dir) const
+bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction /*dir*/) const
 {
 	const ObjRectangle nextPosRect = GetNextPos(deltaTime);
 

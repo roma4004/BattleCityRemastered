@@ -108,6 +108,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		return {};
 	}
 
+	//TODO: refactor to network event ShotBullet{rect, bulletResetProperty, uuid}
 	auto bulletAsBase = _bulletPool->SpawnBullet();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
@@ -116,13 +117,11 @@ buuid ShootingBeh::Shot(const buuid uuid)
 				.dir = _direction,
 				.health = 1,
 				.author = _name,
-				.fraction = _fraction,
-				//TODO: replace fraction with enum
+				.fraction = _fraction,				//TODO: replace fraction with enum
 				.uuid = uuid,
 				.calibre = _calibre,
 		};
 
-		//TODO: skip bullet set guid on client if bullet not create but get from bullet pool
 		bullet->Reset(std::move(bulletResetProperty));
 
 		// std::cout << "[" << "bullet->Reset" << "] "

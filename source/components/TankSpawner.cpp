@@ -32,7 +32,7 @@ TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<Bas
 	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
 	, _respawnManager{std::make_shared<RespawnManager>(events)}
 	, _gameConfig{gameConfig}
-//TODO: extract tank spawner to respawn manager as sub component
+//TODO: extract tank spawner to respawn manager as subComponent
 {
 	Subscribe();
 }
@@ -190,7 +190,7 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 							 const bool skipDelay)
 {
 	const ObjRectangle rect = GetEnemyRandomPosX(type);
-	if (rect.y == -1.f)
+	if (rect.y == -1.f)//TODO: solve proper float compare
 	{
 		return false;
 	}
@@ -304,7 +304,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 {
 	const bool isFirst = type == TankType::PLAYER1;
 	const ObjRectangle rect{GetPlayerRandomPosX(isFirst)};
-	if (rect.y == -1.f)
+	if (rect.y == -1.f)//TODO: solve proper float compare
 	{
 		return;
 	}

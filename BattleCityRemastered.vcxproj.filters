@@ -41,9 +41,6 @@
     <ClCompile Include="source\application\GameSuccess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\application\SDLEnvironment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\components\BonusSpawner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -87,9 +84,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\components\managers\BonusEffectManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\components\managers\SpawnDelayManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\components\managers\TextureManager.cpp">
@@ -147,9 +141,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\entities\obstacles\FortressWall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\entities\obstacles\GrassTile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\entities\obstacles\IceTile.cpp">
@@ -242,6 +233,51 @@
     <ClCompile Include="source\utils\UuidUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\application\GameConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\application\SDL_Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\managers\DelayedSpawnManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\managers\FramePerSecondManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\managers\RenderManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\managers\RespawnManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\managers\SpawnManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\managers\GameStateManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\ScoreBoard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\components\RightSideBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\entities\obstacles\BushTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\commands\BonusStatus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\commands\GameStateChange.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\commands\SignalEvent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\network\commands\TankOnOff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Point.h">
@@ -263,9 +299,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\interfaces\IGame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\interfaces\IHealthBar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\interfaces\IInputProvider.h">
@@ -316,9 +349,6 @@
     <ClInclude Include="headers\application\GameSuccess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\application\SDLEnvironment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\components\BonusSpawner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -367,14 +397,12 @@
     <ClInclude Include="headers\network\Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\network\Client.tpp" />
     <ClInclude Include="headers\network\ClientHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\network\Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\network\Server.tpp" />
     <ClInclude Include="headers\network\ServerHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -385,9 +413,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\components\managers\BonusEffectManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\components\managers\SpawnDelayManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\components\managers\TextureManager.h">
@@ -466,9 +491,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\entities\obstacles\FortressWall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\entities\obstacles\GrassTile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\entities\obstacles\IceTile.h">
@@ -577,6 +599,57 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\utils\UuidUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\GameConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\managers\FramePerSecondManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\managers\RenderManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\managers\RespawnManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\managers\DelayedSpawnManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\managers\SpawnManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\managers\GameStateManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\ScoreBoard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\entities\BulletCalibre.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\RightSideBar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\GameState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\commands\BonusStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\commands\GameStateChange.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\commands\SignalEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\commands\TankOnOff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\application\SDL_Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\entities\obstacles\BushTile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
