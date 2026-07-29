@@ -1,8 +1,8 @@
 ﻿#include "components/managers/TextureManager.h"
 #include "components/EventSystem.h"
 #include "components/managers/AnimationManager.h"
-#include "entities/pawns/Pawn.h"
 #include "enums/Direction.h"
+#include "utils/ColliderUtils.h"
 
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 	: _animationManager{std::make_unique<AnimationManager>(events)}
@@ -212,18 +212,15 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 	return textureRect;
 }
 
-// Check if the absolute difference is within the allowed error margin
-static bool AreEqualAbsolute(float a, float b, float epsilon = 1e-5f) { return std::fabs(a - b) <= epsilon; }
-
 void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name) const
 {
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
-		AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
-		&& AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
-		&& AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
-		&& AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
+		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
+		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
+		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
+		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
 		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
@@ -237,12 +234,12 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 {
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
-	textureRect.x += step * scale;
+	textureRect.x += static_cast<float>(step * scale);
 	if (constexpr ObjRectangle defaultSdlRect{};
-		AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
-		&& AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
-		&& AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
-		&& AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
+		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
+		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
+		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
+		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
 		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color

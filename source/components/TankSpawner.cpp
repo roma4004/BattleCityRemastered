@@ -190,7 +190,7 @@ bool TankSpawner::SpawnEnemy(const buuid uuid, const TankType type, const float 
 							 const bool skipDelay)
 {
 	const ObjRectangle rect = GetEnemyRandomPosX(type);
-	if (rect.y == -1.f)//TODO: solve proper float compare
+	if (ColliderUtils::AreEqualAbsolute(rect.y, -1.f))
 	{
 		return false;
 	}
@@ -304,7 +304,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 {
 	const bool isFirst = type == TankType::PLAYER1;
 	const ObjRectangle rect{GetPlayerRandomPosX(isFirst)};
-	if (rect.y == -1.f)//TODO: solve proper float compare
+	if (ColliderUtils::AreEqualAbsolute(rect.y, -1.f))
 	{
 		return;
 	}

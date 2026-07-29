@@ -406,8 +406,10 @@ bool Tank::IsTouchIce() const
 
 void Tank::ApplyScaleToCalibre(const float newScale)
 {
-	if (newScale == 1) //TODO: fix correct float compare
+	if (ColliderUtils::AreEqualAbsolute(newScale, 1))
+	{
 		return;
+	}
 
 	this->_calibre.speed *= newScale;
 	this->_calibre.damageRadius *= newScale;

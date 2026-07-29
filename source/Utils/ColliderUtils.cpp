@@ -34,3 +34,9 @@ bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) no
 
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }
+
+// Check if the absolute difference is within the allowed error margin
+bool ColliderUtils::AreEqualAbsolute(const float a, const float b, const float epsilon) noexcept
+{
+	return std::fabs(a - b) <= epsilon;
+}
