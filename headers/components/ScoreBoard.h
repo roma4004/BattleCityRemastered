@@ -10,9 +10,8 @@ class GameStatistics;
 
 class ScoreBoard final
 {
-	Point _pos;
-	int _windowHeight;
-	int _padding;
+	Point _pos{};
+	int _windowHeight{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<GameStatistics> _statistics{nullptr};

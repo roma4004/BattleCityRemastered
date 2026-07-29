@@ -9,9 +9,8 @@ class InputProviderForMenu;
 
 class Menu final
 {
-	Point _pos;
+	Point _pos{};
 	int _windowHeight{};
-	int _padding{};
 	int _yOffsetStart{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};

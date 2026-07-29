@@ -7,15 +7,13 @@
 #include <sstream>
 
 ScoreBoard::ScoreBoard(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _events{events}
+	: _pos{.x = 25, .y = 25}
+	, _events{events}
 	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _name{std::string("ScoreBoard")}
 {
 	Subscribe();
 
-	_padding = 25;
-	_pos.x = _padding;
-	_pos.y = _padding;
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
