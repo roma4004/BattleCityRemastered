@@ -50,7 +50,7 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 	if (IsBonus(sideObstacle.front()))
 	{
-		LineOfSight bonusLineOfSight(_rect, _gameConfig.windowSize, _allObjects, this, false);
+		LineOfSight bonusLineOfSight(_rect, _allObjects, _gameConfig, false);
 		const std::vector<std::shared_ptr<BaseObj>>& directionObstacles =
 				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
@@ -211,7 +211,7 @@ void Bot::UpdateShootDistance(const Direction dir, const std::shared_ptr<BaseObj
 
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 {
-	LineOfSight lineOfSight(_rect, _gameConfig.windowSize, _calibre.size, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _calibre.size, _allObjects, _gameConfig);
 
 	auto dir = GetDirection();
 	std::shared_ptr<BaseObj> nearestSeenObstacle{EnemyLookup(lineOfSight, dir)};
@@ -221,7 +221,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	}
 
 	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
-	// if (isBullet && isOpposite(bullet->GetDirection))
+	// if (isBullet(nearestSeenObstacle) && isOpposite(bullet->GetDirection))
 	// {
 	// 	Shot();
 	// }

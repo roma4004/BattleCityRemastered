@@ -7,6 +7,7 @@ struct ObjRectangle;
 struct UPoint;
 struct FPoint;
 class BaseObj;
+class GameConfig;
 
 class LineOfSight final
 {
@@ -19,14 +20,14 @@ class LineOfSight final
 	std::vector<std::shared_ptr<BaseObj>> _rightSideObstacles{};
 
 public:
-	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize, FPoint bulletSize,
-				std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf, bool isWaterSkip = true);
-	LineOfSight(ObjRectangle tankRect, const UPoint& windowSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				const BaseObj* excludeSelf, bool isWaterSkip = true);
+	LineOfSight(ObjRectangle tankRect, FPoint bulletSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+				const GameConfig& gameConfig, bool isWaterSkip = true);
+	LineOfSight(ObjRectangle tankRect, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+				const GameConfig& gameConfig, bool isWaterSkip = true);
 
 	~LineOfSight();
 
-	void CheckLineOfSight(const BaseObj* excludeSelf, bool isWaterSkip);
+	void CheckLineOfSight(bool isWaterSkip);
 	void SortToNearest();
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetUpSideObstacles();

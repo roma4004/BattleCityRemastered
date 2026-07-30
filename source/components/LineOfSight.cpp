@@ -1,74 +1,78 @@
 #include "components/LineOfSight.h"
 #include "Point.h"
+#include "application/GameConfig.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/WaterTile.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
 #include <algorithm>
 
-LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize, const FPoint bulletSize,
-						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
+//Used for checking line of sight for bullets, so range is bullet width and height 
+LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
+						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig,
 						 const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
-	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const FPoint tankHalf = {.x = tankRect.w / 2.f, .y = tankRect.h / 2.f};
-	const FPoint tankCenter = {.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankHalf.y};
-	const float tankDownY = {tankRect.y + tankRect.h};
-	const float tankRightX = {tankRect.x + tankRect.w};
-	const FPoint bulletSpawnPos = {.x = tankCenter.x - bulletSize.x, .y = tankCenter.y - bulletSize.y};
-	const FPoint bulletHalfSize = {.x = bulletSize.x / 2, .y = bulletSize.y / 2};
-	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
+	const FPoint tankHalf{.x = tankRect.w / 2.f, .y = tankRect.h / 2.f};
 
-	_lineOfSightBoundaries = std::vector<ObjRectangle>{
-			/*up, left, down, right*///TODO: align to not needed exclude self
-			{.x = bulletSpawnPos.x - bulletHalfSize.x, .y = 0.f, .w = bulletSize.x, .h = tankRect.y},
-			{.x = 0.f, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = tankRect.x, .h = bulletSize.y},
-			{.x = bulletSpawnPos.x - bulletHalfSize.x, .y = tankDownY, .w = bulletSize.x, .h = sightSize.y},
-			{.x = tankRightX, .y = bulletSpawnPos.y - bulletHalfSize.x, .w = sightSize.x, .h = bulletSize.y}};
+	const FPoint tankUpCenter{.x = tankRect.x + tankHalf.x, .y = tankRect.y};
+	const FPoint tankLeftCenter{.x = tankRect.x, .y = tankRect.y + tankHalf.y};
+	const FPoint tankDownCenter{.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankRect.h};
+	const FPoint tankRightCenter{.x = tankRect.x + tankRect.w, .y = tankRect.y + tankHalf.y};
 
-	CheckLineOfSight(excludeSelf, isWaterSkip);
+	const FPoint bulletHalfSize{.x = bulletSize.x / 2, .y = bulletSize.y / 2};
+
+	const FPoint bulletSpawnPosUp{.x = tankUpCenter.x - bulletHalfSize.x, .y = tankUpCenter.y - bulletSize.y - 1};
+	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - bulletSize.x - 1, .y = tankLeftCenter.y - bulletHalfSize.y};
+	const FPoint bulletSpawnPosDown{.x = tankDownCenter.x - bulletHalfSize.x, .y = tankDownCenter.y + 1};
+	const FPoint bulletSpawnPosRight{.x = tankRightCenter.x + 1, .y = tankRightCenter.y - bulletHalfSize.y};
+
+	const float sightSizeDown{static_cast<float>(gameConfig.windowSize.y) - bulletSpawnPosDown.y};
+	const float sightSizeRight{static_cast<float>(gameConfig.windowSize.x)
+							   - static_cast<float>(gameConfig.sideBarWidth) - bulletSpawnPosRight.x};
+
+	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
+			{.x = bulletSpawnPosUp.x, .y = 0.f, .w = bulletSize.x, .h = tankRect.y > 0.f ? tankRect.y - 1.f : 0.f},
+			{.x = 0.f, .y = bulletSpawnPosLeft.y, .w = tankRect.x > 0.f ? tankRect.x - 1.f : 0.f, .h = bulletSize.y},
+			{.x = bulletSpawnPosDown.x, .y = bulletSpawnPosDown.y, .w = bulletSize.x, .h = sightSizeDown},
+			{.x = bulletSpawnPosRight.x, .y = bulletSpawnPosRight.y, .w = sightSizeRight, .h = bulletSize.y}};
+
+	CheckLineOfSight(isWaterSkip);
 }
 
-LineOfSight::LineOfSight(const ObjRectangle tankRect, const UPoint& windowSize,
-						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const BaseObj* excludeSelf,
-						 const bool isWaterSkip)
+//Used for checking can tank reach the bonus, so range is tank width and height 
+LineOfSight::LineOfSight(const ObjRectangle tankRect, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+						 const GameConfig& gameConfig, const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
-	const float tankDownY = {tankRect.y + tankRect.h};
-	const float tankRightX = {tankRect.x + tankRect.w};
-	const FPoint fWindowSize = {.x = static_cast<float>(windowSize.x), .y = static_cast<float>(windowSize.y)};
-	const FPoint sightSize = {.x = fWindowSize.x - tankRightX, .y = fWindowSize.y - tankDownY};
+	const float sightSizeDown{static_cast<float>(gameConfig.windowSize.y) - tankRect.y - tankRect.h - 1};
+	const float sightSizeRight{static_cast<float>(gameConfig.windowSize.x)
+							   - static_cast<float>(gameConfig.sideBarWidth) - tankRect.x - tankRect.w};
 
 	_lineOfSightBoundaries =
 			std::vector<ObjRectangle>{/*up, left, down, right*/
-					{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = tankRect.y},
-					{.x = 0.f, .y = tankRect.y, .w = tankRect.x, .h = tankRect.h},
-					{.x = tankRect.x, .y = tankDownY, .w = tankRect.w, .h = sightSize.y},
-					{.x = tankRightX, .y = tankRect.y, .w = sightSize.x, .h = tankRect.h}};
+					{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = tankRect.y > 0.f ? tankRect.y - 1.f : 0.f},
+					{.x = 0.f, .y = tankRect.y, .w = tankRect.x > 0.f ? tankRect.x - 1.f : 0.f, .h = tankRect.h},
+					{.x = tankRect.x, .y = tankRect.y + tankRect.h + 1, .w = tankRect.w, .h = sightSizeDown},
+					{.x = tankRect.x + tankRect.w + 1, .y = tankRect.y, .w = sightSizeRight, .h = tankRect.h}};
 
-	CheckLineOfSight(excludeSelf, isWaterSkip);
+	CheckLineOfSight(isWaterSkip);
 }
 
 LineOfSight::~LineOfSight() = default;
 
-void LineOfSight::CheckLineOfSight(const BaseObj* excludeSelf, const bool isWaterSkip = false)
+void LineOfSight::CheckLineOfSight(const bool isWaterSkip = false)
 {
 	// parse all seen in Line Of Sight obj
 	for (std::shared_ptr<BaseObj>& object: *_allObjects)
 	{
-		if (excludeSelf->GetUuid() == object->GetUuid())
-		{
-			continue;
-		}
+		const ObjRectangle& upSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::UP)];
+		const ObjRectangle& leftSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)];
+		const ObjRectangle& downSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)];
+		const ObjRectangle& rightSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)];
 
-		ObjRectangle upSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::UP)];
-		ObjRectangle leftSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)];
-		ObjRectangle downSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)];
-		ObjRectangle rightSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::RIGHT)];
-
-		// tank cannot pass water (if not pickup BonusShip), so we need to skip water when we find opponent to shoot
-		// but when we search for bonus, we should not skip water to avoid moving to bonus through water.
+		// NOTE: tank can't pass water (until pickup BonusShip), so we skip water when find opponent to shoot,
+		// but for searching for bonuses, we should not skip, to avoid trying to move through water.
 		const bool isWater = dynamic_cast<WaterTile*>(object.get()) != nullptr;
 		const bool isBush = dynamic_cast<BushTile*>(object.get()) != nullptr;
 		const bool isPenetrable = object->GetIsPenetrable();
