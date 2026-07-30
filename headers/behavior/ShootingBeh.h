@@ -5,8 +5,8 @@
 #include <functional>
 #include <memory>
 
-struct BulletCalibre;
 enum class Direction : char8_t;
+struct BulletCalibre;
 struct FPoint;
 struct UPoint;
 struct ObjRectangle;

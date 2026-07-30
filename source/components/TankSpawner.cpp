@@ -132,7 +132,6 @@ std::string TankSpawner::GetCurrentTimeString()
 	return ss.str();
 }
 
-//TODO: fix max range tank can be spawn partially outside screen Coop and Enemy
 ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 {
 	const float tankSize{_gameConfig.tankSize};
@@ -142,23 +141,21 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 		return rect;
 	}
 
-	// const float gridOffset{_gameConfig.gridOffset};
 	const float battleFieldSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) - tankSize};
 
-	const int quartFieldSizeX = static_cast<int>(battleFieldSizeX / 4.f);
-	const std::vector<std::pair<float, float>> spawnRanges{{0, quartFieldSizeX},
-														   {quartFieldSizeX, quartFieldSizeX * 2},
-														   {quartFieldSizeX * 2, quartFieldSizeX * 3},
-														   {quartFieldSizeX * 3, quartFieldSizeX * 4}};
+	const float quartFieldSizeX = battleFieldSizeX / 4.f;
+	const std::vector<std::pair<float, float>> spawnRanges{{0.f, quartFieldSizeX},
+														   {quartFieldSizeX, quartFieldSizeX * 2.f},
+														   {quartFieldSizeX * 2.f, quartFieldSizeX * 3.f},
+														   {quartFieldSizeX * 3.f, battleFieldSizeX}};
 
 
 	const int randomRange = static_cast<int>(type);
 	auto [minX, maxX] = spawnRanges[randomRange];
-	//TODO: refactor uniform to float
-	const std::uniform_int_distribution<> distRandX{static_cast<int>(minX), static_cast<int>(maxX)};
-	const int randomX = RandUtils::GetRandNumber(distRandX);
+	const std::uniform_real_distribution<float> distRandX{minX, maxX};
+	const float randomX = RandUtils::GetRandNumber(distRandX);
 
-	ObjRectangle spawnPos{.x = static_cast<float>(randomX), .y = 0, .w = tankSize, .h = tankSize};
+	ObjRectangle spawnPos{.x = randomX, .y = 0, .w = tankSize, .h = tankSize};
 	auto isCollidePredicate = [&spawnPos](const auto& object)
 	{
 		return ColliderUtils::IsCollide(spawnPos, object->GetRect());
@@ -254,6 +251,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 	}
 }
 
+//TODO: write unit test for bot change direction if faced obstacle
 ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 {
 	const float windowSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth)};
@@ -261,17 +259,15 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 	// const float gridOffset{_gameConfig.gridOffset};
 	const float tankSize{_gameConfig.tankSize};
 
-	const std::pair<float, float> spawnRangePlayer1{0,
-													static_cast<int>(windowSizeX / 2.f - tankSize * 3.25f)};
-	const std::pair<float, float> spawnRangePlayer2{static_cast<int>(windowSizeX / 2.f + tankSize * 2.25f),
-													static_cast<int>(windowSizeX - tankSize)};
+	const std::pair spawnRangePlayer1{0.f, windowSizeX / 2.f - tankSize * 3.25f};
+	const std::pair spawnRangePlayer2{windowSizeX / 2.f + tankSize * 2.25f, windowSizeX - tankSize};
 	auto [minX, maxX]{isFirst ? spawnRangePlayer1 : spawnRangePlayer2};
 
-	const std::uniform_int_distribution<> distRandId{static_cast<int>(minX), static_cast<int>(maxX)};
-	const int randomX = RandUtils::GetRandNumber(distRandId);
+	const std::uniform_real_distribution distRandId{minX, maxX};
+	const float randomX = RandUtils::GetRandNumber(distRandId);
 
 	ObjRectangle rect{.x = -1.f, .y = -1.f, .w = tankSize, .h = tankSize};
-	ObjRectangle spawnPos{.x = static_cast<float>(randomX), .y = windowSizeY - tankSize, .w = tankSize, .h = tankSize};
+	ObjRectangle spawnPos{.x = randomX, .y = windowSizeY - tankSize, .w = tankSize, .h = tankSize};
 	auto isCollidePredicate = [&spawnPos](const auto& object)
 	{
 		return ColliderUtils::IsCollide(spawnPos, object->GetRect());

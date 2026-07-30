@@ -10,7 +10,6 @@
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 #include "utils/RandUtils.h"
-#include "utils/TimeUtils.h"
 
 Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
 		 const bool enableByDefault)
@@ -69,7 +68,10 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 						return bonusLineOfSight.GetDownSideObstacles();
 					}
 
-					return bonusLineOfSight.GetRightSideObstacles();
+					// if (dir == Direction::RIGHT)
+					// {
+						return bonusLineOfSight.GetRightSideObstacles();
+					// }
 				}();
 
 		//Check free path to bonus
@@ -281,14 +283,14 @@ std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
 
 	const float speed = _speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
-	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
-	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
-	const ObjRectangle tankNextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
-	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
+	const ObjRectangle nextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
+	const ObjRectangle nextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
+	const ObjRectangle nextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
+	const ObjRectangle nextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
 
 	bool isFreeUp{true};
-	bool isFreeDown{true};
 	bool isFreeLeft{true};
+	bool isFreeDown{true};
 	bool isFreeRight{true};
 
 	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
@@ -298,24 +300,24 @@ std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
 			continue;
 		}
 
-		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUp, object->GetRect()))
+		if (isFreeUp && ColliderUtils::IsCollide(nextPosRectUp, object->GetRect()) && !object->GetIsPassable())
 		{
-			if (!object->GetIsPassable()) { isFreeUp = false; }
+			isFreeUp = false;
+		}
+		
+		if (isFreeLeft && ColliderUtils::IsCollide(nextPosRectLeft, object->GetRect()) && !object->GetIsPassable())
+		{
+			isFreeLeft = false;
 		}
 
-		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDown, object->GetRect()))
+		if (isFreeDown && ColliderUtils::IsCollide(nextPosRectDown, object->GetRect()) && !object->GetIsPassable())
 		{
-			if (!object->GetIsPassable()) { isFreeDown = false; }
+			isFreeDown = false;
 		}
 
-		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLeft, object->GetRect()))
+		if (isFreeRight && ColliderUtils::IsCollide(nextPosRectRight, object->GetRect()) && !object->GetIsPassable())
 		{
-			if (!object->GetIsPassable()) { isFreeLeft = false; }
-		}
-
-		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRight, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeRight = false; }
+			isFreeRight = false;
 		}
 	}
 
@@ -324,14 +326,14 @@ std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
 		freePath.emplace_back(Direction::UP);
 	}
 
-	if (isFreeDown)
-	{
-		freePath.emplace_back(Direction::DOWN);
-	}
-
 	if (isFreeLeft)
 	{
 		freePath.emplace_back(Direction::LEFT);
+	}
+
+	if (isFreeDown)
+	{
+		freePath.emplace_back(Direction::DOWN);
 	}
 
 	if (isFreeRight)

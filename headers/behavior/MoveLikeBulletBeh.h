@@ -30,10 +30,10 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
 
 protected:
-	[[nodiscard]] bool MoveLeft(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 	[[nodiscard]] bool MoveUp(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	[[nodiscard]] bool MoveLeft(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 	[[nodiscard]] bool MoveDown(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
+	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 
 public:
 	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, GameConfig& gameConfig,

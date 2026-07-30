@@ -61,32 +61,32 @@ float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& 
 //Note: {-1.f, -1.f} this is try shooting outside screen
 ObjRectangle ShootingBeh::GetBulletStartRect() const
 {
-	const FPoint tankHalf = {.x = _rect.w / 2.f, .y = _rect.h / 2.f};
-	const FPoint tankPos = {.x = _rect.x, .y = _rect.y};
-	const float tankRightX = _rect.Right();
-	const float tankBottomY = _rect.Bottom();
-	const FPoint tankCenter = {.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
+	const FPoint tankHalf{.x = _rect.w / 2.f, .y = _rect.h / 2.f};
+	const FPoint tankPos{.x = _rect.x, .y = _rect.y};
+	const float tankRightX{_rect.Right()};
+	const float tankBottomY{_rect.Bottom()};
+	const FPoint tankCenter{.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
 
-	const float bulletWidth = _calibre.size.x;
-	const float bulletHeight = _calibre.size.y;
-	const FPoint bulletHalf = {.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
-	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
+	const float bulletWidth{_calibre.size.x};
+	const float bulletHeight{_calibre.size.y};
+	const FPoint bulletHalf{.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
+	ObjRectangle bulletRect{.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction dir = _direction;
-		dir == Direction::UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
+		dir == Direction::UP && tankPos.y - bulletHeight >= 0.f)
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHeight - 1;
+	}
+	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.f)
+	{
+		bulletRect.x = tankPos.x - bulletWidth - 1;
+		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowSize.y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY + 1;
-	}
-	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
-	{
-		bulletRect.x = tankPos.x - bulletWidth - 1;
-		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_windowSize.x))
 	{
@@ -117,7 +117,8 @@ buuid ShootingBeh::Shot(const buuid uuid)
 				.dir = _direction,
 				.health = 1,
 				.author = _name,
-				.fraction = _fraction,				//TODO: replace fraction with enum
+				.fraction = _fraction,
+				//TODO: replace fraction with enum
 				.uuid = uuid,
 				.calibre = _calibre,
 		};

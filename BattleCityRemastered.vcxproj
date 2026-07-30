@@ -231,7 +231,6 @@
     <ClCompile Include="source\utils\ColliderUtils.cpp" />
     <ClCompile Include="source\utils\Logger.cpp" />
     <ClCompile Include="source\utils\NetworkLogger.cpp" />
-    <ClCompile Include="source\utils\RandUtils.cpp" />
     <ClCompile Include="source\utils\Timer.cpp" />
     <ClCompile Include="source\utils\TimeUtils.cpp" />
     <ClCompile Include="source\utils\UuidUtils.cpp" />

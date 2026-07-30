@@ -32,14 +32,14 @@ ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direc
 		return ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
-	if (dir == Direction::DOWN)
-	{
-		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
-	}
-
 	if (dir == Direction::LEFT)
 	{
 		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
+	}
+
+	if (dir == Direction::DOWN)
+	{
+		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
 	}
 
 	if (dir == Direction::RIGHT)
@@ -148,6 +148,49 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 	return false;
 }
 
+bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+{
+	if (float speed = _speed * static_cast<float>(deltaTime);
+		_rect.y - speed >= 0.0f)
+	{
+		constexpr float maxMoveStep = 8.0f;
+		speed = std::min(speed, maxMoveStep);
+		if (IsCanMove(deltaTime, _direction))
+		{
+			if (_effects.isTouchTheIce)
+			{
+				if (_upVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
+				{
+					_upVelocity += speed * _driftMultiplicator;
+				}
+			}
+			else
+			{
+				_rect.y -= std::floor(speed);
+			}
+
+			return true;
+		}
+
+		// move less than speed to stand next to an object
+		const auto& getSideDiff = [thisTopSide = _rect.y](const std::shared_ptr<BaseObj>& object) -> float
+		{
+			return object->GetBottomSide() - thisTopSide;
+		};
+
+		constexpr float padding = 1.f;
+		outCollisions = GetTouchedObjects(deltaTime);
+		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
+		{
+			_rect.y -= std::floor(distance);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime);
@@ -183,6 +226,49 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
 			_rect.x -= std::floor(distance);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+{
+	if (float speed = _speed * static_cast<float>(deltaTime);
+		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
+	{
+		constexpr float maxMoveStep = 8.0f;
+		speed = std::min(speed, maxMoveStep);
+		if (IsCanMove(deltaTime, _direction))
+		{
+			if (_effects.isTouchTheIce)
+			{
+				if (_downVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
+				{
+					_downVelocity += speed * _driftMultiplicator;
+				}
+			}
+			else
+			{
+				_rect.y += std::floor(speed);
+			}
+
+			return true;
+		}
+
+		// move less than speed to stand next to an object
+		const auto getSideDiff = [thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> float
+		{
+			return object->GetY() - thisBottomSide;
+		};
+
+		constexpr float padding = 1.f;
+		outCollisions = GetTouchedObjects(deltaTime);
+		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
+		{
+			_rect.y += std::floor(distance);
 
 			return true;
 		}
@@ -235,92 +321,6 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 	return false;
 }
 
-bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.y - speed >= 0.0f)
-	{
-		constexpr float maxMoveStep = 8.0f;
-		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime, _direction))
-		{
-			if (_effects.isTouchTheIce)
-			{
-				if (_upVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
-				{
-					_upVelocity += speed * _driftMultiplicator;
-				}
-			}
-			else
-			{
-				_rect.y -= std::floor(speed);
-			}
-
-			return true;
-		}
-
-		// move less than speed to stand next to an object
-		const auto& getSideDiff = [thisTopSide = _rect.y](const std::shared_ptr<BaseObj>& object) -> float
-		{
-			return object->GetBottomSide() - thisTopSide;
-		};
-
-		constexpr float padding = 1.f;
-		outCollisions = GetTouchedObjects(deltaTime);
-		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
-		{
-			_rect.y -= std::floor(distance);
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
-	{
-		constexpr float maxMoveStep = 8.0f;
-		speed = std::min(speed, maxMoveStep);
-		if (IsCanMove(deltaTime, _direction))
-		{
-			if (_effects.isTouchTheIce)
-			{
-				if (_downVelocity < _rect.h * _driftMultiplicator)// clamp max accumulated velocity
-				{
-					_downVelocity += speed * _driftMultiplicator;
-				}
-			}
-			else
-			{
-				_rect.y += std::floor(speed);
-			}
-
-			return true;
-		}
-
-		// move less than speed to stand next to an object
-		const auto getSideDiff = [thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> float
-		{
-			return object->GetY() - thisBottomSide;
-		};
-
-		constexpr float padding = 1.f;
-		outCollisions = GetTouchedObjects(deltaTime);
-		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
-		{
-			_rect.y += std::floor(distance);
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 {
 	bool isDrift{false};
@@ -341,6 +341,22 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 		isDrift = true;
 	}
 
+	if (_leftVelocity > speed)
+	{
+		if (_leftVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
+		{
+			speed /= _driftMultiplicator;//slow down if push the gas in drift
+		}
+
+		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.f)
+		{
+			_rect.x -= std::floor(speed);
+		}
+
+		_leftVelocity -= speed;
+		isDrift = true;
+	}
+
 	if (_downVelocity > speed)
 	{
 		if (_downVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
@@ -357,21 +373,6 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 		isDrift = true;
 	}
 
-	if (_leftVelocity > speed)
-	{
-		if (_leftVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
-		{
-			speed /= _driftMultiplicator;//slow down if push the gas in drift
-		}
-
-		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.f)
-		{
-			_rect.x -= std::floor(speed);
-		}
-
-		_leftVelocity -= speed;
-		isDrift = true;
-	}
 
 	const float maxX = static_cast<float>(_windowSize.x - _gameConfig.sideBarWidth);
 	if (_rightVelocity > speed)

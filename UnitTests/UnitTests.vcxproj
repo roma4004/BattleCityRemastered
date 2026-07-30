@@ -69,7 +69,6 @@
     <ClCompile Include="..\source\network\ServerHandler.cpp" />
     <ClCompile Include="..\source\Utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\NetworkLogger.cpp" />
-    <ClCompile Include="..\source\utils\RandUtils.cpp" />
     <ClCompile Include="..\source\utils\Timer.cpp" />
     <ClCompile Include="..\source\Utils\TimeUtils.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />

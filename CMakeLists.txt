@@ -348,7 +348,6 @@ set(SOURCE_FILES
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
-        source/utils/RandUtils.cpp
         source/utils/Timer.cpp
         source/utils/TimeUtils.cpp
         source/utils/UuidUtils.cpp
@@ -425,7 +424,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/commands/TankShot.cpp
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
-        source/utils/RandUtils.cpp
         source/utils/Timer.cpp
         source/utils/UuidUtils.cpp
 )
