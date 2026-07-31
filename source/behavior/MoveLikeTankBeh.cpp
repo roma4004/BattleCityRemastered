@@ -182,7 +182,7 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 		outCollisions = GetTouchedObjects(deltaTime);
 		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
-			_rect.y -= std::floor(distance);
+			_rect.y -= distance;
 
 			return true;
 		}
@@ -225,7 +225,7 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 		outCollisions = GetTouchedObjects(deltaTime);
 		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
-			_rect.x -= std::floor(distance);
+			_rect.x -= distance;
 
 			return true;
 		}
@@ -268,7 +268,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 		outCollisions = GetTouchedObjects(deltaTime);
 		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
-			_rect.y += std::floor(distance);
+			_rect.y += distance;
 
 			return true;
 		}
@@ -312,7 +312,7 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 		outCollisions = GetTouchedObjects(deltaTime);
 		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
 		{
-			_rect.x += std::floor(distance);
+			_rect.x += distance;
 
 			return true;
 		}

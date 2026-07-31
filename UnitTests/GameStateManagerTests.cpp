@@ -110,9 +110,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		isGameWon = true;
 	});
 
-	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);
-	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);
-	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);
+	EXPECT_EQ(_tankSpawner->GetEnemyRespawnCount(), 20);//TODO: Replace with subs just like rightSideBar did
+	EXPECT_EQ(_tankSpawner->GetPlayerOneRespawnCount(), 3);//TODO: Replace with subs just like rightSideBar did
+	EXPECT_EQ(_tankSpawner->GetPlayerTwoRespawnCount(), 3);//TODO: Replace with subs just like rightSideBar did
 	EXPECT_FALSE(isGameWon);
 	for (int i = 0; i < 5; ++i)
 	{

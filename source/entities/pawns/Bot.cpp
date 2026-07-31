@@ -274,6 +274,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	return nearestSeenObstacle;
 }
 
+//TODO: move to moveBeh
 std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
 {
 	std::vector<Direction> freePath;
