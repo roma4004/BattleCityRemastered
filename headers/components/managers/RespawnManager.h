@@ -63,10 +63,6 @@ public:
 
 	~RespawnManager();
 
-	// NOTE: for unit tests only:
-	[[nodiscard]] int GetEnemyRespawnCount() const;
-	[[nodiscard]] int GetPlayerOneRespawnCount() const;
-	[[nodiscard]] int GetPlayerTwoRespawnCount() const;
-
+	// NOTE: for unit tests only
 	void SetSlotNeedRespawn(int slotIndex);
 };

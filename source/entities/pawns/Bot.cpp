@@ -70,7 +70,7 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 					// if (dir == Direction::RIGHT)
 					// {
-						return bonusLineOfSight.GetRightSideObstacles();
+					return bonusLineOfSight.GetRightSideObstacles();
 					// }
 				}();
 
@@ -305,7 +305,7 @@ std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
 		{
 			isFreeUp = false;
 		}
-		
+
 		if (isFreeLeft && ColliderUtils::IsCollide(nextPosRectLeft, object->GetRect()) && !object->GetIsPassable())
 		{
 			isFreeLeft = false;

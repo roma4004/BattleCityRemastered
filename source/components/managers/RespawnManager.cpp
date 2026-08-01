@@ -53,7 +53,7 @@ void RespawnManager::Subscribe()
 		this->OnBonusTank(author);
 	});
 
-	//NOTE: for unit tests
+	//NOTE: for unit tests //TODO: remove direct call from unit tests use event system instead
 	_events->AddListener("SetSlotNeedRespawn", _name, [this](const int slotIndex)
 	{
 		this->SetSlotNeedRespawn(slotIndex);
@@ -139,21 +139,6 @@ void RespawnManager::SetPlayerNeedRespawn()
 		constexpr auto player2Id = static_cast<size_t>(TankType::PLAYER2);
 		_slots[player2Id].isAvailable = true;
 	}
-}
-
-int RespawnManager::GetEnemyRespawnCount() const
-{
-	return _respawnCount[static_cast<std::size_t>(RespawnCount::ENEMY_ALL)];
-}
-
-int RespawnManager::GetPlayerOneRespawnCount() const
-{
-	return _respawnCount[static_cast<std::size_t>(RespawnCount::PLAYER_ONE)];
-}
-
-int RespawnManager::GetPlayerTwoRespawnCount() const
-{
-	return _respawnCount[static_cast<std::size_t>(RespawnCount::PLAYER_TWO)];
 }
 
 std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)

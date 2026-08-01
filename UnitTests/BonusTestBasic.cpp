@@ -305,6 +305,14 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 //Check that player pick up Tank bonus and got his extra life
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
+	unsigned short respawnActual{3u};
+	_events->AddListener(
+			"RespawnCountChangedTo", "BonusTest",
+			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			{
+				respawnActual = respawnCount;
+			});
+
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
@@ -317,16 +325,26 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
+	const int playerSpawnCount = respawnActual;
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_LT(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
+	EXPECT_LT(playerSpawnCount, respawnActual);
+
+	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 //Check that player not pick up Tank bonus and his life count remains the same
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
+	unsigned short respawnActual{3u};
+	_events->AddListener(
+			"RespawnCountChangedTo", "BonusTest",
+			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			{
+				respawnActual = respawnCount;
+			});
+
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
@@ -339,11 +357,13 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
+	const int playerSpawnCount = respawnActual;
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
+	EXPECT_EQ(playerSpawnCount, respawnActual);
+
+	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 //Check that player pick up Star bonus and his tier increased

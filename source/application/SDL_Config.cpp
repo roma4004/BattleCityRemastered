@@ -19,7 +19,7 @@ SDL_Config::~SDL_Config()
 {
 	Mix_CloseAudio();
 	fontSmall.reset();
-	fontMedium.reset();	
+	fontMedium.reset();
 	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();

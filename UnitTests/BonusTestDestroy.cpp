@@ -18,7 +18,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class BonusTestsDestroy : public testing::Test
+class BonusTestDestroy : public testing::Test
 {
 	using buuid = boost::uuids::uuid;
 
@@ -60,7 +60,7 @@ protected:
 };
 
 // Check that bullet can destroy a random bonus
-TEST_F(BonusTestsDestroy, BonusDestroy)
+TEST_F(BonusTestDestroy, BonusDestroy)
 {
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -87,7 +87,7 @@ TEST_F(BonusTestsDestroy, BonusDestroy)
 }
 
 // Check that bullet not destroy a random bonus
-TEST_F(BonusTestsDestroy, BonusNotDestroy)
+TEST_F(BonusTestDestroy, BonusNotDestroy)
 {
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -114,7 +114,7 @@ TEST_F(BonusTestsDestroy, BonusNotDestroy)
 }
 
 //Check that player can destroy timer bonus and enemies still move
-TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
+TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 {
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -144,7 +144,7 @@ TEST_F(BonusTestsDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 }
 
 //Check that player can destroy helmet bonus and enemies still can damage player
-TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
+TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = _tankSize + 1.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
@@ -183,7 +183,7 @@ TEST_F(BonusTestsDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 
 //Check that player can destroy Grenade bonus and enemies still full health
-TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
+TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 {
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -211,8 +211,16 @@ TEST_F(BonusTestsDestroy, GrenadeDestroyEnemyHealthFull)
 }
 
 //Check that player destroys Tank bonus and his life counts remain the same
-TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
+TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
+	unsigned short respawnActual{3u};
+	_events->AddListener(
+			"RespawnCountChangedTo", "BonusTest",
+			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			{
+				respawnActual = respawnCount;
+			});
+
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
 	std::shared_ptr<Bullet> bullet =
@@ -223,15 +231,17 @@ TEST_F(BonusTestsDestroy, TankDestroyNoExtraLife)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	const int playerSpawnCount = _tankSpawner->GetPlayerOneRespawnCount();
+	const unsigned short playerSpawnCount = respawnActual;
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(playerSpawnCount, _tankSpawner->GetPlayerOneRespawnCount());
+	EXPECT_EQ(playerSpawnCount, respawnActual);
+
+	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 //Check that player destroys Star bonus and his tier counts remain the same
-TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
+TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 {
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
@@ -259,7 +269,7 @@ TEST_F(BonusTestsDestroy, StarDestroyTierRemainTheSame)
 }
 
 //Check that player destroys Shovel bonus and fortress brick remain the same
-TEST_F(BonusTestsDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
+TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 {
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};

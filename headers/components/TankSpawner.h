@@ -66,8 +66,5 @@ public:
 
 	~TankSpawner();
 
-	void RespawnTanks(bool skipDelay = false);//TODO: still public for unit test
-	[[nodiscard]] int GetEnemyRespawnCount() const;//TODO: still public for unit test
-	[[nodiscard]] int GetPlayerOneRespawnCount() const;//TODO: still public for unit test
-	[[nodiscard]] int GetPlayerTwoRespawnCount() const;//TODO: still public for unit test
+	void RespawnTanks(bool skipDelay);//TODO: still public for unit test
 };

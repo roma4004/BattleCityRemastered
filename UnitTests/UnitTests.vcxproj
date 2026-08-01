@@ -111,20 +111,21 @@
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
     <ClCompile Include="..\source\utils\Logger.cpp" />
     <ClCompile Include="..\source\utils\UuidUtils.cpp" />
-    <ClCompile Include="BonusTestsBasic.cpp" />
-    <ClCompile Include="BonusTestsDestroy.cpp" />
-    <ClCompile Include="BonusTestsEnemy.cpp" />
-    <ClCompile Include="BotsTests.cpp" />
-    <ClCompile Include="CoopBotTests.cpp" />
-    <ClCompile Include="BulletsTestsAdvanced.cpp" />
-    <ClCompile Include="BulletsTestsBasic.cpp" />
-    <ClCompile Include="EnemyBotTests.cpp" />
-    <ClCompile Include="NetworkTests.cpp" />
-    <ClCompile Include="PlayerTests.cpp" />
-    <ClCompile Include="RespawnTankTests.cpp" />
-    <ClCompile Include="GameStateManagerTests.cpp" />
-    <ClCompile Include="StatisticsTestsAdvanced.cpp" />
-    <ClCompile Include="StatisticsTestsBasic.cpp" />
+    <ClCompile Include="BonusTestBasic.cpp" />
+    <ClCompile Include="BonusTestDestroy.cpp" />
+    <ClCompile Include="BonusTestEnemy.cpp" />
+    <ClCompile Include="BotsTest.cpp" />
+    <ClCompile Include="CoopBotTest.cpp" />
+    <ClCompile Include="BulletsTestAdvanced.cpp" />
+    <ClCompile Include="BulletsTestBasic.cpp" />
+    <ClCompile Include="EnemyBotTest.cpp" />
+    <ClCompile Include="NetworkTest.cpp" />
+    <ClCompile Include="PlayerTest.cpp" />
+    <ClCompile Include="RespawnManagerTest.cpp" />
+    <ClCompile Include="TankSpawnerTest.cpp" />
+    <ClCompile Include="GameStateManagerTest.cpp" />
+    <ClCompile Include="StatisticsTestAdvanced.cpp" />
+    <ClCompile Include="StatisticsTestBasic.cpp" />
     <ClCompile Include="TestUtils.cpp" />
   </ItemGroup>
   <ItemGroup>

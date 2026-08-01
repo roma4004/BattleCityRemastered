@@ -517,11 +517,11 @@ void RenderManager::DrawHealthBar(const ObjRectangle rect, const int health) con
 	const int barWidthInt = static_cast<int>(healthWidth);
 	const int healthPosX = centerX - (barWidthInt / 2);
 
-	const SDL_Rect healthBarRect = {
-		.x = healthPosX,
-		.y = static_cast<int>(rect.y) - 10,
-		.w = barWidthInt,
-		.h = 5
+	const SDL_Rect healthBarRect{
+			.x = healthPosX,
+			.y = static_cast<int>(rect.y) - 10,
+			.w = barWidthInt,
+			.h = 5
 	};
 
 	unsigned int color;

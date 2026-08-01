@@ -71,10 +71,7 @@ void TankSpawner::Subscribe()
 				_events->EmitEvent("AnimationCreateTank", rect, name);
 			});
 
-	_events->AddListener("RespawnTanks", _name, [this](const double /*deltaTime*/)
-	{
-		this->RespawnTanks();
-	});
+	_events->AddListener("RespawnTanks", _name, [this](const bool skipDelay) { this->RespawnTanks(skipDelay); });
 
 	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
 	{
@@ -362,12 +359,6 @@ void TankSpawner::RespawnTanks(const bool skipDelay)
 		}
 	}
 }
-
-int TankSpawner::GetEnemyRespawnCount() const { return _respawnManager->GetEnemyRespawnCount(); }
-
-int TankSpawner::GetPlayerOneRespawnCount() const { return _respawnManager->GetPlayerOneRespawnCount(); }
-
-int TankSpawner::GetPlayerTwoRespawnCount() const { return _respawnManager->GetPlayerTwoRespawnCount(); }
 
 void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid)
 {

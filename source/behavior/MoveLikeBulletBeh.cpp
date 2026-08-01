@@ -38,7 +38,7 @@ ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 
 	//_direction == RIGHT
 	// {
-		return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
+	return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
 	// }
 }
 
@@ -63,7 +63,7 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 
 	//_direction == Direction::RIGHT
 	// {
-		return FPoint{.x = x + speed, .y = y};
+	return FPoint{.x = x + speed, .y = y};
 	// }
 }
 

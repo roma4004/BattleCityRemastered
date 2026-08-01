@@ -429,20 +429,21 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
 )
 
 set(UNIT_TESTS_FILES
-        UnitTests/BonusTestsBasic.cpp
-        UnitTests/BonusTestsDestroy.cpp
-        UnitTests/BonusTestsEnemy.cpp
-        UnitTests/BotsTests.cpp
-        UnitTests/CoopBotTests.cpp
-        UnitTests/BulletsTestsAdvanced.cpp
-        UnitTests/BulletsTestsBasic.cpp
-        UnitTests/EnemyBotTests.cpp
-        UnitTests/NetworkTests.cpp
-        UnitTests/PlayerTests.cpp
-        UnitTests/RespawnTankTests.cpp
-        UnitTests/GameStateManagerTests.cpp
-        UnitTests/StatisticsTestsAdvanced.cpp
-        UnitTests/StatisticsTestsBasic.cpp
+        UnitTests/BonusTestBasic.cpp
+        UnitTests/BonusTestDestroy.cpp
+        UnitTests/BonusTestEnemy.cpp
+        UnitTests/BotsTest.cpp
+        UnitTests/CoopBotTest.cpp
+        UnitTests/BulletsTestAdvanced.cpp
+        UnitTests/BulletsTestBasic.cpp
+        UnitTests/EnemyBotTest.cpp
+        UnitTests/NetworkTest.cpp
+        UnitTests/PlayerTest.cpp
+        UnitTests/RespawnManagerTest.cpp
+        UnitTests/TankSpawnerTest.cpp
+        UnitTests/GameStateManagerTest.cpp
+        UnitTests/StatisticsTestAdvanced.cpp
+        UnitTests/StatisticsTestBasic.cpp
         UnitTests/TestUtils.cpp
 )
 

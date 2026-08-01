@@ -401,7 +401,10 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
 	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
 	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
+								  .y = windowHeight - _tankSize,
+								  .w = _tankSize,
+								  .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
 					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
@@ -424,7 +427,10 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
 	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
 	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
-	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
+								  .y = windowHeight - _tankSize,
+								  .w = _tankSize,
+								  .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
 					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,

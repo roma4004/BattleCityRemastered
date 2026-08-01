@@ -23,7 +23,8 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
 	const FPoint bulletHalfSize{.x = bulletSize.x / 2.f, .y = bulletSize.y / 2.f};
 
 	const FPoint bulletSpawnPosUp{.x = tankUpCenter.x - bulletHalfSize.x, .y = tankUpCenter.y - bulletSize.y - 1.f};
-	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - bulletSize.x - 1.f, .y = tankLeftCenter.y - bulletHalfSize.y};
+	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - bulletSize.x - 1.f,
+									.y = tankLeftCenter.y - bulletHalfSize.y};
 	const FPoint bulletSpawnPosDown{.x = tankDownCenter.x - bulletHalfSize.x, .y = tankDownCenter.y + 1.f};
 	const FPoint bulletSpawnPosRight{.x = tankRightCenter.x + 1.f, .y = tankRightCenter.y - bulletHalfSize.y};
 

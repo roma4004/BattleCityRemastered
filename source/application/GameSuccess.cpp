@@ -172,7 +172,8 @@ void GameSuccess::MainLoop()
 			{
 				if (_gameMode != GameMode::PlayAsClient)
 				{
-					_events->EmitEvent("RespawnTanks", _deltaTime);
+					constexpr bool skipDelay{false};
+					_events->EmitEvent("RespawnTanks", skipDelay);
 
 					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus or:
