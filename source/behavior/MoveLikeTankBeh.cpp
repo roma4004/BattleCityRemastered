@@ -406,3 +406,27 @@ void MoveLikeTankBeh::ResetVelocity()
 	_downVelocity = 0.f;
 	_rightVelocity = 0.f;
 }
+
+std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime,
+														  const std::optional<Direction> excludeDirection) const
+{
+	std::vector<Direction> freePath;
+
+	constexpr int defaultCollisionReserve{4};
+	freePath.reserve(defaultCollisionReserve);
+
+	for (const Direction dir: {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})
+	{
+		if (excludeDirection == dir)
+		{
+			continue;
+		}
+
+		if (IsCanMove(deltaTime, dir))
+		{
+			freePath.emplace_back(dir);
+		}
+	}
+
+	return freePath;
+}

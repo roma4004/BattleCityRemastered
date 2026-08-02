@@ -35,9 +35,8 @@ protected:
 	void UpdateShootDistance(Direction dir, const std::shared_ptr<BaseObj>& nearestSeenObstacle);
 
 	[[nodiscard]] std::shared_ptr<BaseObj> HandleLineOfSight();
-	[[nodiscard]] std::vector<Direction> GetFreePathSides(double deltaTime) const;
 
-	void SetRandomDirection(double deltaTime);
+	void SetRandomDirection(double deltaTime, bool excludeCurrentDirection = false);
 	bool ShouldShootOpponent(const std::shared_ptr<BaseObj>& obj) const;
 
 	void TickUpdate(double deltaTime) override;

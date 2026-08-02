@@ -8,8 +8,8 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
-#include "utils/ColliderUtils.h"
 #include "utils/RandUtils.h"
+#include <optional>
 
 Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
 		 const bool enableByDefault)
@@ -274,81 +274,12 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	return nearestSeenObstacle;
 }
 
-//TODO: move to moveBeh
-std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
+void Bot::SetRandomDirection(const double deltaTime, const bool excludeCurrentDirection)
 {
-	std::vector<Direction> freePath;
+	const std::optional<Direction> excludeDirection{excludeCurrentDirection ? std::optional{_dir} : std::nullopt};
+	const std::vector<Direction> freePath{_moveBeh->GetFreePathSides(deltaTime, excludeDirection)};
 
-	constexpr int defaultCollisionReserve{4};
-	freePath.reserve(defaultCollisionReserve);
-
-	const float speed = _speed * static_cast<float>(deltaTime);
-	const auto [x, y, w, h] = _rect;
-	const ObjRectangle nextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
-	const ObjRectangle nextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
-	const ObjRectangle nextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
-	const ObjRectangle nextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
-
-	bool isFreeUp{true};
-	bool isFreeLeft{true};
-	bool isFreeDown{true};
-	bool isFreeRight{true};
-
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
-	{
-		if (_uuid == object->GetUuid())
-		{
-			continue;
-		}
-
-		if (isFreeUp && ColliderUtils::IsCollide(nextPosRectUp, object->GetRect()) && !object->GetIsPassable())
-		{
-			isFreeUp = false;
-		}
-
-		if (isFreeLeft && ColliderUtils::IsCollide(nextPosRectLeft, object->GetRect()) && !object->GetIsPassable())
-		{
-			isFreeLeft = false;
-		}
-
-		if (isFreeDown && ColliderUtils::IsCollide(nextPosRectDown, object->GetRect()) && !object->GetIsPassable())
-		{
-			isFreeDown = false;
-		}
-
-		if (isFreeRight && ColliderUtils::IsCollide(nextPosRectRight, object->GetRect()) && !object->GetIsPassable())
-		{
-			isFreeRight = false;
-		}
-	}
-
-	if (isFreeUp)
-	{
-		freePath.emplace_back(Direction::UP);
-	}
-
-	if (isFreeLeft)
-	{
-		freePath.emplace_back(Direction::LEFT);
-	}
-
-	if (isFreeDown)
-	{
-		freePath.emplace_back(Direction::DOWN);
-	}
-
-	if (isFreeRight)
-	{
-		freePath.emplace_back(Direction::RIGHT);
-	}
-
-	return freePath;
-}
-
-void Bot::SetRandomDirection(const double deltaTime)
-{
-	if (const std::vector<Direction> freePath = GetFreePathSides(deltaTime);
-		!freePath.empty())
+	if (!freePath.empty())
 	{
 		const int max{static_cast<int>(freePath.size() - 1)};
 		const int pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution{0, max})};
@@ -401,7 +332,9 @@ void Bot::TickUpdate(const double deltaTime)
 	const bool isMove = _moveBeh->Move(_dir, deltaTime, outCollisions);
 	if (!isMove)
 	{
-		SetRandomDirection(deltaTime);// NOTE: bot will change their direction if it can't move
+		// NOTE: bot got stuck against an obstacle, so pick among the remaining 3 sides, excluding the blocked one
+		constexpr bool excludeCurrentDirection{true};
+		SetRandomDirection(deltaTime, excludeCurrentDirection);
 	}
 
 	if (isMove || oldDir != _dir)

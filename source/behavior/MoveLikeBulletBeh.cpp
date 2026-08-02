@@ -181,3 +181,9 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 
 bool MoveLikeBulletBeh::ApplyMoveVelocity(const double /*deltaTime*/) { return false; }
 void MoveLikeBulletBeh::ResetVelocity() {}
+
+std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(const double /*deltaTime*/,
+															const std::optional<Direction> /*excludeDirection*/) const
+{
+	return {};
+}
