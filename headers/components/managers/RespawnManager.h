@@ -1,7 +1,7 @@
 #pragma once
 
 #include "enums/RespawnCount.h"
-#include <boost/uuid/uuid.hpp>//TODO: fix cmake run need to rerun after project build (to download boost dependency)
+#include <boost/uuid/uuid.hpp>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;

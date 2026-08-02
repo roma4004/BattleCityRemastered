@@ -199,7 +199,6 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("PostTickUpdate", _deltaTime);
 
-			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
 			_events->EmitEvent("PreDraw");
 			_events->EmitEvent("Draw");
 			_events->EmitEvent("PostDraw");

@@ -1,13 +1,3 @@
-#NOTE: to build boost from source, run from boots source folder
-#(example for MinGW, if you using MSVC replace "--toolset=gcc" to "--toolset=msvc")
-# and replace {path_to_project_source} with your project path to install boost --prefix={path_to_project_source}
-# .\bootstrap.bat gcc
-# then run this for build only required boost component:
-# ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install
-# or run this for build all boost component:
-# ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serialization
-
-
 cmake_minimum_required(VERSION 3.15) #NOTE: cmake v3.15+ required by boost from 1.87
 project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
@@ -33,8 +23,6 @@ set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(SDL2_MXR_TAG "release-2.8.2")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
 set(BOOST_VERSION "1.91.0")
-string(REPLACE "." "_" BOOST_PATH "${BOOST_VERSION}")
-set(BOOST_GIT_TAG "boost-${BOOST_VERSION}-1")#TODO: remove -1 from tag because now ver 1.91.0-1
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE)
 
 cmake_policy(SET CMP0148 NEW)
@@ -93,57 +81,13 @@ FetchContent_GetProperties(SDL2_mixer)
 
 #FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
 
-#FetchContent_Declare(boost
-##        GIT_REPOSITORY ""
-##        GIT_TAG "boost-1.85.0"
-##        GIT_SUBMODULES_RECURSE ON
-#        URL https://github.com/boostorg/boost/archive/refs/tags/boost-1.85.0.zip
-#        SOURCE_DIR ${Boost_EXTRACTION_DIRECTORY}
-#)
-#set(BOOST_ROOT                  ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_gcc/)
-##FetchContent_MakeAvailable(Boost)
-#FetchContent_GetProperties(boost)
-#if(NOT boost_POPULATED)
-#    FetchContent_Populate(Boost)
-##    set(BOOST_ROOT ${Boost_SOURCE_DIR})
-##    set(Boost_LIBRARY_DIRS ${Boost_SOURCE_DIR}/libs)
-##    set(Boost_NO_SYSTEM_PATHS TRUE)
-##    set(Boost_USE_STATIC_LIBS ON)
-#    set(boost_INCLUDE_DIR ${boost_SOURCE_DIR})
-#    execute_process(COMMAND git submodule update --init WORKING_DIRECTORY
-#            find_package(boost #[[1.85.0]]#[[ COMPONENTS Serialization]] REQUIRED)
-##    message(FATAL_ERROR ${Boost_INCLUDE_DIR})
-##    message(STATUS "Boost include directories: ${Boost_INCLUDE_DIRS}") # log the
-#    if(Boost_FOUND)
-##        include_directories(${Boost_SOURCE_DIR}/libs/serialization/include)
-##        include_directories(${Boost_SOURCE_DIR}/libs/asio/include)
-#    endif()
-#endif()
-cmake_policy(SET CMP0144 NEW)
-include(ExternalProject)
+set(BOOST_INCLUDE_LIBRARIES serialization uuid asio property_tree)
+set(BUILD_TESTING OFF) # keep Boost's own ~172 internal test suites out of our build graph
 
-include(ProcessorCount)
-ProcessorCount(ThreadAmount)
-
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME ON)
-set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_install_done)
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Using Release build of Boost in Debug configuration")
-    set(Boost_USE_DEBUG_LIBS ON)
-    set(Boost_DEBUG ON)
-#    set(BOOST_VARIANT debug)
-#    set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_debug_install_done)
-else()
-    set(Boost_USE_DEBUG_LIBS OFF)
-#    set(BOOST_VARIANT release)
-#    set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_release_install_done)
-endif()
-#set(boost_configure_command ./bootstrap.sh gcc)
-#set(boost_build_command ./b2.exe --toolset=gcc link=static --build-type=complete runtime-link=shared variant=release --prefix=<INSTALL_DIR> --with-serialization -j8 stage install)
 set(BOOST_SUBMODULES
-    "tools/build
+    "tools/cmake
+    tools/build
+    tools/boost_install
     libs/align
     libs/array
     libs/asio
@@ -182,69 +126,43 @@ set(BOOST_SUBMODULES
     libs/tuple
     libs/describe
     libs/mp11
-    tools/boost_install"
-)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
+    libs/unordered
+    libs/variant
+    libs/range
+    libs/algorithm
+    libs/compat
+    libs/concept_check
+    libs/context
+    libs/conversion
+    libs/endian
+    libs/exception
+    libs/function_types
+    libs/fusion
+    libs/lexical_cast
+    libs/pool
+    libs/regex
+    libs/variant2
+    libs/container
+    libs/phoenix
+    libs/tokenizer
+    libs/typeof
+    libs/functional
+    libs/intrusive
+    libs/proto
+    libs/thread
+    libs/atomic
+    libs/chrono
+    libs/ratio"
+)
 
-if (NOT EXISTS ${BOOST_SEMAPHORE})
-    ExternalProject_Add(Boost
-            GIT_REPOSITORY ${BOOST_URL}
-            GIT_TAG ${BOOST_GIT_TAG}
-            GIT_PROGRESS 1
-            GIT_SHALLOW 1
-            GIT_SHALLOW TRUE
-#            UPDATE_DISCONNECTED TRUE
-            GIT_SUBMODULES ${BOOST_SUBMODULES} # load only specified submodules instead of all
-            PREFIX boost
-            DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}
-            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}
-#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}_build
-            INSTALL_DIR ${DEP_DOWNLOAD_DIR}/boost_install
-#            TMP_DIR Boost/tmp
-#            STAMP_DIR Boost/stamp
-
-#            LOG_DOWNLOAD ON
-#            LOG_CONFIGURE ON
-#            LOG_BUILD ON
-#            LOG_INSTALL ON
-
-#            PATCH_COMMAND ./bootstrap.sh gcc
-            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-#            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
-            BUILD_IN_SOURCE 1
-            INSTALL_COMMAND ""
-            DOWNLOAD_EXTRACT_TIMESTAMP true
-            BUILD_ALWAYS TRUE
-    )
-
-    ExternalProject_Add_Step(Boost create_semaphore
-            COMMAND ${CMAKE_COMMAND} -E touch ${BOOST_SEMAPHORE}
-            DEPENDEES install
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-else()
-    message(STATUS "--------------------------------------------------")
-    message(STATUS "Boost: is already installed, so sipping this step.")
-    message(STATUS "--------------------------------------------------")
-endif()
-
-set(Boost_NO_SYSTEM_PATHS ON)
-set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/libraries/boost_install)
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization uuid)
-if(Boost_FOUND)
-    message(STATUS "------------------------------------------------------------")
-    message(STATUS "Found Boost ${Boost_VERSION} with libraries: ${Boost_LIBRARIES}")
-    message(STATUS "include directory: ${Boost_INCLUDE_DIRS}")
-    include_directories(${Boost_INCLUDE_DIRS})
-    message(STATUS "------------------------------------------------------------")
-else ()
-    message(STATUS "------------------------------------------------------------")
-    message(STATUS "If you see error 'Could not find Boost', ignore it once,")
-    message(STATUS "it will be autodownload during first build, so run build.")
-    message(STATUS "first build will finish with compile error like missing boost includes,")
-    message(STATUS "reload cmake project to fix it, then run build again, and all will work fine")
-    message(STATUS "------------------------------------------------------------")
-endif()
+FetchContent_Declare(Boost
+        GIT_REPOSITORY ${BOOST_URL}
+        GIT_TAG "boost-${BOOST_VERSION}"
+        GIT_PROGRESS 1
+        GIT_SHALLOW TRUE
+        GIT_SUBMODULES ${BOOST_SUBMODULES}
+)
+FetchContent_MakeAvailable(Boost)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -449,21 +367,13 @@ set(UNIT_TESTS_FILES
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-if (NOT EXISTS ${BOOST_SEMAPHORE})
-    add_dependencies(${PROJECT_NAME} Boost)
-endif()
-
 add_executable(unit_tests ${SOURCE_FILES_FOR_UNIT_TESTS} ${UNIT_TESTS_FILES})
-
-if (NOT EXISTS ${BOOST_SEMAPHORE})
-    add_dependencies(unit_tests Boost)
-endif()
 
 target_include_directories(unit_tests PRIVATE headers)
 target_link_libraries(unit_tests
         gtest
         gtest_main
-        ${Boost_LIBRARIES}
+        Boost::serialization Boost::uuid Boost::asio Boost::property_tree
         wsock32  #NOTE: this for windows socket
         ws2_32   #NOTE: this for windows socket
 )
@@ -478,7 +388,7 @@ target_link_libraries(${PROJECT_NAME}
         SDL2_ttf
         SDL2_image
         SDL2_mixer
-        ${Boost_LIBRARIES}
+        Boost::serialization Boost::uuid Boost::asio Boost::property_tree
         wsock32  #NOTE: this for windows socket
         ws2_32   #NOTE: this for windows socket
 )
