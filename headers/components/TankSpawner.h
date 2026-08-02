@@ -1,15 +1,16 @@
 #pragma once
 
 #include "Point.h"
+#include "entities/ObjRectangle.h"
 #include "managers/RespawnManager.h"
 #include "utils/Timer.h"
+#include <optional>
 #include <random>
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
-struct ObjRectangle;
 struct BonusEffectProperty;
 class Tank;
 class BaseObj;
@@ -43,7 +44,8 @@ class TankSpawner final
 	void Reset();
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
-	[[nodiscard]] bool SpawnEnemy(buuid uuid, TankType type, float speed, int health, bool skipDelay = false);
+	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, buuid uuid, TankType type, float speed, int health,
+								  bool skipDelay = false);
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
@@ -52,13 +54,15 @@ class TankSpawner final
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
 
-	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false);
+	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false,
+						   std::optional<ObjRectangle> rect = std::nullopt);
 	[[nodiscard]] ObjRectangle GetPlayerRandomPosX(bool isFirst) const;
-	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false);
-	void RespawnTank(TankType type, buuid uuid, bool skipDelay);
+	void RespawnPlayerTeam(TankType type, buuid uuid, bool skipDelay = false,
+						   std::optional<ObjRectangle> rect = std::nullopt);
+	void RespawnTank(TankType type, buuid uuid, bool skipDelay, std::optional<ObjRectangle> rect = std::nullopt);
 	[[nodiscard]] static std::string GetCurrentTimeString();
 
-	void OnClientRespawn(TankType type, buuid uuid);
+	void OnClientRespawn(TankType type, buuid uuid, ObjRectangle rect);
 
 public:
 	TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,

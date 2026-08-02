@@ -142,7 +142,6 @@ TEST_F(NetworkTest, HealthEventReplication)
 	events->AddListener("ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication",
 						[&promise](const int health) { promise.set_value(health); });
 
-	//TODO: emit preUpdate to exec networkCommands, but before that extract it from game success to subscribe
 	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Health", name, healthOrigin, _uuid);
 	events->EmitEvent("Server_EndFrame");
@@ -259,7 +258,6 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	events->RemoveListener("ClientReceived_Statistics", "StatisticsEventReplication");
 }
 
-//TODO: write retry 3 times logic if failure
 TEST_F(NetworkTest, FortressChangeEventReplication)
 {
 	using buuid = boost::uuids::uuid;
@@ -636,14 +634,14 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	auto server = std::make_unique<network::commands::ServerHandler>(events);
 	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
-	std::vector<std::promise<std::pair<TankType, buuid>>> promises(6u);
+	std::vector<std::promise<std::tuple<TankType, buuid, FPoint>>> promises(6u);
 
 	size_t count = 0u;
 	events->AddListener(
 			"ClientReceived_RespawnTank", "RespawnTankEventReplication",
-			[&promises, &count](const TankType type, const buuid& uuid)
+			[&promises, &count](const TankType type, const buuid& uuid, const ObjRectangle rect)
 			{
-				promises[count++].set_value({type, uuid});
+				promises[count++].set_value({type, uuid, FPoint{.x = rect.x, .y = rect.y}});
 			});
 
 	constexpr std::array tankTypes{
@@ -655,10 +653,12 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 			TankType::ENEMY4
 	};
 
+	constexpr ObjRectangle rectOrigin{.x = 12.f, .y = 34.f, .w = 16.f, .h = 16.f};
+
 	// events->EmitEvent("Server_StartFrame");
 	for (const auto tankType: tankTypes)
 	{
-		events->EmitEvent("ServerSend_RespawnTank", tankType, _uuid);
+		events->EmitEvent("ServerSend_RespawnTank", tankType, _uuid, rectOrigin);
 	}
 	events->EmitEvent("Server_EndFrame");
 
@@ -681,16 +681,15 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 			}
 		}
 
-		ASSERT_EQ(status, std::future_status::ready);//TODO: investigate some times failed
-		const auto& [typeReplicated, uuid] = future.get();
+		ASSERT_EQ(status, std::future_status::ready);
+		const auto& [typeReplicated, uuid, posReplicated] = future.get();
 		EXPECT_EQ(tankTypes[i], typeReplicated);
 		EXPECT_EQ(_uuid, uuid);
+		EXPECT_EQ((FPoint{.x = rectOrigin.x, .y = rectOrigin.y}), posReplicated);
 	}
 
 	events->RemoveListener("ClientReceived_RespawnTank", "RespawnTankEventReplication");
 }
 
-//TODO: write test for respawn resource change
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
-//TODO: check animation create replication

@@ -11,15 +11,18 @@ namespace network::commands
 RespawnTank::RespawnTank()
 	: Command{CommandType::RESPAWN_TANK} {}
 
-RespawnTank::RespawnTank(const TankType tankType, const buuid uuid)
+RespawnTank::RespawnTank(const TankType tankType, const buuid uuid, const ObjRectangle rect)
 	: Command{CommandType::RESPAWN_TANK}
 	, _tankType{tankType}
-	, _uuid{uuid} {}
+	, _uuid{uuid}
+	, _rect{rect} {}
 
 using buuid = boost::uuids::uuid;
 buuid RespawnTank::GetUuid() const noexcept { return _uuid; }
 
 TankType RespawnTank::GetTankType() const noexcept { return _tankType; }
+
+ObjRectangle RespawnTank::GetRect() const noexcept { return _rect; }
 
 const char* RespawnTank::GetClassNameW() const noexcept { return "RespawnTank"; }
 }//namespace network::commands

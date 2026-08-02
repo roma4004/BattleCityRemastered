@@ -358,10 +358,11 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
 	{
 		const auto tankType = cmd->GetTankType();
 		const auto uuid = cmd->GetUuid();
+		const auto rect = cmd->GetRect();
 
-		_commandQueue.Enqueue([this, tankType, uuid]()
+		_commandQueue.Enqueue([this, tankType, uuid, rect]()
 		{
-			_events->EmitEvent("ClientReceived_RespawnTank", tankType, uuid);
+			_events->EmitEvent("ClientReceived_RespawnTank", tankType, uuid, rect);
 		});
 	}
 }

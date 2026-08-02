@@ -464,11 +464,13 @@ void Server::Subscribe()
 				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
-	_events->AddListener("ServerSend_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
-	{
-		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
-	});
+	_events->AddListener(
+			"ServerSend_RespawnTank", _name,
+			[this](const TankType type, const buuid& uuid, const ObjRectangle rect)
+			{
+				std::scoped_lock lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid, rect));
+			});
 
 	_events->AddListener(
 			"ServerSend_ObstacleSpawn", _name,
