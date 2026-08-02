@@ -14,7 +14,6 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-//TODO: fix "DoRead error ...asio.misc:2" in console after each test
 class NetworkTest : public testing::Test
 {
 	using buuid = boost::uuids::uuid;

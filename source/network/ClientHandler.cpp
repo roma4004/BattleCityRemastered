@@ -1,6 +1,9 @@
 #include "network/ClientHandler.h"
 #include "components/EventSystem.h"
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
+#include <chrono>
+#include <future>
 
 namespace network::commands
 {
@@ -36,6 +39,26 @@ ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_
 
 ClientHandler::~ClientHandler()
 {
+	Shutdown();
+	Unsubscribe();
+}
+
+void ClientHandler::Shutdown()
+{
+	if (_client && !_ioContext.stopped())
+	{
+		auto shutdownDone{std::make_shared<std::promise<void>>()};
+		const std::future<void> shutdownFuture{shutdownDone->get_future()};
+
+		boost::asio::post(_ioContext, [client = _client, shutdownDone]()
+		{
+			client->Shutdown();
+			shutdownDone->set_value();
+		});
+
+		shutdownFuture.wait_for(std::chrono::milliseconds(500));
+	}
+
 	if (!_ioContext.stopped())
 	{
 		_ioContext.stop();
@@ -45,8 +68,6 @@ ClientHandler::~ClientHandler()
 	{
 		_clientThread.join();
 	}
-
-	Unsubscribe();
 }
 
 void ClientHandler::Subscribe()

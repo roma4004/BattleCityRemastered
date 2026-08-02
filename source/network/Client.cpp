@@ -95,12 +95,19 @@ void Client::TryConnect()
 Client::~Client()
 {
 	Unsubscribe();
+	Shutdown();
+}
 
+void Client::Shutdown()
+{
 	try
 	{
+		_reconnectTimer.cancel();
+
 		if (_socket.is_open())
 		{
 			boost::system::error_code ec;
+			std::ignore = _socket.cancel(ec);
 			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
@@ -116,11 +123,11 @@ Client::~Client()
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Exception in ~Client: " << e.what() << '\n';
+		std::cerr << "Exception in Client::Shutdown: " << e.what() << '\n';
 	}
 	catch (...)
 	{
-		std::cerr << "Unknown error in ~Client" << '\n';
+		std::cerr << "Unknown error in Client::Shutdown" << '\n';
 	}
 }
 
@@ -170,7 +177,11 @@ void Client::ReadResponse()
 		if (ec)
 		{
 			_readBuffer.consume(length);
-			std::cerr << ec.message() << '\n';
+
+			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
+			{
+				std::cerr << ec.message() << '\n';
+			}
 		}
 		else
 		{

@@ -25,6 +25,8 @@ public:
 
 	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
 
+	void Shutdown();
+
 private:
 	void Subscribe();
 	void Unsubscribe() const;

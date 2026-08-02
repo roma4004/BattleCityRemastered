@@ -22,6 +22,7 @@ public:
 private:
 	void Subscribe();
 	void Unsubscribe() const;
+	void Shutdown();
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	boost::asio::io_context _ioContext{};
