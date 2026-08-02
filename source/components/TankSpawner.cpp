@@ -47,14 +47,12 @@ void TankSpawner::Subscribe()
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
 	//TODO: reuse existing tanks when game mode changed
-	_events->AddListener(
-			"GameModeChangedTo", _name,
-			[this](const GameMode newGameMode)
-			{
-				this->_gameMode = newGameMode;
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
 
-				this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-			});
+		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	});
 
 	_events->AddListener(
 			"SpawnEnabled", _name,
@@ -239,10 +237,11 @@ void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const
 }
 
 void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const bool skipDelay,
-									 const std::optional<ObjRectangle> rect)
+									const std::optional<ObjRectangle> rect)
 {
 	const ObjRectangle spawnRect = rect.has_value() ? *rect : GetEnemyRandomPosX(type);
-	const bool isSuccessSpawn = SpawnEnemy(spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth, skipDelay);
+	const bool isSuccessSpawn = SpawnEnemy(spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth,
+										   skipDelay);
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_RespawnTank", type, uuid, spawnRect);
@@ -295,7 +294,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 }
 
 void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const bool skipDelay,
-									 const std::optional<ObjRectangle> rect)
+									const std::optional<ObjRectangle> rect)
 {
 	const bool isFirst = type == TankType::PLAYER1;
 	const ObjRectangle spawnRect{rect.has_value() ? *rect : GetPlayerRandomPosX(isFirst)};
@@ -324,7 +323,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 }
 
 void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool skipDelay,
-							   const std::optional<ObjRectangle> rect)
+							  const std::optional<ObjRectangle> rect)
 {
 	switch (type)
 	{

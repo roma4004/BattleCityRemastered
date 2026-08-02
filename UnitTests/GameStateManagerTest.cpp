@@ -17,7 +17,7 @@
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 
-class GameStateManagerTest : public testing::Test // NOLINT(clang-diagnostic-padded)
+class GameStateManagerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 

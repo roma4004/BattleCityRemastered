@@ -33,16 +33,14 @@ void RespawnManager::Subscribe()
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_events->AddListener("Reset", _name, [this]() { this->ResetSpawn(); });
-	_events->AddListener(
-			"GameModeChangedTo", _name,
-			[this](const GameMode newGameMode)
-			{
-				this->_gameMode = newGameMode;
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
 
-				this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
+		this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
 
-				this->OnGameModeChange();
-			});
+		this->OnGameModeChange();
+	});
 
 	_events->AddListener("TankSpawn", _name, [this](const buuid& uuid) { OnTankSpawn(uuid); });
 

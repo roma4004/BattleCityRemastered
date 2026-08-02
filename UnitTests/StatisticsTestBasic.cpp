@@ -15,7 +15,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class StatisticsTest : public testing::Test // NOLINT(clang-diagnostic-padded)
+class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 

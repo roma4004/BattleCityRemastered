@@ -10,7 +10,7 @@
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 
-class BulletTestAdvanced : public testing::Test // NOLINT(clang-diagnostic-padded)
+class BulletTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
