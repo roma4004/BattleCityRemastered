@@ -331,7 +331,9 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 		case TankType::ENEMY2:
 		case TankType::ENEMY3:
 		case TankType::ENEMY4:
-			if (skipDelay)
+		{
+			const bool isNetworkMirrored = rect.has_value();// server already decided when to spawn this tank
+			if (skipDelay || isNetworkMirrored)
 			{
 				RespawnEnemyTanks(type, uuid, skipDelay, rect);
 			}
@@ -341,6 +343,7 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 				RespawnEnemyTanks(type, uuid, skipDelay, rect);
 			}
 			break;
+		}
 		case TankType::PLAYER1:
 		case TankType::PLAYER2:
 		case TankType::COOP1:
