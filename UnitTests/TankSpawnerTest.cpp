@@ -3,7 +3,7 @@
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
-#include "enums/TankType.h"
+#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -31,74 +31,68 @@ protected:
 	}
 };
 
-TEST_F(TankSpawnerTest, EnemyOneRespawn)
+TEST_F(TankSpawnerTest, DemoGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0u);
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY1));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::Demo);
 	_events->EmitEvent("RespawnTanks", skipDelay);
-	EXPECT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
-TEST_F(TankSpawnerTest, EnemyTwoRespawn)
+TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0u);
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	_events->EmitEvent("RespawnTanks", skipDelay);
-	EXPECT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.size(), 5u);
 }
 
-TEST_F(TankSpawnerTest, EnemyThreeRespawn)
+TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0u);
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY3));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
 	_events->EmitEvent("RespawnTanks", skipDelay);
-	EXPECT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
-TEST_F(TankSpawnerTest, EnemyFourRespawn)
+TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0u);
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY4));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::CoopWithBot);
 	_events->EmitEvent("RespawnTanks", skipDelay);
-	EXPECT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
-TEST_F(TankSpawnerTest, PlayerOneDiedRespawn)
+TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0u);
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::PlayAsHost);
 	_events->EmitEvent("RespawnTanks", skipDelay);
-	EXPECT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
 }
 
-TEST_F(TankSpawnerTest, PlayerTwoDiedRespawn)
+TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	EXPECT_EQ(_allObjects.size(), 0u);
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER2));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::PlayAsClient);
 	_events->EmitEvent("RespawnTanks", skipDelay);
-	EXPECT_EQ(_allObjects.size(), 1u);
+	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
 }

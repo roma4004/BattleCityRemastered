@@ -53,12 +53,6 @@ void RespawnManager::Subscribe()
 		this->OnBonusTank(author);
 	});
 
-	//NOTE: for unit tests //TODO: remove direct call from unit tests use event system instead
-	_events->AddListener("SetSlotNeedRespawn", _name, [this](const int slotIndex)
-	{
-		this->SetSlotNeedRespawn(slotIndex);
-	});
-
 	_events->AddListener("PlayersBaseFinished", _name, [this]() { this->TriggerLastPlayersLife(); });
 }
 
@@ -88,15 +82,6 @@ void RespawnManager::SetEnemyNeedRespawn()
 	for (size_t i = 0; i < 4; ++i)
 	{
 		_slots[i].isAvailable = true;
-	}
-}
-
-//NOTE: use only in unit tests
-void RespawnManager::SetSlotNeedRespawn(const int slotIndex)
-{
-	if (slotIndex >= 0 && slotIndex < 6)
-	{
-		_slots[slotIndex].isAvailable = true;
 	}
 }
 

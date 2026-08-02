@@ -36,7 +36,7 @@ void ScoreBoard::Subscribe()
 			"RespawnCountChangedTo", _name,
 			[this](const std::string& objectName, const unsigned short respawnCount)
 			{
-				this->OnRespawnCountChanged(objectName, respawnCount);//TODO: extract from score to sidebar
+				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
 
 	if (_isScoreBoardDisplayed)

@@ -62,7 +62,4 @@ public:
 	explicit RespawnManager(const std::shared_ptr<EventSystem>& events);
 
 	~RespawnManager();
-
-	// NOTE: for unit tests only
-	void SetSlotNeedRespawn(int slotIndex);
 };

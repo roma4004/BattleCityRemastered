@@ -3,7 +3,7 @@
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
-#include "enums/TankType.h"
+#include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -19,7 +19,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_allObjects.reserve(6);
+		_allObjects.reserve(6u);
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
@@ -37,13 +37,16 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 	unsigned short respawnActual{20u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Enemy")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
 	constexpr bool skipDelay{true};
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	_allObjects.pop_back();
 
@@ -58,13 +61,16 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Player1")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
 	constexpr bool skipDelay{true};
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	_allObjects.pop_back();
 
@@ -79,13 +85,16 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Player2")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER2));
 	constexpr bool skipDelay{true};
+	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	_allObjects.pop_back();
 
@@ -100,14 +109,17 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 	unsigned short respawnActual{20u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Enemy")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
-		_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
 		constexpr bool skipDelay{true};
 		_events->EmitEvent("RespawnTanks", skipDelay);
 		_allObjects.pop_back();
@@ -124,13 +136,15 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Player1")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -149,13 +163,15 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Player2")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER2));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -174,13 +190,15 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{21u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Enemy")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::ENEMY2));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -202,13 +220,15 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Player1")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER1));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	for (unsigned short i = 0; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -230,14 +250,16 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
 			{
-				respawnActual = respawnCount;
+				if (objectName == "Player2")
+				{
+					respawnActual = respawnCount;
+				}
 			});
 
 
-	_events->EmitEvent("SetSlotNeedRespawn", static_cast<int>(TankType::PLAYER2));
-
+	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
