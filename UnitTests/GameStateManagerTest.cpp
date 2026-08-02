@@ -17,7 +17,7 @@
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 
-class GameStateManagerTest : public testing::Test
+class GameStateManagerTest : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -30,13 +30,13 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
+	std::string _name = "Player1";
+	double _deltaTimeOneFrame{1.f / 60.f};
+	buuid _uuid{};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	std::string _name = "Player1";
-	buuid _uuid{};
+	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
@@ -50,7 +50,7 @@ protected:
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
-		_allObjects.reserve(4);
+		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override
@@ -80,7 +80,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		}
 		else
 		{
-			howManySpawnCounters.emplace_back(1, uuid);// Add new entry if UUID not found
+			howManySpawnCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
 		}
 	});
 
@@ -100,7 +100,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		}
 		else
 		{
-			howManyDiedCounters.emplace_back(1, uuid);// Add new entry if UUID not found
+			howManyDiedCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
 		}
 	});
 
@@ -188,7 +188,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		}
 		else
 		{
-			howManySpawnCounters.emplace_back(1, uuid);// Add new entry if UUID not found
+			howManySpawnCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
 		}
 	});
 
@@ -208,7 +208,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		}
 		else
 		{
-			howManyDiedCounters.emplace_back(1, uuid);// Add new entry if UUID not found
+			howManyDiedCounters.emplace_back(1u, uuid);// Add new entry if UUID not found
 		}
 	});
 
@@ -255,7 +255,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	//let enemy pick up
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(respawnEnemyActual, 21u);//TODO: add u to unsigned
+	EXPECT_EQ(respawnEnemyActual, 21u);
 
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
@@ -277,10 +277,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	std::cout << "spawn extra life tank" << '\n';
 	_events->EmitEvent("RespawnTanks", skipDelay);//spawn 4 enemies
-	EXPECT_EQ(_allObjects.size(), 4);
+	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.pop_back();//remove one enemy tank	
 	_events->EmitEvent("RespawnTanks", skipDelay);//spawn use extra life
-	EXPECT_EQ(_allObjects.size(), 4);
+	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.clear();// remove all 4 enemy tank
 
 	for (const auto [spawnCount, uuid]: howManySpawnCounters)
@@ -319,16 +319,16 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 				respawnActual = respawnCount;
 			});
 
-	EXPECT_EQ(respawnActual, 3);
+	EXPECT_EQ(respawnActual, 3u);
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("RespawnTanks", skipDelay);
 	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
-	EXPECT_EQ(respawnActual, 2);
+	EXPECT_EQ(respawnActual, 2u);
 
 	EXPECT_FALSE(isGameLose);
 
 	_allObjects.pop_back();// remove eagle
-	EXPECT_EQ(respawnActual, 0);
+	EXPECT_EQ(respawnActual, 0u);
 	_allObjects.pop_back();// remove player
 
 	EXPECT_TRUE(isGameLose);
@@ -359,7 +359,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 
 	EXPECT_FALSE(isGameLose);
 
-	EXPECT_EQ(respawnActual, 3);
+	EXPECT_EQ(respawnActual, 3u);
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
@@ -368,7 +368,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 		_allObjects.pop_back();
 	}
 
-	EXPECT_EQ(respawnActual, 0);
+	EXPECT_EQ(respawnActual, 0u);
 	EXPECT_TRUE(isGameLose);
 
 	_events->RemoveListener("EnemiesTeamIsWon", _name);
@@ -408,11 +408,11 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	// Spawn bonus extra life
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	EXPECT_EQ(respawnActual, 3);
+	EXPECT_EQ(respawnActual, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(respawnActual, 4);
+	EXPECT_EQ(respawnActual, 4u);
 	constexpr bool skipDelay{true};
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
 	for (unsigned short i = 0u; i < 3u; ++i)

@@ -147,7 +147,7 @@ void FortressWall::OnBonusShovel(const std::string& fraction, const bool isActiv
 	isActive ? OnPlayerPickupShovel() : OnShovelCooldownEnd();
 }
 
-void FortressWall::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void FortressWall::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	const int health = std::visit([damage, &damageAuthor, &damageFraction](auto&& obstacle) -> int
 	{

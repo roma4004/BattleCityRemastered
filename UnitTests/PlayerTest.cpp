@@ -17,7 +17,7 @@
 #include <memory>
 #include <boost/uuid/random_generator.hpp>
 
-class PlayerTest : public testing::Test
+class PlayerTest : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -30,12 +30,12 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
+	double _deltaTimeOneFrame{1.f / 60.f};
+	buuid _uuid{};// boost::uuids::uuid is internally 8-byte aligned (uses a uint64_t for alignment)
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
@@ -49,7 +49,7 @@ protected:
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
-		_allObjects.reserve(4);
+		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override

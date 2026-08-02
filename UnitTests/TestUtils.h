@@ -13,7 +13,7 @@ public:
 	template<class T>
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
 			ObjRectangle rect, int health, buuid uuid, std::string name, std::string fraction,
-			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned int tier,
+			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 			float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 			GameConfig& gameConfig);
 
@@ -48,7 +48,7 @@ template<class T>
 std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, buuid uuid, std::string name,
 										 std::string fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 										 std::shared_ptr<EventSystem> events,
-										 unsigned int tier, float tankSpeed, Direction dir, GameMode gameMode,
+										 unsigned short tier, float tankSpeed, Direction dir, GameMode gameMode,
 										 std::shared_ptr<BulletPool> bulletPool,
 										 GameConfig& gameConfig)
 {
@@ -74,6 +74,6 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, buuid uu
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
 		ObjRectangle rect, int tankHealth, buuid uuid, std::string name, std::string fraction,
-		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned int tier,
+		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		GameConfig& gameConfig);

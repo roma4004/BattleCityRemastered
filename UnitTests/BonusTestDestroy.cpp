@@ -10,7 +10,6 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/Enemy.h"
-#include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -18,7 +17,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class BonusTestDestroy : public testing::Test
+class BonusTestDestroy : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -30,13 +29,13 @@ protected:
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
-	int _bulletHealth{1};
+	double _deltaTimeOneFrame{1.f / 60.f};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
+	unsigned short _tankHealth{100u};
+	unsigned short _bulletHealth{1u};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 

@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class BonusTest : public testing::Test
+class BonusTest : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -29,13 +29,13 @@ protected:
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
-	int _bulletHealth{1};
+	unsigned short _tankHealth{100u};
+	unsigned short _bulletHealth{1u};
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 
@@ -325,7 +325,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	const int playerSpawnCount = respawnActual;
+	const unsigned short playerSpawnCount = respawnActual;
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -357,7 +357,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
-	const int playerSpawnCount = respawnActual;
+	const unsigned short playerSpawnCount = respawnActual;
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 

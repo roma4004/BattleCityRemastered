@@ -169,7 +169,7 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 	_events->EmitEvent("Statistics_BulletHit", author, fraction);
 }
 
-void Bullet::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Bullet::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	Pawn::TakeDamage(damage, damageAuthor, damageFraction);
 }

@@ -59,7 +59,7 @@ public:
 	[[nodiscard]] bool GetIsAlive() const override;
 	void SetIsAlive(bool isAlive) override;
 
-	virtual void TakeDamage(int damage, const std::string& /*damageAuthor*/, const std::string& /*damageFraction*/);
+	virtual void TakeDamage(unsigned int damage, const std::string& /*damageAuthor*/, const std::string& /*damageFraction*/);
 
 	[[nodiscard]] bool GetIsPassable() const override;
 	void SetIsPassable(bool value) override;

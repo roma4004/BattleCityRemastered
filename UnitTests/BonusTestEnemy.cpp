@@ -14,7 +14,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class BonusTestEnemy : public testing::Test
+class BonusTestEnemy : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -26,12 +26,12 @@ protected:
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
+	buuid _uuid{};
+	double _deltaTimeOneFrame{1.f / 60.f};
 	float _tankSize{};
 	float _gridSize{};
 	float _tankSpeed{142};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override

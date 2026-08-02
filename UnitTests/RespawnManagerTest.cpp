@@ -152,7 +152,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 		_allObjects.pop_back();
 	}
 
-	EXPECT_EQ(0, respawnActual);
+	EXPECT_EQ(0u, respawnActual);
 
 	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
 }
@@ -179,7 +179,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 		_allObjects.pop_back();
 	}
 
-	EXPECT_EQ(0, respawnActual);
+	EXPECT_EQ(0u, respawnActual);
 
 	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
 }
@@ -209,7 +209,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 		}
 	}
 
-	EXPECT_EQ(0, respawnActual);
+	EXPECT_EQ(0u, respawnActual);
 
 	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
 }
@@ -229,7 +229,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 			});
 
 	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
-	for (unsigned short i = 0; i < respawnOriginal; ++i)
+	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
 		_events->EmitEvent("RespawnTanks", skipDelay);
@@ -239,7 +239,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 		}
 	}
 
-	EXPECT_EQ(0, respawnActual);
+	EXPECT_EQ(0u, respawnActual);
 
 	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
 }
@@ -270,7 +270,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 		}
 	}
 
-	EXPECT_EQ(0, respawnActual);
+	EXPECT_EQ(0u, respawnActual);
 
 	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
 }

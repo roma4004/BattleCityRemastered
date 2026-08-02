@@ -19,7 +19,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_allObjects.reserve(6);
+		_allObjects.reserve(6u);
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);

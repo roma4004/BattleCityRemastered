@@ -15,7 +15,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class BulletTest : public testing::Test
+class BulletTest : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -23,11 +23,11 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _bulletHealth{1};
-	float _gridSize{1};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
+	float _gridSize{1};
+	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
@@ -290,7 +290,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	// spawn Enemy
 	const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 	const float tankSize = gridSize * 3;// for better turns
-	constexpr int tankHealth = 1;
+	constexpr unsigned short tankHealth = 1u;
 	constexpr float tankSpeed{142};
 	const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 	const ObjRectangle rectEnemy{.x = 0, .y = _calibre.size.y, .w = tankSize, .h = tankSize};

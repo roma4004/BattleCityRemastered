@@ -127,8 +127,6 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 TEST_F(NetworkTest, HealthEventReplication)
 {
-	using buuid = boost::uuids::uuid;
-
 	auto events = std::make_shared<EventSystem>();
 	auto server = std::make_unique<network::commands::ServerHandler>(events);
 	auto client = std::make_unique<network::commands::ClientHandler>(events);
@@ -563,7 +561,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	constexpr auto obstacleType = ObstacleType::Brick;
 	std::vector<ObjRectangle> bricksRect;
 	std::vector<ObjRectangle> bricksRectReplicated;
-	constexpr int itemsInMassiveTest = 10000;
+	constexpr unsigned short itemsInMassiveTest = 10000u;
 	bricksRect.reserve(itemsInMassiveTest);
 	bricksRectReplicated.reserve(itemsInMassiveTest);
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
@@ -575,14 +573,14 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises(itemsInMassiveTest);
 
 	std::mutex mtx;
-	std::atomic<size_t> count{0};
+	std::atomic<size_t> count{0u};
 	events->AddListener(
 			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
 			[&promises, &count, &mtx](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
 			{
 				std::scoped_lock lock(mtx);
 
-				const auto current = count.fetch_add(1);
+				const auto current = count.fetch_add(1u);
 				if (current < promises.size())
 				{
 					promises[current].set_value({rect, type, uuid});
@@ -639,9 +637,9 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	auto server = std::make_unique<network::commands::ServerHandler>(events);
 	auto client = std::make_unique<network::commands::ClientHandler>(events);
 
-	std::vector<std::promise<std::pair<TankType, buuid>>> promises(6);
+	std::vector<std::promise<std::pair<TankType, buuid>>> promises(6u);
 
-	size_t count = 0;
+	size_t count = 0u;
 	events->AddListener(
 			"ClientReceived_RespawnTank", "RespawnTankEventReplication",
 			[&promises, &count](const TankType type, const buuid& uuid)

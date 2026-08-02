@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class EnemyBotTest : public testing::Test
+class EnemyBotTest : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -34,12 +34,12 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
+	double _deltaTimeOneFrame{1.f / 60.f};
+	buuid _uuid{};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
@@ -53,7 +53,7 @@ protected:
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
-		_allObjects.reserve(4);
+		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override
@@ -82,13 +82,13 @@ TEST_F(EnemyBotTest, EnemyShootToCoop)
 	_allObjects.emplace_back(enemyBot);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-	EXPECT_EQ(sizeAfter, 4);
+	EXPECT_EQ(sizeAfter, 4u);
 }
 
 // Check that bot shoots when seeing a Player1
@@ -112,13 +112,13 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that bot shoots when seeing a Player2
@@ -141,13 +141,13 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that bot shoots when seeing a Player1
@@ -170,13 +170,13 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that bot shoots when seeing a Player2
@@ -199,13 +199,13 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // check that enemy don't shoot the allied tanks
@@ -228,7 +228,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 	_allObjects.emplace_back(enemyBot2BaseObj);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -255,7 +255,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
 	_allObjects.emplace_back(enemyBot2BaseObj);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
@@ -482,13 +482,13 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 4);
+	EXPECT_EQ(sizeAfter, 4u);
 }
 
 // Check that Enemy can shoot at Player that been in the water (in case of BonusShip was pickup)
@@ -515,13 +515,13 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 4);
+	EXPECT_EQ(sizeAfter, 4u);
 }
 
 // Check that Enemy can shoot at Player that been behind Ice
@@ -548,13 +548,13 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 4);
+	EXPECT_EQ(sizeAfter, 4u);
 }
 
 // Check that Enemy can shoot at Player that been in the Ice
@@ -581,13 +581,13 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 4);
+	EXPECT_EQ(sizeAfter, 4u);
 }
 
 // Check that Enemy can shoot at Player that been behind BrickWall
@@ -614,13 +614,13 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that Enemy can shoot at Player that been behind SteelWall
@@ -647,13 +647,13 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that Enemy can shoot at Player that been behind FortressWall
@@ -680,13 +680,13 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that Enemy can shoot at Player that been behind Bush
@@ -713,13 +713,13 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }
 
 // Check that Enemy can shoot at Player that been in the Bush
@@ -746,11 +746,11 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 	_allObjects.emplace_back(player);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 3);
+	EXPECT_EQ(sizeBefore, 3u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
-	EXPECT_EQ(sizeAfter, 3);
+	EXPECT_EQ(sizeAfter, 3u);
 }

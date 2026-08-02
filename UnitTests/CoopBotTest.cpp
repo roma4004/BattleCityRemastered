@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class CoopBotTest : public testing::Test
+class CoopBotTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -34,12 +34,12 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{100};
+	double _deltaTimeOneFrame{1.f / 60.f};
+	buuid _uuid{};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
@@ -53,7 +53,7 @@ protected:
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3;// for better turns
 
-		_allObjects.reserve(4);
+		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override
@@ -105,13 +105,13 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	_allObjects.emplace_back(enemyBot);
 
 	const size_t sizeBefore = _allObjects.size();
-	EXPECT_EQ(sizeBefore, 2);
+	EXPECT_EQ(sizeBefore, 2u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
-	EXPECT_EQ(sizeAfter, 4);
+	EXPECT_EQ(sizeAfter, 4u);
 }
 
 // Check that CoopBot does not shoot at PlayerTeam members

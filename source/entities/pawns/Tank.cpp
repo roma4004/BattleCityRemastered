@@ -207,7 +207,7 @@ void Tank::Disable() const
 	}
 }
 
-void Tank::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Tank::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	if (!_effects.isHelmetActive)
 	{

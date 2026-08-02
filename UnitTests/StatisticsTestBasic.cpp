@@ -15,7 +15,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-class StatisticsTest : public testing::Test
+class StatisticsTest : public testing::Test // NOLINT(clang-diagnostic-padded)
 {
 	using buuid = boost::uuids::uuid;
 
@@ -26,13 +26,13 @@ protected:
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	int _tankHealth{1};
-	int _bulletHealth{1};
+	double _deltaTimeOneFrame{1.f / 60.f};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	float _tankSize{};
 	float _tankSpeed{142.f};
-	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
+	unsigned short _tankHealth{1u};
+	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};
 
 	void SetUp() override
@@ -71,11 +71,11 @@ TEST_F(StatisticsTest, PlayerOneHitByEnemy)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetPlayerOneHitByEnemyTeam(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerOneHitByFriend)
@@ -99,11 +99,11 @@ TEST_F(StatisticsTest, PlayerOneHitByFriend)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0);
+	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 1);
+	EXPECT_EQ(_statistics->GetPlayerOneHitFriendlyFire(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
@@ -127,11 +127,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByEnemy)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitByEnemyTeam(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerTwoHitByFriend)
@@ -155,11 +155,11 @@ TEST_F(StatisticsTest, PlayerTwoHitByFriend)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 1);
+	EXPECT_EQ(_statistics->GetPlayerTwoHitFriendlyFire(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerOneDiedByFriend)
@@ -180,11 +180,11 @@ TEST_F(StatisticsTest, PlayerOneDiedByFriend)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0);
+	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 1);
+	EXPECT_EQ(_statistics->GetPlayerOneDiedByFriendlyFire(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
@@ -208,11 +208,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByEnemy)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
@@ -233,11 +233,11 @@ TEST_F(StatisticsTest, PlayerOneDiedByEnemy)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetPlayerDiedByEnemyTeam(), 1u);
 }
 
 TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
@@ -261,11 +261,11 @@ TEST_F(StatisticsTest, PlayerTwoDiedByFriend)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0);
+	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 1);
+	EXPECT_EQ(_statistics->GetPlayerTwoDiedByFriendlyFire(), 1u);
 }
 
 TEST_F(StatisticsTest, EnemyHitByFriend)
@@ -289,11 +289,11 @@ TEST_F(StatisticsTest, EnemyHitByFriend)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0);
+	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 1);
+	EXPECT_EQ(_statistics->GetEnemyHitByFriendlyFire(), 1u);
 }
 
 TEST_F(StatisticsTest, EnemyHitByPlayerOne)
@@ -317,11 +317,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerOne)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerOne(), 1u);
 }
 
 TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
@@ -345,11 +345,11 @@ TEST_F(StatisticsTest, EnemyHitByPlayerTwo)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetEnemyHitByPlayerTwo(), 1u);
 }
 
 TEST_F(StatisticsTest, EnemyDiedByFriend)
@@ -373,11 +373,11 @@ TEST_F(StatisticsTest, EnemyDiedByFriend)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0);
+	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 1);
+	EXPECT_EQ(_statistics->GetEnemyDiedByFriendlyFire(), 1u);
 }
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
@@ -401,11 +401,11 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerOne)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerOne(), 1u);
 }
 
 TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
@@ -429,11 +429,11 @@ TEST_F(StatisticsTest, EnemyDiedByPlayerTwo)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetEnemyDiedByPlayerTwo(), 1u);
 }
 
 TEST_F(StatisticsTest, BulletHitByPlayerTwo)
@@ -457,13 +457,13 @@ TEST_F(StatisticsTest, BulletHitByPlayerTwo)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet2);
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1u);
 }
 
 TEST_F(StatisticsTest, BrickWallDiedByEnemy)
@@ -484,11 +484,11 @@ TEST_F(StatisticsTest, BrickWallDiedByEnemy)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByEnemyTeam(), 1u);
 }
 
 TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
@@ -508,11 +508,11 @@ TEST_F(StatisticsTest, BrickWallDiedByPlayerOne)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerOne(), 1u);
 }
 
 TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
@@ -529,11 +529,11 @@ TEST_F(StatisticsTest, BrickDiedByPlayerTwo)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetBrickWallDiedByPlayerTwo(), 1u);
 }
 
 TEST_F(StatisticsTest, SteelWallDiedByEnemy)
@@ -554,11 +554,11 @@ TEST_F(StatisticsTest, SteelWallDiedByEnemy)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0);
+	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 1);
+	EXPECT_EQ(_statistics->GetSteelWallDiedByEnemyTeam(), 1u);
 }
 
 TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
@@ -579,11 +579,11 @@ TEST_F(StatisticsTest, SteelWallDiedByPlayerOne)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerOne(), 1u);
 }
 
 TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
@@ -601,11 +601,11 @@ TEST_F(StatisticsTest, SteelDiedByPlayerTwo)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet);
 
-	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetSteelWallDiedByPlayerTwo(), 1u);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
@@ -629,11 +629,11 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByEnemy)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy2");
 	_allObjects.emplace_back(bullet2);
 
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 2);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 2u);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
@@ -657,13 +657,13 @@ TEST_F(StatisticsTest, BulletHitBulletPlayerOneAndByPlayerTwo)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Player2");
 	_allObjects.emplace_back(bullet2);
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1u);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
@@ -687,13 +687,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerOne)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet2);
 
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
 }
 
 TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
@@ -717,13 +717,13 @@ TEST_F(StatisticsTest, BulletHitBulletByEnemyAndByPlayerTwo)
 					_events, _calibre, Direction::UP, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet2);
 
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1);
-	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1u);
+	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1u);
 }
 
 // Check that tank can pick up a random bonus with statistic count
@@ -740,15 +740,15 @@ TEST_F(StatisticsTest, BonusPickUpByEnemyCount)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 1);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 1u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 }
 
 // Check that tank can pick up a random bonus with statistic count
@@ -765,15 +765,15 @@ TEST_F(StatisticsTest, BonusNotPickUpByEnemyNotCount)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize * 2 + 1.f, .w = _tankSize, .h = _tankSize});
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2 + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 }
 
 // Check that tank can pick up a random bonus with statistic count
@@ -791,15 +791,15 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 	constexpr bool isPressed{true};
 	_events->EmitEvent("P1_Move_Down", isPressed);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 1);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 1u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 }
 
 // Check that tank can pick up a random bonus with statistic count
@@ -817,15 +817,15 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 }
 
 // Check that tank can pick up a random bonus with statistic count
@@ -843,15 +843,15 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 1);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 1u);
 }
 
 // Check that tank can pick up a random bonus with statistic count
@@ -869,13 +869,13 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
-	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0);
-	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0);
+	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
 }
