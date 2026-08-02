@@ -43,6 +43,7 @@ private:
 	void NextGameMode();
 
 	void DisposeDeadObject();
+	void FlushSpawnQueue();
 
 	void OnClientReady() const;
 
@@ -69,6 +70,7 @@ private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
 
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};

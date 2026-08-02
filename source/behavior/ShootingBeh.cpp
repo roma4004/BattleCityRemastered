@@ -1,6 +1,7 @@
 #include "behavior/ShootingBeh.h"
 #include "Point.h"
 #include "components/BulletPool.h"
+#include "components/EventSystem.h"
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -12,7 +13,8 @@
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
 						 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre)
+						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
+						 const std::shared_ptr<EventSystem>& events)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
@@ -21,7 +23,8 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint
 	, _fraction{fraction}
 	, _calibre{calibre}
 	, _allObjects{allObjects}
-	, _bulletPool{bulletPool} {}
+	, _bulletPool{bulletPool}
+	, _events{events} {}
 
 ShootingBeh::~ShootingBeh() = default;
 
@@ -133,7 +136,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 
 	if (bulletAsBase != nullptr)
 	{
-		_allObjects->emplace_back(bulletAsBase);
+		_events->EmitEvent("AddToSpawnQueue", bulletAsBase);
 	}
 
 	return bulletAsBase->GetUuid();

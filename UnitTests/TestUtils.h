@@ -1,5 +1,6 @@
 #pragma once
 #include "application/GameConfig.h"
+#include "components/EventSystem.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
@@ -10,6 +11,15 @@ using buuid = boost::uuids::uuid;
 class TestUtils
 {
 public:
+	static void WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
+							   std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	{
+		events->AddListener("AddToSpawnQueue", "TestSpawnQueue", [allObjects](std::shared_ptr<BaseObj> obj)
+		{
+			allObjects->emplace_back(std::move(obj));
+		});
+	}
+
 	template<class T>
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
 			ObjRectangle rect, int health, buuid uuid, std::string name, std::string fraction,

@@ -44,6 +44,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);

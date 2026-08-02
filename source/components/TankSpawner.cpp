@@ -424,7 +424,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 
 	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty))})
 	{
-		_allObjects->emplace_back(tank);
+		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{tank});
 		_events->EmitEvent("SpawnDelayStart", tank, milliseconds(skipDelay ? 0 : 1000));
 
 		if (_gameMode != GameMode::PlayAsClient)

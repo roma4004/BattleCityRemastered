@@ -29,6 +29,7 @@ class ShootingBeh final : public IShootable
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::shared_ptr<EventSystem> _events{nullptr};
 
 	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
@@ -38,7 +39,8 @@ class ShootingBeh final : public IShootable
 public:
 	ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
 				std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre);
+				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
+				const std::shared_ptr<EventSystem>& events);
 
 	~ShootingBeh() override;
 

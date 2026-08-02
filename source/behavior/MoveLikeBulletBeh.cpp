@@ -183,7 +183,7 @@ bool MoveLikeBulletBeh::ApplyMoveVelocity(const double /*deltaTime*/) { return f
 void MoveLikeBulletBeh::ResetVelocity() {}
 
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(const double /*deltaTime*/,
-															const std::optional<Direction> /*excludeDirection*/) const
+														   const std::optional<Direction> /*excludeDirection*/) const
 {
 	return {};
 }

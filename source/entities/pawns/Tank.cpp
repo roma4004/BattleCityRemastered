@@ -30,7 +30,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	ApplyScaleToCalibre(gameConfig.scaleFactor);
 
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _gameConfig.windowSize, _name, _fraction,
-												 _allObjects, bulletPool, _calibre);
+												 _allObjects, bulletPool, _calibre, _events);
 
 	if (enableByDefault)
 	{

@@ -104,7 +104,7 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 	if (obstacle)
 	{
-		_allObjects->emplace_back(obstacle);
+		_events->EmitEvent("AddToSpawnQueue", obstacle);
 	}
 }
 

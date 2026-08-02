@@ -1,3 +1,4 @@
+#include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -21,6 +22,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_allObjects.reserve(6u);
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_respawnManager = std::make_shared<RespawnManager>(_events);

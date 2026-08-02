@@ -152,7 +152,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 
 	if (bonus)
 	{
-		_allObjects->emplace_back(bonus);
+		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{bonus});
 	}
 }
 

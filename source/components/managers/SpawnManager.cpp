@@ -7,7 +7,6 @@
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
 
-//TODO: add spawn queue
 SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig)
 	: _name{"SpawnDelayManager"}

@@ -65,7 +65,15 @@ void GameSuccess::Subscribe()
 	{
 		this->OnGameModeChangedTo(newGameMode);
 	});
-	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->DisposeDeadObject(); });
+	_events->AddListener("AddToSpawnQueue", _name, [this](std::shared_ptr<BaseObj> obj)
+	{
+		this->_pendingSpawns.emplace_back(std::move(obj));
+	});
+	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/)
+	{
+		this->FlushSpawnQueue();
+		this->DisposeDeadObject();
+	});
 	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
 	_events->AddListener("GameModeSelectedWithMouse", _name, [this](const GameMode newGameMode)
 	{
@@ -80,6 +88,7 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {
 	_allObjects.clear();
 	_allObjects.reserve(1000);
+	_pendingSpawns.clear();
 
 	_events->EmitEvent("Reset");
 
@@ -150,6 +159,13 @@ void GameSuccess::DisposeDeadObject()
 	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
 }
 
+void GameSuccess::FlushSpawnQueue()
+{
+	_allObjects.insert(_allObjects.end(), std::make_move_iterator(_pendingSpawns.begin()),
+					   std::make_move_iterator(_pendingSpawns.end()));
+	_pendingSpawns.clear();
+}
+
 //TODO: recheck rule of 3/5 for all classes
 
 void GameSuccess::OnClientReady() const
@@ -175,7 +191,6 @@ void GameSuccess::MainLoop()
 					constexpr bool skipDelay{false};
 					_events->EmitEvent("RespawnTanks", skipDelay);
 
-					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus or:
 					//TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)
 					_events->EmitEvent("TickUpdate", _deltaTime);

@@ -408,7 +408,7 @@ void MoveLikeTankBeh::ResetVelocity()
 }
 
 std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime,
-														  const std::optional<Direction> excludeDirection) const
+														 const std::optional<Direction> excludeDirection) const
 {
 	std::vector<Direction> freePath;
 
