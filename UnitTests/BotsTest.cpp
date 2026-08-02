@@ -5,6 +5,7 @@
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
+#include "components/managers/RespawnManager.h"
 #include "components/managers/GameStateManager.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
@@ -27,6 +28,7 @@ protected:
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<GameStateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -43,7 +45,8 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		_respawnManager = std::make_shared<RespawnManager>(_events);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events, *_respawnManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;

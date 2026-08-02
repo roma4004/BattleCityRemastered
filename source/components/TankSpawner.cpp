@@ -26,13 +26,12 @@
 #include <memory>
 
 TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<EventSystem>& events)
+						 const std::shared_ptr<EventSystem>& events, RespawnManager& respawnManager)
 	: _allObjects{allObjects}
 	, _events{events}
 	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
-	, _respawnManager{std::make_shared<RespawnManager>(events)}
+	, _respawnManager{respawnManager}
 	, _gameConfig{gameConfig}
-//TODO: extract tank spawner to respawn manager as subComponent
 {
 	Subscribe();
 }
@@ -355,9 +354,9 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 
 void TankSpawner::RespawnTanks(const bool skipDelay)
 {
-	for (size_t i = 0; i < _respawnManager->_slots.size(); ++i)
+	for (size_t i = 0; i < _respawnManager._slots.size(); ++i)
 	{
-		if (const auto [uuid, isAvailable] = _respawnManager->_slots[i];
+		if (const auto [uuid, isAvailable] = _respawnManager._slots[i];
 			isAvailable)
 		{
 			RespawnTank(static_cast<TankType>(i), uuid, skipDelay);

@@ -4,6 +4,7 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/TankSpawner.h"
+#include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
 #include "entities/bonuses/Bonus.h"
 #include "entities/obstacles/FortressWall.h"
@@ -26,6 +27,7 @@ protected:
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
+	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -43,7 +45,8 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		_respawnManager = std::make_shared<RespawnManager>(_events);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events, *_respawnManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;

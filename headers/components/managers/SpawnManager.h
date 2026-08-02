@@ -11,6 +11,7 @@ class DelayedSpawnManager;
 class BonusSpawner;
 class ObstacleSpawner;
 class TankSpawner;
+class RespawnManager;
 class GameConfig;
 
 class SpawnManager
@@ -20,6 +21,7 @@ class SpawnManager
 	std::shared_ptr<DelayedSpawnManager> _delayedSpawnManager{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
+	std::unique_ptr<RespawnManager> _respawnManager{nullptr};
 	std::unique_ptr<TankSpawner> _tankSpawner{nullptr};
 
 public:
