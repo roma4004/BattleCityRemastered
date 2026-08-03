@@ -1,5 +1,6 @@
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
@@ -19,9 +20,10 @@ void DelayedSpawnManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
-	_events->AddListener("SpawnDelayStart", _name, [this](std::shared_ptr<Tank> tank, const milliseconds delay)
+	_events->AddListener("SpawnDelayStart", _name, [this](const SpawnDelayStartEvent& event)
 	{
-		this->SpawnDelayStart(tank, delay);
+		auto tank = event.tank;// SpawnDelayStart takes tank by non-const ref
+		this->SpawnDelayStart(tank, event.delay);
 	});
 
 	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });

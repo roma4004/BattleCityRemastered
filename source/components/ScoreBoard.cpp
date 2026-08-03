@@ -2,6 +2,7 @@
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
+#include "components/SpawnEvents.h"
 #include "enums/GameMode.h"
 #include <iomanip>
 #include <sstream>
@@ -34,9 +35,9 @@ void ScoreBoard::Subscribe()
 
 	_events->AddListener(
 			"RespawnCountChangedTo", _name,
-			[this](const std::string& objectName, const unsigned short respawnCount)
+			[this](const RespawnCountChangedToEvent& event)
 			{
-				this->OnRespawnCountChanged(objectName, respawnCount);
+				this->OnRespawnCountChanged(event.objectName, event.respawnCount);
 			});
 
 	if (_isScoreBoardDisplayed)

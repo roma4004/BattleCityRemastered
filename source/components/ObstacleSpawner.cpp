@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "components/EventSystem.h"
 #include "components/Map.h"
+#include "components/SpawnEvents.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"
@@ -44,9 +45,9 @@ void ObstacleSpawner::Subscribe()
 	});
 
 	_events->AddListener("LoadMap", _name, [this]() { LoadMap(); });
-	_events->AddListener("SpawnObstacle", _name, [this](const ObjRectangle rect, const ObstacleType type)
+	_events->AddListener("SpawnObstacle", _name, [this](const SpawnObstacleEvent& event)
 	{
-		SpawnObstacle(rect, type);
+		SpawnObstacle(event.rect, event.type);
 	});
 
 	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
@@ -56,9 +57,9 @@ void ObstacleSpawner::SubscribeAsClient()
 {
 	_events->AddListener(
 			"ClientReceived_ObstacleSpawn", _name,
-			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			[this](const ClientReceivedObstacleSpawnEvent& event)
 			{
-				SpawnObstacle(rect, type, uuid);
+				SpawnObstacle(event.rect, event.type, event.uuid);
 			});
 }
 

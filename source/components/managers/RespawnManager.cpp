@@ -1,5 +1,6 @@
 #include "components/managers/RespawnManager.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/GameMode.h"
 #include "enums/RespawnCount.h"
@@ -63,9 +64,9 @@ void RespawnManager::SubscribeAsClient()
 
 	_events->AddListener(
 			"ClientReceived_RespawnTank", _name,
-			[this](const TankType type, const buuid& /*uuid*/, const ObjRectangle /*rect*/)
+			[this](const ClientReceivedRespawnTankEvent& event)
 			{
-				this->OnClientRespawn(type);
+				this->OnClientRespawn(event.type);
 			});
 }
 
@@ -150,15 +151,15 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 	}
 
 	const std::string who = RespawnCountEnumToString(type);
-	_events->EmitEvent("RespawnCountChangedTo", who, _respawnCount[id]);
+	_events->EmitEvent("RespawnCountChangedTo", RespawnCountChangedToEvent{who, _respawnCount[id]});
 }
 
 void RespawnManager::TriggerLastPlayersLife()
 {
 	_respawnCount[1] = 0u;
-	_events->EmitEvent("RespawnCountChangedTo", "Player1", _respawnCount[1]);
+	_events->EmitEvent("RespawnCountChangedTo", RespawnCountChangedToEvent{"Player1", _respawnCount[1]});
 	_respawnCount[2] = 0u;
-	_events->EmitEvent("RespawnCountChangedTo", "Player2", _respawnCount[2]);
+	_events->EmitEvent("RespawnCountChangedTo", RespawnCountChangedToEvent{"Player2", _respawnCount[2]});
 }
 
 void RespawnManager::OnBonusTank(const std::string& author)

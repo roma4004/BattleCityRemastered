@@ -1,5 +1,6 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/CommandType.h"
 #include "enums/TankType.h"
@@ -334,7 +335,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, bonusType, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_BonusSpawn", pos, bonusType, uuid);
+			_events->EmitEvent("ClientReceived_BonusSpawn", ClientReceivedBonusSpawnEvent{pos, bonusType, uuid});
 		});
 	}
 }
@@ -362,7 +363,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, tankType, uuid, rect]()
 		{
-			_events->EmitEvent("ClientReceived_RespawnTank", tankType, uuid, rect);
+			_events->EmitEvent("ClientReceived_RespawnTank", ClientReceivedRespawnTankEvent{tankType, uuid, rect});
 		});
 	}
 }
@@ -377,7 +378,8 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_ObstacleSpawn", rect, obstacleType, uuid);
+			_events->EmitEvent("ClientReceived_ObstacleSpawn",
+							   ClientReceivedObstacleSpawnEvent{rect, obstacleType, uuid});
 		});
 	}
 }
@@ -392,7 +394,7 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, animationType, rect, name]()
 		{
-			_events->EmitEvent("AnimationCreate", animationType, rect, name);
+			_events->EmitEvent("AnimationCreate", AnimationCreateEvent{animationType, rect, name});
 		});
 	}
 }

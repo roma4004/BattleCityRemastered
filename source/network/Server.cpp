@@ -1,5 +1,6 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
 #include "network/commands/AnimationCreate.h"
@@ -466,10 +467,10 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_RespawnTank", _name,
-			[this](const TankType type, const buuid& uuid, const ObjRectangle rect)
+			[this](const ServerSendRespawnTankEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid, rect));
+				_batch->AddCommand(std::make_shared<RespawnTank>(event.type, event.uuid, event.rect));
 			});
 
 	_events->AddListener(

@@ -7,6 +7,7 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
 #include "components/managers/RespawnManager.h"
+#include "components/SpawnEvents.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -65,7 +66,7 @@ void TankSpawner::Subscribe()
 				tank->Enable();
 				const ObjRectangle rect{tank->GetRect()};
 				const std::string name{tank->GetName()};
-				_events->EmitEvent("AnimationCreateTank", rect, name);
+				_events->EmitEvent("AnimationCreateTank", AnimationCreateTankEvent{rect, name});
 			});
 
 	_events->AddListener("RespawnTanks", _name, [this](const bool skipDelay) { this->RespawnTanks(skipDelay); });
@@ -93,9 +94,9 @@ void TankSpawner::SubscribeAsClient()
 {
 	_events->AddListener(
 			"ClientReceived_RespawnTank", _name,
-			[this](const TankType type, const buuid& uuid, const ObjRectangle rect)
+			[this](const ClientReceivedRespawnTankEvent& event)
 			{
-				this->OnClientRespawn(type, uuid, rect);
+				this->OnClientRespawn(event.type, event.uuid, event.rect);
 			});
 }
 
@@ -243,7 +244,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 										   skipDelay);
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_RespawnTank", type, uuid, spawnRect);
+		_events->EmitEvent("ServerSend_RespawnTank", ServerSendRespawnTankEvent{type, uuid, spawnRect});
 	}
 }
 
@@ -311,7 +312,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_RespawnTank", type, uuid, spawnRect);
+			_events->EmitEvent("ServerSend_RespawnTank", ServerSendRespawnTankEvent{type, uuid, spawnRect});
 		}
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
@@ -425,11 +426,11 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty))})
 	{
 		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{tank});
-		_events->EmitEvent("SpawnDelayStart", tank, milliseconds(skipDelay ? 0 : 1000));
+		_events->EmitEvent("SpawnDelayStart", SpawnDelayStartEvent{tank, milliseconds(skipDelay ? 0 : 1000)});
 
 		if (_gameMode != GameMode::PlayAsClient)
 		{
-			_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name);
+			_events->EmitEvent("AnimationCreate", AnimationCreateEvent{AnimationType::Spawn_Animation, rect, name});
 		}
 	}
 }

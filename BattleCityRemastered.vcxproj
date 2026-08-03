@@ -239,6 +239,7 @@
     <ClInclude Include="headers\application\GameConfig.h" />
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\components\AnimatedObjects.h" />
+    <ClInclude Include="headers\components\SpawnEvents.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
     <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
     <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />

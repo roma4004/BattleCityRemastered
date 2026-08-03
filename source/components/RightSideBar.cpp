@@ -1,5 +1,6 @@
 ﻿#include "Components/RightSideBar.h"
 #include "Components/EventSystem.h"
+#include "components/SpawnEvents.h"
 
 RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events)
 	: _name{std::string("RightSideBar")}
@@ -24,9 +25,9 @@ void RightSideBar::Subscribe()
 
 	_events->AddListener(
 			"RespawnCountChangedTo", _name,
-			[this](const std::string& objectName, const unsigned short respawnCount)
+			[this](const RespawnCountChangedToEvent& event)
 			{
-				OnRespawnCountChangedTo(objectName, respawnCount);
+				OnRespawnCountChangedTo(event.objectName, event.respawnCount);
 			});
 }
 

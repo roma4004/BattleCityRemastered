@@ -3,6 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -119,19 +120,19 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	_events->AddListener(
 			"RespawnCountChangedTo", "GameStateManagerTest",
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
-			const std::string& objectName, const unsigned short respawnCount)
+			const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnEnemyActual = respawnCount;
+					respawnEnemyActual = event.respawnCount;
 				}
-				else if (objectName == "Player1")
+				else if (event.objectName == "Player1")
 				{
-					respawnPlayerOneActual = respawnCount;
+					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (objectName == "Player2")
+				else if (event.objectName == "Player2")
 				{
-					respawnPlayerTwoActual = respawnCount;
+					respawnPlayerTwoActual = event.respawnCount;
 				}
 			});
 
@@ -227,19 +228,19 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	_events->AddListener(
 			"RespawnCountChangedTo", "GameStateManagerTest",
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
-			const std::string& objectName, const unsigned short respawnCount)
+			const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnEnemyActual = respawnCount;
+					respawnEnemyActual = event.respawnCount;
 				}
-				else if (objectName == "Player1")
+				else if (event.objectName == "Player1")
 				{
-					respawnPlayerOneActual = respawnCount;
+					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (objectName == "Player2")
+				else if (event.objectName == "Player2")
 				{
-					respawnPlayerTwoActual = respawnCount;
+					respawnPlayerTwoActual = event.respawnCount;
 				}
 			});
 
@@ -318,9 +319,9 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "GameStateManagerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				respawnActual = respawnCount;
+				respawnActual = event.respawnCount;
 			});
 
 	EXPECT_EQ(respawnActual, 3u);
@@ -353,11 +354,11 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "GameStateManagerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player1")
+				if (event.objectName == "Player1")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -401,11 +402,11 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "GameStateManagerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player1")
+				if (event.objectName == "Player1")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -450,19 +451,19 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	_events->AddListener(
 			"RespawnCountChangedTo", "GameStateManagerTest",
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
-			const std::string& objectName, const unsigned short respawnCount)
+			const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnEnemyActual = respawnCount;
+					respawnEnemyActual = event.respawnCount;
 				}
-				else if (objectName == "Player1")
+				else if (event.objectName == "Player1")
 				{
-					respawnPlayerOneActual = respawnCount;
+					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (objectName == "Player2")
+				else if (event.objectName == "Player2")
 				{
-					respawnPlayerTwoActual = respawnCount;
+					respawnPlayerTwoActual = event.respawnCount;
 				}
 			});
 

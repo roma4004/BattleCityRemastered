@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -42,11 +43,11 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 	unsigned short respawnActual{20u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -66,11 +67,11 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player1")
+				if (event.objectName == "Player1")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -90,11 +91,11 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player2")
+				if (event.objectName == "Player2")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -114,11 +115,11 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 	unsigned short respawnActual{20u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -141,11 +142,11 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player1")
+				if (event.objectName == "Player1")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -168,11 +169,11 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player2")
+				if (event.objectName == "Player2")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -195,11 +196,11 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{21u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -225,11 +226,11 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player1")
+				if (event.objectName == "Player1")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 
@@ -255,11 +256,11 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "TankSpawnerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Player2")
+				if (event.objectName == "Player2")
 				{
-					respawnActual = respawnCount;
+					respawnActual = event.respawnCount;
 				}
 			});
 

@@ -1,5 +1,6 @@
 ﻿#include "components/managers/AnimationManager.h"
 #include "components/AnimatedObjects.h"
+#include "components/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
 #include "Point.h"
@@ -35,9 +36,9 @@ void AnimationManager::Subscribe()
 
 	_events->AddListener(
 			"AnimationCreate", _name,
-			[this](const AnimationType& type, const ObjRectangle& rect, const std::string& name)
+			[this](const AnimationCreateEvent& event)
 			{
-				this->CreateAnimation(type, rect, name);
+				this->CreateAnimation(event.type, event.rect, event.name);
 			});
 	_events->AddListener("Reset", _name, [this]() { Reset(); });
 	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
@@ -80,10 +81,10 @@ void AnimationManager::SubscribeAsHost()
 	//TODO: create client like subscription
 	_events->AddListener(
 			"AnimationCreateTank", _name,
-			[this](const ObjRectangle rect, const std::string& name)
+			[this](const AnimationCreateTankEvent& event)
 			{
-				this->CreateAnimationTank(rect, name);
-				this->OnHelmetEffect(name, true);
+				this->CreateAnimationTank(event.rect, event.name);
+				this->OnHelmetEffect(event.name, true);
 				//TODO: reuse animation
 			});
 

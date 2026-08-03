@@ -1,5 +1,6 @@
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -436,9 +437,9 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 
 	events->AddListener(
 			"ClientReceived_BonusSpawn", "BonusSpawnEventReplication",
-			[&promise](const FPoint& pos, const BonusType& bonusType, const buuid& uuid)
+			[&promise](const ClientReceivedBonusSpawnEvent& event)
 			{
-				promise.set_value({pos, bonusType, uuid});
+				promise.set_value({event.pos, event.type, event.uuid});
 			});
 
 	// events->EmitEvent("Server_StartFrame");
@@ -600,9 +601,9 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 
 	events->AddListener(
 			"ClientReceived_ObstacleSpawn", "ObstacleSpawnEventReplication",
-			[&promise](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			[&promise](const ClientReceivedObstacleSpawnEvent& event)
 			{
-				promise.set_value({rect, type, uuid});
+				promise.set_value({event.rect, event.type, event.uuid});
 			});
 
 	// events->EmitEvent("Server_StartFrame");
@@ -672,14 +673,14 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	std::atomic<size_t> count{0u};
 	events->AddListener(
 			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
-			[&promises, &count, &mtx](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			[&promises, &count, &mtx](const ClientReceivedObstacleSpawnEvent& event)
 			{
 				std::scoped_lock lock(mtx);
 
 				const auto current = count.fetch_add(1u);
 				if (current < promises.size())
 				{
-					promises[current].set_value({rect, type, uuid});
+					promises[current].set_value({event.rect, event.type, event.uuid});
 				}
 			});
 
@@ -747,9 +748,9 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	size_t count = 0u;
 	events->AddListener(
 			"ClientReceived_RespawnTank", "RespawnTankEventReplication",
-			[&promises, &count](const TankType type, const buuid& uuid, const ObjRectangle rect)
+			[&promises, &count](const ClientReceivedRespawnTankEvent& event)
 			{
-				promises[count++].set_value({type, uuid, FPoint{.x = rect.x, .y = rect.y}});
+				promises[count++].set_value({event.type, event.uuid, FPoint{.x = event.rect.x, .y = event.rect.y}});
 			});
 
 	constexpr std::array tankTypes{
@@ -766,7 +767,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	// events->EmitEvent("Server_StartFrame");
 	for (const auto tankType: tankTypes)
 	{
-		events->EmitEvent("ServerSend_RespawnTank", tankType, _uuid, rectOrigin);
+		events->EmitEvent("ServerSend_RespawnTank", ServerSendRespawnTankEvent{tankType, _uuid, rectOrigin});
 	}
 	events->EmitEvent("Server_EndFrame");
 

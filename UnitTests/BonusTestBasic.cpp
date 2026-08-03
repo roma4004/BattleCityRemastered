@@ -3,6 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
@@ -312,9 +313,9 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "BonusTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				respawnActual = respawnCount;
+				respawnActual = event.respawnCount;
 			});
 
 	// spawn Player
@@ -344,9 +345,9 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 	unsigned short respawnActual{3u};
 	_events->AddListener(
 			"RespawnCountChangedTo", "BonusTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
+			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
-				respawnActual = respawnCount;
+				respawnActual = event.respawnCount;
 			});
 
 	// spawn Player

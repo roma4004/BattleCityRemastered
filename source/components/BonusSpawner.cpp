@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/bonuses/BonusCaliber.h"
 #include "entities/bonuses/BonusGrenade.h"
 #include "entities/bonuses/BonusHelmet.h"
@@ -76,11 +77,11 @@ void BonusSpawner::SubscribeAsClient()
 {
 	_events->AddListener(
 			"ClientReceived_BonusSpawn", _name,
-			[this](const FPoint pos, const BonusType type, const buuid& uuid)
+			[this](const ClientReceivedBonusSpawnEvent& event)
 			{
 				const auto size = static_cast<float>(_gameConfig.bonusSize);
-				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
-				SpawnBonus(rect, type, uuid);
+				const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
+				SpawnBonus(rect, event.type, event.uuid);
 			});
 }
 
