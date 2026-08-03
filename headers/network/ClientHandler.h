@@ -22,6 +22,8 @@ public:
 		}
 	}
 
+	[[nodiscard]] bool IsConnected() const { return _client && _client->IsConnected(); }
+
 private:
 	void Subscribe();
 	void Unsubscribe() const;

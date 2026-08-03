@@ -2,6 +2,7 @@
 
 #include "NetworkCommandQueue.h"
 #include "commands/Command.h"
+#include <atomic>
 #include <boost/asio.hpp>
 #include <memory>
 #include <string>
@@ -24,6 +25,7 @@ public:
 	~Client();
 
 	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
+	[[nodiscard]] bool IsConnected() const { return _isConnected; }
 
 	void Shutdown();
 
@@ -63,7 +65,7 @@ private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::string _name{};
 	network::NetworkCommandQueue _commandQueue;
-	bool _isConnected{false};
+	std::atomic<bool> _isConnected{false};
 	int _reconnectAttempts{0};
 	static constexpr int MaxReconnectAttempts{10};
 	static constexpr int ReconnectDelayMs{500};

@@ -61,6 +61,8 @@ public:
 
 	void Shutdown();
 
+	[[nodiscard]] uint16_t GetBoundPort() const { return _acceptor.local_endpoint().port(); }
+
 	void ProcessNetworkCommands() const
 	{
 		for (const auto& session: _sessions)
