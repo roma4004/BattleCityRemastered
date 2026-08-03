@@ -39,19 +39,25 @@ Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
 
 Session::~Session()
 {
+	Shutdown();
+}
+
+void Session::Shutdown()
+{
 	try
 	{
 		if (_socket.is_open())
 		{
 			boost::system::error_code ec;
+			std::ignore = _socket.cancel(ec);
 
-			boost::system::error_code shutdownResult = _socket.shutdown(tcp::socket::shutdown_both, ec);
+			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
 			if (ec)
 			{
 				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
 			}
 
-			boost::system::error_code closeResult = _socket.close(ec);
+			std::ignore = _socket.close(ec);
 			if (ec)
 			{
 				std::cerr << "Error closing socket socket: " << ec.message() << '\n';
@@ -60,11 +66,11 @@ Session::~Session()
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Exception in ~Session: " << e.what() << '\n';
+		std::cerr << "Exception in Session::Shutdown: " << e.what() << '\n';
 	}
 	catch (...)
 	{
-		std::cerr << "Unknown error in ~Session" << '\n';
+		std::cerr << "Unknown error in Session::Shutdown" << '\n';
 	}
 }
 
@@ -201,7 +207,11 @@ void Session::DoRead()
 			if (ec)
 			{
 				_readBuffer.consume(length);
-				std::cerr << "DoRead error ..." << ec << '\n';
+
+				if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
+				{
+					std::cerr << "DoRead error ..." << ec << '\n';
+				}
 			}
 			else
 			{
@@ -362,13 +372,26 @@ Server::~Server()
 {
 	// error_log.close();
 	StopSendThread();
+	Shutdown();
+	Unsubscribe();
+}
 
+void Server::Shutdown()
+{
 	if (_acceptor.is_open())
 	{
-		_acceptor.close();
+		boost::system::error_code ec;
+		std::ignore = _acceptor.cancel(ec);
+		std::ignore = _acceptor.close(ec);
 	}
 
-	Unsubscribe();
+	for (const auto& session: _sessions)
+	{
+		if (session)
+		{
+			session->Shutdown();
+		}
+	}
 }
 
 void Server::Subscribe()
@@ -441,11 +464,13 @@ void Server::Subscribe()
 				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
 			});
 
-	_events->AddListener("ServerSend_RespawnTank", _name, [this](const TankType type, const buuid& uuid)
-	{
-		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid));
-	});
+	_events->AddListener(
+			"ServerSend_RespawnTank", _name,
+			[this](const TankType type, const buuid& uuid, const ObjRectangle rect)
+			{
+				std::scoped_lock lock(_batchWriteMutex);
+				_batch->AddCommand(std::make_shared<RespawnTank>(type, uuid, rect));
+			});
 
 	_events->AddListener(
 			"ServerSend_ObstacleSpawn", _name,
@@ -529,7 +554,10 @@ void Server::DoAccept()
 	{
 		if (ec)
 		{
-			std::cerr << "Accept error: " << ec.message() << '\n';
+			if (ec != boost::asio::error::operation_aborted)
+			{
+				std::cerr << "Accept error: " << ec.message() << '\n';
+			}
 		}
 		else
 		{

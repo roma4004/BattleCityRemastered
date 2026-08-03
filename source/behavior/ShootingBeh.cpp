@@ -1,6 +1,7 @@
 #include "behavior/ShootingBeh.h"
 #include "Point.h"
 #include "components/BulletPool.h"
+#include "components/EventSystem.h"
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -12,7 +13,8 @@
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
 						 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre)
+						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
+						 const std::shared_ptr<EventSystem>& events)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
@@ -21,7 +23,8 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint
 	, _fraction{fraction}
 	, _calibre{calibre}
 	, _allObjects{allObjects}
-	, _bulletPool{bulletPool} {}
+	, _bulletPool{bulletPool}
+	, _events{events} {}
 
 ShootingBeh::~ShootingBeh() = default;
 
@@ -61,32 +64,32 @@ float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& 
 //Note: {-1.f, -1.f} this is try shooting outside screen
 ObjRectangle ShootingBeh::GetBulletStartRect() const
 {
-	const FPoint tankHalf = {.x = _rect.w / 2.f, .y = _rect.h / 2.f};
-	const FPoint tankPos = {.x = _rect.x, .y = _rect.y};
-	const float tankRightX = _rect.Right();
-	const float tankBottomY = _rect.Bottom();
-	const FPoint tankCenter = {.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
+	const FPoint tankHalf{.x = _rect.w / 2.f, .y = _rect.h / 2.f};
+	const FPoint tankPos{.x = _rect.x, .y = _rect.y};
+	const float tankRightX{_rect.Right()};
+	const float tankBottomY{_rect.Bottom()};
+	const FPoint tankCenter{.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
 
-	const float bulletWidth = _calibre.size.x;
-	const float bulletHeight = _calibre.size.y;
-	const FPoint bulletHalf = {.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
-	ObjRectangle bulletRect = {.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
+	const float bulletWidth{_calibre.size.x};
+	const float bulletHeight{_calibre.size.y};
+	const FPoint bulletHalf{.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
+	ObjRectangle bulletRect{.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction dir = _direction;
-		dir == Direction::UP && tankPos.y - bulletHeight >= 0.f)//TODO: rewrite check with zero to use epsilon
+		dir == Direction::UP && tankPos.y - bulletHeight >= 0.f)
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHeight - 1;
+	}
+	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.f)
+	{
+		bulletRect.x = tankPos.x - bulletWidth - 1;
+		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowSize.y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY + 1;
-	}
-	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.f)//TODO: rewrite check with zero to use epsilon
-	{
-		bulletRect.x = tankPos.x - bulletWidth - 1;
-		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
 	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_windowSize.x))
 	{
@@ -108,6 +111,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 		return {};
 	}
 
+	//TODO: refactor to network event ShotBullet{rect, bulletResetProperty, uuid}
 	auto bulletAsBase = _bulletPool->SpawnBullet();
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
@@ -122,7 +126,6 @@ buuid ShootingBeh::Shot(const buuid uuid)
 				.calibre = _calibre,
 		};
 
-		//TODO: skip bullet set guid on client if bullet not create but get from bullet pool
 		bullet->Reset(std::move(bulletResetProperty));
 
 		// std::cout << "[" << "bullet->Reset" << "] "
@@ -133,7 +136,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 
 	if (bulletAsBase != nullptr)
 	{
-		_allObjects->emplace_back(bulletAsBase);
+		_events->EmitEvent("AddToSpawnQueue", bulletAsBase);
 	}
 
 	return bulletAsBase->GetUuid();

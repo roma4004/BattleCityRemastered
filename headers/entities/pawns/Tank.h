@@ -46,7 +46,8 @@ protected:
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 	void ApplyScaleToCalibre(float newScale);
-	bool IsTouchBush() const;
+	[[nodiscard]] bool IsTouchBush() const;
+	[[nodiscard]] bool IsTouchIce() const;
 
 	virtual void Enable();
 	virtual void Disable() const;
@@ -60,7 +61,7 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	//BaseObj overrides
-	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

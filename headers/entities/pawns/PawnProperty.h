@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../BaseObjProperty.h"
-#include "point.h"
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
@@ -13,7 +12,7 @@ struct PawnProperty
 	BaseObjProperty baseObjProperty{};
 	std::vector<std::shared_ptr<BaseObj>>* allObjects{nullptr};
 	std::shared_ptr<EventSystem> events{nullptr};
-	unsigned int tier{1u};
+	unsigned short tier{1u};
 	float speed{};
 	Direction dir{};
 	GameMode gameMode{};

@@ -32,6 +32,7 @@ public:
 
 	void Start();
 	void DoWrite(const std::string& message);
+	void Shutdown();
 
 private:
 	void DoRead();
@@ -57,6 +58,10 @@ public:
 		   const std::shared_ptr<EventSystem>& events);
 
 	~Server();
+
+	void Shutdown();
+
+	[[nodiscard]] uint16_t GetBoundPort() const { return _acceptor.local_endpoint().port(); }
 
 	void ProcessNetworkCommands() const
 	{

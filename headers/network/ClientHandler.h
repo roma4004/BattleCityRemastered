@@ -22,9 +22,12 @@ public:
 		}
 	}
 
+	[[nodiscard]] bool IsConnected() const { return _client && _client->IsConnected(); }
+
 private:
 	void Subscribe();
 	void Unsubscribe() const;
+	void Shutdown();
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	boost::asio::io_context _ioContext{};

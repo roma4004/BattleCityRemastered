@@ -11,7 +11,7 @@ class BaseObj;
 class Menu;
 class UserInput;
 class TextureManager;
-class StateManager;
+class GameStateManager;
 class FramePerSecondManager;
 class SpawnManager;
 class RenderManager;
@@ -43,6 +43,7 @@ private:
 	void NextGameMode();
 
 	void DisposeDeadObject();
+	void FlushSpawnQueue();
 
 	void OnClientReady() const;
 
@@ -56,7 +57,7 @@ private:
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
 	std::unique_ptr<TextureManager> _textureManager{nullptr};
-	std::unique_ptr<StateManager> _stateManager{nullptr};
+	std::unique_ptr<GameStateManager> _stateManager{nullptr};
 	std::unique_ptr<UserInput> _userInput{nullptr};
 	std::unique_ptr<FramePerSecondManager> _fpsManager{nullptr};
 	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
@@ -69,6 +70,7 @@ private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
 
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};

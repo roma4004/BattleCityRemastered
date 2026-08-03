@@ -8,9 +8,9 @@
 #include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
+#include "components/managers/GameStateManager.h"
 #include "components/managers/RenderManager.h"
 #include "components/managers/SpawnManager.h"
-#include "components/managers/StateManager.h"
 #include "components/managers/TextureManager.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
@@ -29,7 +29,7 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 						 const GameMode gameMode)
 	: _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(events))
-	, _stateManager{std::make_unique<StateManager>(events)}
+	, _stateManager{std::make_unique<GameStateManager>(events)}
 	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events, gameConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig)}
@@ -65,7 +65,15 @@ void GameSuccess::Subscribe()
 	{
 		this->OnGameModeChangedTo(newGameMode);
 	});
-	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->DisposeDeadObject(); });
+	_events->AddListener("AddToSpawnQueue", _name, [this](std::shared_ptr<BaseObj> obj)
+	{
+		this->_pendingSpawns.emplace_back(std::move(obj));
+	});
+	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/)
+	{
+		this->FlushSpawnQueue();
+		this->DisposeDeadObject();
+	});
 	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
 	_events->AddListener("GameModeSelectedWithMouse", _name, [this](const GameMode newGameMode)
 	{
@@ -80,6 +88,7 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {
 	_allObjects.clear();
 	_allObjects.reserve(1000);
+	_pendingSpawns.clear();
 
 	_events->EmitEvent("Reset");
 
@@ -150,6 +159,13 @@ void GameSuccess::DisposeDeadObject()
 	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
 }
 
+void GameSuccess::FlushSpawnQueue()
+{
+	_allObjects.insert(_allObjects.end(), std::make_move_iterator(_pendingSpawns.begin()),
+					   std::make_move_iterator(_pendingSpawns.end()));
+	_pendingSpawns.clear();
+}
+
 //TODO: recheck rule of 3/5 for all classes
 
 void GameSuccess::OnClientReady() const
@@ -172,9 +188,9 @@ void GameSuccess::MainLoop()
 			{
 				if (_gameMode != GameMode::PlayAsClient)
 				{
-					_events->EmitEvent("RespawnTanks", _deltaTime);
+					constexpr bool skipDelay{false};
+					_events->EmitEvent("RespawnTanks", skipDelay);
 
-					//TODO: postpone all spawn to next frame, spawn queue will be exec each frame before tick update
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus or:
 					//TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)
 					_events->EmitEvent("TickUpdate", _deltaTime);
@@ -183,7 +199,6 @@ void GameSuccess::MainLoop()
 
 			_events->EmitEvent("PostTickUpdate", _deltaTime);
 
-			//TODO: fix crash on client when we add brick on first start, in the middle of draw executing
 			_events->EmitEvent("PreDraw");
 			_events->EmitEvent("Draw");
 			_events->EmitEvent("PostDraw");

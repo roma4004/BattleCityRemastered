@@ -8,9 +8,8 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
-#include "utils/ColliderUtils.h"
 #include "utils/RandUtils.h"
-#include "utils/TimeUtils.h"
+#include <optional>
 
 Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
 		 const bool enableByDefault)
@@ -50,7 +49,7 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 
 	if (IsBonus(sideObstacle.front()))
 	{
-		LineOfSight bonusLineOfSight(_rect, _gameConfig.windowSize, _allObjects, this, false);
+		LineOfSight bonusLineOfSight(_rect, _allObjects, _gameConfig, false);
 		const std::vector<std::shared_ptr<BaseObj>>& directionObstacles =
 				[&bonusLineOfSight, dir]() mutable -> std::vector<std::shared_ptr<BaseObj>>&
 				{
@@ -69,7 +68,10 @@ bool Bot::ChangeDirIfSeenBonus(const Direction dir, const std::vector<std::share
 						return bonusLineOfSight.GetDownSideObstacles();
 					}
 
+					// if (dir == Direction::RIGHT)
+					// {
 					return bonusLineOfSight.GetRightSideObstacles();
+					// }
 				}();
 
 		//Check free path to bonus
@@ -211,7 +213,7 @@ void Bot::UpdateShootDistance(const Direction dir, const std::shared_ptr<BaseObj
 
 std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 {
-	LineOfSight lineOfSight(_rect, _gameConfig.windowSize, _calibre.size, _allObjects, this);
+	LineOfSight lineOfSight(_rect, _calibre.size, _allObjects, _gameConfig);
 
 	auto dir = GetDirection();
 	std::shared_ptr<BaseObj> nearestSeenObstacle{EnemyLookup(lineOfSight, dir)};
@@ -221,7 +223,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	}
 
 	// TODO: write logic if seen bullet flying toward(head-on) to this tank, need shoot to intercept
-	// if (isBullet && isOpposite(bullet->GetDirection))
+	// if (isBullet(nearestSeenObstacle) && isOpposite(bullet->GetDirection))
 	// {
 	// 	Shot();
 	// }
@@ -272,80 +274,12 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 	return nearestSeenObstacle;
 }
 
-std::vector<Direction> Bot::GetFreePathSides(const double deltaTime) const
+void Bot::SetRandomDirection(const double deltaTime, const bool excludeCurrentDirection)
 {
-	std::vector<Direction> freePath;
+	const std::optional<Direction> excludeDirection{excludeCurrentDirection ? std::optional{_dir} : std::nullopt};
+	const std::vector<Direction> freePath{_moveBeh->GetFreePathSides(deltaTime, excludeDirection)};
 
-	constexpr int defaultCollisionReserve{4};
-	freePath.reserve(defaultCollisionReserve);
-
-	const float speed = _speed * static_cast<float>(deltaTime);
-	const auto [x, y, w, h] = _rect;
-	const ObjRectangle tankNextPosRectUp{.x = x, .y = y - speed, .w = w, .h = h + speed};
-	const ObjRectangle tankNextPosRectDown{.x = x, .y = y, .w = w, .h = h + speed};
-	const ObjRectangle tankNextPosRectLeft{.x = x - speed, .y = y, .w = w + speed, .h = h};
-	const ObjRectangle tankNextPosRectRight{.x = x, .y = y, .w = w + speed, .h = h};
-
-	bool isFreeUp{true};
-	bool isFreeDown{true};
-	bool isFreeLeft{true};
-	bool isFreeRight{true};
-
-	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
-	{
-		if (_uuid == object->GetUuid())
-		{
-			continue;
-		}
-
-		if (isFreeUp && ColliderUtils::IsCollide(tankNextPosRectUp, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeUp = false; }
-		}
-
-		if (isFreeDown && ColliderUtils::IsCollide(tankNextPosRectDown, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeDown = false; }
-		}
-
-		if (isFreeLeft && ColliderUtils::IsCollide(tankNextPosRectLeft, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeLeft = false; }
-		}
-
-		if (isFreeRight && ColliderUtils::IsCollide(tankNextPosRectRight, object->GetRect()))
-		{
-			if (!object->GetIsPassable()) { isFreeRight = false; }
-		}
-	}
-
-	if (isFreeUp)
-	{
-		freePath.emplace_back(Direction::UP);
-	}
-
-	if (isFreeDown)
-	{
-		freePath.emplace_back(Direction::DOWN);
-	}
-
-	if (isFreeLeft)
-	{
-		freePath.emplace_back(Direction::LEFT);
-	}
-
-	if (isFreeRight)
-	{
-		freePath.emplace_back(Direction::RIGHT);
-	}
-
-	return freePath;
-}
-
-void Bot::SetRandomDirection(const double deltaTime)
-{
-	if (const std::vector<Direction> freePath = GetFreePathSides(deltaTime);
-		!freePath.empty())
+	if (!freePath.empty())
 	{
 		const int max{static_cast<int>(freePath.size() - 1)};
 		const int pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution{0, max})};
@@ -398,10 +332,24 @@ void Bot::TickUpdate(const double deltaTime)
 	const bool isMove = _moveBeh->Move(_dir, deltaTime, outCollisions);
 	if (!isMove)
 	{
-		SetRandomDirection(deltaTime);// NOTE: bot will change their direction if it can't move
+		// NOTE: bot got stuck against an obstacle, so pick among the remaining 3 sides, excluding the blocked one
+		constexpr bool excludeCurrentDirection{true};
+		SetRandomDirection(deltaTime, excludeCurrentDirection);
 	}
 
 	if (isMove || oldDir != _dir)
+	{
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
+		}
+	}
+
+	// TODO: cover by unit test isTouchTheIce and ice movement logic 
+	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
 		FPoint pos = GetPos();
 		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
@@ -419,6 +367,12 @@ void Bot::TickUpdate(const double deltaTime)
 	}
 
 	_effects.isTouchTheBushes = IsTouchBush();
+	if (const bool isTouchTheIce = IsTouchIce();
+		_effects.isTouchTheIce != isTouchTheIce)
+	{
+		_effects.isTouchTheIce = isTouchTheIce;
+		_moveBeh->ResetVelocity();
+	}
 
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();
 	if (!_shootTimer.isActive && _obstacleDistance >= _calibre.damageRadius + _bulletOffset)

@@ -1,5 +1,6 @@
 #include "components/managers/RespawnManager.h"
 #include "components/EventSystem.h"
+#include "entities/ObjRectangle.h"
 #include "enums/GameMode.h"
 #include "enums/RespawnCount.h"
 #include "enums/TankType.h"
@@ -7,7 +8,6 @@
 #include <boost/uuid/uuid.hpp>
 #include <memory>
 
-//TODO: write spawn delay via timer separated for enemy and players team, example spawn every 5 sec one tank
 RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
 {
@@ -33,16 +33,14 @@ void RespawnManager::Subscribe()
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_events->AddListener("Reset", _name, [this]() { this->ResetSpawn(); });
-	_events->AddListener(
-			"GameModeChangedTo", _name,
-			[this](const GameMode newGameMode)
-			{
-				this->_gameMode = newGameMode;
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
 
-				this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
+		this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
 
-				this->OnGameModeChange();
-			});
+		this->OnGameModeChange();
+	});
 
 	_events->AddListener("TankSpawn", _name, [this](const buuid& uuid) { OnTankSpawn(uuid); });
 
@@ -51,12 +49,6 @@ void RespawnManager::Subscribe()
 	_events->AddListener("BonusTank_Pickup", _name, [this](const std::string& author, const std::string& /*fraction*/)
 	{
 		this->OnBonusTank(author);
-	});
-
-	//NOTE: for unit tests
-	_events->AddListener("SetSlotNeedRespawn", _name, [this](const int slotIndex)
-	{
-		this->SetSlotNeedRespawn(slotIndex);
 	});
 
 	_events->AddListener("PlayersBaseFinished", _name, [this]() { this->TriggerLastPlayersLife(); });
@@ -69,10 +61,12 @@ void RespawnManager::SubscribeAsClient()
 		this->OnBonusTank(author);
 	});
 
-	_events->AddListener("ClientReceived_RespawnTank", _name, [this](const TankType type, const buuid& /*uuid*/)
-	{
-		this->OnClientRespawn(type);
-	});
+	_events->AddListener(
+			"ClientReceived_RespawnTank", _name,
+			[this](const TankType type, const buuid& /*uuid*/, const ObjRectangle /*rect*/)
+			{
+				this->OnClientRespawn(type);
+			});
 }
 
 void RespawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -85,36 +79,27 @@ void RespawnManager::UnsubscribeAsClient() const
 
 void RespawnManager::SetEnemyNeedRespawn()
 {
-	for (size_t i = 0; i < 4; ++i)
+	for (size_t i = 0u; i < 4u; ++i)
 	{
 		_slots[i].isAvailable = true;
 	}
 }
 
-//NOTE: use only in unit tests
-void RespawnManager::SetSlotNeedRespawn(const int slotIndex)
-{
-	if (slotIndex >= 0 && slotIndex < 6)
-	{
-		_slots[slotIndex].isAvailable = true;
-	}
-}
-
 void RespawnManager::ResetRespawnStat()
 {
-	_respawnCount[static_cast<int>(RespawnCount::ENEMY_ALL)] = 20;
-	_respawnCount[static_cast<int>(RespawnCount::PLAYER_ONE)] = 3;
-	_respawnCount[static_cast<int>(RespawnCount::PLAYER_TWO)] = 3;
+	_respawnCount[static_cast<int>(RespawnCount::ENEMY_ALL)] = 20u;
+	_respawnCount[static_cast<int>(RespawnCount::PLAYER_ONE)] = 3u;
+	_respawnCount[static_cast<int>(RespawnCount::PLAYER_TWO)] = 3u;
 
 	for (auto& [_, isAvailable]: _slots)
 	{
 		isAvailable = false;
 	}
 
-	_enemiesSpawnCount = 0;
-	_enemiesDeathCount = 0;
-	_playersSpawnCount = 0;
-	_playersDeathCount = 0;
+	_enemiesSpawnCount = 0u;
+	_enemiesDeathCount = 0u;
+	_playersSpawnCount = 0u;
+	_playersDeathCount = 0u;
 }
 
 void RespawnManager::ResetSpawn()
@@ -139,21 +124,6 @@ void RespawnManager::SetPlayerNeedRespawn()
 		constexpr auto player2Id = static_cast<size_t>(TankType::PLAYER2);
 		_slots[player2Id].isAvailable = true;
 	}
-}
-
-int RespawnManager::GetEnemyRespawnCount() const
-{
-	return _respawnCount[static_cast<std::size_t>(RespawnCount::ENEMY_ALL)];
-}
-
-int RespawnManager::GetPlayerOneRespawnCount() const
-{
-	return _respawnCount[static_cast<std::size_t>(RespawnCount::PLAYER_ONE)];
-}
-
-int RespawnManager::GetPlayerTwoRespawnCount() const
-{
-	return _respawnCount[static_cast<std::size_t>(RespawnCount::PLAYER_TWO)];
 }
 
 std::string RespawnManager::RespawnCountEnumToString(const RespawnCount type)
@@ -185,9 +155,9 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnCount type)
 
 void RespawnManager::TriggerLastPlayersLife()
 {
-	_respawnCount[1] = 0;
+	_respawnCount[1] = 0u;
 	_events->EmitEvent("RespawnCountChangedTo", "Player1", _respawnCount[1]);
-	_respawnCount[2] = 0;
+	_respawnCount[2] = 0u;
 	_events->EmitEvent("RespawnCountChangedTo", "Player2", _respawnCount[2]);
 }
 
@@ -306,17 +276,17 @@ void RespawnManager::OnTankDied(const buuid& uuid)
 				case TankType::ENEMY2:
 				case TankType::ENEMY3:
 				case TankType::ENEMY4:
-					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::ENEMY_ALL)] > 0;
+					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::ENEMY_ALL)] > 0u;
 					EnemyDied(_slots[i].isAvailable);
 					break;
 				case TankType::PLAYER1:
 				case TankType::COOP1:
-					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_ONE)] > 0;
+					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_ONE)] > 0u;
 					PlayerDied(_slots[i].isAvailable);
 					break;
 				case TankType::PLAYER2:
 				case TankType::COOP2:
-					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_TWO)] > 0;
+					_slots[i].isAvailable = _respawnCount[static_cast<size_t>(RespawnCount::PLAYER_TWO)] > 0u;
 					PlayerDied(_slots[i].isAvailable);
 					break;
 				default:

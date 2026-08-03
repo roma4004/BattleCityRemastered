@@ -1,13 +1,3 @@
-#NOTE: to build boost from source, run from boots source folder
-#(example for MinGW, if you using MSVC replace "--toolset=gcc" to "--toolset=msvc")
-# and replace {path_to_project_source} with your project path to install boost --prefix={path_to_project_source}
-# .\bootstrap.bat gcc
-# then run this for build only required boost component:
-# ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install
-# or run this for build all boost component:
-# ./b2 --toolset=gcc --build-type=complete link=static runtime-link=shared --prefix={path_to_project_source}/libraries/boost_gcc install --with-serialization
-
-
 cmake_minimum_required(VERSION 3.15) #NOTE: cmake v3.15+ required by boost from 1.87
 project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
@@ -21,8 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 
+# --- Dependency versions ---
 include(FetchContent)
-set(vendored_default FALSE)
 set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
 set(SDL2_TAG "release-2.32.10")
 set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
@@ -33,233 +23,135 @@ set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(SDL2_MXR_TAG "release-2.8.2")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
 set(BOOST_VERSION "1.91.0")
-string(REPLACE "." "_" BOOST_PATH "${BOOST_VERSION}")
-set(BOOST_GIT_TAG "boost-${BOOST_VERSION}-1")#TODO: remove -1 from tag because now ver 1.91.0-1
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE)
 
-cmake_policy(SET CMP0148 NEW)
-include (FindPython)
-find_package(Python REQUIRED COMPONENTS Interpreter Development)
-
+# --- Global build/fetch settings ---
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required (e.g. SDL2 itself), unrelated to our own cmake_minimum_required above
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-set(SDL_SHARED OFF CACHE BOOL "Build shared SDL2 libraries")
-set(SDL_STATIC ON CACHE BOOL "Build static SDL2 libraries")
-set(SDL_TTF_SHARED OFF CACHE BOOL "Build shared SDL2_ttf library")
-set(SDL_TTF_STATIC ON CACHE BOOL "Build static SDL2_ttf library")
-option(SDL2_TTF_STATIC "Build static SDL2_ttf library" ON)
-set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
-set(SDL2TTF_HARFBUZZ OFF CACHE BOOL "Enable HarfBuzz shaping in SDL2_ttf" FORCE)
-
-set(SDL2MIXER_FLUIDSYNTH OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MODPLUG OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MIDI OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MP3 OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_FLAC OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_LIBXME OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MPG123 OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OGG OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OPUS OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OPUSFILE OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_TREMOR OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_VORBIS OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
-
+set(vendored_default FALSE)
 set(DEP_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/libraries)
 set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
 
-if(DEFINED VCPKG_TARGET_TRIPLET)
+if (DEFINED VCPKG_TARGET_TRIPLET)
     message(STATUS "Using VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
-endif()
+endif ()
 
-FetchContent_Declare(SDL2 GIT_REPOSITORY ${SDL2_URL} GIT_TAG ${SDL2_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
-FetchContent_Declare(SDL2_ttf GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
-FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MXR_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
+# --- SDL2 (+ ttf/image/mixer) ---
+set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
 
-FetchContent_MakeAvailable(SDL2)
-FetchContent_GetProperties(SDL2)
-set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/include")
-set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/libfreetype.a")
-FetchContent_MakeAvailable(SDL2_ttf)
-FetchContent_GetProperties(SDL2_ttf)
+set(SDL2MIXER_MIDI    OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MP3     OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_FLAC    OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MOD     OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_OGG     OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_OPUS    OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_VORBIS  OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(SDL2_image)
-FetchContent_GetProperties(SDL2_image)
+FetchContent_Declare(SDL2       GIT_REPOSITORY ${SDL2_URL}     GIT_TAG ${SDL2_TAG}     GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_ttf   GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MXR_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
 
-set(libxmp_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/include")
-set(libxmp_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/libxmp.a")
-FetchContent_MakeAvailable(SDL2_mixer)
-FetchContent_GetProperties(SDL2_mixer)
+FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image SDL2_mixer)
 
-#FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
+# --- Boost ---
+set(BOOST_INCLUDE_LIBRARIES serialization uuid asio property_tree)
+set(BUILD_TESTING OFF) # keep Boost's own ~172 internal test suites out of our build graph
 
-#FetchContent_Declare(boost
-##        GIT_REPOSITORY ""
-##        GIT_TAG "boost-1.85.0"
-##        GIT_SUBMODULES_RECURSE ON
-#        URL https://github.com/boostorg/boost/archive/refs/tags/boost-1.85.0.zip
-#        SOURCE_DIR ${Boost_EXTRACTION_DIRECTORY}
-#)
-#set(BOOST_ROOT                  ${CMAKE_CURRENT_SOURCE_DIR}/libraries/boost_gcc/)
-##FetchContent_MakeAvailable(Boost)
-#FetchContent_GetProperties(boost)
-#if(NOT boost_POPULATED)
-#    FetchContent_Populate(Boost)
-##    set(BOOST_ROOT ${Boost_SOURCE_DIR})
-##    set(Boost_LIBRARY_DIRS ${Boost_SOURCE_DIR}/libs)
-##    set(Boost_NO_SYSTEM_PATHS TRUE)
-##    set(Boost_USE_STATIC_LIBS ON)
-#    set(boost_INCLUDE_DIR ${boost_SOURCE_DIR})
-#    execute_process(COMMAND git submodule update --init WORKING_DIRECTORY
-#            find_package(boost #[[1.85.0]]#[[ COMPONENTS Serialization]] REQUIRED)
-##    message(FATAL_ERROR ${Boost_INCLUDE_DIR})
-##    message(STATUS "Boost include directories: ${Boost_INCLUDE_DIRS}") # log the
-#    if(Boost_FOUND)
-##        include_directories(${Boost_SOURCE_DIR}/libs/serialization/include)
-##        include_directories(${Boost_SOURCE_DIR}/libs/asio/include)
-#    endif()
-#endif()
-cmake_policy(SET CMP0144 NEW)
-include(ExternalProject)
-
-include(ProcessorCount)
-ProcessorCount(ThreadAmount)
-
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME ON)
-set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_install_done)
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Using Release build of Boost in Debug configuration")
-    set(Boost_USE_DEBUG_LIBS ON)
-    set(Boost_DEBUG ON)
-#    set(BOOST_VARIANT debug)
-#    set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_debug_install_done)
-else()
-    set(Boost_USE_DEBUG_LIBS OFF)
-#    set(BOOST_VARIANT release)
-#    set(BOOST_SEMAPHORE ${DEP_DOWNLOAD_DIR}/checklist_release_install_done)
-endif()
-#set(boost_configure_command ./bootstrap.sh gcc)
-#set(boost_build_command ./b2.exe --toolset=gcc link=static --build-type=complete runtime-link=shared variant=release --prefix=<INSTALL_DIR> --with-serialization -j8 stage install)
 set(BOOST_SUBMODULES
-    "tools/build
-    libs/align
-    libs/array
-    libs/asio
-    libs/assert
-    libs/bind
-    libs/config
-    libs/core
-    libs/date_time
-    libs/detail
-    libs/function
-    libs/headers
-    libs/integer
-    libs/io
-    libs/iterator
-    libs/move
-    libs/mpl
-    libs/numeric
-    libs/optional
-    libs/predef
-    libs/preprocessor
-    libs/serialization
-    libs/smart_ptr
-    libs/spirit
-    libs/static_assert
-    libs/system
-    libs/throw_exception
-    libs/type_traits
-    libs/utility
-    libs/winapi
-    libs/uuid
-    libs/property_tree
-    libs/any
-    libs/type_index
-    libs/container_hash
-    libs/multi_index
-    libs/tuple
-    libs/describe
-    libs/mp11
-    tools/boost_install"
-)#TODO: recheck boost dep after update in patch note mentioned that reduced dep from 11 to 7
-
-if (NOT EXISTS ${BOOST_SEMAPHORE})
-    ExternalProject_Add(Boost
-            GIT_REPOSITORY ${BOOST_URL}
-            GIT_TAG ${BOOST_GIT_TAG}
-            GIT_PROGRESS 1
-            GIT_SHALLOW 1
-            GIT_SHALLOW TRUE
-#            UPDATE_DISCONNECTED TRUE
-            GIT_SUBMODULES ${BOOST_SUBMODULES} # load only specified submodules instead of all
-            PREFIX boost
-            DOWNLOAD_DIR ${DEP_DOWNLOAD_DIR}
-            SOURCE_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}
-#            BINARY_DIR ${DEP_DOWNLOAD_DIR}/boost_${BOOST_PATH}_build
-            INSTALL_DIR ${DEP_DOWNLOAD_DIR}/boost_install
-#            TMP_DIR Boost/tmp
-#            STAMP_DIR Boost/stamp
-
-#            LOG_DOWNLOAD ON
-#            LOG_CONFIGURE ON
-#            LOG_BUILD ON
-#            LOG_INSTALL ON
-
-#            PATCH_COMMAND ./bootstrap.sh gcc
-            CONFIGURE_COMMAND ./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-#            CONFIGURE_COMMAND ""#./bootstrap.sh gcc --prefix=<INSTALL_DIR> --with-libraries=serialization
-            BUILD_COMMAND ./b2 --prefix=<INSTALL_DIR> --toolset=gcc link=static threading=multi --build-type=complete runtime-link=static #[[variant=${BOOST_VARIANT}]] address-model=64 --with-serialization -j${ThreadAmount} -d+2 stage install
-            BUILD_IN_SOURCE 1
-            INSTALL_COMMAND ""
-            DOWNLOAD_EXTRACT_TIMESTAMP true
-            BUILD_ALWAYS TRUE
-    )
-
-    ExternalProject_Add_Step(Boost create_semaphore
-            COMMAND ${CMAKE_COMMAND} -E touch ${BOOST_SEMAPHORE}
-            DEPENDEES install
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-else()
-    message(STATUS "--------------------------------------------------")
-    message(STATUS "Boost: is already installed, so sipping this step.")
-    message(STATUS "--------------------------------------------------")
-endif()
-
-set(Boost_NO_SYSTEM_PATHS ON)
-set(BOOST_ROOT ${CMAKE_SOURCE_DIR}/libraries/boost_install)
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS serialization uuid)
-if(Boost_FOUND)
-    message(STATUS "------------------------------------------------------------")
-    message(STATUS "Found Boost ${Boost_VERSION} with libraries: ${Boost_LIBRARIES}")
-    message(STATUS "include directory: ${Boost_INCLUDE_DIRS}")
-    include_directories(${Boost_INCLUDE_DIRS})
-    message(STATUS "------------------------------------------------------------")
-else ()
-    message(STATUS "------------------------------------------------------------")
-    message(STATUS "If you see error 'Could not find Boost', ignore it once,")
-    message(STATUS "it will be autodownload during first build, so run build.")
-    message(STATUS "first build will finish with compile error like missing boost includes,")
-    message(STATUS "reload cmake project to fix it, then run build again, and all will work fine")
-    message(STATUS "------------------------------------------------------------")
-endif()
-
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.11.0
-    GIT_PROGRESS 1
-    GIT_SHALLOW TRUE
+        "tools/cmake
+        tools/build
+        tools/boost_install
+        libs/align
+        libs/array
+        libs/asio
+        libs/assert
+        libs/bind
+        libs/config
+        libs/core
+        libs/date_time
+        libs/detail
+        libs/function
+        libs/headers
+        libs/integer
+        libs/io
+        libs/iterator
+        libs/move
+        libs/mpl
+        libs/numeric
+        libs/optional
+        libs/predef
+        libs/preprocessor
+        libs/serialization
+        libs/smart_ptr
+        libs/spirit
+        libs/static_assert
+        libs/system
+        libs/throw_exception
+        libs/type_traits
+        libs/utility
+        libs/winapi
+        libs/uuid
+        libs/property_tree
+        libs/any
+        libs/type_index
+        libs/container_hash
+        libs/multi_index
+        libs/tuple
+        libs/describe
+        libs/mp11
+        libs/unordered
+        libs/variant
+        libs/range
+        libs/algorithm
+        libs/compat
+        libs/concept_check
+        libs/context
+        libs/conversion
+        libs/endian
+        libs/exception
+        libs/function_types
+        libs/fusion
+        libs/lexical_cast
+        libs/pool
+        libs/regex
+        libs/variant2
+        libs/container
+        libs/phoenix
+        libs/tokenizer
+        libs/typeof
+        libs/functional
+        libs/intrusive
+        libs/proto
+        libs/thread
+        libs/atomic
+        libs/chrono
+        libs/ratio"
 )
 
-set(BUILD_GMOCK OFF CACHE BOOL "Build gmock" FORCE)
+FetchContent_Declare(Boost
+        GIT_REPOSITORY ${BOOST_URL}
+        GIT_TAG        "boost-${BOOST_VERSION}"
+        GIT_PROGRESS   1
+        GIT_SHALLOW    TRUE
+        GIT_SUBMODULES ${BOOST_SUBMODULES}
+)
+FetchContent_MakeAvailable(Boost)
+
+# --- googletest ---
+FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        release-1.11.0
+        GIT_PROGRESS   1
+        GIT_SHALLOW    TRUE
+)
+
+set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
+# --- Source files ---
 include_directories(headers)
 
 set(SOURCE_FILES
@@ -296,7 +188,7 @@ set(SOURCE_FILES
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnManager.cpp
         source/components/managers/DelayedSpawnManager.cpp
-        source/components/managers/StateManager.cpp
+        source/components/managers/GameStateManager.cpp
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
         source/entities/Obstacles/EagleTile.cpp
@@ -348,7 +240,6 @@ set(SOURCE_FILES
         source/utils/ColliderUtils.cpp
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
-        source/utils/RandUtils.cpp
         source/utils/Timer.cpp
         source/utils/TimeUtils.cpp
         source/utils/UuidUtils.cpp
@@ -375,7 +266,7 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/components/managers/BonusEffectManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/DelayedSpawnManager.cpp
-        source/components/managers/StateManager.cpp
+        source/components/managers/GameStateManager.cpp
         source/components/Map.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
@@ -425,44 +316,44 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/commands/TankShot.cpp
         source/utils/Logger.cpp
         source/utils/NetworkLogger.cpp
-        source/utils/RandUtils.cpp
         source/utils/Timer.cpp
         source/utils/UuidUtils.cpp
 )
 
 set(UNIT_TESTS_FILES
-        UnitTests/BonusTestsBasic.cpp
-        UnitTests/BonusTestsDestroy.cpp
-        UnitTests/BonusTestsEnemy.cpp
-        UnitTests/BotTests.cpp
-        UnitTests/BulletsTestsAdvanced.cpp
-        UnitTests/BulletsTestsBasic.cpp
-        UnitTests/NetworkTests.cpp
-        UnitTests/PlayerTests.cpp
-        UnitTests/RespawnTankTests.cpp
-        UnitTests/StatisticsTestsAdvanced.cpp
-        UnitTests/StatisticsTestsBasic.cpp
+        UnitTests/BonusTestBasic.cpp
+        UnitTests/BonusTestDestroy.cpp
+        UnitTests/BonusTestEnemy.cpp
+        UnitTests/BotsTest.cpp
+        UnitTests/CoopBotTest.cpp
+        UnitTests/BulletsTestAdvanced.cpp
+        UnitTests/BulletsTestBasic.cpp
+        UnitTests/EnemyBotTest.cpp
+        UnitTests/NetworkTest.cpp
+        UnitTests/PlayerTest.cpp
+        UnitTests/RespawnManagerTest.cpp
+        UnitTests/TankSpawnerTest.cpp
+        UnitTests/GameStateManagerTest.cpp
+        UnitTests/StatisticsTestAdvanced.cpp
+        UnitTests/StatisticsTestBasic.cpp
+        UnitTests/TestUtils.cpp
 )
 
+# --- Targets ---
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-
-if (NOT EXISTS ${BOOST_SEMAPHORE})
-    add_dependencies(${PROJECT_NAME} Boost)
-endif()
 
 add_executable(unit_tests ${SOURCE_FILES_FOR_UNIT_TESTS} ${UNIT_TESTS_FILES})
 
-if (NOT EXISTS ${BOOST_SEMAPHORE})
-    add_dependencies(unit_tests Boost)
-endif()
+if (WIN32)
+    set(PLATFORM_NETWORK_LIBS wsock32 ws2_32) #NOTE: Winsock, needed for boost::asio sockets on Windows; POSIX systems already have sockets in libc
+endif ()
 
 target_include_directories(unit_tests PRIVATE headers)
 target_link_libraries(unit_tests
         gtest
         gtest_main
-        ${Boost_LIBRARIES}
-        wsock32  #NOTE: this for windows socket
-        ws2_32   #NOTE: this for windows socket
+        Boost::serialization Boost::uuid Boost::asio Boost::property_tree
+        ${PLATFORM_NETWORK_LIBS}
 )
 
 include(GoogleTest)
@@ -470,112 +361,35 @@ gtest_discover_tests(unit_tests)
 
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(${PROJECT_NAME}
-        SDL2-static
-        SDL2main
-        SDL2_ttf
-        SDL2_image
-        SDL2_mixer
-        ${Boost_LIBRARIES}
-        wsock32  #NOTE: this for windows socket
-        ws2_32   #NOTE: this for windows socket
+        SDL2-static SDL2main SDL2_ttf SDL2_image SDL2_mixer
+        Boost::serialization Boost::uuid Boost::asio Boost::property_tree
+        ${PLATFORM_NETWORK_LIBS}
 )
 
-set(FONT_PATH                   Resources/Fonts)
-set(FONT_PATH_NAME              ${FONT_PATH}/PressStart2P-vaV7.ttf)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
-        "../${FONT_PATH_NAME}"                                  # <--this is in-file
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${FONT_PATH_NAME}") # <--this is out-file path
+# --- Game assets (copied next to the exe post-build) ---
+set(GAME_ASSETS
+        Resources/Fonts/PressStart2P-vaV7.ttf
+        Resources/Images/Title.png
+        Resources/Images/SpriteSheet.png
+        Resources/Images/menuSelectorP1.png
+        Resources/Images/PS5_Buttons/Create.png
+        Resources/Images/PS5_Buttons/Cross.png
+        Resources/Images/PS5_Buttons/D-Pad.png
+        Resources/Images/PS5_Buttons/Home.png
+        Resources/Images/PS5_Buttons/Options.png
+        Resources/Images/PS5_Buttons/Triangle.png
+        Resources/Images/Xbox_Buttons/D-Pad.png
+        Resources/Images/Xbox_Buttons/Home.png
+        Resources/Images/Xbox_Buttons/Menu.png
+        Resources/Images/Xbox_Buttons/View.png
+        Resources/Images/Xbox_Buttons/A.png
+        Resources/Images/Xbox_Buttons/Y.png
+        Resources/Sounds/levelStarted.wav
+)
 
-set(IMG_PATH                   Resources/Images)
-set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
-set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
-set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
-
-set(PS5_BTN_CREATE_PATH_NAME   ${IMG_PATH}/PS5_Buttons/Create.png)
-set(PS5_BTN_CROSS_PATH_NAME    ${IMG_PATH}/PS5_Buttons/Cross.png)
-set(PS5_BTN_D-PAD_PATH_NAME    ${IMG_PATH}/PS5_Buttons/D-Pad.png)
-set(PS5_BTN_HOME_PATH_NAME     ${IMG_PATH}/PS5_Buttons/Home.png)
-set(PS5_BTN_OPTIONS_PATH_NAME  ${IMG_PATH}/PS5_Buttons/Options.png)
-set(PS5_BTN_TRIANGLE_PATH_NAME ${IMG_PATH}/PS5_Buttons/Triangle.png)
-
-set(XBOX_BTN_D-PAD_PATH_NAME   ${IMG_PATH}/XBox_Buttons/D-Pad.png)
-set(XBOX_BTN_HOME_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Home.png)
-set(XBOX_BTN_MENU_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Menu.png)
-set(XBOX_BTN_VIEW_PATH_NAME    ${IMG_PATH}/XBox_Buttons/View.png)
-set(XBOX_BTN_A_PATH_NAME       ${IMG_PATH}/XBox_Buttons/A.png)
-set(XBOX_BTN_Y_PATH_NAME       ${IMG_PATH}/XBox_Buttons/Y.png)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${LOGO_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LOGO_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${ATLAS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${ATLAS_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${JOY_ICON_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_CREATE_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CREATE_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_CROSS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CROSS_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_D-PAD_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_D-PAD_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_HOME_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_HOME_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_OPTIONS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_OPTIONS_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_TRIANGLE_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_TRIANGLE_PATH_NAME}")
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_D-PAD_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_D-PAD_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_HOME_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_HOME_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_MENU_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_MENU_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_VIEW_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_VIEW_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_A_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_A_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_Y_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_Y_PATH_NAME}")
-
-set(LEVEL_STARTED_PATH                   Resources/Sounds)
-set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${LEVEL_STARTED_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LEVEL_STARTED_PATH_NAME}")
+foreach (asset ${GAME_ASSETS})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "../${asset}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${asset}")
+endforeach ()

@@ -52,7 +52,7 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	//BaseObj overrides
-	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

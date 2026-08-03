@@ -7,15 +7,13 @@
 #include <sstream>
 
 ScoreBoard::ScoreBoard(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _events{events}
+	: _pos{.x = 25, .y = 25}
+	, _events{events}
 	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _name{std::string("ScoreBoard")}
 {
 	Subscribe();
 
-	_padding = 25;
-	_pos.x = _padding;
-	_pos.y = _padding;
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
@@ -38,7 +36,7 @@ void ScoreBoard::Subscribe()
 			"RespawnCountChangedTo", _name,
 			[this](const std::string& objectName, const unsigned short respawnCount)
 			{
-				this->OnRespawnCountChanged(objectName, respawnCount);//TODO: extract from score to sidebar
+				this->OnRespawnCountChanged(objectName, respawnCount);
 			});
 
 	if (_isScoreBoardDisplayed)
@@ -54,7 +52,7 @@ void ScoreBoard::Subscribe()
 			this->DisplayScore(false);
 		}
 	});
-	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { /*this->DisplayScore(isPause);*/ });
+	_events->AddListener("Pause_Status", _name, [this](const bool /*isPause*/) { /*this->DisplayScore(isPause);*/ });
 	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->DisplayScore(true); });
 	_events->AddListener("EnemiesTeamIsWon", _name, [this]() { this->DisplayScore(true); });
 }

@@ -1,17 +1,17 @@
-#include "components/managers/StateManager.h"
+#include "components/managers/GameStateManager.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 
-StateManager::StateManager(const std::shared_ptr<EventSystem>& events)
-	: _name{"StateManager"}
+GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
+	: _name{"GameStateManager"}
 	, _events{events}
 {
 	Subscribe();
 }
 
-StateManager::~StateManager() { Unsubscribe(); }
+GameStateManager::~GameStateManager() { Unsubscribe(); }
 
-void StateManager::Subscribe()
+void GameStateManager::Subscribe()
 {
 	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
 	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
@@ -24,9 +24,9 @@ void StateManager::Subscribe()
 	});
 }
 
-void StateManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
+void GameStateManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-void StateManager::Draw() const
+void GameStateManager::Draw() const
 {
 	if (_isPause)
 	{
@@ -44,7 +44,7 @@ void StateManager::Draw() const
 	}
 }
 
-void StateManager::Reset()
+void GameStateManager::Reset()
 {
 	_isPause = false;
 	_isGameOver = false;

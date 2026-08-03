@@ -58,7 +58,7 @@ void Obstacle::SendDamageStatistics(const std::string& author, const std::string
 	}
 }
 
-void Obstacle::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Obstacle::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	BaseObj::TakeDamage(damage, damageAuthor, damageFraction);
 

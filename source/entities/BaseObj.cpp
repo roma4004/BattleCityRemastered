@@ -117,7 +117,8 @@ void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
 bool BaseObj::GetIsAlive() const { return _isAlive; }
 
-void BaseObj::TakeDamage(const int damage, const std::string& /*damageAuthor*/, const std::string& /*damageFraction*/)
+void BaseObj::TakeDamage(const unsigned int damage, const std::string& /*damageAuthor*/,
+						 const std::string& /*damageFraction*/)
 {
 	_health -= damage;
 	_isAlive = _health > 0;

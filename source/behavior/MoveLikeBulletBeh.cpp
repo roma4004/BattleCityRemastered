@@ -12,7 +12,7 @@ MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& 
 									 const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}
-	, _dir{dir}
+	, _direction{dir}
 	, _gameConfig{gameConfig}
 	, _calibre{calibre}
 	, _allObjects{allObjects} {}
@@ -21,49 +21,53 @@ ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 {
 	const float speed = _calibre.speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
-	if (_dir == Direction::UP)
+	if (_direction == Direction::UP)
 	{
 		return ObjRectangle{.x = x, .y = y - speed, .w = w, .h = h + speed};
 	}
 
-	if (_dir == Direction::DOWN)
-	{
-		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
-	}
-
-	if (_dir == Direction::LEFT)
+	if (_direction == Direction::LEFT)
 	{
 		return ObjRectangle{.x = x - speed, .y = y, .w = w + speed, .h = h};
 	}
 
+	if (_direction == Direction::DOWN)
+	{
+		return ObjRectangle{.x = x, .y = y, .w = w, .h = h + speed};
+	}
+
 	//_direction == RIGHT
+	// {
 	return ObjRectangle{.x = x, .y = y, .w = w + speed, .h = h};
+	// }
 }
 
 FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 {
 	const float speed = _calibre.speed * static_cast<float>(deltaTime);
 	const auto [x, y, w, h] = _rect;
-	if (_dir == Direction::UP)
+	if (_direction == Direction::UP)
 	{
 		return FPoint{.x = x, .y = y - speed};
 	}
 
-	if (_dir == Direction::DOWN)
+	if (_direction == Direction::LEFT)
+	{
+		return FPoint{.x = x - speed, .y = y};
+	}
+
+	if (_direction == Direction::DOWN)
 	{
 		return FPoint{.x = x, .y = y + speed};
 	}
 
-	if (_dir == Direction::LEFT)
-	{
-		return FPoint{.x = x - speed, .y = y};//TODO: write bullet test that can damage tank from all sides
-	}
-
 	//_direction == Direction::RIGHT
+	// {
 	return FPoint{.x = x + speed, .y = y};
+	// }
 }
 
-bool MoveLikeBulletBeh::IsCanMove(const double deltaTime) const
+bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction /*dir*/) const
 {
 	const ObjRectangle nextPosRect = GetNextPos(deltaTime);
 
@@ -84,18 +88,18 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 		return MoveUp(deltaTime, outCollisions);
 	}
 
-	if (dir == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_gameConfig.windowSize.y))
-	{
-		return MoveDown(deltaTime, outCollisions);
-	}
-
 	if (dir == Direction::LEFT && _rect.x - speed >= 0.0f)
 	{
 		return MoveLeft(deltaTime, outCollisions);
 	}
 
-	if (size_t sideBarWidth = 175;//TODO: move sidebar width to params
-		dir == Direction::RIGHT && _rect.Right() + speed <= static_cast<float>(_gameConfig.windowSize.x - sideBarWidth))
+	if (dir == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_gameConfig.windowSize.y))
+	{
+		return MoveDown(deltaTime, outCollisions);
+	}
+
+	if (dir == Direction::RIGHT
+		&& _rect.Right() + speed <= static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth))
 	{
 		return MoveRight(deltaTime, outCollisions);
 	}
@@ -106,37 +110,9 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 	return false;
 }
 
-bool MoveLikeBulletBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (IsCanMove(deltaTime))
-	{
-		_rect.x += -_calibre.speed * static_cast<float>(deltaTime);
-
-		return true;
-	}
-
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
-
-	return false;
-}
-
-bool MoveLikeBulletBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
-{
-	if (IsCanMove(deltaTime))
-	{
-		_rect.x += _calibre.speed * static_cast<float>(deltaTime);
-
-		return true;
-	}
-
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
-
-	return false;
-}
-
 bool MoveLikeBulletBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (IsCanMove(deltaTime))
+	if (IsCanMove(deltaTime, _direction))
 	{
 		_rect.y += -_calibre.speed * static_cast<float>(deltaTime);
 
@@ -148,9 +124,23 @@ bool MoveLikeBulletBeh::MoveUp(const double deltaTime, std::vector<std::shared_p
 	return false;
 }
 
+bool MoveLikeBulletBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+{
+	if (IsCanMove(deltaTime, _direction))
+	{
+		_rect.x += -_calibre.speed * static_cast<float>(deltaTime);
+
+		return true;
+	}
+
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+
+	return false;
+}
+
 bool MoveLikeBulletBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (IsCanMove(deltaTime))
+	if (IsCanMove(deltaTime, _direction))
 	{
 		_rect.y += _calibre.speed * static_cast<float>(deltaTime);
 
@@ -162,6 +152,19 @@ bool MoveLikeBulletBeh::MoveDown(const double deltaTime, std::vector<std::shared
 	return false;
 }
 
+bool MoveLikeBulletBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
+{
+	if (IsCanMove(deltaTime, _direction))
+	{
+		_rect.x += _calibre.speed * static_cast<float>(deltaTime);
+
+		return true;
+	}
+
+	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+
+	return false;
+}
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjects(const FPoint blowCenter) const
 {
@@ -174,4 +177,13 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 	});
 
 	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
+}
+
+bool MoveLikeBulletBeh::ApplyMoveVelocity(const double /*deltaTime*/) { return false; }
+void MoveLikeBulletBeh::ResetVelocity() {}
+
+std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(const double /*deltaTime*/,
+														   const std::optional<Direction> /*excludeDirection*/) const
+{
+	return {};
 }

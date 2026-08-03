@@ -6,6 +6,7 @@
 #include "components/EventSystem.h"
 #include "entities/BulletCalibre.h"
 #include "entities/obstacles/BushTile.h"
+#include "entities/obstacles/IceTile.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "interfaces/IPickupableBonus.h"
@@ -20,7 +21,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	BaseObj::SetIsPenetrable(false);
 
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
-												 _allObjects);
+												 _allObjects, _effects, gameConfig);
 	_calibre = BulletCalibre{.speed = 300.f,
 							 .damage = 15,
 							 .damageRadius = 18.f,
@@ -29,7 +30,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	ApplyScaleToCalibre(gameConfig.scaleFactor);
 
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _gameConfig.windowSize, _name, _fraction,
-												 _allObjects, bulletPool, _calibre);
+												 _allObjects, bulletPool, _calibre, _events);
 
 	if (enableByDefault)
 	{
@@ -206,7 +207,7 @@ void Tank::Disable() const
 	}
 }
 
-void Tank::TakeDamage(const int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Tank::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
 	if (!_effects.isHelmetActive)
 	{
@@ -291,7 +292,7 @@ void Tank::OnBonusStar(const std::string& author)
 	if (author == _name)
 	{
 		SetHealth(GetHealth() + 50);
-		if (_tier > 4)
+		if (_tier > 3)
 		{
 			return;
 		}
@@ -391,10 +392,24 @@ bool Tank::IsTouchBush() const
 	return !bushCollisionsFilter.empty();
 }
 
+bool Tank::IsTouchIce() const
+{
+	auto bushCollisionsFilter = *_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	{
+		return _uuid != object->GetUuid()
+			   && ColliderUtils::IsCollide(_rect, object->GetRect())
+			   && dynamic_cast<IceTile*>(object.get()) != nullptr;
+	});
+
+	return !bushCollisionsFilter.empty();
+}
+
 void Tank::ApplyScaleToCalibre(const float newScale)
 {
-	if (newScale == 1)
+	if (ColliderUtils::AreEqualAbsolute(newScale, 1))
+	{
 		return;
+	}
 
 	this->_calibre.speed *= newScale;
 	this->_calibre.damageRadius *= newScale;

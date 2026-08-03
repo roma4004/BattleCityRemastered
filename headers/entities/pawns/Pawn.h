@@ -21,7 +21,7 @@ class Pawn : public BaseObj, public ITickUpdatable
 protected:
 	float _speed{};
 	std::string _uuidStr{};
-	unsigned int _tier{1u};
+	unsigned short _tier{1u};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
@@ -44,7 +44,7 @@ public:
 	~Pawn() override;
 
 	//BaseObj overrides
-	void TakeDamage(int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
 
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);

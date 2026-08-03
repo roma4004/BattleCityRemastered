@@ -5,17 +5,15 @@
 #include "enums/GameMode.h"
 
 Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
-	: _yOffsetStart{static_cast<int>(windowSize.y)}
+	: _pos{.x = 25, .y = 0}
+	, _windowHeight{static_cast<int>(windowSize.y)}
+	, _yOffsetStart{static_cast<int>(windowSize.y)}
 	, _events{events}
 	, _input{std::make_unique<InputProviderForMenu>(events)}
 	, _name{std::string("Menu")}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
-
-	_padding = 25;//TODO: combine with same menu padding in renderManager when draw background
-	_pos.x = _padding;
-	_windowHeight = static_cast<int>(windowSize.y);
 }
 
 Menu::~Menu()
@@ -49,7 +47,8 @@ void Menu::Draw()
 	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
 	{
 		_yOffsetStart -= 3;
-		_pos.y = _padding + _yOffsetStart;
+		constexpr int padding{25};
+		_pos.y = padding + _yOffsetStart;
 		_events->EmitEvent("MenuPosChanged", _pos);
 	}
 

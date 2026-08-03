@@ -1,7 +1,7 @@
 #pragma once
 
 #include "enums/RespawnCount.h"
-#include <boost/uuid/uuid.hpp>//TODO: fix cmake run need to rerun after project build (to download boost dependency)
+#include <boost/uuid/uuid.hpp>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
@@ -62,11 +62,4 @@ public:
 	explicit RespawnManager(const std::shared_ptr<EventSystem>& events);
 
 	~RespawnManager();
-
-	// NOTE: for unit tests only:
-	[[nodiscard]] int GetEnemyRespawnCount() const;
-	[[nodiscard]] int GetPlayerOneRespawnCount() const;
-	[[nodiscard]] int GetPlayerTwoRespawnCount() const;
-
-	void SetSlotNeedRespawn(int slotIndex);
 };

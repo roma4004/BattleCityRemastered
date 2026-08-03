@@ -2,6 +2,7 @@
 
 #include "Command.h"
 #include "UuidSerialization.h"
+#include "entities/ObjRectangle.h"
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -18,18 +19,20 @@ class RespawnTank : public Command
 
 	TankType _tankType{};
 	buuid _uuid{};
+	ObjRectangle _rect{};
 
 public:
 	//for deserialization
 	RespawnTank();
 
 	//for serialization
-	explicit RespawnTank(TankType tankType, buuid uuid);
+	RespawnTank(TankType tankType, buuid uuid, ObjRectangle rect);
 
 	~RespawnTank() override = default;
 
 	[[nodiscard]] TankType GetTankType() const noexcept;
 	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] ObjRectangle GetRect() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
@@ -43,6 +46,7 @@ void RespawnTank::serialize(Archive& ar, const unsigned int)
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _tankType;
 	ar & _uuid;
+	ar & _rect;
 }
 }//namespace network::commands
 

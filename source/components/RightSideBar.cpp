@@ -47,7 +47,7 @@ void RightSideBar::Draw() const
 
 void RightSideBar::OnRespawnCountChangedTo(const std::string& objectName, const unsigned short respawnCount)
 {
-	if (objectName.starts_with("Enemy"))
+	if (objectName == "Enemy")
 	{
 		_enemiesRespawnCount = respawnCount;
 	}

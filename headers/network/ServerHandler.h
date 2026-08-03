@@ -19,9 +19,12 @@ public:
 		_server.ProcessNetworkCommands();
 	}
 
+	[[nodiscard]] uint16_t GetBoundPort() const { return _server.GetBoundPort(); }
+
 private:
 	void Subscribe();
 	void Unsubscribe() const;
+	void Shutdown();
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	boost::asio::io_context _ioContext{};
