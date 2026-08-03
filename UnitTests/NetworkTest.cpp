@@ -1,6 +1,7 @@
 #include "Point.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -332,29 +333,29 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 
 	events->AddListener(
 			"ClientReceived_FortressChange", "FortressChangeEventReplication",
-			[&promiseDied, &promiseToBrick, &promiseToSteel, this](const std::string& state, const buuid& uuid)
+			[&promiseDied, &promiseToBrick, &promiseToSteel, this](const FortressChangeEvent& event)
 			{
-				if (uuid == this->_uuid)
+				if (event.uuid == this->_uuid)
 				{
-					if (state == "Died")
+					if (event.state == "Died")
 					{
-						promiseDied.set_value({state, uuid});
+						promiseDied.set_value({event.state, event.uuid});
 					}
-					else if (state == "ToBrick")
+					else if (event.state == "ToBrick")
 					{
-						promiseToBrick.set_value({state, uuid});
+						promiseToBrick.set_value({event.state, event.uuid});
 					}
-					else if (state == "ToSteel")
+					else if (event.state == "ToSteel")
 					{
-						promiseToSteel.set_value({state, uuid});
+						promiseToSteel.set_value({event.state, event.uuid});
 					}
 				}
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
-	events->EmitEvent("ServerSend_FortressChange", "ToBrick", _uuid);
-	events->EmitEvent("ServerSend_FortressChange", "ToSteel", _uuid);
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", _uuid});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", _uuid});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -445,7 +446,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	// events->EmitEvent("Server_StartFrame");
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
-	events->EmitEvent("ServerSend_BonusSpawn", pos, type, _uuid);
+	events->EmitEvent("ServerSend_BonusSpawn", BonusSpawnEvent{pos, type, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -607,7 +608,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_ObstacleSpawn", rectOrigin, obstacleType, _uuid);
+	events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{rectOrigin, obstacleType, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -687,7 +688,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	// events->EmitEvent("Server_StartFrame");
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		events->EmitEvent("ServerSend_ObstacleSpawn", bricksRect[i], obstacleType, _uuid);
+		events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{bricksRect[i], obstacleType, _uuid});
 	}
 	events->EmitEvent("Server_EndFrame");
 

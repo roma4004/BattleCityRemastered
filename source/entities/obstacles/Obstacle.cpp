@@ -1,5 +1,6 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -21,7 +22,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_ObstacleSpawn", _rect, _obstacleType, uuid);
+		_events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{_rect, _obstacleType, uuid});
 	}
 }
 
@@ -54,7 +55,7 @@ void Obstacle::SendDamageStatistics(const std::string& author, const std::string
 {
 	if (GetHealth() < 1)
 	{
-		_events->EmitEvent("Statistics_" + _name + "Died", author, fraction);
+		_events->EmitEvent("Statistics_" + _name + "Died", StatisticsAttributionEvent{author, fraction});
 	}
 }
 

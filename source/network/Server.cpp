@@ -1,6 +1,7 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
 #include "network/commands/AnimationCreate.h"
@@ -475,10 +476,10 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_ObstacleSpawn", _name,
-			[this](const ObjRectangle rect, const ObstacleType type, const buuid& uuid)
+			[this](const ObstacleSpawnEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<ObstacleSpawn>(rect, type, uuid));
+				_batch->AddCommand(std::make_shared<ObstacleSpawn>(event.rect, event.type, event.uuid));
 			});
 
 	_events->AddListener(
@@ -504,10 +505,10 @@ void Server::SubscribeBonus()
 {
 	_events->AddListener(
 			"ServerSend_BonusSpawn", _name,
-			[this](const FPoint pos, const BonusType type, const buuid& uuid)
+			[this](const BonusSpawnEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<BonusSpawn>(pos, type, uuid));
+				_batch->AddCommand(std::make_shared<BonusSpawn>(event.pos, event.type, event.uuid));
 			});
 
 	_events->AddListener("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
@@ -516,10 +517,10 @@ void Server::SubscribeBonus()
 		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
 	});
 
-	_events->AddListener("ServerSend_FortressChange", _name, [this](const std::string& state, const buuid& uuid)
+	_events->AddListener("ServerSend_FortressChange", _name, [this](const FortressChangeEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<FortressChange>(state, uuid));
+		_batch->AddCommand(std::make_shared<FortressChange>(event.state, event.uuid));
 	});
 
 	_events->AddListener("ServerSend_BonusHelmet_Pickup", _name, [this](const std::string& name, const bool isActive)

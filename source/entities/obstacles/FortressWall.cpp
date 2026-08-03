@@ -1,5 +1,6 @@
 #include "entities/obstacles/FortressWall.h"
 #include "components/EventSystem.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "entities/Pawns/Pawn.h"
 #include "entities/obstacles/BrickWall.h"
@@ -24,7 +25,7 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	//disable replication for fortress _obstacle
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_ObstacleSpawn", _rect, ObstacleType::Fortress, _uuid);
+		_events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{_rect, ObstacleType::Fortress, _uuid});
 	}
 }
 
@@ -52,19 +53,19 @@ void FortressWall::SubscribeAsClient()
 {
 	_events->AddListener(
 			"ClientReceived_FortressChange", _nameWithUuid,
-			[this](const std::string& state, const buuid& uuid)
+			[this](const FortressChangeEvent& event)
 			{
-				if (uuid == _uuid)
+				if (event.uuid == _uuid)
 				{
-					if (state == "Died")
+					if (event.state == "Died")
 					{
 						this->OnEnemyPickupShovel();
 					}
-					else if (state == "ToBrick")
+					else if (event.state == "ToBrick")
 					{
 						this->OnShovelCooldownEnd();
 					}
-					else if (state == "ToSteel")
+					else if (event.state == "ToSteel")
 					{
 						this->OnPlayerPickupShovel();
 					}
@@ -78,11 +79,11 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 {
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
-		_events->EmitEvent("Statistics_BrickWallDied", author, fraction);
+		_events->EmitEvent("Statistics_BrickWallDied", StatisticsAttributionEvent{author, fraction});
 	}
 	else
 	{
-		_events->EmitEvent("Statistics_SteelWallDied", author, fraction);
+		_events->EmitEvent("Statistics_SteelWallDied", StatisticsAttributionEvent{author, fraction});
 	}
 }
 
@@ -93,7 +94,7 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
+		_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", _uuid});
 	}
 }
 
@@ -116,7 +117,7 @@ void FortressWall::OnPlayerPickupShovel()
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_FortressChange", "ToSteel", _uuid);
+			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", _uuid});
 		}
 	}
 }
@@ -132,7 +133,7 @@ void FortressWall::OnShovelCooldownEnd()
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_FortressChange", "ToBrick", _uuid);
+			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", _uuid});
 		}
 	}
 }
@@ -167,7 +168,7 @@ void FortressWall::TakeDamage(const unsigned int damage, const std::string& dama
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_FortressChange", "Died", _uuid);
+			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", _uuid});
 		}
 	}
 }

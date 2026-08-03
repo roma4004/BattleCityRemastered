@@ -1,6 +1,7 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -26,7 +27,8 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_BonusSpawn", FPoint{.x = rect.x, .y = rect.y}, _bonusType, uuid);
+		_events->EmitEvent("ServerSend_BonusSpawn",
+						   BonusSpawnEvent{FPoint{.x = rect.x, .y = rect.y}, _bonusType, uuid});
 	}
 }
 
@@ -83,14 +85,14 @@ void Bonus::TickUpdate(double /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BonusDestroyed", author, fraction);
+	_events->EmitEvent("Statistics_BonusDestroyed", StatisticsAttributionEvent{author, fraction});
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	if (GetIsAlive())
 	{
-		_events->EmitEvent("Statistics_BonusPickup", author, fraction);
+		_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{author, fraction});
 		_events->EmitEvent(_name + "_Pickup", author, fraction);
 		TakeDamage(GetHealth(), _name, _fraction);
 	}

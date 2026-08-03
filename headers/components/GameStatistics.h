@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/events/ObstacleAndBonusEvents.h"
 #include <memory>
 #include <string>
 
@@ -73,10 +74,10 @@ class GameStatistics final
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
 	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
-	void OnBrickWallDied(const std::string& author, const std::string& fraction);
-	void OnSteelWallDied(const std::string& author, const std::string& fraction);
-	void OnBonusPickup(const std::string& author, const std::string& fraction);
-	void OnBonusDestroyed(const std::string& author, const std::string& fraction);
+	void OnBrickWallDied(const StatisticsAttributionEvent& event);
+	void OnSteelWallDied(const StatisticsAttributionEvent& event);
+	void OnBonusPickup(const StatisticsAttributionEvent& event);
+	void OnBonusDestroyed(const StatisticsAttributionEvent& event);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);

@@ -1,6 +1,7 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/CommandType.h"
 #include "enums/TankType.h"
@@ -320,7 +321,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, state, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_FortressChange", state, uuid);
+			_events->EmitEvent("ClientReceived_FortressChange", FortressChangeEvent{state, uuid});
 		});
 	}
 }

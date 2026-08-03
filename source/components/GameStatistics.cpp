@@ -49,30 +49,30 @@ void GameStatistics::SubscribeHost()
 
 	_events->AddListener(
 			"Statistics_BrickWallDied", _name,
-			[this](const std::string& author, const std::string& fraction)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				OnBrickWallDied(author, fraction);
+				OnBrickWallDied(event);
 			});
 
 	_events->AddListener(
 			"Statistics_SteelWallDied", _name,
-			[this](const std::string& author, const std::string& fraction)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				OnSteelWallDied(author, fraction);
+				OnSteelWallDied(event);
 			});
 
 	_events->AddListener(
 			"Statistics_BonusPickup", _name,
-			[this](const std::string& author, const std::string& fraction)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				OnBonusPickup(author, fraction);
+				OnBonusPickup(event);
 			});
 
 	_events->AddListener(
 			"Statistics_BonusDestroyed", _name,
-			[this](const std::string& author, const std::string& fraction)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				OnBonusDestroyed(author, fraction);
+				OnBonusDestroyed(event);
 			});
 }
 
@@ -150,19 +150,19 @@ void GameStatistics::OnClientStatisticsChange(const std::string& type, const std
 	}
 	else if (type == "BrickWallDied")
 	{
-		OnBrickWallDied(author, fraction);
+		OnBrickWallDied(StatisticsAttributionEvent{author, fraction});
 	}
 	else if (type == "SteelWallDied")
 	{
-		OnSteelWallDied(author, fraction);
+		OnSteelWallDied(StatisticsAttributionEvent{author, fraction});
 	}
 	else if (type == "BonusPickup")
 	{
-		OnBonusPickup(author, fraction);
+		OnBonusPickup(StatisticsAttributionEvent{author, fraction});
 	}
 	else if (type == "BonusDestroyed")
 	{
-		OnBonusDestroyed(author, fraction);
+		OnBonusDestroyed(StatisticsAttributionEvent{author, fraction});
 	}
 }
 
@@ -350,19 +350,19 @@ void GameStatistics::OnTankDied(const std::string& who, const std::string& autho
 	}
 }
 
-void GameStatistics::OnBrickWallDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnBrickWallDied(const StatisticsAttributionEvent& event)
 {
-	if (fraction.starts_with("Enemy"))
+	if (event.fraction.starts_with("Enemy"))
 	{
 		++_data.brickWallDiedByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (event.fraction.starts_with("Player"))
 	{
-		if (author.ends_with("1"))
+		if (event.author.ends_with("1"))
 		{
 			++_data.brickWallDiedByPlayerOne;
 		}
-		else if (author.ends_with("2"))
+		else if (event.author.ends_with("2"))
 		{
 			++_data.brickWallDiedByPlayerTwo;
 		}
@@ -370,23 +370,23 @@ void GameStatistics::OnBrickWallDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BrickWallDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "BrickWallDied", event.author, event.fraction);
 	}
 }
 
-void GameStatistics::OnSteelWallDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnSteelWallDied(const StatisticsAttributionEvent& event)
 {
-	if (fraction.starts_with("Enemy"))
+	if (event.fraction.starts_with("Enemy"))
 	{
 		++_data.steelWallDiedByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (event.fraction.starts_with("Player"))
 	{
-		if (author.ends_with("1"))
+		if (event.author.ends_with("1"))
 		{
 			++_data.steelWallDiedByPlayerOne;
 		}
-		else if (author.ends_with("2"))
+		else if (event.author.ends_with("2"))
 		{
 			++_data.steelWallDiedByPlayerTwo;
 		}
@@ -394,23 +394,23 @@ void GameStatistics::OnSteelWallDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "SteelWallDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "SteelWallDied", event.author, event.fraction);
 	}
 }
 
-void GameStatistics::OnBonusPickup(const std::string& author, const std::string& fraction)
+void GameStatistics::OnBonusPickup(const StatisticsAttributionEvent& event)
 {
-	if (fraction.starts_with("Enemy"))
+	if (event.fraction.starts_with("Enemy"))
 	{
 		++_data.bonusPickupByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (event.fraction.starts_with("Player"))
 	{
-		if (author.ends_with("1"))
+		if (event.author.ends_with("1"))
 		{
 			++_data.bonusPickupByPlayerOne;
 		}
-		else if (author.ends_with("2"))
+		else if (event.author.ends_with("2"))
 		{
 			++_data.bonusPickupByPlayerTwo;
 		}
@@ -418,23 +418,23 @@ void GameStatistics::OnBonusPickup(const std::string& author, const std::string&
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BonusPickup", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "BonusPickup", event.author, event.fraction);
 	}
 }
 
-void GameStatistics::OnBonusDestroyed(const std::string& author, const std::string& fraction)
+void GameStatistics::OnBonusDestroyed(const StatisticsAttributionEvent& event)
 {
-	if (fraction.starts_with("Enemy"))
+	if (event.fraction.starts_with("Enemy"))
 	{
 		++_data.bonusDestroyedByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (event.fraction.starts_with("Player"))
 	{
-		if (author.ends_with("1"))
+		if (event.author.ends_with("1"))
 		{
 			++_data.bonusDestroyedByPlayerOne;
 		}
-		else if (author.ends_with("2"))
+		else if (event.author.ends_with("2"))
 		{
 			++_data.bonusDestroyedByPlayerTwo;
 		}
@@ -442,7 +442,7 @@ void GameStatistics::OnBonusDestroyed(const std::string& author, const std::stri
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BonusDestroyed", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", "BonusDestroyed", event.author, event.fraction);
 	}
 }
 
