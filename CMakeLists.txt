@@ -11,8 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 
+# --- Dependency versions ---
 include(FetchContent)
-set(vendored_default FALSE)
 set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
 set(SDL2_TAG "release-2.32.10")
 set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
@@ -23,161 +23,135 @@ set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(SDL2_MXR_TAG "release-2.8.2")
 set(BOOST_URL "https://github.com/boostorg/boost.git")
 set(BOOST_VERSION "1.91.0")
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE)
 
-cmake_policy(SET CMP0148 NEW)
-include (FindPython)
-find_package(Python REQUIRED COMPONENTS Interpreter Development)
-
+# --- Global build/fetch settings ---
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required (e.g. SDL2 itself), unrelated to our own cmake_minimum_required above
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-set(SDL_SHARED OFF CACHE BOOL "Build shared SDL2 libraries")
-set(SDL_STATIC ON CACHE BOOL "Build static SDL2 libraries")
-set(SDL_TTF_SHARED OFF CACHE BOOL "Build shared SDL2_ttf library")
-set(SDL_TTF_STATIC ON CACHE BOOL "Build static SDL2_ttf library")
-option(SDL2_TTF_STATIC "Build static SDL2_ttf library" ON)
-set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
-set(SDL2TTF_HARFBUZZ OFF CACHE BOOL "Enable HarfBuzz shaping in SDL2_ttf" FORCE)
-
-set(SDL2MIXER_FLUIDSYNTH OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MODPLUG OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MIDI OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MP3 OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_FLAC OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_LIBXME OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MPG123 OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OGG OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OPUS OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OPUSFILE OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_TREMOR OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_VORBIS OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
-
+set(vendored_default FALSE)
 set(DEP_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/libraries)
 set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
 
-if(DEFINED VCPKG_TARGET_TRIPLET)
+if (DEFINED VCPKG_TARGET_TRIPLET)
     message(STATUS "Using VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
-endif()
+endif ()
 
-FetchContent_Declare(SDL2 GIT_REPOSITORY ${SDL2_URL} GIT_TAG ${SDL2_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
-FetchContent_Declare(SDL2_ttf GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
-FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MXR_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE #[[OVERRIDE_FIND_PACKAGE]])
+# --- SDL2 (+ ttf/image/mixer) ---
+set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
 
-FetchContent_MakeAvailable(SDL2)
-FetchContent_GetProperties(SDL2)
-set(FREETYPE_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/include")
-set(FREETYPE_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_ttf-src/external/freetype/libfreetype.a")
-FetchContent_MakeAvailable(SDL2_ttf)
-FetchContent_GetProperties(SDL2_ttf)
+set(SDL2MIXER_MIDI    OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MP3     OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_FLAC    OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_MOD     OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_OGG     OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_OPUS    OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_VORBIS  OFF CACHE BOOL "" FORCE)
+set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(SDL2_image)
-FetchContent_GetProperties(SDL2_image)
+FetchContent_Declare(SDL2       GIT_REPOSITORY ${SDL2_URL}     GIT_TAG ${SDL2_TAG}     GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_ttf   GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
+FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MXR_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
 
-set(libxmp_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/include")
-set(libxmp_LIBRARY "${CMAKE_SOURCE_DIR}/libraries/sdl2_mixer-src/external/libxmp/libxmp.a")
-FetchContent_MakeAvailable(SDL2_mixer)
-FetchContent_GetProperties(SDL2_mixer)
+FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image SDL2_mixer)
 
-#FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image #[[SDL2_mixer]])
-
+# --- Boost ---
 set(BOOST_INCLUDE_LIBRARIES serialization uuid asio property_tree)
 set(BUILD_TESTING OFF) # keep Boost's own ~172 internal test suites out of our build graph
 
 set(BOOST_SUBMODULES
-    "tools/cmake
-    tools/build
-    tools/boost_install
-    libs/align
-    libs/array
-    libs/asio
-    libs/assert
-    libs/bind
-    libs/config
-    libs/core
-    libs/date_time
-    libs/detail
-    libs/function
-    libs/headers
-    libs/integer
-    libs/io
-    libs/iterator
-    libs/move
-    libs/mpl
-    libs/numeric
-    libs/optional
-    libs/predef
-    libs/preprocessor
-    libs/serialization
-    libs/smart_ptr
-    libs/spirit
-    libs/static_assert
-    libs/system
-    libs/throw_exception
-    libs/type_traits
-    libs/utility
-    libs/winapi
-    libs/uuid
-    libs/property_tree
-    libs/any
-    libs/type_index
-    libs/container_hash
-    libs/multi_index
-    libs/tuple
-    libs/describe
-    libs/mp11
-    libs/unordered
-    libs/variant
-    libs/range
-    libs/algorithm
-    libs/compat
-    libs/concept_check
-    libs/context
-    libs/conversion
-    libs/endian
-    libs/exception
-    libs/function_types
-    libs/fusion
-    libs/lexical_cast
-    libs/pool
-    libs/regex
-    libs/variant2
-    libs/container
-    libs/phoenix
-    libs/tokenizer
-    libs/typeof
-    libs/functional
-    libs/intrusive
-    libs/proto
-    libs/thread
-    libs/atomic
-    libs/chrono
-    libs/ratio"
+        "tools/cmake
+        tools/build
+        tools/boost_install
+        libs/align
+        libs/array
+        libs/asio
+        libs/assert
+        libs/bind
+        libs/config
+        libs/core
+        libs/date_time
+        libs/detail
+        libs/function
+        libs/headers
+        libs/integer
+        libs/io
+        libs/iterator
+        libs/move
+        libs/mpl
+        libs/numeric
+        libs/optional
+        libs/predef
+        libs/preprocessor
+        libs/serialization
+        libs/smart_ptr
+        libs/spirit
+        libs/static_assert
+        libs/system
+        libs/throw_exception
+        libs/type_traits
+        libs/utility
+        libs/winapi
+        libs/uuid
+        libs/property_tree
+        libs/any
+        libs/type_index
+        libs/container_hash
+        libs/multi_index
+        libs/tuple
+        libs/describe
+        libs/mp11
+        libs/unordered
+        libs/variant
+        libs/range
+        libs/algorithm
+        libs/compat
+        libs/concept_check
+        libs/context
+        libs/conversion
+        libs/endian
+        libs/exception
+        libs/function_types
+        libs/fusion
+        libs/lexical_cast
+        libs/pool
+        libs/regex
+        libs/variant2
+        libs/container
+        libs/phoenix
+        libs/tokenizer
+        libs/typeof
+        libs/functional
+        libs/intrusive
+        libs/proto
+        libs/thread
+        libs/atomic
+        libs/chrono
+        libs/ratio"
 )
 
 FetchContent_Declare(Boost
         GIT_REPOSITORY ${BOOST_URL}
-        GIT_TAG "boost-${BOOST_VERSION}"
-        GIT_PROGRESS 1
-        GIT_SHALLOW TRUE
+        GIT_TAG        "boost-${BOOST_VERSION}"
+        GIT_PROGRESS   1
+        GIT_SHALLOW    TRUE
         GIT_SUBMODULES ${BOOST_SUBMODULES}
 )
 FetchContent_MakeAvailable(Boost)
 
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.11.0
-    GIT_PROGRESS 1
-    GIT_SHALLOW TRUE
+# --- googletest ---
+FetchContent_Declare(googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        release-1.11.0
+        GIT_PROGRESS   1
+        GIT_SHALLOW    TRUE
 )
 
-set(BUILD_GMOCK OFF CACHE BOOL "Build gmock" FORCE)
+set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
+# --- Source files ---
 include_directories(headers)
 
 set(SOURCE_FILES
@@ -365,17 +339,21 @@ set(UNIT_TESTS_FILES
         UnitTests/TestUtils.cpp
 )
 
+# --- Targets ---
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 add_executable(unit_tests ${SOURCE_FILES_FOR_UNIT_TESTS} ${UNIT_TESTS_FILES})
+
+if (WIN32)
+    set(PLATFORM_NETWORK_LIBS wsock32 ws2_32) #NOTE: Winsock, needed for boost::asio sockets on Windows; POSIX systems already have sockets in libc
+endif ()
 
 target_include_directories(unit_tests PRIVATE headers)
 target_link_libraries(unit_tests
         gtest
         gtest_main
         Boost::serialization Boost::uuid Boost::asio Boost::property_tree
-        wsock32  #NOTE: this for windows socket
-        ws2_32   #NOTE: this for windows socket
+        ${PLATFORM_NETWORK_LIBS}
 )
 
 include(GoogleTest)
@@ -383,112 +361,35 @@ gtest_discover_tests(unit_tests)
 
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(${PROJECT_NAME}
-        SDL2-static
-        SDL2main
-        SDL2_ttf
-        SDL2_image
-        SDL2_mixer
+        SDL2-static SDL2main SDL2_ttf SDL2_image SDL2_mixer
         Boost::serialization Boost::uuid Boost::asio Boost::property_tree
-        wsock32  #NOTE: this for windows socket
-        ws2_32   #NOTE: this for windows socket
+        ${PLATFORM_NETWORK_LIBS}
 )
 
-set(FONT_PATH                   Resources/Fonts)
-set(FONT_PATH_NAME              ${FONT_PATH}/PressStart2P-vaV7.ttf)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD            # Adds a post-build event to ${PROJECT_NAME}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different           # which executes "cmake - E copy_if_different..."
-        "../${FONT_PATH_NAME}"                                  # <--this is in-file
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${FONT_PATH_NAME}") # <--this is out-file path
+# --- Game assets (copied next to the exe post-build) ---
+set(GAME_ASSETS
+        Resources/Fonts/PressStart2P-vaV7.ttf
+        Resources/Images/Title.png
+        Resources/Images/SpriteSheet.png
+        Resources/Images/menuSelectorP1.png
+        Resources/Images/PS5_Buttons/Create.png
+        Resources/Images/PS5_Buttons/Cross.png
+        Resources/Images/PS5_Buttons/D-Pad.png
+        Resources/Images/PS5_Buttons/Home.png
+        Resources/Images/PS5_Buttons/Options.png
+        Resources/Images/PS5_Buttons/Triangle.png
+        Resources/Images/Xbox_Buttons/D-Pad.png
+        Resources/Images/Xbox_Buttons/Home.png
+        Resources/Images/Xbox_Buttons/Menu.png
+        Resources/Images/Xbox_Buttons/View.png
+        Resources/Images/Xbox_Buttons/A.png
+        Resources/Images/Xbox_Buttons/Y.png
+        Resources/Sounds/levelStarted.wav
+)
 
-set(IMG_PATH                   Resources/Images)
-set(LOGO_PATH_NAME             ${IMG_PATH}/Title.png)
-set(ATLAS_PATH_NAME            ${IMG_PATH}/SpriteSheet.png)
-set(JOY_ICON_PATH_NAME         ${IMG_PATH}/menuSelectorP1.png)
-
-set(PS5_BTN_CREATE_PATH_NAME   ${IMG_PATH}/PS5_Buttons/Create.png)
-set(PS5_BTN_CROSS_PATH_NAME    ${IMG_PATH}/PS5_Buttons/Cross.png)
-set(PS5_BTN_D-PAD_PATH_NAME    ${IMG_PATH}/PS5_Buttons/D-Pad.png)
-set(PS5_BTN_HOME_PATH_NAME     ${IMG_PATH}/PS5_Buttons/Home.png)
-set(PS5_BTN_OPTIONS_PATH_NAME  ${IMG_PATH}/PS5_Buttons/Options.png)
-set(PS5_BTN_TRIANGLE_PATH_NAME ${IMG_PATH}/PS5_Buttons/Triangle.png)
-
-set(XBOX_BTN_D-PAD_PATH_NAME   ${IMG_PATH}/XBox_Buttons/D-Pad.png)
-set(XBOX_BTN_HOME_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Home.png)
-set(XBOX_BTN_MENU_PATH_NAME    ${IMG_PATH}/XBox_Buttons/Menu.png)
-set(XBOX_BTN_VIEW_PATH_NAME    ${IMG_PATH}/XBox_Buttons/View.png)
-set(XBOX_BTN_A_PATH_NAME       ${IMG_PATH}/XBox_Buttons/A.png)
-set(XBOX_BTN_Y_PATH_NAME       ${IMG_PATH}/XBox_Buttons/Y.png)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${LOGO_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LOGO_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${ATLAS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${ATLAS_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${JOY_ICON_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${JOY_ICON_PATH_NAME}")
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_CREATE_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CREATE_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_CROSS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_CROSS_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_D-PAD_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_D-PAD_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_HOME_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_HOME_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_OPTIONS_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_OPTIONS_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${PS5_BTN_TRIANGLE_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PS5_BTN_TRIANGLE_PATH_NAME}")
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_D-PAD_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_D-PAD_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_HOME_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_HOME_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_MENU_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_MENU_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_MENU_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_VIEW_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_VIEW_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_A_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_A_PATH_NAME}")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${XBOX_BTN_Y_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${XBOX_BTN_Y_PATH_NAME}")
-
-set(LEVEL_STARTED_PATH                   Resources/Sounds)
-set(LEVEL_STARTED_PATH_NAME              ${LEVEL_STARTED_PATH}/levelStarted.wav)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "../${LEVEL_STARTED_PATH_NAME}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${LEVEL_STARTED_PATH_NAME}")
+foreach (asset ${GAME_ASSETS})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "../${asset}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${asset}")
+endforeach ()
