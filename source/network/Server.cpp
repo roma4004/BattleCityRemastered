@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
 #include "network/commands/AnimationCreate.h"
@@ -460,10 +461,10 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
-			[this](const std::string& eventName, const std::string& author, const std::string& fraction)
+			[this](const ServerSendStatisticsEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<StatisticsChange>(eventName, author, fraction));
+				_batch->AddCommand(std::make_shared<StatisticsChange>(event.eventName, event.author, event.fraction));
 			});
 
 	_events->AddListener(

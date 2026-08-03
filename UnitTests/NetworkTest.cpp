@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -271,13 +272,13 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 
 	events->AddListener(
 			"ClientReceived_Statistics", "StatisticsEventReplication",
-			[&promise](const std::string& type, const std::string& author, const std::string& fraction)
+			[&promise](const ClientReceivedStatisticsEvent& event)
 			{
-				promise.set_value({type, author, fraction});
+				promise.set_value({event.eventName, event.author, event.fraction});
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Statistics", "BulletHit", "author", "fraction");
+	events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", "author", "fraction"});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 

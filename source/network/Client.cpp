@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/CommandType.h"
 #include "enums/TankType.h"
@@ -280,7 +281,8 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, eventName, author, fraction]()
 		{
-			_events->EmitEvent("ClientReceived_Statistics", eventName, author, fraction);
+			_events->EmitEvent("ClientReceived_Statistics",
+							  ClientReceivedStatisticsEvent{eventName, author, fraction});
 		});
 	}
 }

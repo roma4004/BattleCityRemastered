@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include <memory>
 #include <string>
 
@@ -59,7 +60,7 @@ class GameStatistics final
 	void SubscribeHost();
 	void SubscribeAsClient();
 	void OnGameModeChangedTo(GameMode newGameMode);
-	void OnClientStatisticsChange(const std::string& type, const std::string& author, const std::string& fraction);
+	void OnClientStatisticsChange(const ClientReceivedStatisticsEvent& event);
 
 	void Unsubscribe() const;
 	void UnsubscribeAsHost() const;

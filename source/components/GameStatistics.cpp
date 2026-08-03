@@ -80,9 +80,9 @@ void GameStatistics::SubscribeAsClient()
 {
 	_events->AddListener(
 			"ClientReceived_Statistics", _name,
-			[this](const std::string& type, const std::string& author, const std::string& fraction)
+			[this](const ClientReceivedStatisticsEvent& event)
 			{
-				this->OnClientStatisticsChange(type, author, fraction);
+				this->OnClientStatisticsChange(event);
 			});
 }
 
@@ -117,9 +117,12 @@ void GameStatistics::OnGameModeChangedTo(const GameMode newGameMode)
 	}
 }
 
-void GameStatistics::OnClientStatisticsChange(const std::string& type, const std::string& author,
-											  const std::string& fraction)
+void GameStatistics::OnClientStatisticsChange(const ClientReceivedStatisticsEvent& event)
 {
+	const std::string& type = event.eventName;
+	const std::string& author = event.author;
+	const std::string& fraction = event.fraction;
+
 	if (type == "BulletHit")
 	{
 		OnBulletHit(author, fraction);
@@ -186,7 +189,7 @@ void GameStatistics::OnBulletHit(const std::string& author, const std::string& f
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BulletHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", author, fraction});
 	}
 }
 
@@ -210,7 +213,7 @@ void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fr
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "EnemyHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"EnemyHit", author, fraction});
 	}
 }
 
@@ -230,7 +233,7 @@ void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "PlayerOneHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerOneHit", author, fraction});
 	}
 }
 
@@ -250,7 +253,7 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "PlayerTwoHit", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerTwoHit", author, fraction});
 	}
 }
 
@@ -290,7 +293,7 @@ void GameStatistics::OnEnemyDied(const std::string& author, const std::string& f
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "EnemyDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"EnemyDied", author, fraction});
 	}
 }
 
@@ -310,7 +313,7 @@ void GameStatistics::OnPlayerOneDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "PlayerOneDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerOneDied", author, fraction});
 	}
 }
 
@@ -330,7 +333,7 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "PlayerTwoDied", author, fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerTwoDied", author, fraction});
 	}
 }
 
@@ -370,7 +373,7 @@ void GameStatistics::OnBrickWallDied(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BrickWallDied", event.author, event.fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BrickWallDied", event.author, event.fraction});
 	}
 }
 
@@ -394,7 +397,7 @@ void GameStatistics::OnSteelWallDied(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "SteelWallDied", event.author, event.fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"SteelWallDied", event.author, event.fraction});
 	}
 }
 
@@ -418,7 +421,7 @@ void GameStatistics::OnBonusPickup(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BonusPickup", event.author, event.fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BonusPickup", event.author, event.fraction});
 	}
 }
 
@@ -442,7 +445,7 @@ void GameStatistics::OnBonusDestroyed(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", "BonusDestroyed", event.author, event.fraction);
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BonusDestroyed", event.author, event.fraction});
 	}
 }
 
