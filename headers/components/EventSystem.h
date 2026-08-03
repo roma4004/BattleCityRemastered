@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -88,7 +89,8 @@ struct callable_signature<R (Class::*)(Args...) const>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
 								  CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
+				eventName, listenerName, std::forward<CallableT>(callback));
 	}
 };
 
@@ -100,7 +102,8 @@ struct callable_signature<R (Class::*)(Args...)>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
 								  CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
+				eventName, listenerName, std::forward<CallableT>(callback));
 	}
 };
 
@@ -112,7 +115,8 @@ struct callable_signature<R (*)(Args...)>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
 								  CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
+				eventName, listenerName, std::forward<CallableT>(callback));
 	}
 };
 
@@ -124,7 +128,8 @@ struct callable_signature<std::function<R(Args...)>>
 	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
 								  CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<Args...>(eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
+				eventName, listenerName, std::forward<CallableT>(callback));
 	}
 };
 
@@ -266,19 +271,27 @@ public:
 	// 	AddListenerImpl<Args...>(eventName, listenerName, std::move(callback));
 	// }
 
-	// EmitEvent with auto-deducing types, find by name and argument count
+	// EmitEvent with auto-deducing types, find by name and verify the exact stored Event<Args...> type.
 	template<typename... Args>
 	void EmitEvent(const std::string& eventName, Args&&... args)
 	{
-		constexpr size_t argCount = sizeof...(Args);
-		if (auto* event = GetEventByNameAndArgCount(eventName, argCount))
+		if (auto* typedEvent = GetTypedEvent<detail::type_adapter_t<Args>...>(eventName))
 		{
-			// if (auto* typedEvent = static_cast<Event<std::decay_t<Args>...>*>(event))
-			if (auto* typedEvent = static_cast<Event<detail::type_adapter_t<Args>...>*>(event))
-			{
-				typedEvent->Emit(std::forward<Args>(args)...);
-			}
+			typedEvent->Emit(std::forward<Args>(args)...);
+			return;
 		}
+
+#ifndef NDEBUG
+		// A registered event with this name and argument COUNT exists, but the typeid check above failed,
+		// meaning the argument TYPES don't match any listener registered for this event name.
+		if (GetEventByNameAndArgCount(eventName, sizeof...(Args)) != nullptr)
+		{
+			std::cerr << "EventSystem: EmitEvent(\"" << eventName << "\") argument types do not match "
+					<< "the listener(s) registered for this event name (name + argument count matched, "
+					<< "types did not).\n";
+			assert(false && "EventSystem: EmitEvent argument type mismatch, see stderr");
+		}
+#endif
 	}
 
 	// spec with no arguments

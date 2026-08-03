@@ -2,6 +2,7 @@
 #include "components/AnimatedObjects.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
+#include "Point.h"
 #include "utils/RandUtils.h"
 #include <algorithm>
 
@@ -43,10 +44,10 @@ void AnimationManager::Subscribe()
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
 	_events->AddListener(
 			"AnimationTankUpdate", _name,
-			[this](const std::string_view& name, const ObjRectangle& rect, const Direction& dir)
+			[this](const std::string_view& name, const FPoint& pos, const Direction& dir)
 			{
-				this->UpdateTank(name, rect, dir);
-				this->UpdateHelmetEffect(name, rect);
+				this->UpdateTank(name, pos, dir);
+				this->UpdateHelmetEffect(name, pos);
 			});
 	_events->AddListener(
 			"BonusHelmet_AnimationChange", _name,
@@ -246,15 +247,15 @@ void AnimationManager::UpdateWaterFrame(AnimatedObject& object, const int animat
 	}
 }
 
-void AnimationManager::UpdateTank(const std::string_view& name, const ObjRectangle& rect, const Direction& dir)
+void AnimationManager::UpdateTank(const std::string_view& name, const FPoint& pos, const Direction& dir)
 {
 	for (auto& object: _tankObjects)
 	{
 		if (object.name.ends_with(name))
 		{
 			//Update tank animation position and dir
-			object.rect.x = rect.x;
-			object.rect.y = rect.y;
+			object.rect.x = pos.x;
+			object.rect.y = pos.y;
 			object.dir = dir;
 
 			UpdateFrame(object, 2);
@@ -262,7 +263,7 @@ void AnimationManager::UpdateTank(const std::string_view& name, const ObjRectang
 	}
 }
 
-void AnimationManager::UpdateHelmetEffect(const std::string_view& name, const ObjRectangle& rect)
+void AnimationManager::UpdateHelmetEffect(const std::string_view& name, const FPoint& pos)
 {
 	for (auto& object: _animatedObjects)
 	{
@@ -271,8 +272,8 @@ void AnimationManager::UpdateHelmetEffect(const std::string_view& name, const Ob
 			&& object.name.starts_with(name))
 		{
 			//Update helmet animation position
-			object.rect.x = rect.x;
-			object.rect.y = rect.y;
+			object.rect.x = pos.x;
+			object.rect.y = pos.y;
 		}
 	}
 }
