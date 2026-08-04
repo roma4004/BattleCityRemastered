@@ -1,5 +1,6 @@
 #include "entities/Bonuses/BonusShovel.h"
 #include "components/EventSystem.h"
+#include "components/events/BonusPickupEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
@@ -15,6 +16,6 @@ BonusShovel::~BonusShovel() = default;
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{author, fraction});
-	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
+	_events->EmitEvent(_name + "_Pickup", BonusTeamEffectPickupEvent{fraction, _effectDuration});
 	TakeDamage(GetHealth(), _name, _fraction);
 }

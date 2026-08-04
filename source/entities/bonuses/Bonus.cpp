@@ -93,7 +93,7 @@ void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 	if (GetIsAlive())
 	{
 		_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{author, fraction});
-		_events->EmitEvent(_name + "_Pickup", author, fraction);
+		_events->EmitEvent(_name + "_Pickup", StatisticsAttributionEvent{author, fraction});
 		TakeDamage(GetHealth(), _name, _fraction);
 	}
 }

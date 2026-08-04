@@ -4,6 +4,7 @@
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/BulletCalibre.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
@@ -159,23 +160,23 @@ void Tank::SubscribeBonus()
 
 	_events->AddListener(
 			"BonusGrenade_Pickup", _nameWithUuid,
-			[this](const std::string& /*author*/, const std::string& fraction)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				this->OnBonusGrenade(fraction);
+				this->OnBonusGrenade(event.fraction);
 			});
 
 	_events->AddListener(
 			"BonusStar_Pickup", _nameWithUuid,
-			[this](const std::string& author, const std::string& /*fraction*/)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				this->OnBonusStar(author);
+				this->OnBonusStar(event.author);
 			});
 
 	_events->AddListener(
 			"BonusCaliber_Pickup", _nameWithUuid,
-			[this](const std::string& author, const std::string& /*fraction*/)
+			[this](const StatisticsAttributionEvent& event)
 			{
-				this->OnBonusCaliber(author);
+				this->OnBonusCaliber(event.author);
 			});
 }
 

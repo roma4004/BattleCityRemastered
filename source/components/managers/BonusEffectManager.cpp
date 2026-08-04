@@ -1,5 +1,6 @@
 #include "components/managers/BonusEffectManager.h"
 #include "components/EventSystem.h"
+#include "components/events/BonusPickupEvents.h"
 #include "entities/pawns/Tank.h"
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
@@ -30,21 +31,21 @@ void BonusEffectManager::Subscribe()
 
 	_events->AddListener(
 			"BonusTimer_Pickup", _name,
-			[this](const std::string& fraction, const milliseconds effectDuration)
+			[this](const BonusTeamEffectPickupEvent& event)
 			{
-				this->OnTimerBonus(fraction, effectDuration);
+				this->OnTimerBonus(event.fraction, event.effectDuration);
 			});
 	_events->AddListener(
 			"BonusHelmet_Pickup", _name,
-			[this](const std::string& author, const milliseconds effectDuration)
+			[this](const BonusHelmetPickupEvent& event)
 			{
-				this->OnHelmetBonusPickup(author, effectDuration);
+				this->OnHelmetBonusPickup(event.author, event.effectDuration);
 			});
 	_events->AddListener(
 			"BonusShovel_Pickup", _name,
-			[this](const std::string& fraction, const milliseconds effectDuration)
+			[this](const BonusTeamEffectPickupEvent& event)
 			{
-				this->OnBonusShovelPickup(fraction, effectDuration);
+				this->OnBonusShovelPickup(event.fraction, event.effectDuration);
 			});
 
 	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank) { this->OnSpawnEnabled(tank); });

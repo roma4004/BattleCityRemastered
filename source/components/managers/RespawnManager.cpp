@@ -1,6 +1,7 @@
 #include "components/managers/RespawnManager.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/GameMode.h"
 #include "enums/RespawnCount.h"
@@ -47,9 +48,9 @@ void RespawnManager::Subscribe()
 
 	_events->AddListener("TankDied", _name, [this](const buuid& uuid) { OnTankDied(uuid); });
 
-	_events->AddListener("BonusTank_Pickup", _name, [this](const std::string& author, const std::string& /*fraction*/)
+	_events->AddListener("BonusTank_Pickup", _name, [this](const StatisticsAttributionEvent& event)
 	{
-		this->OnBonusTank(author);
+		this->OnBonusTank(event.author);
 	});
 
 	_events->AddListener("PlayersBaseFinished", _name, [this]() { this->TriggerLastPlayersLife(); });
