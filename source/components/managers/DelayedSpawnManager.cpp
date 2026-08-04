@@ -22,8 +22,7 @@ void DelayedSpawnManager::Subscribe()
 
 	_events->AddListener("SpawnDelayStart", _name, [this](const SpawnDelayStartEvent& event)
 	{
-		auto tank = event.tank;// SpawnDelayStart takes tank by non-const ref
-		this->SpawnDelayStart(tank, event.delay);
+		this->SpawnDelayStart(event.tank, event.delay);
 	});
 
 	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
@@ -67,7 +66,7 @@ void DelayedSpawnManager::Disposer()
 	});
 }
 
-void DelayedSpawnManager::SpawnDelayStart(std::shared_ptr<Tank>& tank, const milliseconds delay)
+void DelayedSpawnManager::SpawnDelayStart(const std::shared_ptr<Tank>& tank, const milliseconds delay)
 {
 	if (!tank)
 	{
