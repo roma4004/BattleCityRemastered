@@ -38,7 +38,7 @@ public:
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
 	void OnSpawnEnabled(std::shared_ptr<Tank>& tank);
 	void OnGameModeChangedTo(GameMode newGameMode);
-	static size_t TankNameToId(const std::string_view& name);
+	static size_t TankNameToId(const std::string& name);
 
 	void TickUpdate(double deltaTime);
 

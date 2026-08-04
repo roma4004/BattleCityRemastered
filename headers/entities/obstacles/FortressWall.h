@@ -40,7 +40,7 @@ public:
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	[[nodiscard]] std::string_view GetName() const override;
+	[[nodiscard]] std::string GetName() const override;
 	[[nodiscard]] buuid GetUuid() const override;
 	void OnBonusShovel(const std::string& fraction, bool isActive);
 

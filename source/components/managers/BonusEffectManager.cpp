@@ -177,7 +177,7 @@ void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const 
 	}
 }
 
-size_t BonusEffectManager::TankNameToId(const std::string_view& name)
+size_t BonusEffectManager::TankNameToId(const std::string& name)
 {
 	if (name == "Enemy1")
 	{

@@ -294,12 +294,11 @@ void FortressWall::SetIsAlive(const bool isAlive)
 	}, _obstacle);
 }
 
-//TODO: add to event system trait for auto conversion from std::string_view to string or working direct with view
-std::string_view FortressWall::GetName() const
+std::string FortressWall::GetName() const
 {
-	return std::visit([this](auto&& obstacle) -> std::string_view
+	return std::visit([](auto&& obstacle) -> std::string
 	{
-		return obstacle ? obstacle->GetName() : "none";
+		return obstacle ? obstacle->GetName() : std::string{};
 	}, _obstacle);
 }
 

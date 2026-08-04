@@ -64,7 +64,7 @@ ObjRectangle BaseObj::GetRect() const { return _rect; }
 
 void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
-std::string_view BaseObj::GetName() const { return _name; }
+std::string BaseObj::GetName() const { return _name; }
 
 using buuid = boost::uuids::uuid;
 buuid BaseObj::GetUuid() const { return _uuid; }

@@ -46,7 +46,7 @@ void AnimationManager::Subscribe()
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
 	_events->AddListener(
 			"AnimationTankUpdate", _name,
-			[this](const std::string_view& name, const FPoint& pos, const Direction& dir)
+			[this](const std::string& name, const FPoint& pos, const Direction& dir)
 			{
 				this->UpdateTank(name, pos, dir);
 				this->UpdateHelmetEffect(name, pos);
@@ -251,7 +251,7 @@ void AnimationManager::UpdateWaterFrame(AnimatedObject& object, const int animat
 	}
 }
 
-void AnimationManager::UpdateTank(const std::string_view& name, const FPoint& pos, const Direction& dir)
+void AnimationManager::UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir)
 {
 	for (auto& object: _tankObjects)
 	{
@@ -267,7 +267,7 @@ void AnimationManager::UpdateTank(const std::string_view& name, const FPoint& po
 	}
 }
 
-void AnimationManager::UpdateHelmetEffect(const std::string_view& name, const FPoint& pos)
+void AnimationManager::UpdateHelmetEffect(const std::string& name, const FPoint& pos)
 {
 	for (auto& object: _animatedObjects)
 	{
