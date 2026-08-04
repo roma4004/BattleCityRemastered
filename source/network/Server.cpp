@@ -1,6 +1,7 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
@@ -485,10 +486,10 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_AnimationCreate", _name,
-			[this](const AnimationType type, const ObjRectangle rect, const std::string& name)
+			[this](const ServerSendAnimationCreateEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<AnimationCreate>(type, rect, name));
+				_batch->AddCommand(std::make_shared<AnimationCreate>(event.type, event.rect, event.name));
 			});
 
 	_events->AddListener(

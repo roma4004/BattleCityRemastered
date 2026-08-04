@@ -1,6 +1,7 @@
 ﻿#include "components/managers/AnimationManager.h"
 #include "components/AnimatedObjects.h"
 #include "components/SpawnEvents.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
 #include "Point.h"
@@ -152,7 +153,9 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	//TODO: extract to higher layer
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_AnimationCreate", AnimationType::Water_Animation, rect, "Water");
+		_events->EmitEvent(
+				"ServerSend_AnimationCreate",
+				ServerSendAnimationCreateEvent{AnimationType::Water_Animation, rect, "Water"});
 	}
 }
 
@@ -182,7 +185,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_AnimationCreate", type, rect, name);
+		_events->EmitEvent("ServerSend_AnimationCreate", ServerSendAnimationCreateEvent{type, rect, name});
 	}
 }
 
@@ -367,7 +370,9 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 	const int currenAnimationFrame = {object.type == AnimationType::Water_Animation
 										  ? -object.animationFrame//TODO: -animationFrame -> +animationFrame 
 										  : object.animationFrame};//TODO: move this logic to UpdateFrameInfinite
-	_events->EmitEvent("DrawAnimation", object.rect, object.dir, currenAnimationFrame, object.scale, object.name);
+	_events->EmitEvent(
+			"DrawAnimation",
+			DrawAnimationEvent{object.rect, object.dir, currenAnimationFrame, object.scale, object.name});
 }
 
 void AnimationManager::Draw() const

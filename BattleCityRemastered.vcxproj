@@ -240,6 +240,7 @@
     <ClInclude Include="headers\Circle.h" />
     <ClInclude Include="headers\components\AnimatedObjects.h" />
     <ClInclude Include="headers\components\SpawnEvents.h" />
+    <ClInclude Include="headers\components\events\AnimationRenderEvents.h" />
     <ClInclude Include="headers\components\events\BonusPickupEvents.h" />
     <ClInclude Include="headers\components\events\ObstacleAndBonusEvents.h" />
     <ClInclude Include="headers\components\events\StatisticsEvents.h" />

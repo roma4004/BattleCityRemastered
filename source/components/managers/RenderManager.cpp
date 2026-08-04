@@ -3,6 +3,7 @@
 #include "application/GameConfig.h"
 #include "application/SDL_Config.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "enums/Direction.h"
 #include "enums/TextureOffset.h"
 #include <SDL_render.h>
@@ -61,9 +62,9 @@ void RenderManager::ClearFpsTextureCache()
 void RenderManager::Subscribe()
 {
 	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->ClearFrame(); });
-	_events->AddListener("RenderText", _name, [this](const Point pos, const unsigned int color, const std::string& text)
+	_events->AddListener("RenderText", _name, [this](const RenderTextEvent& event)
 	{
-		TextToRender(pos, IntToColor(color), text);
+		TextToRender(event.pos, IntToColor(event.color), event.text);
 	});
 
 	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawMenuBackground(pos); });
@@ -83,9 +84,9 @@ void RenderManager::Subscribe()
 
 	_events->AddListener(
 			"RenderTexture", _name,
-			[this](const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir)
+			[this](const RenderTextureEvent& event)
 			{
-				this->DrawTexture(textureRect, destRect, dir);
+				this->DrawTexture(event.textureRect, event.destRect, event.dir);
 			});
 
 	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });

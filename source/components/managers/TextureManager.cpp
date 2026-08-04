@@ -1,5 +1,6 @@
 ﻿#include "components/managers/TextureManager.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/managers/AnimationManager.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
@@ -27,10 +28,9 @@ void TextureManager::Subscribe() const
 			});
 	_events->AddListener(
 			"DrawAnimation", _name,
-			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-				   const std::string& name)
+			[this](const DrawAnimationEvent& event)
 			{
-				this->DrawAnimation(rect, dir, step, scale, name);
+				this->DrawAnimation(event.rect, event.dir, event.frame, event.scale, event.name);
 			});
 }
 
@@ -226,7 +226,7 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
-	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
+	_events->EmitEvent("RenderTexture", RenderTextureEvent{textureRect, destRect, dir});
 }
 
 void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
@@ -245,5 +245,5 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
-	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
+	_events->EmitEvent("RenderTexture", RenderTextureEvent{textureRect, destRect, dir});
 }

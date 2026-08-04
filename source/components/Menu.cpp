@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "enums/GameMode.h"
 
 Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
@@ -71,7 +72,7 @@ void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text)
 void Menu::DrawTextLine(Point& posText, std::string text) const
 {
 	constexpr unsigned int color = {0xffffffffu};
-	_events->EmitEvent("RenderText", posText, color, text);
+	_events->EmitEvent("RenderText", RenderTextEvent{posText, color, text});
 	posText.y += 30;
 }
 
