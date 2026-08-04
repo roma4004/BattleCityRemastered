@@ -578,6 +578,55 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	events->RemoveListener("ClientReceived_" + nameOrigin + "BonusHelmet_Pickup", "BonusStatusEventReplication");
 }
 
+TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
+{
+	auto events = std::make_shared<EventSystem>();
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+
+	constexpr std::chrono::milliseconds connectTimeout{5000};
+	const auto connectStart = std::chrono::steady_clock::now();
+	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	ASSERT_TRUE(client->IsConnected());
+
+	const auto nameOrigin{std::string("Player1")};
+
+	std::promise<void> promise;
+	auto future = promise.get_future();
+
+	events->AddListener(
+			"ClientReceived_" + nameOrigin + "BonusCaliber_Pickup", "BonusCaliberStatusEventReplication",
+			[&promise]() { promise.set_value(); });
+
+	// events->EmitEvent("Server_StartFrame");
+	events->EmitEvent("ServerSend_BonusCaliber_Pickup", nameOrigin);
+	events->EmitEvent("Server_EndFrame");
+
+	constexpr std::chrono::milliseconds totalTimeout{5000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent("PreTickUpdate", 1.0);
+
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
+
+	events->RemoveListener("ClientReceived_" + nameOrigin + "BonusCaliber_Pickup", "BonusCaliberStatusEventReplication");
+}
+
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
 	using buuid = boost::uuids::uuid;

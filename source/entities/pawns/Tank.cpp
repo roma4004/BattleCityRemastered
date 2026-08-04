@@ -335,7 +335,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_BonusCaliber", author);
+			_events->EmitEvent("ServerSend_BonusCaliber_Pickup", author);
 		}
 	}
 }
