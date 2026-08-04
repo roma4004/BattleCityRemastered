@@ -167,7 +167,19 @@ void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, keyState, isEnable]()//TODO: validate each command, security risk
 		{
-			_events->EmitEvent("ServerReceive_" + keyState, isEnable);
+			// keyState is either a tagged input action ("P1_Move_Up") from UserInput's
+			// keyboard/gamepad side-tag family, re-dispatched here keyed by tag, or an untagged
+			// name (e.g. "Pause_Released") that stays a plain broadcast event.
+			if (keyState.starts_with("P1_") || keyState.starts_with("P2_"))
+			{
+				const std::string tag = keyState.substr(0, 2);
+				const std::string action = keyState.substr(3);
+				_events->EmitEvent("ServerReceive_" + action, Key(tag), isEnable);
+			}
+			else
+			{
+				_events->EmitEvent("ServerReceive_" + keyState, isEnable);
+			}
 		});
 	}
 }

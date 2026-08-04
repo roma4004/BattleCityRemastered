@@ -103,7 +103,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	// spawn FortressWall
 	const ObjRectangle fortressRect{.x = _tankSize * 3.f + 1.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};

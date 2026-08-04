@@ -11,17 +11,18 @@ InputProviderForPlayerOneNet::~InputProviderForPlayerOneNet()
 
 void InputProviderForPlayerOneNet::Subscribe()
 {
-	_events->AddListener("ServerReceive_P1_Move_Up", _name,
+	const std::string tag{"P1"};
+	_events->AddListener("ServerReceive_Move_Up", tag, _name,
 						 [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("ServerReceive_P1_Move_Left", _name,
+	_events->AddListener("ServerReceive_Move_Left", tag, _name,
 						 [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
-	_events->AddListener("ServerReceive_P1_Move_Down", _name,
+	_events->AddListener("ServerReceive_Move_Down", tag, _name,
 						 [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("ServerReceive_P1_Move_Right", _name, [&btn = _playerKeys](const bool isPressed)
+	_events->AddListener("ServerReceive_Move_Right", tag, _name, [&btn = _playerKeys](const bool isPressed)
 	{
 		btn.right = isPressed;
 	});
-	_events->AddListener("ServerReceive_P1_Fire", _name,
+	_events->AddListener("ServerReceive_Fire", tag, _name,
 						 [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
 
 	_events->AddListener("ServerReceive_Pause_Released", _name, [this](const bool /*isPaused*/)
@@ -30,16 +31,7 @@ void InputProviderForPlayerOneNet::Subscribe()
 	});
 }
 
-void InputProviderForPlayerOneNet::Unsubscribe() const
-{
-	_events->RemoveListener("ServerReceive_P1_Move_Up", _name);
-	_events->RemoveListener("ServerReceive_P1_Move_Left", _name);
-	_events->RemoveListener("ServerReceive_P1_Move_Down", _name);
-	_events->RemoveListener("ServerReceive_P1_Move_Right", _name);
-	_events->RemoveListener("ServerReceive_P1_Fire", _name);
-
-	_events->RemoveListener("ServerReceive_Pause_Released", _name);
-}
+void InputProviderForPlayerOneNet::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void InputProviderForPlayerOneNet::Enable()
 {

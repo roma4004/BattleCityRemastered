@@ -77,7 +77,7 @@ TEST_F(BonusTest, BonusPickUp)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
@@ -107,7 +107,7 @@ TEST_F(BonusTest, BonusNotPickUp)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 
 	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
@@ -134,7 +134,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
@@ -166,7 +166,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
@@ -196,7 +196,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 	const int playerHealth = player->GetHealth();
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
@@ -227,7 +227,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 	const int playerHealth = player->GetHealth();
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
@@ -258,7 +258,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -288,7 +288,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -326,7 +326,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
@@ -358,7 +358,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
@@ -382,7 +382,7 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
@@ -404,7 +404,7 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
@@ -427,7 +427,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
@@ -454,7 +454,7 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 

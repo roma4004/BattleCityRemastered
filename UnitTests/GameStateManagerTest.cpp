@@ -392,7 +392,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 
 	bool isGameLose{false};
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
 
 	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
 	{
@@ -496,7 +496,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	}
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
+	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
 	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(respawnPlayerOneActual, 1u);

@@ -137,23 +137,26 @@ void Client::Shutdown()
 void Client::Subscribe()
 {
 	//TODO: write batch sending on client and sending queue
-	_events->AddListener("P2_Move_Up", _name, [this](const bool isPressed)
+	// NOTE: local dispatch is keyed (Move_Up/"P2") but the wire format sent via SendKeyState is
+	// unchanged ("P2_Move_Up" etc.) - Session::OnKeyStateChange on the host still parses that
+	// literal tag+action string out of the KeyStateChange command payload.
+	_events->AddListener("Move_Up", std::string{"P2"}, _name, [this](const bool isPressed)
 	{
 		this->SendKeyState("P2_Move_Up", isPressed);
 	});
-	_events->AddListener("P2_Move_Left", _name, [this](const bool isPressed)
+	_events->AddListener("Move_Left", std::string{"P2"}, _name, [this](const bool isPressed)
 	{
 		this->SendKeyState("P2_Move_Left", isPressed);
 	});
-	_events->AddListener("P2_Move_Down", _name, [this](const bool isPressed)
+	_events->AddListener("Move_Down", std::string{"P2"}, _name, [this](const bool isPressed)
 	{
 		this->SendKeyState("P2_Move_Down", isPressed);
 	});
-	_events->AddListener("P2_Move_Right", _name, [this](const bool isPressed)
+	_events->AddListener("Move_Right", std::string{"P2"}, _name, [this](const bool isPressed)
 	{
 		this->SendKeyState("P2_Move_Right", isPressed);
 	});
-	_events->AddListener("P2_Fire", _name, [this](const bool isPressed) { this->SendKeyState("P2_Fire", isPressed); });
+	_events->AddListener("Fire", std::string{"P2"}, _name, [this](const bool isPressed) { this->SendKeyState("P2_Fire", isPressed); });
 
 	_events->AddListener("ClientSend_ReadyToPlay", _name, [this]()
 	{

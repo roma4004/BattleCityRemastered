@@ -11,21 +11,15 @@ InputProviderForPlayerOne::~InputProviderForPlayerOne()
 
 void InputProviderForPlayerOne::Subscribe()
 {
-	_events->AddListener("P1_Move_Up", _name, [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("P1_Move_Left", _name, [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
-	_events->AddListener("P1_Move_Down", _name, [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("P1_Move_Right", _name, [&btn = _playerKeys](const bool isPressed) { btn.right = isPressed; });
-	_events->AddListener("P1_Fire", _name, [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
+	const std::string tag{"P1"};
+	_events->AddListener("Move_Up", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("Move_Left", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
+	_events->AddListener("Move_Down", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("Move_Right", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.right = isPressed; });
+	_events->AddListener("Fire", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
 }
 
-void InputProviderForPlayerOne::Unsubscribe() const
-{
-	_events->RemoveListener("P1_Move_Up", _name);
-	_events->RemoveListener("P1_Move_Left", _name);
-	_events->RemoveListener("P1_Move_Down", _name);
-	_events->RemoveListener("P1_Move_Right", _name);
-	_events->RemoveListener("P1_Fire", _name);
-}
+void InputProviderForPlayerOne::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void InputProviderForPlayerOne::Enable()
 {

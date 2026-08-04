@@ -163,34 +163,34 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 	switch (event.key.keysym.sym)
 	{
 		case SDLK_w:
-			_events->EmitEvent(keyboardLeftSideTag + "_Move_Up", isPressed);
+			_events->EmitEvent("Move_Up", Key(keyboardLeftSideTag), isPressed);
 			break;
 		case SDLK_UP:
-			_events->EmitEvent(keyboardRightSideTag + "_Move_Up", isPressed);
+			_events->EmitEvent("Move_Up", Key(keyboardRightSideTag), isPressed);
 			break;
 		case SDLK_a:
-			_events->EmitEvent(keyboardLeftSideTag + "_Move_Left", isPressed);
+			_events->EmitEvent("Move_Left", Key(keyboardLeftSideTag), isPressed);
 			break;
 		case SDLK_LEFT:
-			_events->EmitEvent(keyboardRightSideTag + "_Move_Left", isPressed);
+			_events->EmitEvent("Move_Left", Key(keyboardRightSideTag), isPressed);
 			break;
 		case SDLK_s:
-			_events->EmitEvent(keyboardLeftSideTag + "_Move_Down", isPressed);
+			_events->EmitEvent("Move_Down", Key(keyboardLeftSideTag), isPressed);
 			break;
 		case SDLK_DOWN:
-			_events->EmitEvent(keyboardRightSideTag + "_Move_Down", isPressed);
+			_events->EmitEvent("Move_Down", Key(keyboardRightSideTag), isPressed);
 			break;
 		case SDLK_d:
-			_events->EmitEvent(keyboardLeftSideTag + "_Move_Right", isPressed);
+			_events->EmitEvent("Move_Right", Key(keyboardLeftSideTag), isPressed);
 			break;
 		case SDLK_RIGHT:
-			_events->EmitEvent(keyboardRightSideTag + "_Move_Right", isPressed);
+			_events->EmitEvent("Move_Right", Key(keyboardRightSideTag), isPressed);
 			break;
 		case SDLK_SPACE:
-			_events->EmitEvent(keyboardLeftSideTag + "_Fire", isPressed);
+			_events->EmitEvent("Fire", Key(keyboardLeftSideTag), isPressed);
 			break;
 		case SDLK_RCTRL:
-			_events->EmitEvent(keyboardRightSideTag + "_Fire", isPressed);
+			_events->EmitEvent("Fire", Key(keyboardRightSideTag), isPressed);
 			break;
 		case SDLK_m:
 			if (isPressed == false)
@@ -243,32 +243,32 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 		switch (event.cbutton.button)
 		{
 			case SDL_CONTROLLER_BUTTON_A:
-				_events->EmitEvent(controllerTag + "_Fire", isPressed);
+				_events->EmitEvent("Fire", Key(controllerTag), isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_B:
-				_events->EmitEvent(controllerTag + "_B", isPressed);
+				_events->EmitEvent(controllerTag + "_B", isPressed);//NOTE: no listener consumes this yet
 				break;
 			case SDL_CONTROLLER_BUTTON_X:
-				_events->EmitEvent(controllerTag + "_X", isPressed);
+				_events->EmitEvent(controllerTag + "_X", isPressed);//NOTE: no listener consumes this yet
 				break;
 			case SDL_CONTROLLER_BUTTON_Y:
-				_events->EmitEvent(controllerTag + "_Y", isPressed);
+				_events->EmitEvent(controllerTag + "_Y", isPressed);//NOTE: no listener consumes this yet
 				if (isPressed == false)
 				{
 					_events->EmitEvent("Tab_Released");
 				}
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
-				_events->EmitEvent(controllerTag + "_Move_Up", isPressed);
+				_events->EmitEvent("Move_Up", Key(controllerTag), isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-				_events->EmitEvent(controllerTag + "_Move_Down", isPressed);
+				_events->EmitEvent("Move_Down", Key(controllerTag), isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-				_events->EmitEvent(controllerTag + "_Move_Left", isPressed);
+				_events->EmitEvent("Move_Left", Key(controllerTag), isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-				_events->EmitEvent(controllerTag + "_Move_Right", isPressed);
+				_events->EmitEvent("Move_Right", Key(controllerTag), isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_START:
 				if (isPressed == false)

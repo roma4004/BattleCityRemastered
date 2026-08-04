@@ -52,28 +52,22 @@ void InputProviderForMenu::Subscribe()
 
 void InputProviderForMenu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
+// NOTE: registered under _menuNavName (not _name) so DisableMenuInput can drop exactly this
+// toggle-able subset via one RemoveAllListeners call, without disturbing the always-on
+// listeners Subscribe() registered under _name for the lifetime of this object.
 void InputProviderForMenu::EnableMenuInput()
 {
-	_events->AddListener("P1_Move_Up", _name, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("P1_Move_Down", _name, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("P2_Move_Up", _name, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("P2_Move_Down", _name, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Enter", _name, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-	_events->AddListener("P1_Fire", _name, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-	_events->AddListener("P2_Fire", _name, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-
+	const std::string menuNavName{_name + "_MenuNav"};
+	_events->AddListener("Move_Up", std::string{"P1"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("Move_Down", std::string{"P1"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("Move_Up", std::string{"P2"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("Move_Down", std::string{"P2"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("Enter", menuNavName, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("Fire", std::string{"P1"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("Fire", std::string{"P2"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
 }
 
-void InputProviderForMenu::DisableMenuInput() const
-{
-	_events->RemoveListener("P1_Move_Up", _name);
-	_events->RemoveListener("P1_Move_Down", _name);
-	_events->RemoveListener("P2_Move_Up", _name);
-	_events->RemoveListener("P2_Move_Down", _name);
-	_events->RemoveListener("Enter", _name);
-	_events->RemoveListener("P1_Fire", _name);
-	_events->RemoveListener("P2_Fire", _name);
-}
+void InputProviderForMenu::DisableMenuInput() const { _events->RemoveAllListeners(_name + "_MenuNav"); }
 
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
