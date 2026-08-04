@@ -42,17 +42,12 @@ struct ServerSendBonusHelmetPickupEvent
 	bool isActive;
 };
 
-// Payload for the keyed "ClientReceived_Pos" event - the moving object's own uuid is the
-// KeyedEvent dispatch key (see EventSystem.h's Key()/AddListener overloads), not a payload field.
 struct ClientReceivedPosEvent
 {
 	FPoint pos;
 	Direction dir;
 };
 
-// Payload for the keyed "ClientReceived_Shot" event, dispatched by shooting tank NAME (no
-// tank-uuid travels on the wire for this command) - bulletUuid identifies the new bullet to
-// create client-side, distinct from the key.
 struct ClientReceivedShotEvent
 {
 	Direction dir;

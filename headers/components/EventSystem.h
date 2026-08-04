@@ -246,7 +246,7 @@ public:
 		{
 			try
 			{
-				callback(std::forward<FwdArgs>(args)...);
+				callback(args...);
 			}
 			catch (const std::exception& e)
 			{
@@ -307,7 +307,7 @@ public:
 		{
 			try
 			{
-				callback(std::forward<FwdArgs>(args)...);
+				callback(args...);
 			}
 			catch (const std::exception& e)
 			{
