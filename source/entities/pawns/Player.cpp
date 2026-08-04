@@ -1,5 +1,6 @@
 #include "entities/pawns/Player.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -50,7 +51,7 @@ void Player::Move(const Direction direction, const double deltaTime,
 		isNewDir || isMove)
 	{
 		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), pos, _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
@@ -90,7 +91,7 @@ void Player::TickUpdate(const double deltaTime)
 	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
 		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), pos, _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{

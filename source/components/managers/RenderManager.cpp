@@ -91,9 +91,9 @@ void RenderManager::Subscribe()
 
 	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });
 
-	_events->AddListener("RenderHealthBar", _name, [this](const ObjRectangle rect, const int health)
+	_events->AddListener("RenderHealthBar", _name, [this](const RenderHealthBarEvent& event)
 	{
-		this->DrawHealthBar(rect, health);
+		this->DrawHealthBar(event.rect, event.health);
 	});
 	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
 	_events->AddListener("RenderEnemyIconBackground", _name, [this]() { this->DrawEnemyIconBackground(); });

@@ -66,15 +66,15 @@ class GameStatistics final
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 
-	void OnBulletHit(const std::string& author, const std::string& fraction);
+	void OnBulletHit(const StatisticsAttributionEvent& event);
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
 	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnTankHit(const std::string& who, const std::string& author, const std::string& fraction);
+	void OnTankHit(const TankStatisticsEvent& event);
 	void OnEnemyDied(const std::string& author, const std::string& fraction);
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
-	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
+	void OnTankDied(const TankStatisticsEvent& event);
 	void OnBrickWallDied(const StatisticsAttributionEvent& event);
 	void OnSteelWallDied(const StatisticsAttributionEvent& event);
 	void OnBonusPickup(const StatisticsAttributionEvent& event);

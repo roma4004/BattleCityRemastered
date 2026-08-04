@@ -2,6 +2,7 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
 #include "components/LineOfSight.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
@@ -340,7 +341,7 @@ void Bot::TickUpdate(const double deltaTime)
 	if (isMove || oldDir != _dir)
 	{
 		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), pos, _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
@@ -352,7 +353,7 @@ void Bot::TickUpdate(const double deltaTime)
 	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
 		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), pos, _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{

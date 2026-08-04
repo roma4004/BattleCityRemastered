@@ -15,3 +15,10 @@ struct ClientReceivedStatisticsEvent final
 	std::string author;
 	std::string fraction;
 };
+
+struct TankStatisticsEvent final
+{
+	std::string who;
+	std::string author;
+	std::string fraction;
+};

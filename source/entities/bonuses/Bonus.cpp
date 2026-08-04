@@ -1,6 +1,7 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
@@ -72,7 +73,7 @@ void Bonus::SubscribeAsClient()
 
 void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name); }
+void Bonus::Draw() const { _events->EmitEvent("DrawObj", DrawObjEvent{_rect, Direction::UP, _name}); }
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {

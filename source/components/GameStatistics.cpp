@@ -28,23 +28,23 @@ void GameStatistics::Subscribe()
 void GameStatistics::SubscribeHost()
 {
 	//TODO: replace <std::string> with <Enum::statisticsType>
-	_events->AddListener("Statistics_BulletHit", _name, [this](const std::string& author, const std::string& fraction)
+	_events->AddListener("Statistics_BulletHit", _name, [this](const StatisticsAttributionEvent& event)
 	{
-		this->OnBulletHit(author, fraction);
+		this->OnBulletHit(event);
 	});
 
 	_events->AddListener(
 			"Statistics_TankHit", _name,
-			[this](const std::string& whoHit, const std::string& author, const std::string& fraction)
+			[this](const TankStatisticsEvent& event)
 			{
-				this->OnTankHit(whoHit, author, fraction);
+				this->OnTankHit(event);
 			});
 
 	_events->AddListener(
 			"Statistics_TankDied", _name,
-			[this](const std::string& whoDied, const std::string& author, const std::string& fraction)
+			[this](const TankStatisticsEvent& event)
 			{
-				this->OnTankDied(whoDied, author, fraction);
+				this->OnTankDied(event);
 			});
 
 	_events->AddListener(
@@ -125,7 +125,7 @@ void GameStatistics::OnClientStatisticsChange(const ClientReceivedStatisticsEven
 
 	if (type == "BulletHit")
 	{
-		OnBulletHit(author, fraction);
+		OnBulletHit(StatisticsAttributionEvent{author, fraction});
 	}
 	else if (type == "EnemyHit")
 	{
@@ -169,19 +169,19 @@ void GameStatistics::OnClientStatisticsChange(const ClientReceivedStatisticsEven
 	}
 }
 
-void GameStatistics::OnBulletHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnBulletHit(const StatisticsAttributionEvent& event)
 {
-	if (fraction.starts_with("Enemy"))
+	if (event.fraction.starts_with("Enemy"))
 	{
 		++_data.bulletHitByEnemy;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (event.fraction.starts_with("Player"))
 	{
-		if (author.ends_with("1"))
+		if (event.author.ends_with("1"))
 		{
 			++_data.bulletHitByPlayerOne;
 		}
-		else if (author.ends_with("2"))
+		else if (event.author.ends_with("2"))
 		{
 			++_data.bulletHitByPlayerTwo;
 		}
@@ -189,7 +189,7 @@ void GameStatistics::OnBulletHit(const std::string& author, const std::string& f
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", event.author, event.fraction});
 	}
 }
 
@@ -257,19 +257,19 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 	}
 }
 
-void GameStatistics::OnTankHit(const std::string& who, const std::string& author, const std::string& fraction)
+void GameStatistics::OnTankHit(const TankStatisticsEvent& event)
 {
-	if (who.starts_with("Enemy"))
+	if (event.who.starts_with("Enemy"))
 	{
-		OnEnemyHit(author, fraction);
+		OnEnemyHit(event.author, event.fraction);
 	}
-	else if (who.ends_with("1"))
+	else if (event.who.ends_with("1"))
 	{
-		OnPlayerOneHit(author, fraction);
+		OnPlayerOneHit(event.author, event.fraction);
 	}
-	else if (who.ends_with("2"))
+	else if (event.who.ends_with("2"))
 	{
-		OnPlayerTwoHit(author, fraction);
+		OnPlayerTwoHit(event.author, event.fraction);
 	}
 }
 
@@ -337,19 +337,19 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 	}
 }
 
-void GameStatistics::OnTankDied(const std::string& who, const std::string& author, const std::string& fraction)
+void GameStatistics::OnTankDied(const TankStatisticsEvent& event)
 {
-	if (who.starts_with("Enemy"))
+	if (event.who.starts_with("Enemy"))
 	{
-		OnEnemyDied(author, fraction);
+		OnEnemyDied(event.author, event.fraction);
 	}
-	else if (who.ends_with("1"))
+	else if (event.who.ends_with("1"))
 	{
-		OnPlayerOneDied(author, fraction);
+		OnPlayerOneDied(event.author, event.fraction);
 	}
-	else if (who.ends_with("2"))
+	else if (event.who.ends_with("2"))
 	{
-		OnPlayerTwoDied(author, fraction);
+		OnPlayerTwoDied(event.author, event.fraction);
 	}
 }
 

@@ -46,16 +46,16 @@ void AnimationManager::Subscribe()
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
 	_events->AddListener(
 			"AnimationTankUpdate", _name,
-			[this](const std::string& name, const FPoint& pos, const Direction& dir)
+			[this](const AnimationTankUpdateEvent& event)
 			{
-				this->UpdateTank(name, pos, dir);
-				this->UpdateHelmetEffect(name, pos);
+				this->UpdateTank(event.name, event.pos, event.dir);
+				this->UpdateHelmetEffect(event.name, event.pos);
 			});
 	_events->AddListener(
 			"BonusHelmet_AnimationChange", _name,
-			[this](const std::string& name, const bool isEnable)
+			[this](const BonusHelmetAnimationChangeEvent& event)
 			{
-				this->OnHelmetEffect(name, isEnable);
+				this->OnHelmetEffect(event.name, event.isEnable);
 			});
 
 	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
@@ -67,16 +67,16 @@ void AnimationManager::SubscribeAsHost()
 {
 	_events->AddListener(
 			"AnimationCreateTankExplosion", _name,
-			[this](const ObjRectangle rect, const std::string& name)
+			[this](const AnimationCreateExplosionEvent& event)
 			{
-				this->CreateAnimation(AnimationType::Tank_Explosion, rect, name);
+				this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
 			});
 
 	_events->AddListener(
 			"AnimationCreateBulletExplosion", _name,
-			[this](const ObjRectangle rect, const std::string& name)
+			[this](const AnimationCreateExplosionEvent& event)
 			{
-				this->CreateAnimation(AnimationType::Bullet_Explosion, rect, name);
+				this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
 			});
 
 	//TODO: create client like subscription

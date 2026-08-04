@@ -4,7 +4,9 @@
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include "entities/BulletCalibre.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
@@ -83,7 +85,7 @@ Tank::~Tank()
 
 	_events->EmitEvent("TankDied", _uuid);
 
-	_events->EmitEvent("AnimationCreateTankExplosion", _rect, _name);
+	_events->EmitEvent("AnimationCreateTankExplosion", AnimationCreateExplosionEvent{_rect, _name});
 }
 
 void Tank::Subscribe()
@@ -97,7 +99,7 @@ void Tank::Subscribe()
 			return;
 		}
 
-		this->_events->EmitEvent("RenderHealthBar", this->GetRect(), this->GetHealth());
+		this->_events->EmitEvent("RenderHealthBar", RenderHealthBarEvent{this->GetRect(), this->GetHealth()});
 	});
 
 	_events->AddListener("ScaleFactorChangedTo", _name, [this](const float newScale)
@@ -271,7 +273,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	{
 		_effects.isHelmetActive = isActive;
 
-		_events->EmitEvent("BonusHelmet_AnimationChange", _name, isActive);
+		_events->EmitEvent("BonusHelmet_AnimationChange", BonusHelmetAnimationChangeEvent{_name, isActive});
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
@@ -350,12 +352,12 @@ void Tank::OnClientTankOnOff(const buuid uuid, const bool isEnable)
 
 void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_TankHit", _name, author, fraction);
+	_events->EmitEvent("Statistics_TankHit", TankStatisticsEvent{_name, author, fraction});
 
 	if (GetHealth() < 1)
 	{
 		//TODO: move to event from statistic when last tank died
-		_events->EmitEvent("Statistics_TankDied", _name, author, fraction);
+		_events->EmitEvent("Statistics_TankDied", TankStatisticsEvent{_name, author, fraction});
 	}
 }
 
@@ -378,7 +380,7 @@ void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buu
 	SetPos(newPos);
 
 	//NOTE: fix for tank truck animation tick
-	_events->EmitEvent("AnimationTankUpdate", GetName(), newPos, dir);
+	_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), newPos, dir});
 }
 
 bool Tank::IsTouchBush() const

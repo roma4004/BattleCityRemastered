@@ -22,9 +22,9 @@ void TextureManager::Subscribe() const
 	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
 	_events->AddListener(
 			"DrawObj", _name,
-			[this](const ObjRectangle rect, const Direction dir, const std::string& name)
+			[this](const DrawObjEvent& event)
 			{
-				this->Draw(rect, dir, name);
+				this->Draw(event.rect, event.dir, event.name);
 			});
 	_events->AddListener(
 			"DrawAnimation", _name,

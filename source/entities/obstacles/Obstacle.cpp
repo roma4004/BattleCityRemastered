@@ -1,5 +1,6 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
@@ -49,7 +50,7 @@ void Obstacle::SubscribeAsClient()
 
 void Obstacle::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Obstacle::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name); }
+void Obstacle::Draw() const { _events->EmitEvent("DrawObj", DrawObjEvent{_rect, Direction::UP, _name}); }
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
