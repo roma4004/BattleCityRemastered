@@ -540,14 +540,6 @@ public:
 		}
 	}
 
-	// Overload for an explicit argument type set std::function
-	// template<typename... Args>
-	// void AddListener(const std::string& eventName, const std::string& listenerName,
-	//                  std::function<void(Args...)> callback)
-	// {
-	// 	AddListenerImpl<Args...>(eventName, listenerName, std::move(callback));
-	// }
-
 	// EmitEvent with auto-deducing types, find by name and verify the exact stored Event<Args...> type.
 	template<typename... Args>
 	void EmitEvent(const std::string& eventName, Args&&... args)

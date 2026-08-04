@@ -117,7 +117,8 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	//TODO: rename ClientReceived_ to ClientIn
+	//TODO: rename ClientReceived_ to ClientIn                                                                                                                                                                                                          
+	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event  
 	//TODO: refactor to ClientReceived_ "Shot" to just "Shot" and move bot timers to handle outside bot tank,
 	_events->AddListener(
 			"ClientReceived_Shot", _name, _nameWithUuid, [this](const ClientReceivedShotEvent& event)
