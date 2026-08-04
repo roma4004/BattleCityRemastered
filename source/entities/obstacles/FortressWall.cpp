@@ -279,7 +279,7 @@ void FortressWall::SetRect(const ObjRectangle rect)
 
 bool FortressWall::GetIsAlive() const
 {
-	return true;//NOTE: always true to preventing disposing broken FortressWalls
+	return true;//NOTE: always true to preventing disposing of broken FortressWalls
 }
 
 void FortressWall::SetIsAlive(const bool isAlive)

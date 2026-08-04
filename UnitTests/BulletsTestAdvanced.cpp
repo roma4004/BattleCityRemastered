@@ -43,7 +43,7 @@ protected:
 
 	void TearDown() override
 	{
-		// Deinitialization or some cleanup operations
+		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 };
 
