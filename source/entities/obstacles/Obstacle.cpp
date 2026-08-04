@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -42,7 +43,7 @@ void Obstacle::Subscribe()
 
 void Obstacle::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
+	_events->AddListener("ClientReceived_Health", _uuid, _nameWithUuid, [this](const int health)
 	{
 		this->SetHealth(health);
 	});
@@ -68,6 +69,6 @@ void Obstacle::TakeDamage(const unsigned int damage, const std::string& damageAu
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
+		_events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{_name, GetHealth(), _uuid});
 	}
 }

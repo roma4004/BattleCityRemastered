@@ -3,6 +3,7 @@
 #include "components/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
@@ -434,24 +435,24 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_Pos", _name,
-			[this](const std::string& who, const FPoint pos, const Direction dir, const buuid& uuid)
+			[this](const ServerSendPosEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<PositionChange>(who, pos, dir, uuid));
+				_batch->AddCommand(std::make_shared<PositionChange>(event.who, event.pos, event.dir, event.uuid));
 			});
 
 	_events->AddListener(
 			"ServerSend_Shot", _name,
-			[this](const std::string& who, const Direction dir, const buuid& uuid)
+			[this](const ServerSendShotEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<TankShot>(who, dir, uuid));
+				_batch->AddCommand(std::make_shared<TankShot>(event.who, event.dir, event.bulletUuid));
 			});
 
-	_events->AddListener("ServerSend_Health", _name, [this](const std::string& who, const int health, const buuid& uuid)
+	_events->AddListener("ServerSend_Health", _name, [this](const ServerSendHealthEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<HealthChange>(who, health, uuid));
+		_batch->AddCommand(std::make_shared<HealthChange>(event.who, event.health, event.uuid));
 	});
 
 	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/ const buuid& uuid)
@@ -494,10 +495,10 @@ void Server::Subscribe()
 
 	_events->AddListener(
 			"ServerSend_OnTankOnOff", _name,
-			[this](const buuid& uuid, const bool isEnable, std::string name)
+			[this](const ServerSendOnTankOnOffEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<TankOnOff>(uuid, isEnable, std::move(name)));
+				_batch->AddCommand(std::make_shared<TankOnOff>(event.uuid, event.isEnable, event.name));
 			});
 
 	SubscribeBonus();
@@ -525,10 +526,10 @@ void Server::SubscribeBonus()
 		_batch->AddCommand(std::make_shared<FortressChange>(event.state, event.uuid));
 	});
 
-	_events->AddListener("ServerSend_BonusHelmet_Pickup", _name, [this](const std::string& name, const bool isActive)
+	_events->AddListener("ServerSend_BonusHelmet_Pickup", _name, [this](const ServerSendBonusHelmetPickupEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Helmet, isActive));
+		_batch->AddCommand(std::make_shared<BonusStatus>(event.name, BonusType::Helmet, event.isActive));
 	});
 
 	_events->AddListener("ServerSend_BonusStar_Pickup", _name, [this](const std::string& name)

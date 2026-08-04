@@ -6,6 +6,7 @@
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/BulletCalibre.h"
 #include "entities/obstacles/BushTile.h"
@@ -44,18 +45,17 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	if (_gameMode == GameMode::PlayAsClient)
 	{
 		_events->AddListener(
-				"ClientReceived_" + _name + "OnTankOnOff", _nameWithUuid,
-				[this](const buuid uuid, const bool isEnable)
+				"ClientReceived_OnTankOnOff", _uuid, _nameWithUuid,
+				[this](const bool isEnable)
 				{
-					this->OnClientTankOnOff(uuid, isEnable);
+					this->OnClientTankOnOff(isEnable);
 				});
 
 		_events->AddListener(
-				"ClientReceived_" + _name + "Pos",
-				_nameWithUuid,
-				[this](const FPoint newPos, const Direction dir, const buuid& uuid)
+				"ClientReceived_Pos", _uuid, _nameWithUuid,
+				[this](const ClientReceivedPosEvent& event)
 				{
-					this->OnClientChangePos(newPos, dir, uuid);
+					this->OnClientChangePos(event.pos, event.dir);
 				});
 	}
 
@@ -117,28 +117,26 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	//TODO: remove + _name +  from eventName
 	//TODO: rename ClientReceived_ to ClientIn
-	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event
 	//TODO: refactor to ClientReceived_ "Shot" to just "Shot" and move bot timers to handle outside bot tank,
 	_events->AddListener(
-			"ClientReceived_" + _name + "Shot", _nameWithUuid, [this](const Direction dir, const buuid& uuid)
+			"ClientReceived_Shot", _name, _nameWithUuid, [this](const ClientReceivedShotEvent& event)
 			{
-				this->SetDirection(dir);
-				this->Shot(uuid);
+				this->SetDirection(event.dir);
+				this->Shot(event.bulletUuid);
 			});
 
-	_events->AddListener("ClientReceived_" + _name + "BonusHelmet_Pickup", _nameWithUuid, [this](const bool isActive)
+	_events->AddListener("ClientReceived_BonusHelmet_Pickup", _name, _nameWithUuid, [this](const bool isActive)
 	{
 		this->OnBonusHelmet(this->_name, isActive);
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "BonusStar_Pickup", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_BonusStar_Pickup", _name, _nameWithUuid, [this]()
 	{
 		this->OnBonusStar(this->_name);
 	});
 
-	_events->AddListener("ClientReceived_" + _name + "BonusCaliber_Pickup", _nameWithUuid, [this]()
+	_events->AddListener("ClientReceived_BonusCaliber_Pickup", _name, _nameWithUuid, [this]()
 	{
 		this->OnBonusCaliber(this->_name);
 	});
@@ -195,7 +193,7 @@ void Tank::Enable()
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		constexpr bool isEnable = true;
-		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+		_events->EmitEvent("ServerSend_OnTankOnOff", ServerSendOnTankOnOffEvent{_uuid, isEnable, _name});
 	}
 }
 
@@ -206,7 +204,7 @@ void Tank::Disable() const
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		constexpr bool isEnable = false;
-		_events->EmitEvent("ServerSend_OnTankOnOff", _uuid, isEnable, _name);
+		_events->EmitEvent("ServerSend_OnTankOnOff", ServerSendOnTankOnOffEvent{_uuid, isEnable, _name});
 	}
 }
 
@@ -226,7 +224,7 @@ void Tank::Shot(const buuid withUuid)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Shot", _name, GetDirection(), bulletUuid);
+		_events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{_name, GetDirection(), bulletUuid});
 	}
 
 	_shootTimer.Reset();
@@ -244,9 +242,9 @@ float Tank::GetBulletSpeed() const { return _calibre.speed; }
 
 void Tank::SetBulletSpeed(const float bulletSpeed) { _calibre.speed = bulletSpeed; }
 
-int Tank::GetBulletDamage() const { return _calibre.damage; }
+unsigned int Tank::GetBulletDamage() const { return _calibre.damage; }
 
-void Tank::SetBulletDamage(const int bulletDamage) { _calibre.damage = bulletDamage; }
+void Tank::SetBulletDamage(const unsigned int bulletDamage) { _calibre.damage = bulletDamage; }
 
 double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
 
@@ -277,7 +275,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_BonusHelmet_Pickup", _name, isActive);
+			_events->EmitEvent("ServerSend_BonusHelmet_Pickup", ServerSendBonusHelmetPickupEvent{_name, isActive});
 		}
 	}
 }
@@ -342,12 +340,9 @@ void Tank::OnBonusCaliber(const std::string& author)
 	}
 }
 
-void Tank::OnClientTankOnOff(const buuid uuid, const bool isEnable)
+void Tank::OnClientTankOnOff(const bool isEnable)
 {
-	if (uuid == _uuid)
-	{
-		isEnable ? Enable() : Disable();
-	}
+	isEnable ? Enable() : Disable();
 }
 
 void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
@@ -369,13 +364,8 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 	}
 }
 
-void Tank::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
+void Tank::OnClientChangePos(const FPoint newPos, const Direction dir)
 {
-	if (uuid != _uuid)//TODO: check maybe never true
-	{
-		return;
-	}
-
 	SetDirection(dir);
 	SetPos(newPos);
 

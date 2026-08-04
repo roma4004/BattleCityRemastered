@@ -29,7 +29,7 @@ class Tank : public Pawn
 	void OnBonusGrenade(const std::string& fraction);
 	void OnBonusStar(const std::string& author);
 	void OnBonusCaliber(const std::string& author);
-	void OnClientTankOnOff(buuid uuid, bool isEnable);
+	void OnClientTankOnOff(bool isEnable);
 
 protected:
 	BulletCalibre _calibre{};
@@ -44,7 +44,7 @@ protected:
 	void Shot(buuid withUuid = {});
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
-	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
+	void OnClientChangePos(FPoint newPos, Direction dir);
 	void ApplyScaleToCalibre(float newScale);
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
@@ -74,8 +74,8 @@ public:
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
 
-	[[nodiscard]] int GetBulletDamage() const;
-	void SetBulletDamage(int bulletDamage);
+	[[nodiscard]] unsigned int GetBulletDamage() const;
+	void SetBulletDamage(unsigned int bulletDamage);
 
 	[[nodiscard]] double GetBulletDamageRadius() const;
 	void SetBulletDamageRadius(double bulletDamageRadius);

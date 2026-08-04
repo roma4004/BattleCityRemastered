@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
@@ -49,19 +50,19 @@ TEST_F(NetworkTest, PosEventReplication)
 	constexpr FPoint posOrigin{.x = 42.f, .y = 42.f};
 	constexpr auto directionOrigin{Direction::UP};
 
-	std::promise<std::tuple<FPoint, Direction, buuid>> promise{};
+	std::promise<std::tuple<FPoint, Direction>> promise{};
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
 	events->AddListener(
-			"ClientReceived_" + name + "Pos", "PosEventReplication",
-			[&promise](const FPoint newPos, const Direction dir, const buuid& uuid)
+			"ClientReceived_Pos", _uuid, "PosEventReplication",
+			[&promise](const ClientReceivedPosEvent& event)
 			{
-				promise.set_value({newPos, dir, uuid});
+				promise.set_value({event.pos, event.dir});
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Pos", name, posOrigin, directionOrigin, _uuid);
+	events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{name, posOrigin, directionOrigin, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -81,13 +82,12 @@ TEST_F(NetworkTest, PosEventReplication)
 	}
 
 	ASSERT_EQ(status, std::future_status::ready);
-	const auto& [posReplicated, dirReplicated, uuidReplicated] = future.get();
+	const auto& [posReplicated, dirReplicated] = future.get();
 
 	EXPECT_EQ(posOrigin, posReplicated);
 	EXPECT_EQ(directionOrigin, dirReplicated);
-	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveListener("ClientReceived_" + name + "Pos", "PosEventReplication");
+	events->RemoveAllListeners("PosEventReplication");
 }
 
 TEST_F(NetworkTest, ShotEventReplication)
@@ -113,11 +113,14 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	events->AddListener("ClientReceived_" + name + "Shot", "ShotEventReplication",
-						[&promise](const Direction dir, const buuid& uuid) { promise.set_value({dir, uuid}); });
+	events->AddListener("ClientReceived_Shot", name, "ShotEventReplication",
+						[&promise](const ClientReceivedShotEvent& event)
+						{
+							promise.set_value({event.dir, event.bulletUuid});
+						});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Shot", name, direction, _uuid);
+	events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{name, direction, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -142,7 +145,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	EXPECT_EQ(direction, dirReplicated);
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveListener("ClientReceived_" + name + "Shot", "ShotEventReplication");
+	events->RemoveAllListeners("ShotEventReplication");
 }
 
 TEST_F(NetworkTest, HealthEventReplication)
@@ -166,14 +169,12 @@ TEST_F(NetworkTest, HealthEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	const auto uuidStr = boost::uuids::to_string(_uuid);
-	const auto nameWithUuid = name + uuidStr;
 
-	events->AddListener("ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication",
+	events->AddListener("ClientReceived_Health", _uuid, "HealthEventReplication",
 						[&promise](const int health) { promise.set_value(health); });
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Health", name, healthOrigin, _uuid);
+	events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{name, healthOrigin, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -196,7 +197,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	const auto healthReplicated = future.get();
 	EXPECT_EQ(healthOrigin, healthReplicated);
 
-	events->RemoveListener("ClientReceived_" + nameWithUuid + "Health", "HealthEventReplication");
+	events->RemoveAllListeners("HealthEventReplication");
 }
 
 TEST_F(NetworkTest, DisposeEventReplication)
@@ -219,10 +220,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	std::promise<buuid> promise{};
 	auto future = promise.get_future();
 
-	const auto name{std::string("Bullet")};
-
-	events->AddListener("ClientReceived_" + name + "Dispose", "DisposeEventReplication",
-						[&promise](const buuid& uuid) { promise.set_value(uuid); });
+	events->AddListener("ClientReceived_Dispose", _uuid, "DisposeEventReplication",
+						[&promise, uuid = _uuid]() { promise.set_value(uuid); });
 
 	// events->EmitEvent("Server_StartFrame");
 	events->EmitEvent("ServerSend_Dispose", _uuid);
@@ -248,7 +247,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveListener("ClientReceived_" + name + "Dispose", "DisposeEventReplication");
+	events->RemoveAllListeners("DisposeEventReplication");
 }
 
 //TODO: cover all statistics items like this
@@ -548,11 +547,11 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_" + nameOrigin + "BonusHelmet_Pickup", "BonusStatusEventReplication",
+			"ClientReceived_BonusHelmet_Pickup", nameOrigin, "BonusStatusEventReplication",
 			[&promise](const bool isEnable) { promise.set_value(isEnable); });
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_BonusHelmet_Pickup", nameOrigin, isActiveOrigin);
+	events->EmitEvent("ServerSend_BonusHelmet_Pickup", ServerSendBonusHelmetPickupEvent{nameOrigin, isActiveOrigin});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000}; 
@@ -575,7 +574,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	const auto isEnable = future.get();
 	EXPECT_EQ(isActiveOrigin, isEnable);
 
-	events->RemoveListener("ClientReceived_" + nameOrigin + "BonusHelmet_Pickup", "BonusStatusEventReplication");
+	events->RemoveAllListeners("BonusStatusEventReplication");
 }
 
 TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
@@ -599,7 +598,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_" + nameOrigin + "BonusCaliber_Pickup", "BonusCaliberStatusEventReplication",
+			"ClientReceived_BonusCaliber_Pickup", nameOrigin, "BonusCaliberStatusEventReplication",
 			[&promise]() { promise.set_value(); });
 
 	// events->EmitEvent("Server_StartFrame");
@@ -624,7 +623,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 
 	ASSERT_EQ(status, std::future_status::ready);
 
-	events->RemoveListener("ClientReceived_" + nameOrigin + "BonusCaliber_Pickup", "BonusCaliberStatusEventReplication");
+	events->RemoveAllListeners("BonusCaliberStatusEventReplication");
 }
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)

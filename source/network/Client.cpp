@@ -2,6 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/CommandType.h"
@@ -20,7 +21,6 @@
 #include "network/commands/StatisticsChange.h"
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
-#include "utils/UuidUtils.h"
 // #include <fstream>
 #include "enums/AnimationType.h"
 #include "network/commands/AnimationCreate.h"
@@ -215,14 +215,13 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
 	{
-		const auto who = cmd->GetWho();
 		const auto pos = cmd->GetPos();
 		const auto dir = cmd->GetDir();
 		const auto uuid = cmd->GetUuid();
 
-		_commandQueue.Enqueue([this, who, pos, dir, uuid]()
+		_commandQueue.Enqueue([this, pos, dir, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_" + who + "Pos", pos, dir, uuid);
+			_events->EmitEvent("ClientReceived_Pos", Key(uuid), ClientReceivedPosEvent{pos, dir});
 		});
 	}
 }
@@ -237,7 +236,7 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, who, dir, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_" + who + "Shot", dir, uuid);
+			_events->EmitEvent("ClientReceived_Shot", Key(who), ClientReceivedShotEvent{dir, uuid});
 		});
 	}
 }
@@ -246,13 +245,12 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
 	{
-		const auto who = cmd->GetWho();
 		const auto uuid = cmd->GetUuid();
 		const auto health = cmd->GetHealth();
 
-		_commandQueue.Enqueue([this, who, uuid, health]()
+		_commandQueue.Enqueue([this, uuid, health]()
 		{
-			_events->EmitEvent("ClientReceived_" + who + UuidUtils::GetStringUuid(uuid) + "Health", health);
+			_events->EmitEvent("ClientReceived_Health", Key(uuid), health);
 		});
 	}
 }
@@ -261,12 +259,11 @@ void Client::OnDispose(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
 	{
-		const auto who = cmd->GetWho();
 		const auto uuid = cmd->GetUuid();
 
-		_commandQueue.Enqueue([this, who, uuid]()
+		_commandQueue.Enqueue([this, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_" + who + "Dispose", uuid);
+			_events->EmitEvent("ClientReceived_Dispose", Key(uuid));
 		});
 	}
 }
@@ -406,13 +403,12 @@ void Client::OnTankOnOff(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
 	{
-		const auto name = cmd->GetName();
 		const auto uuid = cmd->GetUuid();
 		const auto isEnable = cmd->GetIsEnable();
 
-		_commandQueue.Enqueue([this, name, uuid, isEnable]()
+		_commandQueue.Enqueue([this, uuid, isEnable]()
 		{
-			_events->EmitEvent("ClientReceived_" + name + "OnTankOnOff", uuid, isEnable);
+			_events->EmitEvent("ClientReceived_OnTankOnOff", Key(uuid), isEnable);
 		});
 	}
 }
@@ -441,13 +437,13 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 			switch (bonusType)
 			{
 				case BonusType::Helmet:
-					_events->EmitEvent("ClientReceived_" + name + "BonusHelmet_Pickup", isEnable);
+					_events->EmitEvent("ClientReceived_BonusHelmet_Pickup", Key(name), isEnable);
 					break;
 				case BonusType::Star:
-					_events->EmitEvent("ClientReceived_" + name + "BonusStar_Pickup");
+					_events->EmitEvent("ClientReceived_BonusStar_Pickup", Key(name));
 					break;
 				case BonusType::Caliber:
-					_events->EmitEvent("ClientReceived_" + name + "BonusCaliber_Pickup");
+					_events->EmitEvent("ClientReceived_BonusCaliber_Pickup", Key(name));
 					break;
 				case BonusType::Tank:
 					_events->EmitEvent("ClientReceived_BonusTank_Pickup", name);

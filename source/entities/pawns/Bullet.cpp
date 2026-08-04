@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/WaterTile.h"
@@ -60,22 +61,16 @@ void Bullet::Subscribe()
 void Bullet::SubscribeAsClient()
 {
 	_events->AddListener(
-			"ClientReceived_" + _name + "Dispose", _nameWithUuid,
-			[this](const buuid& uuid)
+			"ClientReceived_Dispose", _uuid, _nameWithUuid,
+			[this]()
 			{
-				if (uuid != _uuid)
-				{
-					return;
-				}
-
 				this->SetIsAlive(false);
 			});
 	_events->AddListener(
-			"ClientReceived_" + _name + "Pos",
-			_nameWithUuid,
-			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
+			"ClientReceived_Pos", _uuid, _nameWithUuid,
+			[this](const ClientReceivedPosEvent& event)
 			{
-				OnClientChangePos(newPos, dir, uuid);
+				OnClientChangePos(event.pos, event.dir);
 			});
 }
 
@@ -155,12 +150,12 @@ void Bullet::TickUpdate(const double deltaTime)
 
 		if (isMove && _gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
+			_events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{_name, GetPos(), _dir, _uuid});
 		}
 	}
 }
 
-int Bullet::GetDamage() const { return _calibre.damage; }
+unsigned int Bullet::GetDamage() const { return _calibre.damage; }
 
 double Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
@@ -217,13 +212,8 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	_events->EmitEvent("AnimationCreateBulletExplosion", AnimationCreateExplosionEvent{_rect, _name});
 }
 
-void Bullet::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
+void Bullet::OnClientChangePos(const FPoint newPos, const Direction dir)
 {
-	if (uuid != _uuid)//TODO: check maybe never true
-	{
-		return;
-	}
-
 	SetDirection(dir);
 	SetPos(newPos);
 }

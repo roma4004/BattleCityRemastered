@@ -3,6 +3,7 @@
 #include "components/EventSystem.h"
 #include "components/LineOfSight.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
@@ -345,7 +346,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
+			_events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{_name, pos, _dir, _uuid});
 		}
 	}
 
@@ -357,7 +358,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
+			_events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{_name, pos, _dir, _uuid});
 		}
 	}
 

@@ -243,6 +243,7 @@
     <ClInclude Include="headers\components\events\AnimationRenderEvents.h" />
     <ClInclude Include="headers\components\events\BonusPickupEvents.h" />
     <ClInclude Include="headers\components\events\ObstacleAndBonusEvents.h" />
+    <ClInclude Include="headers\components\events\ReplicationEvents.h" />
     <ClInclude Include="headers\components\events\StatisticsEvents.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
     <ClInclude Include="headers\components\managers\BonusEffectManager.h" />

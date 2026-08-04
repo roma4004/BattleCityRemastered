@@ -40,7 +40,7 @@ public:
 
 	~Bullet() override;
 
-	[[nodiscard]] int GetDamage() const;
+	[[nodiscard]] unsigned int GetDamage() const;
 
 	[[nodiscard]] double GetDamageRadius() const;
 
@@ -57,5 +57,5 @@ public:
 	[[nodiscard]] unsigned int GetTier() const;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
-	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
+	void OnClientChangePos(FPoint newPos, Direction dir);
 };
