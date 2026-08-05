@@ -65,7 +65,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{name, posOrigin, directionOrigin, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -123,7 +123,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{name, direction, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -177,7 +177,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{name, healthOrigin, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -227,7 +227,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	events->EmitEvent("ServerSend_Dispose", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -280,7 +280,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", "author", "fraction"});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -309,6 +309,14 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 {
 	using buuid = boost::uuids::uuid;
 
+	buuid uuid1Died{boost::uuids::string_generator()("11234567-89ab-cdef-0123-456789abcdef")};
+	buuid uuid1ToBrick{boost::uuids::string_generator()("21234567-89ab-cdef-0123-456789abcdef")};
+	buuid uuid1ToSteel{boost::uuids::string_generator()("31234567-89ab-cdef-0123-456789abcdef")};
+
+	buuid uuid2Died{boost::uuids::string_generator()("41234567-89ab-cdef-0123-456789abcdef")};
+	buuid uuid2ToBrick{boost::uuids::string_generator()("51234567-89ab-cdef-0123-456789abcdef")};
+	buuid uuid2ToSteel{boost::uuids::string_generator()("61234567-89ab-cdef-0123-456789abcdef")};
+
 	auto events = std::make_shared<EventSystem>();
 	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
 	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
@@ -322,98 +330,194 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<std::pair<std::string, buuid>> promiseDied{};
-	auto futureDied = promiseDied.get_future();
+	std::promise<std::pair<std::string, buuid>> promiseDied1{};
+	auto futureDied1 = promiseDied1.get_future();
+	std::promise<std::pair<std::string, buuid>> promiseDied2{};
+	auto futureDied2 = promiseDied2.get_future();
 
-	std::promise<std::pair<std::string, buuid>> promiseToBrick{};
-	auto futureToBrick = promiseToBrick.get_future();
+	std::promise<std::pair<std::string, buuid>> promiseToBrick1{};
+	auto futureToBrick1 = promiseToBrick1.get_future();
+	std::promise<std::pair<std::string, buuid>> promiseToBrick2{};
+	auto futureToBrick2 = promiseToBrick2.get_future();
 
-	std::promise<std::pair<std::string, buuid>> promiseToSteel{};
-	auto futureToSteel = promiseToSteel.get_future();
+	std::promise<std::pair<std::string, buuid>> promiseToSteel1{};
+	auto futureToSteel1 = promiseToSteel1.get_future();
+	std::promise<std::pair<std::string, buuid>> promiseToSteel2{};
+	auto futureToSteel2 = promiseToSteel2.get_future();
 
 	events->AddListener(
-			"ClientReceived_FortressChange", "FortressChangeEventReplication",
-			[&promiseDied, &promiseToBrick, &promiseToSteel, this](const FortressChangeEvent& event)
+			"ClientReceived_FortressChange", "FortressChangeEventReplication1",
+			[&promiseDied1, &promiseToBrick1, &promiseToSteel1, &uuid1Died, &uuid1ToBrick, &uuid1ToSteel](
+			const FortressChangeEvent& event)
 			{
-				if (event.uuid == this->_uuid)
+				if (event.state == "Died" && event.uuid == uuid1Died)
 				{
-					if (event.state == "Died")
-					{
-						promiseDied.set_value({event.state, event.uuid});
-					}
-					else if (event.state == "ToBrick")
-					{
-						promiseToBrick.set_value({event.state, event.uuid});
-					}
-					else if (event.state == "ToSteel")
-					{
-						promiseToSteel.set_value({event.state, event.uuid});
-					}
+					promiseDied1.set_value({event.state, event.uuid});
+				}
+				else if (event.state == "ToBrick" && event.uuid == uuid1ToBrick)
+				{
+					promiseToBrick1.set_value({event.state, event.uuid});
+				}
+				else if (event.state == "ToSteel" && event.uuid == uuid1ToSteel)
+				{
+					promiseToSteel1.set_value({event.state, event.uuid});
+				}
+			});
+	events->AddListener(
+			"ClientReceived_FortressChange", "FortressChangeEventReplication2",
+			[&promiseDied2, &promiseToBrick2, &promiseToSteel2, &uuid2Died, &uuid2ToBrick, &uuid2ToSteel](
+			const FortressChangeEvent& event)
+			{
+				if (event.state == "Died" && event.uuid == uuid2Died)
+				{
+					promiseDied2.set_value({event.state, event.uuid});
+				}
+				else if (event.state == "ToBrick" && event.uuid == uuid2ToBrick)
+				{
+					promiseToBrick2.set_value({event.state, event.uuid});
+				}
+				else if (event.state == "ToSteel" && event.uuid == uuid2ToSteel)
+				{
+					promiseToSteel2.set_value({event.state, event.uuid});
 				}
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", _uuid});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", _uuid});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", _uuid});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", uuid1Died});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", uuid1ToBrick});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", uuid1ToSteel});
+
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", uuid2Died});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", uuid2ToBrick});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", uuid2ToSteel});
+
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
-	auto status = std::future_status::timeout;
-	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
 
-		if (status = futureDied.wait_for(checkInterval);
-			status == std::future_status::ready)
-		{
-			break;
+	{//test first fortressWall
+		{//died1 test
+			auto statusToDied1 = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (statusToDied1 = futureDied1.wait_for(checkInterval);
+					statusToDied1 == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(statusToDied1, std::future_status::ready);
+			const auto& [stateDied, uuidDied] = futureDied1.get();
+			EXPECT_EQ("Died", stateDied);
+			EXPECT_EQ(uuid1Died, uuidDied);
+		}
+		{//brick1 test
+			auto statusToBrick1 = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (statusToBrick1 = futureToBrick1.wait_for(checkInterval);
+					statusToBrick1 == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(statusToBrick1, std::future_status::ready);
+			const auto& [stateToBrick, uuidToBrick] = futureToBrick1.get();
+			EXPECT_EQ("ToBrick", stateToBrick);
+			EXPECT_EQ(uuid1ToBrick, uuidToBrick);
+		}
+		{//steel1 test
+			auto statusToSteel1 = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (statusToSteel1 = futureToSteel1.wait_for(checkInterval);
+					statusToSteel1 == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(statusToSteel1, std::future_status::ready);
+			const auto& [stateToSteel, uuidToSteel] = futureToSteel1.get();
+			EXPECT_EQ("ToSteel", stateToSteel);
+			EXPECT_EQ(uuid1ToSteel, uuidToSteel);
+		}
+	}
+	{//test second fortressWall
+		{//died2 test
+			auto statusToDied2 = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (statusToDied2 = futureDied2.wait_for(checkInterval);
+					statusToDied2 == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(statusToDied2, std::future_status::ready);
+			const auto& [stateDied, uuidDied] = futureDied2.get();
+			EXPECT_EQ("Died", stateDied);
+			EXPECT_EQ(uuid2Died, uuidDied);
+		}
+		{//brick2 test
+			auto statusToBrick2 = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (statusToBrick2 = futureToBrick2.wait_for(checkInterval);
+					statusToBrick2 == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(statusToBrick2, std::future_status::ready);
+			const auto& [stateToBrick, uuidToBrick] = futureToBrick2.get();
+			EXPECT_EQ("ToBrick", stateToBrick);
+			EXPECT_EQ(uuid2ToBrick, uuidToBrick);
+		}
+		{//steel2 test
+			auto statusToSteel2 = std::future_status::timeout;
+			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+			{
+				events->EmitEvent("NetCommandUpdate", 1.0);
+				events->EmitEvent("PreTickUpdate", 1.0);
+
+				if (statusToSteel2 = futureToSteel2.wait_for(checkInterval);
+					statusToSteel2 == std::future_status::ready)
+				{
+					break;
+				}
+			}
+
+			ASSERT_EQ(statusToSteel2, std::future_status::ready);
+			const auto& [stateToSteel, uuidToSteel] = futureToSteel2.get();
+			EXPECT_EQ("ToSteel", stateToSteel);
+			EXPECT_EQ(uuid2ToSteel, uuidToSteel);
 		}
 	}
 
-	ASSERT_EQ(status, std::future_status::ready);
-	const auto& [stateDied, uuidDied] = futureDied.get();
-	EXPECT_EQ("Died", stateDied);
-	EXPECT_EQ(_uuid, uuidDied);
-
-	auto statusToBrick = std::future_status::timeout;
-	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
-
-		if (statusToBrick = futureToBrick.wait_for(checkInterval);
-			statusToBrick == std::future_status::ready)
-		{
-			break;
-		}
-	}
-	ASSERT_EQ(statusToBrick, std::future_status::ready);
-	const auto& [stateToBrick, uuidToBrick] = futureToBrick.get();
-	EXPECT_EQ("ToBrick", stateToBrick);
-	EXPECT_EQ(_uuid, uuidToBrick);
-
-	auto statusToSteel = std::future_status::timeout;
-	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
-
-		if (statusToSteel = futureToSteel.wait_for(checkInterval);
-			statusToSteel == std::future_status::ready)
-		{
-			break;
-		}
-	}
-	ASSERT_EQ(statusToSteel, std::future_status::ready);
-	const auto& [stateToSteel, uuidToSteel] = futureToSteel.get();
-	EXPECT_EQ("ToSteel", stateToSteel);
-	EXPECT_EQ(_uuid, uuidToSteel);
-
-	events->RemoveListener("ClientReceived_FortressChange", "FortressChangeEventReplication");
+	events->RemoveListener("ClientReceived_FortressChange", "FortressChangeEventReplication1");
+	events->RemoveListener("ClientReceived_FortressChange", "FortressChangeEventReplication2");
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
@@ -449,7 +553,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	events->EmitEvent("ServerSend_BonusSpawn", BonusSpawnEvent{pos, type, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -502,7 +606,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -554,7 +658,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	events->EmitEvent("ServerSend_BonusHelmet_Pickup", ServerSendBonusHelmetPickupEvent{nameOrigin, isActiveOrigin});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -660,7 +764,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{rectOrigin, obstacleType, _uuid});
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	auto status = std::future_status::timeout;
@@ -821,7 +925,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	}
 	events->EmitEvent("Server_EndFrame");
 
-	constexpr std::chrono::milliseconds totalTimeout{5000}; 
+	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
 	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 	for (size_t i = 0u; i < tankTypes.size(); ++i)
