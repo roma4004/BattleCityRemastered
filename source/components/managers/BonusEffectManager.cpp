@@ -212,7 +212,7 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 	return static_cast<size_t>(-1);
 }
 
-void BonusEffectManager::OnSpawnEnabled(std::shared_ptr<Tank>& tank)
+void BonusEffectManager::OnSpawnEnabled(const std::shared_ptr<BaseObj>& tank)
 {
 	if (!tank)
 	{

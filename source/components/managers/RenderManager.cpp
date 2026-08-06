@@ -186,7 +186,7 @@ void RenderManager::DrawEnemyIconBackground() const
 	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
 }
 
-void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
+void RenderManager::DrawEnemyIcons(const unsigned short numberOfIcons) const
 {
 	constexpr TextureOffset offset{};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIcon.x),
@@ -194,7 +194,7 @@ void RenderManager::DrawEnemyIcons(const int numberOfIcons) const
 							   .w = static_cast<int>(offset.enemyIcon.w),
 							   .h = static_cast<int>(offset.enemyIcon.h)};
 
-	for (int i = 0; i < numberOfIcons; ++i)
+	for (unsigned short i = 0u; i < numberOfIcons; ++i)
 	{
 		constexpr int columns{2};
 		constexpr int iconBackgroundPadding{55};

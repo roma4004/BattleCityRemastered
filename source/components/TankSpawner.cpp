@@ -6,7 +6,6 @@
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
-#include "components/managers/RespawnManager.h"
 #include "components/SpawnEvents.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
@@ -27,11 +26,10 @@
 #include <memory>
 
 TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<EventSystem>& events, RespawnManager& respawnManager)
+						 const std::shared_ptr<EventSystem>& events)
 	: _allObjects{allObjects}
 	, _events{events}
 	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
-	, _respawnManager{respawnManager}
 	, _gameConfig{gameConfig}
 {
 	Subscribe();
@@ -69,7 +67,10 @@ void TankSpawner::Subscribe()
 				_events->EmitEvent("AnimationCreateTank", AnimationCreateTankEvent{rect, name});
 			});
 
-	_events->AddListener("RespawnTanks", _name, [this](const bool skipDelay) { this->RespawnTanks(skipDelay); });
+	_events->AddListener("RespawnTank", _name, [this](const TankType type, const buuid uuid, const bool skipDelay)
+	{
+		this->RespawnTank(type, uuid, skipDelay);
+	});
 
 	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
 	{
@@ -353,18 +354,6 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 	}
 }
 
-void TankSpawner::RespawnTanks(const bool skipDelay)
-{
-	for (size_t i = 0; i < _respawnManager._slots.size(); ++i)
-	{
-		if (const auto [uuid, isAvailable] = _respawnManager._slots[i];
-			isAvailable)
-		{
-			RespawnTank(static_cast<TankType>(i), uuid, skipDelay);
-		}
-	}
-}
-
 void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid, const ObjRectangle rect)
 {
 	constexpr bool skipDelay{false};
@@ -426,11 +415,15 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty))})
 	{
 		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{tank});
-		_events->EmitEvent("SpawnDelayStart", SpawnDelayStartEvent{tank, milliseconds(skipDelay ? 0 : 1000)});
+		_events->EmitEvent("SpawnDelayStart",
+						   SpawnDelayStartEvent{.tank = tank, .delay = milliseconds(skipDelay ? 0 : 1000)});
 
 		if (_gameMode != GameMode::PlayAsClient)
 		{
-			_events->EmitEvent("AnimationCreate", AnimationCreateEvent{AnimationType::Spawn_Animation, rect, name});
+			_events->EmitEvent("AnimationCreate",
+							   AnimationCreateEvent{.type = AnimationType::Spawn_Animation,
+													.rect = rect,
+													.name = name});
 		}
 	}
 }

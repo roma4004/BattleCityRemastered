@@ -20,7 +20,7 @@ void DelayedSpawnManager::Subscribe()
 {
 	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
 
-	_events->AddListener("SpawnDelayStart", _name, [this](const SpawnDelayStartEvent& event)
+	_events->AddListener("SpawnDelayStart", _name, [this](SpawnDelayStartEvent event)
 	{
 		this->SpawnDelayStart(event.tank, event.delay);
 	});
@@ -30,13 +30,7 @@ void DelayedSpawnManager::Subscribe()
 	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->Disposer(); });
 }
 
-void DelayedSpawnManager::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
-	_events->RemoveListener("SpawnDelayStart", _name);
-	_events->RemoveListener("PreTickUpdate", _name);
-	_events->RemoveListener("PostTickUpdate", _name);
-}
+void DelayedSpawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void DelayedSpawnManager::Reset()
 {
@@ -66,7 +60,7 @@ void DelayedSpawnManager::Disposer()
 	});
 }
 
-void DelayedSpawnManager::SpawnDelayStart(const std::shared_ptr<Tank>& tank, const milliseconds delay)
+void DelayedSpawnManager::SpawnDelayStart(std::shared_ptr<Tank>& tank, const milliseconds delay)
 {
 	if (!tank)
 	{

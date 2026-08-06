@@ -19,7 +19,6 @@ class ScoreBoard final
 	std::string _name{};
 	bool _isScoreBoardDisplayed{false};
 
-	//TODO: extract to separate sidebar class
 	unsigned short _enemyRespawnCount{20u};
 	unsigned short _playerOneRepawnCount{3u};
 	unsigned short _playerTwoRespawnCount{3u};

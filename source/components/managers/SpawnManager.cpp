@@ -15,6 +15,6 @@ SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events,
 	, _bonusSpawner{std::make_unique<BonusSpawner>(events, allObjects, gameConfig)}
 	, _obstacleSpawner{std::make_unique<ObstacleSpawner>(events, allObjects, gameConfig.windowSize)}
 	, _respawnManager{std::make_unique<RespawnManager>(events)}
-	, _tankSpawner{std::make_unique<TankSpawner>(gameConfig, allObjects, events, *_respawnManager)} {}
+	, _tankSpawner{std::make_unique<TankSpawner>(gameConfig, allObjects, events)} {}
 
 SpawnManager::~SpawnManager() = default;

@@ -50,7 +50,7 @@ class RenderManager
 	void DrawGameWonText() const;
 	void DrawRightSideBar() const;
 	void DrawEnemyIconBackground() const;
-	void DrawEnemyIcons(int numberOfIcons) const;
+	void DrawEnemyIcons(unsigned short numberOfIcons) const;
 	void DrawPlayerOneIcons(unsigned short respawnCount) const;
 	void DrawPlayerTwoIcons(unsigned short respawnCount) const;
 	void DrawStageNumber(unsigned short currentStageNumber) const;

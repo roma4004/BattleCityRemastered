@@ -1,6 +1,6 @@
 #pragma once
 
-#include "enums/RespawnCount.h"
+#include "enums/RespawnGroup.h"
 #include <boost/uuid/uuid.hpp>
 
 enum class TankType : char8_t;
@@ -22,6 +22,8 @@ class RespawnManager final
 	struct SpawnSlot
 	{
 		buuid uuid{};
+		TankType type{};
+		RespawnGroup group{};
 		bool isAvailable{};
 	};
 
@@ -47,14 +49,16 @@ class RespawnManager final
 	void ResetSpawn();
 	void OnGameModeChange();
 
-	static std::string RespawnCountEnumToString(RespawnCount type);
-	void ChangeRespawnCount(int delta, RespawnCount type);
+	[[nodiscard]] static std::string RespawnCountEnumToString(RespawnGroup type);
+	void ChangeRespawnCount(int delta, RespawnGroup type);
 	void TriggerLastPlayersLife();
 
 	void OnTankSpawn(const buuid& uuid);
-	void EnemyDied(bool isAvailable);
-	void PlayerDied(bool isAvailable);
+	[[nodiscard]] static bool IsEnemyGroup(RespawnGroup group);
+	void OnEnemyDied(bool isAvailable);
+	void OnPlayerDied(bool isAvailable);
 	void OnTankDied(const buuid& uuid);
+	void RespawnTanks(bool skipDelay);
 
 public:
 	std::vector<SpawnSlot> _slots{};

@@ -324,7 +324,7 @@
     <ClInclude Include="headers\enums\Direction.h" />
     <ClInclude Include="headers\enums\GameMode.h" />
     <ClInclude Include="headers\enums\ObstacleType.h" />
-    <ClInclude Include="headers\enums\RespawnCount.h" />
+    <ClInclude Include="headers\enums\RespawnGroup.h" />
     <ClInclude Include="headers\enums\TankType.h" />
     <ClInclude Include="headers\enums\TextureOffset.h" />
     <ClInclude Include="headers\interfaces\IConfig.h" />

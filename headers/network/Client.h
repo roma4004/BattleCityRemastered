@@ -66,8 +66,8 @@ private:
 	std::string _name{};
 	network::NetworkCommandQueue _commandQueue;
 	std::atomic<bool> _isConnected{false};
-	int _reconnectAttempts{0};
-	static constexpr int MaxReconnectAttempts{10};
-	static constexpr int ReconnectDelayMs{500};
+	unsigned char _reconnectAttempts{0u};
+	static constexpr unsigned char MaxReconnectAttempts{10u};
+	static constexpr unsigned short ReconnectDelayMs{500u};
 };
 }//namespace network::commands
