@@ -54,16 +54,15 @@ void TankSpawner::Subscribe()
 
 	_events->AddListener(
 			"SpawnEnabled", _name,
-			[this](std::shared_ptr<Tank> tank)
+			[this](const std::shared_ptr<BaseObj>& obj)
 			{
-				if (!tank)
+				if (!obj)
 				{
 					return;
 				}
 
-				tank->Enable();
-				const ObjRectangle rect{tank->GetRect()};
-				const std::string name{tank->GetName()};
+				const ObjRectangle rect{obj->GetRect()};
+				const std::string name{obj->GetName()};
 				_events->EmitEvent("AnimationCreateTank", AnimationCreateTankEvent{.rect = rect, .name = name});
 			});
 
@@ -414,11 +413,11 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 
-	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty))})
+	if (std::shared_ptr<BaseObj> tank{CreateTank(type, std::move(pawnProperty))})
 	{
-		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{tank});
+		_events->EmitEvent("AddToSpawnQueue", tank);
 		_events->EmitEvent("SpawnDelayStart",
-						   SpawnDelayStartEvent{.tank = tank, .delay = milliseconds(skipDelay ? 0 : 1000)});
+						   SpawnDelayStartEvent{.obj = tank, .delay = milliseconds(skipDelay ? 0 : 1000)});
 
 		if (_gameMode != GameMode::PlayAsClient)
 		{

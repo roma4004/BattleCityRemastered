@@ -76,6 +76,14 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 				}
 			});
 
+	_events->AddListener("SpawnEnabled", _nameWithUuid, [this](const std::shared_ptr<BaseObj>& obj)
+	{
+		if (obj->GetUuid() == _uuid)
+		{
+			Enable();
+		}
+	});
+
 	_events->EmitEvent("TankSpawn", _uuid);
 }
 

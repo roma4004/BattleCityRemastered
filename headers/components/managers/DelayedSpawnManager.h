@@ -2,7 +2,7 @@
 
 #include "utils/Timer.h"
 
-class Tank;
+class BaseObj;
 class EventSystem;
 
 class DelayedSpawnManager
@@ -11,7 +11,7 @@ class DelayedSpawnManager
 
 	struct SpawnDelay
 	{
-		std::shared_ptr<Tank> tank{nullptr};
+		std::shared_ptr<BaseObj> obj{nullptr};
 		Timer timer;
 	};
 
@@ -31,5 +31,5 @@ public:
 
 	void PreTickUpdate(double deltaTime);
 	void Disposer();
-	void SpawnDelayStart(std::shared_ptr<Tank>& tank, milliseconds delay);
+	void SpawnDelayStart(const std::shared_ptr<BaseObj>& obj, milliseconds delay);
 };

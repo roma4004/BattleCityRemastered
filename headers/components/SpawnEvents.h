@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-class Tank;
+class BaseObj;
 
 using buuid = boost::uuids::uuid;
 
@@ -64,7 +64,7 @@ struct ServerSendRespawnTankEvent
 
 struct SpawnDelayStartEvent
 {
-	std::shared_ptr<Tank> tank;
+	std::shared_ptr<BaseObj> obj;
 	std::chrono::milliseconds delay;
 };
 
