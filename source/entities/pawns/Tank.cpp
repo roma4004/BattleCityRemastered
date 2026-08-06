@@ -85,7 +85,7 @@ Tank::~Tank()
 
 	_events->EmitEvent("TankDied", _uuid);
 
-	_events->EmitEvent("AnimationCreateTankExplosion", AnimationCreateExplosionEvent{_rect, _name});
+	_events->EmitEvent("AnimationCreateTankExplosion", AnimationCreateExplosionEvent{.rect = _rect, .name = _name});
 }
 
 void Tank::Subscribe()
@@ -99,7 +99,8 @@ void Tank::Subscribe()
 			return;
 		}
 
-		this->_events->EmitEvent("RenderHealthBar", RenderHealthBarEvent{this->GetRect(), this->GetHealth()});
+		this->_events->EmitEvent("RenderHealthBar",
+								 RenderHealthBarEvent{.rect = this->GetRect(), .health = this->GetHealth()});
 	});
 
 	_events->AddListener("ScaleFactorChangedTo", _name, [this](const float newScale)
@@ -194,7 +195,8 @@ void Tank::Enable()
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		constexpr bool isEnable = true;
-		_events->EmitEvent("ServerSend_OnTankOnOff", ServerSendOnTankOnOffEvent{_uuid, isEnable, _name});
+		_events->EmitEvent("ServerSend_OnTankOnOff",
+						   ServerSendOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
 	}
 }
 
@@ -205,7 +207,8 @@ void Tank::Disable() const
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		constexpr bool isEnable = false;
-		_events->EmitEvent("ServerSend_OnTankOnOff", ServerSendOnTankOnOffEvent{_uuid, isEnable, _name});
+		_events->EmitEvent("ServerSend_OnTankOnOff",
+						   ServerSendOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
 	}
 }
 
@@ -225,7 +228,8 @@ void Tank::Shot(const buuid withUuid)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{_name, GetDirection(), bulletUuid});
+		_events->EmitEvent("ServerSend_Shot",
+						   ServerSendShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
 	}
 
 	_shootTimer.Reset();
@@ -272,11 +276,13 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	{
 		_effects.isHelmetActive = isActive;
 
-		_events->EmitEvent("BonusHelmet_AnimationChange", BonusHelmetAnimationChangeEvent{_name, isActive});
+		_events->EmitEvent("BonusHelmet_AnimationChange",
+						   BonusHelmetAnimationChangeEvent{.name = _name, .isEnable = isActive});
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_BonusHelmet_Pickup", ServerSendBonusHelmetPickupEvent{_name, isActive});
+			_events->EmitEvent("ServerSend_BonusHelmet_Pickup",
+							   ServerSendBonusHelmetPickupEvent{.name = _name, .isActive = isActive});
 		}
 	}
 }
@@ -348,12 +354,13 @@ void Tank::OnClientTankOnOff(const bool isEnable)
 
 void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_TankHit", TankStatisticsEvent{_name, author, fraction});
+	_events->EmitEvent("Statistics_TankHit", TankStatisticsEvent{.who = _name, .author = author, .fraction = fraction});
 
 	if (GetHealth() < 1)
 	{
 		//TODO: move to event from statistic when last tank died
-		_events->EmitEvent("Statistics_TankDied", TankStatisticsEvent{_name, author, fraction});
+		_events->EmitEvent("Statistics_TankDied",
+						   TankStatisticsEvent{.who = _name, .author = author, .fraction = fraction});
 	}
 }
 
@@ -371,7 +378,7 @@ void Tank::OnClientChangePos(const FPoint newPos, const Direction dir)
 	SetPos(newPos);
 
 	//NOTE: fix for tank truck animation tick
-	_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), newPos, dir});
+	_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = newPos, .dir = dir});
 }
 
 bool Tank::IsTouchBush() const

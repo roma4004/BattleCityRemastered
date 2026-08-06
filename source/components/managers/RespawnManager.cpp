@@ -156,15 +156,18 @@ void RespawnManager::ChangeRespawnCount(const int delta, RespawnGroup type)
 	}
 
 	const std::string who = RespawnCountEnumToString(type);
-	_events->EmitEvent("RespawnCountChangedTo", RespawnCountChangedToEvent{who, _respawnCount[id]});
+	_events->EmitEvent("RespawnCountChangedTo",
+					   RespawnCountChangedToEvent{.objectName = who, .respawnCount = _respawnCount[id]});
 }
 
 void RespawnManager::TriggerLastPlayersLife()
 {
 	_respawnCount[1] = 0u;
-	_events->EmitEvent("RespawnCountChangedTo", RespawnCountChangedToEvent{"Player1", _respawnCount[1]});
+	_events->EmitEvent("RespawnCountChangedTo",
+					   RespawnCountChangedToEvent{.objectName = "Player1", .respawnCount = _respawnCount[1]});
 	_respawnCount[2] = 0u;
-	_events->EmitEvent("RespawnCountChangedTo", RespawnCountChangedToEvent{"Player2", _respawnCount[2]});
+	_events->EmitEvent("RespawnCountChangedTo",
+					   RespawnCountChangedToEvent{.objectName = "Player2", .respawnCount = _respawnCount[2]});
 }
 
 void RespawnManager::OnBonusTank(const std::string& author)

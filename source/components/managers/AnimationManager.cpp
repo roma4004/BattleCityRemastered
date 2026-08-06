@@ -155,7 +155,7 @@ void AnimationManager::CreateAnimationWater(const ObjRectangle rect)
 	{
 		_events->EmitEvent(
 				"ServerSend_AnimationCreate",
-				ServerSendAnimationCreateEvent{AnimationType::Water_Animation, rect, "Water"});
+				ServerSendAnimationCreateEvent{.type = AnimationType::Water_Animation, .rect = rect, .name = "Water"});
 	}
 }
 
@@ -185,7 +185,8 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_AnimationCreate", ServerSendAnimationCreateEvent{type, rect, name});
+		_events->EmitEvent("ServerSend_AnimationCreate",
+						   ServerSendAnimationCreateEvent{.type = type, .rect = rect, .name = name});
 	}
 }
 
@@ -372,7 +373,11 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 										  : object.animationFrame};//TODO: move this logic to UpdateFrameInfinite
 	_events->EmitEvent(
 			"DrawAnimation",
-			DrawAnimationEvent{object.rect, object.dir, currenAnimationFrame, object.scale, object.name});
+			DrawAnimationEvent{.rect = object.rect,
+							   .dir = object.dir,
+							   .frame = currenAnimationFrame,
+							   .scale = object.scale,
+							   .name = object.name});
 }
 
 void AnimationManager::Draw() const

@@ -15,7 +15,8 @@ void InputProviderForPlayerOne::Subscribe()
 	_events->AddListener("Move_Up", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
 	_events->AddListener("Move_Left", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
 	_events->AddListener("Move_Down", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Move_Right", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.right = isPressed; });
+	_events->AddListener("Move_Right", tag, _name,
+						 [&btn = _playerKeys](const bool isPressed) { btn.right = isPressed; });
 	_events->AddListener("Fire", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
 }
 

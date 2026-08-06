@@ -64,7 +64,7 @@ void TankSpawner::Subscribe()
 				tank->Enable();
 				const ObjRectangle rect{tank->GetRect()};
 				const std::string name{tank->GetName()};
-				_events->EmitEvent("AnimationCreateTank", AnimationCreateTankEvent{rect, name});
+				_events->EmitEvent("AnimationCreateTank", AnimationCreateTankEvent{.rect = rect, .name = name});
 			});
 
 	_events->AddListener("RespawnTank", _name, [this](const TankType type, const buuid uuid, const bool skipDelay)
@@ -245,7 +245,8 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 										   skipDelay);
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_RespawnTank", ServerSendRespawnTankEvent{type, uuid, spawnRect});
+		_events->EmitEvent("ServerSend_RespawnTank",
+						   ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 	}
 }
 
@@ -313,7 +314,8 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_RespawnTank", ServerSendRespawnTankEvent{type, uuid, spawnRect});
+			_events->EmitEvent("ServerSend_RespawnTank",
+							   ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 		}
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)

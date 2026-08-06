@@ -125,7 +125,7 @@ void GameStatistics::OnClientStatisticsChange(const ClientReceivedStatisticsEven
 
 	if (type == "BulletHit")
 	{
-		OnBulletHit(StatisticsAttributionEvent{author, fraction});
+		OnBulletHit(StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 	else if (type == "EnemyHit")
 	{
@@ -153,19 +153,19 @@ void GameStatistics::OnClientStatisticsChange(const ClientReceivedStatisticsEven
 	}
 	else if (type == "BrickWallDied")
 	{
-		OnBrickWallDied(StatisticsAttributionEvent{author, fraction});
+		OnBrickWallDied(StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 	else if (type == "SteelWallDied")
 	{
-		OnSteelWallDied(StatisticsAttributionEvent{author, fraction});
+		OnSteelWallDied(StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 	else if (type == "BonusPickup")
 	{
-		OnBonusPickup(StatisticsAttributionEvent{author, fraction});
+		OnBonusPickup(StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 	else if (type == "BonusDestroyed")
 	{
-		OnBonusDestroyed(StatisticsAttributionEvent{author, fraction});
+		OnBonusDestroyed(StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 }
 
@@ -189,7 +189,10 @@ void GameStatistics::OnBulletHit(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", event.author, event.fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "BulletHit",
+													 .author = event.author,
+													 .fraction = event.fraction});
 	}
 }
 
@@ -213,7 +216,8 @@ void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fr
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"EnemyHit", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "EnemyHit", .author = author, .fraction = fraction});
 	}
 }
 
@@ -233,7 +237,10 @@ void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerOneHit", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "PlayerOneHit",
+													 .author = author,
+													 .fraction = fraction});
 	}
 }
 
@@ -253,7 +260,10 @@ void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerTwoHit", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "PlayerTwoHit",
+													 .author = author,
+													 .fraction = fraction});
 	}
 }
 
@@ -293,7 +303,8 @@ void GameStatistics::OnEnemyDied(const std::string& author, const std::string& f
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"EnemyDied", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "EnemyDied", .author = author, .fraction = fraction});
 	}
 }
 
@@ -313,7 +324,10 @@ void GameStatistics::OnPlayerOneDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerOneDied", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "PlayerOneDied",
+													 .author = author,
+													 .fraction = fraction});
 	}
 }
 
@@ -333,7 +347,10 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::strin
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"PlayerTwoDied", author, fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "PlayerTwoDied",
+													 .author = author,
+													 .fraction = fraction});
 	}
 }
 
@@ -373,7 +390,10 @@ void GameStatistics::OnBrickWallDied(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BrickWallDied", event.author, event.fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "BrickWallDied",
+													 .author = event.author,
+													 .fraction = event.fraction});
 	}
 }
 
@@ -397,7 +417,10 @@ void GameStatistics::OnSteelWallDied(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"SteelWallDied", event.author, event.fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "SteelWallDied",
+													 .author = event.author,
+													 .fraction = event.fraction});
 	}
 }
 
@@ -421,7 +444,10 @@ void GameStatistics::OnBonusPickup(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BonusPickup", event.author, event.fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "BonusPickup",
+													 .author = event.author,
+													 .fraction = event.fraction});
 	}
 }
 
@@ -445,7 +471,10 @@ void GameStatistics::OnBonusDestroyed(const StatisticsAttributionEvent& event)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BonusDestroyed", event.author, event.fraction});
+		_events->EmitEvent("ServerSend_Statistics",
+						   ServerSendStatisticsEvent{.eventName = "BonusDestroyed",
+													 .author = event.author,
+													 .fraction = event.fraction});
 	}
 }
 

@@ -226,7 +226,8 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
-	_events->EmitEvent("RenderTexture", RenderTextureEvent{textureRect, destRect, dir});
+	_events->EmitEvent("RenderTexture",
+					   RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }
 
 void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
@@ -245,5 +246,6 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 		//NOTE: fallback draw to non-texture, rectangle filled by color
 	}
 
-	_events->EmitEvent("RenderTexture", RenderTextureEvent{textureRect, destRect, dir});
+	_events->EmitEvent("RenderTexture",
+					   RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }

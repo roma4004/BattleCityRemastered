@@ -63,7 +63,8 @@ void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{_name, GetHealth(), _uuid});
+		_events->EmitEvent("ServerSend_Health",
+						   ServerSendHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }
 

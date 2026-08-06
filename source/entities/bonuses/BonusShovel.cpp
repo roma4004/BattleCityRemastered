@@ -15,7 +15,8 @@ BonusShovel::~BonusShovel() = default;
 
 void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{author, fraction});
-	_events->EmitEvent(_name + "_Pickup", BonusTeamEffectPickupEvent{fraction, _effectDuration});
+	_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{.author = author, .fraction = fraction});
+	_events->EmitEvent(_name + "_Pickup",
+					   BonusTeamEffectPickupEvent{.fraction = fraction, .effectDuration = _effectDuration});
 	TakeDamage(GetHealth(), _name, _fraction);
 }

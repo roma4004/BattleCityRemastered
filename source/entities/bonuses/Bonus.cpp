@@ -29,7 +29,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent("ServerSend_BonusSpawn",
-						   BonusSpawnEvent{FPoint{.x = rect.x, .y = rect.y}, _bonusType, uuid});
+						   BonusSpawnEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = _bonusType, .uuid = uuid});
 	}
 }
 
@@ -73,7 +73,10 @@ void Bonus::SubscribeAsClient()
 
 void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
-void Bonus::Draw() const { _events->EmitEvent("DrawObj", DrawObjEvent{_rect, Direction::UP, _name}); }
+void Bonus::Draw() const
+{
+	_events->EmitEvent("DrawObj", DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
+}
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {
@@ -86,15 +89,16 @@ void Bonus::TickUpdate(double /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BonusDestroyed", StatisticsAttributionEvent{author, fraction});
+	_events->EmitEvent("Statistics_BonusDestroyed", StatisticsAttributionEvent{.author = author, .fraction = fraction});
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	if (GetIsAlive())
 	{
-		_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{author, fraction});
-		_events->EmitEvent(_name + "_Pickup", StatisticsAttributionEvent{author, fraction});
+		_events->EmitEvent("Statistics_BonusPickup",
+						   StatisticsAttributionEvent{.author = author, .fraction = fraction});
+		_events->EmitEvent(_name + "_Pickup", StatisticsAttributionEvent{.author = author, .fraction = fraction});
 		TakeDamage(GetHealth(), _name, _fraction);
 	}
 }

@@ -59,14 +59,10 @@ struct EventKey
 };
 
 template<typename T>
-struct is_event_key : std::false_type
-{
-};
+struct is_event_key : std::false_type {};
 
 template<typename KeyT>
-struct is_event_key<EventKey<KeyT>> : std::true_type
-{
-};
+struct is_event_key<EventKey<KeyT>> : std::true_type {};
 
 template<typename T>
 constexpr bool is_event_key_v = is_event_key<std::decay_t<T>>::value;
@@ -530,7 +526,7 @@ public:
 		if (const auto it = _keyedEvents.find(eventName); it == _keyedEvents.end())
 		{
 			_keyedEvents.emplace(eventName, KeyedEventInfo{std::make_unique<KeyedEvent<KeyT, Args...>>(),
-															&typeid(KeyedEvent<KeyT, Args...>)});
+														   &typeid(KeyedEvent<KeyT, Args...>)});
 		}
 
 		if (auto* event = GetTypedKeyedEvent<KeyT, Args...>(eventName))

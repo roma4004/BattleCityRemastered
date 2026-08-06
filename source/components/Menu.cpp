@@ -72,7 +72,7 @@ void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text)
 void Menu::DrawTextLine(Point& posText, std::string text) const
 {
 	constexpr unsigned int color = {0xffffffffu};
-	_events->EmitEvent("RenderText", RenderTextEvent{posText, color, text});
+	_events->EmitEvent("RenderText", RenderTextEvent{.pos = posText, .color = color, .text = text});
 	posText.y += 30;
 }
 

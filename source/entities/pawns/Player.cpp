@@ -52,11 +52,12 @@ void Player::Move(const Direction direction, const double deltaTime,
 		isNewDir || isMove)
 	{
 		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), pos, _dir});
+		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{_name, pos, _dir, _uuid});
+			_events->EmitEvent("ServerSend_Pos",
+							   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 }
@@ -92,11 +93,12 @@ void Player::TickUpdate(const double deltaTime)
 	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
 		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{GetName(), pos, _dir});
+		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{_name, pos, _dir, _uuid});
+			_events->EmitEvent("ServerSend_Pos",
+							   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 

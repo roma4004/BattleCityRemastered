@@ -74,9 +74,13 @@ void ScoreBoard::RenderStatistics() const
 	constexpr unsigned int color = {0xff00ffffu};
 
 	_events->EmitEvent(
-			"RenderText", RenderTextEvent{Point{.x = pos.x - 60, .y = pos.y + 80}, color, "PRESS M TO SHOW MENU"});
+			"RenderText", RenderTextEvent{.pos = Point{.x = pos.x - 60, .y = pos.y + 80},
+										  .color = color,
+										  .text = "PRESS M TO SHOW MENU"});
 	_events->EmitEvent(
-			"RenderText", RenderTextEvent{Point{.x = pos.x - 20, .y = pos.y + 120}, color, "GAME STATISTICS:"});
+			"RenderText", RenderTextEvent{.pos = Point{.x = pos.x - 20, .y = pos.y + 120},
+										  .color = color,
+										  .text = "GAME STATISTICS:"});
 
 	RenderTextWithAlignment({.x = pos.x + 180, .y = pos.y + 140}, color, "P1", "P2", "ENEMY");
 
@@ -149,7 +153,7 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 			<< std::setw(4) << player2
 			<< std::setw(4) << enemy;
 
-	_events->EmitEvent("RenderText", RenderTextEvent{pos, color, textStream.str()});
+	_events->EmitEvent("RenderText", RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
 }
 
 void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
@@ -161,7 +165,7 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 			<< std::setw(4) << player1
 			<< std::setw(4) << player2;
 
-	_events->EmitEvent("RenderText", RenderTextEvent{pos, color, textStream.str()});
+	_events->EmitEvent("RenderText", RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
 }
 
 void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
@@ -171,7 +175,8 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 
 	textStream << std::left << std::setw(22) << std::setw(4) << text << std::setw(4) << text2 << std::setw(4) << text3;
 
-	_events->EmitEvent("RenderText", RenderTextEvent{Point{.x = pos.x, .y = pos.y}, color, textStream.str()});
+	_events->EmitEvent("RenderText",
+					   RenderTextEvent{.pos = Point{.x = pos.x, .y = pos.y}, .color = color, .text = textStream.str()});
 }
 
 void ScoreBoard::OnRespawnCountChanged(const std::string& objectName, const unsigned short respawnCount)

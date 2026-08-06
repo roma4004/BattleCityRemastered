@@ -58,13 +58,20 @@ void InputProviderForMenu::Unsubscribe() const { _events->RemoveAllListeners(_na
 void InputProviderForMenu::EnableMenuInput()
 {
 	const std::string menuNavName{_name + "_MenuNav"};
-	_events->AddListener("Move_Up", std::string{"P1"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("Move_Down", std::string{"P1"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Move_Up", std::string{"P2"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("Move_Down", std::string{"P2"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Enter", menuNavName, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-	_events->AddListener("Fire", std::string{"P1"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-	_events->AddListener("Fire", std::string{"P2"}, menuNavName, [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("Move_Up", std::string{"P1"}, menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("Move_Down", std::string{"P1"}, menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("Move_Up", std::string{"P2"}, menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("Move_Down", std::string{"P2"}, menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("Enter", menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("Fire", std::string{"P1"}, menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener("Fire", std::string{"P2"}, menuNavName,
+						 [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
 }
 
 void InputProviderForMenu::DisableMenuInput() const { _events->RemoveAllListeners(_name + "_MenuNav"); }

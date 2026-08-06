@@ -156,7 +156,10 @@ void Client::Subscribe()
 	{
 		this->SendKeyState("P2_Move_Right", isPressed);
 	});
-	_events->AddListener("Fire", std::string{"P2"}, _name, [this](const bool isPressed) { this->SendKeyState("P2_Fire", isPressed); });
+	_events->AddListener("Fire", std::string{"P2"}, _name, [this](const bool isPressed)
+	{
+		this->SendKeyState("P2_Fire", isPressed);
+	});
 
 	_events->AddListener("ClientSend_ReadyToPlay", _name, [this]()
 	{
@@ -224,7 +227,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, dir, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_Pos", Key(uuid), ClientReceivedPosEvent{pos, dir});
+			_events->EmitEvent("ClientReceived_Pos", Key(uuid), ClientReceivedPosEvent{.pos = pos, .dir = dir});
 		});
 	}
 }
@@ -239,7 +242,8 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, who, dir, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_Shot", Key(who), ClientReceivedShotEvent{dir, uuid});
+			_events->EmitEvent("ClientReceived_Shot", Key(who),
+							   ClientReceivedShotEvent{.dir = dir, .bulletUuid = uuid});
 		});
 	}
 }
@@ -282,7 +286,9 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
 		_commandQueue.Enqueue([this, eventName, author, fraction]()
 		{
 			_events->EmitEvent("ClientReceived_Statistics",
-							  ClientReceivedStatisticsEvent{eventName, author, fraction});
+							   ClientReceivedStatisticsEvent{.eventName = eventName,
+															 .author = author,
+															 .fraction = fraction});
 		});
 	}
 }
@@ -323,7 +329,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, state, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_FortressChange", FortressChangeEvent{state, uuid});
+			_events->EmitEvent("ClientReceived_FortressChange", FortressChangeEvent{.state = state, .uuid = uuid});
 		});
 	}
 }
@@ -338,7 +344,8 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, bonusType, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_BonusSpawn", ClientReceivedBonusSpawnEvent{pos, bonusType, uuid});
+			_events->EmitEvent("ClientReceived_BonusSpawn",
+							   ClientReceivedBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
 		});
 	}
 }
@@ -366,7 +373,8 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, tankType, uuid, rect]()
 		{
-			_events->EmitEvent("ClientReceived_RespawnTank", ClientReceivedRespawnTankEvent{tankType, uuid, rect});
+			_events->EmitEvent("ClientReceived_RespawnTank",
+							   ClientReceivedRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
 		});
 	}
 }
@@ -382,7 +390,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
 		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
 		{
 			_events->EmitEvent("ClientReceived_ObstacleSpawn",
-							   ClientReceivedObstacleSpawnEvent{rect, obstacleType, uuid});
+							   ClientReceivedObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
 		});
 	}
 }
@@ -397,7 +405,8 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, animationType, rect, name]()
 		{
-			_events->EmitEvent("AnimationCreate", AnimationCreateEvent{animationType, rect, name});
+			_events->EmitEvent("AnimationCreate",
+							   AnimationCreateEvent{.type = animationType, .rect = rect, .name = name});
 		});
 	}
 }

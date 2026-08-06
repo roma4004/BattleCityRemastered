@@ -80,7 +80,7 @@ void Bullet::Unsubscribe() const
 	_events->RemoveAllListeners(_nameWithUuid);
 }
 
-void Bullet::Draw() const { _events->EmitEvent("DrawObj", DrawObjEvent{_rect, _dir, _name}); }
+void Bullet::Draw() const { _events->EmitEvent("DrawObj", DrawObjEvent{.rect = _rect, .dir = _dir, .name = _name}); }
 
 using buuid = boost::uuids::uuid;
 
@@ -150,7 +150,8 @@ void Bullet::TickUpdate(const double deltaTime)
 
 		if (isMove && _gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{_name, GetPos(), _dir, _uuid});
+			_events->EmitEvent("ServerSend_Pos",
+							   ServerSendPosEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
 		}
 	}
 }
@@ -163,7 +164,7 @@ std::string Bullet::GetAuthor() const { return _author; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BulletHit", StatisticsAttributionEvent{author, fraction});
+	_events->EmitEvent("Statistics_BulletHit", StatisticsAttributionEvent{.author = author, .fraction = fraction});
 }
 
 void Bullet::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
@@ -209,7 +210,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
 	}
 
-	_events->EmitEvent("AnimationCreateBulletExplosion", AnimationCreateExplosionEvent{_rect, _name});
+	_events->EmitEvent("AnimationCreateBulletExplosion", AnimationCreateExplosionEvent{.rect = _rect, .name = _name});
 }
 
 void Bullet::OnClientChangePos(const FPoint newPos, const Direction dir)

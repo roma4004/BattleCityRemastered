@@ -25,7 +25,8 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	//disable replication for fortress _obstacle
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{_rect, ObstacleType::Fortress, _uuid});
+		_events->EmitEvent("ServerSend_ObstacleSpawn",
+						   ObstacleSpawnEvent{.rect = _rect, .type = ObstacleType::Fortress, .uuid = _uuid});
 	}
 }
 
@@ -79,11 +80,13 @@ void FortressWall::SendDamageStatistics(const std::string& author, const std::st
 {
 	if (std::holds_alternative<std::unique_ptr<BrickWall>>(_obstacle))
 	{
-		_events->EmitEvent("Statistics_BrickWallDied", StatisticsAttributionEvent{author, fraction});
+		_events->EmitEvent("Statistics_BrickWallDied",
+						   StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 	else
 	{
-		_events->EmitEvent("Statistics_SteelWallDied", StatisticsAttributionEvent{author, fraction});
+		_events->EmitEvent("Statistics_SteelWallDied",
+						   StatisticsAttributionEvent{.author = author, .fraction = fraction});
 	}
 }
 
@@ -94,7 +97,7 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", _uuid});
+		_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "Died", .uuid = _uuid});
 	}
 }
 
@@ -117,7 +120,7 @@ void FortressWall::OnPlayerPickupShovel()
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", _uuid});
+			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToSteel", .uuid = _uuid});
 		}
 	}
 }
@@ -133,7 +136,7 @@ void FortressWall::OnShovelCooldownEnd()
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", _uuid});
+			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToBrick", .uuid = _uuid});
 		}
 	}
 }
@@ -168,7 +171,7 @@ void FortressWall::TakeDamage(const unsigned int damage, const std::string& dama
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", _uuid});
+			_events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "Died", .uuid = _uuid});
 		}
 	}
 }

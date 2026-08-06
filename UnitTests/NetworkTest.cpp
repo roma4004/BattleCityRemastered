@@ -62,7 +62,8 @@ TEST_F(NetworkTest, PosEventReplication)
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Pos", ServerSendPosEvent{name, posOrigin, directionOrigin, _uuid});
+	events->EmitEvent("ServerSend_Pos",
+					  ServerSendPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -120,7 +121,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 						});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{name, direction, _uuid});
+	events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -174,7 +175,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 						[&promise](const int health) { promise.set_value(health); });
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{name, healthOrigin, _uuid});
+	events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -277,7 +278,8 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Statistics", ServerSendStatisticsEvent{"BulletHit", "author", "fraction"});
+	events->EmitEvent("ServerSend_Statistics",
+					  ServerSendStatisticsEvent{.eventName = "BulletHit", .author = "author", .fraction = "fraction"});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -383,13 +385,13 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", uuid1Died});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", uuid1ToBrick});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", uuid1ToSteel});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "Died", .uuid = uuid1Died});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToBrick", .uuid = uuid1ToBrick});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToSteel", .uuid = uuid1ToSteel});
 
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"Died", uuid2Died});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToBrick", uuid2ToBrick});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{"ToSteel", uuid2ToSteel});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "Died", .uuid = uuid2Died});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
+	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
 
 	events->EmitEvent("Server_EndFrame");
 
@@ -550,7 +552,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	// events->EmitEvent("Server_StartFrame");
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
-	events->EmitEvent("ServerSend_BonusSpawn", BonusSpawnEvent{pos, type, _uuid});
+	events->EmitEvent("ServerSend_BonusSpawn", BonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -655,7 +657,8 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 			[&promise](const bool isEnable) { promise.set_value(isEnable); });
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_BonusHelmet_Pickup", ServerSendBonusHelmetPickupEvent{nameOrigin, isActiveOrigin});
+	events->EmitEvent("ServerSend_BonusHelmet_Pickup",
+					  ServerSendBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -761,7 +764,8 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 			});
 
 	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{rectOrigin, obstacleType, _uuid});
+	events->EmitEvent("ServerSend_ObstacleSpawn",
+					  ObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
 	events->EmitEvent("Server_EndFrame");
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -841,7 +845,8 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	// events->EmitEvent("Server_StartFrame");
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		events->EmitEvent("ServerSend_ObstacleSpawn", ObstacleSpawnEvent{bricksRect[i], obstacleType, _uuid});
+		events->EmitEvent("ServerSend_ObstacleSpawn",
+						  ObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
 	}
 	events->EmitEvent("Server_EndFrame");
 
@@ -921,7 +926,8 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	// events->EmitEvent("Server_StartFrame");
 	for (const auto tankType: tankTypes)
 	{
-		events->EmitEvent("ServerSend_RespawnTank", ServerSendRespawnTankEvent{tankType, _uuid, rectOrigin});
+		events->EmitEvent("ServerSend_RespawnTank",
+						  ServerSendRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
 	}
 	events->EmitEvent("Server_EndFrame");
 
