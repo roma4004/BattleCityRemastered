@@ -352,15 +352,20 @@ void Bot::TickUpdate(const double deltaTime)
 	}
 
 	// TODO: cover by unit test isTouchTheIce and ice movement logic 
-	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
+	if (_effects.isTouchTheIce)
 	{
-		const FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
-
-		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
+			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
 		{
-			_events->EmitEvent("ServerSend_Pos",
-							   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			const FPoint pos = GetPos();
+			_events->EmitEvent("AnimationTankUpdate",
+							   AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+
+			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+			{
+				_events->EmitEvent("ServerSend_Pos",
+								   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			}
 		}
 	}
 
@@ -375,7 +380,10 @@ void Bot::TickUpdate(const double deltaTime)
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
-		_moveBeh->ResetVelocity();
+		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
+		{
+			moveBeh->ResetVelocity();
+		}
 	}
 
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();

@@ -702,7 +702,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	const auto nameOrigin{std::string("Player1")};
 
 	std::promise<void> promise;
-	auto future = promise.get_future();
+	const auto future = promise.get_future();
 
 	events->AddListener(
 			"ClientReceived_BonusCaliber_Pickup", nameOrigin, "BonusCaliberStatusEventReplication",
@@ -738,8 +738,8 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();

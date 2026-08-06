@@ -1,4 +1,5 @@
 #include "entities/pawns/Player.h"
+#include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/ReplicationEvents.h"
@@ -51,7 +52,7 @@ void Player::Move(const Direction direction, const double deltaTime,
 	if (const bool isMove = _moveBeh->Move(direction, deltaTime, outCollisions);
 		isNewDir || isMove)
 	{
-		FPoint pos = GetPos();
+		const FPoint pos = GetPos();
 		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
@@ -90,15 +91,21 @@ void Player::TickUpdate(const double deltaTime)
 		Move(Direction::RIGHT, deltaTime, outCollisions);
 	}
 
-	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
+	if (_effects.isTouchTheIce)
 	{
-		FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
-
-		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
+			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
 		{
-			_events->EmitEvent("ServerSend_Pos",
-							   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			const FPoint pos = GetPos();
+			_events->EmitEvent("AnimationTankUpdate",
+							   AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+
+			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+			{
+				_events->EmitEvent("ServerSend_Pos",
+								   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			}
+
 		}
 	}
 
@@ -107,7 +114,10 @@ void Player::TickUpdate(const double deltaTime)
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
-		_moveBeh->ResetVelocity();
+		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
+		{
+			moveBeh->ResetVelocity();
+		}
 	}
 
 	if (!outCollisions.empty())

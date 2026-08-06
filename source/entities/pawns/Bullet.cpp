@@ -118,8 +118,10 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
 
-	//TODO: write reset for MoveLikeBulletBeh
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, resetProperty.calibre, _allObjects);
+	if (auto* moveBeh = dynamic_cast<MoveLikeBulletBeh*>(_moveBeh.get()))
+	{
+		moveBeh->Reset(resetProperty.calibre);
+	}
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_calibre = resetProperty.calibre;
