@@ -48,7 +48,10 @@ void BonusEffectManager::Subscribe()
 				this->OnBonusShovelPickup(event.fraction, event.effectDuration);
 			});
 
-	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank) { this->OnSpawnEnabled(tank); });
+	_events->AddListener("SpawnEnabled", _name, [this](const std::shared_ptr<BaseObj>& obj)
+	{
+		this->OnSpawnEnabled(obj);
+	});
 }
 
 void BonusEffectManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
