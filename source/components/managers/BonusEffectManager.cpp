@@ -1,7 +1,7 @@
 #include "components/managers/BonusEffectManager.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
-#include "entities/pawns/Tank.h"
 #include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
@@ -48,9 +48,9 @@ void BonusEffectManager::Subscribe()
 				this->OnBonusShovelPickup(event.fraction, event.effectDuration);
 			});
 
-	_events->AddListener("SpawnEnabled", _name, [this](const std::shared_ptr<BaseObj>& obj)
+	_events->AddListener("TankEnabled", _name, [this](const BonusEffectReApplyEvent& event)
 	{
-		this->OnSpawnEnabled(obj);
+		this->OnSpawnEnabled(event.name, event.fraction);//TODO: refactor to enabled by uuid instead of name and fraction
 	});
 }
 
@@ -67,14 +67,8 @@ void BonusEffectManager::Reset()
 
 void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const std::string& tankName, const std::string& tankFraction)
 {
-	if (tankFraction == "EnemyTeam")
-	{
-		_events->EmitEvent("BonusTimer_ReApplyOnSpawn", _timerEnemy.isActive, tankName);
-	}
-	else if (tankFraction == "PlayerTeam")
-	{
-		_events->EmitEvent("BonusTimer_ReApplyOnSpawn", _timerPlayer.isActive, tankName);
-	}
+	const bool isActive = tankFraction == "EnemyTeam" ? _timerEnemy.isActive : _timerPlayer.isActive;
+	_events->EmitEvent("BonusTimer_ReApplyOnSpawn", isActive, tankName);
 
 	constexpr milliseconds effectDuration{std::chrono::seconds{5}};
 	OnHelmetBonusPickup(tankName, effectDuration);
@@ -215,16 +209,9 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 	return static_cast<size_t>(-1);
 }
 
-void BonusEffectManager::OnSpawnEnabled(const std::shared_ptr<BaseObj>& tank)
+void BonusEffectManager::OnSpawnEnabled(const std::string& name, const std::string& fraction)
 {
-	if (!tank)
-	{
-		return;
-	}
-
-	const std::string tankName{tank->GetName()};
-	const std::string tankFraction{tank->GetFraction()};
-	ApplyBonusEffectsOnSpawnTo(tankName, tankFraction);//NOTE: continue effects after respawn
+	ApplyBonusEffectsOnSpawnTo(name, fraction);//NOTE: continue effects after respawn
 }
 
 void BonusEffectManager::OnGameModeChangedTo(const GameMode newGameMode)

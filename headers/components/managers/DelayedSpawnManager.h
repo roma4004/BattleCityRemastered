@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/Timer.h"
+#include <boost/uuid/uuid.hpp>
 
 class BaseObj;
 class EventSystem;
@@ -8,10 +9,11 @@ class EventSystem;
 class DelayedSpawnManager
 {
 	using milliseconds = std::chrono::milliseconds;
+	using buuid = boost::uuids::uuid;
 
 	struct SpawnDelay
 	{
-		std::shared_ptr<BaseObj> obj{nullptr};
+		buuid uuid;
 		Timer timer;
 	};
 
@@ -31,5 +33,5 @@ public:
 
 	void PreTickUpdate(double deltaTime);
 	void Disposer();
-	void SpawnDelayStart(const std::shared_ptr<BaseObj>& obj, milliseconds delay);
+	void SpawnDelayStart(const buuid& uuid, milliseconds delay);
 };

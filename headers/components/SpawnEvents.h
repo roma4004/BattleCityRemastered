@@ -8,7 +8,6 @@
 #include "enums/TankType.h"
 #include <boost/uuid/uuid.hpp>
 #include <chrono>
-#include <memory>
 #include <string>
 
 class BaseObj;
@@ -64,7 +63,7 @@ struct ServerSendRespawnTankEvent
 
 struct SpawnDelayStartEvent
 {
-	std::shared_ptr<BaseObj> obj;
+	buuid uuid;
 	std::chrono::milliseconds delay;
 };
 
@@ -72,4 +71,10 @@ struct SpawnObstacleEvent
 {
 	ObjRectangle rect;
 	ObstacleType type;
+};
+
+struct BonusEffectReApplyEvent
+{
+	std::string name;
+	std::string fraction;
 };

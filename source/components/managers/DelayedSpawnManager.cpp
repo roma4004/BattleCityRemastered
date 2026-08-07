@@ -22,7 +22,7 @@ void DelayedSpawnManager::Subscribe()
 
 	_events->AddListener("SpawnDelayStart", _name, [this](const SpawnDelayStartEvent& event)
 	{
-		this->SpawnDelayStart(event.obj, event.delay);
+		this->SpawnDelayStart(event.uuid, event.delay);
 	});
 
 	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
@@ -39,14 +39,11 @@ void DelayedSpawnManager::Reset()
 
 void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 {
-	for (auto& [obj, timer]: _spawnDelays)
+	for (auto& [uuid, timer]: _spawnDelays)
 	{
 		if (timer.isActive && timer.IsCooldownFinish())
 		{
-			if (obj)
-			{
-				_events->EmitEvent("SpawnEnabled", obj);
-			}
+			_events->EmitEvent("SpawnEnabled", uuid);
 
 			timer.isActive = false;
 		}
@@ -61,20 +58,15 @@ void DelayedSpawnManager::Disposer()
 	});
 }
 
-void DelayedSpawnManager::SpawnDelayStart(const std::shared_ptr<BaseObj>& obj, const milliseconds delay)
+void DelayedSpawnManager::SpawnDelayStart(const buuid& uuid, const milliseconds delay)
 {
-	if (!obj)
-	{
-		return;
-	}
-
 	if (delay == milliseconds{0})
 	{
 		// NOTE: immediate call, for unit tests
-		_events->EmitEvent("SpawnEnabled", obj);
+		_events->EmitEvent("SpawnEnabled", uuid);
 	}
 	else
 	{
-		_spawnDelays.emplace_back(obj, Timer{delay, std::chrono::system_clock::now()});
+		_spawnDelays.emplace_back(uuid, Timer{delay, std::chrono::system_clock::now()});
 	}
 }

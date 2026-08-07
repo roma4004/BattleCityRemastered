@@ -52,20 +52,6 @@ void TankSpawner::Subscribe()
 		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 
-	_events->AddListener(
-			"SpawnEnabled", _name,
-			[this](const std::shared_ptr<BaseObj>& obj)
-			{
-				if (!obj)
-				{
-					return;
-				}
-
-				const ObjRectangle rect{obj->GetRect()};
-				const std::string name{obj->GetName()};
-				_events->EmitEvent("AnimationCreateTank", AnimationCreateTankEvent{.rect = rect, .name = name});
-			});
-
 	_events->AddListener("RespawnTank", _name, [this](const TankType type, const buuid uuid, const bool skipDelay)
 	{
 		this->RespawnTank(type, uuid, skipDelay);
@@ -397,7 +383,7 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std::string& name, std::string fraction,
-							const float speed, buuid uuid, const TankType type, const bool skipDelay)
+							const float speed, buuid uuid, const TankType tankType, const bool skipDelay)
 {
 	BaseObjProperty baseObjProperty{.rect = rect,
 									.health = health,
@@ -413,18 +399,17 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 
-	if (std::shared_ptr<BaseObj> tank{CreateTank(type, std::move(pawnProperty))})
+	if (std::shared_ptr<BaseObj> tank{CreateTank(tankType, std::move(pawnProperty))})
 	{
 		_events->EmitEvent("AddToSpawnQueue", tank);
-		_events->EmitEvent("SpawnDelayStart",
-						   SpawnDelayStartEvent{.obj = tank, .delay = milliseconds(skipDelay ? 0 : 1000)});
+
+		const milliseconds delay{skipDelay ? 0 : 1000};
+		_events->EmitEvent("SpawnDelayStart", SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
 
 		if (_gameMode != GameMode::PlayAsClient)
 		{
-			_events->EmitEvent("AnimationCreate",
-							   AnimationCreateEvent{.type = AnimationType::Spawn_Animation,
-													.rect = rect,
-													.name = name});
+			constexpr auto type{AnimationType::Spawn_Animation};
+			_events->EmitEvent("AnimationCreate", AnimationCreateEvent{.type = type, .rect = rect, .name = name});
 		}
 	}
 }

@@ -1,8 +1,7 @@
 #pragma once
-
-#include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
+enum class GameMode : char8_t;
 class EventSystem;
 
 class BonusEffectManager
@@ -36,7 +35,7 @@ public:
 	void StartTimer(Timer& timer, const std::string& event, const std::string& id, milliseconds effectDuration) const;
 	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;
 	void OnBonusShovelPickup(const std::string& fraction, milliseconds effectDuration);
-	void OnSpawnEnabled(const std::shared_ptr<BaseObj>& tank);
+	void OnSpawnEnabled(const std::string& name, const std::string& fraction);
 	void OnGameModeChangedTo(GameMode newGameMode);
 	static size_t TankNameToId(const std::string& name);
 
