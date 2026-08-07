@@ -16,11 +16,10 @@
 
 Options::Options(UPoint windowSize, const std::shared_ptr<EventSystem>& events) 
 : _events{events}
+, _pos{.x = 25, .y = 25}
 , _name{std::string("Options")}
 {
 	Subscribe();
-
-	std::shared_ptr<EventSystem> _events{nullptr};
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
@@ -31,24 +30,28 @@ Options::~Options()
 
 void Options::Subscribe()
 {
-	
+	//NOTE: avoid showing score and menu at the same time
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
+	{
+		_isMenuDisplayed = isDisplayed;
+	});
+	_events->AddListener("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
+		if (_gameMode == GameMode::EndIterator)
+		{
+			this->_isOptionsDisplayed = true;
+		}
+		else
+		{
+			this->_isOptionsDisplayed = false;
+		}
+	});
+
+		_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
 }
 
 void Options::Unsubscribe() const { _events->RemoveAllListeners(_name); }
-
-void Options::DisplayOptions(bool isDisplayed)
-{
-	_isOptionsDisplayed = isDisplayed;
-
-	if (_isOptionsDisplayed)
-	{
-		_events->AddListener("DrawOptions", _name, [this]() { this->Draw(); });
-	}
-	else
-	{
-		_events->RemoveListener("DrawOptions", _name);
-	}
-}
 
 void Options::DrawTextLine(Point& posText, std::string text) const
 {
@@ -59,13 +62,8 @@ void Options::DrawTextLine(Point& posText, std::string text) const
 
 void Options::Draw()
 {
-	// first time animation, slow scrolling from bottom corner to vertical center
-	if (constexpr int yOffsetEnd = 0; _yOffsetStart > yOffsetEnd)
+	if (_isMenuDisplayed == false && _isOptionsDisplayed)
 	{
-		_yOffsetStart -= 3;
-		_pos.y = _padding + _yOffsetStart;
-		_events->EmitEvent("MenuPosChanged", _pos);
+		_events->EmitEvent("RenderMenuBackground", _pos);
 	}
-
-	_events->EmitEvent("RenderMenuBackground", _pos);
 }

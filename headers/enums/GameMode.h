@@ -10,5 +10,5 @@ enum class GameMode : char8_t
 	PlayAsHost,
 	PlayAsClient,
 
-	EndIterator// should be the last one
+	EndIterator// should be the last one / currently used for Options 
 };

@@ -4,6 +4,7 @@
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/Menu.h"
+#include "components/Options.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
 #include "components/managers/BonusEffectManager.h"
@@ -25,7 +26,7 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
-						 std::unique_ptr<RightSideBar>& rightSideBar,
+						 std::unique_ptr<RightSideBar>& rightSideBar, std::unique_ptr<Options>& options,
 						 const GameMode gameMode)
 	: _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(events))
@@ -38,6 +39,7 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
 	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _rightSideBar{std::move(rightSideBar)}
+	, _options{std::move(options)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
@@ -86,6 +88,7 @@ void GameSuccess::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 {
+	if (gameMode == GameMode::EndIterator) { return; }
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 	_pendingSpawns.clear();
@@ -110,7 +113,7 @@ void GameSuccess::PrevGameMode()
 	int mode = static_cast<int>(_selectedGameMode);
 	--mode;
 
-	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
+	constexpr int maxMode = static_cast<int>(GameMode::EndIterator);
 	constexpr int minMode = 1;
 	const int newMode = mode < minMode ? maxMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
@@ -123,7 +126,7 @@ void GameSuccess::NextGameMode()
 	int mode = static_cast<int>(_selectedGameMode);
 	++mode;
 
-	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
+	constexpr int maxMode = static_cast<int>(GameMode::EndIterator);
 	constexpr int minMode = 1;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
@@ -239,7 +242,7 @@ void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 
 void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 {
-	_gameMode = newGameMode;
+	if (newGameMode == GameMode::EndIterator) { return; }
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{

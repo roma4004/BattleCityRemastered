@@ -436,13 +436,14 @@ void UserInput::InitMouseHoverTiles(const Point menuPos)
 			.h = _firstMenuMouseTileDefault.h
 	};
 
-	_allTilesRect = {.x = x, .y = y, .w = w, .h = h * 5};
+	_allTilesRect = {.x = x, .y = y, .w = w, .h = h * 6};
 
 	_menuTiles = {
 			{.rect = {.x = x, .y = y + h * 0, .w = w, .h = h}, .gameMode = GameMode::OnePlayer},
 			{.rect = {.x = x, .y = y + h * 1, .w = w, .h = h}, .gameMode = GameMode::TwoPlayers},
 			{.rect = {.x = x, .y = y + h * 2, .w = w, .h = h}, .gameMode = GameMode::CoopWithBot},
 			{.rect = {.x = x, .y = y + h * 3, .w = w, .h = h}, .gameMode = GameMode::PlayAsHost},
-			{.rect = {.x = x, .y = y + h * 4, .w = w, .h = h}, .gameMode = GameMode::PlayAsClient}
+			{.rect = {.x = x, .y = y + h * 4, .w = w, .h = h}, .gameMode = GameMode::PlayAsClient},
+			{.rect = {.x = x, .y = y + h * 5, .w = w, .h = h}, .gameMode = GameMode::EndIterator}
 	};
 }

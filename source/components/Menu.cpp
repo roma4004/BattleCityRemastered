@@ -88,7 +88,7 @@ void Menu::DrawMenuText() const
 	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::CoopWithBot, "COOP WITH BOT");
 	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsHost, "PLAY AS HOST");
 	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsClient, "PLAY AS CLIENT");
-	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsClient, "OPTIONS");
+	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::EndIterator, "OPTIONS");
 }
 
 void Menu::DrawControlHints() const
@@ -119,9 +119,13 @@ void Menu::DisplayMenu(const bool isDisplayed)
 	if (_isMenuDisplayed)
 	{
 		_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
+
+		_events->EmitEvent("ShowMenu", true);
 	}
 	else
 	{
 		_events->RemoveListener("DrawUserInterface", _name);
+
+		_events->EmitEvent("ShowMenu", false);
 	}
 }

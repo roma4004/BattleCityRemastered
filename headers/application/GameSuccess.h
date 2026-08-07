@@ -20,6 +20,7 @@ class BonusEffectManager;
 class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
+class Options;
 class GameConfig;
 
 class GameSuccess final : public IGame
@@ -27,7 +28,8 @@ class GameSuccess final : public IGame
 public:
 	GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
 				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
-				std::unique_ptr<RightSideBar>& rightSideBar, GameMode gameMode);
+				std::unique_ptr<RightSideBar>& rightSideBar, std::unique_ptr<Options>& options,
+				GameMode gameMode);
 	~GameSuccess() override;
 
 	void MainLoop() override;
@@ -66,6 +68,7 @@ private:
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 	std::unique_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
+	std::unique_ptr<Options> _options{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	//TODO: modify only under mutex lock (main and network thread can add)
@@ -75,4 +78,5 @@ private:
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
+	bool _isMenuDisplayed{true};
 };
