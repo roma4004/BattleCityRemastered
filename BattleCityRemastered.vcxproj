@@ -242,9 +242,15 @@
     <ClInclude Include="headers\components\SpawnEvents.h" />
     <ClInclude Include="headers\components\events\AnimationRenderEvents.h" />
     <ClInclude Include="headers\components\events\BonusPickupEvents.h" />
+    <ClInclude Include="headers\components\events\CoreLifecycleEvents.h" />
+    <ClInclude Include="headers\components\events\GameModeEvents.h" />
+    <ClInclude Include="headers\components\events\InputEvents.h" />
+    <ClInclude Include="headers\components\events\ObjectLifecycleEvents.h" />
     <ClInclude Include="headers\components\events\ObstacleAndBonusEvents.h" />
+    <ClInclude Include="headers\components\events\RenderUIEvents.h" />
     <ClInclude Include="headers\components\events\ReplicationEvents.h" />
     <ClInclude Include="headers\components\events\StatisticsEvents.h" />
+    <ClInclude Include="headers\components\events\TimingEvents.h" />
     <ClInclude Include="headers\components\managers\AnimationManager.h" />
     <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
     <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />
@@ -325,6 +331,7 @@
     <ClInclude Include="headers\enums\GameMode.h" />
     <ClInclude Include="headers\enums\ObstacleType.h" />
     <ClInclude Include="headers\enums\RespawnGroup.h" />
+    <ClInclude Include="headers\enums\StatisticsType.h" />
     <ClInclude Include="headers\enums\TankType.h" />
     <ClInclude Include="headers\enums\TextureOffset.h" />
     <ClInclude Include="headers\interfaces\IConfig.h" />

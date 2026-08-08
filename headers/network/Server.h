@@ -83,6 +83,7 @@ private:
 	void SendCommand(const std::shared_ptr<Command>& command);
 
 	void Subscribe();
+	void SubscribeStatistics();
 	void SubscribeBonus();
 	void Unsubscribe() const;
 

@@ -14,3 +14,81 @@ struct BonusTeamEffectPickupEvent
 	std::string fraction;
 	std::chrono::milliseconds effectDuration;
 };
+
+struct BonusShovelPickupEvent
+{
+	std::string fraction;
+	std::chrono::milliseconds effectDuration;
+};
+
+struct BonusTimerPickupEvent
+{
+	std::string fraction;
+	std::chrono::milliseconds effectDuration;
+};
+
+struct BonusStarPickupEvent
+{
+	std::string author;
+	std::string fraction;
+};
+
+struct BonusCaliberPickupEvent
+{
+	std::string author;
+	std::string fraction;
+};
+
+struct BonusGrenadePickupEvent
+{
+	std::string author;
+	std::string fraction;
+};
+
+struct BonusTankPickupEvent
+{
+	std::string author;
+	std::string fraction;
+};
+
+struct ServerSendBonusStarPickupEvent
+{
+	std::string author;
+};
+
+struct ServerSendBonusCaliberPickupEvent
+{
+	std::string author;
+};
+
+struct ServerSendBonusTankPickupEvent
+{
+	std::string author;
+};
+
+struct ClientReceivedBonusTankPickupEvent
+{
+	std::string name;
+};
+
+struct BonusTimerStatusChangeEvent
+{
+	std::string fraction;
+	bool isActive;
+};
+
+struct BonusHelmetStatusChangeEvent
+{
+	std::string name;
+	bool isActive;
+};
+
+struct BonusShovelStatusChangeEvent
+{
+	std::string fraction;
+	bool isActive;
+};
+
+struct ClientReceivedBonusStarPickupEvent {};
+
+struct ClientReceivedBonusCaliberPickupEvent {};

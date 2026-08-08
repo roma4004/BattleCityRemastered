@@ -1,9 +1,13 @@
 #include "Point.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/BonusPickupEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
@@ -42,7 +46,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -55,16 +59,16 @@ TEST_F(NetworkTest, PosEventReplication)
 
 	const auto name{std::string("TestTank")};
 	events->AddListener(
-			"ClientReceived_Pos", _uuid, "PosEventReplication",
+			_uuid, "PosEventReplication",
 			[&promise](const ClientReceivedPosEvent& event)
 			{
 				promise.set_value({event.pos, event.dir});
 			});
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Pos",
-					  ServerSendPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(
+			ServerSendPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -72,8 +76,8 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -103,7 +107,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -114,15 +118,15 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	events->AddListener("ClientReceived_Shot", name, "ShotEventReplication",
+	events->AddListener(name, "ShotEventReplication",
 						[&promise](const ClientReceivedShotEvent& event)
 						{
 							promise.set_value({event.dir, event.bulletUuid});
 						});
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Shot", ServerSendShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -130,8 +134,8 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -159,7 +163,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -171,12 +175,12 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	const auto name{std::string("TestTank")};
 
-	events->AddListener("ClientReceived_Health", _uuid, "HealthEventReplication",
-						[&promise](const int health) { promise.set_value(health); });
+	events->AddListener(_uuid, "HealthEventReplication",
+						[&promise](const ClientReceivedHealthEvent& event) { promise.set_value(event.health); });
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Health", ServerSendHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -184,8 +188,8 @@ TEST_F(NetworkTest, HealthEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -213,7 +217,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -221,12 +225,12 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	std::promise<buuid> promise{};
 	auto future = promise.get_future();
 
-	events->AddListener("ClientReceived_Dispose", _uuid, "DisposeEventReplication",
-						[&promise, uuid = _uuid]() { promise.set_value(uuid); });
+	events->AddListener(_uuid, "DisposeEventReplication",
+						[&promise, uuid = _uuid](const ClientReceivedDisposeEvent&) { promise.set_value(uuid); });
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Dispose", _uuid);
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendDisposeEvent{.uuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -234,8 +238,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -262,25 +266,24 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<std::tuple<std::string, std::string, std::string>> promise{};
+	std::promise<std::pair<std::string, std::string>> promise{};
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_Statistics", "StatisticsEventReplication",
-			[&promise](const ClientReceivedStatisticsEvent& event)
+			"StatisticsEventReplication",
+			[&promise](const ClientReceivedBulletHitEvent& event)
 			{
-				promise.set_value({event.eventName, event.author, event.fraction});
+				promise.set_value({event.author, event.fraction});
 			});
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_Statistics",
-					  ServerSendStatisticsEvent{.eventName = "BulletHit", .author = "author", .fraction = "fraction"});
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendBulletHitEvent{.author = "author", .fraction = "fraction"});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -288,8 +291,8 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -299,12 +302,11 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	}
 
 	ASSERT_EQ(status, std::future_status::ready);
-	const auto& [type, author, fraction] = future.get();
-	EXPECT_EQ("BulletHit", type);
+	const auto& [author, fraction] = future.get();
 	EXPECT_EQ("author", author);
 	EXPECT_EQ("fraction", fraction);
 
-	events->RemoveListener("ClientReceived_Statistics", "StatisticsEventReplication");
+	events->RemoveListener<ClientReceivedBulletHitEvent>("StatisticsEventReplication");
 }
 
 TEST_F(NetworkTest, FortressChangeEventReplication)
@@ -327,7 +329,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -348,9 +350,9 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	auto futureToSteel2 = promiseToSteel2.get_future();
 
 	events->AddListener(
-			"ClientReceived_FortressChange", "FortressChangeEventReplication1",
+			"FortressChangeEventReplication1",
 			[&promiseDied1, &promiseToBrick1, &promiseToSteel1, &uuid1Died, &uuid1ToBrick, &uuid1ToSteel](
-			const FortressChangeEvent& event)
+			const ClientReceivedFortressChangeEvent& event)
 			{
 				if (event.state == "Died" && event.uuid == uuid1Died)
 				{
@@ -366,9 +368,9 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 				}
 			});
 	events->AddListener(
-			"ClientReceived_FortressChange", "FortressChangeEventReplication2",
+			"FortressChangeEventReplication2",
 			[&promiseDied2, &promiseToBrick2, &promiseToSteel2, &uuid2Died, &uuid2ToBrick, &uuid2ToSteel](
-			const FortressChangeEvent& event)
+			const ClientReceivedFortressChangeEvent& event)
 			{
 				if (event.state == "Died" && event.uuid == uuid2Died)
 				{
@@ -384,16 +386,16 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 				}
 			});
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "Died", .uuid = uuid1Died});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToBrick", .uuid = uuid1ToBrick});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToSteel", .uuid = uuid1ToSteel});
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendFortressChangeEvent{.state = "Died", .uuid = uuid1Died});
+	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToBrick", .uuid = uuid1ToBrick});
+	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToSteel", .uuid = uuid1ToSteel});
 
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "Died", .uuid = uuid2Died});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
-	events->EmitEvent("ServerSend_FortressChange", FortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
+	events->EmitEvent(ServerSendFortressChangeEvent{.state = "Died", .uuid = uuid2Died});
+	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
+	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
 
-	events->EmitEvent("Server_EndFrame");
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -404,8 +406,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToDied1 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (statusToDied1 = futureDied1.wait_for(checkInterval);
 					statusToDied1 == std::future_status::ready)
@@ -423,8 +425,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToBrick1 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (statusToBrick1 = futureToBrick1.wait_for(checkInterval);
 					statusToBrick1 == std::future_status::ready)
@@ -442,8 +444,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToSteel1 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (statusToSteel1 = futureToSteel1.wait_for(checkInterval);
 					statusToSteel1 == std::future_status::ready)
@@ -463,8 +465,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToDied2 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (statusToDied2 = futureDied2.wait_for(checkInterval);
 					statusToDied2 == std::future_status::ready)
@@ -482,8 +484,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToBrick2 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (statusToBrick2 = futureToBrick2.wait_for(checkInterval);
 					statusToBrick2 == std::future_status::ready)
@@ -501,8 +503,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToSteel2 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (statusToSteel2 = futureToSteel2.wait_for(checkInterval);
 					statusToSteel2 == std::future_status::ready)
@@ -518,8 +520,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 		}
 	}
 
-	events->RemoveListener("ClientReceived_FortressChange", "FortressChangeEventReplication1");
-	events->RemoveListener("ClientReceived_FortressChange", "FortressChangeEventReplication2");
+	events->RemoveListener<ClientReceivedFortressChangeEvent>("FortressChangeEventReplication1");
+	events->RemoveListener<ClientReceivedFortressChangeEvent>("FortressChangeEventReplication2");
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
@@ -534,7 +536,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -543,17 +545,17 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_BonusSpawn", "BonusSpawnEventReplication",
+			"BonusSpawnEventReplication",
 			[&promise](const ClientReceivedBonusSpawnEvent& event)
 			{
 				promise.set_value({event.pos, event.type, event.uuid});
 			});
 
-	// events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
-	events->EmitEvent("ServerSend_BonusSpawn", BonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
-	events->EmitEvent("Server_EndFrame");
+	events->EmitEvent(ServerSendBonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -561,8 +563,8 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -577,7 +579,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	EXPECT_EQ(type, typeReplicated);
 	EXPECT_EQ(_uuid, uuid);
 
-	events->RemoveListener("ClientReceived_BonusSpawn", "BonusSpawnEventReplication");
+	events->RemoveListener<ClientReceivedBonusSpawnEvent>("BonusSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusDeSpawnEventReplication)
@@ -592,7 +594,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -601,12 +603,12 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication",
-			[&promise](const buuid& uuid) { promise.set_value(uuid); });
+			"BonusDeSpawnEventReplication",
+			[&promise](const ClientReceivedBonusDeSpawnEvent& event) { promise.set_value(event.uuid); });
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendBonusDeSpawnEvent{.uuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -614,8 +616,8 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -628,7 +630,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveListener("ClientReceived_BonusDeSpawn", "BonusDeSpawnEventReplication");
+	events->RemoveListener<ClientReceivedBonusDeSpawnEvent>("BonusDeSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
@@ -641,7 +643,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -653,13 +655,13 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_BonusHelmet_Pickup", nameOrigin, "BonusStatusEventReplication",
-			[&promise](const bool isEnable) { promise.set_value(isEnable); });
+			nameOrigin, "BonusStatusEventReplication",
+			[&promise](const ClientReceivedBonusHelmetPickupEvent& event) { promise.set_value(event.isEnable); });
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_BonusHelmet_Pickup",
-					  ServerSendBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(
+			ServerSendBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -667,8 +669,8 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -694,7 +696,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -705,12 +707,12 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	const auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_BonusCaliber_Pickup", nameOrigin, "BonusCaliberStatusEventReplication",
-			[&promise]() { promise.set_value(); });
+			nameOrigin, "BonusCaliberStatusEventReplication",
+			[&promise](const ClientReceivedBonusCaliberPickupEvent&) { promise.set_value(); });
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_BonusCaliber_Pickup", nameOrigin);
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendBonusCaliberPickupEvent{.author = nameOrigin});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -718,8 +720,8 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -745,7 +747,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -757,16 +759,15 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	auto future = promise.get_future();
 
 	events->AddListener(
-			"ClientReceived_ObstacleSpawn", "ObstacleSpawnEventReplication",
+			"ObstacleSpawnEventReplication",
 			[&promise](const ClientReceivedObstacleSpawnEvent& event)
 			{
 				promise.set_value({event.rect, event.type, event.uuid});
 			});
 
-	// events->EmitEvent("Server_StartFrame");
-	events->EmitEvent("ServerSend_ObstacleSpawn",
-					  ObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
-	events->EmitEvent("Server_EndFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
+	events->EmitEvent(ServerSendObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -774,8 +775,8 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
-		events->EmitEvent("PreTickUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -793,7 +794,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	EXPECT_EQ(obstacleType, type);
 	EXPECT_EQ(_uuid, uuid);
 
-	events->RemoveListener("ClientReceived_ObstacleSpawn", "ObstacleSpawnEventReplication");
+	events->RemoveListener<ClientReceivedObstacleSpawnEvent>("ObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
@@ -808,7 +809,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -830,7 +831,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	std::mutex mtx;
 	std::atomic<size_t> count{0u};
 	events->AddListener(
-			"ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication",
+			"MassiveObstacleSpawnEventReplication",
 			[&promises, &count, &mtx](const ClientReceivedObstacleSpawnEvent& event)
 			{
 				std::scoped_lock lock(mtx);
@@ -842,13 +843,12 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 				}
 			});
 
-	// events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		events->EmitEvent("ServerSend_ObstacleSpawn",
-						  ObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
+		events->EmitEvent(ServerSendObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
 	}
-	events->EmitEvent("Server_EndFrame");
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -861,8 +861,8 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			auto status = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent("NetCommandUpdate", 1.0);
-				events->EmitEvent("PreTickUpdate", 1.0);
+				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 				if (status = future.wait_for(checkInterval);
 					status == std::future_status::ready)
@@ -882,7 +882,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			EXPECT_EQ(_uuid, uuid);
 		}
 
-	events->RemoveListener("ClientReceived_ObstacleSpawn", "MassiveObstacleSpawnEventReplication");
+	events->RemoveListener<ClientReceivedObstacleSpawnEvent>("MassiveObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
@@ -897,7 +897,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent("NetCommandUpdate", 1.0);
+		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -906,7 +906,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 	size_t count = 0u;
 	events->AddListener(
-			"ClientReceived_RespawnTank", "RespawnTankEventReplication",
+			"RespawnTankEventReplication",
 			[&promises, &count](const ClientReceivedRespawnTankEvent& event)
 			{
 				promises[count++].set_value({event.type, event.uuid, FPoint{.x = event.rect.x, .y = event.rect.y}});
@@ -923,13 +923,12 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 	constexpr ObjRectangle rectOrigin{.x = 12.f, .y = 34.f, .w = 16.f, .h = 16.f};
 
-	// events->EmitEvent("Server_StartFrame");
+	// events->EmitEvent(ServerStartFrameEvent{});
 	for (const auto tankType: tankTypes)
 	{
-		events->EmitEvent("ServerSend_RespawnTank",
-						  ServerSendRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
+		events->EmitEvent(ServerSendRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
 	}
-	events->EmitEvent("Server_EndFrame");
+	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -940,8 +939,8 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		auto status = std::future_status::timeout;
 		while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 		{
-			events->EmitEvent("NetCommandUpdate", 1.0);
-			events->EmitEvent("PreTickUpdate", 1.0);
+			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
 
 			if (status = future.wait_for(checkInterval);
 				status == std::future_status::ready)
@@ -957,7 +956,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		EXPECT_EQ((FPoint{.x = rectOrigin.x, .y = rectOrigin.y}), posReplicated);
 	}
 
-	events->RemoveListener("ClientReceived_RespawnTank", "RespawnTankEventReplication");
+	events->RemoveListener<ClientReceivedRespawnTankEvent>("RespawnTankEventReplication");
 }
 
 //TODO: other bonus effect replication test after write this replication

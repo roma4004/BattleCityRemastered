@@ -1,6 +1,9 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/RenderUIEvents.h"
+#include "components/events/TimingEvents.h"
 #include <cmath>//NOTE: need for cmake build
 #include <thread>
 
@@ -21,16 +24,16 @@ FramePerSecondManager::~FramePerSecondManager()
 
 void FramePerSecondManager::Subscribe()
 {
-	_events->AddListener("CalculateActualFps", _name, [this]() { this->CountFpsAndDeltaTime(); });
+	_events->AddListener(_name, [this](const CalculateActualFpsEvent&) { this->CountFpsAndDeltaTime(); });
 
-	_events->AddListener("FrameStart", _name, [this]()
+	_events->AddListener(_name, [this](const FrameStartEvent&)
 	{
 		this->_startFrameTime = std::chrono::high_resolution_clock::now();
 	});
 
-	_events->AddListener("PostDrawUserInterface", _name, [this]()
+	_events->AddListener(_name, [this](const PostDrawUserInterfaceEvent&)
 	{
-		this->_events->EmitEvent("RenderFPS", _lastDisplayedFps);
+		this->_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
 	});
 }
 
@@ -59,7 +62,7 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 	}
 
 	_deltaTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
-	_events->EmitEvent("DeltaTime", _deltaTime);
+	_events->EmitEvent(DeltaTimeEvent{.deltaTime = _deltaTime});
 
 	_frameCounter++;
 	_fpsAccumulatedTime += _deltaTime;

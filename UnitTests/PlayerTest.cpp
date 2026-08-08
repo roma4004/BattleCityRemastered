@@ -3,6 +3,8 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/InputEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -58,7 +60,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -76,8 +78,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos = player->GetPos();
 	EXPECT_NE(startPos.y, endPos.y);
@@ -99,8 +101,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Left", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveLeftEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos = player->GetPos();
 	EXPECT_NE(startPos.x, endPos.x);
@@ -121,8 +123,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenDown)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos = player->GetPos();
 	EXPECT_NE(startPos.y, endPos.y);
@@ -143,8 +145,8 @@ TEST_F(PlayerTest, TankMoveInSideScreenRight)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Right", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveRightEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint endPos = player->GetPos();
 	EXPECT_NE(startPos.x, endPos.x);
@@ -165,8 +167,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenUp)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -184,8 +186,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Left", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveLeftEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -208,8 +210,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -232,8 +234,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Right", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveRightEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -290,8 +292,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -311,8 +313,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -332,8 +334,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -353,8 +355,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -373,8 +375,8 @@ TEST_F(PlayerTest, TankShotInSideScreenDown)
 	const size_t size = _allObjects.size();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(size, _allObjects.size());
 }
@@ -393,9 +395,9 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 	const size_t size = _allObjects.size();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Right", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveRightEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(size, _allObjects.size());
 }
@@ -419,9 +421,9 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 	const size_t size = _allObjects.size();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(size, _allObjects.size());
 }
@@ -445,9 +447,9 @@ TEST_F(PlayerTest, TankShotInSideScreenLeft)
 	const size_t size = _allObjects.size();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Left", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveLeftEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(size, _allObjects.size());
 }
@@ -467,9 +469,9 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		//fail the shot up test, try to create an outside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+		_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(size, _allObjects.size());
 	}
@@ -477,9 +479,9 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		//fail shot left test, try to create an outside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("Move_Left", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(Key(std::string{"P1"}), MoveLeftEvent{.isPressed = isPressed});
+		_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(size, _allObjects.size());
 	}
@@ -490,9 +492,9 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		//fail the shot down test, try to create an outside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+		_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(size, _allObjects.size());
 	}
@@ -500,9 +502,9 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		//fail the shot right test, try to create an outside screen bullet
 		const size_t size = _allObjects.size();
 
-		_events->EmitEvent("Move_Right", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("Fire", Key(std::string{"P1"}), isPressed);
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(Key(std::string{"P1"}), MoveRightEvent{.isPressed = isPressed});
+		_events->EmitEvent(Key(std::string{"P1"}), FireEvent{.isPressed = isPressed});
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(size, _allObjects.size());
 	}
@@ -530,9 +532,9 @@ TEST_F(PlayerTest, TankCantPassThroughTank)
 	const FPoint player2StartPos = player2->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Left", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("Move_Up", Key(std::string{"P2"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveLeftEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(std::string{"P2"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(playerStartPos, player->GetPos());
 	EXPECT_EQ(player2StartPos, player2->GetPos());
@@ -557,8 +559,8 @@ TEST_F(PlayerTest, TankCantPassThroughBrickWall)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -582,8 +584,8 @@ TEST_F(PlayerTest, TankCantPassThroughSteelWall)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -607,8 +609,8 @@ TEST_F(PlayerTest, TankCantPassThroughWater)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }
@@ -632,8 +634,8 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	const FPoint startPos = player->GetPos();
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
 }

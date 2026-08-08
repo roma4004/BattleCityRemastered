@@ -11,13 +11,13 @@ namespace network::commands
 StatisticsChange::StatisticsChange()
 	: Command{CommandType::STATISTICS_CHANGE} {}
 
-StatisticsChange::StatisticsChange(std::string eventName, std::string author, std::string fraction)
+StatisticsChange::StatisticsChange(const StatisticsType type, std::string author, std::string fraction)
 	: Command{CommandType::STATISTICS_CHANGE}
-	, _eventName{std::move(eventName)}
+	, _type{type}
 	, _author{std::move(author)}
 	, _fraction{std::move(fraction)} {}
 
-std::string StatisticsChange::GetEventName() const noexcept { return _eventName; }
+StatisticsType StatisticsChange::GetType() const noexcept { return _type; }
 
 std::string StatisticsChange::GetAuthor() const noexcept { return _author; }
 

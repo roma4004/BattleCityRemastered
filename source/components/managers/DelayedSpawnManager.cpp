@@ -1,6 +1,9 @@
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
@@ -18,16 +21,16 @@ DelayedSpawnManager::~DelayedSpawnManager()
 
 void DelayedSpawnManager::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
 
-	_events->AddListener("SpawnDelayStart", _name, [this](const SpawnDelayStartEvent& event)
+	_events->AddListener(_name, [this](const SpawnDelayStartEvent& event)
 	{
 		this->SpawnDelayStart(event.uuid, event.delay);
 	});
 
-	_events->AddListener("PreTickUpdate", _name, [this](const double deltaTime) { this->PreTickUpdate(deltaTime); });
+	_events->AddListener(_name, [this](const PreTickUpdateEvent& event) { this->PreTickUpdate(event.deltaTime); });
 
-	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { this->Disposer(); });
+	_events->AddListener(_name, [this](const PostTickUpdateEvent&) { this->Disposer(); });
 }
 
 void DelayedSpawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
@@ -43,7 +46,7 @@ void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 	{
 		if (timer.isActive && timer.IsCooldownFinish())
 		{
-			_events->EmitEvent("SpawnEnabled", uuid);
+			_events->EmitEvent(SpawnEnabledEvent{.uuid = uuid});
 
 			timer.isActive = false;
 		}
@@ -63,7 +66,7 @@ void DelayedSpawnManager::SpawnDelayStart(const buuid& uuid, const milliseconds 
 	if (delay == milliseconds{0})
 	{
 		// NOTE: immediate call, for unit tests
-		_events->EmitEvent("SpawnEnabled", uuid);
+		_events->EmitEvent(SpawnEnabledEvent{.uuid = uuid});
 	}
 	else
 	{

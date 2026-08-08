@@ -2,6 +2,9 @@
 #include "components/AnimatedObjects.h"
 #include "components/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
 #include "Point.h"
@@ -34,59 +37,49 @@ void AnimationManager::Subscribe()
 		SubscribeAsHost();
 	}
 
-	_events->AddListener("AnimationCreate", _name, [this](const AnimationCreateEvent& event)
+	_events->AddListener(_name, [this](const AnimationCreateEvent& event)
 	{
 		this->CreateAnimation(event.type, event.rect, event.name);
 	});
-	_events->AddListener("Reset", _name, [this]() { Reset(); });
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { SetGameMode(newGameMode); });
-	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/) { Update(); });
-	_events->AddListener("AnimationTankUpdate", _name, [this](const AnimationTankUpdateEvent& event)
+	_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); });
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { SetGameMode(event.mode); });
+	_events->AddListener(_name, [this](const PostTickUpdateEvent&) { Update(); });
+	_events->AddListener(_name, [this](const AnimationTankUpdateEvent& event)
 	{
 		this->UpdateTank(event.name, event.pos, event.dir);
 	});
-	_events->AddListener("BonusHelmet_AnimationChange", _name, [this](const BonusHelmetAnimationChangeEvent& event)
+	_events->AddListener(_name, [this](const BonusHelmetAnimationChangeEvent& event)
 	{
 		this->OnHelmetEffect(event.name, event.isEnable);
 	});
 
-	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { this->AnimationSeqDisposer(); });
-	//TODO: do not add new helmet animation if we already have for this tank
-	_events->AddListener("Draw", _name, [this]() { this->Draw(); });
+	_events->AddListener(_name, [this](const TickUpdateEvent&) { this->AnimationSeqDisposer(); });
+	_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); });
 }
 
 void AnimationManager::SubscribeAsHost()
 {
-	_events->AddListener(
-			"AnimationCreateTankExplosion", _name,
-			[this](const AnimationCreateExplosionEvent& event)
-			{
-				this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
-			});
+	_events->AddListener(_name, [this](const AnimationCreateTankExplosionEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
+	});
 
-	_events->AddListener(
-			"AnimationCreateBulletExplosion", _name,
-			[this](const AnimationCreateExplosionEvent& event)
-			{
-				this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
-			});
+	_events->AddListener(_name, [this](const AnimationCreateBulletExplosionEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
+	});
 
 	//TODO: create client like subscription
-	_events->AddListener(
-			"AnimationCreateTank", _name,
-			[this](const AnimationCreateTankEvent& event)
-			{
-				this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
-				this->OnHelmetEffect(event.name, true);
-				//TODO: reuse animation
-			});
+	_events->AddListener(_name, [this](const AnimationCreateTankEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
+		this->OnHelmetEffect(event.name, true);
+	});
 
-	_events->AddListener(
-			"AnimationCreateWater", _name,
-			[this](const ObjRectangle rect)
-			{
-				this->CreateAnimation(AnimationType::Water_Animation, rect, "Water");
-			});
+	_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Water_Animation, event.rect, "Water");
+	});
 }
 
 // void AnimationManager::SubscribeAsClient() {}
@@ -124,27 +117,26 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 			Create("BulletExplosion", rect, type, 3, 16, 20);
 			break;
 		case AnimationType::Tank_Explosion:
-			DeleteTankAnimation(name);//TODO: fix tank explosion
+			DeleteTankAnimation(name);
 			Create("TankExplosion", rect, type, 2, 32, 30);
 			//TODO: should change limitOfFrame to 5?
 			break;
-		case AnimationType::Bullet_Animation:
-			//NOTE: bullets are drawn via the texture manager, not animated here; speed 0 keeps UpdateFrame a no-op
-			Create("BulletAnimation", rect, type, 2, 16, 0);
-			break;
+		// case AnimationType::Bullet_Animation:
+		// 	//NOTE: bullets are drawn via the texture manager, not animated here; speed 0 keeps UpdateFrame a no-op
+		// 	Create("BulletAnimation", rect, type, 2, 16, 0);
+		// 	break;
 		case AnimationType::Water_Animation:
 			Create("Water", rect, type, 16, 1, 20, true);
 			break;
 		case AnimationType::Helmet_Animation:
 		{
-			//NOTE: isLocallySimulated=true: helmet effect syncs independently via ServerSend_BonusHelmet_Pickup;
-			//each client has its own helmet animation locally from its own tank
+			//NOTE: isLocallySimulated=true: each client has its own helmet animation locally from its own tank
 			constexpr bool isLocallySimulated{true};
 			Create(name + "HelmetAnimation", rect, type, 2, 16, 20, true, isLocallySimulated);
 		}
 		break;
 		case AnimationType::Tank_Animation:
-			//NOTE: isLocallySimulated=true: each client has its own tank animation locally from its own spawn-enabled trigger
+			//NOTE: isLocallySimulated=true: each client has its own tank animation from its own spawn-enabled trigger
 			constexpr bool isLocallySimulated{true};
 			Create(name, rect, type, 2, 16, 2, true, isLocallySimulated);
 			break;
@@ -166,8 +158,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 	if (!isLocallySimulated && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_AnimationCreate",
-						   ServerSendAnimationCreateEvent{.type = type, .rect = rect, .name = name});
+		_events->EmitEvent(ServerSendAnimationCreateEvent{.type = type, .rect = rect, .name = name});
 	}
 }
 
@@ -317,7 +308,7 @@ void AnimationManager::DeleteHelmetAnimation(const std::string& name)
 
 // it = [2][4][6] [0][1][3][5]
 //  cut here     |
-void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
+void AnimationManager::AnimationSeqDisposer()
 {
 	std::erase_if(_autoAnimatedObjects, [](const auto& object)
 	{
@@ -328,7 +319,6 @@ void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 void AnimationManager::DrawObject(const AnimatedObject& object) const
 {
 	_events->EmitEvent(
-			"DrawAnimation",
 			DrawAnimationEvent{.rect = object.rect,
 							   .dir = object.dir,
 							   .frame = object.currentFrameIndex,

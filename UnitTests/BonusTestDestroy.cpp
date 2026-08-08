@@ -4,6 +4,7 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
@@ -59,7 +60,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -80,7 +81,7 @@ TEST_F(BonusTestDestroy, BonusDestroy)
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_FALSE(bonus->GetIsAlive());
 
@@ -107,7 +108,7 @@ TEST_F(BonusTestDestroy, BonusNotDestroy)
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_TRUE(bonus->GetIsAlive());
 
@@ -130,7 +131,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -142,7 +143,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 	const FPoint enemyPos = enemyBot->GetPos();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
@@ -168,7 +169,7 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	// spawn Bullet2
 	const ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.f, .y = 7.f, .w = 6.f, .h = 5.f};
@@ -180,7 +181,7 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 	const int playerHealth = player->GetHealth();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(playerHealth, player->GetHealth());
 }
@@ -209,7 +210,7 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
@@ -219,7 +220,7 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "BonusTest",
+			"BonusTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				respawnActual = event.respawnCount;
@@ -237,11 +238,11 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 
 	const unsigned short playerSpawnCount = respawnActual;
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 //Check that player destroys Star bonus and his tier counts remain the same
@@ -267,7 +268,7 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 
 	EXPECT_EQ(player->GetTier(), 1u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(player->GetTier(), 1u);
 }
@@ -290,7 +291,7 @@ TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 }

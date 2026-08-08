@@ -13,10 +13,7 @@ BonusShovel::BonusShovel(const ObjRectangle& rect, const std::shared_ptr<EventSy
 
 BonusShovel::~BonusShovel() = default;
 
-void BonusShovel::PickUpBonus(const std::string& author, const std::string& fraction)
+void BonusShovel::EmitPickupEvent(const std::string&, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{.author = author, .fraction = fraction});
-	_events->EmitEvent(_name + "_Pickup",
-					   BonusTeamEffectPickupEvent{.fraction = fraction, .effectDuration = _effectDuration});
-	TakeDamage(GetHealth(), _name, _fraction);
+	_events->EmitEvent(BonusShovelPickupEvent{.fraction = fraction, .effectDuration = _effectDuration});
 }

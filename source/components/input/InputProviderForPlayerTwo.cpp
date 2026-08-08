@@ -1,5 +1,6 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/EventSystem.h"
+#include "components/events/InputEvents.h"
 
 InputProviderForPlayerTwo::InputProviderForPlayerTwo(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
@@ -12,12 +13,12 @@ InputProviderForPlayerTwo::~InputProviderForPlayerTwo()
 void InputProviderForPlayerTwo::Subscribe()
 {
 	const std::string tag{"P2"};
-	_events->AddListener("Move_Up", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("Move_Left", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
-	_events->AddListener("Move_Down", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Move_Right", tag, _name,
-						 [&btn = _playerKeys](const bool isPressed) { btn.right = isPressed; });
-	_events->AddListener("Fire", tag, _name, [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
+	_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveUpEvent& event) { btn.up = event.isPressed; });
+	_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveLeftEvent& event) { btn.left = event.isPressed; });
+	_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveDownEvent& event) { btn.down = event.isPressed; });
+	_events->AddListener(tag, _name,
+						 [&btn = _playerKeys](const MoveRightEvent& event) { btn.right = event.isPressed; });
+	_events->AddListener(tag, _name, [&btn = _playerKeys](const FireEvent& event) { btn.shot = event.isPressed; });
 }
 
 void InputProviderForPlayerTwo::Unsubscribe() const { _events->RemoveAllListeners(_name); }

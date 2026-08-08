@@ -64,7 +64,6 @@ private:
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
 	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
-	std::unique_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};

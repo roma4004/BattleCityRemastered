@@ -24,8 +24,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_ObstacleSpawn",
-						   ObstacleSpawnEvent{.rect = _rect, .type = _obstacleType, .uuid = uuid});
+		_events->EmitEvent(ServerSendObstacleSpawnEvent{.rect = _rect, .type = _obstacleType, .uuid = uuid});
 	}
 }
 
@@ -44,9 +43,9 @@ void Obstacle::Subscribe()
 
 void Obstacle::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_Health", _uuid, _nameWithUuid, [this](const int health)
+	_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
 	{
-		this->SetHealth(health);
+		this->SetHealth(event.health);
 	});
 }
 
@@ -54,15 +53,14 @@ void Obstacle::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid);
 
 void Obstacle::Draw() const
 {
-	_events->EmitEvent("DrawObj", DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
+	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
 }
 
 void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	if (GetHealth() < 1)
 	{
-		_events->EmitEvent("Statistics_" + _name + "Died",
-						   StatisticsAttributionEvent{.author = author, .fraction = fraction});
+		EmitDeathStatistics(author, fraction);
 	}
 }
 
@@ -74,7 +72,6 @@ void Obstacle::TakeDamage(const unsigned int damage, const std::string& damageAu
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Health",
-						   ServerSendHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(ServerSendHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }

@@ -2,6 +2,10 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/BonusPickupEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
@@ -146,13 +150,15 @@ void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, signalName]()
 		{
+			//NOTE: signalName has exactly one live value today; a real second signal would need its
+			//own fixed-name branch/struct here rather than reviving a runtime-built event name.
 			if (signalName == "ClientSend_ReadyToPlay")
 			{
-				_events->EmitEvent("ServerReceive_ClientReadyToStartGame");
+				_events->EmitEvent(ServerReceiveClientReadyToStartGameEvent{});
 			}
 			else
 			{
-				_events->EmitEvent("ServerReceive_" + signalName);//NOTE: Other not used now
+				NetworkLogger::WriteLog("Session::OnSignalEvent: unrecognized signal \"" + signalName + "\"");
 			}
 		});
 	}
@@ -170,15 +176,47 @@ void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
 			// keyState is either a tagged input action ("P1_Move_Up") from UserInput's
 			// keyboard/gamepad side-tag family, re-dispatched here keyed by tag, or an untagged
 			// name (e.g. "Pause_Released") that stays a plain broadcast event.
+			//NOTE: both `action` and the untagged `keyState` are closed sets, so a runtime string
+			//switch onto fixed-name structs replaces what used to be a "ServerReceive_" + <dynamic>
+			//event name.
 			if (keyState.starts_with("P1_") || keyState.starts_with("P2_"))
 			{
 				const std::string tag = keyState.substr(0, 2);
 				const std::string action = keyState.substr(3);
-				_events->EmitEvent("ServerReceive_" + action, Key(tag), isEnable);
+
+				if (action == "Move_Up")
+				{
+					_events->EmitEvent(Key(tag), ServerReceiveMoveUpEvent{.isPressed = isEnable});
+				}
+				else if (action == "Move_Down")
+				{
+					_events->EmitEvent(Key(tag), ServerReceiveMoveDownEvent{.isPressed = isEnable});
+				}
+				else if (action == "Move_Left")
+				{
+					_events->EmitEvent(Key(tag), ServerReceiveMoveLeftEvent{.isPressed = isEnable});
+				}
+				else if (action == "Move_Right")
+				{
+					_events->EmitEvent(Key(tag), ServerReceiveMoveRightEvent{.isPressed = isEnable});
+				}
+				else if (action == "Fire")
+				{
+					_events->EmitEvent(Key(tag), ServerReceiveFireEvent{.isPressed = isEnable});
+				}
+				else
+				{
+					NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized tagged action \"" + action
+											+ "\"");
+				}
+			}
+			else if (keyState == "Pause_Released")
+			{
+				_events->EmitEvent(ServerReceivePauseReleasedEvent{.isPaused = isEnable});
 			}
 			else
 			{
-				_events->EmitEvent("ServerReceive_" + keyState, isEnable);
+				NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
 			}
 		});
 	}
@@ -413,7 +451,7 @@ void Server::Shutdown()
 
 void Server::Subscribe()
 {
-	_events->AddListener("Server_EndFrame", _name, [this]()
+	_events->AddListener(_name, [this](const ServerEndFrameEvent&)
 	{
 		auto batch{std::make_shared<CommandBatch>()};
 		{
@@ -427,26 +465,26 @@ void Server::Subscribe()
 		_sendCondition.notify_one();
 	});
 
-	_events->AddListener("ServerSend_Pause_Status", _name, [this](const bool isPause)
+	_events->AddListener(_name, [this](const ServerSendPauseStatusEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", isPause));
+		_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", event.isPaused));
 	});
 
-	_events->AddListener("ServerSend_PlayersTeamIsWon", _name, [this]()
+	_events->AddListener(_name, [this](const ServerSendPlayersTeamIsWonEvent&)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<GameStateChange>("PlayersTeamIsWon"));
 	});
 
-	_events->AddListener("ServerSend_EnemiesTeamIsWon", _name, [this]()
+	_events->AddListener(_name, [this](const ServerSendEnemiesTeamIsWonEvent&)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<GameStateChange>("EnemiesTeamIsWon"));
 	});
 
 	_events->AddListener(
-			"ServerSend_Pos", _name,
+			_name,
 			[this](const ServerSendPosEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
@@ -454,35 +492,29 @@ void Server::Subscribe()
 			});
 
 	_events->AddListener(
-			"ServerSend_Shot", _name,
+			_name,
 			[this](const ServerSendShotEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<TankShot>(event.who, event.dir, event.bulletUuid));
 			});
 
-	_events->AddListener("ServerSend_Health", _name, [this](const ServerSendHealthEvent& event)
+	_events->AddListener(_name, [this](const ServerSendHealthEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<HealthChange>(event.who, event.health, event.uuid));
 	});
 
-	_events->AddListener("ServerSend_Dispose", _name, [this](/*TODO: add who,*/ const buuid& uuid)
+	_events->AddListener(_name, [this](const ServerSendDisposeEvent& event)//TODO: add who,
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<Dispose>("Bullet", uuid));
+		_batch->AddCommand(std::make_shared<Dispose>("Bullet", event.uuid));
 	});
 
-	_events->AddListener(
-			"ServerSend_Statistics", _name,//TODO: refactor statistics to send actual value not increment
-			[this](const ServerSendStatisticsEvent& event)
-			{
-				std::scoped_lock lock(_batchWriteMutex);
-				_batch->AddCommand(std::make_shared<StatisticsChange>(event.eventName, event.author, event.fraction));
-			});
+	SubscribeStatistics();
 
 	_events->AddListener(
-			"ServerSend_RespawnTank", _name,
+			_name,
 			[this](const ServerSendRespawnTankEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
@@ -490,15 +522,15 @@ void Server::Subscribe()
 			});
 
 	_events->AddListener(
-			"ServerSend_ObstacleSpawn", _name,
-			[this](const ObstacleSpawnEvent& event)
+			_name,
+			[this](const ServerSendObstacleSpawnEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<ObstacleSpawn>(event.rect, event.type, event.uuid));
 			});
 
 	_events->AddListener(
-			"ServerSend_AnimationCreate", _name,
+			_name,
 			[this](const ServerSendAnimationCreateEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
@@ -506,7 +538,7 @@ void Server::Subscribe()
 			});
 
 	_events->AddListener(
-			"ServerSend_OnTankOnOff", _name,
+			_name,
 			[this](const ServerSendOnTankOnOffEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
@@ -516,50 +548,122 @@ void Server::Subscribe()
 	SubscribeBonus();
 }
 
+//NOTE: GameStatistics.cpp emits one of these 11 distinct types directly. StatisticsChange's own
+//discriminator is StatisticsType (see enums/StatisticsType.h), not a free-form string, so each
+//listener here just names its enum value.
+void Server::SubscribeStatistics()
+{
+	_events->AddListener(_name, [this](const ServerSendBulletHitEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BulletHit, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendEnemyHitEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::EnemyHit, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendPlayerOneHitEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerOneHit, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendPlayerTwoHitEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoHit, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendEnemyDiedEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::EnemyDied, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendPlayerOneDiedEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerOneDied, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendPlayerTwoDiedEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoDied, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendBrickWallDiedEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BrickWallDied, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendSteelWallDiedEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::SteelWallDied, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendBonusPickupEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BonusPickup, event.author, event.fraction));
+	});
+
+	_events->AddListener(_name, [this](const ServerSendBonusDestroyedEvent& event)
+	{
+		std::scoped_lock lock(_batchWriteMutex);
+		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BonusDestroyed, event.author, event.fraction));
+	});
+}
+
 void Server::SubscribeBonus()
 {
 	_events->AddListener(
-			"ServerSend_BonusSpawn", _name,
-			[this](const BonusSpawnEvent& event)
+			_name,
+			[this](const ServerSendBonusSpawnEvent& event)
 			{
 				std::scoped_lock lock(_batchWriteMutex);
 				_batch->AddCommand(std::make_shared<BonusSpawn>(event.pos, event.type, event.uuid));
 			});
 
-	_events->AddListener("ServerSend_BonusDeSpawn", _name, [this](const buuid& uuid)
+	_events->AddListener(_name, [this](const ServerSendBonusDeSpawnEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<BonusDeSpawn>(uuid));
+		_batch->AddCommand(std::make_shared<BonusDeSpawn>(event.uuid));
 	});
 
-	_events->AddListener("ServerSend_FortressChange", _name, [this](const FortressChangeEvent& event)
+	_events->AddListener(_name, [this](const ServerSendFortressChangeEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<FortressChange>(event.state, event.uuid));
 	});
 
-	_events->AddListener("ServerSend_BonusHelmet_Pickup", _name, [this](const ServerSendBonusHelmetPickupEvent& event)
+	_events->AddListener(_name, [this](const ServerSendBonusHelmetPickupEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<BonusStatus>(event.name, BonusType::Helmet, event.isActive));
 	});
 
-	_events->AddListener("ServerSend_BonusStar_Pickup", _name, [this](const std::string& name)
+	_events->AddListener(_name, [this](const ServerSendBonusStarPickupEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Star));
+		_batch->AddCommand(std::make_shared<BonusStatus>(event.author, BonusType::Star));
 	});
 
-	_events->AddListener("ServerSend_BonusCaliber_Pickup", _name, [this](const std::string& name)
+	_events->AddListener(_name, [this](const ServerSendBonusCaliberPickupEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Caliber));
+		_batch->AddCommand(std::make_shared<BonusStatus>(event.author, BonusType::Caliber));
 	});
 
-	_events->AddListener("ServerSend_BonusTank_Pickup", _name, [this](const std::string& name)
+	_events->AddListener(_name, [this](const ServerSendBonusTankPickupEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<BonusStatus>(name, BonusType::Tank));
+		_batch->AddCommand(std::make_shared<BonusStatus>(event.author, BonusType::Tank));
 	});
 }
 

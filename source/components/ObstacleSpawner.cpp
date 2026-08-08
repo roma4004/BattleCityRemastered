@@ -1,6 +1,8 @@
 #include "components/ObstacleSpawner.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
 #include "components/Map.h"
 #include "components/SpawnEvents.h"
 #include "entities/obstacles/BrickWall.h"
@@ -38,25 +40,25 @@ ObstacleSpawner::~ObstacleSpawner()
 
 void ObstacleSpawner::Subscribe()
 {
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
-		_gameMode = newGameMode;
+		_gameMode = event.mode;
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 
-	_events->AddListener("LoadMap", _name, [this]() { LoadMap(); });
-	_events->AddListener("SpawnObstacle", _name, [this](const SpawnObstacleEvent& event)
+	_events->AddListener(_name, [this](const LoadMapEvent&) { LoadMap(); });
+	_events->AddListener(_name, [this](const SpawnObstacleEvent& event)
 	{
 		SpawnObstacle(event.rect, event.type);
 	});
 
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize) { _windowSize = newSize; });
+	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event) { _windowSize = event.newSize; });
 }
 
 void ObstacleSpawner::SubscribeAsClient()
 {
 	_events->AddListener(
-			"ClientReceived_ObstacleSpawn", _name,
+			_name,
 			[this](const ClientReceivedObstacleSpawnEvent& event)
 			{
 				SpawnObstacle(event.rect, event.type, event.uuid);
@@ -65,7 +67,10 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-void ObstacleSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_ObstacleSpawn", _name); }
+void ObstacleSpawner::UnsubscribeAsClient() const
+{
+	_events->RemoveListener<ClientReceivedObstacleSpawnEvent>(_name);
+}
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
 {
@@ -105,7 +110,7 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 
 	if (obstacle)
 	{
-		_events->EmitEvent("AddToSpawnQueue", obstacle);
+		_events->EmitEvent(AddToSpawnQueueEvent{.obj = obstacle});
 	}
 }
 

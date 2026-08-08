@@ -13,6 +13,12 @@ class EagleTile final : public Obstacle
 	void Subscribe() override;
 	void Unsubscribe() const override;
 
+protected:
+	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),
+	//not the BrickWall/SteelWall-style death-statistics struct - no-op body to satisfy the base's
+	//pure virtual hook.
+	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+
 public:
 	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 

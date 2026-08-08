@@ -1,5 +1,7 @@
 #include "entities/obstacles/BrickWall.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include "enums/ObstacleType.h"
 
 BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
@@ -20,10 +22,15 @@ BrickWall::~BrickWall()
 
 void BrickWall::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
 }
 
 void BrickWall::Unsubscribe() const
 {
-	_events->RemoveListener("Draw", _nameWithUuid);
+	_events->RemoveListener<DrawEvent>(_nameWithUuid);
+}
+
+void BrickWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent(BrickWallDiedEvent{.author = author, .fraction = fraction});
 }

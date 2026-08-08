@@ -13,6 +13,18 @@ struct AnimationCreateExplosionEvent
 	std::string name;
 };
 
+struct AnimationCreateTankExplosionEvent
+{
+	ObjRectangle rect;
+	std::string name;
+};
+
+struct AnimationCreateBulletExplosionEvent
+{
+	ObjRectangle rect;
+	std::string name;
+};
+
 struct AnimationTankUpdateEvent
 {
 	std::string name;
@@ -67,4 +79,14 @@ struct ServerSendAnimationCreateEvent
 	AnimationType type;
 	ObjRectangle rect;
 	std::string name;
+};
+
+struct AnimationCreateWaterEvent
+{
+	ObjRectangle rect;
+};
+
+struct RenderColorTextureEvent
+{
+	ObjRectangle rect;
 };

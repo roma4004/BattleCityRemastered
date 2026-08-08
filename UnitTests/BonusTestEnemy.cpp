@@ -3,6 +3,8 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/InputEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
@@ -51,7 +53,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -77,7 +79,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 	EXPECT_NE(fortressWall->GetHealth(), 0);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 	EXPECT_EQ(fortressWall->GetHealth(), -1);
@@ -103,7 +105,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	// spawn FortressWall
 	const ObjRectangle fortressRect{.x = _tankSize * 3.f + 1.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
@@ -124,14 +126,14 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 
 		EXPECT_TRUE(fortressWall->IsBrickWall());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		_allObjects.pop_back();//NOTE: to avoid second pickup by player same bonus
 
 		EXPECT_TRUE(fortressWall->IsSteelWall());
 		EXPECT_NE(fortressWall->GetHealth(), 0);
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_TRUE(fortressWall->IsBrickWall());
 		EXPECT_EQ(fortressWall->GetHealth(), -1);

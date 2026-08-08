@@ -1,5 +1,6 @@
 #include "network/ServerHandler.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
@@ -73,7 +74,7 @@ void ServerHandler::Shutdown()
 
 void ServerHandler::Subscribe()
 {
-	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
+	_events->AddListener(_name, [this](const NetCommandUpdateEvent&)
 	{
 		this->ProcessNetworkCommands();
 	});
@@ -81,7 +82,7 @@ void ServerHandler::Subscribe()
 
 void ServerHandler::Unsubscribe() const
 {
-	_events->RemoveListener("NetCommandUpdate", _name);
+	_events->RemoveListener<NetCommandUpdateEvent>(_name);
 }
 
 }//namespace network::commands

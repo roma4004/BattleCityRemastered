@@ -17,4 +17,7 @@ public:
 				 buuid uuid, GameMode gameMode);
 
 	~BonusCaliber() override;
+
+protected:
+	void EmitPickupEvent(const std::string& author, const std::string& fraction) override;
 };

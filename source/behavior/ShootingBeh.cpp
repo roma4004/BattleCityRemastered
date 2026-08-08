@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -136,7 +137,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 
 	if (bulletAsBase != nullptr)
 	{
-		_events->EmitEvent("AddToSpawnQueue", bulletAsBase);
+		_events->EmitEvent(AddToSpawnQueueEvent{bulletAsBase});
 	}
 
 	return bulletAsBase->GetUuid();

@@ -3,6 +3,8 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -33,7 +35,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -42,7 +44,7 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Enemy")
@@ -52,13 +54,13 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 			});
 
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
 	EXPECT_GT(respawnOriginal, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
@@ -66,7 +68,7 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Player1")
@@ -76,13 +78,13 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 			});
 
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
 	EXPECT_GT(respawnOriginal, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
@@ -90,7 +92,7 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Player2")
@@ -100,13 +102,13 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 			});
 
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::TwoPlayers});
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
 	EXPECT_GT(respawnOriginal, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
@@ -114,7 +116,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Enemy")
@@ -123,17 +125,17 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 				}
 			});
 
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		_allObjects.pop_back();
 	}
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
@@ -141,7 +143,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Player1")
@@ -150,17 +152,17 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 				}
 			});
 
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		_allObjects.pop_back();
 	}
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
@@ -168,7 +170,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Player2")
@@ -177,17 +179,17 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 				}
 			});
 
-	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::TwoPlayers});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		_allObjects.pop_back();
 	}
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
@@ -195,7 +197,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 	constexpr unsigned short respawnOriginal{21u};
 	unsigned short respawnActual{21u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Enemy")
@@ -204,11 +206,11 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 				}
 			});
 
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		if (!_allObjects.empty())
 		{
 			_allObjects.pop_back();
@@ -217,7 +219,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
@@ -225,7 +227,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Player1")
@@ -234,11 +236,11 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 				}
 			});
 
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		if (!_allObjects.empty())
 		{
 			_allObjects.pop_back();
@@ -247,7 +249,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
@@ -255,7 +257,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "TankSpawnerTest",
+			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				if (event.objectName == "Player2")
@@ -265,11 +267,11 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 			});
 
 
-	_events->EmitEvent("GameModeChangedTo", GameMode::TwoPlayers);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::TwoPlayers});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		if (!_allObjects.empty())
 		{
 			_allObjects.pop_back();
@@ -278,5 +280,5 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "TankSpawnerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }

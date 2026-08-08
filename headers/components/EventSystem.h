@@ -6,49 +6,11 @@
 #include <iostream>
 #include <memory>
 #include <ranges>
+#include <typeindex>
 #include <unordered_set>
 
-//TODO: template for deducing lambda parameters type can be constexpr?
-//TODO: create eventType and derived just like network command to compile time parameter check and replace event name
 namespace detail
 {
-// Type adapter for auto conversion const char* to std::string
-template<typename T>
-struct type_adapter
-{
-	using type = T;
-};
-
-// specialization for const char*
-template<>
-struct type_adapter<const char*>
-{
-	using type = std::string;
-};
-
-// specialization for char*
-template<>
-struct type_adapter<char*>
-{
-	using type = std::string;
-};
-
-// specialization for a char array
-template<size_t N>
-struct type_adapter<char[N]>
-{
-	using type = std::string;
-};
-
-template<size_t N>
-struct type_adapter<const char[N]>
-{
-	using type = std::string;
-};
-
-template<typename T>
-using type_adapter_t = type_adapter<std::decay_t<T>>::type;
-
 // Wrapper marking a variadic EmitEvent argument as a dispatch KEY rather than a payload value.
 // Used to disambiguate the keyed EmitEvent overload from the plain variadic one without any
 // risk of colliding with a genuine payload type - see the Key() factory function below.
@@ -66,12 +28,26 @@ struct is_event_key<EventKey<KeyT>> : std::true_type {};
 
 template<typename T>
 constexpr bool is_event_key_v = is_event_key<std::decay_t<T>>::value;
+
+// Extracts the first type of a non-empty pack - used below to pull the single EventType out of
+// a listener lambda's parameter list once callable_signature has verified there's exactly one.
+template<typename... Args>
+struct first_type;
+
+template<typename T, typename... Rest>
+struct first_type<T, Rest...>
+{
+	using type = T;
+};
+
+template<typename... Args>
+using first_type_t = typename first_type<Args...>::type;
 }// namespace detail
 
 // Wrap a per-instance dispatch key (e.g. a tank's uuid) for the keyed EmitEvent/AddListener
-// overloads: EmitEvent("Pos", Key(uuid), pos, dir) delivers only to listeners registered via
-// AddListener("Pos", uuid, listenerName, callback) for that same key - everyone else registered
-// under the plain (non-keyed) "Pos" bucket is unaffected, and vice versa.
+// overloads: EmitEvent(Key(uuid), PosEvent{...}) delivers only to listeners registered via
+// AddListener(uuid, listenerName, callback) for that same key - everyone else registered under
+// the plain (non-keyed) bucket for that same EventType is unaffected, and vice versa.
 template<typename KeyT>
 detail::EventKey<KeyT> Key(KeyT key)
 {
@@ -87,64 +63,53 @@ template<typename T>
 	requires requires { &T::operator(); }
 struct callable_signature<T> : callable_signature<decltype(&T::operator())> {};
 
-// Const lambda without arguments
+// Zero-parameter lambdas are no longer supported under the type_index-keyed design: the single
+// EventType parameter's C++ type IS the dispatch key, so there's nothing to key off of without
+// one. Every event - even ones that used to carry no data - gets a uniquely-named struct (an
+// empty tag struct if it truly has no fields) and the listener takes it by value/const-ref,
+// e.g. `[](const FrameStartEvent&){}` instead of `[](){}`.
 template<typename Class>
 struct callable_signature<void (Class::*)() const>
 {
-	template<typename CallableT>
-	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-								  CallableT&& callback)
-	{
-		eventSystem->template AddListenerImpl<>(eventName, listenerName, std::forward<CallableT>(callback));
-	}
-
-	template<typename KeyT, typename CallableT>
-	static void call_add_keyed_listener(auto* eventSystem, const std::string& eventName, const KeyT& key,
-										const std::string& listenerName, CallableT&& callback)
-	{
-		eventSystem->template AddKeyedListenerImpl<KeyT>(eventName, key, listenerName,
-														 std::forward<CallableT>(callback));
-	}
+	static_assert(sizeof(Class) == 0,
+				  "EventSystem: listener must take exactly one event-struct parameter (e.g. "
+				  "`[](const FooEvent&){}`), even for events with no data - give it an empty tag "
+				  "struct instead. Zero-parameter listeners are no longer supported.");
 };
 
-// Mutable lambda without arguments
 template<typename Class>
 struct callable_signature<void (Class::*)()>
 {
-	template<typename CallableT>
-	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-								  CallableT&& callback)
-	{
-		eventSystem->template AddListenerImpl<>(eventName, listenerName, std::forward<CallableT>(callback));
-	}
-
-	template<typename KeyT, typename CallableT>
-	static void call_add_keyed_listener(auto* eventSystem, const std::string& eventName, const KeyT& key,
-										const std::string& listenerName, CallableT&& callback)
-	{
-		eventSystem->template AddKeyedListenerImpl<KeyT>(eventName, key, listenerName,
-														 std::forward<CallableT>(callback));
-	}
+	static_assert(sizeof(Class) == 0,
+				  "EventSystem: listener must take exactly one event-struct parameter (e.g. "
+				  "`[](const FooEvent&){}`), even for events with no data - give it an empty tag "
+				  "struct instead. Zero-parameter listeners are no longer supported.");
 };
 
 // Const lambda with arguments
 template<typename Class, typename R, typename... Args>
 struct callable_signature<R (Class::*)(Args...) const>
 {
+	static_assert(sizeof...(Args) == 1,
+				  "EventSystem: listener callback must take exactly one event-struct parameter, "
+				  "e.g. `[](const FooEvent& e){...}` - a single eventName string used to carry "
+				  "several distinct payload shapes is no longer supported, split into separate "
+				  "event structs.");
+
+	using EventType = std::decay_t<detail::first_type_t<Args...>>;
+
 	template<typename CallableT>
-	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-								  CallableT&& callback)
+	static void call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
-				eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
 	}
 
 	template<typename KeyT, typename CallableT>
-	static void call_add_keyed_listener(auto* eventSystem, const std::string& eventName, const KeyT& key,
-										const std::string& listenerName, CallableT&& callback)
+	static void call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
+										CallableT&& callback)
 	{
-		eventSystem->template AddKeyedListenerImpl<KeyT, std::decay_t<Args>...>(
-				eventName, key, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
+																	std::forward<CallableT>(callback));
 	}
 };
 
@@ -152,20 +117,26 @@ struct callable_signature<R (Class::*)(Args...) const>
 template<typename Class, typename R, typename... Args>
 struct callable_signature<R (Class::*)(Args...)>
 {
+	static_assert(sizeof...(Args) == 1,
+				  "EventSystem: listener callback must take exactly one event-struct parameter, "
+				  "e.g. `[](const FooEvent& e){...}` - a single eventName string used to carry "
+				  "several distinct payload shapes is no longer supported, split into separate "
+				  "event structs.");
+
+	using EventType = std::decay_t<detail::first_type_t<Args...>>;
+
 	template<typename CallableT>
-	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-								  CallableT&& callback)
+	static void call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
-				eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
 	}
 
 	template<typename KeyT, typename CallableT>
-	static void call_add_keyed_listener(auto* eventSystem, const std::string& eventName, const KeyT& key,
-										const std::string& listenerName, CallableT&& callback)
+	static void call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
+										CallableT&& callback)
 	{
-		eventSystem->template AddKeyedListenerImpl<KeyT, std::decay_t<Args>...>(
-				eventName, key, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
+																	std::forward<CallableT>(callback));
 	}
 };
 
@@ -173,20 +144,23 @@ struct callable_signature<R (Class::*)(Args...)>
 template<typename R, typename... Args>
 struct callable_signature<R (*)(Args...)>
 {
+	static_assert(sizeof...(Args) == 1,
+				  "EventSystem: listener callback must take exactly one event-struct parameter.");
+
+	using EventType = std::decay_t<detail::first_type_t<Args...>>;
+
 	template<typename CallableT>
-	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-								  CallableT&& callback)
+	static void call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
-				eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
 	}
 
 	template<typename KeyT, typename CallableT>
-	static void call_add_keyed_listener(auto* eventSystem, const std::string& eventName, const KeyT& key,
-										const std::string& listenerName, CallableT&& callback)
+	static void call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
+										CallableT&& callback)
 	{
-		eventSystem->template AddKeyedListenerImpl<KeyT, std::decay_t<Args>...>(
-				eventName, key, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
+																	std::forward<CallableT>(callback));
 	}
 };
 
@@ -194,20 +168,23 @@ struct callable_signature<R (*)(Args...)>
 template<typename R, typename... Args>
 struct callable_signature<std::function<R(Args...)>>
 {
+	static_assert(sizeof...(Args) == 1,
+				  "EventSystem: listener callback must take exactly one event-struct parameter.");
+
+	using EventType = std::decay_t<detail::first_type_t<Args...>>;
+
 	template<typename CallableT>
-	static void call_add_listener(auto* eventSystem, const std::string& eventName, const std::string& listenerName,
-								  CallableT&& callback)
+	static void call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
 	{
-		eventSystem->template AddListenerImpl<std::decay_t<Args>...>(
-				eventName, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
 	}
 
 	template<typename KeyT, typename CallableT>
-	static void call_add_keyed_listener(auto* eventSystem, const std::string& eventName, const KeyT& key,
-										const std::string& listenerName, CallableT&& callback)
+	static void call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
+										CallableT&& callback)
 	{
-		eventSystem->template AddKeyedListenerImpl<KeyT, std::decay_t<Args>...>(
-				eventName, key, listenerName, std::forward<CallableT>(callback));
+		eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
+																	std::forward<CallableT>(callback));
 	}
 };
 
@@ -346,50 +323,27 @@ private:
 
 class EventSystem final
 {
-	// storing info about an event type
+	// storing info about an event type - the map key (std::type_index of the EventType payload
+	// struct) already IS the type identity, so unlike the old string-keyed design there's no
+	// separate runtime type_info re-check needed here: a lookup hit is always exactly the right
+	// C++ type by construction (AddListenerImpl<EventType> is the only thing that ever inserts
+	// under type_index(typeid(EventType))).
 	struct EventInfo
 	{
 		std::unique_ptr<BaseEvent> event;
-		const std::type_info* type_info;
-
-		EventInfo(std::unique_ptr<BaseEvent> ev, const std::type_info* ti)
-			: event(std::move(ev))
-			, type_info(ti) {}
 	};
 
-	std::unordered_map<std::string, EventInfo> _events;
+	std::unordered_map<std::type_index, EventInfo> _events;
 
 	// Helper for getting a typed event
-	template<typename... Args>
-	Event<Args...>* GetTypedEvent(const std::string& eventName)
+	template<typename EventType>
+	Event<EventType>* GetTypedEvent()
 	{
-		if (const auto it = _events.find(eventName);
-			it != _events.end() && *it->second.type_info == typeid(Event<Args...>))
+		if (const auto it = _events.find(std::type_index(typeid(EventType))); it != _events.end())
 		{
-			return static_cast<Event<Args...>*>(it->second.event.get());
+			return static_cast<Event<EventType>*>(it->second.event.get());
 		}
 
-		return nullptr;
-	}
-
-	// Helper for getting event by name and argument count
-	BaseEvent* GetEventByNameAndArgCount(const std::string& eventName, const size_t argCount)
-	{
-		if (const auto it = _events.find(eventName);
-			it != _events.end() && it->second.event->GetArgumentCount() == argCount)
-		{
-			return it->second.event.get();
-		}
-		return nullptr;
-	}
-
-	// Helper for getting any event by name without any checking
-	BaseEvent* GetEventByName(const std::string& eventName)
-	{
-		if (const auto it = _events.find(eventName); it != _events.end())
-		{
-			return it->second.event.get();
-		}
 		return nullptr;
 	}
 
@@ -398,49 +352,43 @@ class EventSystem final
 	struct KeyedEventInfo
 	{
 		std::unique_ptr<BaseKeyedEvent> event;
-		const std::type_info* type_info;
-
-		KeyedEventInfo(std::unique_ptr<BaseKeyedEvent> ev, const std::type_info* ti)
-			: event(std::move(ev))
-			, type_info(ti) {}
 	};
 
-	std::unordered_map<std::string, KeyedEventInfo> _keyedEvents;
+	std::unordered_map<std::type_index, KeyedEventInfo> _keyedEvents;
 
 	// Helper for getting a typed keyed event
-	template<typename KeyT, typename... Args>
-	KeyedEvent<KeyT, Args...>* GetTypedKeyedEvent(const std::string& eventName)
+	template<typename KeyT, typename EventType>
+	KeyedEvent<KeyT, EventType>* GetTypedKeyedEvent()
 	{
-		if (const auto it = _keyedEvents.find(eventName);
-			it != _keyedEvents.end() && *it->second.type_info == typeid(KeyedEvent<KeyT, Args...>))
+		if (const auto it = _keyedEvents.find(std::type_index(typeid(EventType))); it != _keyedEvents.end())
 		{
-			return static_cast<KeyedEvent<KeyT, Args...>*>(it->second.event.get());
+			return static_cast<KeyedEvent<KeyT, EventType>*>(it->second.event.get());
 		}
 
 		return nullptr;
 	}
 
-	// Reverse index: listenerName -> the event names it's currently registered under (in either
-	// _events or _keyedEvents). Lets RemoveAllListeners(listenerName) sweep only the event names
-	// that listener actually touched instead of every event name known to the system. Kept up to
+	// Reverse index: listenerName -> the event types it's currently registered under (in either
+	// _events or _keyedEvents). Lets RemoveAllListeners(listenerName) sweep only the event types
+	// that listener actually touched instead of every event type known to the system. Kept up to
 	// date on both the add side (AddListenerImpl/AddKeyedListenerImpl) and the single-target
-	// remove side (the RemoveListener overloads) - a stale leftover entry here is harmless (it
-	// just costs one no-op erase attempt later), never a correctness problem.
-	std::unordered_map<std::string, std::unordered_set<std::string>> _listenerToEventNames;
+	// remove side (RemoveListener<EventType>) - a stale leftover entry here is harmless (it just
+	// costs one no-op erase attempt later), never a correctness problem.
+	std::unordered_map<std::string, std::unordered_set<std::type_index>> _listenerToEventTypes;
 
-	void TrackSubscription(const std::string& listenerName, const std::string& eventName)
+	void TrackSubscription(const std::string& listenerName, const std::type_index eventType)
 	{
-		_listenerToEventNames[listenerName].insert(eventName);
+		_listenerToEventTypes[listenerName].insert(eventType);
 	}
 
-	void UntrackSubscription(const std::string& listenerName, const std::string& eventName)
+	void UntrackSubscription(const std::string& listenerName, const std::type_index eventType)
 	{
-		if (const auto it = _listenerToEventNames.find(listenerName); it != _listenerToEventNames.end())
+		if (const auto it = _listenerToEventTypes.find(listenerName); it != _listenerToEventTypes.end())
 		{
-			it->second.erase(eventName);
+			it->second.erase(eventType);
 			if (it->second.empty())
 			{
-				_listenerToEventNames.erase(it);
+				_listenerToEventTypes.erase(it);
 			}
 		}
 	}
@@ -454,25 +402,25 @@ public:
 		// If something's still subscribed when the bus itself is being torn down, some object's
 		// Unsubscribe() was never called (or ran too late/never at all) - a real cleanup bug, since
 		// nothing will ever deliver to these listeners again anyway. Loud on purpose, same as the
-		// EmitEvent mismatch check above: this is a debug-only diagnostic, a no-op in release.
+		// EmitEvent mismatch check used to be: this is a debug-only diagnostic, a no-op in release.
 		bool anyLeftoverListeners = false;
 
-		for (const auto& [eventName, eventInfo]: _events)
+		for (const auto& [eventType, eventInfo]: _events)
 		{
 			if (eventInfo.event->HasListeners())
 			{
-				std::cerr << "EventSystem: event \"" << eventName << "\" still has listeners at shutdown "
-						<< "- some object's Unsubscribe()/RemoveListener() was never called.\n";
+				std::cerr << "EventSystem: event type \"" << eventType.name() << "\" still has listeners at "
+						<< "shutdown - some object's Unsubscribe()/RemoveListener() was never called.\n";
 				anyLeftoverListeners = true;
 			}
 		}
 
-		for (const auto& [eventName, keyedEventInfo]: _keyedEvents)
+		for (const auto& [eventType, keyedEventInfo]: _keyedEvents)
 		{
 			if (keyedEventInfo.event->HasListeners())
 			{
-				std::cerr << "EventSystem: keyed event \"" << eventName << "\" still has listeners at "
-						<< "shutdown - some object's Unsubscribe()/RemoveListener() was never called.\n";
+				std::cerr << "EventSystem: keyed event type \"" << eventType.name() << "\" still has listeners "
+						<< "at shutdown - some object's Unsubscribe()/RemoveListener() was never called.\n";
 				anyLeftoverListeners = true;
 			}
 		}
@@ -481,174 +429,148 @@ public:
 #endif
 	}
 
-	// Main overload for auto-deducing types
+	// Main overload for auto-deducing types. eventName is gone: the listener's single parameter
+	// type IS the dispatch key (type_index(typeid(EventType))) - see callable_signature above.
 	template<Callable CallableT>
-	void AddListener(const std::string& eventName, const std::string& listenerName, CallableT&& callback)
+	void AddListener(const std::string& listenerName, CallableT&& callback)
 	{
-		callable_signature<std::decay_t<CallableT>>::call_add_listener(this, eventName, listenerName,
+		callable_signature<std::decay_t<CallableT>>::call_add_listener(this, listenerName,
 																	   std::forward<CallableT>(callback));
 	}
 
-	// internal implementation for concrete types (used in callable_signature)
-	template<typename... Args, Callable CallableT>
-	void AddListenerImpl(const std::string& eventName, const std::string& listenerName, CallableT&& callback)
+	// internal implementation for the concrete EventType (used in callable_signature)
+	template<typename EventType, Callable CallableT>
+	void AddListenerImpl(const std::string& listenerName, CallableT&& callback)
 	{
+		const std::type_index key(typeid(EventType));
+
 		//create new if not exist
-		if (const auto it = _events.find(eventName); it == _events.end())
+		if (const auto it = _events.find(key); it == _events.end())
 		{
-			_events.emplace(eventName, EventInfo{std::make_unique<Event<Args...>>(), &typeid(Event<Args...>)});
+			_events.emplace(key, EventInfo{std::make_unique<Event<EventType>>()});
 		}
 
 		//add subscription
-		if (auto* event = GetTypedEvent<Args...>(eventName))
+		if (auto* event = GetTypedEvent<EventType>())
 		{
 			event->AddListener(listenerName, std::forward<CallableT>(callback));
-			TrackSubscription(listenerName, eventName);
+			TrackSubscription(listenerName, key);
 		}
 	}
 
-	// Keyed overload - subscribe to a specific dispatch key (e.g. a tank's uuid) under this event
-	// name instead of the plain broadcast bucket. A distinct 4-arg overload, so it can never be
-	// confused with the plain 3-arg AddListener above at any call site.
+	// Keyed overload - subscribe to a specific dispatch key (e.g. a tank's uuid) instead of the
+	// plain broadcast bucket. A distinct 3-arg overload, so it can never be confused with the
+	// plain 2-arg AddListener above at any call site.
 	template<typename KeyT, Callable CallableT>
-	void AddListener(const std::string& eventName, const KeyT& key, const std::string& listenerName,
-					 CallableT&& callback)
+	void AddListener(const KeyT& key, const std::string& listenerName, CallableT&& callback)
 	{
-		callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, eventName, key, listenerName,
+		callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, key, listenerName,
 																			 std::forward<CallableT>(callback));
 	}
 
-	// internal implementation for concrete keyed types (used in callable_signature)
-	template<typename KeyT, typename... Args, Callable CallableT>
-	void AddKeyedListenerImpl(const std::string& eventName, const KeyT& key, const std::string& listenerName,
-							  CallableT&& callback)
+	// internal implementation for the concrete keyed EventType (used in callable_signature)
+	template<typename KeyT, typename EventType, Callable CallableT>
+	void AddKeyedListenerImpl(const KeyT& key, const std::string& listenerName, CallableT&& callback)
 	{
-		if (const auto it = _keyedEvents.find(eventName); it == _keyedEvents.end())
+		const std::type_index typeKey(typeid(EventType));
+
+		if (const auto it = _keyedEvents.find(typeKey); it == _keyedEvents.end())
 		{
-			_keyedEvents.emplace(eventName, KeyedEventInfo{std::make_unique<KeyedEvent<KeyT, Args...>>(),
-														   &typeid(KeyedEvent<KeyT, Args...>)});
+			_keyedEvents.emplace(typeKey, KeyedEventInfo{std::make_unique<KeyedEvent<KeyT, EventType>>()});
 		}
 
-		if (auto* event = GetTypedKeyedEvent<KeyT, Args...>(eventName))
+		if (auto* event = GetTypedKeyedEvent<KeyT, EventType>())
 		{
 			event->AddListener(key, listenerName, std::forward<CallableT>(callback));
-			TrackSubscription(listenerName, eventName);
+			TrackSubscription(listenerName, typeKey);
 		}
 	}
 
-	// EmitEvent with auto-deducing types, find by name and verify the exact stored Event<Args...> type.
-	template<typename... Args>
-	void EmitEvent(const std::string& eventName, Args&&... args)
+	// EmitEvent - the payload struct's own type is the dispatch key, found by exact type_index
+	// lookup. No listeners registered for this EventType yet is a legitimate no-op (nobody's
+	// listening), not an error - unlike the old string-keyed design there's no "name matched but
+	// types didn't" case left to diagnose: type_index lookup can't partially match.
+	template<typename EventType>
+	void EmitEvent(const EventType& eventInstance)
 	{
-		if (auto* typedEvent = GetTypedEvent<detail::type_adapter_t<Args>...>(eventName))
+		if (auto* typedEvent = GetTypedEvent<EventType>())
 		{
-			typedEvent->Emit(std::forward<Args>(args)...);
-			return;
-		}
-
-#ifndef NDEBUG
-		// A registered event with this name and argument COUNT exists, but the typeid check above failed,
-		// meaning the argument TYPES don't match any listener registered for this event name.
-		if (GetEventByNameAndArgCount(eventName, sizeof...(Args)) != nullptr)
-		{
-			std::cerr << "EventSystem: EmitEvent(\"" << eventName << "\") argument types do not match "
-					<< "the listener(s) registered for this event name (name + argument count matched, "
-					<< "types did not).\n";
-			assert(false && "EventSystem: EmitEvent argument type mismatch, see stderr");
-		}
-#endif
-	}
-
-	// Keyed overload - EmitEvent("Pos", Key(uuid), pos, dir) delivers only to listeners registered
-	// via the keyed AddListener overload for that same (name, key) pair, leaving the plain
-	// broadcast bucket for "Pos" (if any) untouched. Resolved unambiguously against the plain
-	// overload above because EventKey<KeyT> is a fixed (non-pack) parameter, not part of Args -
-	// verified against this exact compiler via a standalone overload-resolution test before wiring
-	// this in, since GCC/Clang partial ordering between a variadic-only and a mixed template can
-	// be subtle.
-	template<typename KeyT, typename... Args>
-	void EmitEvent(const std::string& eventName, detail::EventKey<KeyT> key, Args&&... args)
-	{
-		if (auto* typedEvent = GetTypedKeyedEvent<KeyT, detail::type_adapter_t<Args>...>(eventName))
-		{
-			typedEvent->Emit(key.value, std::forward<Args>(args)...);
-			return;
-		}
-
-#ifndef NDEBUG
-		if (const auto it = _keyedEvents.find(eventName);
-			it != _keyedEvents.end() && it->second.event->GetArgumentCount() == sizeof...(Args))
-		{
-			std::cerr << "EventSystem: EmitEvent(\"" << eventName << "\", Key<...>) argument types do not "
-					<< "match the keyed listener(s) registered for this event name (name + argument count "
-					<< "matched, types did not).\n";
-			assert(false && "EventSystem: keyed EmitEvent argument type mismatch, see stderr");
-		}
-#endif
-	}
-
-	// spec with no arguments
-	void EmitEvent(const std::string& eventName)
-	{
-		if (auto* event = GetEventByNameAndArgCount(eventName, 0))
-		{
-			if (auto* typedEvent = static_cast<Event<>*>(event))
-			{
-				typedEvent->Emit();
-			}
+			typedEvent->Emit(eventInstance);
 		}
 	}
 
-	void RemoveListener(const std::string& eventName, const std::string& listenerName)
+	// Keyed overload - EmitEvent(Key(uuid), FooEvent{...}) delivers only to listeners registered
+	// via the keyed AddListener overload for that same (EventType, key) pair, leaving the plain
+	// broadcast bucket for FooEvent (if any) untouched. Resolved unambiguously against the plain
+	// overload above because EventKey<KeyT> is a distinct fixed parameter type, never confusable
+	// with a genuine EventType payload.
+	template<typename KeyT, typename EventType>
+	void EmitEvent(detail::EventKey<KeyT> key, const EventType& eventInstance)
 	{
-		if (auto* event = GetEventByName(eventName))
+		if (auto* typedEvent = GetTypedKeyedEvent<KeyT, EventType>())
 		{
-			event->RemoveListener(listenerName);
-			UntrackSubscription(listenerName, eventName);
+			typedEvent->Emit(key.value, eventInstance);
+		}
+	}
+
+	template<typename EventType>
+	void RemoveListener(const std::string& listenerName)
+	{
+		const std::type_index key(typeid(EventType));
+		if (const auto it = _events.find(key); it != _events.end())
+		{
+			it->second.event->RemoveListener(listenerName);
+			UntrackSubscription(listenerName, key);
 		}
 	}
 
 	void RemoveAllListeners(const std::string& listenerName)
 	{
-		// Only sweep the event names this listenerName is actually known to be subscribed to,
-		// instead of every event name registered in the whole system.
-		const auto it = _listenerToEventNames.find(listenerName);
-		if (it == _listenerToEventNames.end())
+		// Only sweep the event types this listenerName is actually known to be subscribed to,
+		// instead of every event type registered in the whole system.
+		const auto it = _listenerToEventTypes.find(listenerName);
+		if (it == _listenerToEventTypes.end())
 		{
 			return;
 		}
 
-		// copy: RemoveListener()/UntrackSubscription() below mutate _listenerToEventNames, which
+		// copy: RemoveListener()/UntrackSubscription() below mutate _listenerToEventTypes, which
 		// would invalidate iterators into the very set we're iterating.
-		const std::vector<std::string> eventNames(it->second.begin(), it->second.end());
+		const std::vector<std::type_index> eventTypes(it->second.begin(), it->second.end());
 
-		for (const auto& eventName: eventNames)
+		for (const auto& eventType: eventTypes)
 		{
-			if (const auto eventIt = _events.find(eventName); eventIt != _events.end())
+			if (const auto eventIt = _events.find(eventType); eventIt != _events.end())
 			{
 				eventIt->second.event->RemoveListener(listenerName);
 			}
 
-			if (const auto keyedIt = _keyedEvents.find(eventName); keyedIt != _keyedEvents.end())
+			if (const auto keyedIt = _keyedEvents.find(eventType); keyedIt != _keyedEvents.end())
 			{
 				keyedIt->second.event->RemoveListener(listenerName);
 			}
 		}
 
-		_listenerToEventNames.erase(listenerName);
+		_listenerToEventTypes.erase(listenerName);
 	}
 
-	bool HasEvent(const std::string& eventName) const { return _events.contains(eventName); }
-
-	bool HasListeners(const std::string& eventName) const
+	template<typename EventType>
+	bool HasEvent() const
 	{
-		const auto it = _events.find(eventName);
+		return _events.contains(std::type_index(typeid(EventType)));
+	}
+
+	template<typename EventType>
+	bool HasListeners() const
+	{
+		const auto it = _events.find(std::type_index(typeid(EventType)));
 		return it != _events.end() && it->second.event->HasListeners();
 	}
 
-	size_t GetEventArgumentCount(const std::string& eventName) const
+	template<typename EventType>
+	size_t GetEventArgumentCount() const
 	{
-		const auto it = _events.find(eventName);
+		const auto it = _events.find(std::type_index(typeid(EventType)));
 		return it != _events.end() ? it->second.event->GetArgumentCount() : 0;
 	}
 };

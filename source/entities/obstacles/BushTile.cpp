@@ -1,5 +1,6 @@
 ﻿#include "entities/obstacles/BushTile.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
 
 BushTile::BushTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
@@ -20,7 +21,9 @@ BushTile::~BushTile()
 
 void BushTile::Subscribe()
 {
-	_events->AddListener("PostDraw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&) { this->Draw(); });
 }
 
 void BushTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+
+void BushTile::EmitDeathStatistics(const std::string&, const std::string&) {}

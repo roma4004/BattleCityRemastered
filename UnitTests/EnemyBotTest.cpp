@@ -3,6 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -62,7 +63,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -88,7 +89,7 @@ TEST_F(EnemyBotTest, EnemyShootToCoop)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
@@ -118,7 +119,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer1)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
@@ -147,7 +148,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayer2)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
@@ -176,7 +177,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer1IfTooClose)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
@@ -205,7 +206,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayer2IfTooClose)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
@@ -234,7 +235,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToAllied)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -261,7 +262,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToAlliedIfTooClose)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -282,7 +283,7 @@ TEST_F(EnemyBotTest, EnemyShootToBrick)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
@@ -303,7 +304,7 @@ TEST_F(EnemyBotTest, EnemyTooCloseToShootTheBrick)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -325,7 +326,7 @@ TEST_F(EnemyBotTest, EnemyShootToSteel)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
@@ -347,7 +348,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToSteelIfTierTooLow)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -369,7 +370,7 @@ TEST_F(EnemyBotTest, EnemyShootToEagle)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
@@ -391,7 +392,7 @@ TEST_F(EnemyBotTest, EnemyShootToFortress)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
@@ -413,7 +414,7 @@ TEST_F(EnemyBotTest, EnemyShootToWater)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -435,7 +436,7 @@ TEST_F(EnemyBotTest, EnemyShootToBush)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -457,7 +458,7 @@ TEST_F(EnemyBotTest, EnemyShootToIce)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -488,7 +489,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindWater)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
@@ -521,7 +522,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheWater)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
@@ -554,7 +555,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerBehindIce)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
@@ -587,7 +588,7 @@ TEST_F(EnemyBotTest, EnemyShootToPlayerInTheIce)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);
@@ -620,7 +621,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBrickWall)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
@@ -653,7 +654,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindSteelWall)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
@@ -686,7 +687,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindFortressWall)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
@@ -719,7 +720,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerBehindBush)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);
@@ -752,7 +753,7 @@ TEST_F(EnemyBotTest, EnemyNoShootToPlayerInTheBush)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_EQ(sizeBefore, sizeAfter);

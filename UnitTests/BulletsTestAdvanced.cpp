@@ -2,6 +2,7 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
@@ -43,7 +44,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -60,7 +61,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 		EXPECT_EQ(steelWall->GetHealth(), 1);
 		EXPECT_EQ(bullet->GetTier(), 3u);
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(steelWall->GetHealth(), 0);
 

@@ -21,13 +21,13 @@ void TextureManager::Subscribe() const
 {
 	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
 	_events->AddListener(
-			"DrawObj", _name,
+			_name,
 			[this](const DrawObjEvent& event)
 			{
 				this->Draw(event.rect, event.dir, event.name);
 			});
 	_events->AddListener(
-			"DrawAnimation", _name,
+			_name,
 			[this](const DrawAnimationEvent& event)
 			{
 				this->DrawAnimation(event.rect, event.dir, event.frame, event.scale, event.name);
@@ -222,12 +222,11 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 
-	_events->EmitEvent("RenderTexture",
-					   RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }
 
 void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
@@ -243,10 +242,9 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 
-	_events->EmitEvent("RenderTexture",
-					   RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }

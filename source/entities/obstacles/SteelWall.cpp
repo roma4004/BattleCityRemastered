@@ -1,5 +1,7 @@
 ﻿#include "entities/obstacles/SteelWall.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include "enums/ObstacleType.h"
 
 SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
@@ -20,7 +22,12 @@ SteelWall::~SteelWall()
 
 void SteelWall::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
 }
 
 void SteelWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+
+void SteelWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent(SteelWallDiedEvent{.author = author, .fraction = fraction});
+}

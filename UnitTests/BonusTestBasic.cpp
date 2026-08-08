@@ -4,6 +4,8 @@
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
@@ -59,7 +61,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -77,13 +79,13 @@ TEST_F(BonusTest, BonusPickUp)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_FALSE(bonus->GetIsAlive());
 	}
@@ -107,13 +109,13 @@ TEST_F(BonusTest, BonusNotPickUp)
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 
 	if (const auto bonus = dynamic_cast<Bonus*>(_allObjects.back().get()))
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_TRUE(bonus->GetIsAlive());
 	}
@@ -134,7 +136,7 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
@@ -146,11 +148,11 @@ TEST_F(BonusTest, TimerPickUpEnemyCantMove)
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const FPoint enemyPos = enemyBot->GetPos();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(enemyPos, enemyBot->GetPos());
 }
@@ -166,7 +168,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
@@ -180,7 +182,7 @@ TEST_F(BonusTest, TimerNotPickUpEnemyCanMove)
 
 	const FPoint enemyPos = enemyBot->GetPos();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
@@ -196,12 +198,12 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 	const int playerHealth = player->GetHealth();
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	// spawn Bullet
 	const ObjRectangle rectBullet{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -211,7 +213,7 @@ TEST_F(BonusTest, HelmetPickUpAndBulletCantDamageTank)
 					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(playerHealth, player->GetHealth());
 }
@@ -227,12 +229,12 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 	const int playerHealth = player->GetHealth();
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	// spawn Bullet
 	const ObjRectangle rectBullet{.x = _tankSize + 1.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -242,7 +244,7 @@ TEST_F(BonusTest, HelmetNotPickUpBulletCanDamageTank)
 					_events, _calibre, Direction::LEFT, _gameMode, _gameConfig, "Enemy1");
 	_allObjects.emplace_back(bullet);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(playerHealth, player->GetHealth());
 }
@@ -258,7 +260,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -272,7 +274,7 @@ TEST_F(BonusTest, GrenadePickUpEnemyHealthZero)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(enemyBot->GetHealth(), 0);
 }
@@ -288,7 +290,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -302,7 +304,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Grenade);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
@@ -312,7 +314,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "BonusTest",
+			"BonusTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				respawnActual = event.respawnCount;
@@ -326,17 +328,17 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
 	const unsigned short playerSpawnCount = respawnActual;
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_LT(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 //Check that player not pick up Tank bonus and his life count remains the same
@@ -344,7 +346,7 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	unsigned short respawnActual{3u};
 	_events->AddListener(
-			"RespawnCountChangedTo", "BonusTest",
+			"BonusTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
 				respawnActual = event.respawnCount;
@@ -358,17 +360,17 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
 	const unsigned short playerSpawnCount = respawnActual;
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
+	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 //Check that player pick up Star bonus and his tier increased
@@ -382,13 +384,13 @@ TEST_F(BonusTest, StarPickUpTierIncrease)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
 	EXPECT_EQ(player->GetTier(), 1u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(player->GetTier(), 2u);
 }
@@ -404,13 +406,13 @@ TEST_F(BonusTest, StarNotPickUpTierTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Star);
 
 	EXPECT_EQ(player->GetTier(), 1u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(player->GetTier(), 1u);
 }
@@ -427,7 +429,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Down", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
@@ -437,7 +439,7 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_TRUE(fortressWall->IsSteelWall());
 }
@@ -454,7 +456,7 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent("Move_Up", Key(std::string{"P1"}), isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
@@ -464,7 +466,7 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 }

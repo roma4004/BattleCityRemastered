@@ -60,25 +60,24 @@ class GameStatistics final
 	void SubscribeHost();
 	void SubscribeAsClient();
 	void OnGameModeChangedTo(GameMode newGameMode);
-	void OnClientStatisticsChange(const ClientReceivedStatisticsEvent& event);
 
 	void Unsubscribe() const;
 	void UnsubscribeAsHost() const;
 	void UnsubscribeAsClient() const;
 
-	void OnBulletHit(const StatisticsAttributionEvent& event);
+	void OnBulletHit(const StatisticsBulletHitEvent& event);
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
 	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnTankHit(const TankStatisticsEvent& event);
+	void OnTankHit(const StatisticsTankHitEvent& event);
 	void OnEnemyDied(const std::string& author, const std::string& fraction);
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
-	void OnTankDied(const TankStatisticsEvent& event);
+	void OnTankDied(const StatisticsTankDiedEvent& event);
 	void OnBrickWallDied(const StatisticsAttributionEvent& event);
 	void OnSteelWallDied(const StatisticsAttributionEvent& event);
-	void OnBonusPickup(const StatisticsAttributionEvent& event);
-	void OnBonusDestroyed(const StatisticsAttributionEvent& event);
+	void OnBonusPickup(const StatisticsBonusPickupEvent& event);
+	void OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);

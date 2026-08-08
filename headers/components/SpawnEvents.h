@@ -8,11 +8,17 @@
 #include "enums/TankType.h"
 #include <boost/uuid/uuid.hpp>
 #include <chrono>
+#include <memory>
 #include <string>
 
 class BaseObj;
 
 using buuid = boost::uuids::uuid;
+
+struct AddToSpawnQueueEvent
+{
+	std::shared_ptr<BaseObj> obj;
+};
 
 struct AnimationCreateEvent
 {
@@ -32,6 +38,13 @@ struct ClientReceivedRespawnTankEvent
 	TankType type;
 	buuid uuid;
 	ObjRectangle rect;
+};
+
+struct RespawnTankEvent
+{
+	TankType type;
+	buuid uuid;
+	bool skipDelay;
 };
 
 struct ClientReceivedBonusSpawnEvent
@@ -77,4 +90,10 @@ struct BonusEffectReApplyEvent
 {
 	std::string name;
 	std::string fraction;
+};
+
+struct BonusTimerReApplyOnSpawnEvent
+{
+	bool isEnabled;
+	std::string name;
 };

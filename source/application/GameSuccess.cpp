@@ -6,6 +6,12 @@
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
+#include "components/SpawnEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/RenderUIEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/managers/BonusEffectManager.h"
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/GameStateManager.h"
@@ -35,7 +41,6 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 	, _renderManager{std::move(renderManager)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
-	, _statistics{std::make_unique<GameStatistics>(events)}
 	, _rightSideBar{std::make_unique<RightSideBar>(events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
@@ -46,7 +51,7 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 
 	if (gameMode == GameMode::Demo)
 	{
-		_events->EmitEvent("ShowMenu", true);
+		_events->EmitEvent(ShowMenuEvent{.show = true});
 	}
 }
 
@@ -57,27 +62,30 @@ GameSuccess::~GameSuccess()
 
 void GameSuccess::Subscribe()
 {
-	_events->AddListener("PreviousGameMode", _name, [this]() { this->PrevGameMode(); });
-	_events->AddListener("NextGameMode", _name, [this]() { this->NextGameMode(); });
-	_events->AddListener("ResetBattlefield", _name, [this]() { this->ResetBattlefieldTo(this->_selectedGameMode); });
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener(_name, [this](const PreviousGameModeEvent&) { this->PrevGameMode(); });
+	_events->AddListener(_name, [this](const NextGameModeEvent&) { this->NextGameMode(); });
+	_events->AddListener(_name, [this](const ResetBattlefieldEvent&)
 	{
-		this->OnGameModeChangedTo(newGameMode);
+		this->ResetBattlefieldTo(this->_selectedGameMode);
 	});
-	_events->AddListener("AddToSpawnQueue", _name, [this](std::shared_ptr<BaseObj> obj)
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
-		this->_pendingSpawns.emplace_back(std::move(obj));
+		this->OnGameModeChangedTo(event.mode);
 	});
-	_events->AddListener("PostTickUpdate", _name, [this](const double /*deltaTime*/)
+	_events->AddListener(_name, [this](AddToSpawnQueueEvent event)
+	{
+		this->_pendingSpawns.emplace_back(std::move(event.obj));
+	});
+	_events->AddListener(_name, [this](const PostTickUpdateEvent&)
 	{
 		this->FlushSpawnQueue();
 		this->DisposeDeadObject();
 	});
-	_events->AddListener("DeltaTime", _name, [this](const double& deltaTime) { this->_deltaTime = deltaTime; });
-	_events->AddListener("GameModeSelectedWithMouse", _name, [this](const GameMode newGameMode)
-	{
-		this->_selectedGameMode = newGameMode;
-		this->_events->EmitEvent("SelectedGameModeChangedTo", this->_selectedGameMode);
+	_events->AddListener(_name, [this](const DeltaTimeEvent& event) { this->_deltaTime = event.deltaTime; });
+	_events->AddListener(_name, [this](const GameModeSelectedWithMouseEvent& event)
+	{//TODO: merge with SelectedGameModeChangedToEvent
+		this->_selectedGameMode = event.mode;
+		this->_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = this->_selectedGameMode});
 	});
 }
 
@@ -89,18 +97,18 @@ void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
 	_allObjects.reserve(1000);
 	_pendingSpawns.clear();
 
-	_events->EmitEvent("Reset");
+	_events->EmitEvent(GameResetEvent{});
 
 	SetCurrentGameMode(gameMode);
 
 	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("LoadMap");//TODO: move to obstacle spawner which should spawn when unpause 
+		_events->EmitEvent(LoadMapEvent{});//TODO: move to obstacle spawner which should spawn when unpause
 	}
 
 	if (gameMode == GameMode::PlayAsClient)
 	{
-		_events->EmitEvent("ClientSend_ReadyToPlay");
+		_events->EmitEvent(ClientSendReadyToPlayEvent{});
 	}
 }
 
@@ -114,7 +122,7 @@ void GameSuccess::PrevGameMode()
 	const int newMode = mode < minMode ? maxMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
-	_events->EmitEvent("SelectedGameModeChangedTo", _selectedGameMode);
+	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
 void GameSuccess::NextGameMode()
@@ -127,10 +135,11 @@ void GameSuccess::NextGameMode()
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
-	_events->EmitEvent("SelectedGameModeChangedTo", _selectedGameMode);
+	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
-// void GameSuccess::DisposeDeadObject()//TODO: run on debug only
+//TODO: push other tank mechanic like velosity with ice effect
+// void GameSuccess::DisposeDeadObject()//TODO: add verbosity level for debug only ifndef
 // {
 // 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };
 // 	const auto it = std::ranges::remove_if(_allObjects, predicate).begin();
@@ -169,8 +178,8 @@ void GameSuccess::FlushSpawnQueue()
 
 void GameSuccess::OnClientReady() const
 {
-	_events->EmitEvent("LoadMap");
-	_events->EmitEvent("Pause_Released");
+	_events->EmitEvent(LoadMapEvent{});
+	_events->EmitEvent(PauseReleasedEvent{});
 }
 
 void GameSuccess::MainLoop()
@@ -179,40 +188,40 @@ void GameSuccess::MainLoop()
 	{
 		while (!_userInput->IsShutdown())
 		{
-			_events->EmitEvent("FrameStart");
-			_events->EmitEvent("NetCommandUpdate", _deltaTime);
-			_events->EmitEvent("PreTickUpdate", _deltaTime);
+			_events->EmitEvent(FrameStartEvent{});
+			_events->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTime});
+			_events->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTime});
 
 			if (!_userInput->IsPause())
 			{
 				if (_gameMode != GameMode::PlayAsClient)
 				{
 					constexpr bool skipDelay{false};
-					_events->EmitEvent("RespawnTanks", skipDelay);
+					_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 
 					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus or:
 					//TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)
-					_events->EmitEvent("TickUpdate", _deltaTime);
+					_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTime});
 				}
 			}
 
-			_events->EmitEvent("PostTickUpdate", _deltaTime);
+			_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTime});
 
-			_events->EmitEvent("PreDraw");
-			_events->EmitEvent("Draw");
-			_events->EmitEvent("PostDraw");
+			_events->EmitEvent(PreDrawEvent{});
+			_events->EmitEvent(DrawEvent{});
+			_events->EmitEvent(PostDrawEvent{});
 			//TODO: optimize draw call with separated layer for brick, create image layer with all level brick, then when brick die replace it spot on layer with black rectangle
 
-			_events->EmitEvent("PreDrawUserInterface");
-			_events->EmitEvent("DrawUserInterface");
-			_events->EmitEvent("PostDrawUserInterface");
+			_events->EmitEvent(PreDrawUserInterfaceEvent{});
+			_events->EmitEvent(DrawUserInterfaceEvent{});
+			_events->EmitEvent(PostDrawUserInterfaceEvent{});
 
 			if (_gameMode == GameMode::PlayAsHost)
 			{
-				_events->EmitEvent("Server_EndFrame");
+				_events->EmitEvent(ServerEndFrameEvent{});
 			}
 
-			_events->EmitEvent("CalculateActualFps");
+			_events->EmitEvent(CalculateActualFpsEvent{});
 		}
 	}
 	catch (std::exception& e)
@@ -233,7 +242,7 @@ void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 {
 	_gameMode = selectedGameMode;
 
-	_events->EmitEvent("GameModeChangedTo", _gameMode);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = _gameMode});
 }
 
 void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
@@ -242,18 +251,18 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("Pause_Released");//NOTE: pause on start for awaiting a client ready
-		_events->AddListener("ServerReceive_ClientReadyToStartGame", _name, [this]() { this->OnClientReady(); });
+		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
+		_events->AddListener(_name, [this](const ServerReceiveClientReadyToStartGameEvent&) { this->OnClientReady(); });
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
-		_events->RemoveListener("ServerReceive_ClientReadyToStartGame", _name);
+		_events->RemoveListener<ServerReceiveClientReadyToStartGameEvent>(_name);
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else
 	{
-		_events->RemoveListener("ServerReceive_ClientReadyToStartGame", _name);
+		_events->RemoveListener<ServerReceiveClientReadyToStartGameEvent>(_name);
 		_networkNode = nullptr;
 	}
 }

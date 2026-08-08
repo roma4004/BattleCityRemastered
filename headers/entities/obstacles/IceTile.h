@@ -13,6 +13,11 @@ class IceTile final : public Obstacle
 	void Subscribe() override;
 	void Unsubscribe() const override;
 
+protected:
+	//NOTE: Ice is indestructible - never reaches SendDamageStatistics's health<1 branch, but the
+	//base hook is pure virtual so every leaf must still supply a (no-op) body.
+	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+
 public:
 	IceTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 

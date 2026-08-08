@@ -1,5 +1,6 @@
 ﻿#include "entities/obstacles/IceTile.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
 
 IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
@@ -20,7 +21,9 @@ IceTile::~IceTile()
 
 void IceTile::Subscribe()
 {
-	_events->AddListener("PreDraw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener(_nameWithUuid, [this](const PreDrawEvent&) { this->Draw(); });
 }
 
 void IceTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+
+void IceTile::EmitDeathStatistics(const std::string&, const std::string&) {}

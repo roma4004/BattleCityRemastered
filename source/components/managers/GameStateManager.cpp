@@ -1,5 +1,9 @@
 #include "components/managers/GameStateManager.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/RenderUIEvents.h"
 #include "enums/GameMode.h"
 
 GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
@@ -13,14 +17,14 @@ GameStateManager::~GameStateManager() { Unsubscribe(); }
 
 void GameStateManager::Subscribe()
 {
-	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
-	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
-	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->_isGameWon = true; });
-	_events->AddListener("EnemiesTeamIsWon", _name, [this]() { this->_isGameOver = true; });
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; });
+	_events->AddListener(_name, [this](const PreDrawUserInterfaceEvent&) { this->Draw(); });
+	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
+	_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->_isGameWon = true; });
+	_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->_isGameOver = true; });
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
-		this->_gameMode = newGameMode;
+		this->_gameMode = event.mode;
 	});
 }
 
@@ -30,17 +34,17 @@ void GameStateManager::Draw() const
 {
 	if (_isPause)
 	{
-		_events->EmitEvent("RenderPauseText");
+		_events->EmitEvent(RenderPauseTextEvent{});
 	}
 
 	if (_isGameOver)
 	{
-		_events->EmitEvent("RenderGameOverText");
+		_events->EmitEvent(RenderGameOverTextEvent{});
 	}
 
 	if (_isGameWon)
 	{
-		_events->EmitEvent("RenderGameWonText");
+		_events->EmitEvent(RenderGameWonTextEvent{});
 	}
 }
 

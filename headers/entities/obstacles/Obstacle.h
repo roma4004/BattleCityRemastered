@@ -24,6 +24,8 @@ protected:
 
 	void Draw() const override;
 
+	virtual void EmitDeathStatistics(const std::string& author, const std::string& fraction) = 0;
+
 public:
 	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, buuid uuid,
 			 GameMode gameMode, ObstacleType obstacleType);

@@ -2,6 +2,9 @@
 #include "Point.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/SpawnEvents.h"
 #include "entities/bonuses/BonusCaliber.h"
 #include "entities/bonuses/BonusGrenade.h"
@@ -38,10 +41,10 @@ BonusSpawner::~BonusSpawner() { Unsubscribe(); }
 
 void BonusSpawner::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
-		this->_gameMode = newGameMode;
+		this->_gameMode = event.mode;
 
 		if (_gameMode == GameMode::PlayAsClient)
 		{
@@ -55,8 +58,9 @@ void BonusSpawner::Subscribe()
 		}
 	});
 
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
+	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
+		const UPoint& newSize = event.newSize;
 		_distSpawnPosY = std::uniform_int_distribution<>{
 				0,
 				static_cast<int>(newSize.y) - _gameConfig.bonusSize};
@@ -70,13 +74,13 @@ void BonusSpawner::Subscribe()
 
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
+	_events->AddListener(_name, [this](const TickUpdateEvent&) { this->Update(); });
 }
 
 void BonusSpawner::SubscribeAsClient()
 {
 	_events->AddListener(
-			"ClientReceived_BonusSpawn", _name,
+			_name,
 			[this](const ClientReceivedBonusSpawnEvent& event)
 			{
 				const auto size = static_cast<float>(_gameConfig.bonusSize);
@@ -87,9 +91,9 @@ void BonusSpawner::SubscribeAsClient()
 
 void BonusSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-void BonusSpawner::UnsubscribeAsHost() const { _events->RemoveListener("TickUpdate", _name); }
+void BonusSpawner::UnsubscribeAsHost() const { _events->RemoveListener<TickUpdateEvent>(_name); }
 
-void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_BonusSpawn", _name); }
+void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener<ClientReceivedBonusSpawnEvent>(_name); }
 
 void BonusSpawner::Update()
 {
@@ -153,7 +157,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 
 	if (bonus)
 	{
-		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{bonus});
+		_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::shared_ptr<BaseObj>{bonus}});
 	}
 }
 

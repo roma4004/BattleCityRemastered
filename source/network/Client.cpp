@@ -1,11 +1,16 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
+#include "components/events/BonusPickupEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/CommandType.h"
+#include "enums/StatisticsType.h"
 #include "enums/TankType.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
@@ -137,42 +142,39 @@ void Client::Shutdown()
 void Client::Subscribe()
 {
 	//TODO: write batch sending on client and sending queue
-	// NOTE: local dispatch is keyed (Move_Up/"P2") but the wire format sent via SendKeyState is
-	// unchanged ("P2_Move_Up" etc.) - Session::OnKeyStateChange on the host still parses that
-	// literal tag+action string out of the KeyStateChange command payload.
-	_events->AddListener("Move_Up", std::string{"P2"}, _name, [this](const bool isPressed)
+	_events->AddListener(std::string{"P2"}, _name, [this](const MoveUpEvent& event)
 	{
-		this->SendKeyState("P2_Move_Up", isPressed);
+		this->SendKeyState("P2_Move_Up", event.isPressed);
 	});
-	_events->AddListener("Move_Left", std::string{"P2"}, _name, [this](const bool isPressed)
+	_events->AddListener(std::string{"P2"}, _name, [this](const MoveLeftEvent& event)
 	{
-		this->SendKeyState("P2_Move_Left", isPressed);
+		this->SendKeyState("P2_Move_Left", event.isPressed);
 	});
-	_events->AddListener("Move_Down", std::string{"P2"}, _name, [this](const bool isPressed)
+	_events->AddListener(std::string{"P2"}, _name, [this](const MoveDownEvent& event)
 	{
-		this->SendKeyState("P2_Move_Down", isPressed);
+		this->SendKeyState("P2_Move_Down", event.isPressed);
 	});
-	_events->AddListener("Move_Right", std::string{"P2"}, _name, [this](const bool isPressed)
+	_events->AddListener(std::string{"P2"}, _name, [this](const MoveRightEvent& event)
 	{
-		this->SendKeyState("P2_Move_Right", isPressed);
+		this->SendKeyState("P2_Move_Right", event.isPressed);
 	});
-	_events->AddListener("Fire", std::string{"P2"}, _name, [this](const bool isPressed)
+	_events->AddListener(std::string{"P2"}, _name, [this](const FireEvent& event)
 	{
-		this->SendKeyState("P2_Fire", isPressed);
+		this->SendKeyState("P2_Fire", event.isPressed);
 	});
 
-	_events->AddListener("ClientSend_ReadyToPlay", _name, [this]()
+	_events->AddListener(_name, [this](const ClientSendReadyToPlayEvent&)
 	{
 		// std::scoped_lock lock(_batchWriteMutex);
 		// this->_batch->AddCommand(  //TODO: implement batch sending
 		SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
 	});
 
-	_events->AddListener("ClientSend_Pause_Status", _name, [this](const bool isPaused)
+	_events->AddListener(_name, [this](const ClientSendPauseStatusEvent& event)
 	{
 		// std::scoped_lock lock(_batchWriteMutex);
 		// this->_batch->AddCommand(  //TODO: implement batch sending
-		SendCommand(std::make_shared<KeyStateChange>("Pause_Released", isPaused));
+		SendCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
 	});
 }
 
@@ -227,7 +229,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, dir, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_Pos", Key(uuid), ClientReceivedPosEvent{.pos = pos, .dir = dir});
+			_events->EmitEvent(Key(uuid), ClientReceivedPosEvent{.pos = pos, .dir = dir});
 		});
 	}
 }
@@ -242,8 +244,7 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, who, dir, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_Shot", Key(who),
-							   ClientReceivedShotEvent{.dir = dir, .bulletUuid = uuid});
+			_events->EmitEvent(Key(who), ClientReceivedShotEvent{.dir = dir, .bulletUuid = uuid});
 		});
 	}
 }
@@ -257,7 +258,7 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid, health]()
 		{
-			_events->EmitEvent("ClientReceived_Health", Key(uuid), health);
+			_events->EmitEvent(Key(uuid), ClientReceivedHealthEvent{.health = health});
 		});
 	}
 }
@@ -270,7 +271,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_Dispose", Key(uuid));
+			_events->EmitEvent(Key(uuid), ClientReceivedDisposeEvent{});
 		});
 	}
 }
@@ -279,16 +280,48 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
 {
 	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
 	{
-		const auto eventName = cmd->GetEventName();
+		const auto type = cmd->GetType();
 		const auto author = cmd->GetAuthor();
 		const auto fraction = cmd->GetFraction();
 
-		_commandQueue.Enqueue([this, eventName, author, fraction]()
+		_commandQueue.Enqueue([this, type, author, fraction]()
 		{
-			_events->EmitEvent("ClientReceived_Statistics",
-							   ClientReceivedStatisticsEvent{.eventName = eventName,
-															 .author = author,
-															 .fraction = fraction});
+			switch (type)
+			{
+				case StatisticsType::BulletHit:
+					_events->EmitEvent(ClientReceivedBulletHitEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::EnemyHit:
+					_events->EmitEvent(ClientReceivedEnemyHitEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::PlayerOneHit:
+					_events->EmitEvent(ClientReceivedPlayerOneHitEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::PlayerTwoHit:
+					_events->EmitEvent(ClientReceivedPlayerTwoHitEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::EnemyDied:
+					_events->EmitEvent(ClientReceivedEnemyDiedEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::PlayerOneDied:
+					_events->EmitEvent(ClientReceivedPlayerOneDiedEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::PlayerTwoDied:
+					_events->EmitEvent(ClientReceivedPlayerTwoDiedEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::BrickWallDied:
+					_events->EmitEvent(ClientReceivedBrickWallDiedEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::SteelWallDied:
+					_events->EmitEvent(ClientReceivedSteelWallDiedEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::BonusPickup:
+					_events->EmitEvent(ClientReceivedBonusPickupEvent{.author = author, .fraction = fraction});
+					break;
+				case StatisticsType::BonusDestroyed:
+					_events->EmitEvent(ClientReceivedBonusDestroyedEvent{.author = author, .fraction = fraction});
+					break;
+			}
 		});
 	}
 }
@@ -302,7 +335,14 @@ void Client::OnKeyStateChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, keyState, isEnable]()
 		{
-			this->_events->EmitEvent(keyState, isEnable);
+			if (keyState == "Pause_Status")
+			{
+				this->_events->EmitEvent(PauseStatusEvent{.isPaused = isEnable});
+			}
+			else
+			{
+				NetworkLogger::WriteLog("Client::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
+			}
 		});
 	}
 }
@@ -315,7 +355,18 @@ void Client::OnGameStateChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, gameState]()
 		{
-			this->_events->EmitEvent(gameState);
+			if (gameState == "PlayersTeamIsWon")
+			{
+				this->_events->EmitEvent(PlayersTeamIsWonEvent{});
+			}
+			else if (gameState == "EnemiesTeamIsWon")
+			{
+				this->_events->EmitEvent(EnemiesTeamIsWonEvent{});
+			}
+			else
+			{
+				NetworkLogger::WriteLog("Client::OnGameStateChange: unrecognized game state \"" + gameState + "\"");
+			}
 		});
 	}
 }
@@ -329,7 +380,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, state, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_FortressChange", FortressChangeEvent{.state = state, .uuid = uuid});
+			_events->EmitEvent(ClientReceivedFortressChangeEvent{.state = state, .uuid = uuid});
 		});
 	}
 }
@@ -344,8 +395,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, bonusType, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_BonusSpawn",
-							   ClientReceivedBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
+			_events->EmitEvent(ClientReceivedBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
 		});
 	}
 }
@@ -358,7 +408,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_BonusDeSpawn", uuid);
+			_events->EmitEvent(ClientReceivedBonusDeSpawnEvent{.uuid = uuid});
 		});
 	}
 }
@@ -373,8 +423,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, tankType, uuid, rect]()
 		{
-			_events->EmitEvent("ClientReceived_RespawnTank",
-							   ClientReceivedRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
+			_events->EmitEvent(ClientReceivedRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
 		});
 	}
 }
@@ -389,8 +438,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
 		{
-			_events->EmitEvent("ClientReceived_ObstacleSpawn",
-							   ClientReceivedObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
+			_events->EmitEvent(ClientReceivedObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
 		});
 	}
 }
@@ -405,8 +453,7 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, animationType, rect, name]()
 		{
-			_events->EmitEvent("AnimationCreate",
-							   AnimationCreateEvent{.type = animationType, .rect = rect, .name = name});
+			_events->EmitEvent(AnimationCreateEvent{.type = animationType, .rect = rect, .name = name});
 		});
 	}
 }
@@ -420,7 +467,7 @@ void Client::OnTankOnOff(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid, isEnable]()
 		{
-			_events->EmitEvent("ClientReceived_OnTankOnOff", Key(uuid), isEnable);
+			_events->EmitEvent(Key(uuid), ClientReceivedOnTankOnOffEvent{.isEnable = isEnable});
 		});
 	}
 }
@@ -449,16 +496,16 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 			switch (bonusType)
 			{
 				case BonusType::Helmet:
-					_events->EmitEvent("ClientReceived_BonusHelmet_Pickup", Key(name), isEnable);
+					_events->EmitEvent(Key(name), ClientReceivedBonusHelmetPickupEvent{.isEnable = isEnable});
 					break;
 				case BonusType::Star:
-					_events->EmitEvent("ClientReceived_BonusStar_Pickup", Key(name));
+					_events->EmitEvent(Key(name), ClientReceivedBonusStarPickupEvent{});
 					break;
 				case BonusType::Caliber:
-					_events->EmitEvent("ClientReceived_BonusCaliber_Pickup", Key(name));
+					_events->EmitEvent(Key(name), ClientReceivedBonusCaliberPickupEvent{});
 					break;
 				case BonusType::Tank:
-					_events->EmitEvent("ClientReceived_BonusTank_Pickup", name);
+					_events->EmitEvent(ClientReceivedBonusTankPickupEvent{.name = name});
 					break;
 				default: //TODO: add assert
 					break;
@@ -484,7 +531,7 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
 			case CommandType::POSITION_CHANGE:
 			{
 				OnPositionChange(command);
-				//TODO: use more polymorphic way command->exec() to process commands, uni method onReceived
+				//TODO: use more polymorphic way to process commands, uni method onReceived
 				break;
 			}
 			case CommandType::TANK_SHOT:

@@ -1,6 +1,7 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
@@ -38,7 +39,7 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
+		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 
 	//TODO: use this style for others bullet creation
@@ -67,7 +68,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1u);
@@ -80,7 +81,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1u);

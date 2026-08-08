@@ -10,6 +10,9 @@ class SteelWall final : public Obstacle
 	void Subscribe() override;
 	void Unsubscribe() const override;
 
+protected:
+	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+
 public:
 	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 

@@ -1,5 +1,6 @@
 ﻿#include "entities/obstacles/EagleTile.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
@@ -17,12 +18,14 @@ EagleTile::~EagleTile()
 {
 	Unsubscribe();
 
-	_events->EmitEvent("PlayersBaseFinished");
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
 }
 
 void EagleTile::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
 }
 
 void EagleTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+
+void EagleTile::EmitDeathStatistics(const std::string&, const std::string&) {}

@@ -2,6 +2,8 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
@@ -42,23 +44,24 @@ TankSpawner::~TankSpawner()
 
 void TankSpawner::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
 
 	//TODO: reuse existing tanks when game mode changed
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
-		this->_gameMode = newGameMode;
+		this->_gameMode = event.mode;
 
 		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 	});
 
-	_events->AddListener("RespawnTank", _name, [this](const TankType type, const buuid uuid, const bool skipDelay)
+	_events->AddListener(_name, [this](const RespawnTankEvent& event)
 	{
-		this->RespawnTank(type, uuid, skipDelay);
+		this->RespawnTank(event.type, event.uuid, event.skipDelay);
 	});
 
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
+	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
+		const UPoint& newSize = event.newSize;
 		_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
 		const float newSizeY = static_cast<float>(newSize.y);
 		_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
@@ -72,14 +75,14 @@ void TankSpawner::Subscribe()
 		_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
 
 		//scale bullet caliber
-		_events->EmitEvent("ScaleFactorChangedTo", _gameConfig.scaleFactor);
+		_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
 	});
 }
 
 void TankSpawner::SubscribeAsClient()
 {
 	_events->AddListener(
-			"ClientReceived_RespawnTank", _name,
+			_name,
 			[this](const ClientReceivedRespawnTankEvent& event)
 			{
 				this->OnClientRespawn(event.type, event.uuid, event.rect);
@@ -88,7 +91,7 @@ void TankSpawner::SubscribeAsClient()
 
 void TankSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
+void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener<ClientReceivedRespawnTankEvent>(_name); }
 
 void TankSpawner::Reset()
 {
@@ -230,8 +233,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 										   skipDelay);
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_RespawnTank",
-						   ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
+		_events->EmitEvent(ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 	}
 }
 
@@ -299,8 +301,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_RespawnTank",
-							   ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
+			_events->EmitEvent(ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 		}
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
@@ -401,15 +402,15 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 
 	if (std::shared_ptr<BaseObj> tank{CreateTank(tankType, std::move(pawnProperty))})
 	{
-		_events->EmitEvent("AddToSpawnQueue", tank);
+		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 
 		const milliseconds delay{skipDelay ? 0 : 1000};
-		_events->EmitEvent("SpawnDelayStart", SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
+		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
 
 		if (_gameMode != GameMode::PlayAsClient)
 		{
 			constexpr auto type{AnimationType::Spawn_Animation};
-			_events->EmitEvent("AnimationCreate", AnimationCreateEvent{.type = type, .rect = rect, .name = name});
+			_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
 		}
 	}
 }

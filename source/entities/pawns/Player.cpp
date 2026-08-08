@@ -53,12 +53,11 @@ void Player::Move(const Direction direction, const double deltaTime,
 		isNewDir || isMove)
 	{
 		const FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos",
-							   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 }
@@ -97,13 +96,11 @@ void Player::TickUpdate(const double deltaTime)
 			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
 		{
 			const FPoint pos = GetPos();
-			_events->EmitEvent("AnimationTankUpdate",
-							   AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 			{
-				_events->EmitEvent("ServerSend_Pos",
-								   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+				_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 			}
 
 		}

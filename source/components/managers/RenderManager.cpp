@@ -4,6 +4,9 @@
 #include "application/SDL_Config.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/RenderUIEvents.h"
+#include "components/events/TimingEvents.h"
 #include "enums/Direction.h"
 #include "enums/TextureOffset.h"
 #include <SDL_render.h>
@@ -61,67 +64,67 @@ void RenderManager::ClearFpsTextureCache()
 
 void RenderManager::Subscribe()
 {
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->ClearFrame(); });
-	_events->AddListener("RenderText", _name, [this](const RenderTextEvent& event)
+	_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->ClearFrame(); });
+	_events->AddListener(_name, [this](const RenderTextEvent& event)
 	{
 		TextToRender(event.pos, IntToColor(event.color), event.text);
 	});
 
-	_events->AddListener("RenderMenuBackground", _name, [this](const Point pos) { DrawMenuBackground(pos); });
-	_events->AddListener("RenderMenuLogo", _name, [this](const Point pos) { DrawMenuLogo(pos); });
-	_events->AddListener("RenderMenuSelectorIcon", _name, [this](const Point pos) { DrawSelectorIcon(pos); });
-	_events->AddListener("RenderMenuXBoxHint", _name, [this](const Point pos) { DrawXBoxHint(pos); });
-	_events->AddListener("RenderMenuPS5Hint", _name, [this](const Point pos) { DrawPS5Hint(pos); });
+	_events->AddListener(_name, [this](const RenderMenuBackgroundEvent& event) { DrawMenuBackground(event.pos); });
+	_events->AddListener(_name, [this](const RenderMenuLogoEvent& event) { DrawMenuLogo(event.pos); });
+	_events->AddListener(_name, [this](const RenderMenuSelectorIconEvent& event) { DrawSelectorIcon(event.pos); });
+	_events->AddListener(_name, [this](const RenderMenuXBoxHintEvent& event) { DrawXBoxHint(event.pos); });
+	_events->AddListener(_name, [this](const RenderMenuPS5HintEvent& event) { DrawPS5Hint(event.pos); });
 
-	_events->AddListener("RenderPauseText", _name, [this]() { DrawPauseText(); });
-	_events->AddListener("RenderGameOverText", _name, [this]() { DrawGameOverText(); });
-	_events->AddListener("RenderGameWonText", _name, [this]() { DrawGameWonText(); });
+	_events->AddListener(_name, [this](const RenderPauseTextEvent&) { DrawPauseText(); });
+	_events->AddListener(_name, [this](const RenderGameOverTextEvent&) { DrawGameOverText(); });
+	_events->AddListener(_name, [this](const RenderGameWonTextEvent&) { DrawGameWonText(); });
 
-	_events->AddListener("RenderColorTexture", _name, [this](const ObjRectangle rect)
+	_events->AddListener(_name, [this](const RenderColorTextureEvent& event)
 	{
-		this->DrawColorTexture(rect);
+		this->DrawColorTexture(event.rect);
 	});
 
 	_events->AddListener(
-			"RenderTexture", _name,
+			_name,
 			[this](const RenderTextureEvent& event)
 			{
 				this->DrawTexture(event.textureRect, event.destRect, event.dir);
 			});
 
-	_events->AddListener("RenderFPS", _name, [this](const unsigned int fps) { RenderFPS(fps); });
+	_events->AddListener(_name, [this](const RenderFPSEvent& event) { RenderFPS(event.fps); });
 
-	_events->AddListener("RenderHealthBar", _name, [this](const RenderHealthBarEvent& event)
+	_events->AddListener(_name, [this](const RenderHealthBarEvent& event)
 	{
 		this->DrawHealthBar(event.rect, event.health);
 	});
-	_events->AddListener("RenderRightSideBar", _name, [this]() { this->DrawRightSideBar(); });
-	_events->AddListener("RenderEnemyIconBackground", _name, [this]() { this->DrawEnemyIconBackground(); });
-	_events->AddListener("RenderEnemyIcons", _name, [this](const unsigned short respawnCount)
+	_events->AddListener(_name, [this](const RenderRightSideBarEvent&) { this->DrawRightSideBar(); });
+	_events->AddListener(_name, [this](const RenderEnemyIconBackgroundEvent&) { this->DrawEnemyIconBackground(); });
+	_events->AddListener(_name, [this](const RenderEnemyIconsEvent& event)
 	{
-		this->DrawEnemyIcons(respawnCount);
+		this->DrawEnemyIcons(event.count);
 	});
-	_events->AddListener("RenderPlayerOneIcon", _name, [this](const unsigned short respawnCount)
+	_events->AddListener(_name, [this](const RenderPlayerOneIconEvent& event)
 	{
-		this->DrawPlayerOneIcons(respawnCount);
+		this->DrawPlayerOneIcons(event.respawnCount);
 	});
-	_events->AddListener("RenderPlayerTwoIcon", _name, [this](const unsigned short respawnCount)
+	_events->AddListener(_name, [this](const RenderPlayerTwoIconEvent& event)
 	{
-		this->DrawPlayerTwoIcons(respawnCount);
+		this->DrawPlayerTwoIcons(event.respawnCount);
 	});
-	_events->AddListener("RenderStageNumber", _name, [this](const unsigned short stageNumber)
+	_events->AddListener(_name, [this](const RenderStageNumberEvent& event)
 	{
-		this->DrawStageNumber(stageNumber);
+		this->DrawStageNumber(event.stageNumber);
 	});
 
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
+	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
-		this->_gameConfig.windowSize = newSize;//TODO: find better place for this responsibility
-		this->_fpsRectangle = CalcFpsPos(newSize);
+		this->_gameConfig.windowSize = event.newSize;//TODO: find better place for this responsibility
+		this->_fpsRectangle = CalcFpsPos(event.newSize);
 
 		SDL_RenderSetLogicalSize(this->_sdlConfig.renderer.get(),
-								 static_cast<int>(newSize.x),
-								 static_cast<int>(newSize.y));
+								 static_cast<int>(event.newSize.x),
+								 static_cast<int>(event.newSize.y));
 	});
 }
 

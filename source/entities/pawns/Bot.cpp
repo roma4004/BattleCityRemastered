@@ -342,29 +342,26 @@ void Bot::TickUpdate(const double deltaTime)
 	if (isMove || oldDir != _dir)
 	{
 		const FPoint pos = GetPos();
-		_events->EmitEvent("AnimationTankUpdate", AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent("ServerSend_Pos",
-							   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 
-	// TODO: cover by unit test isTouchTheIce and ice movement logic 
+	// TODO: cover by unit test isTouchTheIce and ice movement logic
 	if (_effects.isTouchTheIce)
 	{
 		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
 			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
 		{
 			const FPoint pos = GetPos();
-			_events->EmitEvent("AnimationTankUpdate",
-							   AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
 			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 			{
-				_events->EmitEvent("ServerSend_Pos",
-								   ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+				_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 			}
 		}
 	}

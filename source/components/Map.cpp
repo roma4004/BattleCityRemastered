@@ -24,28 +24,27 @@ void Map::ParseAndCreateObstacle(const float gridSize) const
 				case 0:
 					break;
 				case 1:
-					_events->EmitEvent("SpawnObstacle", SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Brick});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Brick});
 					break;
 				case 2:
-					_events->EmitEvent("SpawnObstacle", SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Steel});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Steel});
 					break;
 				case 3:
 					rect.w += gridSize * 3;
 					rect.h += gridSize * 3;
-					_events->EmitEvent("SpawnObstacle", SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Eagle});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Eagle});
 					break;
 				case 4:
-					_events->EmitEvent("SpawnObstacle",
-									   SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Fortress});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Fortress});
 					break;
 				case 5:
-					_events->EmitEvent("SpawnObstacle", SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Water});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Water});
 					break;
 				case 6:
-					_events->EmitEvent("SpawnObstacle", SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Bush});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Bush});
 					break;
 				case 7:
-					_events->EmitEvent("SpawnObstacle", SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Ice});
+					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Ice});
 					break;
 				default:
 					break;

@@ -13,9 +13,7 @@ BonusHelmet::BonusHelmet(const ObjRectangle& rect, const std::shared_ptr<EventSy
 
 BonusHelmet::~BonusHelmet() = default;
 
-void BonusHelmet::PickUpBonus(const std::string& author, const std::string& fraction)
+void BonusHelmet::EmitPickupEvent(const std::string& author, const std::string&)
 {
-	_events->EmitEvent("Statistics_BonusPickup", StatisticsAttributionEvent{.author = author, .fraction = fraction});
-	_events->EmitEvent(_name + "_Pickup", BonusHelmetPickupEvent{.author = author, .effectDuration = _effectDuration});
-	TakeDamage(GetHealth(), _name, _fraction);
+	_events->EmitEvent(BonusHelmetPickupEvent{.author = author, .effectDuration = _effectDuration});
 }

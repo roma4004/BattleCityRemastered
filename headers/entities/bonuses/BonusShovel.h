@@ -20,5 +20,6 @@ public:
 
 	~BonusShovel() override;
 
-	void PickUpBonus(const std::string& author, const std::string& fraction) override;
+protected:
+	void EmitPickupEvent(const std::string& author, const std::string& fraction) override;
 };

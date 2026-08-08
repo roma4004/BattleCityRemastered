@@ -53,3 +53,18 @@ struct ClientReceivedShotEvent
 	Direction dir;
 	buuid bulletUuid;
 };
+
+struct ClientReceivedOnTankOnOffEvent
+{
+	bool isEnable;
+};
+
+struct ClientReceivedBonusHelmetPickupEvent
+{
+	bool isEnable;
+};
+
+struct ClientReceivedHealthEvent
+{
+	int health;
+};

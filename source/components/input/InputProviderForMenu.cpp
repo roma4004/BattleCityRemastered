@@ -1,5 +1,10 @@
 #include "components/input/InputProviderForMenu.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/RenderUIEvents.h"
+#include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 #include "network/Client.h"
 
@@ -16,17 +21,15 @@ InputProviderForMenu::~InputProviderForMenu()
 
 void InputProviderForMenu::Subscribe()
 {
-	_events->AddListener("Menu_Released", _name, [this]() { this->ToggleMenuInputSubscription(); });
-	_events->AddListener("Pause_Released", _name, [this]() { this->TogglePause(); });
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	{
-		this->_gameMode = newGameMode;
-	});
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+	_events->AddListener(_name, [this](const MenuReleasedEvent&) { this->ToggleMenuInputSubscription(); });
+	_events->AddListener(_name, [this](const PauseReleasedEvent&) { this->TogglePause(); });
+	_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { this->_gameMode = event.mode; });
+	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
 
-	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->MenuUpdate(); });
-	_events->AddListener("ShowMenu", _name, [this](const bool isDisplayed)
+	_events->AddListener(_name, [this](const PreTickUpdateEvent& /*event*/) { this->MenuUpdate(); });
+	_events->AddListener(_name, [this](const ShowMenuEvent& event)
 	{
+		const bool isDisplayed = event.show;
 		if ((isDisplayed && !_keys.menuShow)
 			|| (!isDisplayed && _keys.menuShow))
 		{
@@ -34,7 +37,7 @@ void InputProviderForMenu::Subscribe()
 		}
 	});
 
-	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
+	_events->AddListener(_name, [this](const MenuShowedEvent& event)
 	{
 		if (this->_gameMode == GameMode::Demo
 			|| this->_gameMode == GameMode::PlayAsHost)
@@ -42,6 +45,7 @@ void InputProviderForMenu::Subscribe()
 			return;
 		}
 
+		const bool isDisplayed = event.isShown;
 		if (isDisplayed && !_keys.pause
 			|| !isDisplayed && _keys.pause)
 		{
@@ -52,26 +56,23 @@ void InputProviderForMenu::Subscribe()
 
 void InputProviderForMenu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-// NOTE: registered under _menuNavName (not _name) so DisableMenuInput can drop exactly this
-// toggle-able subset via one RemoveAllListeners call, without disturbing the always-on
-// listeners Subscribe() registered under _name for the lifetime of this object.
 void InputProviderForMenu::EnableMenuInput()
 {
 	const std::string menuNavName{_name + "_MenuNav"};
-	_events->AddListener("Move_Up", std::string{"P1"}, menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("Move_Down", std::string{"P1"}, menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Move_Up", std::string{"P2"}, menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("Move_Down", std::string{"P2"}, menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("Enter", menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-	_events->AddListener("Fire", std::string{"P1"}, menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
-	_events->AddListener("Fire", std::string{"P2"}, menuNavName,
-						 [&btn = _keys](const bool isPressed) { btn.reset = isPressed; });
+	_events->AddListener(std::string{"P1"}, menuNavName,
+						 [&btn = _keys](const MoveUpEvent& event) { btn.up = event.isPressed; });
+	_events->AddListener(std::string{"P1"}, menuNavName,
+						 [&btn = _keys](const MoveDownEvent& event) { btn.down = event.isPressed; });
+	_events->AddListener(std::string{"P2"}, menuNavName,
+						 [&btn = _keys](const MoveUpEvent& event) { btn.up = event.isPressed; });
+	_events->AddListener(std::string{"P2"}, menuNavName,
+						 [&btn = _keys](const MoveDownEvent& event) { btn.down = event.isPressed; });
+	_events->AddListener(menuNavName,
+						 [&btn = _keys](const EnterEvent& event) { btn.reset = event.isPressed; });
+	_events->AddListener(std::string{"P1"}, menuNavName,
+						 [&btn = _keys](const FireEvent& event) { btn.reset = event.isPressed; });
+	_events->AddListener(std::string{"P2"}, menuNavName,
+						 [&btn = _keys](const FireEvent& event) { btn.reset = event.isPressed; });
 }
 
 void InputProviderForMenu::DisableMenuInput() const { _events->RemoveAllListeners(_name + "_MenuNav"); }
@@ -93,7 +94,7 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 		DisableMenuInput();
 	}
 
-	_events->EmitEvent("MenuShowed", _keys.menuShow);
+	_events->EmitEvent(MenuShowedEvent{.isShown = _keys.menuShow});
 
 	_keys.reset = false;
 }
@@ -101,13 +102,13 @@ void InputProviderForMenu::ToggleMenuInputSubscription()
 void InputProviderForMenu::ToggleUp()
 {
 	_keys.up = false;
-	_events->EmitEvent("PreviousGameMode");
+	_events->EmitEvent(PreviousGameModeEvent{});
 }
 
 void InputProviderForMenu::ToggleDown()
 {
 	_keys.down = false;
-	_events->EmitEvent("NextGameMode");
+	_events->EmitEvent(NextGameModeEvent{});
 }
 
 void InputProviderForMenu::TogglePause() { SetPause(!GetPause()); }
@@ -123,15 +124,15 @@ void InputProviderForMenu::SetPause(bool value)
 	}
 
 	_keys.pause = value;
-	_events->EmitEvent("Pause_Status", _keys.pause);
+	_events->EmitEvent(PauseStatusEvent{.isPaused = _keys.pause});
 
 	if (_gameMode != GameMode::PlayAsClient)
 	{
-		_events->EmitEvent("ServerSend_Pause_Status", _keys.pause);
+		_events->EmitEvent(ServerSendPauseStatusEvent{.isPaused = _keys.pause});
 	}
 	else
 	{
-		_events->EmitEvent("ClientSend_Pause_Status", _keys.pause);
+		_events->EmitEvent(ClientSendPauseStatusEvent{.isPaused = _keys.pause});
 	}
 }
 
@@ -152,7 +153,7 @@ void InputProviderForMenu::MenuUpdate()
 
 	if (menuKeysStats.reset)
 	{
-		_events->EmitEvent("ResetBattlefield");
-		_events->EmitEvent("ShowMenu", false);
+		_events->EmitEvent(ResetBattlefieldEvent{});
+		_events->EmitEvent(ShowMenuEvent{.show = false});
 	}
 }

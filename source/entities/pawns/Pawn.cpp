@@ -2,6 +2,7 @@
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/ReplicationEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h" //NOTE: required for std::unique_ptr<IMoveBeh> Pawn::_moveBeh
@@ -37,21 +38,21 @@ void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_Health", _uuid, _nameWithUuid, [this](const int health)
+	_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
 	{
-		this->SetHealth(health);
+		this->SetHealth(event.health);
 	});
 }
 
 void Pawn::SubscribeTickUpdate()
 {
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
+	_events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
 	{
-		this->TickUpdate(deltaTime);
+		this->TickUpdate(event.deltaTime);
 	});
 }
 
-void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate", _nameWithUuid); }
+void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener<TickUpdateEvent>(_nameWithUuid); }
 
 void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
@@ -63,8 +64,7 @@ void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Health",
-						   ServerSendHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(ServerSendHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
@@ -14,9 +15,9 @@ public:
 	static void WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
 							   std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	{
-		events->AddListener("AddToSpawnQueue", "TestSpawnQueue", [allObjects](std::shared_ptr<BaseObj> obj)
+		events->AddListener("TestSpawnQueue", [allObjects](const AddToSpawnQueueEvent& event)
 		{
-			allObjects->emplace_back(std::move(obj));
+			allObjects->emplace_back(event.obj);
 		});
 	}
 
