@@ -3,9 +3,9 @@
 #include "../BaseObj.h"
 #include "interfaces/ITickUpdatable.h"
 
-struct PawnProperty;
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
+struct PawnProperty;
 struct ObjRectangle;
 class IMoveBeh;
 class EventSystem;
@@ -15,8 +15,19 @@ class Pawn : public BaseObj, public ITickUpdatable
 {
 	using buuid = boost::uuids::uuid;
 
-	virtual void SubscribeAsHost();
-	virtual void SubscribeAsClient();
+public:
+	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig);
+
+	~Pawn() override;
+
+	//BaseObj overrides
+	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+
+	[[nodiscard]] Direction GetDirection() const;
+	void SetDirection(Direction dir);
+
+	[[nodiscard]] float GetSpeed() const;
+	void SetSpeed(float speed);
 
 protected:
 	float _speed{};
@@ -38,17 +49,7 @@ protected:
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(double deltaTime) override = 0;
 
-public:
-	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig);
-
-	~Pawn() override;
-
-	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
-
-	[[nodiscard]] Direction GetDirection() const;
-	void SetDirection(Direction dir);
-
-	[[nodiscard]] float GetSpeed() const;
-	void SetSpeed(float speed);
+private:
+	virtual void SubscribeAsHost();
+	virtual void SubscribeAsClient();
 };

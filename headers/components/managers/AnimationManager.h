@@ -35,18 +35,14 @@ public:
 	void Unsubscribe() const;
 	void SetGameMode(GameMode newGameMode);
 	void Reset();
-	void CreateAnimationWater(ObjRectangle rect);
-	void CreateHelmetAnimation(ObjRectangle rect, const std::string& name);
-	void CreateAnimationTank(ObjRectangle rect, std::string name);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
 	void DeleteTankAnimation(const std::string& name);
 
 private:
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
-				bool isInfinite = {});
+				int animationSpeed, bool isInfinite = {}, bool playsInReverse = {}, bool isLocallySimulated = {});
 	void Update();
-	static void UpdateFrame(AnimatedObject& object, int animationSpeed);
-	static void UpdateWaterFrame(AnimatedObject& object, int animationSpeed);
+	static void UpdateFrame(AnimatedObject& object);
 	void UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir);
 	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
 	void DeleteHelmetAnimation(const std::string& name);
