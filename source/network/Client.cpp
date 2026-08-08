@@ -484,7 +484,7 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
 			case CommandType::POSITION_CHANGE:
 			{
 				OnPositionChange(command);
-				//TODO: use more polymorphic way to process commands, uni method onReceived
+				//TODO: use more polymorphic way command->exec() to process commands, uni method onReceived
 				break;
 			}
 			case CommandType::TANK_SHOT:

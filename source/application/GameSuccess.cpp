@@ -25,7 +25,6 @@ class BaseObj;
 // std::ofstream error_log_server("error_log_Server.txt");
 GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
 						 std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
-						 std::unique_ptr<RightSideBar>& rightSideBar,
 						 const GameMode gameMode)
 	: _menu{std::move(menu)}
 	, _textureManager(std::make_unique<TextureManager>(events))
@@ -37,7 +36,7 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
 	, _statistics{std::make_unique<GameStatistics>(events)}
-	, _rightSideBar{std::move(rightSideBar)}
+	, _rightSideBar{std::make_unique<RightSideBar>(events)}
 	, _events{events}
 	, _selectedGameMode{GameMode::OnePlayer}
 {

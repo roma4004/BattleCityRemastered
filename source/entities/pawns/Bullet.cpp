@@ -112,7 +112,7 @@ void Bullet::Disable() const
 
 void Bullet::Reset(BulletResetProperty resetProperty)
 {
-	Disable();
+	Disable();//TODO: remove and unsubscribe in bullet pool on return
 
 	SetRect(resetProperty.rect);
 	SetHealth(resetProperty.health);

@@ -26,8 +26,8 @@ class GameSuccess final : public IGame
 {
 public:
 	GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
-				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
-				std::unique_ptr<RightSideBar>& rightSideBar, GameMode gameMode);
+				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager, GameMode gameMode);
+
 	~GameSuccess() override;
 
 	void MainLoop() override;
