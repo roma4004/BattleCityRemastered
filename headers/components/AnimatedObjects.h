@@ -17,7 +17,6 @@ public:
 	AnimationType type{};
 	bool markToDispose{};
 	bool isInfinite{};
-	bool playsInReverse{};//NOTE: frames are sampled back-to-front in the sprite sheet (eg. water "flowing")
 	int scale{};
 	std::string name{};
 	std::string nameWithUuid{};
@@ -26,7 +25,7 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, int frameLimit, int scale,
-				   int animationSpeed, bool isInfinite = {}, bool playsInReverse = {});
+				   int animationSpeed, bool isInfinite = {});
 
 	~AnimatedObject();
 

@@ -235,7 +235,8 @@ void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir,
 {
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
-	textureRect.x += static_cast<float>(step * scale);
+	const int direction = name == "Water" ? -1 : 1;//NOTE: water's frames are played back-to-front frames flow
+	textureRect.x += static_cast<float>(step * scale * direction);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)

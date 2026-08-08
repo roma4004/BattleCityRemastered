@@ -17,9 +17,9 @@ class AnimationManager
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<AnimatedObject> _animatedObjects{};// all other (eg. explosion)
-	std::vector<AnimatedObject> _tankObjects{};//procedural animated (eg tanks )
-	std::vector<AnimatedObject> _waterObjects{};//idle animation
+	std::vector<AnimatedObject> _autoAnimatedObjects{};//advanced on TickUpdate() (eg. explosions, spawn, helmet)
+	std::vector<AnimatedObject> _turnBasedTankObjects{};//advanced on movement (eg. tank move event)
+	std::vector<AnimatedObject> _autoAnimatedWaterObjects{};//advanced on TickUpdate(), separated to render water first
 	std::string _name = "AnimationManager";
 	GameMode _gameMode{};
 
@@ -40,7 +40,7 @@ public:
 
 private:
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
-				int animationSpeed, bool isInfinite = {}, bool playsInReverse = {}, bool isLocallySimulated = {});
+				int animationSpeed, bool isInfinite = {}, bool isLocallySimulated = {});
 	void Update();
 	static void UpdateFrame(AnimatedObject& object);
 	void UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir);

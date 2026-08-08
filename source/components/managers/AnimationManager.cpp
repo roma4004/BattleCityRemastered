@@ -11,9 +11,9 @@ AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 	: _events(events)
 	, _gameMode{GameMode::Demo}
 {
-	_animatedObjects.reserve(100);
-	_tankObjects.reserve(6);
-	_waterObjects.reserve(10);
+	_autoAnimatedObjects.reserve(100);
+	_turnBasedTankObjects.reserve(6);
+	_autoAnimatedWaterObjects.reserve(10);
 
 	Subscribe();
 }
@@ -108,9 +108,9 @@ void AnimationManager::SetGameMode(const GameMode newGameMode)
 
 void AnimationManager::Reset()
 {
-	_animatedObjects.clear();
-	_tankObjects.clear();//NOTE: all tank_animation will be removed when tank died
-	_waterObjects.clear();
+	_autoAnimatedObjects.clear();
+	_turnBasedTankObjects.clear();//NOTE: all tank_animation will be removed when tank died
+	_autoAnimatedWaterObjects.clear();
 }
 
 void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name)
@@ -133,33 +133,36 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 			Create("BulletAnimation", rect, type, 2, 16, 0);
 			break;
 		case AnimationType::Water_Animation:
-			//NOTE: isInfinite=true, playsInReverse=true: water "flows" by sampling the sprite sheet back-to-front
-			Create("Water", rect, type, 16, 1, 20, true, true);
+			Create("Water", rect, type, 16, 1, 20, true);
 			break;
 		case AnimationType::Helmet_Animation:
+		{
 			//NOTE: isLocallySimulated=true: helmet effect syncs independently via ServerSend_BonusHelmet_Pickup;
 			//each client has its own helmet animation locally from its own tank
-			Create(name + "HelmetAnimation", rect, type, 2, 16, 20, true, false, true);
-			break;
+			constexpr bool isLocallySimulated{true};
+			Create(name + "HelmetAnimation", rect, type, 2, 16, 20, true, isLocallySimulated);
+		}
+		break;
 		case AnimationType::Tank_Animation:
 			//NOTE: isLocallySimulated=true: each client has its own tank animation locally from its own spawn-enabled trigger
-			Create(name, rect, type, 2, 16, 2, true, false, true);
+			constexpr bool isLocallySimulated{true};
+			Create(name, rect, type, 2, 16, 2, true, isLocallySimulated);
 			break;
 	}
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							  const int limitOfFrames, const int scale, const int animationSpeed,
-							  const bool isInfinite, const bool playsInReverse, const bool isLocallySimulated)
+							  const bool isInfinite, const bool isLocallySimulated)
 {
 	//NOTE: chose animation container for water if not then tanks, if not then other objects
 	auto& target =
 			type == AnimationType::Water_Animation
-				? _waterObjects
+				? _autoAnimatedWaterObjects
 				: type == AnimationType::Tank_Animation
-				? _tankObjects
-				: _animatedObjects;
-	target.emplace_back(name, rect, type, limitOfFrames, scale, animationSpeed, isInfinite, playsInReverse);
+				? _turnBasedTankObjects
+				: _autoAnimatedObjects;
+	target.emplace_back(name, rect, type, limitOfFrames, scale, animationSpeed, isInfinite);
 
 	if (!isLocallySimulated && _gameMode == GameMode::PlayAsHost)
 	{
@@ -170,12 +173,12 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 void AnimationManager::Update()
 {
-	for (auto& object: _waterObjects)
+	for (auto& object: _autoAnimatedWaterObjects)
 	{
 		UpdateFrame(object);
 	}
 
-	for (auto& object: _animatedObjects)
+	for (auto& object: _autoAnimatedObjects)
 	{
 		UpdateFrame(object);
 	}
@@ -207,7 +210,7 @@ void AnimationManager::UpdateFrame(AnimatedObject& object)
 
 void AnimationManager::UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir)
 {
-	for (auto& object: _tankObjects)
+	for (auto& object: _turnBasedTankObjects)
 	{
 		if (object.name.ends_with(name))
 		{
@@ -225,7 +228,7 @@ void AnimationManager::UpdateTank(const std::string& name, const FPoint& pos, co
 
 void AnimationManager::UpdateHelmetEffect(const std::string& name, const FPoint& pos)
 {
-	for (auto& object: _animatedObjects)
+	for (auto& object: _autoAnimatedObjects)
 	{
 		if (object.markToDispose == false
 			&& object.type == AnimationType::Helmet_Animation
@@ -247,7 +250,7 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 	}
 	else
 	{
-		for (auto& tankObject: _tankObjects)
+		for (auto& tankObject: _turnBasedTankObjects)
 		{
 			if (tankObject.type == AnimationType::Tank_Animation && tankObject.name != name)
 			{
@@ -255,7 +258,7 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 			}
 
 			//enable and update if exist
-			for (auto& animatedObject: _animatedObjects)
+			for (auto& animatedObject: _autoAnimatedObjects)
 			{
 				if (animatedObject.type == AnimationType::Helmet_Animation && animatedObject.name.starts_with(name))
 				{
@@ -289,7 +292,7 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 
 void AnimationManager::DeleteTankAnimation(const std::string& name)
 {
-	std::erase_if(_tankObjects, [&name](const auto& object)
+	std::erase_if(_turnBasedTankObjects, [&name](const auto& object)
 	{
 		return object.name.ends_with(name);
 	});
@@ -297,7 +300,7 @@ void AnimationManager::DeleteTankAnimation(const std::string& name)
 
 void AnimationManager::DeleteHelmetAnimation(const std::string& name)
 {
-	for (auto& object: _animatedObjects)
+	for (auto& object: _autoAnimatedObjects)
 	{
 		if (object.markToDispose == false
 			&& object.type == AnimationType::Helmet_Animation
@@ -316,7 +319,7 @@ void AnimationManager::DeleteHelmetAnimation(const std::string& name)
 //  cut here     |
 void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 {
-	std::erase_if(_animatedObjects, [](const auto& object)
+	std::erase_if(_autoAnimatedObjects, [](const auto& object)
 	{
 		return object.markToDispose;
 	});
@@ -324,19 +327,18 @@ void AnimationManager::AnimationSeqDisposer()//TODO: write correct disposer
 
 void AnimationManager::DrawObject(const AnimatedObject& object) const
 {
-	const int currentAnimationFrame = object.playsInReverse ? -object.currentFrameIndex : object.currentFrameIndex;
 	_events->EmitEvent(
 			"DrawAnimation",
 			DrawAnimationEvent{.rect = object.rect,
 							   .dir = object.dir,
-							   .frame = currentAnimationFrame,
+							   .frame = object.currentFrameIndex,
 							   .scale = object.scale,
 							   .name = object.name});
 }
 
 void AnimationManager::Draw() const
 {
-	for (const auto& object: _waterObjects)
+	for (const auto& object: _autoAnimatedWaterObjects)
 	{
 		if (object.markToDispose)
 		{
@@ -346,7 +348,7 @@ void AnimationManager::Draw() const
 		DrawObject(object);
 	}
 
-	for (const auto& object: _tankObjects)
+	for (const auto& object: _turnBasedTankObjects)
 	{
 		if (object.markToDispose)
 		{
@@ -356,7 +358,7 @@ void AnimationManager::Draw() const
 		DrawObject(object);
 	}
 
-	for (const auto& object: _animatedObjects)
+	for (const auto& object: _autoAnimatedObjects)
 	{
 		if (object.markToDispose)
 		{

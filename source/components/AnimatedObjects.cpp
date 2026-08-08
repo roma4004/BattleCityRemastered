@@ -4,14 +4,12 @@
 #include <boost/uuid/nil_generator.hpp>
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							   const int frameLimit, const int scale, const int animationSpeed,
-							   const bool isInfinite, const bool playsInReverse)
+							   const int frameLimit, const int scale, const int animationSpeed, const bool isInfinite)
 	: rect{rect}
 	, limitOfFrames{frameLimit}
 	, animationSpeed{animationSpeed}
 	, type(type)
 	, isInfinite{isInfinite}
-	, playsInReverse{playsInReverse}
 	, scale{scale}
 	, name{name}
 	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())} {}
@@ -31,7 +29,6 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
-	playsInReverse = other.playsInReverse;
 	scale = other.scale;
 	name = other.name;
 	nameWithUuid = other.nameWithUuid;
@@ -49,7 +46,6 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
-	playsInReverse = other.playsInReverse;
 	scale = other.scale;
 	name = std::move(other.name);
 	nameWithUuid = std::move(other.nameWithUuid);
@@ -70,7 +66,6 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
-	playsInReverse = other.playsInReverse;
 	scale = other.scale;
 	name = other.name;
 	nameWithUuid = other.nameWithUuid;
@@ -93,7 +88,6 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
-	playsInReverse = other.playsInReverse;
 	scale = other.scale;
 	name = std::move(other.name);
 	nameWithUuid = std::move(other.nameWithUuid);
