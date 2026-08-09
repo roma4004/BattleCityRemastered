@@ -52,6 +52,7 @@ void AnimationManager::Subscribe()
 		this->OnHelmetEffect(event.name, event.isEnable);
 	}));
 
+	//TODO: draw explosion animation after others obstacle and tanks, maybe split explosions and other collections
 	_subs.push_back(_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); }));
 }
 

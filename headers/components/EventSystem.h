@@ -83,15 +83,6 @@ struct EventKey
 	KeyT value;
 };
 
-template<typename T>
-struct is_event_key : std::false_type {};
-
-template<typename KeyT>
-struct is_event_key<EventKey<KeyT>> : std::true_type {};
-
-template<typename T>
-constexpr bool is_event_key_v = is_event_key<std::decay_t<T>>::value;
-
 // Extracts the first type of a non-empty pack - used below to pull the single EventType out of
 // a listener lambda's parameter list once callable_signature has verified there's exactly one.
 template<typename... Args>
@@ -149,9 +140,12 @@ struct callable_signature<void (Class::*)()>
 				  "struct instead. Zero-parameter listeners are no longer supported.");
 };
 
-// Const lambda with arguments
-template<typename Class, typename R, typename... Args>
-struct callable_signature<R (Class::*)(Args...) const>
+// Shared body for every callable shape below that carries a concrete Args... pack (const lambda,
+// mutable lambda, function pointer, std::function) - all four previously repeated this verbatim,
+// differing only in which callable_signature<T> specialization pattern-matched. EventType/
+// call_add_listener/call_add_keyed_listener are inherited as-is; only the pattern match differs.
+template<typename... Args>
+struct callable_signature_args
 {
 	static_assert(sizeof...(Args) == 1,
 				  "EventSystem: listener callback must take exactly one event-struct parameter, "
@@ -176,84 +170,22 @@ struct callable_signature<R (Class::*)(Args...) const>
 																		   std::forward<CallableT>(callback));
 	}
 };
+
+// Const lambda with arguments
+template<typename Class, typename R, typename... Args>
+struct callable_signature<R (Class::*)(Args...) const> : callable_signature_args<Args...> {};
 
 // mutable lambda with arguments
 template<typename Class, typename R, typename... Args>
-struct callable_signature<R (Class::*)(Args...)>
-{
-	static_assert(sizeof...(Args) == 1,
-				  "EventSystem: listener callback must take exactly one event-struct parameter, "
-				  "e.g. `[](const FooEvent& e){...}` - a single eventName string used to carry "
-				  "several distinct payload shapes is no longer supported, split into separate "
-				  "event structs.");
-
-	using EventType = std::decay_t<detail::first_type_t<Args...>>;
-
-	template<typename CallableT>
-	static EventSubscription call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
-	{
-		return eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
-	}
-
-	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
-													 const std::string& listenerName,
-													 CallableT&& callback)
-	{
-		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																		   std::forward<CallableT>(callback));
-	}
-};
+struct callable_signature<R (Class::*)(Args...)> : callable_signature_args<Args...> {};
 
 // function pointers
 template<typename R, typename... Args>
-struct callable_signature<R (*)(Args...)>
-{
-	static_assert(sizeof...(Args) == 1,
-				  "EventSystem: listener callback must take exactly one event-struct parameter.");
-
-	using EventType = std::decay_t<detail::first_type_t<Args...>>;
-
-	template<typename CallableT>
-	static EventSubscription call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
-	{
-		return eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
-	}
-
-	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
-													 const std::string& listenerName,
-													 CallableT&& callback)
-	{
-		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																		   std::forward<CallableT>(callback));
-	}
-};
+struct callable_signature<R (*)(Args...)> : callable_signature_args<Args...> {};
 
 // std::function
 template<typename R, typename... Args>
-struct callable_signature<std::function<R(Args...)>>
-{
-	static_assert(sizeof...(Args) == 1,
-				  "EventSystem: listener callback must take exactly one event-struct parameter.");
-
-	using EventType = std::decay_t<detail::first_type_t<Args...>>;
-
-	template<typename CallableT>
-	static EventSubscription call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
-	{
-		return eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
-	}
-
-	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
-													 const std::string& listenerName,
-													 CallableT&& callback)
-	{
-		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																		   std::forward<CallableT>(callback));
-	}
-};
+struct callable_signature<std::function<R(Args...)>> : callable_signature_args<Args...> {};
 
 // concepts for check a callable object
 template<typename T>
