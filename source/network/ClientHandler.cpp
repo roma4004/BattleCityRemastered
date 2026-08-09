@@ -1,6 +1,7 @@
 #include "network/ClientHandler.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
+#include "utils/NetworkLogger.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
@@ -26,12 +27,12 @@ ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_
 		catch (std::exception& e)
 		{
 			std::cerr << "ClientHandler thread " << e.what() << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog(std::string("ClientHandler thread exception: ") + e.what());
 		}
 		catch (...)
 		{
 			std::cerr << "ClientHandler thread error ..." << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog("ClientHandler thread error: unknown exception");
 		}
 	});
 

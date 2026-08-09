@@ -1,6 +1,7 @@
 #include "network/ServerHandler.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
+#include "utils/NetworkLogger.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
@@ -27,12 +28,12 @@ ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_
 		catch (std::exception& e)
 		{
 			std::cerr << "ServerHandler thread " << e.what() << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog(std::string("ServerHandler thread exception: ") + e.what());
 		}
 		catch (...)
 		{
 			std::cerr << "ServerHandler thread error ..." << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog("ServerHandler thread error: unknown exception");
 		}
 	});
 

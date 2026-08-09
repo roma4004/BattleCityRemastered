@@ -150,8 +150,6 @@ void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, signalName]()
 		{
-			//NOTE: signalName has exactly one live value today; a real second signal would need its
-			//own fixed-name branch/struct here rather than reviving a runtime-built event name.
 			if (signalName == "ClientSend_ReadyToPlay")
 			{
 				_events->EmitEvent(ServerReceiveClientReadyToStartGameEvent{});
@@ -173,12 +171,6 @@ void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, keyState, isEnable]()//TODO: validate each command, security risk
 		{
-			// keyState is either a tagged input action ("P1_Move_Up") from UserInput's
-			// keyboard/gamepad side-tag family, re-dispatched here keyed by tag, or an untagged
-			// name (e.g. "Pause_Released") that stays a plain broadcast event.
-			//NOTE: both `action` and the untagged `keyState` are closed sets, so a runtime string
-			//switch onto fixed-name structs replaces what used to be a "ServerReceive_" + <dynamic>
-			//event name.
 			if (keyState.starts_with("P1_") || keyState.starts_with("P2_"))
 			{
 				const std::string tag = keyState.substr(0, 2);
@@ -339,12 +331,12 @@ void Session::DoWrite(const std::string& message)
 	catch (const std::exception& e)
 	{
 		std::cerr << "Session Exception in DoWrite: " << e.what() << '\n';
-		//TODO: write error to file
+		NetworkLogger::WriteLog(std::string("Session Exception in DoWrite: ") + e.what());
 	}
 	catch (...)
 	{
 		std::cerr << "Session error ..." << '\n';
-		//TODO: write error to file
+		NetworkLogger::WriteLog("Session error in DoWrite: unknown exception");
 	}
 }
 
@@ -401,7 +393,7 @@ void Server::StartSendThread()
 				catch (...)
 				{
 					std::cerr << "Server thread error ..." << '\n';
-					//TODO: write error to file
+					NetworkLogger::WriteLog("Server send thread error: unknown exception");
 				}
 			}
 		}
@@ -568,13 +560,15 @@ void Server::SubscribeStatistics()
 	_events->AddListener(_name, [this](const ServerSendPlayerOneHitEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerOneHit, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::PlayerOneHit, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendPlayerTwoHitEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoHit, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoHit, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendEnemyDiedEvent& event)
@@ -586,37 +580,43 @@ void Server::SubscribeStatistics()
 	_events->AddListener(_name, [this](const ServerSendPlayerOneDiedEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerOneDied, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::PlayerOneDied, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendPlayerTwoDiedEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoDied, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoDied, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendBrickWallDiedEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BrickWallDied, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::BrickWallDied, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendSteelWallDiedEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::SteelWallDied, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::SteelWallDied, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendBonusPickupEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BonusPickup, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::BonusPickup, event.author, event.fraction));
 	});
 
 	_events->AddListener(_name, [this](const ServerSendBonusDestroyedEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BonusDestroyed, event.author, event.fraction));
+		_batch->AddCommand(
+				std::make_shared<StatisticsChange>(StatisticsType::BonusDestroyed, event.author, event.fraction));
 	});
 }
 
