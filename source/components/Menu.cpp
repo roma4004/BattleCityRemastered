@@ -20,30 +20,23 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-Menu::~Menu()
-{
-	Unsubscribe();
-}
-
 void Menu::Subscribe()
 {
 	if (_isMenuDisplayed)
 	{
-		_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
 	}
 
-	_events->AddListener(_name, [this](const SelectedGameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const SelectedGameModeChangedToEvent& event)
 	{
 		this->_selectedGameMode = event.mode;
-	});
+	}));
 
-	_events->AddListener(_name, [this](const MenuShowedEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event)
 	{
 		DisplayMenu(event.isShown);
-	});
+	}));
 }
-
-void Menu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void Menu::Draw()
 {
@@ -122,10 +115,10 @@ void Menu::DisplayMenu(const bool isDisplayed)
 
 	if (_isMenuDisplayed)
 	{
-		_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
 	}
 	else
 	{
-		_events->RemoveListener<DrawUserInterfaceEvent>(_name);
+		_drawSub = EventSubscription{};
 	}
 }

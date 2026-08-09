@@ -17,48 +17,38 @@ BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& event
 	Subscribe();
 }
 
-BonusEffectManager::~BonusEffectManager()
-{
-	Unsubscribe();
-}
-
 void BonusEffectManager::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
 
-	_events->AddListener(_name, [this](const TickUpdateEvent& event) { this->TickUpdate(event.deltaTime); });
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const TickUpdateEvent& event)
+	{
+		this->TickUpdate(event.deltaTime);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->OnGameModeChangedTo(event.mode);
-	});
+	}));
 
-	_events->AddListener(
-			_name,
-			[this](const BonusTimerPickupEvent& event)
-			{
-				this->OnTimerBonus(event.fraction, event.effectDuration);
-			});
-	_events->AddListener(
-			_name,
-			[this](const BonusHelmetPickupEvent& event)
-			{
-				this->OnHelmetBonusPickup(event.author, event.effectDuration);
-			});
-	_events->AddListener(
-			_name,
-			[this](const BonusShovelPickupEvent& event)
-			{
-				this->OnBonusShovelPickup(event.fraction, event.effectDuration);
-			});
+	_subs.push_back(_events->AddListener(_name, [this](const BonusTimerPickupEvent& event)
+	{
+		this->OnTimerBonus(event.fraction, event.effectDuration);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const BonusHelmetPickupEvent& event)
+	{
+		this->OnHelmetBonusPickup(event.author, event.effectDuration);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const BonusShovelPickupEvent& event)
+	{
+		this->OnBonusShovelPickup(event.fraction, event.effectDuration);
+	}));
 
-	_events->AddListener(_name, [this](const BonusEffectReApplyEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const BonusEffectReApplyEvent& event)
 	{
 		this->OnSpawnEnabled(event.name, event.fraction);
 		//TODO: refactor to enabled by uuid instead of name and fraction
-	});
+	}));
 }
-
-void BonusEffectManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void BonusEffectManager::Reset()
 {

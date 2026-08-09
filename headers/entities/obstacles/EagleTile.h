@@ -11,7 +11,6 @@ class EagleTile final : public Obstacle
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
-	void Unsubscribe() const override;
 
 protected:
 	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),

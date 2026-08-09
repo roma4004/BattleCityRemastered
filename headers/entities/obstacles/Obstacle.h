@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include <memory>
+#include <vector>
 
 enum class ObstacleType : char8_t;
 enum class GameMode : char8_t;
@@ -15,10 +17,14 @@ class Obstacle : public BaseObj, public IDrawable
 	virtual void Subscribe();
 	virtual void SubscribeAsClient();
 
-	virtual void Unsubscribe() const;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	// Shared with derived classes (BrickWall/SteelWall/BushTile/EagleTile/IceTile all override
+	// Subscribe() and push into this same inherited vector) - one destruction point cleans up
+	// both the base's and the derived class's subscriptions together, replacing the old two-stage
+	// manual Unsubscribe() (derived override removes its own, then Obstacle::Unsubscribe() swept
+	// the rest via RemoveAllListeners).
+	std::vector<EventSubscription> _subs{};
 	GameMode _gameMode{};
 	ObstacleType _obstacleType{};
 

@@ -43,11 +43,12 @@ protected:
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
@@ -313,12 +314,10 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	unsigned short respawnActual{3u};
-	_events->AddListener(
-			"BonusTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				respawnActual = event.respawnCount;
-			});
+	auto respawnSub = _events->AddListener("BonusTest", [&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		respawnActual = event.respawnCount;
+	});
 
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
@@ -345,12 +344,10 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	unsigned short respawnActual{3u};
-	_events->AddListener(
-			"BonusTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				respawnActual = event.respawnCount;
-			});
+	auto respawnSub = _events->AddListener("BonusTest", [&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		respawnActual = event.respawnCount;
+	});
 
 	// spawn Player
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};

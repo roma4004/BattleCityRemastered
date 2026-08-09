@@ -43,7 +43,6 @@ ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_
 ServerHandler::~ServerHandler()
 {
 	Shutdown();
-	Unsubscribe();
 }
 
 void ServerHandler::Shutdown()
@@ -75,15 +74,10 @@ void ServerHandler::Shutdown()
 
 void ServerHandler::Subscribe()
 {
-	_events->AddListener(_name, [this](const NetCommandUpdateEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const NetCommandUpdateEvent&)
 	{
 		this->ProcessNetworkCommands();
-	});
-}
-
-void ServerHandler::Unsubscribe() const
-{
-	_events->RemoveListener<NetCommandUpdateEvent>(_name);
+	}));
 }
 
 }//namespace network::commands

@@ -14,16 +14,9 @@ BushTile::BushTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& 
 	Subscribe();
 }
 
-BushTile::~BushTile()
-{
-	Unsubscribe();
-}
-
 void BushTile::Subscribe()
 {
-	_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&) { this->Draw(); }));
 }
-
-void BushTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void BushTile::EmitDeathStatistics(const std::string&, const std::string&) {}

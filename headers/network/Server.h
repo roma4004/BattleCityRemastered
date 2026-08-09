@@ -3,6 +3,7 @@
 #include "NetworkCommandQueue.h"
 #include "commands/Command.h"
 #include "commands/CommandBatch.h"
+#include "components/EventSystem.h"
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <condition_variable>
@@ -85,13 +86,13 @@ private:
 	void Subscribe();
 	void SubscribeStatistics();
 	void SubscribeBonus();
-	void Unsubscribe() const;
 
 	void SendToAll(const std::string& message);
 	void CleanupDeadSessions();
 
 	tcp::acceptor _acceptor;
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<Session>> _sessions;
 	std::string _name;
 

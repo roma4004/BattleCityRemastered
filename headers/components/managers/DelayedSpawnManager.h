@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/EventSystem.h"
 #include "utils/Timer.h"
 #include <boost/uuid/uuid.hpp>
 
@@ -20,14 +21,14 @@ class DelayedSpawnManager
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<SpawnDelay> _spawnDelays{};
+	std::vector<EventSubscription> _subs{};
 
 public:
 	explicit DelayedSpawnManager(const std::shared_ptr<EventSystem>& events);
 
-	~DelayedSpawnManager();
+	~DelayedSpawnManager() = default;
 
 	void Subscribe();
-	void Unsubscribe() const;
 
 	void Reset();
 

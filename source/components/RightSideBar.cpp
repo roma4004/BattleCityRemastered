@@ -12,29 +12,20 @@ RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-RightSideBar::~RightSideBar()
-{
-	Unsubscribe();
-}
-
 void RightSideBar::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->_gameMode = event.mode;
-	});
+	}));
 
-	_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); }));
 
-	_events->AddListener(
-			_name,
-			[this](const RespawnCountChangedToEvent& event)
-			{
-				OnRespawnCountChangedTo(event.objectName, event.respawnCount);
-			});
+	_subs.push_back(_events->AddListener(_name, [this](const RespawnCountChangedToEvent& event)
+	{
+		OnRespawnCountChangedTo(event.objectName, event.respawnCount);
+	}));
 }
-
-void RightSideBar::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RightSideBar::Draw() const
 {

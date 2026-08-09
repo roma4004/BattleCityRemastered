@@ -58,7 +58,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	events->AddListener(
+	auto posSub = events->AddListener(
 			_uuid, "PosEventReplication",
 			[&promise](const ClientReceivedPosEvent& event)
 			{
@@ -118,7 +118,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	events->AddListener(name, "ShotEventReplication",
+	auto shotSub = events->AddListener(name, "ShotEventReplication",
 						[&promise](const ClientReceivedShotEvent& event)
 						{
 							promise.set_value({event.dir, event.bulletUuid});
@@ -175,7 +175,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	const auto name{std::string("TestTank")};
 
-	events->AddListener(_uuid, "HealthEventReplication",
+	auto healthSub = events->AddListener(_uuid, "HealthEventReplication",
 						[&promise](const ClientReceivedHealthEvent& event) { promise.set_value(event.health); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
@@ -225,7 +225,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	std::promise<buuid> promise{};
 	auto future = promise.get_future();
 
-	events->AddListener(_uuid, "DisposeEventReplication",
+	auto disposeSub = events->AddListener(_uuid, "DisposeEventReplication",
 						[&promise, uuid = _uuid](const ClientReceivedDisposeEvent&) { promise.set_value(uuid); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
@@ -274,7 +274,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	std::promise<std::pair<std::string, std::string>> promise{};
 	auto future = promise.get_future();
 
-	events->AddListener(
+	auto statsSub = events->AddListener(
 			"StatisticsEventReplication",
 			[&promise](const ClientReceivedBulletHitEvent& event)
 			{
@@ -349,7 +349,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	std::promise<std::pair<std::string, buuid>> promiseToSteel2{};
 	auto futureToSteel2 = promiseToSteel2.get_future();
 
-	events->AddListener(
+	auto fortressSub1 = events->AddListener(
 			"FortressChangeEventReplication1",
 			[&promiseDied1, &promiseToBrick1, &promiseToSteel1, &uuid1Died, &uuid1ToBrick, &uuid1ToSteel](
 			const ClientReceivedFortressChangeEvent& event)
@@ -367,7 +367,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 					promiseToSteel1.set_value({event.state, event.uuid});
 				}
 			});
-	events->AddListener(
+	auto fortressSub2 = events->AddListener(
 			"FortressChangeEventReplication2",
 			[&promiseDied2, &promiseToBrick2, &promiseToSteel2, &uuid2Died, &uuid2ToBrick, &uuid2ToSteel](
 			const ClientReceivedFortressChangeEvent& event)
@@ -544,7 +544,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	std::promise<std::tuple<FPoint, BonusType, buuid>> promise{};
 	auto future = promise.get_future();
 
-	events->AddListener(
+	auto bonusSpawnSub = events->AddListener(
 			"BonusSpawnEventReplication",
 			[&promise](const ClientReceivedBonusSpawnEvent& event)
 			{
@@ -602,7 +602,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	std::promise<buuid> promise;
 	auto future = promise.get_future();
 
-	events->AddListener(
+	auto bonusDeSpawnSub = events->AddListener(
 			"BonusDeSpawnEventReplication",
 			[&promise](const ClientReceivedBonusDeSpawnEvent& event) { promise.set_value(event.uuid); });
 
@@ -654,7 +654,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	std::promise<bool> promise;
 	auto future = promise.get_future();
 
-	events->AddListener(
+	auto bonusStatusSub = events->AddListener(
 			nameOrigin, "BonusStatusEventReplication",
 			[&promise](const ClientReceivedBonusHelmetPickupEvent& event) { promise.set_value(event.isEnable); });
 
@@ -706,7 +706,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	std::promise<void> promise;
 	const auto future = promise.get_future();
 
-	events->AddListener(
+	auto bonusCaliberSub = events->AddListener(
 			nameOrigin, "BonusCaliberStatusEventReplication",
 			[&promise](const ClientReceivedBonusCaliberPickupEvent&) { promise.set_value(); });
 
@@ -758,7 +758,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise{};
 	auto future = promise.get_future();
 
-	events->AddListener(
+	auto obstacleSpawnSub = events->AddListener(
 			"ObstacleSpawnEventReplication",
 			[&promise](const ClientReceivedObstacleSpawnEvent& event)
 			{
@@ -830,7 +830,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 
 	std::mutex mtx;
 	std::atomic<size_t> count{0u};
-	events->AddListener(
+	auto massiveObstacleSub = events->AddListener(
 			"MassiveObstacleSpawnEventReplication",
 			[&promises, &count, &mtx](const ClientReceivedObstacleSpawnEvent& event)
 			{
@@ -905,7 +905,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	std::vector<std::promise<std::tuple<TankType, buuid, FPoint>>> promises(6u);
 
 	size_t count = 0u;
-	events->AddListener(
+	auto respawnTankSub = events->AddListener(
 			"RespawnTankEventReplication",
 			[&promises, &count](const ClientReceivedRespawnTankEvent& event)
 			{

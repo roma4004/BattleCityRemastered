@@ -3,8 +3,10 @@
 #include "../BaseObj.h"
 #include "BrickWall.h"
 #include "SteelWall.h"
+#include "components/EventSystem.h"
 #include "utils/Timer.h"
 #include <variant>
+#include <vector>
 
 enum class GameMode : char8_t;
 class EventSystem;
@@ -15,6 +17,7 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 
 	std::variant<std::unique_ptr<BrickWall>,
@@ -26,8 +29,6 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 	void Subscribe();
 	void SubscribeAsClient();
 
-	void Unsubscribe() const;
-
 	void OnEnemyPickupShovel();
 	void OnPlayerPickupShovel();
 	void OnShovelCooldownEnd();
@@ -36,7 +37,7 @@ public:
 	FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 				 std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode);
 
-	~FortressWall() override;
+	~FortressWall() override = default;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 

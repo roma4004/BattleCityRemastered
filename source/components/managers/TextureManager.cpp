@@ -12,29 +12,17 @@ TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-TextureManager::~TextureManager()
+void TextureManager::Subscribe()
 {
-	Unsubscribe();
+	_subs.push_back(_events->AddListener(_name, [this](const DrawObjEvent& event)
+	{
+		this->Draw(event.rect, event.dir, event.name);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const DrawAnimationEvent& event)
+	{
+		this->DrawAnimation(event.rect, event.dir, event.frame, event.scale, event.name);
+	}));
 }
-
-void TextureManager::Subscribe() const
-{
-	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
-	_events->AddListener(
-			_name,
-			[this](const DrawObjEvent& event)
-			{
-				this->Draw(event.rect, event.dir, event.name);
-			});
-	_events->AddListener(
-			_name,
-			[this](const DrawAnimationEvent& event)
-			{
-				this->DrawAnimation(event.rect, event.dir, event.frame, event.scale, event.name);
-			});
-}
-
-void TextureManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 {

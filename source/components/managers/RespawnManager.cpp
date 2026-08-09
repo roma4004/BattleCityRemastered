@@ -27,64 +27,53 @@ RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-RespawnManager::~RespawnManager()
-{
-	Unsubscribe();
-}
-
 void RespawnManager::Subscribe()
 {
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->ResetSpawn(); });
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->ResetSpawn(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->_gameMode = event.mode;
 
 		this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
 
 		this->OnGameModeChange();
-	});
+	}));
 
-	_events->AddListener(_name, [this](const TankSpawnEvent& event) { OnTankSpawn(event.uuid); });
+	_subs.push_back(_events->AddListener(_name, [this](const TankSpawnEvent& event) { OnTankSpawn(event.uuid); }));
 
-	_events->AddListener(_name, [this](const TankDiedEvent& event) { OnTankDied(event.uuid); });
+	_subs.push_back(_events->AddListener(_name, [this](const TankDiedEvent& event) { OnTankDied(event.uuid); }));
 
-	_events->AddListener(_name, [this](const BonusTankPickupEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const BonusTankPickupEvent& event)
 	{
 		this->OnBonusTank(event.author);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const PlayersBaseFinishedEvent&) { this->TriggerLastPlayersLife(); });
+	_subs.push_back(_events->AddListener(_name, [this](const PlayersBaseFinishedEvent&) { this->TriggerLastPlayersLife(); }));
 
-	_events->AddListener(_name, [this](const RespawnTanksEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const RespawnTanksEvent& event)
 	{
 		this->RespawnTanks(event.skipDelay);
-	});
+	}));
 }
 
 void RespawnManager::SubscribeAsClient()
 {
-	_events->AddListener(_name, [this](const ClientReceivedBonusTankPickupEvent& event)
+	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientReceivedBonusTankPickupEvent& event)
 	{
 		this->OnBonusTank(event.name);
-	});
+	}));
 
-	_events->AddListener(
+	_clientSubs.push_back(_events->AddListener(
 			_name,
 			[this](const ClientReceivedRespawnTankEvent& event)
 			{
 				this->OnClientRespawn(event.type);
-			});
+			}));
 }
 
-void RespawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
-
-void RespawnManager::UnsubscribeAsClient() const
-{
-	_events->RemoveListener<ClientReceivedBonusTankPickupEvent>(_name);
-	_events->RemoveListener<ClientReceivedRespawnTankEvent>(_name);
-}
+void RespawnManager::UnsubscribeAsClient() { _clientSubs.clear(); }
 
 void RespawnManager::SetEnemyNeedRespawn()
 {

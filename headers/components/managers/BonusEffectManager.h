@@ -1,4 +1,5 @@
 #pragma once
+#include "components/EventSystem.h"
 #include "utils/Timer.h"
 
 enum class GameMode : char8_t;
@@ -17,14 +18,14 @@ class BonusEffectManager
 	GameMode _gameMode{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 
 public:
 	explicit BonusEffectManager(const std::shared_ptr<EventSystem>& events);
 
-	~BonusEffectManager();
+	~BonusEffectManager() = default;
 
 	void Subscribe();
-	void Unsubscribe() const;
 
 	void Reset();
 

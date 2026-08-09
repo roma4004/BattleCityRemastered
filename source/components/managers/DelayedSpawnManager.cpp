@@ -14,26 +14,19 @@ DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& eve
 	Subscribe();
 }
 
-DelayedSpawnManager::~DelayedSpawnManager()
-{
-	Unsubscribe();
-}
-
 void DelayedSpawnManager::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
 
-	_events->AddListener(_name, [this](const SpawnDelayStartEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const SpawnDelayStartEvent& event)
 	{
 		this->SpawnDelayStart(event.uuid, event.delay);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const PreTickUpdateEvent& event) { this->PreTickUpdate(event.deltaTime); });
+	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent& event) { this->PreTickUpdate(event.deltaTime); }));
 
-	_events->AddListener(_name, [this](const PostTickUpdateEvent&) { this->Disposer(); });
+	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { this->Disposer(); }));
 }
-
-void DelayedSpawnManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void DelayedSpawnManager::Reset()
 {

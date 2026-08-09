@@ -13,22 +13,18 @@ GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-GameStateManager::~GameStateManager() { Unsubscribe(); }
-
 void GameStateManager::Subscribe()
 {
-	_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; });
-	_events->AddListener(_name, [this](const PreDrawUserInterfaceEvent&) { this->Draw(); });
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
-	_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->_isGameWon = true; });
-	_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->_isGameOver = true; });
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; }));
+	_subs.push_back(_events->AddListener(_name, [this](const PreDrawUserInterfaceEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->_isGameWon = true; }));
+	_subs.push_back(_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->_isGameOver = true; }));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->_gameMode = event.mode;
-	});
+	}));
 }
-
-void GameStateManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void GameStateManager::Draw() const
 {

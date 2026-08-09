@@ -38,23 +38,36 @@ void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
 	{
 		this->SetHealth(event.health);
-	});
+	}));
 }
 
 void Pawn::SubscribeTickUpdate()
 {
-	_events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
+	//NOTE: guarded - Tank's constructor and Player's Enable() (called right after, when
+	//enableByDefault) both end up invoking this for the same object, harmless under the old
+	//string-keyed design (redundant AddListener just overwrote the map entry with an equivalent
+	//callback) but not safe to redo blindly here: reassigning an already-subscribed single-slot
+	//EventSubscription would unsubscribe-old-then-adopt-new, and since the new listener is already
+	//in the map by the time that unsubscribe runs, it would erase the brand new registration.
+	if (!_tickUpdateSub)
 	{
-		this->TickUpdate(event.deltaTime);
-	});
+		_tickUpdateSub = _events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
+		{
+			this->TickUpdate(event.deltaTime);
+		});
+	}
 }
 
-void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener<TickUpdateEvent>(_nameWithUuid); }
+void Pawn::UnsubscribeTickUpdate() const { _tickUpdateSub = EventSubscription{}; }
 
-void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+void Pawn::Unsubscribe() const
+{
+	_subs.clear();
+	_tickUpdateSub = EventSubscription{};
+}
 
 void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {

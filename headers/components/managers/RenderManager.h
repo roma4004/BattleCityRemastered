@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Point.h"
+#include "components/EventSystem.h"
 #include <SDL_render.h>
 #include <memory>
 #include <string>
@@ -19,6 +20,7 @@ class RenderManager
 	std::string _name{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 	GameConfig& _gameConfig;
 	SDL_Config& _sdlConfig;
 
@@ -43,7 +45,6 @@ class RenderManager
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
 
 	void Subscribe();
-	void Unsubscribe() const;
 
 	void DrawPauseText() const;
 	void DrawGameOverText() const;

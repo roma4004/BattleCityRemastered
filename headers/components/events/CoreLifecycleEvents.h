@@ -37,7 +37,7 @@ struct PreviousGameModeEvent {};
 
 struct NextGameModeEvent {};
 
-struct ResetBattlefieldEvent {};
+struct ApplyGameModeEvent {};
 
 struct PlayersBaseFinishedEvent {};
 

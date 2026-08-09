@@ -42,7 +42,6 @@ ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_
 ClientHandler::~ClientHandler()
 {
 	Shutdown();
-	Unsubscribe();
 }
 
 void ClientHandler::Shutdown()
@@ -74,15 +73,10 @@ void ClientHandler::Shutdown()
 
 void ClientHandler::Subscribe()
 {
-	_events->AddListener(_name, [this](const NetCommandUpdateEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const NetCommandUpdateEvent&)
 	{
 		this->ProcessNetworkCommands();
-	});
-}
-
-void ClientHandler::Unsubscribe() const
-{
-	_events->RemoveListener<NetCommandUpdateEvent>(_name);
+	}));
 }
 
 }//namespace network::commands

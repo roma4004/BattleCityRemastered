@@ -19,6 +19,9 @@ class Tank : public Pawn
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
+	// Unconditional, whole-lifetime listeners registered directly in the constructor (not via
+	// Subscribe()), so Enable()/Disable() toggling _subs (inherited from Pawn) never touches them.
+	std::vector<EventSubscription> _permanentSubs{};
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
@@ -36,7 +39,6 @@ protected:
 	Timer _shootTimer{};
 
 	void Subscribe() override;
-	void Unsubscribe() const override;
 
 	// bonuses
 	BonusEffectProperty _effects{};

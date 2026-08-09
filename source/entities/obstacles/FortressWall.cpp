@@ -31,11 +31,6 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	}
 }
 
-FortressWall::~FortressWall()
-{
-	Unsubscribe();
-}
-
 void FortressWall::Subscribe()
 {
 	if (_gameMode == GameMode::PlayAsClient)
@@ -43,12 +38,10 @@ void FortressWall::Subscribe()
 		SubscribeAsClient();
 	}
 
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusShovelStatusChangeEvent& event)
-			{
-				this->OnBonusShovel(event.fraction, event.isActive);
-			});
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusShovelStatusChangeEvent& event)
+	{
+		this->OnBonusShovel(event.fraction, event.isActive);
+	}));
 }
 
 void FortressWall::SubscribeAsClient()
@@ -56,29 +49,25 @@ void FortressWall::SubscribeAsClient()
 	//NOTE: Client.cpp emits ClientReceivedFortressChangeEvent here, split off the
 	//ServerSendFortressChangeEvent the host side (below, PlayAsHost branches) uses for its own local
 	//trigger - see ObstacleAndBonusEvents.h for why.
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const ClientReceivedFortressChangeEvent& event)
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ClientReceivedFortressChangeEvent& event)
+	{
+		if (event.uuid == _uuid)
+		{
+			if (event.state == "Died")
 			{
-				if (event.uuid == _uuid)
-				{
-					if (event.state == "Died")
-					{
-						this->OnEnemyPickupShovel();
-					}
-					else if (event.state == "ToBrick")
-					{
-						this->OnShovelCooldownEnd();
-					}
-					else if (event.state == "ToSteel")
-					{
-						this->OnPlayerPickupShovel();
-					}
-				}
-			});
+				this->OnEnemyPickupShovel();
+			}
+			else if (event.state == "ToBrick")
+			{
+				this->OnShovelCooldownEnd();
+			}
+			else if (event.state == "ToSteel")
+			{
+				this->OnPlayerPickupShovel();
+			}
+		}
+	}));
 }
-
-void FortressWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {

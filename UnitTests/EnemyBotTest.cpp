@@ -37,6 +37,7 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
+	EventSubscription _spawnQueueSub{};
 	double _deltaTimeOneFrame{1.f / 60.f};
 	buuid _uuid{};
 	float _tankSize{};
@@ -48,7 +49,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		_respawnManager = std::make_shared<RespawnManager>(_events);

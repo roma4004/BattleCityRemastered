@@ -37,29 +37,24 @@ TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<Bas
 	Subscribe();
 }
 
-TankSpawner::~TankSpawner()
-{
-	Unsubscribe();
-}
-
 void TankSpawner::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
 
 	//TODO: reuse existing tanks when game mode changed
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->_gameMode = event.mode;
 
 		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	});
+	}));
 
-	_events->AddListener(_name, [this](const RespawnTankEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const RespawnTankEvent& event)
 	{
 		this->RespawnTank(event.type, event.uuid, event.skipDelay);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
 		const UPoint& newSize = event.newSize;
 		_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
@@ -76,12 +71,12 @@ void TankSpawner::Subscribe()
 
 		//scale bullet caliber
 		_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
-	});
+	}));
 }
 
 void TankSpawner::SubscribeAsClient()
 {
-	_events->AddListener(
+	_clientRespawnSub = _events->AddListener(
 			_name,
 			[this](const ClientReceivedRespawnTankEvent& event)
 			{
@@ -89,9 +84,7 @@ void TankSpawner::SubscribeAsClient()
 			});
 }
 
-void TankSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
-
-void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener<ClientReceivedRespawnTankEvent>(_name); }
+void TankSpawner::UnsubscribeAsClient() { _clientRespawnSub = EventSubscription{}; }
 
 void TankSpawner::Reset()
 {

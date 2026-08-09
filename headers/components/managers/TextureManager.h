@@ -2,6 +2,7 @@
 
 #include "AnimationManager.h"
 #include "Point.h"
+#include "components/EventSystem.h"
 #include "enums/TextureOffset.h"
 #include <memory>
 
@@ -16,9 +17,9 @@ class TextureManager final
 	TextureOffset _offset{};
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 
-	void Subscribe() const;
-	void Unsubscribe() const;
+	void Subscribe();
 
 	void Draw(ObjRectangle rect, Direction dir, const std::string& name) const;
 	void DrawAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name) const;
@@ -33,5 +34,5 @@ class TextureManager final
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);
 
-	~TextureManager();
+	~TextureManager() = default;
 };

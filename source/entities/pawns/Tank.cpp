@@ -48,47 +48,43 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	// NOTE: should be in constructor to be able to enable by replication
 	if (_gameMode == GameMode::PlayAsClient)
 	{
-		_events->AddListener(
-				_uuid, _nameWithUuid,
-				[this](const ClientReceivedOnTankOnOffEvent& event)
+		_permanentSubs.push_back(
+				_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedOnTankOnOffEvent& event)
 				{
 					this->OnClientTankOnOff(event.isEnable);
-				});
+				}));
 
-		_events->AddListener(
-				_uuid, _nameWithUuid,
-				[this](const ClientReceivedPosEvent& event)
-				{
-					this->OnClientChangePos(event.pos, event.dir);
-				});
+		_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedPosEvent& event)
+		{
+			this->OnClientChangePos(event.pos, event.dir);
+		}));
 	}
 
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusTimerReApplyOnSpawnEvent& event)
+	_permanentSubs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusTimerReApplyOnSpawnEvent& event)
+	{
+		if (event.name == this->_name)
+		{
+			if (event.isEnabled)
 			{
-				if (event.name == this->_name)
-				{
-					if (event.isEnabled)
-					{
-						this->UnsubscribeTickUpdate();
-					}
-					else
-					{
-						this->SubscribeTickUpdate();
-					}
-				}
-			});
+				this->UnsubscribeTickUpdate();
+			}
+			else
+			{
+				this->SubscribeTickUpdate();
+			}
+		}
+	}));
 
-	_events->AddListener(_nameWithUuid, [this](const SpawnEnabledEvent& event) { OnSpawnEnabled(event.uuid); });
+	_permanentSubs.push_back(_events->AddListener(_nameWithUuid, [this](const SpawnEnabledEvent& event)
+	{
+		OnSpawnEnabled(event.uuid);
+	}));
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = _uuid});
 }
 
 Tank::~Tank()
 {
-	Tank::Unsubscribe();
-
 	_events->EmitEvent(TankDiedEvent{.uuid = _uuid});
 
 	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .name = _name});
@@ -98,7 +94,7 @@ void Tank::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&)
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&)
 	{
 		if (this->_effects.isHelmetActive || this->_effects.isTouchTheBushes)
 		{
@@ -106,12 +102,12 @@ void Tank::Subscribe()
 		}
 
 		this->_events->EmitEvent(RenderHealthBarEvent{.rect = this->GetRect(), .health = this->GetHealth()});
-	});
+	}));
 
-	_events->AddListener(_nameWithUuid, [this](const ScaleFactorChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ScaleFactorChangedToEvent& event)
 	{
 		this->ApplyScaleToCalibre(event.scale);
-	});
+	}));
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -123,74 +119,57 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	//TODO: rename ClientReceived_ to ClientIn                                                                                                                                                                                                          
-	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event  
+	//TODO: rename ClientReceived_ to ClientIn
+	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event
 	//TODO: refactor to ClientReceived_ "Shot" to just "Shot" and move bot timers to handle outside bot tank,
-	_events->AddListener(
-			_name, _nameWithUuid, [this](const ClientReceivedShotEvent& event)
-			{
-				this->SetDirection(event.dir);
-				this->Shot(event.bulletUuid);
-			});
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedShotEvent& event)
+	{
+		this->SetDirection(event.dir);
+		this->Shot(event.bulletUuid);
+	}));
 
-	_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusHelmetPickupEvent& event)
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusHelmetPickupEvent& event)
 	{
 		this->OnBonusHelmet(this->_name, event.isEnable);
-	});
+	}));
 
-	_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusStarPickupEvent&)
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusStarPickupEvent&)
 	{
 		this->OnBonusStar(this->_name);
-	});
+	}));
 
-	_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusCaliberPickupEvent&)
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusCaliberPickupEvent&)
 	{
 		this->OnBonusCaliber(this->_name);
-	});
+	}));
 }
 
 void Tank::SubscribeBonus()
 {
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusTimerStatusChangeEvent& event)
-			{
-				this->OnBonusTimer(event.fraction, event.isActive);
-			});
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusTimerStatusChangeEvent& event)
+	{
+		this->OnBonusTimer(event.fraction, event.isActive);
+	}));
 
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusHelmetStatusChangeEvent& event)
-			{
-				this->OnBonusHelmet(event.name, event.isActive);
-			});
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusHelmetStatusChangeEvent& event)
+	{
+		this->OnBonusHelmet(event.name, event.isActive);
+	}));
 
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusGrenadePickupEvent& event)
-			{
-				this->OnBonusGrenade(event.fraction);
-			});
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusGrenadePickupEvent& event)
+	{
+		this->OnBonusGrenade(event.fraction);
+	}));
 
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusStarPickupEvent& event)
-			{
-				this->OnBonusStar(event.author);
-			});
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusStarPickupEvent& event)
+	{
+		this->OnBonusStar(event.author);
+	}));
 
-	_events->AddListener(
-			_nameWithUuid,
-			[this](const BonusCaliberPickupEvent& event)
-			{
-				this->OnBonusCaliber(event.author);
-			});
-}
-
-void Tank::Unsubscribe() const
-{
-	Pawn::Unsubscribe();
-	_events->RemoveAllListeners(_nameWithUuid);
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusCaliberPickupEvent& event)
+	{
+		this->OnBonusCaliber(event.author);
+	}));
 }
 
 void Tank::Enable()

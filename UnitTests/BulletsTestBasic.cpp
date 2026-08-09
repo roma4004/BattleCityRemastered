@@ -30,11 +30,12 @@ protected:
 	float _gridSize{1};
 	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 
 		_allObjects.reserve(4);

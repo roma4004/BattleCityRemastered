@@ -17,27 +17,20 @@ FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>&
 	Subscribe();
 }
 
-FramePerSecondManager::~FramePerSecondManager()
-{
-	Unsubscribe();
-}
-
 void FramePerSecondManager::Subscribe()
 {
-	_events->AddListener(_name, [this](const CalculateActualFpsEvent&) { this->CountFpsAndDeltaTime(); });
+	_subs.push_back(_events->AddListener(_name, [this](const CalculateActualFpsEvent&) { this->CountFpsAndDeltaTime(); }));
 
-	_events->AddListener(_name, [this](const FrameStartEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const FrameStartEvent&)
 	{
 		this->_startFrameTime = std::chrono::high_resolution_clock::now();
-	});
+	}));
 
-	_events->AddListener(_name, [this](const PostDrawUserInterfaceEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const PostDrawUserInterfaceEvent&)
 	{
 		this->_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
-	});
+	}));
 }
-
-void FramePerSecondManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void FramePerSecondManager::CountFpsAndDeltaTime()
 {

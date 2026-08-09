@@ -1,9 +1,11 @@
 #pragma once
 
+#include "components/EventSystem.h"
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
+#include <vector>
 
 enum class GameMode : char8_t;
 class Bullet;
@@ -18,6 +20,7 @@ class BulletPool final
 	std::mutex _bulletsMutex{};
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 	std::queue<std::shared_ptr<BaseObj>> _bullets{};
 	GameMode _gameMode{};
@@ -28,10 +31,9 @@ public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 			   GameConfig& gameConfig);
 
-	~BulletPool();
+	~BulletPool() = default;
 
 	void Subscribe();
-	void Unsubscribe() const;
 
 	[[nodiscard]] std::shared_ptr<Bullet> CreateNewBullet();
 

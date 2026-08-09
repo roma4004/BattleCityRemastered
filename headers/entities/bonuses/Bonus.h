@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
 #include "interfaces/ITickUpdatable.h"
 #include "utils/Timer.h"
+#include <vector>
 
 enum class GameMode : char8_t;
 enum class BonusType : char8_t;
@@ -22,6 +24,7 @@ class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IP
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 
 	void TickUpdate(double deltaTime) override;
 	void Draw() const override;
@@ -37,8 +40,6 @@ public:
 	void Subscribe();
 	void SubscribeAsHost();
 	void SubscribeAsClient();
-
-	void Unsubscribe() const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void PickUpBonus(const std::string& author, const std::string& fraction) override;

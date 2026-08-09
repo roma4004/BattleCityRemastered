@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Point.h"
+#include "components/EventSystem.h"
 #include "interfaces/IGame.h"
 #include <chrono>
 
@@ -28,6 +29,8 @@ public:
 	GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
 				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager, GameMode gameMode);
 
+	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares the
+	//manager types held by unique_ptr below, so an in-header default would need them complete here.
 	~GameSuccess() override;
 
 	void MainLoop() override;
@@ -36,9 +39,8 @@ public:
 
 private:
 	void Subscribe();
-	void Unsubscribe() const;
 
-	void ResetBattlefieldTo(GameMode gameMode);
+	void ApplyGameMode(GameMode gameMode);
 	void PrevGameMode();
 	void NextGameMode();
 
@@ -67,6 +69,11 @@ private:
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
+	// Toggled at runtime on every GameModeChangedToEvent (host-only listener), independent of
+	// _subs's fixed subscribe-once-at-construction lifetime - assigning a new EventSubscription
+	// here auto-unsubscribes whatever was previously held.
+	EventSubscription _clientReadySub{};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};

@@ -29,7 +29,6 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameCon
 
 RenderManager::~RenderManager()
 {
-	Unsubscribe();
 	ClearFpsTextureCache();
 	ClearColorTextureCache();
 }
@@ -64,60 +63,60 @@ void RenderManager::ClearFpsTextureCache()
 
 void RenderManager::Subscribe()
 {
-	_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->ClearFrame(); });
-	_events->AddListener(_name, [this](const RenderTextEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->ClearFrame(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderTextEvent& event)
 	{
 		TextToRender(event.pos, IntToColor(event.color), event.text);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const RenderMenuBackgroundEvent& event) { DrawMenuBackground(event.pos); });
-	_events->AddListener(_name, [this](const RenderMenuLogoEvent& event) { DrawMenuLogo(event.pos); });
-	_events->AddListener(_name, [this](const RenderMenuSelectorIconEvent& event) { DrawSelectorIcon(event.pos); });
-	_events->AddListener(_name, [this](const RenderMenuXBoxHintEvent& event) { DrawXBoxHint(event.pos); });
-	_events->AddListener(_name, [this](const RenderMenuPS5HintEvent& event) { DrawPS5Hint(event.pos); });
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuBackgroundEvent& event) { DrawMenuBackground(event.pos); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuLogoEvent& event) { DrawMenuLogo(event.pos); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuSelectorIconEvent& event) { DrawSelectorIcon(event.pos); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuXBoxHintEvent& event) { DrawXBoxHint(event.pos); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuPS5HintEvent& event) { DrawPS5Hint(event.pos); }));
 
-	_events->AddListener(_name, [this](const RenderPauseTextEvent&) { DrawPauseText(); });
-	_events->AddListener(_name, [this](const RenderGameOverTextEvent&) { DrawGameOverText(); });
-	_events->AddListener(_name, [this](const RenderGameWonTextEvent&) { DrawGameWonText(); });
+	_subs.push_back(_events->AddListener(_name, [this](const RenderPauseTextEvent&) { DrawPauseText(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderGameOverTextEvent&) { DrawGameOverText(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderGameWonTextEvent&) { DrawGameWonText(); }));
 
-	_events->AddListener(_name, [this](const RenderColorTextureEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const RenderColorTextureEvent& event)
 	{
 		this->DrawColorTexture(event.rect);
-	});
+	}));
 
-	_events->AddListener(
+	_subs.push_back(_events->AddListener(
 			_name,
 			[this](const RenderTextureEvent& event)
 			{
 				this->DrawTexture(event.textureRect, event.destRect, event.dir);
-			});
+			}));
 
-	_events->AddListener(_name, [this](const RenderFPSEvent& event) { RenderFPS(event.fps); });
+	_subs.push_back(_events->AddListener(_name, [this](const RenderFPSEvent& event) { RenderFPS(event.fps); }));
 
-	_events->AddListener(_name, [this](const RenderHealthBarEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const RenderHealthBarEvent& event)
 	{
 		this->DrawHealthBar(event.rect, event.health);
-	});
-	_events->AddListener(_name, [this](const RenderRightSideBarEvent&) { this->DrawRightSideBar(); });
-	_events->AddListener(_name, [this](const RenderEnemyIconBackgroundEvent&) { this->DrawEnemyIconBackground(); });
-	_events->AddListener(_name, [this](const RenderEnemyIconsEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderRightSideBarEvent&) { this->DrawRightSideBar(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderEnemyIconBackgroundEvent&) { this->DrawEnemyIconBackground(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderEnemyIconsEvent& event)
 	{
 		this->DrawEnemyIcons(event.count);
-	});
-	_events->AddListener(_name, [this](const RenderPlayerOneIconEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderPlayerOneIconEvent& event)
 	{
 		this->DrawPlayerOneIcons(event.respawnCount);
-	});
-	_events->AddListener(_name, [this](const RenderPlayerTwoIconEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderPlayerTwoIconEvent& event)
 	{
 		this->DrawPlayerTwoIcons(event.respawnCount);
-	});
-	_events->AddListener(_name, [this](const RenderStageNumberEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderStageNumberEvent& event)
 	{
 		this->DrawStageNumber(event.stageNumber);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
 		this->_gameConfig.windowSize = event.newSize;//TODO: find better place for this responsibility
 		this->_fpsRectangle = CalcFpsPos(event.newSize);
@@ -125,10 +124,8 @@ void RenderManager::Subscribe()
 		SDL_RenderSetLogicalSize(this->_sdlConfig.renderer.get(),
 								 static_cast<int>(event.newSize.x),
 								 static_cast<int>(event.newSize.y));
-	});
+	}));
 }
-
-void RenderManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void RenderManager::DrawPauseText() const
 {

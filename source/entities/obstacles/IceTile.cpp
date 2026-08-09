@@ -14,16 +14,9 @@ IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& ev
 	Subscribe();
 }
 
-IceTile::~IceTile()
-{
-	Unsubscribe();
-}
-
 void IceTile::Subscribe()
 {
-	_events->AddListener(_nameWithUuid, [this](const PreDrawEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PreDrawEvent&) { this->Draw(); }));
 }
-
-void IceTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void IceTile::EmitDeathStatistics(const std::string&, const std::string&) {}

@@ -37,12 +37,10 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	Subscribe();
 }
 
-BonusSpawner::~BonusSpawner() { Unsubscribe(); }
-
 void BonusSpawner::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); });
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->_gameMode = event.mode;
 
@@ -56,9 +54,9 @@ void BonusSpawner::Subscribe()
 			SubscribeAsHost();
 			UnsubscribeAsClient();
 		}
-	});
+	}));
 
-	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
 		const UPoint& newSize = event.newSize;
 		_distSpawnPosY = std::uniform_int_distribution<>{
@@ -67,33 +65,29 @@ void BonusSpawner::Subscribe()
 		_distSpawnPosX = std::uniform_int_distribution<>{
 				0,
 				static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
-	});
+	}));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener(_name, [this](const TickUpdateEvent&) { this->Update(); });
+	_hostSub = _events->AddListener(_name, [this](const TickUpdateEvent&) { this->Update(); });
 }
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_events->AddListener(
-			_name,
-			[this](const ClientReceivedBonusSpawnEvent& event)
-			{
-				const auto size = static_cast<float>(_gameConfig.bonusSize);
-				const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
-				SpawnBonus(rect, event.type, event.uuid);
-			});
+	_clientSub = _events->AddListener(_name, [this](const ClientReceivedBonusSpawnEvent& event)
+	{
+		const auto size = static_cast<float>(_gameConfig.bonusSize);
+		const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
+		SpawnBonus(rect, event.type, event.uuid);
+	});
 }
 
-void BonusSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
+void BonusSpawner::UnsubscribeAsHost() { _hostSub = EventSubscription{}; }
 
-void BonusSpawner::UnsubscribeAsHost() const { _events->RemoveListener<TickUpdateEvent>(_name); }
-
-void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener<ClientReceivedBonusSpawnEvent>(_name); }
+void BonusSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
 void BonusSpawner::Update()
 {

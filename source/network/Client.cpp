@@ -102,7 +102,6 @@ void Client::TryConnect()
 
 Client::~Client()
 {
-	Unsubscribe();
 	Shutdown();
 }
 
@@ -142,43 +141,44 @@ void Client::Shutdown()
 void Client::Subscribe()
 {
 	//TODO: write batch sending on client and sending queue
-	_events->AddListener(std::string{"P2"}, _name, [this](const MoveUpEvent& event)
+	// NOTE: local dispatch is keyed (MoveUpEvent/"P2") but the wire format sent via SendKeyState is
+	// unchanged ("P2_Move_Up" etc.) - Session::OnKeyStateChange on the host still parses that
+	// literal tag+action string out of the KeyStateChange command payload.
+	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveUpEvent& event)
 	{
 		this->SendKeyState("P2_Move_Up", event.isPressed);
-	});
-	_events->AddListener(std::string{"P2"}, _name, [this](const MoveLeftEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveLeftEvent& event)
 	{
 		this->SendKeyState("P2_Move_Left", event.isPressed);
-	});
-	_events->AddListener(std::string{"P2"}, _name, [this](const MoveDownEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveDownEvent& event)
 	{
 		this->SendKeyState("P2_Move_Down", event.isPressed);
-	});
-	_events->AddListener(std::string{"P2"}, _name, [this](const MoveRightEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveRightEvent& event)
 	{
 		this->SendKeyState("P2_Move_Right", event.isPressed);
-	});
-	_events->AddListener(std::string{"P2"}, _name, [this](const FireEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const FireEvent& event)
 	{
 		this->SendKeyState("P2_Fire", event.isPressed);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const ClientSendReadyToPlayEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const ClientSendReadyToPlayEvent&)
 	{
 		// std::scoped_lock lock(_batchWriteMutex);
 		// this->_batch->AddCommand(  //TODO: implement batch sending
 		SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
-	});
+	}));
 
-	_events->AddListener(_name, [this](const ClientSendPauseStatusEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const ClientSendPauseStatusEvent& event)
 	{
 		// std::scoped_lock lock(_batchWriteMutex);
 		// this->_batch->AddCommand(  //TODO: implement batch sending
 		SendCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
-	});
+	}));
 }
-
-void Client::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void Client::ReadResponse()
 {

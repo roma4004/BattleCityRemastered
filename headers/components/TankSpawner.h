@@ -1,9 +1,11 @@
 #pragma once
 
+#include "components/EventSystem.h"
 #include "entities/ObjRectangle.h"
 #include "utils/Timer.h"
 #include <optional>
 #include <random>
+#include <vector>
 #include <boost/uuid/uuid.hpp>
 
 struct PawnProperty;
@@ -28,6 +30,11 @@ class TankSpawner final
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
+	std::vector<EventSubscription> _subs{};
+	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
+	// subscribe-once-at-construction lifetime - assigning a new EventSubscription here
+	// auto-unsubscribes whatever was previously held.
+	EventSubscription _clientRespawnSub{};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
@@ -35,8 +42,7 @@ class TankSpawner final
 	void Subscribe();
 	void SubscribeAsClient();
 
-	void Unsubscribe() const;
-	void UnsubscribeAsClient() const;
+	void UnsubscribeAsClient();
 	void Reset();
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
@@ -64,5 +70,5 @@ public:
 	TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 				const std::shared_ptr<EventSystem>& events);
 
-	~TankSpawner();
+	~TankSpawner() = default;
 };

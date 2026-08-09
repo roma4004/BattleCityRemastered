@@ -25,11 +25,6 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<s
 	Subscribe();
 }
 
-BulletPool::~BulletPool()
-{
-	Unsubscribe();
-}
-
 std::string BulletPool::GetCurrentTimeString()
 {
 	const auto now = std::chrono::system_clock::now();
@@ -47,16 +42,9 @@ std::string BulletPool::GetCurrentTimeString()
 
 void BulletPool::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameResetEvent&) { Clear(); });
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Clear(); }));
 
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { _gameMode = event.mode; });
-}
-
-void BulletPool::Unsubscribe() const
-{
-	_events->RemoveListener<GameResetEvent>(_name);
-
-	_events->RemoveListener<GameModeChangedToEvent>(_name);
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { _gameMode = event.mode; }));
 }
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()

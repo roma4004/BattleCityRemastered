@@ -21,11 +21,12 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_allObjects.reserve(6u);
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
@@ -43,7 +44,7 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -67,7 +68,7 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -91,7 +92,7 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -115,7 +116,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -142,7 +143,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -169,7 +170,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -196,7 +197,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{21u};
 	unsigned short respawnActual{21u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -226,7 +227,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{
@@ -256,7 +257,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
-	_events->AddListener(
+	auto respawnSub = _events->AddListener(
 			"TankSpawnerTest",
 			[&respawnActual](const RespawnCountChangedToEvent& event)
 			{

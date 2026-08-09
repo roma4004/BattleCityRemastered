@@ -2,10 +2,12 @@
 
 #include "NetworkCommandQueue.h"
 #include "commands/Command.h"
+#include "components/EventSystem.h"
 #include <atomic>
 #include <boost/asio.hpp>
 #include <memory>
 #include <string>
+#include <vector>
 
 class EventSystem;
 enum class BonusType : char8_t;
@@ -31,7 +33,6 @@ public:
 
 private:
 	void Subscribe();
-	void Unsubscribe() const;
 
 	void ReadResponse();
 	void TryConnect();
@@ -63,6 +64,7 @@ private:
 	boost::asio::streambuf _readBuffer{};
 	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 	std::string _name{};
 	network::NetworkCommandQueue _commandQueue;
 	std::atomic<bool> _isConnected{false};

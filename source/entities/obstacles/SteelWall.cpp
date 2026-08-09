@@ -15,17 +15,10 @@ SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 	Subscribe();
 }
 
-SteelWall::~SteelWall()
-{
-	Unsubscribe();
-}
-
 void SteelWall::Subscribe()
 {
-	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
 }
-
-void SteelWall::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void SteelWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
 {

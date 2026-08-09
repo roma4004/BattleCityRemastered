@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "components/EventSystem.h"
 #include "interfaces/ITickUpdatable.h"
+#include <vector>
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
@@ -40,8 +42,18 @@ protected:
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
 
+	// _subs: the Subscribe()/Unsubscribe() toggle group (SubscribeAsHost/SubscribeAsClient plus
+	// whatever derived classes' own Subscribe() overrides push in) - shared with derived classes
+	// since Tank/Bullet add their own listeners into this same inherited vector rather than
+	// keeping a separate one, so one Unsubscribe() clears everything for the whole hierarchy.
+	// _tickUpdateSub: toggled independently by SubscribeTickUpdate()/UnsubscribeTickUpdate() (e.g.
+	// to pause ticking during a bonus-timer effect) without disturbing the rest of _subs.
+	// Both mutable: Unsubscribe()/UnsubscribeTickUpdate() are const but must be able to clear them.
+	mutable std::vector<EventSubscription> _subs{};
+	mutable EventSubscription _tickUpdateSub{};
+
 	virtual void Subscribe();
-	virtual void Unsubscribe() const;
+	void Unsubscribe() const;
 
 	void SubscribeTickUpdate();
 	void UnsubscribeTickUpdate() const;

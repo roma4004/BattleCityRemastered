@@ -12,10 +12,10 @@ using buuid = boost::uuids::uuid;
 class TestUtils
 {
 public:
-	static void WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
-							   std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
+														   std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	{
-		events->AddListener("TestSpawnQueue", [allObjects](const AddToSpawnQueueEvent& event)
+		return events->AddListener("TestSpawnQueue", [allObjects](const AddToSpawnQueueEvent& event)
 		{
 			allObjects->emplace_back(event.obj);
 		});

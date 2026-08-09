@@ -30,7 +30,6 @@ class Bullet final : public Pawn, public IDrawable
 
 protected:
 	void Subscribe() override;
-	void Unsubscribe() const override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
 

@@ -15,19 +15,9 @@ BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 	Subscribe();
 }
 
-BrickWall::~BrickWall()
-{
-	Unsubscribe();
-}
-
 void BrickWall::Subscribe()
 {
-	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
-}
-
-void BrickWall::Unsubscribe() const
-{
-	_events->RemoveListener<DrawEvent>(_nameWithUuid);
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
 }
 
 void BrickWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)

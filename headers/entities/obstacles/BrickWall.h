@@ -11,7 +11,6 @@ class BrickWall final : public Obstacle
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
-	void Unsubscribe() const override;
 
 protected:
 	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
@@ -19,5 +18,5 @@ protected:
 public:
 	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
-	~BrickWall() override;
+	~BrickWall() override = default;
 };

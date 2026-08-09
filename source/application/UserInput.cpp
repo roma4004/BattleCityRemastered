@@ -28,18 +28,16 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 
 UserInput::~UserInput()
 {
-	Unsubscribe();
-
 	_slotsForController.clear();
 }
 
 void UserInput::Subscribe()
 {
-	_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; });
-	_events->AddListener(_name, [this](const TabReleasedEvent&) { this->SwapControllers(); });
-	_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->Update(); });
-	_events->AddListener(_name, [this](const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; });
-	_events->AddListener(_name, [this](const MenuPosChangedEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; }));
+	_subs.push_back(_events->AddListener(_name, [this](const TabReleasedEvent&) { this->SwapControllers(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->Update(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; }));
+	_subs.push_back(_events->AddListener(_name, [this](const MenuPosChangedEvent& event)
 	{
 		_allTilesRect = {
 				.x = _menuPos.x + _allTilesRectDefault.x,
@@ -48,10 +46,8 @@ void UserInput::Subscribe()
 				.h = _allTilesRectDefault.h
 		};
 		InitMouseHoverTiles(event.pos);
-	});
+	}));
 }
-
-void UserInput::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {

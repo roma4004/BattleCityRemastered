@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/EventSystem.h"
 #include "enums/RespawnGroup.h"
 #include <boost/uuid/uuid.hpp>
 
@@ -15,6 +16,10 @@ class RespawnManager final
 	std::string _name{"RespawnManager"};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
+	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
+	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
+	std::vector<EventSubscription> _clientSubs{};
 
 	// TODO: use std::atomic when multithreading is used
 	std::vector<unsigned short> _respawnCount{20u, 3u, 3u};
@@ -39,8 +44,7 @@ class RespawnManager final
 	void Subscribe();
 	void SubscribeAsClient();
 
-	void Unsubscribe() const;
-	void UnsubscribeAsClient() const;
+	void UnsubscribeAsClient();
 
 	void SetEnemyNeedRespawn();
 	void SetPlayerNeedRespawn();
@@ -65,5 +69,5 @@ public:
 
 	explicit RespawnManager(const std::shared_ptr<EventSystem>& events);
 
-	~RespawnManager();
+	~RespawnManager() = default;
 };

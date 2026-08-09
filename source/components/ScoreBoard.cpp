@@ -23,47 +23,43 @@ ScoreBoard::ScoreBoard(const UPoint windowSize, const std::shared_ptr<EventSyste
 	_windowHeight = static_cast<int>(windowSize.y);
 }
 
-ScoreBoard::~ScoreBoard()
-{
-	Unsubscribe();
-}
+ScoreBoard::~ScoreBoard() = default;
 
 void ScoreBoard::Subscribe()
 {
 	//NOTE: avoid showing score on game start
-	_events->AddListener(_name, [this](const GameResetEvent&) { this->DisplayScore(false); });
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->DisplayScore(false); }));
 
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->_gameMode = event.mode;
-	});
+	}));
 
-	_events->AddListener(
-			_name,
-			[this](const RespawnCountChangedToEvent& event)
-			{
-				this->OnRespawnCountChanged(event.objectName, event.respawnCount);
-			});
+	_subs.push_back(_events->AddListener(_name, [this](const RespawnCountChangedToEvent& event)
+	{
+		this->OnRespawnCountChanged(event.objectName, event.respawnCount);
+	}));
 
 	if (_isScoreBoardDisplayed)
 	{
-		_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
 	}
 
 	//NOTE: avoid showing score and menu at the same time
-	_events->AddListener(_name, [this](const MenuShowedEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event)
 	{
 		if (event.isShown)
 		{
 			this->DisplayScore(false);
 		}
-	});
-	_events->AddListener(_name, [this](const PauseStatusEvent& /*event*/) { /*this->DisplayScore(isPause);*/ });
-	_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->DisplayScore(true); });
-	_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->DisplayScore(true); });
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& /*event*/)
+	{
+		/*this->DisplayScore(isPause);*/
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->DisplayScore(true); }));
+	_subs.push_back(_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->DisplayScore(true); }));
 }
-
-void ScoreBoard::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 //TODO: optimize draw call with cache non changed text part
 void ScoreBoard::Draw()
@@ -214,11 +210,11 @@ void ScoreBoard::DisplayScore(const bool isDisplayed)
 
 	if (_isScoreBoardDisplayed)
 	{
-		_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
 	}
 	else
 	{
-		_events->RemoveListener<DrawUserInterfaceEvent>(_name);
+		_drawSub = EventSubscription{};
 	}
 
 	_events->EmitEvent(ScoreBoardShowedEvent{.isDisplayed = isDisplayed});

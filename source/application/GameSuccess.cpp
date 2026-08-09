@@ -47,7 +47,7 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 {
 	Subscribe();
 
-	ResetBattlefieldTo(gameMode);
+	ApplyGameMode(gameMode);
 
 	if (gameMode == GameMode::Demo)
 	{
@@ -55,43 +55,41 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 	}
 }
 
-GameSuccess::~GameSuccess()
-{
-	Unsubscribe();
-}
+GameSuccess::~GameSuccess() = default;
 
 void GameSuccess::Subscribe()
 {
-	_events->AddListener(_name, [this](const PreviousGameModeEvent&) { this->PrevGameMode(); });
-	_events->AddListener(_name, [this](const NextGameModeEvent&) { this->NextGameMode(); });
-	_events->AddListener(_name, [this](const ResetBattlefieldEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const PreviousGameModeEvent&) { this->PrevGameMode(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const NextGameModeEvent&) { this->NextGameMode(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const ApplyGameModeEvent&)
 	{
-		this->ResetBattlefieldTo(this->_selectedGameMode);
-	});
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+		this->ApplyGameMode(this->_selectedGameMode);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		this->OnGameModeChangedTo(event.mode);
-	});
-	_events->AddListener(_name, [this](AddToSpawnQueueEvent event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](AddToSpawnQueueEvent event)
 	{
 		this->_pendingSpawns.emplace_back(std::move(event.obj));
-	});
-	_events->AddListener(_name, [this](const PostTickUpdateEvent&)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&)
 	{
 		this->FlushSpawnQueue();
 		this->DisposeDeadObject();
-	});
-	_events->AddListener(_name, [this](const DeltaTimeEvent& event) { this->_deltaTime = event.deltaTime; });
-	_events->AddListener(_name, [this](const GameModeSelectedWithMouseEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const DeltaTimeEvent& event)
+	{
+		this->_deltaTime = event.deltaTime;
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeSelectedWithMouseEvent& event)
 	{//TODO: merge with SelectedGameModeChangedToEvent
 		this->_selectedGameMode = event.mode;
 		this->_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = this->_selectedGameMode});
-	});
+	}));
 }
 
-void GameSuccess::Unsubscribe() const { _events->RemoveAllListeners(_name); }
-
-void GameSuccess::ResetBattlefieldTo(const GameMode gameMode)
+void GameSuccess::ApplyGameMode(const GameMode gameMode)
 {
 	_allObjects.clear();
 	_allObjects.reserve(1000);
@@ -252,17 +250,20 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
-		_events->AddListener(_name, [this](const ServerReceiveClientReadyToStartGameEvent&) { this->OnClientReady(); });
+		_clientReadySub = _events->AddListener(_name, [this](const ServerReceiveClientReadyToStartGameEvent&)
+		{
+			this->OnClientReady();
+		});
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
-		_events->RemoveListener<ServerReceiveClientReadyToStartGameEvent>(_name);
+		_clientReadySub = EventSubscription{};
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else
 	{
-		_events->RemoveListener<ServerReceiveClientReadyToStartGameEvent>(_name);
+		_clientReadySub = EventSubscription{};
 		_networkNode = nullptr;
 	}
 }

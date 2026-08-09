@@ -11,7 +11,6 @@ class IceTile final : public Obstacle
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
-	void Unsubscribe() const override;
 
 protected:
 	//NOTE: Ice is indestructible - never reaches SendDamageStatistics's health<1 branch, but the
@@ -21,5 +20,5 @@ protected:
 public:
 	IceTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
-	~IceTile() override;
+	~IceTile() override = default;
 };

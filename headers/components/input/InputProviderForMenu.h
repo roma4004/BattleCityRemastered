@@ -1,7 +1,9 @@
 #pragma once
 
+#include "components/EventSystem.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 enum class GameMode : char8_t;
 class EventSystem;
@@ -19,19 +21,22 @@ class InputProviderForMenu final
 {
 	std::string _name{"InputProviderForMenu"};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
+	// Toggled at runtime by EnableMenuInput()/DisableMenuInput(), independent of _subs's fixed
+	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
+	std::vector<EventSubscription> _menuNavSubs{};
 	GameMode _gameMode{};
 	MenuKeys _keys{};
 
 public:
 	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);
 
-	~InputProviderForMenu();
+	~InputProviderForMenu() = default;
 
 	void Subscribe();
-	void Unsubscribe() const;
 
 	void EnableMenuInput();
-	void DisableMenuInput() const;
+	void DisableMenuInput();
 	void ToggleMenuInputSubscription();
 	void Reset();
 	void MenuUpdate();

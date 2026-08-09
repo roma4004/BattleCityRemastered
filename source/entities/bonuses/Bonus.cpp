@@ -38,8 +38,6 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 
 Bonus::~Bonus()
 {
-	Unsubscribe();
-
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(ServerSendBonusDeSpawnEvent{.uuid = _uuid});
@@ -48,22 +46,22 @@ Bonus::~Bonus()
 
 void Bonus::Subscribe()
 {
-	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
 	{
 		this->TickUpdate(event.deltaTime);
-	});
+	}));
 }
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener(_nameWithUuid, [this](const ClientReceivedBonusDeSpawnEvent& event)
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ClientReceivedBonusDeSpawnEvent& event)
 	{
 		if (event.uuid != this->_uuid)
 		{
@@ -71,10 +69,8 @@ void Bonus::SubscribeAsClient()
 		}
 
 		this->SetIsAlive(false);
-	});
+	}));
 }
-
-void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void Bonus::Draw() const
 {

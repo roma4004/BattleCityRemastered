@@ -1,9 +1,11 @@
 #pragma once
 
+#include "components/EventSystem.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 enum class GameMode : char8_t;
 class EventSystem;
@@ -53,6 +55,12 @@ class GameStatistics final
 {
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
+	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
+	// subscribe-once-at-construction lifetime - clearing one of these vectors auto-unsubscribes
+	// just that group.
+	std::vector<EventSubscription> _hostSubs{};
+	std::vector<EventSubscription> _clientSubs{};
 	StatisticsData _data{};
 	GameMode _gameMode{};
 
@@ -61,9 +69,8 @@ class GameStatistics final
 	void SubscribeAsClient();
 	void OnGameModeChangedTo(GameMode newGameMode);
 
-	void Unsubscribe() const;
-	void UnsubscribeAsHost() const;
-	void UnsubscribeAsClient() const;
+	void UnsubscribeAsHost();
+	void UnsubscribeAsClient();
 
 	void OnBulletHit(const StatisticsBulletHitEvent& event);
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
@@ -82,7 +89,7 @@ class GameStatistics final
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
 
-	~GameStatistics();
+	~GameStatistics() = default;
 
 	void Reset();
 

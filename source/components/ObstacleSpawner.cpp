@@ -33,44 +33,35 @@ ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
 	Subscribe();
 }
 
-ObstacleSpawner::~ObstacleSpawner()
-{
-	Unsubscribe();
-}
-
 void ObstacleSpawner::Subscribe()
 {
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
 		_gameMode = event.mode;
 		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	});
+	}));
 
-	_events->AddListener(_name, [this](const LoadMapEvent&) { LoadMap(); });
-	_events->AddListener(_name, [this](const SpawnObstacleEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const LoadMapEvent&) { LoadMap(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const SpawnObstacleEvent& event)
 	{
 		SpawnObstacle(event.rect, event.type);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event) { _windowSize = event.newSize; });
+	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
+	{
+		_windowSize = event.newSize;
+	}));
 }
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_events->AddListener(
-			_name,
-			[this](const ClientReceivedObstacleSpawnEvent& event)
-			{
-				SpawnObstacle(event.rect, event.type, event.uuid);
-			});
+	_clientSub = _events->AddListener(_name, [this](const ClientReceivedObstacleSpawnEvent& event)
+	{
+		SpawnObstacle(event.rect, event.type, event.uuid);
+	});
 }
 
-void ObstacleSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
-
-void ObstacleSpawner::UnsubscribeAsClient() const
-{
-	_events->RemoveListener<ClientReceivedObstacleSpawnEvent>(_name);
-}
+void ObstacleSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
 {

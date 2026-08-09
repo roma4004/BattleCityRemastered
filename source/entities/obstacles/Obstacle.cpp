@@ -28,10 +28,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 	}
 }
 
-Obstacle::~Obstacle()
-{
-	Obstacle::Unsubscribe();
-}
+Obstacle::~Obstacle() = default;
 
 void Obstacle::Subscribe()
 {
@@ -43,13 +40,11 @@ void Obstacle::Subscribe()
 
 void Obstacle::SubscribeAsClient()
 {
-	_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
 	{
 		this->SetHealth(event.health);
-	});
+	}));
 }
-
-void Obstacle::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
 
 void Obstacle::Draw() const
 {

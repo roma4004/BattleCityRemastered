@@ -21,11 +21,6 @@ AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-AnimationManager::~AnimationManager()
-{
-	Unsubscribe();
-}
-
 void AnimationManager::Subscribe()
 {
 	if (_gameMode == GameMode::PlayAsClient)
@@ -37,54 +32,55 @@ void AnimationManager::Subscribe()
 		SubscribeAsHost();
 	}
 
-	_events->AddListener(_name, [this](const AnimationCreateEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateEvent& event)
 	{
 		this->CreateAnimation(event.type, event.rect, event.name);
-	});
-	_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); });
-	_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { SetGameMode(event.mode); });
-	_events->AddListener(_name, [this](const PostTickUpdateEvent&) { Update(); });
-	_events->AddListener(_name, [this](const AnimationTankUpdateEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); }));
+	_subs.push_back(
+			_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { SetGameMode(event.mode); }));
+	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { Update(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationTankUpdateEvent& event)
 	{
 		this->UpdateTank(event.name, event.pos, event.dir);
-	});
-	_events->AddListener(_name, [this](const BonusHelmetAnimationChangeEvent& event)
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const BonusHelmetAnimationChangeEvent& event)
 	{
 		this->OnHelmetEffect(event.name, event.isEnable);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const TickUpdateEvent&) { this->AnimationSeqDisposer(); });
-	_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_name, [this](const TickUpdateEvent&) { this->AnimationSeqDisposer(); }));
+	//TODO: do not add new helmet animation if we already have for this tank
+	_subs.push_back(_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); }));
 }
 
 void AnimationManager::SubscribeAsHost()
 {
-	_events->AddListener(_name, [this](const AnimationCreateTankExplosionEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankExplosionEvent& event)
 	{
 		this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
-	});
+	}));
 
-	_events->AddListener(_name, [this](const AnimationCreateBulletExplosionEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateBulletExplosionEvent& event)
 	{
 		this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
-	});
+	}));
 
 	//TODO: create client like subscription
-	_events->AddListener(_name, [this](const AnimationCreateTankEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankEvent& event)
 	{
 		this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
 		this->OnHelmetEffect(event.name, true);
-	});
+		//TODO: reuse animation
+	}));
 
-	_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
 	{
 		this->CreateAnimation(AnimationType::Water_Animation, event.rect, "Water");
-	});
+	}));
 }
 
 // void AnimationManager::SubscribeAsClient() {}
-
-void AnimationManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void AnimationManager::SetGameMode(const GameMode newGameMode)
 {

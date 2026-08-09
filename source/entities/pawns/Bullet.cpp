@@ -46,14 +46,13 @@ Bullet::~Bullet()
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< '\n';
-	Unsubscribe();
 }
 
 void Bullet::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); });
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -63,24 +62,14 @@ void Bullet::Subscribe()
 
 void Bullet::SubscribeAsClient()
 {
-	_events->AddListener(
-			_uuid, _nameWithUuid,
-			[this](const ClientReceivedDisposeEvent&)
-			{
-				this->SetIsAlive(false);
-			});
-	_events->AddListener(
-			_uuid, _nameWithUuid,
-			[this](const ClientReceivedPosEvent& event)
-			{
-				OnClientChangePos(event.pos, event.dir);
-			});
-}
-
-void Bullet::Unsubscribe() const
-{
-	Pawn::Unsubscribe();
-	_events->RemoveAllListeners(_nameWithUuid);
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedDisposeEvent&)
+	{
+		this->SetIsAlive(false);
+	}));
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedPosEvent& event)
+	{
+		OnClientChangePos(event.pos, event.dir);
+	}));
 }
 
 void Bullet::Draw() const { _events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .name = _name}); }
