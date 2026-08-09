@@ -68,7 +68,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(
 			ServerOutPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -126,7 +126,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -180,7 +180,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -230,7 +230,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutDisposeEvent{.uuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -283,7 +283,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutBulletHitEvent{.author = "author", .fraction = "fraction"});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -395,7 +395,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
 	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
 
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -555,7 +555,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
 	events->EmitEvent(ServerOutBonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -608,7 +608,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutBonusDeSpawnEvent{.uuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -661,7 +661,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(
 			ServerOutBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -712,7 +712,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutBonusCaliberPickupEvent{.author = nameOrigin});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -767,7 +767,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -848,7 +848,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	{
 		events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
 	}
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -928,7 +928,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	{
 		events->EmitEvent(ServerOutRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
 	}
-	events->EmitEvent(ServerEndFrameEvent{});
+	events->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};

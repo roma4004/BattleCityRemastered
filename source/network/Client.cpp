@@ -49,6 +49,7 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t po
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
 	, _events{events}
 	, _name{"Client"}
+	, _batch{std::make_shared<CommandBatch>()}
 {
 	Subscribe();
 
@@ -73,9 +74,10 @@ void Client::TryConnect()
 			_reconnectAttempts = 0;
 			_isConnected = true;
 			this->ReadResponse();
-			// std::scoped_lock lock(_batchWriteMutex);
-			// this->_batch->AddCommand(  //TODO: implement batch sending
-			this->SendCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
+			{
+				std::scoped_lock lock(_batchWriteMutex);
+				this->_batch->AddCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
+			}
 		}
 		else
 		{
@@ -142,7 +144,20 @@ void Client::Shutdown()
 
 void Client::Subscribe()
 {
-	//TODO: write batch sending on client and sending queue
+	_subs.push_back(_events->AddListener(_name, [this](const NetworkEndFrameEvent&)
+	{
+		auto batch{std::make_shared<CommandBatch>()};
+		{
+			std::scoped_lock lock(_batchWriteMutex);
+			std::swap(batch, _batch);
+		}
+
+		if (batch && !batch->IsEmpty())
+		{
+			SendCommand(batch);
+		}
+	}));
+
 	// NOTE: local dispatch is keyed (MoveUpEvent/"P2") but the wire format sent via SendKeyState is
 	// unchanged ("P2_Move_Up" etc.) - Session::OnKeyStateChange on the host still parses that
 	// literal tag+action string out of the KeyStateChange command payload.
@@ -169,16 +184,14 @@ void Client::Subscribe()
 
 	_subs.push_back(_events->AddListener(_name, [this](const ClientOutReadyToPlayEvent&)
 	{
-		// std::scoped_lock lock(_batchWriteMutex);
-		// this->_batch->AddCommand(  //TODO: implement batch sending
-		SendCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
+		std::scoped_lock lock(this->_batchWriteMutex);
+		this->_batch->AddCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
 	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const ClientOutPauseStatusEvent& event)
 	{
-		// std::scoped_lock lock(_batchWriteMutex);
-		// this->_batch->AddCommand(  //TODO: implement batch sending
-		SendCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
+		std::scoped_lock lock(this->_batchWriteMutex);
+		this->_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
 	}));
 }
 
@@ -220,9 +233,8 @@ void Client::ReadResponse()
 void Client::SendKeyState(const std::string& key, const bool state)
 {
 	// NetworkLogger::LogClientOut(state);
-	// std::scoped_lock lock(_batchWriteMutex);
-	// this->_batch->AddCommand(  //TODO: implement batch sending
-	SendCommand(std::make_shared<KeyStateChange>(key, state));
+	std::scoped_lock lock(_batchWriteMutex);
+	_batch->AddCommand(std::make_shared<KeyStateChange>(key, state));
 }
 
 void Client::OnPositionChange(const std::shared_ptr<Command>& command)

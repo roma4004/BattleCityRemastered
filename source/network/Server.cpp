@@ -442,7 +442,7 @@ void Server::Shutdown()
 
 void Server::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const ServerEndFrameEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const NetworkEndFrameEvent&)
 	{
 		auto batch{std::make_shared<CommandBatch>()};
 		{

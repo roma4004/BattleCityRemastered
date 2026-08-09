@@ -29,7 +29,7 @@ struct DrawUserInterfaceEvent {};
 
 struct PostDrawUserInterfaceEvent {};
 
-struct ServerEndFrameEvent {};
+struct NetworkEndFrameEvent {};
 
 struct CalculateActualFpsEvent {};
 

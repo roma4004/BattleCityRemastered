@@ -2,10 +2,12 @@
 
 #include "NetworkCommandQueue.h"
 #include "commands/Command.h"
+#include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <atomic>
 #include <boost/asio.hpp>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -67,6 +69,8 @@ private:
 	std::vector<EventSubscription> _subs{};
 	std::string _name{};
 	network::NetworkCommandQueue _commandQueue;
+	std::mutex _batchWriteMutex;
+	std::shared_ptr<CommandBatch> _batch{nullptr};
 	std::atomic<bool> _isConnected{false};
 	unsigned char _reconnectAttempts{0u};
 	static constexpr unsigned char MaxReconnectAttempts{10u};

@@ -2,7 +2,6 @@
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
-#include "components/GameStatistics.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
 #include "components/ScoreBoard.h"
@@ -214,9 +213,9 @@ void GameSuccess::MainLoop()
 			_events->EmitEvent(DrawUserInterfaceEvent{});
 			_events->EmitEvent(PostDrawUserInterfaceEvent{});
 
-			if (_gameMode == GameMode::PlayAsHost)
+			if (_gameMode == GameMode::PlayAsHost || _gameMode == GameMode::PlayAsClient)
 			{
-				_events->EmitEvent(ServerEndFrameEvent{});
+				_events->EmitEvent(NetworkEndFrameEvent{});
 			}
 
 			_events->EmitEvent(CalculateActualFpsEvent{});
