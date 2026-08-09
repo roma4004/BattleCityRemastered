@@ -40,11 +40,21 @@
 // std::ofstream error_log("error_log.txt");
 namespace network::commands
 {
-using buuid = boost::uuids::uuid;
-
 Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
 	: _socket(std::move(sock))
-	, _events(events) {}
+	, _events(events)
+{
+	RegisterCommandHandlers();
+}
+
+void Session::RegisterCommandHandlers()
+{
+	_commandHandlers = {
+			{CommandType::COMMAND_BATCH, [this](const std::shared_ptr<Command>& cmd) { OnCommandBatch(cmd); }},
+			{CommandType::SIGNAL_EVENT, [this](const std::shared_ptr<Command>& cmd) { OnSignalEvent(cmd); }},
+			{CommandType::KEY_STATE_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnKeyStateChange(cmd); }},
+	};
+}
 
 Session::~Session()
 {
@@ -216,31 +226,17 @@ void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
 
 void Session::ProcessServerCommand(const std::shared_ptr<Command>& command)
 {
-	if (command)
+	if (!command)
 	{
-		// auto classNameW = std::string(command->GetClassNameW());
-		// auto commandName = std::string("client receive:" + classNameW);
-		// NetworkLogger::LogClientIn(commandName);
-		switch (command->GetType())
-		{
-			case CommandType::COMMAND_BATCH:
-			{
-				OnCommandBatch(command);
-				break;
-			}
-			case CommandType::SIGNAL_EVENT:
-			{
-				OnSignalEvent(command);
-				break;
-			}
-			case CommandType::KEY_STATE_CHANGE:
-			{
-				OnKeyStateChange(command);
-				break;
-			}
-			default:
-				break;
-		}
+		return;
+	}
+
+	// auto classNameW = std::string(command->GetClassNameW());
+	// auto commandName = std::string("client receive:" + classNameW);
+	// NetworkLogger::LogClientIn(commandName);
+	if (const auto it = _commandHandlers.find(command->GetType()); it != _commandHandlers.end())
+	{
+		it->second(command);
 	}
 }
 
@@ -249,8 +245,12 @@ void Session::DoRead()
 	try
 	{
 		auto self(shared_from_this());
-		auto lambda = [this, events = _events](const boost::system::error_code& ec, const std::size_t length)
+		auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
 		{
+			//NOTE: self is captured only to keep this Session alive for the duration of the async
+			//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
+			std::ignore = self;
+
 			if (ec)
 			{
 				_readBuffer.consume(length);

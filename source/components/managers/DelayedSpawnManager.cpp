@@ -42,7 +42,7 @@ void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 	{
 		if (timer.isActive && timer.IsCooldownFinish())
 		{
-			_events->EmitEvent(SpawnEnabledEvent{.uuid = uuid});
+			_events->EmitEvent(Key(uuid), SpawnEnabledEvent{});
 
 			timer.isActive = false;
 		}
@@ -62,7 +62,7 @@ void DelayedSpawnManager::SpawnDelayStart(const buuid& uuid, const milliseconds 
 	if (delay == milliseconds{0})
 	{
 		// NOTE: immediate call, for unit tests
-		_events->EmitEvent(SpawnEnabledEvent{.uuid = uuid});
+		_events->EmitEvent(Key(uuid), SpawnEnabledEvent{});
 	}
 	else
 	{

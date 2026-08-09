@@ -45,8 +45,7 @@ void BonusEffectManager::Subscribe()
 
 	_subs.push_back(_events->AddListener(_name, [this](const BonusEffectReApplyEvent& event)
 	{
-		this->OnSpawnEnabled(event.name, event.fraction);
-		//TODO: refactor to enabled by uuid instead of name and fraction
+		this->ApplyBonusEffectsOnSpawnTo(event.uuid, event.name, event.fraction);//NOTE: continue effects after respawn
 	}));
 }
 
@@ -59,10 +58,11 @@ void BonusEffectManager::Reset()
 	_helmetSlotsTankNames = {{}, {}, {}, {}, {}, {}};
 }
 
-void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const std::string& tankName, const std::string& tankFraction)
+void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const buuid& uuid, const std::string& tankName,
+													 const std::string& tankFraction)
 {
 	const bool isActive = tankFraction == "EnemyTeam" ? _timerEnemy.isActive : _timerPlayer.isActive;
-	_events->EmitEvent(BonusTimerReApplyOnSpawnEvent{.isEnabled = isActive, .name = tankName});
+	_events->EmitEvent(Key(uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isActive});
 
 	constexpr milliseconds effectDuration{std::chrono::seconds{5}};
 	OnHelmetBonusPickup(tankName, effectDuration);
@@ -212,11 +212,6 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 	}
 
 	return static_cast<size_t>(-1);
-}
-
-void BonusEffectManager::OnSpawnEnabled(const std::string& name, const std::string& fraction)
-{
-	ApplyBonusEffectsOnSpawnTo(name, fraction);//NOTE: continue effects after respawn
 }
 
 void BonusEffectManager::OnGameModeChangedTo(const GameMode newGameMode)

@@ -88,6 +88,7 @@ struct SpawnObstacleEvent
 
 struct BonusEffectReApplyEvent
 {
+	buuid uuid;
 	std::string name;
 	std::string fraction;
 };
@@ -95,5 +96,4 @@ struct BonusEffectReApplyEvent
 struct BonusTimerReApplyOnSpawnEvent
 {
 	bool isEnabled;
-	std::string name;
 };

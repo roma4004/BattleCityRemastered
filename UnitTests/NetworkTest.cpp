@@ -36,8 +36,6 @@ protected:
 
 TEST_F(NetworkTest, PosEventReplication)
 {
-	using buuid = boost::uuids::uuid;
-
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
 	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
@@ -92,7 +90,6 @@ TEST_F(NetworkTest, PosEventReplication)
 	EXPECT_EQ(posOrigin, posReplicated);
 	EXPECT_EQ(directionOrigin, dirReplicated);
 
-	events->RemoveAllListeners("PosEventReplication");
 }
 
 TEST_F(NetworkTest, ShotEventReplication)
@@ -150,7 +147,6 @@ TEST_F(NetworkTest, ShotEventReplication)
 	EXPECT_EQ(direction, dirReplicated);
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveAllListeners("ShotEventReplication");
 }
 
 TEST_F(NetworkTest, HealthEventReplication)
@@ -202,7 +198,6 @@ TEST_F(NetworkTest, HealthEventReplication)
 	const auto healthReplicated = future.get();
 	EXPECT_EQ(healthOrigin, healthReplicated);
 
-	events->RemoveAllListeners("HealthEventReplication");
 }
 
 TEST_F(NetworkTest, DisposeEventReplication)
@@ -252,7 +247,6 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveAllListeners("DisposeEventReplication");
 }
 
 //TODO: cover all statistics items like this
@@ -334,57 +328,36 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<std::pair<std::string, buuid>> promiseDied1{};
+	std::promise<std::string> promiseDied1{};
 	auto futureDied1 = promiseDied1.get_future();
-	std::promise<std::pair<std::string, buuid>> promiseDied2{};
+	std::promise<std::string> promiseDied2{};
 	auto futureDied2 = promiseDied2.get_future();
 
-	std::promise<std::pair<std::string, buuid>> promiseToBrick1{};
+	std::promise<std::string> promiseToBrick1{};
 	auto futureToBrick1 = promiseToBrick1.get_future();
-	std::promise<std::pair<std::string, buuid>> promiseToBrick2{};
+	std::promise<std::string> promiseToBrick2{};
 	auto futureToBrick2 = promiseToBrick2.get_future();
 
-	std::promise<std::pair<std::string, buuid>> promiseToSteel1{};
+	std::promise<std::string> promiseToSteel1{};
 	auto futureToSteel1 = promiseToSteel1.get_future();
-	std::promise<std::pair<std::string, buuid>> promiseToSteel2{};
+	std::promise<std::string> promiseToSteel2{};
 	auto futureToSteel2 = promiseToSteel2.get_future();
 
-	auto fortressSub1 = events->AddListener(
-			"FortressChangeEventReplication1",
-			[&promiseDied1, &promiseToBrick1, &promiseToSteel1, &uuid1Died, &uuid1ToBrick, &uuid1ToSteel](
-			const ClientInFortressChangeEvent& event)
-			{
-				if (event.state == "Died" && event.uuid == uuid1Died)
-				{
-					promiseDied1.set_value({event.state, event.uuid});
-				}
-				else if (event.state == "ToBrick" && event.uuid == uuid1ToBrick)
-				{
-					promiseToBrick1.set_value({event.state, event.uuid});
-				}
-				else if (event.state == "ToSteel" && event.uuid == uuid1ToSteel)
-				{
-					promiseToSteel1.set_value({event.state, event.uuid});
-				}
-			});
-	auto fortressSub2 = events->AddListener(
-			"FortressChangeEventReplication2",
-			[&promiseDied2, &promiseToBrick2, &promiseToSteel2, &uuid2Died, &uuid2ToBrick, &uuid2ToSteel](
-			const ClientInFortressChangeEvent& event)
-			{
-				if (event.state == "Died" && event.uuid == uuid2Died)
-				{
-					promiseDied2.set_value({event.state, event.uuid});
-				}
-				else if (event.state == "ToBrick" && event.uuid == uuid2ToBrick)
-				{
-					promiseToBrick2.set_value({event.state, event.uuid});
-				}
-				else if (event.state == "ToSteel" && event.uuid == uuid2ToSteel)
-				{
-					promiseToSteel2.set_value({event.state, event.uuid});
-				}
-			});
+	// NOTE: keyed by each event's own uuid - delivery itself proves uuid routing is correct,
+	// no need to compare event.uuid inside the callback anymore.
+	auto diedSub1 = events->AddListener(uuid1Died, "FortressChangeEventReplication1Died",
+			[&promiseDied1](const ClientInFortressChangeEvent& event) { promiseDied1.set_value(event.state); });
+	auto toBrickSub1 = events->AddListener(uuid1ToBrick, "FortressChangeEventReplication1ToBrick",
+			[&promiseToBrick1](const ClientInFortressChangeEvent& event) { promiseToBrick1.set_value(event.state); });
+	auto toSteelSub1 = events->AddListener(uuid1ToSteel, "FortressChangeEventReplication1ToSteel",
+			[&promiseToSteel1](const ClientInFortressChangeEvent& event) { promiseToSteel1.set_value(event.state); });
+
+	auto diedSub2 = events->AddListener(uuid2Died, "FortressChangeEventReplication2Died",
+			[&promiseDied2](const ClientInFortressChangeEvent& event) { promiseDied2.set_value(event.state); });
+	auto toBrickSub2 = events->AddListener(uuid2ToBrick, "FortressChangeEventReplication2ToBrick",
+			[&promiseToBrick2](const ClientInFortressChangeEvent& event) { promiseToBrick2.set_value(event.state); });
+	auto toSteelSub2 = events->AddListener(uuid2ToSteel, "FortressChangeEventReplication2ToSteel",
+			[&promiseToSteel2](const ClientInFortressChangeEvent& event) { promiseToSteel2.set_value(event.state); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = uuid1Died});
@@ -417,9 +390,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToDied1, std::future_status::ready);
-			const auto& [stateDied, uuidDied] = futureDied1.get();
-			EXPECT_EQ("Died", stateDied);
-			EXPECT_EQ(uuid1Died, uuidDied);
+			EXPECT_EQ("Died", futureDied1.get());
 		}
 		{//brick1 test
 			auto statusToBrick1 = std::future_status::timeout;
@@ -436,9 +407,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToBrick1, std::future_status::ready);
-			const auto& [stateToBrick, uuidToBrick] = futureToBrick1.get();
-			EXPECT_EQ("ToBrick", stateToBrick);
-			EXPECT_EQ(uuid1ToBrick, uuidToBrick);
+			EXPECT_EQ("ToBrick", futureToBrick1.get());
 		}
 		{//steel1 test
 			auto statusToSteel1 = std::future_status::timeout;
@@ -455,9 +424,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToSteel1, std::future_status::ready);
-			const auto& [stateToSteel, uuidToSteel] = futureToSteel1.get();
-			EXPECT_EQ("ToSteel", stateToSteel);
-			EXPECT_EQ(uuid1ToSteel, uuidToSteel);
+			EXPECT_EQ("ToSteel", futureToSteel1.get());
 		}
 	}
 	{//test second fortressWall
@@ -476,9 +443,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToDied2, std::future_status::ready);
-			const auto& [stateDied, uuidDied] = futureDied2.get();
-			EXPECT_EQ("Died", stateDied);
-			EXPECT_EQ(uuid2Died, uuidDied);
+			EXPECT_EQ("Died", futureDied2.get());
 		}
 		{//brick2 test
 			auto statusToBrick2 = std::future_status::timeout;
@@ -495,9 +460,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToBrick2, std::future_status::ready);
-			const auto& [stateToBrick, uuidToBrick] = futureToBrick2.get();
-			EXPECT_EQ("ToBrick", stateToBrick);
-			EXPECT_EQ(uuid2ToBrick, uuidToBrick);
+			EXPECT_EQ("ToBrick", futureToBrick2.get());
 		}
 		{//steel2 test
 			auto statusToSteel2 = std::future_status::timeout;
@@ -514,14 +477,9 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToSteel2, std::future_status::ready);
-			const auto& [stateToSteel, uuidToSteel] = futureToSteel2.get();
-			EXPECT_EQ("ToSteel", stateToSteel);
-			EXPECT_EQ(uuid2ToSteel, uuidToSteel);
+			EXPECT_EQ("ToSteel", futureToSteel2.get());
 		}
 	}
-
-	events->RemoveListener<ClientInFortressChangeEvent>("FortressChangeEventReplication1");
-	events->RemoveListener<ClientInFortressChangeEvent>("FortressChangeEventReplication2");
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
@@ -683,7 +641,6 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	const auto isEnable = future.get();
 	EXPECT_EQ(isActiveOrigin, isEnable);
 
-	events->RemoveAllListeners("BonusStatusEventReplication");
 }
 
 TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
@@ -732,7 +689,6 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 
 	ASSERT_EQ(status, std::future_status::ready);
 
-	events->RemoveAllListeners("BonusCaliberStatusEventReplication");
 }
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)

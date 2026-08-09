@@ -30,7 +30,6 @@ struct ServerOutFortressChangeEvent
 struct ClientInFortressChangeEvent
 {
 	std::string state;
-	boost::uuids::uuid uuid;
 };
 
 struct ServerOutBonusSpawnEvent

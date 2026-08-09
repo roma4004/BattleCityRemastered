@@ -52,8 +52,32 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t po
 	, _batch{std::make_shared<CommandBatch>()}
 {
 	Subscribe();
+	RegisterCommandHandlers();
 
 	TryConnect();
+}
+
+void Client::RegisterCommandHandlers()
+{
+	_commandHandlers = {
+			{CommandType::COMMAND_BATCH, [this](const std::shared_ptr<Command>& cmd) { OnCommandBatch(cmd); }},
+			{CommandType::POSITION_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnPositionChange(cmd); }},
+			//TODO: refactored tankShot event to bullet pool spawn with bulletId
+			{CommandType::TANK_SHOT, [this](const std::shared_ptr<Command>& cmd) { OnTankShot(cmd); }},
+			{CommandType::HEALTH_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnHealthChange(cmd); }},
+			{CommandType::DISPOSE, [this](const std::shared_ptr<Command>& cmd) { OnDispose(cmd); }},
+			{CommandType::STATISTICS_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnStatisticsChange(cmd); }},
+			{CommandType::KEY_STATE_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnKeyStateChange(cmd); }},
+			{CommandType::GAME_STATE_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnGameStateChange(cmd); }},
+			{CommandType::FORTRESS_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnFortressChange(cmd); }},
+			{CommandType::BONUS_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnBonusSpawn(cmd); }},
+			{CommandType::BONUS_DESPAWN, [this](const std::shared_ptr<Command>& cmd) { OnBonusDeSpawn(cmd); }},
+			{CommandType::RESPAWN_TANK, [this](const std::shared_ptr<Command>& cmd) { OnRespawnTank(cmd); }},
+			{CommandType::OBSTACLE_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnObstacleSpawn(cmd); }},
+			{CommandType::ANIMATION_CREATE, [this](const std::shared_ptr<Command>& cmd) { OnAnimationCreate(cmd); }},
+			{CommandType::TANK_ON_OFF, [this](const std::shared_ptr<Command>& cmd) { OnTankOnOff(cmd); }},
+			{CommandType::BONUS_STATUS, [this](const std::shared_ptr<Command>& cmd) { OnBonusStatus(cmd); }},
+	};
 }
 
 //TODO: fix reconnect for minGW when we too fast run host and client
@@ -398,7 +422,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, state, uuid]()
 		{
-			_events->EmitEvent(ClientInFortressChangeEvent{.state = state, .uuid = uuid});
+			_events->EmitEvent(Key(uuid), ClientInFortressChangeEvent{.state = state});
 		});
 	}
 }
@@ -537,98 +561,17 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 
 void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
 {
-	if (command)
+	if (!command)
 	{
-		// auto classNameW = std::string(command->GetClassNameW());
-		// auto commandName = std::string("client receive:" + classNameW);
-		// NetworkLogger::LogClientIn(commandName);
-		switch (command->GetType())
-		{
-			case CommandType::COMMAND_BATCH:
-			{
-				OnCommandBatch(command);
-				break;
-			}
-			case CommandType::POSITION_CHANGE:
-			{
-				OnPositionChange(command);
-				//TODO: use more polymorphic way to process commands, uni method onReceived
-				break;
-			}
-			case CommandType::TANK_SHOT:
-			{
-				OnTankShot(command);//TODO: refactored tankShot event to bullet pool spawn with bulletId
-				break;
-			}
-			case CommandType::HEALTH_CHANGE:
-			{
-				OnHealthChange(command);
-				break;
-			}
-			case CommandType::DISPOSE:
-			{
-				OnDispose(command);
-				break;
-			}
-			case CommandType::STATISTICS_CHANGE:
-			{
-				OnStatisticsChange(command);
-				break;
-			}
-			case CommandType::KEY_STATE_CHANGE:
-			{
-				OnKeyStateChange(command);
-				break;
-			}
-			case CommandType::GAME_STATE_CHANGE:
-			{
-				OnGameStateChange(command);
-				break;
-			}
-			case CommandType::FORTRESS_CHANGE:
-			{
-				OnFortressChange(command);
-				break;
-			}
-			case CommandType::BONUS_SPAWN:
-			{
-				OnBonusSpawn(command);
-				break;
-			}
-			case CommandType::BONUS_DESPAWN:
-			{
-				OnBonusDeSpawn(command);
-				break;
-			}
-			case CommandType::RESPAWN_TANK:
-			{
-				OnRespawnTank(command);
-				break;
-			}
-			case CommandType::OBSTACLE_SPAWN:
-			{
-				OnObstacleSpawn(command);
-				break;
-			}
-			case CommandType::ANIMATION_CREATE:
-			{
-				OnAnimationCreate(command);
-				break;
-			}
-			case CommandType::TANK_ON_OFF:
-			{
-				OnTankOnOff(command);
-				break;
-			}
-			case CommandType::BONUS_STATUS:
-			{
-				OnBonusStatus(command);
-				break;
-			}
-			//TODO: implement other command types
-			default:
-				break;
-		}
+		return;
+	}
+
+	// auto classNameW = std::string(command->GetClassNameW());
+	// auto commandName = std::string("client receive:" + classNameW);
+	// NetworkLogger::LogClientIn(commandName);
+	if (const auto it = _commandHandlers.find(command->GetType()); it != _commandHandlers.end())
+	{
+		it->second(command);
 	}
 }
 

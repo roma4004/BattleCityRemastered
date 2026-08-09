@@ -52,22 +52,19 @@ void FortressWall::SubscribeAsClient()
 	//NOTE: Client.cpp emits ClientInFortressChangeEvent here, split off the
 	//ServerOutFortressChangeEvent the host side (below, PlayAsHost branches) uses for its own local
 	//trigger - see ObstacleAndBonusEvents.h for why.
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ClientInFortressChangeEvent& event)
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInFortressChangeEvent& event)
 	{
-		if (event.uuid == _uuid)
+		if (event.state == "Died")
 		{
-			if (event.state == "Died")
-			{
-				this->OnEnemyPickupShovel();
-			}
-			else if (event.state == "ToBrick")
-			{
-				this->OnShovelCooldownEnd();
-			}
-			else if (event.state == "ToSteel")
-			{
-				this->OnPlayerPickupShovel();
-			}
+			this->OnEnemyPickupShovel();
+		}
+		else if (event.state == "ToBrick")
+		{
+			this->OnShovelCooldownEnd();
+		}
+		else if (event.state == "ToSteel")
+		{
+			this->OnPlayerPickupShovel();
 		}
 	}));
 }

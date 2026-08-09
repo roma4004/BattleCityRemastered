@@ -55,24 +55,22 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 		}));
 	}
 
-	_permanentSubs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusTimerReApplyOnSpawnEvent& event)
-	{
-		if (event.name == this->_name)
-		{
-			if (event.isEnabled)
+	_permanentSubs.push_back(
+			_events->AddListener(_uuid, _nameWithUuid, [this](const BonusTimerReApplyOnSpawnEvent& event)
 			{
-				this->UnsubscribeTickUpdate();
-			}
-			else
-			{
-				this->SubscribeTickUpdate();
-			}
-		}
-	}));
+				if (event.isEnabled)
+				{
+					this->UnsubscribeTickUpdate();
+				}
+				else
+				{
+					this->SubscribeTickUpdate();
+				}
+			}));
 
-	_permanentSubs.push_back(_events->AddListener(_nameWithUuid, [this](const SpawnEnabledEvent& event)
+	_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const SpawnEnabledEvent&)
 	{
-		OnSpawnEnabled(event.uuid);
+		OnSpawnEnabled();
 	}));
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = _uuid});
@@ -390,13 +388,10 @@ void Tank::ApplyScaleToCalibre(const float newScale)
 	this->_calibre.size.y *= newScale;
 }
 
-void Tank::OnSpawnEnabled(const buuid& uuid)
+void Tank::OnSpawnEnabled()
 {
-	if (uuid == _uuid)
-	{
-		Enable();
+	Enable();
 
-		_events->EmitEvent(AnimationCreateTankEvent{.rect = _rect, .name = _name});
-		_events->EmitEvent(BonusEffectReApplyEvent{.name = _name, .fraction = _fraction});
-	}
+	_events->EmitEvent(AnimationCreateTankEvent{.rect = _rect, .name = _name});
+	_events->EmitEvent(BonusEffectReApplyEvent{.uuid = _uuid, .name = _name, .fraction = _fraction});
 }

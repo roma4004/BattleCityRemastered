@@ -7,12 +7,14 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
 #include <thread>
 #include <atomic>
+#include <unordered_map>
 #include <vector>
 
 class EventSystem;
@@ -36,10 +38,13 @@ public:
 	void Shutdown();
 
 private:
+	using CommandHandler = std::function<void(const std::shared_ptr<Command>&)>;
+
 	void DoRead();
 
 	void ProcessReceivedData(const std::string& archiveData);
 	void ProcessServerCommand(const std::shared_ptr<Command>& command);
+	void RegisterCommandHandlers();
 	void OnCommandBatch(const std::shared_ptr<Command>& commands);
 	void OnSignalEvent(const std::shared_ptr<Command>& command);
 	void OnKeyStateChange(const std::shared_ptr<Command>& command);
@@ -49,6 +54,7 @@ private:
 	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	network::NetworkCommandQueue _commandQueue;
+	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
 
 };
 

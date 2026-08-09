@@ -6,9 +6,11 @@
 #include "components/EventSystem.h"
 #include <atomic>
 #include <boost/asio.hpp>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class EventSystem;
@@ -34,7 +36,10 @@ public:
 	void Shutdown();
 
 private:
+	using CommandHandler = std::function<void(const std::shared_ptr<Command>&)>;
+
 	void Subscribe();
+	void RegisterCommandHandlers();
 
 	void ReadResponse();
 	void TryConnect();
@@ -71,6 +76,7 @@ private:
 	network::NetworkCommandQueue _commandQueue;
 	std::mutex _batchWriteMutex;
 	std::shared_ptr<CommandBatch> _batch{nullptr};
+	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
 	std::atomic<bool> _isConnected{false};
 	unsigned char _reconnectAttempts{0u};
 	static constexpr unsigned char MaxReconnectAttempts{10u};

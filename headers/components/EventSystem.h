@@ -7,15 +7,15 @@
 #include <memory>
 #include <ranges>
 #include <typeindex>
-#include <unordered_set>
 
 class EventSystem;
 
 // RAII handle returned by AddListener: movable, not copyable. Holds a shared_ptr<EventSystem> so
 // the bus outlives the subscription for as long as this handle is alive, and unsubscribes
 // automatically on destruction (or on move-assignment replacing an already-held subscription) via
-// the type-erased callback captured at AddListener call time. release() opts out of the
-// auto-unsubscribe for call sites that want the old fire-and-forget (manual Unsubscribe()) behavior.
+// the type-erased callback captured at AddListener call time. To unsubscribe early, either erase the
+// handle from its owning std::vector<EventSubscription>, or move-assign a fresh EventSubscription{}
+// over a single named member (see Pawn::UnsubscribeTickUpdate) - both just trigger the destructor.
 class EventSubscription
 {
 public:
@@ -49,10 +49,6 @@ public:
 	}
 
 	~EventSubscription() { Unsubscribe(); }
-
-	// Opts out of auto-unsubscribe - the subscription then lives until the EventSystem itself
-	// removes it (e.g. RemoveAllListeners(listenerName) elsewhere), same as pre-RAII behavior.
-	void release() { _unsubscribe = nullptr; }
 
 	// True while this handle actively owns a live subscription. Lets a Subscribe()-style method
 	// guard against re-registering into an already-populated single-slot member (see
@@ -108,7 +104,7 @@ struct first_type<T, Rest...>
 };
 
 template<typename... Args>
-using first_type_t = typename first_type<Args...>::type;
+using first_type_t = first_type<Args...>::type;
 }// namespace detail
 
 // Wrap a per-instance dispatch key (e.g. a tank's uuid) for the keyed EmitEvent/AddListener
@@ -269,7 +265,6 @@ public:
 	virtual ~BaseEvent() = default;
 	virtual void RemoveListener(const std::string& listenerName) = 0;
 	virtual bool HasListeners() const = 0;
-	virtual size_t GetArgumentCount() const = 0;
 };
 
 template<typename... Args>
@@ -308,8 +303,6 @@ public:
 
 	bool HasListeners() const override { return !_listeners.empty(); }
 
-	size_t GetArgumentCount() const override { return sizeof...(Args); }
-
 private:
 	std::unordered_map<std::string, callbackType> _listeners;
 };
@@ -320,11 +313,7 @@ class BaseKeyedEvent
 {
 public:
 	virtual ~BaseKeyedEvent() = default;
-	// Removes listenerName from every key's bucket - used by RemoveAllListeners(listenerName),
-	// which doesn't know (and shouldn't need to know) which key(s) an object subscribed under.
-	virtual void RemoveListener(const std::string& listenerName) = 0;
 	virtual bool HasListeners() const = 0;
-	virtual size_t GetArgumentCount() const = 0;
 };
 
 template<typename KeyT, typename... Args>
@@ -372,21 +361,11 @@ public:
 		}
 	}
 
-	void RemoveListener(const std::string& listenerName) override
-	{
-		for (auto& perKeyListeners: _listeners | std::views::values)
-		{
-			perKeyListeners.erase(listenerName);
-		}
-	}
-
 	bool HasListeners() const override
 	{
 		return std::ranges::any_of(_listeners | std::views::values,
 								   [](const auto& perKeyListeners) { return !perKeyListeners.empty(); });
 	}
-
-	size_t GetArgumentCount() const override { return sizeof...(Args); }
 
 private:
 	std::unordered_map<KeyT, std::unordered_map<std::string, callbackType>> _listeners;
@@ -443,31 +422,6 @@ class EventSystem final : public std::enable_shared_from_this<EventSystem>
 		return nullptr;
 	}
 
-	// Reverse index: listenerName -> the event types it's currently registered under (in either
-	// _events or _keyedEvents). Lets RemoveAllListeners(listenerName) sweep only the event types
-	// that listener actually touched instead of every event type known to the system. Kept up to
-	// date on both the add side (AddListenerImpl/AddKeyedListenerImpl) and the single-target
-	// remove side (RemoveListener<EventType>) - a stale leftover entry here is harmless (it just
-	// costs one no-op erase attempt later), never a correctness problem.
-	std::unordered_map<std::string, std::unordered_set<std::type_index>> _listenerToEventTypes;
-
-	void TrackSubscription(const std::string& listenerName, const std::type_index eventType)
-	{
-		_listenerToEventTypes[listenerName].insert(eventType);
-	}
-
-	void UntrackSubscription(const std::string& listenerName, const std::type_index eventType)
-	{
-		if (const auto it = _listenerToEventTypes.find(listenerName); it != _listenerToEventTypes.end())
-		{
-			it->second.erase(eventType);
-			if (it->second.empty())
-			{
-				_listenerToEventTypes.erase(it);
-			}
-		}
-	}
-
 public:
 	EventSystem() = default;
 
@@ -508,8 +462,7 @@ public:
 	// type IS the dispatch key (type_index(typeid(EventType))) - see callable_signature above.
 	// Returns an EventSubscription RAII handle - keep it alive (e.g. in a std::vector<EventSubscription>
 	// member) for as long as the listener should stay registered; letting it go out of scope
-	// unsubscribes automatically. Call .release() on it to opt back into manual/never-auto-unsubscribe
-	// behavior.
+	// unsubscribes automatically.
 	template<Callable CallableT>
 	[[nodiscard]] EventSubscription AddListener(const std::string& listenerName, CallableT&& callback)
 	{
@@ -533,7 +486,6 @@ public:
 		if (auto* event = GetTypedEvent<EventType>())
 		{
 			event->AddListener(listenerName, std::forward<CallableT>(callback));
-			TrackSubscription(listenerName, key);
 		}
 
 		return EventSubscription(shared_from_this(), [this, listenerName]()
@@ -566,7 +518,6 @@ public:
 		if (auto* event = GetTypedKeyedEvent<KeyT, EventType>())
 		{
 			event->AddListener(key, listenerName, std::forward<CallableT>(callback));
-			TrackSubscription(listenerName, typeKey);
 		}
 
 		return EventSubscription(shared_from_this(), [this, key, listenerName]()
@@ -609,7 +560,6 @@ public:
 		if (const auto it = _events.find(key); it != _events.end())
 		{
 			it->second.event->RemoveListener(listenerName);
-			UntrackSubscription(listenerName, key);
 		}
 	}
 
@@ -625,58 +575,8 @@ public:
 			if (auto* event = static_cast<KeyedEvent<KeyT, EventType>*>(it->second.event.get()))
 			{
 				event->RemoveListener(key, listenerName);
-				UntrackSubscription(listenerName, typeKey);
 			}
 		}
 	}
 
-	void RemoveAllListeners(const std::string& listenerName)
-	{
-		// Only sweep the event types this listenerName is actually known to be subscribed to,
-		// instead of every event type registered in the whole system.
-		const auto it = _listenerToEventTypes.find(listenerName);
-		if (it == _listenerToEventTypes.end())
-		{
-			return;
-		}
-
-		// copy: RemoveListener()/UntrackSubscription() below mutate _listenerToEventTypes, which
-		// would invalidate iterators into the very set we're iterating.
-		const std::vector<std::type_index> eventTypes(it->second.begin(), it->second.end());
-
-		for (const auto& eventType: eventTypes)
-		{
-			if (const auto eventIt = _events.find(eventType); eventIt != _events.end())
-			{
-				eventIt->second.event->RemoveListener(listenerName);
-			}
-
-			if (const auto keyedIt = _keyedEvents.find(eventType); keyedIt != _keyedEvents.end())
-			{
-				keyedIt->second.event->RemoveListener(listenerName);
-			}
-		}
-
-		_listenerToEventTypes.erase(listenerName);
-	}
-
-	template<typename EventType>
-	bool HasEvent() const
-	{
-		return _events.contains(std::type_index(typeid(EventType)));
-	}
-
-	template<typename EventType>
-	bool HasListeners() const
-	{
-		const auto it = _events.find(std::type_index(typeid(EventType)));
-		return it != _events.end() && it->second.event->HasListeners();
-	}
-
-	template<typename EventType>
-	size_t GetEventArgumentCount() const
-	{
-		const auto it = _events.find(std::type_index(typeid(EventType)));
-		return it != _events.end() ? it->second.event->GetArgumentCount() : 0;
-	}
 };
