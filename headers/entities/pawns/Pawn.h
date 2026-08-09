@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "../Tags.h"
 #include "components/EventSystem.h"
 #include "interfaces/ITickUpdatable.h"
 #include <vector>
@@ -18,7 +19,7 @@ class Pawn : public BaseObj, public ITickUpdatable
 	using buuid = boost::uuids::uuid;
 
 public:
-	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig);
+	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, CollisionTags collision);
 
 	~Pawn() override;
 

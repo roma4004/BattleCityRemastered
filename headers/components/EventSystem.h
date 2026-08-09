@@ -172,11 +172,12 @@ struct callable_signature<R (Class::*)(Args...) const>
 	}
 
 	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
-										CallableT&& callback)
+	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
+													 const std::string& listenerName,
+													 CallableT&& callback)
 	{
 		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																	 std::forward<CallableT>(callback));
+																		   std::forward<CallableT>(callback));
 	}
 };
 
@@ -199,11 +200,12 @@ struct callable_signature<R (Class::*)(Args...)>
 	}
 
 	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
-										CallableT&& callback)
+	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
+													 const std::string& listenerName,
+													 CallableT&& callback)
 	{
 		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																	 std::forward<CallableT>(callback));
+																		   std::forward<CallableT>(callback));
 	}
 };
 
@@ -223,11 +225,12 @@ struct callable_signature<R (*)(Args...)>
 	}
 
 	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
-										CallableT&& callback)
+	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
+													 const std::string& listenerName,
+													 CallableT&& callback)
 	{
 		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																	 std::forward<CallableT>(callback));
+																		   std::forward<CallableT>(callback));
 	}
 };
 
@@ -247,11 +250,12 @@ struct callable_signature<std::function<R(Args...)>>
 	}
 
 	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, const std::string& listenerName,
-										CallableT&& callback)
+	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
+													 const std::string& listenerName,
+													 CallableT&& callback)
 	{
 		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																	 std::forward<CallableT>(callback));
+																		   std::forward<CallableT>(callback));
 	}
 };
 
@@ -532,7 +536,10 @@ public:
 			TrackSubscription(listenerName, key);
 		}
 
-		return EventSubscription(shared_from_this(), [this, listenerName]() { this->RemoveListener<EventType>(listenerName); });
+		return EventSubscription(shared_from_this(), [this, listenerName]()
+		{
+			this->RemoveListener<EventType>(listenerName);
+		});
 	}
 
 	// Keyed overload - subscribe to a specific dispatch key (e.g. a tank's uuid) instead of the
@@ -542,7 +549,7 @@ public:
 	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& listenerName, CallableT&& callback)
 	{
 		return callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, key, listenerName,
-																					std::forward<CallableT>(callback));
+			std::forward<CallableT>(callback));
 	}
 
 	// internal implementation for the concrete keyed EventType (used in callable_signature)

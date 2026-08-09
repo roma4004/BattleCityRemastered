@@ -16,7 +16,10 @@
 
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
-	: BaseObj{BaseObjProperty{.rect = rect, .health = 1, .uuid = uuid, .name = "FortressWall", .fraction = "Neutral"}}
+	: BaseObj{BaseObjProperty{.rect = rect, .health = 1, .uuid = uuid, .name = "FortressWall", .fraction = "Neutral"},
+			  BrickWall::kCollision}//NOTE: FortressWall::GetIsPassable/Destructible/Penetrable fully delegate to
+	//the held BrickWall/SteelWall variant below - this base value is never read,
+	//BrickWall's tags used simply because FortressWall always starts as one
 	, _events{events}
 	, _allObjects{allObjects}
 	, _obstacle{std::make_unique<BrickWall>(rect, events, uuid, gameMode)}
@@ -185,17 +188,6 @@ bool FortressWall::GetIsPassable() const
 	}, _obstacle);
 }
 
-void FortressWall::SetIsPassable(const bool value)
-{
-	std::visit([value](auto&& obstacle)
-	{
-		if (obstacle)
-		{
-			obstacle->SetIsPassable(value);
-		}
-	}, _obstacle);
-}
-
 bool FortressWall::GetIsDestructible() const
 {
 	return std::visit([](auto&& obstacle)
@@ -204,33 +196,11 @@ bool FortressWall::GetIsDestructible() const
 	}, _obstacle);
 }
 
-void FortressWall::SetIsDestructible(const bool value)
-{
-	std::visit([value](auto&& obstacle)
-	{
-		if (obstacle)
-		{
-			obstacle->SetIsDestructible(value);
-		}
-	}, _obstacle);
-}
-
 bool FortressWall::GetIsPenetrable() const
 {
 	return std::visit([](auto&& obstacle)
 	{
 		return obstacle ? obstacle->GetIsPenetrable() : true;
-	}, _obstacle);
-}
-
-void FortressWall::SetIsPenetrable(const bool value)
-{
-	std::visit([value](auto&& obstacle)
-	{
-		if (obstacle)
-		{
-			obstacle->SetIsPenetrable(value);
-		}
 	}, _obstacle);
 }
 

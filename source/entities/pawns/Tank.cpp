@@ -22,12 +22,8 @@
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
 		   const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), gameConfig}
+	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(true);
-	BaseObj::SetIsPenetrable(false);
-
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
 												 _allObjects, _effects, gameConfig);
 	_calibre = BulletCalibre{.speed = 300.f,

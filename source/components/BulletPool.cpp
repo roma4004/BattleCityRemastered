@@ -44,7 +44,10 @@ void BulletPool::Subscribe()
 {
 	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Clear(); }));
 
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { _gameMode = event.mode; }));
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	{
+		_gameMode = event.mode;
+	}));
 }
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()

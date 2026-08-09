@@ -69,11 +69,23 @@ void RenderManager::Subscribe()
 		TextToRender(event.pos, IntToColor(event.color), event.text);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuBackgroundEvent& event) { DrawMenuBackground(event.pos); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuBackgroundEvent& event)
+	{
+		DrawMenuBackground(event.pos);
+	}));
 	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuLogoEvent& event) { DrawMenuLogo(event.pos); }));
-	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuSelectorIconEvent& event) { DrawSelectorIcon(event.pos); }));
-	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuXBoxHintEvent& event) { DrawXBoxHint(event.pos); }));
-	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuPS5HintEvent& event) { DrawPS5Hint(event.pos); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuSelectorIconEvent& event)
+	{
+		DrawSelectorIcon(event.pos);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuXBoxHintEvent& event)
+	{
+		DrawXBoxHint(event.pos);
+	}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderMenuPS5HintEvent& event)
+	{
+		DrawPS5Hint(event.pos);
+	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const RenderPauseTextEvent&) { DrawPauseText(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const RenderGameOverTextEvent&) { DrawGameOverText(); }));
@@ -84,12 +96,10 @@ void RenderManager::Subscribe()
 		this->DrawColorTexture(event.rect);
 	}));
 
-	_subs.push_back(_events->AddListener(
-			_name,
-			[this](const RenderTextureEvent& event)
-			{
-				this->DrawTexture(event.textureRect, event.destRect, event.dir);
-			}));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderTextureEvent& event)
+	{
+		this->DrawTexture(event.textureRect, event.destRect, event.dir);
+	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const RenderFPSEvent& event) { RenderFPS(event.fps); }));
 
@@ -98,7 +108,10 @@ void RenderManager::Subscribe()
 		this->DrawHealthBar(event.rect, event.health);
 	}));
 	_subs.push_back(_events->AddListener(_name, [this](const RenderRightSideBarEvent&) { this->DrawRightSideBar(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const RenderEnemyIconBackgroundEvent&) { this->DrawEnemyIconBackground(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const RenderEnemyIconBackgroundEvent&)
+	{
+		this->DrawEnemyIconBackground();
+	}));
 	_subs.push_back(_events->AddListener(_name, [this](const RenderEnemyIconsEvent& event)
 	{
 		this->DrawEnemyIcons(event.count);

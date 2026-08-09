@@ -19,7 +19,8 @@ FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>&
 
 void FramePerSecondManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const CalculateActualFpsEvent&) { this->CountFpsAndDeltaTime(); }));
+	_subs.push_back(
+			_events->AddListener(_name, [this](const CalculateActualFpsEvent&) { this->CountFpsAndDeltaTime(); }));
 
 	_subs.push_back(_events->AddListener(_name, [this](const FrameStartEvent&)
 	{

@@ -20,14 +20,10 @@
 
 Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
 			   const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), gameConfig}
+	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {
-	BaseObj::SetIsPassable(true);
-	BaseObj::SetIsDestructible(true);
-	BaseObj::SetIsPenetrable(false);
-
 	// NOTE: needed only for tests, TODO in test use tank shoot instead of creating bullet
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, _calibre, _allObjects);
 

@@ -23,7 +23,10 @@ void DelayedSpawnManager::Subscribe()
 		this->SpawnDelayStart(event.uuid, event.delay);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent& event) { this->PreTickUpdate(event.deltaTime); }));
+	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent& event)
+	{
+		this->PreTickUpdate(event.deltaTime);
+	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { this->Disposer(); }));
 }

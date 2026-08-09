@@ -457,6 +457,9 @@
     <ClInclude Include="headers\entities\BonusEffectProperty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\entities\Tags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="headers\entities\ObjRectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>

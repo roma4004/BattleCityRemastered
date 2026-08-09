@@ -5,12 +5,8 @@
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect, 1, "Eagle", events, uuid, gameMode, ObstacleType::Eagle}
+	: Obstacle{rect, 1, "Eagle", events, uuid, gameMode, ObstacleType::Eagle, kCollision}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(true);
-	BaseObj::SetIsPenetrable(false);
-
 	Subscribe();
 }
 

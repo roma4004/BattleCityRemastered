@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "../Tags.h"
 #include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include <memory>
@@ -34,7 +35,7 @@ protected:
 
 public:
 	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, buuid uuid,
-			 GameMode gameMode, ObstacleType obstacleType);
+			 GameMode gameMode, ObstacleType obstacleType, CollisionTags collision);
 
 	~Obstacle() override;
 

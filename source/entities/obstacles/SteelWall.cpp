@@ -6,12 +6,8 @@
 
 SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect, 1, "SteelWall", events, uuid, gameMode, ObstacleType::Steel}
+	: Obstacle{rect, 1, "SteelWall", events, uuid, gameMode, ObstacleType::Steel, kCollision}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(false);
-
 	Subscribe();
 }
 

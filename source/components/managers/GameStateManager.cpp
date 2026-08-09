@@ -15,7 +15,10 @@ GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 
 void GameStateManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; }));
+	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event)
+	{
+		this->_isPause = event.isPaused;
+	}));
 	_subs.push_back(_events->AddListener(_name, [this](const PreDrawUserInterfaceEvent&) { this->Draw(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->_isGameWon = true; }));

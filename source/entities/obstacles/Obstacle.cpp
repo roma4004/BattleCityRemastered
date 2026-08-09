@@ -10,12 +10,13 @@
 
 Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 				   const std::shared_ptr<EventSystem>& events, const buuid uuid, const GameMode gameMode,
-				   const ObstacleType obstacleType)
+				   const ObstacleType obstacleType, const CollisionTags collision)
 	: BaseObj{BaseObjProperty{.rect = rect,
 							  .health = health,
 							  .uuid = uuid,
 							  .name = std::move(name),
-							  .fraction = "Neutral"}}
+							  .fraction = "Neutral"},
+			  collision}
 	, _events(events)
 	, _gameMode{gameMode}
 	, _obstacleType(obstacleType)

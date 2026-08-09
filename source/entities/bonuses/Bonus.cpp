@@ -17,16 +17,13 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 							  .health = 1,
 							  .uuid = uuid,
 							  .name = std::move(name),
-							  .fraction = "Neutral"}}
+							  .fraction = "Neutral"},
+			  kCollision}
 	, _lifeTimeTimer{lifeTime, std::chrono::system_clock::now()}
 	, _gameMode{gameMode}
 	, _bonusType{bonusType}
 	, _events{events}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(true);
-	BaseObj::SetIsPenetrable(false);
-
 	Subscribe();
 
 	if (_gameMode == GameMode::PlayAsHost)

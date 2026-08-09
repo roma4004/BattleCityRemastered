@@ -16,7 +16,10 @@ InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& e
 
 void InputProviderForMenu::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const MenuReleasedEvent&) { this->ToggleMenuInputSubscription(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const MenuReleasedEvent&)
+	{
+		this->ToggleMenuInputSubscription();
+	}));
 	_subs.push_back(_events->AddListener(_name, [this](const PauseReleasedEvent&) { this->TogglePause(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
 	{
@@ -58,20 +61,36 @@ void InputProviderForMenu::Subscribe()
 void InputProviderForMenu::EnableMenuInput()
 {
 	const std::string menuNavName{_name + "_MenuNav"};
-	_menuNavSubs.push_back(_events->AddListener(std::string{"P1"}, menuNavName,
-						 [&btn = _keys](const MoveUpEvent& event) { btn.up = event.isPressed; }));
-	_menuNavSubs.push_back(_events->AddListener(std::string{"P1"}, menuNavName,
-						 [&btn = _keys](const MoveDownEvent& event) { btn.down = event.isPressed; }));
-	_menuNavSubs.push_back(_events->AddListener(std::string{"P2"}, menuNavName,
-						 [&btn = _keys](const MoveUpEvent& event) { btn.up = event.isPressed; }));
-	_menuNavSubs.push_back(_events->AddListener(std::string{"P2"}, menuNavName,
-						 [&btn = _keys](const MoveDownEvent& event) { btn.down = event.isPressed; }));
-	_menuNavSubs.push_back(_events->AddListener(menuNavName,
-						 [&btn = _keys](const EnterEvent& event) { btn.reset = event.isPressed; }));
-	_menuNavSubs.push_back(_events->AddListener(std::string{"P1"}, menuNavName,
-						 [&btn = _keys](const FireEvent& event) { btn.reset = event.isPressed; }));
-	_menuNavSubs.push_back(_events->AddListener(std::string{"P2"}, menuNavName,
-						 [&btn = _keys](const FireEvent& event) { btn.reset = event.isPressed; }));
+	_menuNavSubs.push_back(_events->AddListener(std::string{"P1"}, menuNavName, [&btn = _keys](const MoveUpEvent& event)
+	{
+		btn.up = event.isPressed;
+	}));
+	_menuNavSubs.push_back(
+			_events->AddListener(std::string{"P1"}, menuNavName, [&btn = _keys](const MoveDownEvent& event)
+			{
+				btn.down = event.isPressed;
+			}));
+	_menuNavSubs.push_back(_events->AddListener(std::string{"P2"}, menuNavName, [&btn = _keys](const MoveUpEvent& event)
+	{
+		btn.up = event.isPressed;
+	}));
+	_menuNavSubs.push_back(
+			_events->AddListener(std::string{"P2"}, menuNavName, [&btn = _keys](const MoveDownEvent& event)
+			{
+				btn.down = event.isPressed;
+			}));
+	_menuNavSubs.push_back(_events->AddListener(menuNavName, [&btn = _keys](const EnterEvent& event)
+	{
+		btn.reset = event.isPressed;
+	}));
+	_menuNavSubs.push_back(_events->AddListener(std::string{"P1"}, menuNavName, [&btn = _keys](const FireEvent& event)
+	{
+		btn.reset = event.isPressed;
+	}));
+	_menuNavSubs.push_back(_events->AddListener(std::string{"P2"}, menuNavName, [&btn = _keys](const FireEvent& event)
+	{
+		btn.reset = event.isPressed;
+	}));
 }
 
 void InputProviderForMenu::DisableMenuInput() { _menuNavSubs.clear(); }

@@ -299,6 +299,7 @@
     <ClInclude Include="headers\entities\BaseObj.h" />
     <ClInclude Include="headers\entities\BaseObjProperty.h" />
     <ClInclude Include="headers\entities\BonusEffectProperty.h" />
+    <ClInclude Include="headers\entities\Tags.h" />
     <ClInclude Include="headers\entities\ObjRectangle.h" />
     <ClInclude Include="headers\entities\bonuses\Bonus.h" />
     <ClInclude Include="headers\entities\bonuses\BonusCaliber.h" />

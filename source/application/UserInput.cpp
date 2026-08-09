@@ -33,10 +33,16 @@ UserInput::~UserInput()
 
 void UserInput::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event) { this->_isPause = event.isPaused; }));
+	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event)
+	{
+		this->_isPause = event.isPaused;
+	}));
 	_subs.push_back(_events->AddListener(_name, [this](const TabReleasedEvent&) { this->SwapControllers(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->Update(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; }));
+	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event)
+	{
+		_isMenuDisplayed = event.isShown;
+	}));
 	_subs.push_back(_events->AddListener(_name, [this](const MenuPosChangedEvent& event)
 	{
 		_allTilesRect = {

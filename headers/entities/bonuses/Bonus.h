@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../BaseObj.h"
+#include "../Tags.h"
 #include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
@@ -32,6 +33,8 @@ protected:
 	virtual void EmitPickupEvent(const std::string& author, const std::string& fraction) = 0;
 
 public:
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
 		  std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);
 

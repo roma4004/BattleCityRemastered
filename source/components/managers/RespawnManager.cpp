@@ -50,7 +50,10 @@ void RespawnManager::Subscribe()
 		this->OnBonusTank(event.author);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const PlayersBaseFinishedEvent&) { this->TriggerLastPlayersLife(); }));
+	_subs.push_back(_events->AddListener(_name, [this](const PlayersBaseFinishedEvent&)
+	{
+		this->TriggerLastPlayersLife();
+	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const RespawnTanksEvent& event)
 	{

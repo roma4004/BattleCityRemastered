@@ -5,12 +5,8 @@
 
 WaterTile::WaterTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect, 1, "Water", events, uuid, gameMode, ObstacleType::Water}
+	: Obstacle{rect, 1, "Water", events, uuid, gameMode, ObstacleType::Water, kCollision}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(true);
-
 	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 }
 

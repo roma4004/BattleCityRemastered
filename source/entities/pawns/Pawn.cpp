@@ -9,8 +9,8 @@
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig)
-	: BaseObj{std::move(pawnProperty.baseObjProperty)}
+Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, const CollisionTags collision)
+	: BaseObj{std::move(pawnProperty.baseObjProperty), collision}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}
 	, _allObjects{pawnProperty.allObjects}

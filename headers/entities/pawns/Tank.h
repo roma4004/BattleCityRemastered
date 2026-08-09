@@ -56,6 +56,8 @@ protected:
 	virtual void Disable() const;
 
 public:
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
 		 bool enableByDefault = false);
 

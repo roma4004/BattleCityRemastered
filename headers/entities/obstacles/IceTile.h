@@ -18,6 +18,8 @@ protected:
 	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
+	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Indestructible{}, tags::Penetrable{}};
+
 	IceTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~IceTile() override = default;

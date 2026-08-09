@@ -16,6 +16,8 @@ protected:
 	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
 
 public:
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Penetrable{}};
+
 	WaterTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~WaterTile() override;

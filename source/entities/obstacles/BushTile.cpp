@@ -5,12 +5,8 @@
 
 BushTile::BushTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 				   const GameMode gameMode)
-	: Obstacle{rect, 1, "Bush", events, uuid, gameMode, ObstacleType::Bush}
+	: Obstacle{rect, 1, "Bush", events, uuid, gameMode, ObstacleType::Bush, kCollision}
 {
-	BaseObj::SetIsPassable(true);
-	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(true);
-
 	Subscribe();
 }
 
