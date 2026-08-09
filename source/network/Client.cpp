@@ -35,8 +35,10 @@
 #include "network/commands/TankOnOff.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <cassert>
 #include <iostream>
 #include <string>
+#include <tuple>
 
 namespace network::commands
 {
@@ -59,7 +61,7 @@ void Client::TryConnect()
 	if (_socket.is_open())
 	{
 		boost::system::error_code ec;
-		const auto result = _socket.close(ec);
+		std::ignore = _socket.close(ec);// NOTE: error captured via ec, return value intentionally discarded
 	}
 
 	_socket.open(_endpoint.protocol());
@@ -185,6 +187,10 @@ void Client::ReadResponse()
 	auto self(shared_from_this());
 	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
 	{
+		//NOTE: self is captured only to keep this Client alive for the duration of the async
+		//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
+		std::ignore = self;
+
 		if (ec)
 		{
 			_readBuffer.consume(length);
@@ -507,7 +513,10 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 				case BonusType::Tank:
 					_events->EmitEvent(ClientInBonusTankPickupEvent{.name = name});
 					break;
-				default: //TODO: add assert
+				default:
+					//NOTE: Server only ever constructs BonusStatus with Helmet/Star/Caliber/Tank
+					//(see Server.cpp), so reaching here means a new BonusType wasn't wired up above
+					assert(false && "Client::OnBonusStatus: unhandled BonusType");
 					break;
 			}
 		});
@@ -647,8 +656,10 @@ void Client::SendCommand(const std::shared_ptr<Command>& command)
 {
 	if (!_isConnected)
 	{
+		//NOTE: not an invariant violation - reconnect windows/disconnects are expected at runtime,
+		//so log instead of asserting
+		NetworkLogger::WriteLog("Client::SendCommand: dropped, not connected");
 		return;
-		//TODO: add assert or console error print
 	}
 
 	std::ostringstream archiveStream;
@@ -663,6 +674,10 @@ void Client::SendCommand(const std::shared_ptr<Command>& command)
 	auto self(shared_from_this());
 	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
 	{
+		//NOTE: self is captured only to keep this Client alive for the duration of the async
+		//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
+		std::ignore = self;
+
 		_writeBuffer.consume(length);
 
 		if (ec)
