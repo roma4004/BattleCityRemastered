@@ -47,8 +47,7 @@ private:
 	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
 	void DeleteHelmetAnimation(const std::string& name);
 	void OnHelmetEffect(const std::string& name, bool isEnable);
-	// void DisableTankAnimation(const std::string& name);
-	void AnimationSeqDisposer();
+	static AnimatedObject* FindReusable(std::vector<AnimatedObject>& container, AnimationType type);
 	void DrawObject(const AnimatedObject& object) const;
 	void Draw() const;
 };

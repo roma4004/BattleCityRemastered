@@ -9,6 +9,9 @@
 #include "enums/AnimationType.h"
 #include "Point.h"
 #include "utils/RandUtils.h"
+#include <algorithm>
+#include <memory>
+#include <ranges>
 
 AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 	: _events(events)
@@ -49,8 +52,6 @@ void AnimationManager::Subscribe()
 		this->OnHelmetEffect(event.name, event.isEnable);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const TickUpdateEvent&) { this->AnimationSeqDisposer(); }));
-	//TODO: do not add new helmet animation if we already have for this tank
 	_subs.push_back(_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); }));
 }
 
@@ -71,7 +72,6 @@ void AnimationManager::SubscribeAsHost()
 	{
 		this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
 		this->OnHelmetEffect(event.name, true);
-		//TODO: reuse animation
 	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
@@ -150,7 +150,20 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 				: type == AnimationType::Tank_Animation
 				? _turnBasedTankObjects
 				: _autoAnimatedObjects;
-	target.emplace_back(name, rect, type, limitOfFrames, scale, animationSpeed, isInfinite);
+
+	if (auto* reusable = FindReusable(target, type))
+	{
+		reusable->rect = rect;
+		reusable->dir = {};
+		reusable->currentFrameIndex = 0;
+		reusable->ticksSinceLastFrame = 0;
+		reusable->name = name;
+		reusable->markToDispose = false;
+	}
+	else
+	{
+		target.emplace_back(name, rect, type, limitOfFrames, scale, animationSpeed, isInfinite);
+	}
 
 	if (!isLocallySimulated && _gameMode == GameMode::PlayAsHost)
 	{
@@ -160,15 +173,8 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 void AnimationManager::Update()
 {
-	for (auto& object: _autoAnimatedWaterObjects)
-	{
-		UpdateFrame(object);
-	}
-
-	for (auto& object: _autoAnimatedObjects)
-	{
-		UpdateFrame(object);
-	}
+	std::ranges::for_each(_autoAnimatedWaterObjects, UpdateFrame);
+	std::ranges::for_each(_autoAnimatedObjects, UpdateFrame);
 }
 
 void AnimationManager::UpdateFrame(AnimatedObject& object)
@@ -197,35 +203,39 @@ void AnimationManager::UpdateFrame(AnimatedObject& object)
 
 void AnimationManager::UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir)
 {
-	for (auto& object: _turnBasedTankObjects)
+	const auto it = std::ranges::find_if(_turnBasedTankObjects, [&name](const AnimatedObject& object)
 	{
-		if (object.name.ends_with(name))
-		{
-			//Update tank animation position and dir
-			object.rect.x = pos.x;
-			object.rect.y = pos.y;
-			object.dir = dir;
+		return object.name.ends_with(name);
+	});
 
-			UpdateFrame(object);
-			UpdateHelmetEffect(name, pos);
-			break;
-		}
+	if (it == _turnBasedTankObjects.end())
+	{
+		return;
 	}
+
+	//Update tank animation position and dir
+	it->rect.x = pos.x;
+	it->rect.y = pos.y;
+	it->dir = dir;
+
+	UpdateFrame(*it);
+	UpdateHelmetEffect(name, pos);
 }
 
 void AnimationManager::UpdateHelmetEffect(const std::string& name, const FPoint& pos)
 {
-	for (auto& object: _autoAnimatedObjects)
+	const auto it = std::ranges::find_if(_autoAnimatedObjects, [&name](const AnimatedObject& object)
 	{
-		if (object.markToDispose == false
+		return !object.markToDispose
 			&& object.type == AnimationType::Helmet_Animation
-			&& object.name.starts_with(name))
-		{
-			//Update helmet animation position
-			object.rect.x = pos.x;
-			object.rect.y = pos.y;
-			break;
-		}
+			&& object.name.starts_with(name);
+	});
+
+	if (it != _autoAnimatedObjects.end())
+	{
+		//Update helmet animation position
+		it->rect.x = pos.x;
+		it->rect.y = pos.y;
 	}
 }
 
@@ -234,82 +244,67 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 	if (!isEnable)
 	{
 		DeleteHelmetAnimation(name);
+		return;
 	}
-	else
+
+	const auto tankIt = std::ranges::find_if(_turnBasedTankObjects, [&name](const AnimatedObject& tankObject)
 	{
-		for (auto& tankObject: _turnBasedTankObjects)
-		{
-			if (tankObject.type == AnimationType::Tank_Animation && tankObject.name != name)
-			{
-				continue;
-			}
+		return tankObject.type != AnimationType::Tank_Animation || tankObject.name == name;
+	});
 
-			//enable and update if exist
-			for (auto& animatedObject: _autoAnimatedObjects)
-			{
-				if (animatedObject.type == AnimationType::Helmet_Animation && animatedObject.name.starts_with(name))
-				{
-					animatedObject.markToDispose = false;
-					animatedObject.rect.x = tankObject.rect.x;
-					animatedObject.rect.y = tankObject.rect.y;
-
-					return;
-				}
-			}
-
-			CreateAnimation(AnimationType::Helmet_Animation, tankObject.rect, name);
-			return;
-		}
-
+	if (tankIt == _turnBasedTankObjects.end())
+	{
 		std::cout << "AnimationManager [DEBUG] Fail to CreateHelmetAnimation: " << "name = " << name << '\n';
+		return;
 	}
-}
 
-// void AnimationManager::DisableTankAnimation(const std::string& name)//TODO: add reuse flow for animation
-// {
-// 	for (auto& object: _tankObjects)
-// 	{
-// 		if (object.name == name)
-// 		{
-// 			object.markToDispose = true;
-// 			return;
-// 		}
-// 	}
-// }
+	//enable and update if exist
+	const auto helmetIt = std::ranges::find_if(_autoAnimatedObjects, [&name](const AnimatedObject& animatedObject)
+	{
+		return animatedObject.type == AnimationType::Helmet_Animation && animatedObject.name.starts_with(name);
+	});
+
+	if (helmetIt == _autoAnimatedObjects.end())
+	{
+		CreateAnimation(AnimationType::Helmet_Animation, tankIt->rect, name);
+		return;
+	}
+
+	helmetIt->markToDispose = false;
+	helmetIt->rect.x = tankIt->rect.x;
+	helmetIt->rect.y = tankIt->rect.y;
+}
 
 void AnimationManager::DeleteTankAnimation(const std::string& name)
 {
-	std::erase_if(_turnBasedTankObjects, [&name](const auto& object)
+	auto matching = _turnBasedTankObjects | std::views::filter([&name](const AnimatedObject& object)
 	{
 		return object.name.ends_with(name);
 	});
+
+	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
 void AnimationManager::DeleteHelmetAnimation(const std::string& name)
 {
-	for (auto& object: _autoAnimatedObjects)
+	auto matching = _autoAnimatedObjects | std::views::filter([&name](const AnimatedObject& object)
 	{
-		if (object.markToDispose == false
+		return !object.markToDispose
 			&& object.type == AnimationType::Helmet_Animation
-			&& object.name.starts_with(name))
-		{
-			object.markToDispose = true;
-		}
-	}
+			&& object.name.starts_with(name);
+	});
+
+	std::ranges::for_each(matching, [](AnimatedObject& object) { object.markToDispose = true; });
 }
 
-// NOTE: how it works
-// it = [0][1][2][3][4][5][6]
-// mark  t  t  f  t  f  t  f
-
-// it = [2][4][6] [0][1][3][5]
-//  cut here     |
-void AnimationManager::AnimationSeqDisposer()
+AnimatedObject* AnimationManager::FindReusable(std::vector<AnimatedObject>& container, const AnimationType type)
 {
-	std::erase_if(_autoAnimatedObjects, [](const auto& object)
+	const auto it = std::ranges::find_if(container, [type](const AnimatedObject& object)
 	{
-		return object.markToDispose;
+		return object.type == type && object.markToDispose;
 	});
+
+	return it != container.end() ? std::to_address(it) : nullptr;
 }
 
 void AnimationManager::DrawObject(const AnimatedObject& object) const
@@ -324,35 +319,20 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 
 void AnimationManager::Draw() const
 {
-	for (const auto& object: _autoAnimatedWaterObjects)
-	{
-		if (object.markToDispose)
-		{
-			continue;
-		}
+	constexpr auto isEnabled = [](const AnimatedObject& object) { return !object.markToDispose; };
 
+	for (const auto& object: _autoAnimatedWaterObjects | std::views::filter(isEnabled))
+	{
 		DrawObject(object);
 	}
 
-	for (const auto& object: _turnBasedTankObjects)
+	for (const auto& object: _turnBasedTankObjects | std::views::filter(isEnabled))
 	{
-		if (object.markToDispose)
-		{
-			continue;
-		}
-
 		DrawObject(object);
 	}
 
-	for (const auto& object: _autoAnimatedObjects)
+	for (const auto& object: _autoAnimatedObjects | std::views::filter(isEnabled))
 	{
-		if (object.markToDispose)
-		{
-			continue;
-		}
-
 		DrawObject(object);
 	}
 }
-
-//TODO: add reuse flow for explosions like bullet pool
