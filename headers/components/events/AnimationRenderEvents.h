@@ -74,7 +74,7 @@ struct RenderTextureEvent
 	Direction dir;
 };
 
-struct ServerSendAnimationCreateEvent
+struct ServerOutAnimationCreateEvent
 {
 	AnimationType type;
 	ObjRectangle rect;

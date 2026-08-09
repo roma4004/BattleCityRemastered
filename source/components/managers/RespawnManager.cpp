@@ -63,14 +63,14 @@ void RespawnManager::Subscribe()
 
 void RespawnManager::SubscribeAsClient()
 {
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientReceivedBonusTankPickupEvent& event)
+	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInBonusTankPickupEvent& event)
 	{
 		this->OnBonusTank(event.name);
 	}));
 
 	_clientSubs.push_back(_events->AddListener(
 			_name,
-			[this](const ClientReceivedRespawnTankEvent& event)
+			[this](const ClientInRespawnTankEvent& event)
 			{
 				this->OnClientRespawn(event.type);
 			}));
@@ -179,7 +179,7 @@ void RespawnManager::OnBonusTank(const std::string& author)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerSendBonusTankPickupEvent{.author = author});
+		_events->EmitEvent(ServerOutBonusTankPickupEvent{.author = author});
 	}
 }
 
@@ -235,7 +235,7 @@ void RespawnManager::OnEnemyDied(const bool isAvailable)
 		_events->EmitEvent(PlayersTeamIsWonEvent{});
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerSendPlayersTeamIsWonEvent{});
+			_events->EmitEvent(ServerOutPlayersTeamIsWonEvent{});
 		}
 	}
 }
@@ -248,7 +248,7 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 		_events->EmitEvent(EnemiesTeamIsWonEvent{});
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerSendEnemiesTeamIsWonEvent{});
+			_events->EmitEvent(ServerOutEnemiesTeamIsWonEvent{});
 		}
 	}
 }

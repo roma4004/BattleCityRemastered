@@ -60,14 +60,14 @@ TEST_F(NetworkTest, PosEventReplication)
 	const auto name{std::string("TestTank")};
 	auto posSub = events->AddListener(
 			_uuid, "PosEventReplication",
-			[&promise](const ClientReceivedPosEvent& event)
+			[&promise](const ClientInPosEvent& event)
 			{
 				promise.set_value({event.pos, event.dir});
 			});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(
-			ServerSendPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
+			ServerOutPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -119,13 +119,13 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	const auto name{std::string("TestTank")};
 	auto shotSub = events->AddListener(name, "ShotEventReplication",
-						[&promise](const ClientReceivedShotEvent& event)
+						[&promise](const ClientInShotEvent& event)
 						{
 							promise.set_value({event.dir, event.bulletUuid});
 						});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
+	events->EmitEvent(ServerOutShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -176,10 +176,10 @@ TEST_F(NetworkTest, HealthEventReplication)
 	const auto name{std::string("TestTank")};
 
 	auto healthSub = events->AddListener(_uuid, "HealthEventReplication",
-						[&promise](const ClientReceivedHealthEvent& event) { promise.set_value(event.health); });
+						[&promise](const ClientInHealthEvent& event) { promise.set_value(event.health); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
+	events->EmitEvent(ServerOutHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -226,10 +226,10 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	auto future = promise.get_future();
 
 	auto disposeSub = events->AddListener(_uuid, "DisposeEventReplication",
-						[&promise, uuid = _uuid](const ClientReceivedDisposeEvent&) { promise.set_value(uuid); });
+						[&promise, uuid = _uuid](const ClientInDisposeEvent&) { promise.set_value(uuid); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendDisposeEvent{.uuid = _uuid});
+	events->EmitEvent(ServerOutDisposeEvent{.uuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -276,13 +276,13 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 
 	auto statsSub = events->AddListener(
 			"StatisticsEventReplication",
-			[&promise](const ClientReceivedBulletHitEvent& event)
+			[&promise](const ClientInBulletHitEvent& event)
 			{
 				promise.set_value({event.author, event.fraction});
 			});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendBulletHitEvent{.author = "author", .fraction = "fraction"});
+	events->EmitEvent(ServerOutBulletHitEvent{.author = "author", .fraction = "fraction"});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -306,7 +306,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	EXPECT_EQ("author", author);
 	EXPECT_EQ("fraction", fraction);
 
-	events->RemoveListener<ClientReceivedBulletHitEvent>("StatisticsEventReplication");
+	events->RemoveListener<ClientInBulletHitEvent>("StatisticsEventReplication");
 }
 
 TEST_F(NetworkTest, FortressChangeEventReplication)
@@ -352,7 +352,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	auto fortressSub1 = events->AddListener(
 			"FortressChangeEventReplication1",
 			[&promiseDied1, &promiseToBrick1, &promiseToSteel1, &uuid1Died, &uuid1ToBrick, &uuid1ToSteel](
-			const ClientReceivedFortressChangeEvent& event)
+			const ClientInFortressChangeEvent& event)
 			{
 				if (event.state == "Died" && event.uuid == uuid1Died)
 				{
@@ -370,7 +370,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	auto fortressSub2 = events->AddListener(
 			"FortressChangeEventReplication2",
 			[&promiseDied2, &promiseToBrick2, &promiseToSteel2, &uuid2Died, &uuid2ToBrick, &uuid2ToSteel](
-			const ClientReceivedFortressChangeEvent& event)
+			const ClientInFortressChangeEvent& event)
 			{
 				if (event.state == "Died" && event.uuid == uuid2Died)
 				{
@@ -387,13 +387,13 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendFortressChangeEvent{.state = "Died", .uuid = uuid1Died});
-	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToBrick", .uuid = uuid1ToBrick});
-	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToSteel", .uuid = uuid1ToSteel});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = uuid1Died});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToBrick", .uuid = uuid1ToBrick});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToSteel", .uuid = uuid1ToSteel});
 
-	events->EmitEvent(ServerSendFortressChangeEvent{.state = "Died", .uuid = uuid2Died});
-	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
-	events->EmitEvent(ServerSendFortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = uuid2Died});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
 
 	events->EmitEvent(ServerEndFrameEvent{});
 
@@ -520,8 +520,8 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 		}
 	}
 
-	events->RemoveListener<ClientReceivedFortressChangeEvent>("FortressChangeEventReplication1");
-	events->RemoveListener<ClientReceivedFortressChangeEvent>("FortressChangeEventReplication2");
+	events->RemoveListener<ClientInFortressChangeEvent>("FortressChangeEventReplication1");
+	events->RemoveListener<ClientInFortressChangeEvent>("FortressChangeEventReplication2");
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
@@ -546,7 +546,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 
 	auto bonusSpawnSub = events->AddListener(
 			"BonusSpawnEventReplication",
-			[&promise](const ClientReceivedBonusSpawnEvent& event)
+			[&promise](const ClientInBonusSpawnEvent& event)
 			{
 				promise.set_value({event.pos, event.type, event.uuid});
 			});
@@ -554,7 +554,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	// events->EmitEvent(ServerStartFrameEvent{});
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
-	events->EmitEvent(ServerSendBonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
+	events->EmitEvent(ServerOutBonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -579,7 +579,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	EXPECT_EQ(type, typeReplicated);
 	EXPECT_EQ(_uuid, uuid);
 
-	events->RemoveListener<ClientReceivedBonusSpawnEvent>("BonusSpawnEventReplication");
+	events->RemoveListener<ClientInBonusSpawnEvent>("BonusSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusDeSpawnEventReplication)
@@ -604,10 +604,10 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 
 	auto bonusDeSpawnSub = events->AddListener(
 			"BonusDeSpawnEventReplication",
-			[&promise](const ClientReceivedBonusDeSpawnEvent& event) { promise.set_value(event.uuid); });
+			[&promise](const ClientInBonusDeSpawnEvent& event) { promise.set_value(event.uuid); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendBonusDeSpawnEvent{.uuid = _uuid});
+	events->EmitEvent(ServerOutBonusDeSpawnEvent{.uuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -630,7 +630,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveListener<ClientReceivedBonusDeSpawnEvent>("BonusDeSpawnEventReplication");
+	events->RemoveListener<ClientInBonusDeSpawnEvent>("BonusDeSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
@@ -656,11 +656,11 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 
 	auto bonusStatusSub = events->AddListener(
 			nameOrigin, "BonusStatusEventReplication",
-			[&promise](const ClientReceivedBonusHelmetPickupEvent& event) { promise.set_value(event.isEnable); });
+			[&promise](const ClientInBonusHelmetPickupEvent& event) { promise.set_value(event.isEnable); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(
-			ServerSendBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
+			ServerOutBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -708,10 +708,10 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 
 	auto bonusCaliberSub = events->AddListener(
 			nameOrigin, "BonusCaliberStatusEventReplication",
-			[&promise](const ClientReceivedBonusCaliberPickupEvent&) { promise.set_value(); });
+			[&promise](const ClientInBonusCaliberPickupEvent&) { promise.set_value(); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendBonusCaliberPickupEvent{.author = nameOrigin});
+	events->EmitEvent(ServerOutBonusCaliberPickupEvent{.author = nameOrigin});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -760,13 +760,13 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 
 	auto obstacleSpawnSub = events->AddListener(
 			"ObstacleSpawnEventReplication",
-			[&promise](const ClientReceivedObstacleSpawnEvent& event)
+			[&promise](const ClientInObstacleSpawnEvent& event)
 			{
 				promise.set_value({event.rect, event.type, event.uuid});
 			});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerSendObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
+	events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
 	events->EmitEvent(ServerEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
@@ -794,7 +794,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	EXPECT_EQ(obstacleType, type);
 	EXPECT_EQ(_uuid, uuid);
 
-	events->RemoveListener<ClientReceivedObstacleSpawnEvent>("ObstacleSpawnEventReplication");
+	events->RemoveListener<ClientInObstacleSpawnEvent>("ObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
@@ -832,7 +832,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	std::atomic<size_t> count{0u};
 	auto massiveObstacleSub = events->AddListener(
 			"MassiveObstacleSpawnEventReplication",
-			[&promises, &count, &mtx](const ClientReceivedObstacleSpawnEvent& event)
+			[&promises, &count, &mtx](const ClientInObstacleSpawnEvent& event)
 			{
 				std::scoped_lock lock(mtx);
 
@@ -846,7 +846,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	// events->EmitEvent(ServerStartFrameEvent{});
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		events->EmitEvent(ServerSendObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
+		events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
 	}
 	events->EmitEvent(ServerEndFrameEvent{});
 
@@ -882,7 +882,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			EXPECT_EQ(_uuid, uuid);
 		}
 
-	events->RemoveListener<ClientReceivedObstacleSpawnEvent>("MassiveObstacleSpawnEventReplication");
+	events->RemoveListener<ClientInObstacleSpawnEvent>("MassiveObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
@@ -907,7 +907,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	size_t count = 0u;
 	auto respawnTankSub = events->AddListener(
 			"RespawnTankEventReplication",
-			[&promises, &count](const ClientReceivedRespawnTankEvent& event)
+			[&promises, &count](const ClientInRespawnTankEvent& event)
 			{
 				promises[count++].set_value({event.type, event.uuid, FPoint{.x = event.rect.x, .y = event.rect.y}});
 			});
@@ -926,7 +926,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	// events->EmitEvent(ServerStartFrameEvent{});
 	for (const auto tankType: tankTypes)
 	{
-		events->EmitEvent(ServerSendRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
+		events->EmitEvent(ServerOutRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
 	}
 	events->EmitEvent(ServerEndFrameEvent{});
 
@@ -956,7 +956,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		EXPECT_EQ((FPoint{.x = rectOrigin.x, .y = rectOrigin.y}), posReplicated);
 	}
 
-	events->RemoveListener<ClientReceivedRespawnTankEvent>("RespawnTankEventReplication");
+	events->RemoveListener<ClientInRespawnTankEvent>("RespawnTankEventReplication");
 }
 
 //TODO: other bonus effect replication test after write this replication

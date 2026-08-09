@@ -146,11 +146,11 @@ void InputProviderForMenu::SetPause(bool value)
 
 	if (_gameMode != GameMode::PlayAsClient)
 	{
-		_events->EmitEvent(ServerSendPauseStatusEvent{.isPaused = _keys.pause});
+		_events->EmitEvent(ServerOutPauseStatusEvent{.isPaused = _keys.pause});
 	}
 	else
 	{
-		_events->EmitEvent(ClientSendPauseStatusEvent{.isPaused = _keys.pause});
+		_events->EmitEvent(ClientOutPauseStatusEvent{.isPaused = _keys.pause});
 	}
 }
 

@@ -346,7 +346,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 
@@ -361,7 +361,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 			{
-				_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+				_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 			}
 		}
 	}

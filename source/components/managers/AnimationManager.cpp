@@ -154,7 +154,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 
 	if (!isLocallySimulated && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerSendAnimationCreateEvent{.type = type, .rect = rect, .name = name});
+		_events->EmitEvent(ServerOutAnimationCreateEvent{.type = type, .rect = rect, .name = name});
 	}
 }
 

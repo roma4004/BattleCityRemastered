@@ -77,7 +77,7 @@ void BonusSpawner::SubscribeAsHost()
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_clientSub = _events->AddListener(_name, [this](const ClientReceivedBonusSpawnEvent& event)
+	_clientSub = _events->AddListener(_name, [this](const ClientInBonusSpawnEvent& event)
 	{
 		const auto size = static_cast<float>(_gameConfig.bonusSize);
 		const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};

@@ -29,7 +29,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(
-				ServerSendBonusSpawnEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = _bonusType, .uuid = uuid});
+				ServerOutBonusSpawnEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = _bonusType, .uuid = uuid});
 	}
 }
 
@@ -37,7 +37,7 @@ Bonus::~Bonus()
 {
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerSendBonusDeSpawnEvent{.uuid = _uuid});
+		_events->EmitEvent(ServerOutBonusDeSpawnEvent{.uuid = _uuid});
 	}
 }
 
@@ -58,7 +58,7 @@ void Bonus::SubscribeAsHost()
 
 void Bonus::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ClientReceivedBonusDeSpawnEvent& event)
+	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ClientInBonusDeSpawnEvent& event)
 	{
 		if (event.uuid != this->_uuid)
 		{

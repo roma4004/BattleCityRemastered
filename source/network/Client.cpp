@@ -73,7 +73,7 @@ void Client::TryConnect()
 			this->ReadResponse();
 			// std::scoped_lock lock(_batchWriteMutex);
 			// this->_batch->AddCommand(  //TODO: implement batch sending
-			this->SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
+			this->SendCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
 		}
 		else
 		{
@@ -165,14 +165,14 @@ void Client::Subscribe()
 		this->SendKeyState("P2_Fire", event.isPressed);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const ClientSendReadyToPlayEvent&)
+	_subs.push_back(_events->AddListener(_name, [this](const ClientOutReadyToPlayEvent&)
 	{
 		// std::scoped_lock lock(_batchWriteMutex);
 		// this->_batch->AddCommand(  //TODO: implement batch sending
-		SendCommand(std::make_shared<SignalEvent>("ClientSend_ReadyToPlay"));
+		SendCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const ClientSendPauseStatusEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const ClientOutPauseStatusEvent& event)
 	{
 		// std::scoped_lock lock(_batchWriteMutex);
 		// this->_batch->AddCommand(  //TODO: implement batch sending
@@ -213,7 +213,7 @@ void Client::ReadResponse()
 
 void Client::SendKeyState(const std::string& key, const bool state)
 {
-	// NetworkLogger::LogClientSend(state);
+	// NetworkLogger::LogClientOut(state);
 	// std::scoped_lock lock(_batchWriteMutex);
 	// this->_batch->AddCommand(  //TODO: implement batch sending
 	SendCommand(std::make_shared<KeyStateChange>(key, state));
@@ -229,7 +229,7 @@ void Client::OnPositionChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, dir, uuid]()
 		{
-			_events->EmitEvent(Key(uuid), ClientReceivedPosEvent{.pos = pos, .dir = dir});
+			_events->EmitEvent(Key(uuid), ClientInPosEvent{.pos = pos, .dir = dir});
 		});
 	}
 }
@@ -244,7 +244,7 @@ void Client::OnTankShot(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, who, dir, uuid]()
 		{
-			_events->EmitEvent(Key(who), ClientReceivedShotEvent{.dir = dir, .bulletUuid = uuid});
+			_events->EmitEvent(Key(who), ClientInShotEvent{.dir = dir, .bulletUuid = uuid});
 		});
 	}
 }
@@ -258,7 +258,7 @@ void Client::OnHealthChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid, health]()
 		{
-			_events->EmitEvent(Key(uuid), ClientReceivedHealthEvent{.health = health});
+			_events->EmitEvent(Key(uuid), ClientInHealthEvent{.health = health});
 		});
 	}
 }
@@ -271,7 +271,7 @@ void Client::OnDispose(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid]()
 		{
-			_events->EmitEvent(Key(uuid), ClientReceivedDisposeEvent{});
+			_events->EmitEvent(Key(uuid), ClientInDisposeEvent{});
 		});
 	}
 }
@@ -289,37 +289,37 @@ void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
 			switch (type)
 			{
 				case StatisticsType::BulletHit:
-					_events->EmitEvent(ClientReceivedBulletHitEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInBulletHitEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::EnemyHit:
-					_events->EmitEvent(ClientReceivedEnemyHitEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInEnemyHitEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::PlayerOneHit:
-					_events->EmitEvent(ClientReceivedPlayerOneHitEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInPlayerOneHitEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::PlayerTwoHit:
-					_events->EmitEvent(ClientReceivedPlayerTwoHitEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInPlayerTwoHitEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::EnemyDied:
-					_events->EmitEvent(ClientReceivedEnemyDiedEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInEnemyDiedEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::PlayerOneDied:
-					_events->EmitEvent(ClientReceivedPlayerOneDiedEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInPlayerOneDiedEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::PlayerTwoDied:
-					_events->EmitEvent(ClientReceivedPlayerTwoDiedEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInPlayerTwoDiedEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::BrickWallDied:
-					_events->EmitEvent(ClientReceivedBrickWallDiedEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInBrickWallDiedEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::SteelWallDied:
-					_events->EmitEvent(ClientReceivedSteelWallDiedEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInSteelWallDiedEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::BonusPickup:
-					_events->EmitEvent(ClientReceivedBonusPickupEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInBonusPickupEvent{.author = author, .fraction = fraction});
 					break;
 				case StatisticsType::BonusDestroyed:
-					_events->EmitEvent(ClientReceivedBonusDestroyedEvent{.author = author, .fraction = fraction});
+					_events->EmitEvent(ClientInBonusDestroyedEvent{.author = author, .fraction = fraction});
 					break;
 			}
 		});
@@ -380,7 +380,7 @@ void Client::OnFortressChange(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, state, uuid]()
 		{
-			_events->EmitEvent(ClientReceivedFortressChangeEvent{.state = state, .uuid = uuid});
+			_events->EmitEvent(ClientInFortressChangeEvent{.state = state, .uuid = uuid});
 		});
 	}
 }
@@ -395,7 +395,7 @@ void Client::OnBonusSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, pos, bonusType, uuid]()
 		{
-			_events->EmitEvent(ClientReceivedBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
+			_events->EmitEvent(ClientInBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
 		});
 	}
 }
@@ -408,7 +408,7 @@ void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid]()
 		{
-			_events->EmitEvent(ClientReceivedBonusDeSpawnEvent{.uuid = uuid});
+			_events->EmitEvent(ClientInBonusDeSpawnEvent{.uuid = uuid});
 		});
 	}
 }
@@ -423,7 +423,7 @@ void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, tankType, uuid, rect]()
 		{
-			_events->EmitEvent(ClientReceivedRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
+			_events->EmitEvent(ClientInRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
 		});
 	}
 }
@@ -438,7 +438,7 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
 		{
-			_events->EmitEvent(ClientReceivedObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
+			_events->EmitEvent(ClientInObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
 		});
 	}
 }
@@ -467,7 +467,7 @@ void Client::OnTankOnOff(const std::shared_ptr<Command>& command)
 
 		_commandQueue.Enqueue([this, uuid, isEnable]()
 		{
-			_events->EmitEvent(Key(uuid), ClientReceivedOnTankOnOffEvent{.isEnable = isEnable});
+			_events->EmitEvent(Key(uuid), ClientInOnTankOnOffEvent{.isEnable = isEnable});
 		});
 	}
 }
@@ -496,16 +496,16 @@ void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
 			switch (bonusType)
 			{
 				case BonusType::Helmet:
-					_events->EmitEvent(Key(name), ClientReceivedBonusHelmetPickupEvent{.isEnable = isEnable});
+					_events->EmitEvent(Key(name), ClientInBonusHelmetPickupEvent{.isEnable = isEnable});
 					break;
 				case BonusType::Star:
-					_events->EmitEvent(Key(name), ClientReceivedBonusStarPickupEvent{});
+					_events->EmitEvent(Key(name), ClientInBonusStarPickupEvent{});
 					break;
 				case BonusType::Caliber:
-					_events->EmitEvent(Key(name), ClientReceivedBonusCaliberPickupEvent{});
+					_events->EmitEvent(Key(name), ClientInBonusCaliberPickupEvent{});
 					break;
 				case BonusType::Tank:
-					_events->EmitEvent(ClientReceivedBonusTankPickupEvent{.name = name});
+					_events->EmitEvent(ClientInBonusTankPickupEvent{.name = name});
 					break;
 				default: //TODO: add assert
 					break;
@@ -520,7 +520,7 @@ void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
 	{
 		// auto classNameW = std::string(command->GetClassNameW());
 		// auto commandName = std::string("client receive:" + classNameW);
-		// NetworkLogger::LogClientReceive(commandName);
+		// NetworkLogger::LogClientIn(commandName);
 		switch (command->GetType())
 		{
 			case CommandType::COMMAND_BATCH:

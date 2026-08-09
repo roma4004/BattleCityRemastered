@@ -8,28 +8,28 @@ InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(const std::shared_ptr
 void InputProviderForPlayerOneNet::Subscribe()
 {
 	const std::string tag{"P1"};
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerReceiveMoveUpEvent& event)
+	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerInMoveUpEvent& event)
 	{
 		btn.up = event.isPressed;
 	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerReceiveMoveLeftEvent& event)
+	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerInMoveLeftEvent& event)
 	{
 		btn.left = event.isPressed;
 	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerReceiveMoveDownEvent& event)
+	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerInMoveDownEvent& event)
 	{
 		btn.down = event.isPressed;
 	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerReceiveMoveRightEvent& event)
+	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerInMoveRightEvent& event)
 	{
 		btn.right = event.isPressed;
 	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerReceiveFireEvent& event)
+	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const ServerInFireEvent& event)
 	{
 		btn.shot = event.isPressed;
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const ServerReceivePauseReleasedEvent& /*event*/)
+	_subs.push_back(_events->AddListener(_name, [this](const ServerInPauseReleasedEvent& /*event*/)
 	{
 		_events->EmitEvent(PauseReleasedEvent{});
 	}));

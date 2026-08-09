@@ -7,7 +7,7 @@
 
 using buuid = boost::uuids::uuid;
 
-struct ServerSendPosEvent
+struct ServerOutPosEvent
 {
 	std::string who;
 	FPoint pos;
@@ -15,56 +15,56 @@ struct ServerSendPosEvent
 	buuid uuid;
 };
 
-struct ServerSendShotEvent
+struct ServerOutShotEvent
 {
 	std::string who;
 	Direction dir;
 	buuid bulletUuid;
 };
 
-struct ServerSendHealthEvent
+struct ServerOutHealthEvent
 {
 	std::string who;
 	int health;
 	buuid uuid;
 };
 
-struct ServerSendOnTankOnOffEvent
+struct ServerOutOnTankOnOffEvent
 {
 	buuid uuid;
 	bool isEnable;
 	std::string name;
 };
 
-struct ServerSendBonusHelmetPickupEvent
+struct ServerOutBonusHelmetPickupEvent
 {
 	std::string name;
 	bool isActive;
 };
 
-struct ClientReceivedPosEvent
+struct ClientInPosEvent
 {
 	FPoint pos;
 	Direction dir;
 };
 
-struct ClientReceivedShotEvent
+struct ClientInShotEvent
 {
 	Direction dir;
 	buuid bulletUuid;
 };
 
-struct ClientReceivedOnTankOnOffEvent
+struct ClientInOnTankOnOffEvent
 {
 	bool isEnable;
 };
 
-struct ClientReceivedBonusHelmetPickupEvent
+struct ClientInBonusHelmetPickupEvent
 {
 	bool isEnable;
 };
 
-struct ClientReceivedHealthEvent
+struct ClientInHealthEvent
 {
 	int health;
 };

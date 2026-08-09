@@ -33,7 +33,7 @@ struct AnimationCreateTankEvent
 	std::string name;
 };
 
-struct ClientReceivedRespawnTankEvent
+struct ClientInRespawnTankEvent
 {
 	TankType type;
 	buuid uuid;
@@ -47,14 +47,14 @@ struct RespawnTankEvent
 	bool skipDelay;
 };
 
-struct ClientReceivedBonusSpawnEvent
+struct ClientInBonusSpawnEvent
 {
 	FPoint pos;
 	BonusType type;
 	buuid uuid;
 };
 
-struct ClientReceivedObstacleSpawnEvent
+struct ClientInObstacleSpawnEvent
 {
 	ObjRectangle rect;
 	ObstacleType type;
@@ -67,7 +67,7 @@ struct RespawnCountChangedToEvent
 	unsigned short respawnCount;
 };
 
-struct ServerSendRespawnTankEvent
+struct ServerOutRespawnTankEvent
 {
 	TankType type;
 	buuid uuid;

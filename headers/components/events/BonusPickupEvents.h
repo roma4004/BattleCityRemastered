@@ -51,22 +51,22 @@ struct BonusTankPickupEvent
 	std::string fraction;
 };
 
-struct ServerSendBonusStarPickupEvent
+struct ServerOutBonusStarPickupEvent
 {
 	std::string author;
 };
 
-struct ServerSendBonusCaliberPickupEvent
+struct ServerOutBonusCaliberPickupEvent
 {
 	std::string author;
 };
 
-struct ServerSendBonusTankPickupEvent
+struct ServerOutBonusTankPickupEvent
 {
 	std::string author;
 };
 
-struct ClientReceivedBonusTankPickupEvent
+struct ClientInBonusTankPickupEvent
 {
 	std::string name;
 };
@@ -89,6 +89,6 @@ struct BonusShovelStatusChangeEvent
 	bool isActive;
 };
 
-struct ClientReceivedBonusStarPickupEvent {};
+struct ClientInBonusStarPickupEvent {};
 
-struct ClientReceivedBonusCaliberPickupEvent {};
+struct ClientInBonusCaliberPickupEvent {};

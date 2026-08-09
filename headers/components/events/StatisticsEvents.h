@@ -2,14 +2,14 @@
 
 #include <string>
 
-struct ServerSendStatisticsEvent final
+struct ServerOutStatisticsEvent final
 {
 	std::string eventName;
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedStatisticsEvent final
+struct ClientInStatisticsEvent final
 {
 	std::string eventName;
 	std::string author;
@@ -69,133 +69,133 @@ struct StatisticsTankDiedEvent final
 	std::string fraction;
 };
 
-struct ServerSendBulletHitEvent final
+struct ServerOutBulletHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendEnemyHitEvent final
+struct ServerOutEnemyHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendPlayerOneHitEvent final
+struct ServerOutPlayerOneHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendPlayerTwoHitEvent final
+struct ServerOutPlayerTwoHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendEnemyDiedEvent final
+struct ServerOutEnemyDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendPlayerOneDiedEvent final
+struct ServerOutPlayerOneDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendPlayerTwoDiedEvent final
+struct ServerOutPlayerTwoDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendBrickWallDiedEvent final
+struct ServerOutBrickWallDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendSteelWallDiedEvent final
+struct ServerOutSteelWallDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendBonusPickupEvent final
+struct ServerOutBonusPickupEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ServerSendBonusDestroyedEvent final
+struct ServerOutBonusDestroyedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedBulletHitEvent final
+struct ClientInBulletHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedEnemyHitEvent final
+struct ClientInEnemyHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedPlayerOneHitEvent final
+struct ClientInPlayerOneHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedPlayerTwoHitEvent final
+struct ClientInPlayerTwoHitEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedEnemyDiedEvent final
+struct ClientInEnemyDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedPlayerOneDiedEvent final
+struct ClientInPlayerOneDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedPlayerTwoDiedEvent final
+struct ClientInPlayerTwoDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedBrickWallDiedEvent final
+struct ClientInBrickWallDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedSteelWallDiedEvent final
+struct ClientInSteelWallDiedEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedBonusPickupEvent final
+struct ClientInBonusPickupEvent final
 {
 	std::string author;
 	std::string fraction;
 };
 
-struct ClientReceivedBonusDestroyedEvent final
+struct ClientInBonusDestroyedEvent final
 {
 	std::string author;
 	std::string fraction;

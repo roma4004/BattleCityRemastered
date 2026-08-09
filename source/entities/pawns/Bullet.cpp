@@ -58,11 +58,11 @@ void Bullet::Subscribe()
 
 void Bullet::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedDisposeEvent&)
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInDisposeEvent&)
 	{
 		this->SetIsAlive(false);
 	}));
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedPosEvent& event)
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInPosEvent& event)
 	{
 		OnClientChangePos(event.pos, event.dir);
 	}));
@@ -140,7 +140,7 @@ void Bullet::TickUpdate(const double deltaTime)
 
 		if (isMove && _gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent(ServerSendPosEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
 		}
 	}
 }

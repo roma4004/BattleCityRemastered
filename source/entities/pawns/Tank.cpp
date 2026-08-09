@@ -9,7 +9,6 @@
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/BulletCalibre.h"
@@ -45,12 +44,12 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	if (_gameMode == GameMode::PlayAsClient)
 	{
 		_permanentSubs.push_back(
-				_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedOnTankOnOffEvent& event)
+				_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInOnTankOnOffEvent& event)
 				{
 					this->OnClientTankOnOff(event.isEnable);
 				}));
 
-		_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedPosEvent& event)
+		_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInPosEvent& event)
 		{
 			this->OnClientChangePos(event.pos, event.dir);
 		}));
@@ -115,26 +114,25 @@ void Tank::Subscribe()
 
 void Tank::SubscribeAsClient()
 {
-	//TODO: rename ClientReceived_ to ClientIn
-	//TODO: reduce number of "ClientReceived_" overloading if we can use just direct local event
-	//TODO: refactor to ClientReceived_ "Shot" to just "Shot" and move bot timers to handle outside bot tank,
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedShotEvent& event)
+	//TODO: reduce number of "ClientIn" overloading if we can use just direct local event
+	//TODO: refactor ClientIn "Shot" to just "Shot" and move bot timers to handle outside bot tank,
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInShotEvent& event)
 	{
 		this->SetDirection(event.dir);
 		this->Shot(event.bulletUuid);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusHelmetPickupEvent& event)
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInBonusHelmetPickupEvent& event)
 	{
 		this->OnBonusHelmet(this->_name, event.isEnable);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusStarPickupEvent&)
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInBonusStarPickupEvent&)
 	{
 		this->OnBonusStar(this->_name);
 	}));
 
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientReceivedBonusCaliberPickupEvent&)
+	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInBonusCaliberPickupEvent&)
 	{
 		this->OnBonusCaliber(this->_name);
 	}));
@@ -175,7 +173,7 @@ void Tank::Enable()
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		constexpr bool isEnable = true;
-		_events->EmitEvent(ServerSendOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
+		_events->EmitEvent(ServerOutOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
 	}
 }
 
@@ -186,7 +184,7 @@ void Tank::Disable() const
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		constexpr bool isEnable = false;
-		_events->EmitEvent(ServerSendOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
+		_events->EmitEvent(ServerOutOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
 	}
 }
 
@@ -206,7 +204,7 @@ void Tank::Shot(const buuid withUuid)
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerSendShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
+		_events->EmitEvent(ServerOutShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
 	}
 
 	_shootTimer.Reset();
@@ -257,7 +255,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerSendBonusHelmetPickupEvent{.name = _name, .isActive = isActive});
+			_events->EmitEvent(ServerOutBonusHelmetPickupEvent{.name = _name, .isActive = isActive});
 		}
 	}
 }
@@ -291,7 +289,7 @@ void Tank::OnBonusStar(const std::string& author)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerSendBonusStarPickupEvent{.author = author});
+			_events->EmitEvent(ServerOutBonusStarPickupEvent{.author = author});
 		}
 	}
 }
@@ -317,7 +315,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerSendBonusCaliberPickupEvent{.author = author});
+			_events->EmitEvent(ServerOutBonusCaliberPickupEvent{.author = author});
 		}
 	}
 }

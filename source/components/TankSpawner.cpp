@@ -78,7 +78,7 @@ void TankSpawner::SubscribeAsClient()
 {
 	_clientRespawnSub = _events->AddListener(
 			_name,
-			[this](const ClientReceivedRespawnTankEvent& event)
+			[this](const ClientInRespawnTankEvent& event)
 			{
 				this->OnClientRespawn(event.type, event.uuid, event.rect);
 			});
@@ -226,7 +226,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 										   skipDelay);
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
+		_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 	}
 }
 
@@ -294,7 +294,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerSendRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
+			_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 		}
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)

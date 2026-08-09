@@ -14,7 +14,7 @@ struct TankDiedEvent
 	buuid uuid;
 };
 
-struct ServerSendDisposeEvent
+struct ServerOutDisposeEvent
 {
 	buuid uuid;
 };
@@ -25,4 +25,4 @@ struct SpawnEnabledEvent
 };
 
 
-struct ClientReceivedDisposeEvent {};
+struct ClientInDisposeEvent {};

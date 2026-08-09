@@ -106,7 +106,7 @@ void GameSuccess::ApplyGameMode(const GameMode gameMode)
 
 	if (gameMode == GameMode::PlayAsClient)
 	{
-		_events->EmitEvent(ClientSendReadyToPlayEvent{});
+		_events->EmitEvent(ClientOutReadyToPlayEvent{});
 	}
 }
 
@@ -250,7 +250,7 @@ void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
-		_clientReadySub = _events->AddListener(_name, [this](const ServerReceiveClientReadyToStartGameEvent&)
+		_clientReadySub = _events->AddListener(_name, [this](const ServerInClientReadyToStartGameEvent&)
 		{
 			this->OnClientReady();
 		});

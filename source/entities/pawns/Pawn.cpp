@@ -38,7 +38,7 @@ void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientReceivedHealthEvent& event)
+	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInHealthEvent& event)
 	{
 		this->SetHealth(event.health);
 	}));
@@ -77,7 +77,7 @@ void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerSendHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(ServerOutHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }
 

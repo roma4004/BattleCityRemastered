@@ -2,7 +2,7 @@
 
 #include "Point.h"
 
-struct ServerReceiveClientReadyToStartGameEvent {};
+struct ServerInClientReadyToStartGameEvent {};
 
 //NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL2 on this
 //MinGW/Windows toolchain) declares a WinAPI function literally named `ResetEvent` (synchapi.h),
@@ -13,7 +13,7 @@ struct GameResetEvent {};
 
 struct LoadMapEvent {};
 
-struct ClientSendReadyToPlayEvent {};
+struct ClientOutReadyToPlayEvent {};
 
 struct FrameStartEvent {};
 
@@ -45,9 +45,9 @@ struct PlayersTeamIsWonEvent {};
 
 struct EnemiesTeamIsWonEvent {};
 
-struct ServerSendPlayersTeamIsWonEvent {};
+struct ServerOutPlayersTeamIsWonEvent {};
 
-struct ServerSendEnemiesTeamIsWonEvent {};
+struct ServerOutEnemiesTeamIsWonEvent {};
 
 struct RespawnTanksEvent
 {

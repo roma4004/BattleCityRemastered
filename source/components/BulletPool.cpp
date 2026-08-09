@@ -113,7 +113,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		_events->EmitEvent(ServerSendDisposeEvent{.uuid = bulletCast->GetUuid()});
+		_events->EmitEvent(ServerOutDisposeEvent{.uuid = bulletCast->GetUuid()});
 	}
 }
 

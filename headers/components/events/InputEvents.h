@@ -17,17 +17,17 @@ struct PauseStatusEvent
 	bool isPaused;
 };
 
-struct ServerSendPauseStatusEvent
+struct ServerOutPauseStatusEvent
 {
 	bool isPaused;
 };
 
-struct ClientSendPauseStatusEvent
+struct ClientOutPauseStatusEvent
 {
 	bool isPaused;
 };
 
-struct ServerReceivePauseReleasedEvent
+struct ServerInPauseReleasedEvent
 {
 	bool isPaused;
 };
@@ -59,27 +59,27 @@ struct FireEvent
 };
 
 
-struct ServerReceiveMoveUpEvent
+struct ServerInMoveUpEvent
 {
 	bool isPressed;
 };
 
-struct ServerReceiveMoveDownEvent
+struct ServerInMoveDownEvent
 {
 	bool isPressed;
 };
 
-struct ServerReceiveMoveLeftEvent
+struct ServerInMoveLeftEvent
 {
 	bool isPressed;
 };
 
-struct ServerReceiveMoveRightEvent
+struct ServerInMoveRightEvent
 {
 	bool isPressed;
 };
 
-struct ServerReceiveFireEvent
+struct ServerInFireEvent
 {
 	bool isPressed;
 };

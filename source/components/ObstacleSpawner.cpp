@@ -55,7 +55,7 @@ void ObstacleSpawner::Subscribe()
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_clientSub = _events->AddListener(_name, [this](const ClientReceivedObstacleSpawnEvent& event)
+	_clientSub = _events->AddListener(_name, [this](const ClientInObstacleSpawnEvent& event)
 	{
 		SpawnObstacle(event.rect, event.type, event.uuid);
 	});
