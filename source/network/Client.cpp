@@ -27,8 +27,6 @@
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 // #include <fstream>
-#include "enums/AnimationType.h"
-#include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusStatus.h"
 #include "network/commands/GameStateChange.h"
 #include "network/commands/SignalEvent.h"
@@ -74,7 +72,6 @@ void Client::RegisterCommandHandlers()
 			{CommandType::BONUS_DESPAWN, [this](const std::shared_ptr<Command>& cmd) { OnBonusDeSpawn(cmd); }},
 			{CommandType::RESPAWN_TANK, [this](const std::shared_ptr<Command>& cmd) { OnRespawnTank(cmd); }},
 			{CommandType::OBSTACLE_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnObstacleSpawn(cmd); }},
-			{CommandType::ANIMATION_CREATE, [this](const std::shared_ptr<Command>& cmd) { OnAnimationCreate(cmd); }},
 			{CommandType::TANK_SPAWN_COMPLETE, [this](const std::shared_ptr<Command>& cmd) { OnTankSpawnComplete(cmd); }},
 			{CommandType::BONUS_STATUS, [this](const std::shared_ptr<Command>& cmd) { OnBonusStatus(cmd); }},
 	};
@@ -481,21 +478,6 @@ void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
 		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
 		{
 			_events->EmitEvent(ClientInObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
-		});
-	}
-}
-
-void Client::OnAnimationCreate(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<AnimationCreate*>(command.get()))
-	{
-		const auto animationType = cmd->GetAnimationType();
-		const auto rect = cmd->GetRect();
-		const auto name = cmd->GetName();
-
-		_commandQueue.Enqueue([this, animationType, rect, name]()
-		{
-			_events->EmitEvent(AnimationCreateEvent{.type = animationType, .rect = rect, .name = name});
 		});
 	}
 }

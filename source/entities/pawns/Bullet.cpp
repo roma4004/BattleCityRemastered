@@ -61,6 +61,7 @@ void Bullet::SubscribeAsClient()
 	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInDisposeEvent&)
 	{
 		this->SetIsAlive(false);
+		this->_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = this->_rect, .name = this->_name});
 	}));
 	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInPosEvent& event)
 	{

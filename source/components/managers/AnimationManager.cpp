@@ -3,7 +3,6 @@
 #include "components/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/AnimationType.h"
@@ -15,7 +14,6 @@
 
 AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 	: _events(events)
-	, _gameMode{GameMode::Demo}
 {
 	_autoAnimatedObjects.reserve(100);
 	_turnBasedTankObjects.reserve(6);
@@ -26,22 +24,33 @@ AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 
 void AnimationManager::Subscribe()
 {
-	if (_gameMode == GameMode::PlayAsClient)
-	{
-		//SubscribeAsClient();
-	}
-	else
-	{
-		SubscribeAsHost();
-	}
-
 	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateEvent& event)
 	{
 		this->CreateAnimation(event.type, event.rect, event.name);
 	}));
+
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankExplosionEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
+	}));
+
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateBulletExplosionEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
+	}));
+
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
+		this->OnHelmetEffect(event.name, true);
+	}));
+
+	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
+	{
+		this->CreateAnimation(AnimationType::Water_Animation, event.rect, "Water");
+	}));
+
 	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); }));
-	_subs.push_back(
-			_events->AddListener(_name, [this](const GameModeChangedToEvent& event) { SetGameMode(event.mode); }));
 	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { Update(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const AnimationTankUpdateEvent& event)
 	{
@@ -54,46 +63,6 @@ void AnimationManager::Subscribe()
 
 	//TODO: draw explosion animation after others obstacle and tanks, maybe split explosions and other collections
 	_subs.push_back(_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); }));
-}
-
-void AnimationManager::SubscribeAsHost()
-{
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankExplosionEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateBulletExplosionEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
-	}));
-
-	//TODO: create client like subscription
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
-		this->OnHelmetEffect(event.name, true);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Water_Animation, event.rect, "Water");
-	}));
-}
-
-// void AnimationManager::SubscribeAsClient() {}
-
-void AnimationManager::SetGameMode(const GameMode newGameMode)
-{
-	_gameMode = newGameMode;
-	// if (_gameMode == GameMode::PlayAsClient)
-	// {
-	// 	SubscribeAsClient();
-	// }
-	// else
-	// {
-	// 	UnsubscribeAsClient();
-	// }
 }
 
 void AnimationManager::Reset()
@@ -126,23 +95,17 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 			Create("Water", rect, type, 16, 1, 20, true);
 			break;
 		case AnimationType::Helmet_Animation:
-		{
-			//NOTE: isLocallySimulated=true: each client has its own helmet animation locally from its own tank
-			constexpr bool isLocallySimulated{true};
-			Create(name + "HelmetAnimation", rect, type, 2, 16, 20, true, isLocallySimulated);
-		}
-		break;
+			Create(name + "HelmetAnimation", rect, type, 2, 16, 20, true);
+			break;
 		case AnimationType::Tank_Animation:
-			//NOTE: isLocallySimulated=true: each client has its own tank animation from its own spawn-enabled trigger
-			constexpr bool isLocallySimulated{true};
-			Create(name, rect, type, 2, 16, 2, true, isLocallySimulated);
+			Create(name, rect, type, 2, 16, 2, true);
 			break;
 	}
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							  const int limitOfFrames, const int scale, const int animationSpeed,
-							  const bool isInfinite, const bool isLocallySimulated)
+							  const bool isInfinite)
 {
 	//NOTE: chose animation container for water if not then tanks, if not then other objects
 	auto& target =
@@ -164,11 +127,6 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 	else
 	{
 		target.emplace_back(name, rect, type, limitOfFrames, scale, animationSpeed, isInfinite);
-	}
-
-	if (!isLocallySimulated && _gameMode == GameMode::PlayAsHost)
-	{
-		_events->EmitEvent(ServerOutAnimationCreateEvent{.type = type, .rect = rect, .name = name});
 	}
 }
 

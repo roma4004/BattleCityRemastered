@@ -208,7 +208,6 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\network\Client.cpp" />
     <ClCompile Include="source\network\ClientHandler.cpp" />
-    <ClCompile Include="source\network\commands\AnimationCreate.cpp" />
     <ClCompile Include="source\network\commands\BonusStatus.cpp" />
     <ClCompile Include="source\network\commands\GameStateChange.cpp" />
     <ClCompile Include="source\network\commands\SignalEvent.cpp" />
@@ -265,7 +264,6 @@
     <ClInclude Include="headers\components\RightSideBar.h" />
     <ClInclude Include="headers\enums\AnimationType.h" />
     <ClInclude Include="headers\enums\GameState.h" />
-    <ClInclude Include="headers\network\commands\AnimationCreate.h" />
     <ClInclude Include="headers\network\commands\BonusStatus.h" />
     <ClInclude Include="headers\network\commands\GameStateChange.h" />
     <ClInclude Include="headers\network\commands\SignalEvent.h" />

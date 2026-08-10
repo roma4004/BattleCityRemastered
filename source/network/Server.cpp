@@ -11,7 +11,6 @@
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
-#include "network/commands/AnimationCreate.h"
 #include "network/commands/BonusDeSpawn.h"
 #include "network/commands/BonusSpawn.h"
 #include "network/commands/BonusStatus.h"
@@ -510,12 +509,6 @@ void Server::Subscribe()
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		_batch->AddCommand(std::make_shared<ObstacleSpawn>(event.rect, event.type, event.uuid));
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const ServerOutAnimationCreateEvent& event)
-	{
-		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<AnimationCreate>(event.type, event.rect, event.name));
 	}));
 
 	_subs.push_back(_events->AddListener(_name, [this](const ServerOutTankSpawnCompleteEvent& event)

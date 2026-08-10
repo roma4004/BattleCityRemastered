@@ -417,11 +417,9 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
 	}
 
-	if (_gameMode != GameMode::PlayAsClient)
-	{
-		constexpr auto type{AnimationType::Spawn_Animation};
-		_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
-	}
+	// Locally simulated: runs on both sides from already-replicated spawn data, no network relay.
+	constexpr auto type{AnimationType::Spawn_Animation};
+	_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
 }
 
 void TankSpawner::OnSpawnDelayFinished(const buuid uuid)

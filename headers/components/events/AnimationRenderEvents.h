@@ -74,13 +74,6 @@ struct RenderTextureEvent
 	Direction dir;
 };
 
-struct ServerOutAnimationCreateEvent
-{
-	AnimationType type;
-	ObjRectangle rect;
-	std::string name;
-};
-
 struct AnimationCreateWaterEvent
 {
 	ObjRectangle rect;
