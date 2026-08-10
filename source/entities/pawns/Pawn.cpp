@@ -46,12 +46,7 @@ void Pawn::SubscribeAsClient()
 
 void Pawn::SubscribeTickUpdate()
 {
-	//NOTE: guarded - Tank's constructor and Player's Enable() (called right after, when
-	//enableByDefault) both end up invoking this for the same object, harmless under the old
-	//string-keyed design (redundant AddListener just overwrote the map entry with an equivalent
-	//callback) but not safe to redo blindly here: reassigning an already-subscribed single-slot
-	//EventSubscription would unsubscribe-old-then-adopt-new, and since the new listener is already
-	//in the map by the time that unsubscribe runs, it would erase the brand new registration.
+	//NOTE: guarded - Bullet::Enable() re-subscribes on pool reuse while already subscribed.
 	if (!_tickUpdateSub)
 	{
 		_tickUpdateSub = _events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)

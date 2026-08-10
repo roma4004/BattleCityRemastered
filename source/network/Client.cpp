@@ -32,7 +32,7 @@
 #include "network/commands/BonusStatus.h"
 #include "network/commands/GameStateChange.h"
 #include "network/commands/SignalEvent.h"
-#include "network/commands/TankOnOff.h"
+#include "network/commands/TankSpawnComplete.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <cassert>
@@ -75,7 +75,7 @@ void Client::RegisterCommandHandlers()
 			{CommandType::RESPAWN_TANK, [this](const std::shared_ptr<Command>& cmd) { OnRespawnTank(cmd); }},
 			{CommandType::OBSTACLE_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnObstacleSpawn(cmd); }},
 			{CommandType::ANIMATION_CREATE, [this](const std::shared_ptr<Command>& cmd) { OnAnimationCreate(cmd); }},
-			{CommandType::TANK_ON_OFF, [this](const std::shared_ptr<Command>& cmd) { OnTankOnOff(cmd); }},
+			{CommandType::TANK_SPAWN_COMPLETE, [this](const std::shared_ptr<Command>& cmd) { OnTankSpawnComplete(cmd); }},
 			{CommandType::BONUS_STATUS, [this](const std::shared_ptr<Command>& cmd) { OnBonusStatus(cmd); }},
 	};
 }
@@ -500,16 +500,15 @@ void Client::OnAnimationCreate(const std::shared_ptr<Command>& command)
 	}
 }
 
-void Client::OnTankOnOff(const std::shared_ptr<Command>& command)
+void Client::OnTankSpawnComplete(const std::shared_ptr<Command>& command)
 {
-	if (const auto* cmd = dynamic_cast<TankOnOff*>(command.get()))
+	if (const auto* cmd = dynamic_cast<TankSpawnComplete*>(command.get()))
 	{
 		const auto uuid = cmd->GetUuid();
-		const auto isEnable = cmd->GetIsEnable();
 
-		_commandQueue.Enqueue([this, uuid, isEnable]()
+		_commandQueue.Enqueue([this, uuid]()
 		{
-			_events->EmitEvent(Key(uuid), ClientInOnTankOnOffEvent{.isEnable = isEnable});
+			_events->EmitEvent(ClientInTankSpawnCompleteEvent{.uuid = uuid});
 		});
 	}
 }

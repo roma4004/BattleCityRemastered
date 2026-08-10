@@ -2,7 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
@@ -23,6 +23,11 @@ void DelayedSpawnManager::Subscribe()
 		this->SpawnDelayStart(event.uuid, event.delay);
 	}));
 
+	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
+	{
+		this->_gameMode = event.mode;
+	}));
+
 	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent& event)
 	{
 		this->PreTickUpdate(event.deltaTime);
@@ -38,11 +43,17 @@ void DelayedSpawnManager::Reset()
 
 void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 {
+	// Doesn't tick on the client - it materializes only via TankSpawnComplete from the host.
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		return;
+	}
+
 	for (auto& [uuid, timer]: _spawnDelays)
 	{
 		if (timer.isActive && timer.IsCooldownFinish())
 		{
-			_events->EmitEvent(Key(uuid), SpawnEnabledEvent{});
+			_events->EmitEvent(TankSpawnDelayFinishedEvent{.uuid = uuid});
 
 			timer.isActive = false;
 		}
@@ -62,7 +73,7 @@ void DelayedSpawnManager::SpawnDelayStart(const buuid& uuid, const milliseconds 
 	if (delay == milliseconds{0})
 	{
 		// NOTE: immediate call, for unit tests
-		_events->EmitEvent(Key(uuid), SpawnEnabledEvent{});
+		_events->EmitEvent(TankSpawnDelayFinishedEvent{.uuid = uuid});
 	}
 	else
 	{

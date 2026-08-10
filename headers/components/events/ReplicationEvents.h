@@ -29,11 +29,10 @@ struct ServerOutHealthEvent
 	buuid uuid;
 };
 
-struct ServerOutOnTankOnOffEvent
+// Host -> client: "materialize the tank with this uuid now".
+struct ServerOutTankSpawnCompleteEvent
 {
 	buuid uuid;
-	bool isEnable;
-	std::string name;
 };
 
 struct ServerOutBonusHelmetPickupEvent
@@ -54,9 +53,10 @@ struct ClientInShotEvent
 	buuid bulletUuid;
 };
 
-struct ClientInOnTankOnOffEvent
+// Broadcast: no Tank exists yet to key against. TankSpawner looks up uuid in its pending-spawn stash.
+struct ClientInTankSpawnCompleteEvent
 {
-	bool isEnable;
+	buuid uuid;
 };
 
 struct ClientInBonusHelmetPickupEvent

@@ -14,13 +14,11 @@ class Player final : public Tank
 protected:
 	void TickUpdate(double deltaTime) override;
 
-	void Enable() override;
-	void Disable() const override;
 	void Move(Direction direction, double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions);
 
 public:
 	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-		   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig, bool enableByDefault = false);
+		   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig);
 
 	~Player() override;
 };

@@ -19,7 +19,4 @@ struct ServerOutDisposeEvent
 	buuid uuid;
 };
 
-struct SpawnEnabledEvent {};
-
-
 struct ClientInDisposeEvent {};

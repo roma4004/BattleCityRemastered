@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "enums/GameMode.h"
 #include "utils/Timer.h"
 #include <boost/uuid/uuid.hpp>
 
@@ -22,6 +23,7 @@ class DelayedSpawnManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<SpawnDelay> _spawnDelays{};
 	std::vector<EventSubscription> _subs{};
+	GameMode _gameMode{};
 
 public:
 	explicit DelayedSpawnManager(const std::shared_ptr<EventSystem>& events);

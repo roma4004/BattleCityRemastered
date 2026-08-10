@@ -24,6 +24,18 @@ class TankSpawner final
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
+	// Stashed while the spawn animation plays; Tank is constructed once the delay finishes.
+	struct DelayedTankSpawn
+	{
+		buuid uuid;
+		TankType type;
+		ObjRectangle rect;
+		int health;
+		std::string name;
+		std::string fraction;
+		float speed;
+	};
+
 	std::string _name{"TankSpawner"};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -35,15 +47,20 @@ class TankSpawner final
 	// subscribe-once-at-construction lifetime - assigning a new EventSubscription here
 	// auto-unsubscribes whatever was previously held.
 	EventSubscription _clientRespawnSub{};
+	EventSubscription _clientMaterializeSub{};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
+	std::vector<DelayedTankSpawn> _delayedSpawns{};
 
 	void Subscribe();
 	void SubscribeAsClient();
 
 	void UnsubscribeAsClient();
 	void Reset();
+
+	void OnSpawnDelayFinished(buuid uuid);
+	void MaterializeTank(const DelayedTankSpawn& pending);
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, buuid uuid, TankType type, float speed, int health,

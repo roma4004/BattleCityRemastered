@@ -19,8 +19,7 @@
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
 
-Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
-		   const bool enableByDefault)
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
@@ -35,20 +34,10 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _gameConfig.windowSize, _name, _fraction,
 												 _allObjects, bulletPool, _calibre, _events);
 
-	if (enableByDefault)
-	{
-		Tank::Subscribe();
-	}
+	Tank::Subscribe();
 
-	// NOTE: should be in constructor to be able to enable by replication
 	if (_gameMode == GameMode::PlayAsClient)
 	{
-		_permanentSubs.push_back(
-				_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInOnTankOnOffEvent& event)
-				{
-					this->OnClientTankOnOff(event.isEnable);
-				}));
-
 		_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInPosEvent& event)
 		{
 			this->OnClientChangePos(event.pos, event.dir);
@@ -67,13 +56,6 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 					this->SubscribeTickUpdate();
 				}
 			}));
-
-	_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const SpawnEnabledEvent&)
-	{
-		OnSpawnEnabled();
-	}));
-
-	_events->EmitEvent(TankSpawnEvent{.uuid = _uuid});
 }
 
 Tank::~Tank()
@@ -85,13 +67,6 @@ Tank::~Tank()
 
 void Tank::Subscribe()
 {
-	if (_isSubscribed)
-	{
-		return;
-	}
-
-	_isSubscribed = true;
-
 	Pawn::Subscribe();
 
 	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&)
@@ -169,29 +144,6 @@ void Tank::SubscribeBonus()
 	{
 		this->OnBonusCaliber(event.author);
 	}));
-}
-
-void Tank::Enable()
-{
-	Subscribe();
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		constexpr bool isEnable = true;
-		_events->EmitEvent(ServerOutOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
-	}
-}
-
-void Tank::Disable() const
-{
-	Unsubscribe();
-	_isSubscribed = false;
-
-	if (_gameMode == GameMode::PlayAsHost)
-	{
-		constexpr bool isEnable = false;
-		_events->EmitEvent(ServerOutOnTankOnOffEvent{.uuid = _uuid, .isEnable = isEnable, .name = _name});
-	}
 }
 
 void Tank::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
@@ -326,11 +278,6 @@ void Tank::OnBonusCaliber(const std::string& author)
 	}
 }
 
-void Tank::OnClientTankOnOff(const bool isEnable)
-{
-	isEnable ? Enable() : Disable();
-}
-
 void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(StatisticsTankHitEvent{.who = _name, .author = author, .fraction = fraction});
@@ -394,12 +341,4 @@ void Tank::ApplyScaleToCalibre(const float newScale)
 	this->_calibre.damageRadius *= newScale;
 	this->_calibre.size.x *= newScale;
 	this->_calibre.size.y *= newScale;
-}
-
-void Tank::OnSpawnEnabled()
-{
-	Enable();
-
-	_events->EmitEvent(AnimationCreateTankEvent{.rect = _rect, .name = _name});
-	_events->EmitEvent(BonusEffectReApplyEvent{.uuid = _uuid, .name = _name, .fraction = _fraction});
 }

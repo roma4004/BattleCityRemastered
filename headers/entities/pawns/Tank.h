@@ -19,14 +19,8 @@ class Tank : public Pawn
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
-	// Unconditional, whole-lifetime listeners registered directly in the constructor (not via
-	// Subscribe()), so Enable()/Disable() toggling _subs (inherited from Pawn) never touches them.
+	// Whole-lifetime listeners registered directly in the constructor.
 	std::vector<EventSubscription> _permanentSubs{};
-	// Guards Subscribe() against double-invocation: the constructor calls it directly when
-	// enableByDefault, and Player's own constructor separately calls Enable(), which calls
-	// Subscribe() again. Without this guard, the second call would double-register every listener.
-	// Reset to false in Disable() so a legitimate later re-Enable still subscribes.
-	mutable bool _isSubscribed{false};
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
@@ -37,7 +31,6 @@ class Tank : public Pawn
 	void OnBonusGrenade(const std::string& fraction);
 	void OnBonusStar(const std::string& author);
 	void OnBonusCaliber(const std::string& author);
-	void OnClientTankOnOff(bool isEnable);
 
 protected:
 	BulletCalibre _calibre{};
@@ -53,18 +46,13 @@ protected:
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(FPoint newPos, Direction dir);
 	void ApplyScaleToCalibre(float newScale);
-	void OnSpawnEnabled();
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
-
-	virtual void Enable();
-	virtual void Disable() const;
 
 public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
-	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
-		 bool enableByDefault = false);
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig);
 
 	~Tank() override;
 

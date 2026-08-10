@@ -80,6 +80,12 @@ struct SpawnDelayStartEvent
 	std::chrono::milliseconds delay;
 };
 
+// Broadcast: spawn-delay timer for uuid finished. TankSpawner listens and materializes the tank.
+struct TankSpawnDelayFinishedEvent
+{
+	buuid uuid;
+};
+
 struct SpawnObstacleEvent
 {
 	ObjRectangle rect;

@@ -212,7 +212,7 @@
     <ClCompile Include="source\network\commands\BonusStatus.cpp" />
     <ClCompile Include="source\network\commands\GameStateChange.cpp" />
     <ClCompile Include="source\network\commands\SignalEvent.cpp" />
-    <ClCompile Include="source\network\commands\TankOnOff.cpp" />
+    <ClCompile Include="source\network\commands\TankSpawnComplete.cpp" />
     <ClCompile Include="source\network\Server.cpp" />
     <ClCompile Include="source\network\ServerHandler.cpp" />
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
@@ -269,7 +269,7 @@
     <ClInclude Include="headers\network\commands\BonusStatus.h" />
     <ClInclude Include="headers\network\commands\GameStateChange.h" />
     <ClInclude Include="headers\network\commands\SignalEvent.h" />
-    <ClInclude Include="headers\network\commands\TankOnOff.h" />
+    <ClInclude Include="headers\network\commands\TankSpawnComplete.h" />
     <ClInclude Include="headers\Point.h" />
     <ClInclude Include="headers\application\ConfigFailure.h" />
     <ClInclude Include="headers\application\ConfigSuccess.h" />

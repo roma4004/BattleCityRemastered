@@ -26,7 +26,7 @@
 #include "network/commands/RespawnTank.h"
 #include "network/commands/SignalEvent.h"
 #include "network/commands/StatisticsChange.h"
-#include "network/commands/TankOnOff.h"
+#include "network/commands/TankSpawnComplete.h"
 #include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 #include <algorithm>
@@ -518,10 +518,10 @@ void Server::Subscribe()
 		_batch->AddCommand(std::make_shared<AnimationCreate>(event.type, event.rect, event.name));
 	}));
 
-	_subs.push_back(_events->AddListener(_name, [this](const ServerOutOnTankOnOffEvent& event)
+	_subs.push_back(_events->AddListener(_name, [this](const ServerOutTankSpawnCompleteEvent& event)
 	{
 		std::scoped_lock lock(_batchWriteMutex);
-		_batch->AddCommand(std::make_shared<TankOnOff>(event.uuid, event.isEnable, event.name));
+		_batch->AddCommand(std::make_shared<TankSpawnComplete>(event.uuid));
 	}));
 
 	SubscribeBonus();

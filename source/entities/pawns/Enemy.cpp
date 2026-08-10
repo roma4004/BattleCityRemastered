@@ -2,9 +2,8 @@
 #include "entities/pawns/PawnProperty.h"
 
 //TODO: if enemy see bullets they should try or prioritize move aside
-Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
-			 const bool enableByDefault)
-	: Bot{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
+Enemy::Enemy(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
+	: Bot{std::move(pawnProperty), bulletPool, gameConfig}
 {
 	m_shouldShootToObstacleStrategy = [this](const std::shared_ptr<BaseObj>& obj)
 	{

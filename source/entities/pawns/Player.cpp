@@ -11,33 +11,16 @@
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig, const bool enableByDefault)
-	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
+			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig)
+	: Tank{std::move(pawnProperty), bulletPool, gameConfig}
 	, _inputProvider{std::move(inputProvider)}
 {
-	if (enableByDefault)
-	{
-		Enable();
-	}
+	_inputProvider->Enable();
 
 	_shootTimer.cooldown = std::chrono::milliseconds{500};
 }
 
 Player::~Player() = default;
-
-void Player::Enable()
-{
-	Tank::Enable();
-
-	_inputProvider->Enable();
-}
-
-void Player::Disable() const
-{
-	Tank::Disable();
-
-	_inputProvider->Disable();
-}
 
 void Player::Move(const Direction direction, const double deltaTime,
 				  std::vector<std::shared_ptr<BaseObj>>& outCollisions)

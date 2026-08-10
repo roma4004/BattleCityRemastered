@@ -58,7 +58,7 @@ private:
 	void OnRespawnTank(const std::shared_ptr<Command>& command);
 	void OnObstacleSpawn(const std::shared_ptr<Command>& command);
 	void OnAnimationCreate(const std::shared_ptr<Command>& command);
-	void OnTankOnOff(const std::shared_ptr<Command>& command);
+	void OnTankSpawnComplete(const std::shared_ptr<Command>& command);
 	void OnCommandBatch(const std::shared_ptr<Command>& commands);
 	void OnBonusStatus(const std::shared_ptr<Command>& command);
 	void ProcessClientCommand(const std::shared_ptr<Command>& command);

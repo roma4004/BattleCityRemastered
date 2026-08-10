@@ -4,6 +4,8 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
@@ -54,6 +56,11 @@ void TankSpawner::Subscribe()
 		this->RespawnTank(event.type, event.uuid, event.skipDelay);
 	}));
 
+	_subs.push_back(_events->AddListener(_name, [this](const TankSpawnDelayFinishedEvent& event)
+	{
+		this->OnSpawnDelayFinished(event.uuid);
+	}));
+
 	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
 	{
 		const UPoint& newSize = event.newSize;
@@ -82,15 +89,28 @@ void TankSpawner::SubscribeAsClient()
 			{
 				this->OnClientRespawn(event.type, event.uuid, event.rect);
 			});
+
+	// Sole materialize trigger on the client - DelayedSpawnManager's timer doesn't tick here.
+	_clientMaterializeSub = _events->AddListener(
+			_name,
+			[this](const ClientInTankSpawnCompleteEvent& event)
+			{
+				this->OnSpawnDelayFinished(event.uuid);
+			});
 }
 
-void TankSpawner::UnsubscribeAsClient() { _clientRespawnSub = EventSubscription{}; }
+void TankSpawner::UnsubscribeAsClient()
+{
+	_clientRespawnSub = EventSubscription{};
+	_clientMaterializeSub = EventSubscription{};
+}
 
 void TankSpawner::Reset()
 {
 	_enemySpawnTimer.cooldown = milliseconds{5000};
 	_enemySpawnTimer.isActive = false;
 	_enemySpawnTimer.activateTime = std::chrono::system_clock::now() - _enemySpawnTimer.cooldown;
+	_delayedSpawns.clear();
 }
 
 std::string TankSpawner::GetCurrentTimeString()
@@ -377,33 +397,71 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std::string& name, std::string fraction,
-							const float speed, buuid uuid, const TankType tankType, const bool skipDelay)
+							const float speed, const buuid uuid, const TankType tankType, const bool skipDelay)
 {
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = health,
-									.uuid = uuid,
-									.name = name,
-									.fraction = std::move(fraction)};
+	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
+											  .type = tankType,
+											  .rect = rect,
+											  .health = health,
+											  .name = name,
+											  .fraction = std::move(fraction),
+											  .speed = speed});
+
+	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
+
+	// On a real client (skipDelay false) skip this: DelayedSpawnManager's timer never ticks there,
+	// so a >0ms entry would just sit in _spawnDelays forever, never disposed.
+	if (skipDelay || _gameMode != GameMode::PlayAsClient)
+	{
+		const milliseconds delay{skipDelay ? 0 : 1000};
+		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
+	}
+
+	if (_gameMode != GameMode::PlayAsClient)
+	{
+		constexpr auto type{AnimationType::Spawn_Animation};
+		_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
+	}
+}
+
+void TankSpawner::OnSpawnDelayFinished(const buuid uuid)
+{
+	const auto it = std::ranges::find(_delayedSpawns, uuid, &DelayedTankSpawn::uuid);
+	if (it == _delayedSpawns.end())
+	{
+		return;
+	}
+
+	MaterializeTank(*it);
+	_delayedSpawns.erase(it);
+}
+
+void TankSpawner::MaterializeTank(const DelayedTankSpawn& pending)
+{
+	BaseObjProperty baseObjProperty{.rect = pending.rect,
+									.health = pending.health,
+									.uuid = pending.uuid,
+									.name = pending.name,
+									.fraction = pending.fraction};
 
 	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
 							  .allObjects = _allObjects,
 							  .events = _events,
 							  .tier = 1u,
-							  .speed = speed,
+							  .speed = pending.speed,
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 
-	if (std::shared_ptr<BaseObj> tank{CreateTank(tankType, std::move(pawnProperty))})
+	if (std::shared_ptr<BaseObj> tank{CreateTank(pending.type, std::move(pawnProperty))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
+		_events->EmitEvent(AnimationCreateTankEvent{.rect = pending.rect, .name = pending.name});
+		_events->EmitEvent(
+				BonusEffectReApplyEvent{.uuid = pending.uuid, .name = pending.name, .fraction = pending.fraction});
 
-		const milliseconds delay{skipDelay ? 0 : 1000};
-		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
-
-		if (_gameMode != GameMode::PlayAsClient)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			constexpr auto type{AnimationType::Spawn_Animation};
-			_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
+			_events->EmitEvent(ServerOutTankSpawnCompleteEvent{.uuid = pending.uuid});
 		}
 	}
 }

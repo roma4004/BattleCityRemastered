@@ -77,9 +77,8 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, buuid uu
 			.speed = tankSpeed,
 			.dir = dir,
 			.gameMode = gameMode};
-	constexpr bool enableByDefault{true};
 
-	return std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig, enableByDefault);
+	return std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig);
 }
 
 template<>
