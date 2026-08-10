@@ -119,13 +119,9 @@ void Menu::DisplayMenu(const bool isDisplayed)
 	if (_isMenuDisplayed)
 	{
 		_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
-
-		_events->EmitEvent("ShowMenu", true);
 	}
 	else
 	{
 		_events->RemoveListener("DrawUserInterface", _name);
-
-		_events->EmitEvent("ShowMenu", false);
 	}
 }
