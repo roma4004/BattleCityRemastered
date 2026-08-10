@@ -75,6 +75,9 @@ void ServerHandler::Shutdown()
 void ServerHandler::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &ServerHandler::OnNetCommandUpdate));
+
+	//TODO: inline simple or empty delegate wrapper above to method call in lambda like this:
+	//_subs.push_back(_events->AddListener([this](const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }));
 }
 
 void ServerHandler::OnNetCommandUpdate(const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }

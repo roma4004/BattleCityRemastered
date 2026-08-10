@@ -30,8 +30,8 @@ void AnimationManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreateTank));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreateWater));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &AnimationManager::Update));
-	_subs.push_back(_events->AddListener(this, &AnimationManager::UpdateTank));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnUpdate));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnUpdateTank));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnBonusHelmetAnimationChange));
 
 	//TODO: draw explosion animation after others obstacle and tanks, maybe split explosions and other collections
@@ -136,7 +136,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 	}
 }
 
-void AnimationManager::Update(const PostTickUpdateEvent&)
+void AnimationManager::OnUpdate(const PostTickUpdateEvent&)
 {
 	std::ranges::for_each(_autoAnimatedWaterObjects, UpdateFrame);
 	std::ranges::for_each(_autoAnimatedObjects, UpdateFrame);
@@ -166,7 +166,7 @@ void AnimationManager::UpdateFrame(AnimatedObject& object)
 	}
 }
 
-void AnimationManager::UpdateTank(const AnimationTankUpdateEvent& event)
+void AnimationManager::OnUpdateTank(const AnimationTankUpdateEvent& event)
 {
 	const auto& name = event.name;
 	const auto it = std::ranges::find_if(_turnBasedTankObjects, [&name](const AnimatedObject& object)

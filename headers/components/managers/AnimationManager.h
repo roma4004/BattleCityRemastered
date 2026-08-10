@@ -54,9 +54,9 @@ private:
 
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
 				int animationSpeed, bool isInfinite = {});
-	void Update(const PostTickUpdateEvent&);
+	void OnUpdate(const PostTickUpdateEvent&);
 	static void UpdateFrame(AnimatedObject& object);
-	void UpdateTank(const AnimationTankUpdateEvent& event);
+	void OnUpdateTank(const AnimationTankUpdateEvent& event);
 	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
 	void DeleteHelmetAnimation(const std::string& name);
 	void OnHelmetEffect(const std::string& name, bool isEnable);
