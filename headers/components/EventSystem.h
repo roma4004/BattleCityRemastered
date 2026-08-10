@@ -4,6 +4,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <list>
 #include <memory>
 #include <ranges>
 #include <typeindex>
@@ -53,9 +54,9 @@ public:
 	// True while this handle actively owns a live subscription. Lets a Subscribe()-style method
 	// guard against re-registering into an already-populated single-slot member (see
 	// Pawn::SubscribeTickUpdate) - without this, reassigning while already subscribed would
-	// unsubscribe-then-replace, and since AddListener's map insert for the same (EventType,
-	// listenerName) key already happened before the assignment runs, that unsubscribe call would
-	// erase the brand new listener instead of a stale one.
+	// unsubscribe-then-replace, and since the new AddListener call's list insert already happened
+	// before the assignment runs, that unsubscribe call would erase the brand new listener instead
+	// of the stale one.
 	explicit operator bool() const { return static_cast<bool>(_unsubscribe); }
 
 private:
@@ -100,8 +101,8 @@ using first_type_t = first_type<Args...>::type;
 
 // Wrap a per-instance dispatch key (e.g. a tank's uuid) for the keyed EmitEvent/AddListener
 // overloads: EmitEvent(Key(uuid), PosEvent{...}) delivers only to listeners registered via
-// AddListener(uuid, listenerName, callback) for that same key - everyone else registered under
-// the plain (non-keyed) bucket for that same EventType is unaffected, and vice versa.
+// AddListener(Key(uuid), callback) for that same key - everyone else registered under the plain
+// (non-keyed) bucket for that same EventType is unaffected, and vice versa.
 template<typename KeyT>
 detail::EventKey<KeyT> Key(KeyT key)
 {
@@ -155,19 +156,17 @@ struct callable_signature_args
 
 	using EventType = std::decay_t<detail::first_type_t<Args...>>;
 
+	// Identity-free: O(1) unsubscribe via captured (Event*, iterator), no name lookup.
 	template<typename CallableT>
-	static EventSubscription call_add_listener(auto* eventSystem, const std::string& listenerName, CallableT&& callback)
+	static EventSubscription call_add_listener(auto* eventSystem, CallableT&& callback)
 	{
-		return eventSystem->template AddListenerImpl<EventType>(listenerName, std::forward<CallableT>(callback));
+		return eventSystem->template AddListenerImpl<EventType>(std::forward<CallableT>(callback));
 	}
 
 	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key,
-													 const std::string& listenerName,
-													 CallableT&& callback)
+	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, CallableT&& callback)
 	{
-		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, listenerName,
-																		   std::forward<CallableT>(callback));
+		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, std::forward<CallableT>(callback));
 	}
 };
 
@@ -195,29 +194,35 @@ class BaseEvent
 {
 public:
 	virtual ~BaseEvent() = default;
-	virtual void RemoveListener(const std::string& listenerName) = 0;
 	virtual bool HasListeners() const = 0;
 };
 
+// std::list, not a name-keyed map: node addresses stay stable, so a subscription can carry
+// its own iterator as identity.
 template<typename... Args>
 class Event final : public BaseEvent
 {
 public:
 	using callbackType = std::function<void(Args...)>;
+	using ListenerHandle = std::list<callbackType>::iterator;
 
-	void AddListener(const std::string& listenerName, callbackType callback)
+	ListenerHandle AddListener(callbackType callback)
 	{
-		_listeners[listenerName] = std::move(callback);
+		_listeners.push_back(std::move(callback));
+		return std::prev(_listeners.end());
 	}
 
 	template<typename... FwdArgs>
 	void Emit(FwdArgs&&... args)
 	{
-		for (const auto& [_, callback]: _listeners)
+		// Advance before invoking: a self-unsubscribing callback erases this node mid-loop.
+		for (auto it = _listeners.begin(); it != _listeners.end();)
 		{
+			const auto next = std::next(it);
+
 			try
 			{
-				callback(args...);
+				(*it)(args...);
 			}
 			catch (const std::exception& e)
 			{
@@ -228,15 +233,17 @@ public:
 			{
 				std::cerr << "Unknown exception in event callback" << '\n';
 			}
+
+			it = next;
 		}
 	}
 
-	void RemoveListener(const std::string& listenerName) override { _listeners.erase(listenerName); }
+	void RemoveListener(ListenerHandle handle) { _listeners.erase(handle); }
 
 	bool HasListeners() const override { return !_listeners.empty(); }
 
 private:
-	std::unordered_map<std::string, callbackType> _listeners;
+	std::list<callbackType> _listeners;
 };
 
 // Parallel to BaseEvent/Event<Args...> - backs the keyed (per-instance) dispatch overloads.
@@ -253,10 +260,14 @@ class KeyedEvent final : public BaseKeyedEvent
 {
 public:
 	using callbackType = std::function<void(Args...)>;
+	using ListenerList = std::list<callbackType>;
+	using ListenerHandle = ListenerList::iterator;
 
-	void AddListener(const KeyT& key, const std::string& listenerName, callbackType callback)
+	ListenerHandle AddListener(const KeyT& key, callbackType callback)
 	{
-		_listeners[key][listenerName] = std::move(callback);
+		auto& listeners = _listeners[key];
+		listeners.push_back(std::move(callback));
+		return std::prev(listeners.end());
 	}
 
 	template<typename... FwdArgs>
@@ -268,11 +279,14 @@ public:
 			return;
 		}
 
-		for (const auto& [_, callback]: it->second)
+		// Same next-iterator-first guarantee as Event<Args...>::Emit above - see its comment.
+		for (auto lit = it->second.begin(); lit != it->second.end();)
 		{
+			const auto next = std::next(lit);
+
 			try
 			{
-				callback(args...);
+				(*lit)(args...);
 			}
 			catch (const std::exception& e)
 			{
@@ -282,14 +296,16 @@ public:
 			{
 				std::cerr << "Unknown exception in keyed event callback" << '\n';
 			}
+
+			lit = next;
 		}
 	}
 
-	void RemoveListener(const KeyT& key, const std::string& listenerName)
+	void RemoveListener(const KeyT& key, ListenerHandle handle)
 	{
 		if (const auto it = _listeners.find(key); it != _listeners.end())
 		{
-			it->second.erase(listenerName);
+			it->second.erase(handle);
 		}
 	}
 
@@ -300,7 +316,7 @@ public:
 	}
 
 private:
-	std::unordered_map<KeyT, std::unordered_map<std::string, callbackType>> _listeners;
+	std::unordered_map<KeyT, ListenerList> _listeners;
 };
 
 // enable_shared_from_this so AddListener can hand the EventSubscription it returns a
@@ -390,21 +406,25 @@ public:
 #endif
 	}
 
-	// Main overload for auto-deducing types. eventName is gone: the listener's single parameter
-	// type IS the dispatch key (type_index(typeid(EventType))) - see callable_signature above.
-	// Returns an EventSubscription RAII handle - keep it alive (e.g. in a std::vector<EventSubscription>
-	// member) for as long as the listener should stay registered; letting it go out of scope
-	// unsubscribes automatically.
+	// Auto-deduces EventType from the listener's parameter (type_index(typeid(EventType))).
+	// Identity-free. Keep the returned EventSubscription alive while the listener should stay
+	// registered.
 	template<Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(const std::string& listenerName, CallableT&& callback)
+	[[nodiscard]] EventSubscription AddListener(CallableT&& callback)
 	{
-		return callable_signature<std::decay_t<CallableT>>::call_add_listener(this, listenerName,
-																			  std::forward<CallableT>(callback));
+		return callable_signature<std::decay_t<CallableT>>::call_add_listener(this, std::forward<CallableT>(callback));
+	}
+
+	// Compat shim: listenerName ignored, kept until call sites migrate off it.
+	template<Callable CallableT>
+	[[nodiscard]] EventSubscription AddListener(const std::string& /*listenerName*/, CallableT&& callback)
+	{
+		return AddListener(std::forward<CallableT>(callback));
 	}
 
 	// internal implementation for the concrete EventType (used in callable_signature)
 	template<typename EventType, Callable CallableT>
-	EventSubscription AddListenerImpl(const std::string& listenerName, CallableT&& callback)
+	EventSubscription AddListenerImpl(CallableT&& callback)
 	{
 		const std::type_index key(typeid(EventType));
 
@@ -414,31 +434,34 @@ public:
 			_events.emplace(key, EventInfo{std::make_unique<Event<EventType>>()});
 		}
 
-		//add subscription
-		if (auto* event = GetTypedEvent<EventType>())
-		{
-			event->AddListener(listenerName, std::forward<CallableT>(callback));
-		}
+		auto* event = GetTypedEvent<EventType>();
+		const auto handle = event->AddListener(std::forward<CallableT>(callback));
 
-		return EventSubscription(shared_from_this(), [this, listenerName]()
+		return EventSubscription(shared_from_this(), [event, handle]()
 		{
-			this->RemoveListener<EventType>(listenerName);
+			event->RemoveListener(handle);
 		});
 	}
 
-	// Keyed overload - subscribe to a specific dispatch key (e.g. a tank's uuid) instead of the
-	// plain broadcast bucket. A distinct 3-arg overload, so it can never be confused with the
-	// plain 2-arg AddListener above at any call site.
+	// Keyed overload. Uses Key() to disambiguate from the string-taking compat shim below - a raw
+	// KeyT would let a string literal silently bind to the wrong overload.
 	template<typename KeyT, Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& listenerName, CallableT&& callback)
+	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, CallableT&& callback)
 	{
-		return callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, key, listenerName,
+		return callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, key.value,
 			std::forward<CallableT>(callback));
+	}
+
+	// Compat shim, keyed variant - see the plain-overload shim above.
+	template<typename KeyT, Callable CallableT>
+	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& /*listenerName*/, CallableT&& callback)
+	{
+		return AddListener(Key(key), std::forward<CallableT>(callback));
 	}
 
 	// internal implementation for the concrete keyed EventType (used in callable_signature)
 	template<typename KeyT, typename EventType, Callable CallableT>
-	EventSubscription AddKeyedListenerImpl(const KeyT& key, const std::string& listenerName, CallableT&& callback)
+	EventSubscription AddKeyedListenerImpl(const KeyT& key, CallableT&& callback)
 	{
 		const std::type_index typeKey(typeid(EventType));
 
@@ -447,14 +470,12 @@ public:
 			_keyedEvents.emplace(typeKey, KeyedEventInfo{std::make_unique<KeyedEvent<KeyT, EventType>>()});
 		}
 
-		if (auto* event = GetTypedKeyedEvent<KeyT, EventType>())
-		{
-			event->AddListener(key, listenerName, std::forward<CallableT>(callback));
-		}
+		auto* event = GetTypedKeyedEvent<KeyT, EventType>();
+		const auto handle = event->AddListener(key, std::forward<CallableT>(callback));
 
-		return EventSubscription(shared_from_this(), [this, key, listenerName]()
+		return EventSubscription(shared_from_this(), [event, key, handle]()
 		{
-			this->RemoveListener<KeyT, EventType>(key, listenerName);
+			event->RemoveListener(key, handle);
 		});
 	}
 
@@ -484,31 +505,4 @@ public:
 			typedEvent->Emit(key.value, eventInstance);
 		}
 	}
-
-	template<typename EventType>
-	void RemoveListener(const std::string& listenerName)
-	{
-		const std::type_index key(typeid(EventType));
-		if (const auto it = _events.find(key); it != _events.end())
-		{
-			it->second.event->RemoveListener(listenerName);
-		}
-	}
-
-	// Keyed counterpart of RemoveListener<EventType> above - removes listenerName from just the
-	// one (KeyT, EventType, key) bucket it was registered under, not every key it might share a
-	// name with. This is what a keyed EventSubscription's auto-unsubscribe calls.
-	template<typename KeyT, typename EventType>
-	void RemoveListener(const KeyT& key, const std::string& listenerName)
-	{
-		const std::type_index typeKey(typeid(EventType));
-		if (const auto it = _keyedEvents.find(typeKey); it != _keyedEvents.end())
-		{
-			if (auto* event = static_cast<KeyedEvent<KeyT, EventType>*>(it->second.event.get()))
-			{
-				event->RemoveListener(key, listenerName);
-			}
-		}
-	}
-
 };

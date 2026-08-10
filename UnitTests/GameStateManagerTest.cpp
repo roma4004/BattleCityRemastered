@@ -66,7 +66,6 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -173,10 +172,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
 	EXPECT_TRUE(isGameWon);
 
-	_events->RemoveListener<PlayersTeamIsWonEvent>(_name);
-	_events->RemoveListener<TankSpawnEvent>(_name);
-	_events->RemoveListener<TankDiedEvent>(_name);
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 // Check that Player's team can win with enemy extra life
@@ -312,10 +307,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
 	EXPECT_TRUE(isGameWon);
 
-	_events->RemoveListener<PlayersTeamIsWonEvent>(_name);
-	_events->RemoveListener<TankSpawnEvent>(_name);
-	_events->RemoveListener<TankDiedEvent>(_name);
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 // Player team lose with broken base
@@ -347,8 +338,6 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 
 	EXPECT_TRUE(isGameLose);
 
-	_events->RemoveListener<EnemiesTeamIsWonEvent>(_name);
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 // Player team lose with three deaths in a row
@@ -385,8 +374,6 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	EXPECT_EQ(respawnActual, 0u);
 	EXPECT_TRUE(isGameLose);
 
-	_events->RemoveListener<EnemiesTeamIsWonEvent>(_name);
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 // Player team lose with four deaths with extra life
@@ -444,8 +431,6 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	EXPECT_EQ(respawnActual, 0u);
 	EXPECT_TRUE(isGameLose);//Check that we lose after one death after
 
-	_events->RemoveListener<EnemiesTeamIsWonEvent>(_name);
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 // Player team lose with broken base
@@ -521,6 +506,4 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 
 	EXPECT_TRUE(isGameLose);
 
-	_events->RemoveListener<EnemiesTeamIsWonEvent>(_name);
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }

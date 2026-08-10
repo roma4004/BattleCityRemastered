@@ -85,6 +85,13 @@ Tank::~Tank()
 
 void Tank::Subscribe()
 {
+	if (_isSubscribed)
+	{
+		return;
+	}
+
+	_isSubscribed = true;
+
 	Pawn::Subscribe();
 
 	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&)
@@ -178,6 +185,7 @@ void Tank::Enable()
 void Tank::Disable() const
 {
 	Unsubscribe();
+	_isSubscribed = false;
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{

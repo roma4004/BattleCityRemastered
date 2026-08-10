@@ -62,7 +62,6 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -337,7 +336,6 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 
 	EXPECT_LT(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 //Check that player not pick up Tank bonus and his life count remains the same
@@ -367,7 +365,6 @@ TEST_F(BonusTest, TankNotPickUpTierTheSame)
 
 	EXPECT_EQ(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 //Check that player pick up Star bonus and his tier increased

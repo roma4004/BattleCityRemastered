@@ -61,7 +61,6 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -241,7 +240,6 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 
 	EXPECT_EQ(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("GameStateManagerTest");
 }
 
 //Check that player destroys Star bonus and his tier counts remain the same

@@ -22,6 +22,11 @@ class Tank : public Pawn
 	// Unconditional, whole-lifetime listeners registered directly in the constructor (not via
 	// Subscribe()), so Enable()/Disable() toggling _subs (inherited from Pawn) never touches them.
 	std::vector<EventSubscription> _permanentSubs{};
+	// Guards Subscribe() against double-invocation: the constructor calls it directly when
+	// enableByDefault, and Player's own constructor separately calls Enable(), which calls
+	// Subscribe() again. Without this guard, the second call would double-register every listener.
+	// Reset to false in Disable() so a legitimate later re-Enable still subscribes.
+	mutable bool _isSubscribed{false};
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();

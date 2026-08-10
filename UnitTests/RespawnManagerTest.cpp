@@ -36,7 +36,6 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener<AddToSpawnQueueEvent>("TestSpawnQueue");
 	}
 };
 
@@ -61,7 +60,6 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 
 	EXPECT_GT(respawnOriginal, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
@@ -85,7 +83,6 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 
 	EXPECT_GT(respawnOriginal, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
@@ -109,7 +106,6 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 
 	EXPECT_GT(respawnOriginal, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
@@ -136,7 +132,6 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
@@ -163,7 +158,6 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
@@ -190,7 +184,6 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
@@ -220,7 +213,6 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
@@ -250,7 +242,6 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }
 
 TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
@@ -281,5 +272,4 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 
 	EXPECT_EQ(0u, respawnActual);
 
-	_events->RemoveListener<RespawnCountChangedToEvent>("TankSpawnerTest");
 }

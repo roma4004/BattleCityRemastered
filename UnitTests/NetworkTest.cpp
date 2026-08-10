@@ -300,7 +300,6 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	EXPECT_EQ("author", author);
 	EXPECT_EQ("fraction", fraction);
 
-	events->RemoveListener<ClientInBulletHitEvent>("StatisticsEventReplication");
 }
 
 TEST_F(NetworkTest, FortressChangeEventReplication)
@@ -537,7 +536,6 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	EXPECT_EQ(type, typeReplicated);
 	EXPECT_EQ(_uuid, uuid);
 
-	events->RemoveListener<ClientInBonusSpawnEvent>("BonusSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusDeSpawnEventReplication)
@@ -588,7 +586,6 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	const auto uuidReplicated = future.get();
 	EXPECT_EQ(_uuid, uuidReplicated);
 
-	events->RemoveListener<ClientInBonusDeSpawnEvent>("BonusDeSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
@@ -750,7 +747,6 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	EXPECT_EQ(obstacleType, type);
 	EXPECT_EQ(_uuid, uuid);
 
-	events->RemoveListener<ClientInObstacleSpawnEvent>("ObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
@@ -838,7 +834,6 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			EXPECT_EQ(_uuid, uuid);
 		}
 
-	events->RemoveListener<ClientInObstacleSpawnEvent>("MassiveObstacleSpawnEventReplication");
 }
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
@@ -912,7 +907,6 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		EXPECT_EQ((FPoint{.x = rectOrigin.x, .y = rectOrigin.y}), posReplicated);
 	}
 
-	events->RemoveListener<ClientInRespawnTankEvent>("RespawnTankEventReplication");
 }
 
 //TODO: other bonus effect replication test after write this replication
