@@ -13,6 +13,8 @@ struct ObjRectangle;
 class IMoveBeh;
 class EventSystem;
 class GameConfig;
+struct ClientInHealthEvent;
+struct TickUpdateEvent;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
@@ -58,6 +60,7 @@ protected:
 
 	void SubscribeTickUpdate();
 	void UnsubscribeTickUpdate() const;
+	void OnTickUpdate(const TickUpdateEvent& event);
 
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(double deltaTime) override = 0;
@@ -65,4 +68,5 @@ protected:
 private:
 	virtual void SubscribeAsHost();
 	virtual void SubscribeAsClient();
+	void OnClientInHealth(const ClientInHealthEvent& event);
 };

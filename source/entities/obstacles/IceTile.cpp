@@ -12,7 +12,9 @@ IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& ev
 
 void IceTile::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PreDrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &IceTile::OnPreDraw));
 }
+
+void IceTile::OnPreDraw(const PreDrawEvent&) { Draw(); }
 
 void IceTile::EmitDeathStatistics(const std::string&, const std::string&) {}

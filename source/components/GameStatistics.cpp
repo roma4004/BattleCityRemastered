@@ -13,121 +13,110 @@ GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
 
 void GameStatistics::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->OnGameModeChangedTo(event.mode);
-	}));
+	_subs.push_back(_events->AddListener(this, &GameStatistics::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &GameStatistics::OnGameModeChangedTo));
 
 	SubscribeHost();
 }
 
+void GameStatistics::OnGameReset(const GameResetEvent&) { Reset(); }
+
 void GameStatistics::SubscribeHost()
 {
-	_hostSubs.push_back(_events->AddListener(_name, [this](const StatisticsBulletHitEvent& event)
-	{
-		this->OnBulletHit(event);
-	}));
-
-	_hostSubs.push_back(_events->AddListener(_name, [this](const StatisticsTankHitEvent& event)
-	{
-		this->OnTankHit(event);
-	}));
-
-	_hostSubs.push_back(_events->AddListener(_name, [this](const StatisticsTankDiedEvent& event)
-	{
-		this->OnTankDied(event);
-	}));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnBulletHit));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnTankHit));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnTankDied));
 
 	//NOTE: emit side uses BrickWallDiedEvent/SteelWallDiedEvent (see Obstacle.cpp/FortressWall.cpp);
 	//OnBrickWallDied/OnSteelWallDied themselves still take StatisticsAttributionEvent as an
 	//adapter type.
-	_hostSubs.push_back(_events->AddListener(_name, [this](const BrickWallDiedEvent& event)
-	{
-		OnBrickWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
-	}));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnHostBrickWallDied));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnHostSteelWallDied));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnBonusPickup));
+	_hostSubs.push_back(_events->AddListener(this, &GameStatistics::OnBonusDestroyed));
+}
 
-	_hostSubs.push_back(_events->AddListener(_name, [this](const SteelWallDiedEvent& event)
-	{
-		OnSteelWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
-	}));
+void GameStatistics::OnHostBrickWallDied(const BrickWallDiedEvent& event)
+{
+	OnBrickWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
+}
 
-	_hostSubs.push_back(_events->AddListener(_name, [this](const StatisticsBonusPickupEvent& event)
-	{
-		OnBonusPickup(event);
-	}));
-
-	_hostSubs.push_back(_events->AddListener(_name, [this](const StatisticsBonusDestroyedEvent& event)
-	{
-		OnBonusDestroyed(event);
-	}));
+void GameStatistics::OnHostSteelWallDied(const SteelWallDiedEvent& event)
+{
+	OnSteelWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
 }
 
 void GameStatistics::SubscribeAsClient()
 {
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInBulletHitEvent& event)
-	{
-		OnBulletHit(StatisticsBulletHitEvent{.author = event.author, .fraction = event.fraction});
-	}));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInBulletHit));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInEnemyHit));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInPlayerOneHit));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInPlayerTwoHit));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInEnemyDied));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInPlayerOneDied));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInPlayerTwoDied));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInBrickWallDied));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInSteelWallDied));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInBonusPickup));
+	_clientSubs.push_back(_events->AddListener(this, &GameStatistics::OnClientInBonusDestroyed));
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInEnemyHitEvent& event)
-	{
-		OnEnemyHit(event.author, event.fraction);
-	}));
+void GameStatistics::OnClientInBulletHit(const ClientInBulletHitEvent& event)
+{
+	OnBulletHit(StatisticsBulletHitEvent{.author = event.author, .fraction = event.fraction});
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInPlayerOneHitEvent& event)
-	{
-		OnPlayerOneHit(event.author, event.fraction);
-	}));
+void GameStatistics::OnClientInEnemyHit(const ClientInEnemyHitEvent& event) { OnEnemyHit(event.author, event.fraction); }
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInPlayerTwoHitEvent& event)
-	{
-		OnPlayerTwoHit(event.author, event.fraction);
-	}));
+void GameStatistics::OnClientInPlayerOneHit(const ClientInPlayerOneHitEvent& event)
+{
+	OnPlayerOneHit(event.author, event.fraction);
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInEnemyDiedEvent& event)
-	{
-		OnEnemyDied(event.author, event.fraction);
-	}));
+void GameStatistics::OnClientInPlayerTwoHit(const ClientInPlayerTwoHitEvent& event)
+{
+	OnPlayerTwoHit(event.author, event.fraction);
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInPlayerOneDiedEvent& event)
-	{
-		OnPlayerOneDied(event.author, event.fraction);
-	}));
+void GameStatistics::OnClientInEnemyDied(const ClientInEnemyDiedEvent& event) { OnEnemyDied(event.author, event.fraction); }
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInPlayerTwoDiedEvent& event)
-	{
-		OnPlayerTwoDied(event.author, event.fraction);
-	}));
+void GameStatistics::OnClientInPlayerOneDied(const ClientInPlayerOneDiedEvent& event)
+{
+	OnPlayerOneDied(event.author, event.fraction);
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInBrickWallDiedEvent& event)
-	{
-		OnBrickWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
-	}));
+void GameStatistics::OnClientInPlayerTwoDied(const ClientInPlayerTwoDiedEvent& event)
+{
+	OnPlayerTwoDied(event.author, event.fraction);
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInSteelWallDiedEvent& event)
-	{
-		OnSteelWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
-	}));
+void GameStatistics::OnClientInBrickWallDied(const ClientInBrickWallDiedEvent& event)
+{
+	OnBrickWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInBonusPickupEvent& event)
-	{
-		OnBonusPickup(StatisticsBonusPickupEvent{.author = event.author, .fraction = event.fraction});
-	}));
+void GameStatistics::OnClientInSteelWallDied(const ClientInSteelWallDiedEvent& event)
+{
+	OnSteelWallDied(StatisticsAttributionEvent{.author = event.author, .fraction = event.fraction});
+}
 
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInBonusDestroyedEvent& event)
-	{
-		OnBonusDestroyed(StatisticsBonusDestroyedEvent{.author = event.author, .fraction = event.fraction});
-	}));
+void GameStatistics::OnClientInBonusPickup(const ClientInBonusPickupEvent& event)
+{
+	OnBonusPickup(StatisticsBonusPickupEvent{.author = event.author, .fraction = event.fraction});
+}
+
+void GameStatistics::OnClientInBonusDestroyed(const ClientInBonusDestroyedEvent& event)
+{
+	OnBonusDestroyed(StatisticsBonusDestroyedEvent{.author = event.author, .fraction = event.fraction});
 }
 
 void GameStatistics::UnsubscribeAsHost() { _hostSubs.clear(); }
 
 void GameStatistics::UnsubscribeAsClient() { _clientSubs.clear(); }
 
-void GameStatistics::OnGameModeChangedTo(const GameMode newGameMode)
+void GameStatistics::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
-	this->_gameMode = newGameMode;
+	_gameMode = event.mode;
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{

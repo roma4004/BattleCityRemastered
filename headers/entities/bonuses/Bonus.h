@@ -13,6 +13,9 @@ enum class GameMode : char8_t;
 enum class BonusType : char8_t;
 struct BaseObjProperty;
 class EventSystem;
+struct DrawEvent;
+struct TickUpdateEvent;
+struct ClientInBonusDeSpawnEvent;
 
 class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IPickupableBonus
 {
@@ -29,6 +32,9 @@ protected:
 
 	void TickUpdate(double deltaTime) override;
 	void Draw() const override;
+	void OnDraw(const DrawEvent&);
+	void OnTickUpdate(const TickUpdateEvent& event);
+	void OnClientInBonusDeSpawn(const ClientInBonusDeSpawnEvent& event);
 
 	virtual void EmitPickupEvent(const std::string& author, const std::string& fraction) = 0;
 

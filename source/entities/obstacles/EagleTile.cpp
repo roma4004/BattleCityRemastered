@@ -17,7 +17,9 @@ EagleTile::~EagleTile()
 
 void EagleTile::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &EagleTile::OnDraw));
 }
+
+void EagleTile::OnDraw(const DrawEvent&) { Draw(); }
 
 void EagleTile::EmitDeathStatistics(const std::string&, const std::string&) {}

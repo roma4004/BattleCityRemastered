@@ -10,6 +10,8 @@
 
 enum class GameMode : char8_t;
 class EventSystem;
+struct BonusShovelStatusChangeEvent;
+struct ClientInFortressChangeEvent;
 
 class FortressWall final : public BaseObj//TODO: remove baseObj after changing to baseObj interface in allObjects
 {
@@ -28,6 +30,7 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 
 	void Subscribe();
 	void SubscribeAsClient();
+	void OnClientInFortressChange(const ClientInFortressChangeEvent& event);
 
 	void OnEnemyPickupShovel();
 	void OnPlayerPickupShovel();
@@ -43,7 +46,7 @@ public:
 
 	[[nodiscard]] std::string GetName() const override;
 	[[nodiscard]] buuid GetUuid() const override;
-	void OnBonusShovel(const std::string& fraction, bool isActive);
+	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
 
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;

@@ -41,10 +41,7 @@ void FortressWall::Subscribe()
 		SubscribeAsClient();
 	}
 
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusShovelStatusChangeEvent& event)
-	{
-		this->OnBonusShovel(event.fraction, event.isActive);
-	}));
+	_subs.push_back(_events->AddListener(this, &FortressWall::OnBonusShovel));
 }
 
 void FortressWall::SubscribeAsClient()
@@ -52,21 +49,23 @@ void FortressWall::SubscribeAsClient()
 	//NOTE: Client.cpp emits ClientInFortressChangeEvent here, split off the
 	//ServerOutFortressChangeEvent the host side (below, PlayAsHost branches) uses for its own local
 	//trigger - see ObstacleAndBonusEvents.h for why.
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInFortressChangeEvent& event)
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressChange));
+}
+
+void FortressWall::OnClientInFortressChange(const ClientInFortressChangeEvent& event)
+{
+	if (event.state == "Died")
 	{
-		if (event.state == "Died")
-		{
-			this->OnEnemyPickupShovel();
-		}
-		else if (event.state == "ToBrick")
-		{
-			this->OnShovelCooldownEnd();
-		}
-		else if (event.state == "ToSteel")
-		{
-			this->OnPlayerPickupShovel();
-		}
-	}));
+		OnEnemyPickupShovel();
+	}
+	else if (event.state == "ToBrick")
+	{
+		OnShovelCooldownEnd();
+	}
+	else if (event.state == "ToSteel")
+	{
+		OnPlayerPickupShovel();
+	}
 }
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
@@ -132,14 +131,14 @@ void FortressWall::OnShovelCooldownEnd()
 	}
 }
 
-void FortressWall::OnBonusShovel(const std::string& fraction, const bool isActive)
+void FortressWall::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 {
-	if (fraction == "EnemyTeam")
+	if (event.fraction == "EnemyTeam")
 	{
 		OnEnemyPickupShovel();
 	}
 
-	isActive ? OnPlayerPickupShovel() : OnShovelCooldownEnd();
+	event.isActive ? OnPlayerPickupShovel() : OnShovelCooldownEnd();
 }
 
 void FortressWall::TakeDamage(const unsigned int damage, const std::string& damageAuthor,

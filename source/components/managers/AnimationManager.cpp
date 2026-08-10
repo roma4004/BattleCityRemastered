@@ -24,42 +24,51 @@ AnimationManager::AnimationManager(const std::shared_ptr<EventSystem>& events)
 
 void AnimationManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateEvent& event)
-	{
-		this->CreateAnimation(event.type, event.rect, event.name);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankExplosionEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateBulletExplosionEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateTankEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
-		this->OnHelmetEffect(event.name, true);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationCreateWaterEvent& event)
-	{
-		this->CreateAnimation(AnimationType::Water_Animation, event.rect, "Water");
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { Update(); }));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreate));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreateTankExplosion));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreateBulletExplosion));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreateTank));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnAnimationCreateWater));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::Update));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::UpdateTank));
-	_subs.push_back(_events->AddListener(_name, [this](const BonusHelmetAnimationChangeEvent& event)
-	{
-		this->OnHelmetEffect(event.name, event.isEnable);
-	}));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnBonusHelmetAnimationChange));
 
 	//TODO: draw explosion animation after others obstacle and tanks, maybe split explosions and other collections
-	_subs.push_back(_events->AddListener(_name, [this](const DrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::Draw));
+}
+
+void AnimationManager::OnAnimationCreate(const AnimationCreateEvent& event)
+{
+	CreateAnimation(event.type, event.rect, event.name);
+}
+
+void AnimationManager::OnAnimationCreateTankExplosion(const AnimationCreateTankExplosionEvent& event)
+{
+	CreateAnimation(AnimationType::Tank_Explosion, event.rect, event.name);
+}
+
+void AnimationManager::OnAnimationCreateBulletExplosion(const AnimationCreateBulletExplosionEvent& event)
+{
+	CreateAnimation(AnimationType::Bullet_Explosion, event.rect, event.name);
+}
+
+void AnimationManager::OnAnimationCreateTank(const AnimationCreateTankEvent& event)
+{
+	CreateAnimation(AnimationType::Tank_Animation, event.rect, event.name);
+	OnHelmetEffect(event.name, true);
+}
+
+void AnimationManager::OnAnimationCreateWater(const AnimationCreateWaterEvent& event)
+{
+	CreateAnimation(AnimationType::Water_Animation, event.rect, "Water");
+}
+
+void AnimationManager::OnGameReset(const GameResetEvent&) { Reset(); }
+
+void AnimationManager::OnBonusHelmetAnimationChange(const BonusHelmetAnimationChangeEvent& event)
+{
+	OnHelmetEffect(event.name, event.isEnable);
 }
 
 void AnimationManager::Reset()
@@ -127,7 +136,7 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 	}
 }
 
-void AnimationManager::Update()
+void AnimationManager::Update(const PostTickUpdateEvent&)
 {
 	std::ranges::for_each(_autoAnimatedWaterObjects, UpdateFrame);
 	std::ranges::for_each(_autoAnimatedObjects, UpdateFrame);
@@ -274,7 +283,7 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 							   .name = object.name});
 }
 
-void AnimationManager::Draw() const
+void AnimationManager::Draw(const DrawEvent&) const
 {
 	constexpr auto isEnabled = [](const AnimatedObject& object) { return !object.markToDispose; };
 

@@ -35,30 +35,32 @@ ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
 
 void ObstacleSpawner::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		_gameMode = event.mode;
-		_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const LoadMapEvent&) { LoadMap(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const SpawnObstacleEvent& event)
-	{
-		SpawnObstacle(event.rect, event.type);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
-	{
-		_windowSize = event.newSize;
-	}));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnLoadMap));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnObstacle));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnWindowSizeChangedTo));
 }
+
+void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_gameMode = event.mode;
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+}
+
+void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) { LoadMap(); }
+
+void ObstacleSpawner::OnSpawnObstacle(const SpawnObstacleEvent& event) { SpawnObstacle(event.rect, event.type); }
+
+void ObstacleSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event) { _windowSize = event.newSize; }
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_clientSub = _events->AddListener(_name, [this](const ClientInObstacleSpawnEvent& event)
-	{
-		SpawnObstacle(event.rect, event.type, event.uuid);
-	});
+	_clientSub = _events->AddListener(this, &ObstacleSpawner::OnClientInObstacleSpawn);
+}
+
+void ObstacleSpawner::OnClientInObstacleSpawn(const ClientInObstacleSpawnEvent& event)
+{
+	SpawnObstacle(event.rect, event.type, event.uuid);
 }
 
 void ObstacleSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }

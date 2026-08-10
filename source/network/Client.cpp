@@ -165,55 +165,51 @@ void Client::Shutdown()
 
 void Client::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const NetworkEndFrameEvent&)
-	{
-		auto batch{std::make_shared<CommandBatch>()};
-		{
-			std::scoped_lock lock(_batchWriteMutex);
-			std::swap(batch, _batch);
-		}
-
-		if (batch && !batch->IsEmpty())
-		{
-			SendCommand(batch);
-		}
-	}));
+	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
 
 	// NOTE: local dispatch is keyed (MoveUpEvent/"P2") but the wire format sent via SendKeyState is
 	// unchanged ("P2_Move_Up" etc.) - Session::OnKeyStateChange on the host still parses that
 	// literal tag+action string out of the KeyStateChange command payload.
-	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveUpEvent& event)
-	{
-		this->SendKeyState("P2_Move_Up", event.isPressed);
-	}));
-	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveLeftEvent& event)
-	{
-		this->SendKeyState("P2_Move_Left", event.isPressed);
-	}));
-	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveDownEvent& event)
-	{
-		this->SendKeyState("P2_Move_Down", event.isPressed);
-	}));
-	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const MoveRightEvent& event)
-	{
-		this->SendKeyState("P2_Move_Right", event.isPressed);
-	}));
-	_subs.push_back(_events->AddListener(std::string{"P2"}, _name, [this](const FireEvent& event)
-	{
-		this->SendKeyState("P2_Fire", event.isPressed);
-	}));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnFire));
 
-	_subs.push_back(_events->AddListener(_name, [this](const ClientOutReadyToPlayEvent&)
-	{
-		std::scoped_lock lock(this->_batchWriteMutex);
-		this->_batch->AddCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
-	}));
+	_subs.push_back(_events->AddListener(this, &Client::OnClientOutReadyToPlay));
+	_subs.push_back(_events->AddListener(this, &Client::OnClientOutPauseStatus));
+}
 
-	_subs.push_back(_events->AddListener(_name, [this](const ClientOutPauseStatusEvent& event)
+void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
+{
+	auto batch{std::make_shared<CommandBatch>()};
 	{
-		std::scoped_lock lock(this->_batchWriteMutex);
-		this->_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
-	}));
+		std::scoped_lock lock(_batchWriteMutex);
+		std::swap(batch, _batch);
+	}
+
+	if (batch && !batch->IsEmpty())
+	{
+		SendCommand(batch);
+	}
+}
+
+void Client::OnMoveUp(const MoveUpEvent& event) { SendKeyState("P2_Move_Up", event.isPressed); }
+void Client::OnMoveLeft(const MoveLeftEvent& event) { SendKeyState("P2_Move_Left", event.isPressed); }
+void Client::OnMoveDown(const MoveDownEvent& event) { SendKeyState("P2_Move_Down", event.isPressed); }
+void Client::OnMoveRight(const MoveRightEvent& event) { SendKeyState("P2_Move_Right", event.isPressed); }
+void Client::OnFire(const FireEvent& event) { SendKeyState("P2_Fire", event.isPressed); }
+
+void Client::OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&)
+{
+	std::scoped_lock lock(_batchWriteMutex);
+	_batch->AddCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
+}
+
+void Client::OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event)
+{
+	std::scoped_lock lock(_batchWriteMutex);
+	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
 }
 
 void Client::ReadResponse()

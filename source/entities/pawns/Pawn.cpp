@@ -38,23 +38,21 @@ void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInHealthEvent& event)
-	{
-		this->SetHealth(event.health);
-	}));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnClientInHealth));
 }
+
+void Pawn::OnClientInHealth(const ClientInHealthEvent& event) { SetHealth(event.health); }
 
 void Pawn::SubscribeTickUpdate()
 {
 	//NOTE: guarded - Bullet::Enable() re-subscribes on pool reuse while already subscribed.
 	if (!_tickUpdateSub)
 	{
-		_tickUpdateSub = _events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
-		{
-			this->TickUpdate(event.deltaTime);
-		});
+		_tickUpdateSub = _events->AddListener(this, &Pawn::OnTickUpdate);
 	}
 }
+
+void Pawn::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
 
 void Pawn::UnsubscribeTickUpdate() const { _tickUpdateSub = EventSubscription{}; }
 

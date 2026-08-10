@@ -19,21 +19,22 @@ FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>&
 
 void FramePerSecondManager::Subscribe()
 {
-	_subs.push_back(
-			_events->AddListener(_name, [this](const CalculateActualFpsEvent&) { this->CountFpsAndDeltaTime(); }));
-
-	_subs.push_back(_events->AddListener(_name, [this](const FrameStartEvent&)
-	{
-		this->_startFrameTime = std::chrono::high_resolution_clock::now();
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const PostDrawUserInterfaceEvent&)
-	{
-		this->_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
-	}));
+	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::CountFpsAndDeltaTime));
+	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::OnFrameStart));
+	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::OnPostDrawUserInterface));
 }
 
-void FramePerSecondManager::CountFpsAndDeltaTime()
+void FramePerSecondManager::OnFrameStart(const FrameStartEvent&)
+{
+	_startFrameTime = std::chrono::high_resolution_clock::now();
+}
+
+void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&)
+{
+	_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
+}
+
+void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 {
 	if (const bool isVsyncOn = _gameConfig.Get<bool>("Window.vsync", false);
 		!isVsyncOn)

@@ -12,6 +12,9 @@ class EventSystem;
 class BulletPool;
 class ShootingBeh;
 class GameConfig;
+struct DrawEvent;
+struct ClientInDisposeEvent;
+struct ClientInPosEvent;
 
 class Bullet final : public Pawn, public IDrawable
 {
@@ -27,6 +30,8 @@ class Bullet final : public Pawn, public IDrawable
 	void Enable();
 	void Disable() const;
 	void Reset(BulletResetProperty resetProperty);
+	void OnDraw(const DrawEvent&);
+	void OnClientInDispose(const ClientInDisposeEvent&);
 
 protected:
 	void Subscribe() override;
@@ -58,5 +63,5 @@ public:
 	[[nodiscard]] unsigned int GetTier() const;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
-	void OnClientChangePos(FPoint newPos, Direction dir);
+	void OnClientChangePos(const ClientInPosEvent& event);
 };

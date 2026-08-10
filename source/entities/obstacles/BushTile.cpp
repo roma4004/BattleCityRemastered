@@ -12,7 +12,9 @@ BushTile::BushTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& 
 
 void BushTile::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &BushTile::OnPostDraw));
 }
+
+void BushTile::OnPostDraw(const PostDrawEvent&) { Draw(); }
 
 void BushTile::EmitDeathStatistics(const std::string&, const std::string&) {}

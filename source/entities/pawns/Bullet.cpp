@@ -5,7 +5,6 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/obstacles/BushTile.h"
@@ -48,7 +47,7 @@ void Bullet::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &Bullet::OnDraw));
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -56,17 +55,18 @@ void Bullet::Subscribe()
 	}
 }
 
+void Bullet::OnDraw(const DrawEvent&) { Draw(); }
+
 void Bullet::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInDisposeEvent&)
-	{
-		this->SetIsAlive(false);
-		this->_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = this->_rect, .name = this->_name});
-	}));
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInPosEvent& event)
-	{
-		OnClientChangePos(event.pos, event.dir);
-	}));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnClientInDispose));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnClientChangePos));
+}
+
+void Bullet::OnClientInDispose(const ClientInDisposeEvent&)
+{
+	SetIsAlive(false);
+	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
 }
 
 void Bullet::Draw() const { _events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .name = _name}); }
@@ -203,8 +203,8 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
 }
 
-void Bullet::OnClientChangePos(const FPoint newPos, const Direction dir)
+void Bullet::OnClientChangePos(const ClientInPosEvent& event)
 {
-	SetDirection(dir);
-	SetPos(newPos);
+	SetDirection(event.dir);
+	SetPos(event.pos);
 }

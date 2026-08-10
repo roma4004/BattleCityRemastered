@@ -7,28 +7,18 @@ InputProviderForPlayerTwo::InputProviderForPlayerTwo(const std::shared_ptr<Event
 
 void InputProviderForPlayerTwo::Subscribe()
 {
-	const std::string tag{"P2"};
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveUpEvent& event)
-	{
-		btn.up = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveLeftEvent& event)
-	{
-		btn.left = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveDownEvent& event)
-	{
-		btn.down = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveRightEvent& event)
-	{
-		btn.right = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const FireEvent& event)
-	{
-		btn.shot = event.isPressed;
-	}));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnFire));
 }
+
+void InputProviderForPlayerTwo::OnMoveUp(const MoveUpEvent& event) { _playerKeys.up = event.isPressed; }
+void InputProviderForPlayerTwo::OnMoveLeft(const MoveLeftEvent& event) { _playerKeys.left = event.isPressed; }
+void InputProviderForPlayerTwo::OnMoveDown(const MoveDownEvent& event) { _playerKeys.down = event.isPressed; }
+void InputProviderForPlayerTwo::OnMoveRight(const MoveRightEvent& event) { _playerKeys.right = event.isPressed; }
+void InputProviderForPlayerTwo::OnFire(const FireEvent& event) { _playerKeys.shot = event.isPressed; }
 
 void InputProviderForPlayerTwo::Enable()
 {

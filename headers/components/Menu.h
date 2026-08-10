@@ -8,6 +8,9 @@
 class EventSystem;
 class GameStatistics;
 class InputProviderForMenu;
+struct DrawUserInterfaceEvent;
+struct SelectedGameModeChangedToEvent;
+struct MenuShowedEvent;
 
 class Menu final
 {
@@ -28,6 +31,10 @@ class Menu final
 	bool _isMenuDisplayed{false};
 
 	void Subscribe();
+
+	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
+	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
+	void OnMenuShowed(const MenuShowedEvent& event);
 
 	void DrawTextLine(Point& posText, std::string text) const;
 	void DrawMenuText() const;

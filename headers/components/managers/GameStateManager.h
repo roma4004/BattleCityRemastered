@@ -10,6 +10,12 @@ class EventSystem;
 class GameStateManager;
 
 enum class GameMode : char8_t;
+struct PauseStatusEvent;
+struct PreDrawUserInterfaceEvent;
+struct GameResetEvent;
+struct PlayersTeamIsWonEvent;
+struct EnemiesTeamIsWonEvent;
+struct GameModeChangedToEvent;
 
 class GameStateManager
 {
@@ -24,9 +30,13 @@ class GameStateManager
 	bool _isGameWon{};
 
 	void Subscribe();
+	void OnPauseStatus(const PauseStatusEvent& event);
+	void OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&);
+	void OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
-	void Draw() const;
-	void Reset();
+	void Draw(const PreDrawUserInterfaceEvent&) const;
+	void Reset(const GameResetEvent&);
 
 public:
 	explicit GameStateManager(const std::shared_ptr<EventSystem>& events);

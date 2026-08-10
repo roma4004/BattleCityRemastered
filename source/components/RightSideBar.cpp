@@ -14,18 +14,13 @@ RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events)
 
 void RightSideBar::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); }));
-
-	_subs.push_back(_events->AddListener(_name, [this](const RespawnCountChangedToEvent& event)
-	{
-		OnRespawnCountChangedTo(event.objectName, event.respawnCount);
-	}));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnDrawUserInterface));
+	_subs.push_back(_events->AddListener(this, &RightSideBar::OnRespawnCountChangedTo));
 }
+
+void RightSideBar::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
+void RightSideBar::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
 void RightSideBar::Draw() const
 {
@@ -40,18 +35,19 @@ void RightSideBar::Draw() const
 	_events->EmitEvent(RenderStageNumberEvent{.stageNumber = _stageNumber});
 }
 
-void RightSideBar::OnRespawnCountChangedTo(const std::string& objectName, const unsigned short respawnCount)
+void RightSideBar::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
+	const auto& objectName = event.objectName;
 	if (objectName == "Enemy")
 	{
-		_enemiesRespawnCount = respawnCount;
+		_enemiesRespawnCount = event.respawnCount;
 	}
 	else if (objectName.ends_with("1"))
 	{
-		_playerOneRespawnCount = respawnCount;
+		_playerOneRespawnCount = event.respawnCount;
 	}
 	else if (objectName.ends_with("2"))
 	{
-		_playerTwoRespawnCount = respawnCount;
+		_playerTwoRespawnCount = event.respawnCount;
 	}
 }

@@ -7,28 +7,18 @@ InputProviderForPlayerOne::InputProviderForPlayerOne(const std::shared_ptr<Event
 
 void InputProviderForPlayerOne::Subscribe()
 {
-	const std::string tag{"P1"};
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveUpEvent& event)
-	{
-		btn.up = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveLeftEvent& event)
-	{
-		btn.left = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveDownEvent& event)
-	{
-		btn.down = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const MoveRightEvent& event)
-	{
-		btn.right = event.isPressed;
-	}));
-	_subs.push_back(_events->AddListener(tag, _name, [&btn = _playerKeys](const FireEvent& event)
-	{
-		btn.shot = event.isPressed;
-	}));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOne::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOne::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOne::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOne::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOne::OnFire));
 }
+
+void InputProviderForPlayerOne::OnMoveUp(const MoveUpEvent& event) { _playerKeys.up = event.isPressed; }
+void InputProviderForPlayerOne::OnMoveLeft(const MoveLeftEvent& event) { _playerKeys.left = event.isPressed; }
+void InputProviderForPlayerOne::OnMoveDown(const MoveDownEvent& event) { _playerKeys.down = event.isPressed; }
+void InputProviderForPlayerOne::OnMoveRight(const MoveRightEvent& event) { _playerKeys.right = event.isPressed; }
+void InputProviderForPlayerOne::OnFire(const FireEvent& event) { _playerKeys.shot = event.isPressed; }
 
 void InputProviderForPlayerOne::Enable()
 {

@@ -18,6 +18,13 @@ class BulletPool;
 class EventSystem;
 class IInputProvider;
 class GameConfig;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
+struct RespawnTankEvent;
+struct TankSpawnDelayFinishedEvent;
+struct WindowSizeChangedToEvent;
+struct ClientInRespawnTankEvent;
+struct ClientInTankSpawnCompleteEvent;
 
 class TankSpawner final
 {
@@ -54,10 +61,16 @@ class TankSpawner final
 	std::vector<DelayedTankSpawn> _delayedSpawns{};
 
 	void Subscribe();
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnRespawnTank(const RespawnTankEvent& event);
+	void OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event);
+	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
 	void SubscribeAsClient();
+	void OnClientInRespawnTank(const ClientInRespawnTankEvent& event);
+	void OnClientInTankSpawnComplete(const ClientInTankSpawnCompleteEvent& event);
 
 	void UnsubscribeAsClient();
-	void Reset();
+	void Reset(const GameResetEvent&);
 
 	void OnSpawnDelayFinished(buuid uuid);
 	void MaterializeTank(const DelayedTankSpawn& pending);

@@ -7,6 +7,9 @@
 
 struct ObjRectangle;
 class EventSystem;
+struct GameModeChangedToEvent;
+struct DrawUserInterfaceEvent;
+struct RespawnCountChangedToEvent;
 
 class RightSideBar
 {
@@ -25,7 +28,9 @@ class RightSideBar
 
 	void Subscribe();
 	void Draw() const;
-	void OnRespawnCountChangedTo(const std::string& objectName, unsigned short respawnCount);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
+	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 
 public:
 	explicit RightSideBar(const std::shared_ptr<EventSystem>& events);

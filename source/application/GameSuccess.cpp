@@ -58,34 +58,32 @@ GameSuccess::~GameSuccess() = default;
 
 void GameSuccess::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const PreviousGameModeEvent&) { this->PrevGameMode(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const NextGameModeEvent&) { this->NextGameMode(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const ApplyGameModeEvent&)
-	{
-		this->ApplyGameMode(this->_selectedGameMode);
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->OnGameModeChangedTo(event.mode);
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](AddToSpawnQueueEvent event)
-	{
-		this->_pendingSpawns.emplace_back(std::move(event.obj));
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&)
-	{
-		this->FlushSpawnQueue();
-		this->DisposeDeadObject();
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const DeltaTimeEvent& event)
-	{
-		this->_deltaTime = event.deltaTime;
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeSelectedWithMouseEvent& event)
-	{//TODO: merge with SelectedGameModeChangedToEvent
-		this->_selectedGameMode = event.mode;
-		this->_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = this->_selectedGameMode});
-	}));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::PrevGameMode));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::NextGameMode));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::OnApplyGameMode));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::OnAddToSpawnQueue));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::OnPostTickUpdate));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::OnDeltaTime));
+	_subs.push_back(_events->AddListener(this, &GameSuccess::OnGameModeSelectedWithMouse));
+}
+
+void GameSuccess::OnApplyGameMode(const ApplyGameModeEvent&) { ApplyGameMode(_selectedGameMode); }
+
+void GameSuccess::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event) { _pendingSpawns.push_back(event.obj); }
+
+void GameSuccess::OnPostTickUpdate(const PostTickUpdateEvent&)
+{
+	FlushSpawnQueue();
+	DisposeDeadObject();
+}
+
+void GameSuccess::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }
+
+void GameSuccess::OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event)
+{//TODO: merge with SelectedGameModeChangedToEvent
+	_selectedGameMode = event.mode;
+	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
 void GameSuccess::ApplyGameMode(const GameMode gameMode)
@@ -109,7 +107,7 @@ void GameSuccess::ApplyGameMode(const GameMode gameMode)
 	}
 }
 
-void GameSuccess::PrevGameMode()
+void GameSuccess::PrevGameMode(const PreviousGameModeEvent&)
 {
 	int mode = static_cast<int>(_selectedGameMode);
 	--mode;
@@ -122,7 +120,7 @@ void GameSuccess::PrevGameMode()
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
-void GameSuccess::NextGameMode()
+void GameSuccess::NextGameMode(const NextGameModeEvent&)
 {
 	int mode = static_cast<int>(_selectedGameMode);
 	++mode;
@@ -173,7 +171,7 @@ void GameSuccess::FlushSpawnQueue()
 
 //TODO: recheck rule of 3/5 for all classes
 
-void GameSuccess::OnClientReady() const
+void GameSuccess::OnClientReady(const ServerInClientReadyToStartGameEvent&) const
 {
 	_events->EmitEvent(LoadMapEvent{});
 	_events->EmitEvent(PauseReleasedEvent{});
@@ -242,17 +240,14 @@ void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
 	_events->EmitEvent(GameModeChangedToEvent{.mode = _gameMode});
 }
 
-void GameSuccess::OnGameModeChangedTo(const GameMode newGameMode)
+void GameSuccess::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
-	_gameMode = newGameMode;
+	_gameMode = event.mode;
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
-		_clientReadySub = _events->AddListener(_name, [this](const ServerInClientReadyToStartGameEvent&)
-		{
-			this->OnClientReady();
-		});
+		_clientReadySub = _events->AddListener(this, &GameSuccess::OnClientReady);
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)

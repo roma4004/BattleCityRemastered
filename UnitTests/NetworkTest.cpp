@@ -56,12 +56,10 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	auto posSub = events->AddListener(
-			_uuid, "PosEventReplication",
-			[&promise](const ClientInPosEvent& event)
-			{
-				promise.set_value({event.pos, event.dir});
-			});
+	auto posSub = events->AddListener(Key(_uuid), [&promise](const ClientInPosEvent& event)
+	{
+		promise.set_value({event.pos, event.dir});
+	});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(
@@ -115,11 +113,10 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	auto shotSub = events->AddListener(name, "ShotEventReplication",
-						[&promise](const ClientInShotEvent& event)
-						{
-							promise.set_value({event.dir, event.bulletUuid});
-						});
+	auto shotSub = events->AddListener(Key(name), [&promise](const ClientInShotEvent& event)
+	{
+		promise.set_value({event.dir, event.bulletUuid});
+	});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
@@ -171,8 +168,8 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	const auto name{std::string("TestTank")};
 
-	auto healthSub = events->AddListener(_uuid, "HealthEventReplication",
-						[&promise](const ClientInHealthEvent& event) { promise.set_value(event.health); });
+	auto healthSub = events->AddListener(Key(_uuid),
+			[&promise](const ClientInHealthEvent& event) { promise.set_value(event.health); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
@@ -220,8 +217,8 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	std::promise<buuid> promise{};
 	auto future = promise.get_future();
 
-	auto disposeSub = events->AddListener(_uuid, "DisposeEventReplication",
-						[&promise, uuid = _uuid](const ClientInDisposeEvent&) { promise.set_value(uuid); });
+	auto disposeSub = events->AddListener(Key(_uuid),
+			[&promise, uuid = _uuid](const ClientInDisposeEvent&) { promise.set_value(uuid); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutDisposeEvent{.uuid = _uuid});
@@ -268,12 +265,10 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	std::promise<std::pair<std::string, std::string>> promise{};
 	auto future = promise.get_future();
 
-	auto statsSub = events->AddListener(
-			"StatisticsEventReplication",
-			[&promise](const ClientInBulletHitEvent& event)
-			{
-				promise.set_value({event.author, event.fraction});
-			});
+	auto statsSub = events->AddListener([&promise](const ClientInBulletHitEvent& event)
+	{
+		promise.set_value({event.author, event.fraction});
+	});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutBulletHitEvent{.author = "author", .fraction = "fraction"});
@@ -344,18 +339,18 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 
 	// NOTE: keyed by each event's own uuid - delivery itself proves uuid routing is correct,
 	// no need to compare event.uuid inside the callback anymore.
-	auto diedSub1 = events->AddListener(uuid1Died, "FortressChangeEventReplication1Died",
+	auto diedSub1 = events->AddListener(Key(uuid1Died),
 			[&promiseDied1](const ClientInFortressChangeEvent& event) { promiseDied1.set_value(event.state); });
-	auto toBrickSub1 = events->AddListener(uuid1ToBrick, "FortressChangeEventReplication1ToBrick",
+	auto toBrickSub1 = events->AddListener(Key(uuid1ToBrick),
 			[&promiseToBrick1](const ClientInFortressChangeEvent& event) { promiseToBrick1.set_value(event.state); });
-	auto toSteelSub1 = events->AddListener(uuid1ToSteel, "FortressChangeEventReplication1ToSteel",
+	auto toSteelSub1 = events->AddListener(Key(uuid1ToSteel),
 			[&promiseToSteel1](const ClientInFortressChangeEvent& event) { promiseToSteel1.set_value(event.state); });
 
-	auto diedSub2 = events->AddListener(uuid2Died, "FortressChangeEventReplication2Died",
+	auto diedSub2 = events->AddListener(Key(uuid2Died),
 			[&promiseDied2](const ClientInFortressChangeEvent& event) { promiseDied2.set_value(event.state); });
-	auto toBrickSub2 = events->AddListener(uuid2ToBrick, "FortressChangeEventReplication2ToBrick",
+	auto toBrickSub2 = events->AddListener(Key(uuid2ToBrick),
 			[&promiseToBrick2](const ClientInFortressChangeEvent& event) { promiseToBrick2.set_value(event.state); });
-	auto toSteelSub2 = events->AddListener(uuid2ToSteel, "FortressChangeEventReplication2ToSteel",
+	auto toSteelSub2 = events->AddListener(Key(uuid2ToSteel),
 			[&promiseToSteel2](const ClientInFortressChangeEvent& event) { promiseToSteel2.set_value(event.state); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
@@ -501,12 +496,10 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	std::promise<std::tuple<FPoint, BonusType, buuid>> promise{};
 	auto future = promise.get_future();
 
-	auto bonusSpawnSub = events->AddListener(
-			"BonusSpawnEventReplication",
-			[&promise](const ClientInBonusSpawnEvent& event)
-			{
-				promise.set_value({event.pos, event.type, event.uuid});
-			});
+	auto bonusSpawnSub = events->AddListener([&promise](const ClientInBonusSpawnEvent& event)
+	{
+		promise.set_value({event.pos, event.type, event.uuid});
+	});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
@@ -559,7 +552,6 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	auto future = promise.get_future();
 
 	auto bonusDeSpawnSub = events->AddListener(
-			"BonusDeSpawnEventReplication",
 			[&promise](const ClientInBonusDeSpawnEvent& event) { promise.set_value(event.uuid); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
@@ -609,8 +601,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	std::promise<bool> promise;
 	auto future = promise.get_future();
 
-	auto bonusStatusSub = events->AddListener(
-			nameOrigin, "BonusStatusEventReplication",
+	auto bonusStatusSub = events->AddListener(Key(nameOrigin),
 			[&promise](const ClientInBonusHelmetPickupEvent& event) { promise.set_value(event.isEnable); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
@@ -660,8 +651,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	std::promise<void> promise;
 	const auto future = promise.get_future();
 
-	auto bonusCaliberSub = events->AddListener(
-			nameOrigin, "BonusCaliberStatusEventReplication",
+	auto bonusCaliberSub = events->AddListener(Key(nameOrigin),
 			[&promise](const ClientInBonusCaliberPickupEvent&) { promise.set_value(); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
@@ -711,12 +701,10 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise{};
 	auto future = promise.get_future();
 
-	auto obstacleSpawnSub = events->AddListener(
-			"ObstacleSpawnEventReplication",
-			[&promise](const ClientInObstacleSpawnEvent& event)
-			{
-				promise.set_value({event.rect, event.type, event.uuid});
-			});
+	auto obstacleSpawnSub = events->AddListener([&promise](const ClientInObstacleSpawnEvent& event)
+	{
+		promise.set_value({event.rect, event.type, event.uuid});
+	});
 
 	// events->EmitEvent(ServerStartFrameEvent{});
 	events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
@@ -783,7 +771,6 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	std::mutex mtx;
 	std::atomic<size_t> count{0u};
 	auto massiveObstacleSub = events->AddListener(
-			"MassiveObstacleSpawnEventReplication",
 			[&promises, &count, &mtx](const ClientInObstacleSpawnEvent& event)
 			{
 				std::scoped_lock lock(mtx);
@@ -857,7 +844,6 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 	size_t count = 0u;
 	auto respawnTankSub = events->AddListener(
-			"RespawnTankEventReplication",
 			[&promises, &count](const ClientInRespawnTankEvent& event)
 			{
 				promises[count++].set_value({event.type, event.uuid, FPoint{.x = event.rect.x, .y = event.rect.y}});

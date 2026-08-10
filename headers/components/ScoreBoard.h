@@ -9,6 +9,14 @@
 
 class EventSystem;
 class GameStatistics;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
+struct RespawnCountChangedToEvent;
+struct DrawUserInterfaceEvent;
+struct MenuShowedEvent;
+struct PauseStatusEvent;
+struct PlayersTeamIsWonEvent;
+struct EnemiesTeamIsWonEvent;
 
 class ScoreBoard final
 {
@@ -32,6 +40,15 @@ class ScoreBoard final
 
 	void Subscribe();
 
+	void OnGameReset(const GameResetEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
+	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
+	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnPauseStatus(const PauseStatusEvent&);
+	void OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&);
+	void OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&);
+
 	void RenderStatistics() const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short player1,
 								 unsigned short player2, unsigned short enemy) const;
@@ -40,7 +57,6 @@ class ScoreBoard final
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
 								 const std::string& text3) const;
 
-	void OnRespawnCountChanged(const std::string& objectName, unsigned short respawnCount);
 	void DisplayScore(bool isDisplayed);
 
 public:

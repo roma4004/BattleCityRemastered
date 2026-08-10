@@ -5,12 +5,14 @@
 
 struct ObjRectangle;
 class EventSystem;
+struct PreDrawEvent;
 
 class IceTile final : public Obstacle
 {
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
+	void OnPreDraw(const PreDrawEvent&);
 
 protected:
 	//NOTE: Ice is indestructible - never reaches SendDamageStatistics's health<1 branch, but the

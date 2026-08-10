@@ -11,6 +11,11 @@ enum class BonusType : char8_t;
 struct ObjRectangle;
 class BaseObj;
 class EventSystem;
+struct GameModeChangedToEvent;
+struct LoadMapEvent;
+struct SpawnObstacleEvent;
+struct WindowSizeChangedToEvent;
+struct ClientInObstacleSpawnEvent;
 
 class ObstacleSpawner final
 {
@@ -30,7 +35,12 @@ class ObstacleSpawner final
 	// std::uniform_int_distribution<> _distSpawnType;
 
 	void Subscribe();
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnLoadMap(const LoadMapEvent&);
+	void OnSpawnObstacle(const SpawnObstacleEvent& event);
+	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
 	void SubscribeAsClient();
+	void OnClientInObstacleSpawn(const ClientInObstacleSpawnEvent& event);
 
 	void UnsubscribeAsClient();
 

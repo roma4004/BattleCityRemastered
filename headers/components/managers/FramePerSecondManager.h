@@ -5,6 +5,9 @@
 
 class EventSystem;
 class GameConfig;
+struct CalculateActualFpsEvent;
+struct FrameStartEvent;
+struct PostDrawUserInterfaceEvent;
 
 class FramePerSecondManager
 {
@@ -22,8 +25,10 @@ class FramePerSecondManager
 	GameConfig& _gameConfig;
 
 	void Subscribe();
+	void OnFrameStart(const FrameStartEvent&);
+	void OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&);
 
-	void CountFpsAndDeltaTime();
+	void CountFpsAndDeltaTime(const CalculateActualFpsEvent&);
 
 public:
 	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);

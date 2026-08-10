@@ -16,6 +16,14 @@
 class EventSystem;
 enum class BonusType : char8_t;
 enum class Direction : char8_t;
+struct NetworkEndFrameEvent;
+struct MoveUpEvent;
+struct MoveLeftEvent;
+struct MoveDownEvent;
+struct MoveRightEvent;
+struct FireEvent;
+struct ClientOutReadyToPlayEvent;
+struct ClientOutPauseStatusEvent;
 
 namespace network::commands
 {
@@ -43,6 +51,15 @@ private:
 
 	void ReadResponse();
 	void TryConnect();
+
+	void OnNetworkEndFrame(const NetworkEndFrameEvent&);
+	void OnMoveUp(const MoveUpEvent& event);
+	void OnMoveLeft(const MoveLeftEvent& event);
+	void OnMoveDown(const MoveDownEvent& event);
+	void OnMoveRight(const MoveRightEvent& event);
+	void OnFire(const FireEvent& event);
+	void OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&);
+	void OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event);
 
 	void SendKeyState(const std::string& key, bool state);
 	void OnPositionChange(const std::shared_ptr<Command>& command);

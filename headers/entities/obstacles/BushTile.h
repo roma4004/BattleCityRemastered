@@ -5,12 +5,14 @@
 
 struct ObjRectangle;
 class EventSystem;
+struct PostDrawEvent;
 
 class BushTile final : public Obstacle
 {
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
+	void OnPostDraw(const PostDrawEvent&);
 
 protected:
 	//NOTE: Bush is indestructible - never reaches SendDamageStatistics's health<1 branch, but the

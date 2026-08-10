@@ -41,62 +41,64 @@ TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<Bas
 
 void TankSpawner::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
 
 	//TODO: reuse existing tanks when game mode changed
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnDelayFinished));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnWindowSizeChangedTo));
+}
 
-		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	}));
+void TankSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_gameMode = event.mode;
 
-	_subs.push_back(_events->AddListener(_name, [this](const RespawnTankEvent& event)
-	{
-		this->RespawnTank(event.type, event.uuid, event.skipDelay);
-	}));
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+}
 
-	_subs.push_back(_events->AddListener(_name, [this](const TankSpawnDelayFinishedEvent& event)
-	{
-		this->OnSpawnDelayFinished(event.uuid);
-	}));
+void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(event.type, event.uuid, event.skipDelay); }
 
-	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
-	{
-		const UPoint& newSize = event.newSize;
-		_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
-		const float newSizeY = static_cast<float>(newSize.y);
-		_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
-		_gameConfig.gridSize = _gameConfig.gridSizeDefault * _gameConfig.scaleFactor;
+void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event)
+{
+	OnSpawnDelayFinished(event.uuid);
+}
 
-		_gameConfig.gridOffset = (newSizeY * _gameConfig.scaleFactor) / _gameConfig.gridSize;
-		_gameConfig.tankSize = _gameConfig.gridOffset * 3.f;
+void TankSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+{
+	const UPoint& newSize = event.newSize;
+	_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
+	const float newSizeY = static_cast<float>(newSize.y);
+	_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
+	_gameConfig.gridSize = _gameConfig.gridSizeDefault * _gameConfig.scaleFactor;
 
-		_gameConfig.tankSpeed = _gameConfig.tankSpeed * _gameConfig.scaleFactor / 2.f;
+	_gameConfig.gridOffset = (newSizeY * _gameConfig.scaleFactor) / _gameConfig.gridSize;
+	_gameConfig.tankSize = _gameConfig.gridOffset * 3.f;
 
-		_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
+	_gameConfig.tankSpeed = _gameConfig.tankSpeed * _gameConfig.scaleFactor / 2.f;
 
-		//scale bullet caliber
-		_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
-	}));
+	_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
+
+	//scale bullet caliber
+	_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
 }
 
 void TankSpawner::SubscribeAsClient()
 {
-	_clientRespawnSub = _events->AddListener(
-			_name,
-			[this](const ClientInRespawnTankEvent& event)
-			{
-				this->OnClientRespawn(event.type, event.uuid, event.rect);
-			});
+	_clientRespawnSub = _events->AddListener(this, &TankSpawner::OnClientInRespawnTank);
 
 	// Sole materialize trigger on the client - DelayedSpawnManager's timer doesn't tick here.
-	_clientMaterializeSub = _events->AddListener(
-			_name,
-			[this](const ClientInTankSpawnCompleteEvent& event)
-			{
-				this->OnSpawnDelayFinished(event.uuid);
-			});
+	_clientMaterializeSub = _events->AddListener(this, &TankSpawner::OnClientInTankSpawnComplete);
+}
+
+void TankSpawner::OnClientInRespawnTank(const ClientInRespawnTankEvent& event)
+{
+	OnClientRespawn(event.type, event.uuid, event.rect);
+}
+
+void TankSpawner::OnClientInTankSpawnComplete(const ClientInTankSpawnCompleteEvent& event)
+{
+	OnSpawnDelayFinished(event.uuid);
 }
 
 void TankSpawner::UnsubscribeAsClient()
@@ -105,7 +107,7 @@ void TankSpawner::UnsubscribeAsClient()
 	_clientMaterializeSub = EventSubscription{};
 }
 
-void TankSpawner::Reset()
+void TankSpawner::Reset(const GameResetEvent&)
 {
 	_enemySpawnTimer.cooldown = milliseconds{5000};
 	_enemySpawnTimer.isActive = false;
@@ -418,7 +420,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 	}
 
 	// Locally simulated: runs on both sides from already-replicated spawn data, no network relay.
-	constexpr auto type{AnimationType::Spawn_Animation};
+	constexpr auto type{AnimationType::Spawn_Animation};//TODO: refactor to call tankAnimationCreateEvent, no type here
 	_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
 }
 

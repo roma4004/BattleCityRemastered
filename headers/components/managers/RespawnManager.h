@@ -7,6 +7,15 @@
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
+struct TankSpawnEvent;
+struct TankDiedEvent;
+struct BonusTankPickupEvent;
+struct PlayersBaseFinishedEvent;
+struct RespawnTanksEvent;
+struct ClientInBonusTankPickupEvent;
+struct ClientInRespawnTankEvent;
 
 class RespawnManager final
 {
@@ -39,9 +48,15 @@ class RespawnManager final
 	unsigned short _playersDeathCount{};
 
 	void OnBonusTank(const std::string& author);
-	void OnClientRespawn(TankType type);
+	void OnClientInBonusTankPickup(const ClientInBonusTankPickupEvent& event);
+	void OnClientRespawn(const ClientInRespawnTankEvent& event);
 
 	void Subscribe();
+	void OnGameReset(const GameResetEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnBonusTankPickup(const BonusTankPickupEvent& event);
+	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
+	void OnRespawnTanks(const RespawnTanksEvent& event);
 	void SubscribeAsClient();
 
 	void UnsubscribeAsClient();
@@ -57,11 +72,11 @@ class RespawnManager final
 	void ChangeRespawnCount(int delta, RespawnGroup type);
 	void TriggerLastPlayersLife();
 
-	void OnTankSpawn(const buuid& uuid);
+	void OnTankSpawn(const TankSpawnEvent& event);
 	[[nodiscard]] static bool IsEnemyGroup(RespawnGroup group);
 	void OnEnemyDied(bool isAvailable);
 	void OnPlayerDied(bool isAvailable);
-	void OnTankDied(const buuid& uuid);
+	void OnTankDied(const TankDiedEvent& event);
 	void RespawnTanks(bool skipDelay);
 
 public:

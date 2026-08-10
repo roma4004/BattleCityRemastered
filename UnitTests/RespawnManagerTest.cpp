@@ -43,15 +43,13 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Enemy")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Enemy")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	constexpr bool skipDelay{true};
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
@@ -66,15 +64,13 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Player1")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player1")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	constexpr bool skipDelay{true};
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
@@ -89,15 +85,13 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Player2")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player2")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	constexpr bool skipDelay{true};
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::TwoPlayers});
@@ -112,15 +106,13 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{20u};
 	unsigned short respawnActual{20u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Enemy")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Enemy")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
@@ -138,15 +130,13 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Player1")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player1")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
@@ -164,15 +154,13 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 {
 	constexpr unsigned short respawnOriginal{3u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Player2")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player2")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::TwoPlayers});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
@@ -190,15 +178,13 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{21u};
 	unsigned short respawnActual{21u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Enemy")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Enemy")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
@@ -219,15 +205,13 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Player1")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player1")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
@@ -248,16 +232,13 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 {
 	constexpr unsigned short respawnOriginal{4u};
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener(
-			"TankSpawnerTest",
-			[&respawnActual](const RespawnCountChangedToEvent& event)
-			{
-				if (event.objectName == "Player2")
-				{
-					respawnActual = event.respawnCount;
-				}
-			});
-
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player2")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::TwoPlayers});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)

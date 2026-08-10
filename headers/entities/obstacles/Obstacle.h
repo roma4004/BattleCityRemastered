@@ -10,6 +10,7 @@
 enum class ObstacleType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
+struct ClientInHealthEvent;
 
 class Obstacle : public BaseObj, public IDrawable
 {
@@ -17,6 +18,7 @@ class Obstacle : public BaseObj, public IDrawable
 
 	virtual void Subscribe();
 	virtual void SubscribeAsClient();
+	void OnClientInHealth(const ClientInHealthEvent& event);
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};

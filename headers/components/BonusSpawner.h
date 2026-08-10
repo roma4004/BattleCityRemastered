@@ -13,6 +13,11 @@ struct ObjRectangle;
 class BaseObj;
 class EventSystem;
 class GameConfig;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
+struct WindowSizeChangedToEvent;
+struct TickUpdateEvent;
+struct ClientInBonusSpawnEvent;
 
 class BonusSpawner final
 {
@@ -41,14 +46,17 @@ class BonusSpawner final
 	EventSubscription _clientSub{};
 
 	void Subscribe();
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
 	void SubscribeAsHost();
 	void SubscribeAsClient();
+	void OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event);
 
 	void UnsubscribeAsHost();
 	void UnsubscribeAsClient();
 
-	void Update();
-	void Reset();
+	void Update(const TickUpdateEvent&);
+	void Reset(const GameResetEvent&);
 
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,

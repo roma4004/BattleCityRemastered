@@ -38,24 +38,22 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
-		_permanentSubs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInPosEvent& event)
-		{
-			this->OnClientChangePos(event.pos, event.dir);
-		}));
+		_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnClientChangePos));
 	}
 
-	_permanentSubs.push_back(
-			_events->AddListener(_uuid, _nameWithUuid, [this](const BonusTimerReApplyOnSpawnEvent& event)
-			{
-				if (event.isEnabled)
-				{
-					this->UnsubscribeTickUpdate();
-				}
-				else
-				{
-					this->SubscribeTickUpdate();
-				}
-			}));
+	_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnBonusTimerReApplyOnSpawn));
+}
+
+void Tank::OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event)
+{
+	if (event.isEnabled)
+	{
+		UnsubscribeTickUpdate();
+	}
+	else
+	{
+		SubscribeTickUpdate();
+	}
 }
 
 Tank::~Tank()
@@ -69,20 +67,8 @@ void Tank::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const PostDrawEvent&)
-	{
-		if (this->_effects.isHelmetActive || this->_effects.isTouchTheBushes)
-		{
-			return;
-		}
-
-		this->_events->EmitEvent(RenderHealthBarEvent{.rect = this->GetRect(), .health = this->GetHealth()});
-	}));
-
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ScaleFactorChangedToEvent& event)
-	{
-		this->ApplyScaleToCalibre(event.scale);
-	}));
+	_subs.push_back(_events->AddListener(this, &Tank::OnPostDraw));
+	_subs.push_back(_events->AddListener(this, &Tank::OnScaleFactorChangedTo));
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -92,59 +78,60 @@ void Tank::Subscribe()
 	SubscribeBonus();
 }
 
+void Tank::OnPostDraw(const PostDrawEvent&)
+{
+	if (_effects.isHelmetActive || _effects.isTouchTheBushes)
+	{
+		return;
+	}
+
+	_events->EmitEvent(RenderHealthBarEvent{.rect = GetRect(), .health = GetHealth()});
+}
+
+void Tank::OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event) { ApplyScaleToCalibre(event.scale); }
+
 void Tank::SubscribeAsClient()
 {
 	//TODO: reduce number of "ClientIn" overloading if we can use just direct local event
 	//TODO: refactor ClientIn "Shot" to just "Shot" and move bot timers to handle outside bot tank,
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInShotEvent& event)
-	{
-		this->SetDirection(event.dir);
-		this->Shot(event.bulletUuid);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInBonusHelmetPickupEvent& event)
-	{
-		this->OnBonusHelmet(this->_name, event.isEnable);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInBonusStarPickupEvent&)
-	{
-		this->OnBonusStar(this->_name);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, _nameWithUuid, [this](const ClientInBonusCaliberPickupEvent&)
-	{
-		this->OnBonusCaliber(this->_name);
-	}));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInShot));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInBonusHelmetPickup));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInBonusStarPickup));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInBonusCaliberPickup));
 }
+
+void Tank::OnClientInShot(const ClientInShotEvent& event)
+{
+	SetDirection(event.dir);
+	Shot(event.bulletUuid);
+}
+
+void Tank::OnClientInBonusHelmetPickup(const ClientInBonusHelmetPickupEvent& event)
+{
+	OnBonusHelmet(_name, event.isEnable);
+}
+
+void Tank::OnClientInBonusStarPickup(const ClientInBonusStarPickupEvent&) { OnBonusStar(_name); }
+
+void Tank::OnClientInBonusCaliberPickup(const ClientInBonusCaliberPickupEvent&) { OnBonusCaliber(_name); }
 
 void Tank::SubscribeBonus()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusTimerStatusChangeEvent& event)
-	{
-		this->OnBonusTimer(event.fraction, event.isActive);
-	}));
-
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusHelmetStatusChangeEvent& event)
-	{
-		this->OnBonusHelmet(event.name, event.isActive);
-	}));
-
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusGrenadePickupEvent& event)
-	{
-		this->OnBonusGrenade(event.fraction);
-	}));
-
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusStarPickupEvent& event)
-	{
-		this->OnBonusStar(event.author);
-	}));
-
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const BonusCaliberPickupEvent& event)
-	{
-		this->OnBonusCaliber(event.author);
-	}));
+	_subs.push_back(_events->AddListener(this, &Tank::OnBonusTimer));
+	_subs.push_back(_events->AddListener(this, &Tank::OnBonusHelmetStatusChange));
+	_subs.push_back(_events->AddListener(this, &Tank::OnBonusGrenade));
+	_subs.push_back(_events->AddListener(this, &Tank::OnBonusStarPickup));
+	_subs.push_back(_events->AddListener(this, &Tank::OnBonusCaliberPickup));
 }
+
+void Tank::OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event)
+{
+	OnBonusHelmet(event.name, event.isActive);
+}
+
+void Tank::OnBonusStarPickup(const BonusStarPickupEvent& event) { OnBonusStar(event.author); }
+
+void Tank::OnBonusCaliberPickup(const BonusCaliberPickupEvent& event) { OnBonusCaliber(event.author); }
 
 void Tank::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
@@ -188,11 +175,11 @@ double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
 
 void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
 
-void Tank::OnBonusTimer(const std::string& fraction, const bool isActive)
+void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
-	if (fraction == _fraction)
+	if (event.fraction == _fraction)
 	{
-		if (isActive)
+		if (event.isActive)
 		{
 			UnsubscribeTickUpdate();
 		}
@@ -218,11 +205,11 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	}
 }
 
-void Tank::OnBonusGrenade(const std::string& fraction)
+void Tank::OnBonusGrenade(const BonusGrenadePickupEvent& event)
 {
-	if (fraction != _fraction)
+	if (event.fraction != _fraction)
 	{
-		TakeDamage(GetHealth(), "Grenade", fraction);
+		TakeDamage(GetHealth(), "Grenade", event.fraction);
 	}
 }
 
@@ -297,13 +284,13 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 	}
 }
 
-void Tank::OnClientChangePos(const FPoint newPos, const Direction dir)
+void Tank::OnClientChangePos(const ClientInPosEvent& event)
 {
-	SetDirection(dir);
-	SetPos(newPos);
+	SetDirection(event.dir);
+	SetPos(event.pos);
 
 	//NOTE: fix for tank truck animation tick
-	_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = newPos, .dir = dir});
+	_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = event.pos, .dir = event.dir});
 }
 
 bool Tank::IsTouchBush() const

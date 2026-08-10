@@ -39,57 +39,62 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 
 void BonusSpawner::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
-
-		if (_gameMode == GameMode::PlayAsClient)
-		{
-			UnsubscribeAsHost();
-			SubscribeAsClient();
-		}
-		else
-		{
-			SubscribeAsHost();
-			UnsubscribeAsClient();
-		}
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const WindowSizeChangedToEvent& event)
-	{
-		const UPoint& newSize = event.newSize;
-		_distSpawnPosY = std::uniform_int_distribution<>{
-				0,
-				static_cast<int>(newSize.y) - _gameConfig.bonusSize};
-		_distSpawnPosX = std::uniform_int_distribution<>{
-				0,
-				static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
-	}));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWindowSizeChangedTo));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
+void BonusSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_gameMode = event.mode;
+
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		UnsubscribeAsHost();
+		SubscribeAsClient();
+	}
+	else
+	{
+		SubscribeAsHost();
+		UnsubscribeAsClient();
+	}
+}
+
+void BonusSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+{
+	const UPoint& newSize = event.newSize;
+	_distSpawnPosY = std::uniform_int_distribution<>{
+			0,
+			static_cast<int>(newSize.y) - _gameConfig.bonusSize};
+	_distSpawnPosX = std::uniform_int_distribution<>{
+			0,
+			static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
+}
+
 void BonusSpawner::SubscribeAsHost()
 {
-	_hostSub = _events->AddListener(_name, [this](const TickUpdateEvent&) { this->Update(); });
+	_hostSub = _events->AddListener(this, &BonusSpawner::Update);
 }
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_clientSub = _events->AddListener(_name, [this](const ClientInBonusSpawnEvent& event)
-	{
-		const auto size = static_cast<float>(_gameConfig.bonusSize);
-		const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
-		SpawnBonus(rect, event.type, event.uuid);
-	});
+	_clientSub = _events->AddListener(this, &BonusSpawner::OnClientInBonusSpawn);
+}
+
+void BonusSpawner::OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event)
+{
+	const auto size = static_cast<float>(_gameConfig.bonusSize);
+	const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
+	SpawnBonus(rect, event.type, event.uuid);
 }
 
 void BonusSpawner::UnsubscribeAsHost() { _hostSub = EventSubscription{}; }
 
 void BonusSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
-void BonusSpawner::Update()
+void BonusSpawner::Update(const TickUpdateEvent&)
 {
 	if (_spawnTimer.IsCooldownFinish())
 	{
@@ -161,7 +166,7 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 	SpawnBonus(rect, bonusType);
 }
 
-void BonusSpawner::Reset()
+void BonusSpawner::Reset(const GameResetEvent&)
 {
 	_spawnTimer.Reset();
 }

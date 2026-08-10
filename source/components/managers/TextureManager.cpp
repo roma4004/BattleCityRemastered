@@ -15,14 +15,8 @@ TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 
 void TextureManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const DrawObjEvent& event)
-	{
-		this->Draw(event.rect, event.dir, event.name);
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const DrawAnimationEvent& event)
-	{
-		this->DrawAnimation(event.rect, event.dir, event.frame, event.scale, event.name);
-	}));
+	_subs.push_back(_events->AddListener(this, &TextureManager::Draw));
+	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
 }
 
 ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
@@ -201,8 +195,11 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 	return textureRect;
 }
 
-void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name) const
+void TextureManager::Draw(const DrawObjEvent& event) const
 {
+	const ObjRectangle& rect = event.rect;
+	const Direction dir = event.dir;
+	const std::string& name = event.name;
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
@@ -218,9 +215,13 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }
 
-void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
-								   const std::string& name) const
+void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
+	const ObjRectangle& rect = event.rect;
+	const Direction dir = event.dir;
+	const int step = event.frame;
+	const int scale = event.scale;
+	const std::string& name = event.name;
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
 	const int direction = name == "Water" ? -1 : 1;//NOTE: water's frames are played back-to-front frames flow

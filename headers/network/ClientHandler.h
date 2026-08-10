@@ -6,6 +6,8 @@
 #include <thread>
 #include <vector>
 
+struct NetCommandUpdateEvent;
+
 namespace network::commands
 {
 class ClientHandler : public INetworkNode
@@ -29,6 +31,7 @@ public:
 private:
 	void Subscribe();
 	void Shutdown();
+	void OnNetCommandUpdate(const NetCommandUpdateEvent&);
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};

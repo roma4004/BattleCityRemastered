@@ -7,6 +7,17 @@
 
 enum class GameMode : char8_t;
 class EventSystem;
+struct MenuReleasedEvent;
+struct PauseReleasedEvent;
+struct GameModeChangedToEvent;
+struct GameResetEvent;
+struct PreTickUpdateEvent;
+struct ShowMenuEvent;
+struct MenuShowedEvent;
+struct MoveUpEvent;
+struct MoveDownEvent;
+struct EnterEvent;
+struct FireEvent;
 
 struct MenuKeys final
 {
@@ -27,6 +38,19 @@ class InputProviderForMenu final
 	std::vector<EventSubscription> _menuNavSubs{};
 	GameMode _gameMode{};
 	MenuKeys _keys{};
+
+	void OnMenuReleased(const MenuReleasedEvent&);
+	void OnPauseReleased(const PauseReleasedEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnGameReset(const GameResetEvent&);
+	void OnPreTickUpdate(const PreTickUpdateEvent&);
+	void OnShowMenu(const ShowMenuEvent& event);
+	void OnMenuShowed(const MenuShowedEvent& event);
+
+	void OnMenuNavUp(const MoveUpEvent& event);
+	void OnMenuNavDown(const MoveDownEvent& event);
+	void OnMenuNavEnter(const EnterEvent& event);
+	void OnMenuNavFire(const FireEvent& event);
 
 public:
 	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);

@@ -13,8 +13,10 @@ BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 
 void BrickWall::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &BrickWall::OnDraw));
 }
+
+void BrickWall::OnDraw(const DrawEvent&) { Draw(); }
 
 void BrickWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
 {

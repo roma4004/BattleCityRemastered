@@ -10,6 +10,19 @@ class PlayerTest;
 class IShootable;
 class BulletPool;
 class GameConfig;
+struct ClientInPosEvent;
+struct BonusTimerReApplyOnSpawnEvent;
+struct PostDrawEvent;
+struct ScaleFactorChangedToEvent;
+struct ClientInShotEvent;
+struct ClientInBonusHelmetPickupEvent;
+struct ClientInBonusStarPickupEvent;
+struct ClientInBonusCaliberPickupEvent;
+struct BonusTimerStatusChangeEvent;
+struct BonusHelmetStatusChangeEvent;
+struct BonusGrenadePickupEvent;
+struct BonusStarPickupEvent;
+struct BonusCaliberPickupEvent;
 
 class Tank : public Pawn
 {
@@ -24,11 +37,21 @@ class Tank : public Pawn
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
+	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);
+	void OnPostDraw(const PostDrawEvent&);
+	void OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event);
+	void OnClientInShot(const ClientInShotEvent& event);
+	void OnClientInBonusHelmetPickup(const ClientInBonusHelmetPickupEvent& event);
+	void OnClientInBonusStarPickup(const ClientInBonusStarPickupEvent&);
+	void OnClientInBonusCaliberPickup(const ClientInBonusCaliberPickupEvent&);
+	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
+	void OnBonusStarPickup(const BonusStarPickupEvent& event);
+	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
 
-	void OnBonusTimer(const std::string& fraction, bool isActive);
+	void OnBonusTimer(const BonusTimerStatusChangeEvent& event);
 	void OnBonusHelmet(const std::string& name, bool isActive);
 
-	void OnBonusGrenade(const std::string& fraction);
+	void OnBonusGrenade(const BonusGrenadePickupEvent& event);
 	void OnBonusStar(const std::string& author);
 	void OnBonusCaliber(const std::string& author);
 
@@ -44,7 +67,7 @@ protected:
 	void Shot(buuid withUuid = {});
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
-	void OnClientChangePos(FPoint newPos, Direction dir);
+	void OnClientChangePos(const ClientInPosEvent& event);
 	void ApplyScaleToCalibre(float newScale);
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;

@@ -9,6 +9,15 @@ enum class AnimationType : char8_t;
 struct ObjRectangle;
 struct FPoint;
 struct AnimationTankUpdateEvent;
+struct AnimationCreateEvent;
+struct AnimationCreateTankExplosionEvent;
+struct AnimationCreateBulletExplosionEvent;
+struct AnimationCreateTankEvent;
+struct AnimationCreateWaterEvent;
+struct GameResetEvent;
+struct PostTickUpdateEvent;
+struct BonusHelmetAnimationChangeEvent;
+struct DrawEvent;
 class Tank;
 
 // Every animation is locally simulated: each side (host or client) creates and finishes its own
@@ -35,9 +44,17 @@ public:
 	void DeleteTankAnimation(const std::string& name);
 
 private:
+	void OnGameReset(const GameResetEvent&);
+	void OnAnimationCreate(const AnimationCreateEvent& event);
+	void OnAnimationCreateTankExplosion(const AnimationCreateTankExplosionEvent& event);
+	void OnAnimationCreateBulletExplosion(const AnimationCreateBulletExplosionEvent& event);
+	void OnAnimationCreateTank(const AnimationCreateTankEvent& event);
+	void OnAnimationCreateWater(const AnimationCreateWaterEvent& event);
+	void OnBonusHelmetAnimationChange(const BonusHelmetAnimationChangeEvent& event);
+
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
 				int animationSpeed, bool isInfinite = {});
-	void Update();
+	void Update(const PostTickUpdateEvent&);
 	static void UpdateFrame(AnimatedObject& object);
 	void UpdateTank(const AnimationTankUpdateEvent& event);
 	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
@@ -45,5 +62,5 @@ private:
 	void OnHelmetEffect(const std::string& name, bool isEnable);
 	static AnimatedObject* FindReusable(std::vector<AnimatedObject>& container, AnimationType type);
 	void DrawObject(const AnimatedObject& object) const;
-	void Draw() const;
+	void Draw(const DrawEvent&) const;
 };

@@ -12,6 +12,8 @@ class Bullet;
 class BaseObj;
 class EventSystem;
 class GameConfig;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
 
 class BulletPool final
 {
@@ -26,6 +28,9 @@ class BulletPool final
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
 	bool _isClearing{};
+
+	void OnGameReset(const GameResetEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,

@@ -16,25 +16,25 @@ DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& eve
 
 void DelayedSpawnManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
-
-	_subs.push_back(_events->AddListener(_name, [this](const SpawnDelayStartEvent& event)
-	{
-		this->SpawnDelayStart(event.uuid, event.delay);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent& event)
-	{
-		this->PreTickUpdate(event.deltaTime);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { this->Disposer(); }));
+	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnSpawnDelayStart));
+	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnPreTickUpdate));
+	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnPostTickUpdate));
 }
+
+void DelayedSpawnManager::OnGameReset(const GameResetEvent&) { Reset(); }
+
+void DelayedSpawnManager::OnSpawnDelayStart(const SpawnDelayStartEvent& event)
+{
+	SpawnDelayStart(event.uuid, event.delay);
+}
+
+void DelayedSpawnManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
+
+void DelayedSpawnManager::OnPreTickUpdate(const PreTickUpdateEvent& event) { PreTickUpdate(event.deltaTime); }
+
+void DelayedSpawnManager::OnPostTickUpdate(const PostTickUpdateEvent&) { Disposer(); }
 
 void DelayedSpawnManager::Reset()
 {

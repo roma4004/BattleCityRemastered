@@ -313,7 +313,7 @@ TEST_F(BonusTest, GrenadeNotPickUpEnemyHealthFull)
 TEST_F(BonusTest, TankPickUpExtraLife)
 {
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener("BonusTest", [&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		respawnActual = event.respawnCount;
 	});
@@ -342,7 +342,7 @@ TEST_F(BonusTest, TankPickUpExtraLife)
 TEST_F(BonusTest, TankNotPickUpTierTheSame)
 {
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener("BonusTest", [&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		respawnActual = event.respawnCount;
 	});

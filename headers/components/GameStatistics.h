@@ -9,6 +9,8 @@
 
 enum class GameMode : char8_t;
 class EventSystem;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
 
 struct StatisticsData final
 {
@@ -67,24 +69,38 @@ class GameStatistics final
 	void Subscribe();
 	void SubscribeHost();
 	void SubscribeAsClient();
-	void OnGameModeChangedTo(GameMode newGameMode);
+	void OnGameReset(const GameResetEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
 	void UnsubscribeAsHost();
 	void UnsubscribeAsClient();
 
 	void OnBulletHit(const StatisticsBulletHitEvent& event);
+	void OnClientInBulletHit(const ClientInBulletHitEvent& event);
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
+	void OnClientInEnemyHit(const ClientInEnemyHitEvent& event);
 	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerOneHit(const ClientInPlayerOneHitEvent& event);
 	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerTwoHit(const ClientInPlayerTwoHitEvent& event);
 	void OnTankHit(const StatisticsTankHitEvent& event);
 	void OnEnemyDied(const std::string& author, const std::string& fraction);
+	void OnClientInEnemyDied(const ClientInEnemyDiedEvent& event);
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerOneDied(const ClientInPlayerOneDiedEvent& event);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerTwoDied(const ClientInPlayerTwoDiedEvent& event);
 	void OnTankDied(const StatisticsTankDiedEvent& event);
 	void OnBrickWallDied(const StatisticsAttributionEvent& event);
+	void OnHostBrickWallDied(const BrickWallDiedEvent& event);
+	void OnClientInBrickWallDied(const ClientInBrickWallDiedEvent& event);
 	void OnSteelWallDied(const StatisticsAttributionEvent& event);
+	void OnHostSteelWallDied(const SteelWallDiedEvent& event);
+	void OnClientInSteelWallDied(const ClientInSteelWallDiedEvent& event);
 	void OnBonusPickup(const StatisticsBonusPickupEvent& event);
+	void OnClientInBonusPickup(const ClientInBonusPickupEvent& event);
 	void OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event);
+	void OnClientInBonusDestroyed(const ClientInBonusDestroyedEvent& event);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);

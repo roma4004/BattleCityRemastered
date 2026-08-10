@@ -28,38 +28,61 @@ ScoreBoard::~ScoreBoard() = default;
 void ScoreBoard::Subscribe()
 {
 	//NOTE: avoid showing score on game start
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->DisplayScore(false); }));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameReset));
 
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
-	}));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameModeChangedTo));
 
-	_subs.push_back(_events->AddListener(_name, [this](const RespawnCountChangedToEvent& event)
-	{
-		this->OnRespawnCountChanged(event.objectName, event.respawnCount);
-	}));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnRespawnCountChangedTo));
 
 	if (_isScoreBoardDisplayed)
 	{
-		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(this, &ScoreBoard::OnDrawUserInterface);
 	}
 
 	//NOTE: avoid showing score and menu at the same time
-	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event)
-	{
-		if (event.isShown)
-		{
-			this->DisplayScore(false);
-		}
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& /*event*/)
-	{
-		/*this->DisplayScore(isPause);*/
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->DisplayScore(true); }));
-	_subs.push_back(_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->DisplayScore(true); }));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPauseStatus));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPlayersTeamIsWon));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnEnemiesTeamIsWon));
 }
+
+void ScoreBoard::OnGameReset(const GameResetEvent&) { DisplayScore(false); }
+void ScoreBoard::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
+
+void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
+{
+	const auto& objectName = event.objectName;
+	if (objectName == "Enemy")
+	{
+		_enemyRespawnCount = event.respawnCount;
+	}
+	else if (objectName == "Player1")
+	{
+		_playerOneRepawnCount = event.respawnCount;
+	}
+	else if (objectName == "Player2")
+	{
+		_playerTwoRespawnCount = event.respawnCount;
+	}
+}
+
+void ScoreBoard::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
+
+void ScoreBoard::OnMenuShowed(const MenuShowedEvent& event)
+{
+	if (event.isShown)
+	{
+		DisplayScore(false);
+	}
+}
+
+void ScoreBoard::OnPauseStatus(const PauseStatusEvent& /*event*/)
+{
+	/*DisplayScore(isPause);*/
+}
+
+void ScoreBoard::OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&) { DisplayScore(true); }
+void ScoreBoard::OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&) { DisplayScore(true); }
 
 //TODO: optimize draw call with cache non changed text part
 void ScoreBoard::Draw()
@@ -178,22 +201,6 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 	_events->EmitEvent(RenderTextEvent{.pos = Point{.x = pos.x, .y = pos.y}, .color = color, .text = textStream.str()});
 }
 
-void ScoreBoard::OnRespawnCountChanged(const std::string& objectName, const unsigned short respawnCount)
-{
-	if (objectName == "Enemy")
-	{
-		_enemyRespawnCount = respawnCount;
-	}
-	else if (objectName == "Player1")
-	{
-		_playerOneRepawnCount = respawnCount;
-	}
-	else if (objectName == "Player2")
-	{
-		_playerTwoRespawnCount = respawnCount;
-	}
-}
-
 void ScoreBoard::DisplayScore(const bool isDisplayed)
 {
 	if (isDisplayed && _gameMode == GameMode::Demo)
@@ -210,7 +217,7 @@ void ScoreBoard::DisplayScore(const bool isDisplayed)
 
 	if (_isScoreBoardDisplayed)
 	{
-		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(this, &ScoreBoard::OnDrawUserInterface);
 	}
 	else
 	{

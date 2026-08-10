@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "AnimationManager.h"
-#include "Point.h"
 #include "components/EventSystem.h"
 #include "enums/TextureOffset.h"
 #include <memory>
@@ -10,6 +9,8 @@ enum class Direction : char8_t;
 using Uint8 = uint8_t;
 class BaseObj;
 class EventSystem;
+struct DrawObjEvent;
+struct DrawAnimationEvent;
 
 class TextureManager final
 {
@@ -21,8 +22,8 @@ class TextureManager final
 
 	void Subscribe();
 
-	void Draw(ObjRectangle rect, Direction dir, const std::string& name) const;
-	void DrawAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name) const;
+	void Draw(const DrawObjEvent& event) const;
+	void DrawAnimation(const DrawAnimationEvent& event) const;
 
 	[[nodiscard]] ObjRectangle GetAnimTextureRect(const std::string& name, ObjRectangle rect,
 												  ObjRectangle& destRect) const;

@@ -22,6 +22,15 @@ class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
 class GameConfig;
+struct AddToSpawnQueueEvent;
+struct PostTickUpdateEvent;
+struct DeltaTimeEvent;
+struct GameModeSelectedWithMouseEvent;
+struct PreviousGameModeEvent;
+struct NextGameModeEvent;
+struct ApplyGameModeEvent;
+struct ServerInClientReadyToStartGameEvent;
+struct GameModeChangedToEvent;
 
 class GameSuccess final : public IGame
 {
@@ -41,20 +50,25 @@ private:
 	void Subscribe();
 
 	void ApplyGameMode(GameMode gameMode);
-	void PrevGameMode();
-	void NextGameMode();
+	void PrevGameMode(const PreviousGameModeEvent&);
+	void NextGameMode(const NextGameModeEvent&);
+	void OnApplyGameMode(const ApplyGameModeEvent&);
+
+	void OnAddToSpawnQueue(const AddToSpawnQueueEvent& event);
+	void OnPostTickUpdate(const PostTickUpdateEvent&);
+	void OnDeltaTime(const DeltaTimeEvent& event);
+	void OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event);
 
 	void DisposeDeadObject();
 	void FlushSpawnQueue();
 
-	void OnClientReady() const;
+	void OnClientReady(const ServerInClientReadyToStartGameEvent&) const;
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
-	void OnGameModeChangedTo(GameMode newGameMode);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
 	UPoint _windowSize{};
-	std::string _name{"Game"};
 
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};

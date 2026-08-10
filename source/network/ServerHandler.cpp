@@ -74,10 +74,9 @@ void ServerHandler::Shutdown()
 
 void ServerHandler::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const NetCommandUpdateEvent&)
-	{
-		this->ProcessNetworkCommands();
-	}));
+	_subs.push_back(_events->AddListener(this, &ServerHandler::OnNetCommandUpdate));
 }
+
+void ServerHandler::OnNetCommandUpdate(const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }
 
 }//namespace network::commands

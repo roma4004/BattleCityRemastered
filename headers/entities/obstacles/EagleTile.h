@@ -5,12 +5,14 @@
 
 struct ObjRectangle;
 class EventSystem;
+struct DrawEvent;
 
 class EagleTile final : public Obstacle
 {
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
+	void OnDraw(const DrawEvent&);
 
 protected:
 	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),

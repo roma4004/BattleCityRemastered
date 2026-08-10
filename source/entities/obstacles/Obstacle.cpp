@@ -41,11 +41,10 @@ void Obstacle::Subscribe()
 
 void Obstacle::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_uuid, _nameWithUuid, [this](const ClientInHealthEvent& event)
-	{
-		this->SetHealth(event.health);
-	}));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnClientInHealth));
 }
+
+void Obstacle::OnClientInHealth(const ClientInHealthEvent& event) { SetHealth(event.health); }
 
 void Obstacle::Draw() const
 {

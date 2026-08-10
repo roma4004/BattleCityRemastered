@@ -15,7 +15,7 @@ public:
 	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
 														   std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	{
-		return events->AddListener("TestSpawnQueue", [allObjects](const AddToSpawnQueueEvent& event)
+		return events->AddListener([allObjects](const AddToSpawnQueueEvent& event)
 		{
 			allObjects->emplace_back(event.obj);
 		});

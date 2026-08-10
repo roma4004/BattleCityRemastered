@@ -12,6 +12,11 @@
 union SDL_Event;
 class EventSystem;
 class GameConfig;
+struct PauseStatusEvent;
+struct TabReleasedEvent;
+struct PreTickUpdateEvent;
+struct MenuShowedEvent;
+struct MenuPosChangedEvent;
 
 class UserInput final
 {
@@ -30,7 +35,6 @@ class UserInput final
 	bool _isWindowMoving{false};
 	bool _isMenuDisplayed{false};
 	GameMode _selectedGameMode{};
-	std::string _name{"UserInput"};
 	bool _areControllersSwapped{false};
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -54,11 +58,15 @@ class UserInput final
 	void WindowsMoveEvents(const SDL_Event& event);
 
 	void Subscribe();
+	void OnPauseStatus(const PauseStatusEvent& event);
+	void SwapControllers(const TabReleasedEvent&);
+	void OnPreTickUpdate(const PreTickUpdateEvent&);
+	void OnMenuShowed(const MenuShowedEvent& event);
+	void OnMenuPosChanged(const MenuPosChangedEvent& event);
 
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_GameController>& newController);
 	void DisconnectController(SDL_JoystickID instanceId);
-	void SwapControllers();
 	[[nodiscard]] std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
 	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller,
 											   SDL_JoystickID instanceId);

@@ -31,50 +31,39 @@ void RespawnManager::Subscribe()
 {
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->ResetSpawn(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
-
-		this->_gameMode == GameMode::PlayAsClient ? this->SubscribeAsClient() : this->UnsubscribeAsClient();
-
-		this->OnGameModeChange();
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const TankSpawnEvent& event) { OnTankSpawn(event.uuid); }));
-
-	_subs.push_back(_events->AddListener(_name, [this](const TankDiedEvent& event) { OnTankDied(event.uuid); }));
-
-	_subs.push_back(_events->AddListener(_name, [this](const BonusTankPickupEvent& event)
-	{
-		this->OnBonusTank(event.author);
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const PlayersBaseFinishedEvent&)
-	{
-		this->TriggerLastPlayersLife();
-	}));
-
-	_subs.push_back(_events->AddListener(_name, [this](const RespawnTanksEvent& event)
-	{
-		this->RespawnTanks(event.skipDelay);
-	}));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankSpawn));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankDied));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankPickup));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnPlayersBaseFinished));
+	_subs.push_back(_events->AddListener(this, &RespawnManager::OnRespawnTanks));
 }
+
+void RespawnManager::OnGameReset(const GameResetEvent&) { ResetSpawn(); }
+
+void RespawnManager::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_gameMode = event.mode;
+
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+
+	OnGameModeChange();
+}
+
+void RespawnManager::OnBonusTankPickup(const BonusTankPickupEvent& event) { OnBonusTank(event.author); }
+
+void RespawnManager::OnPlayersBaseFinished(const PlayersBaseFinishedEvent&) { TriggerLastPlayersLife(); }
+
+void RespawnManager::OnRespawnTanks(const RespawnTanksEvent& event) { RespawnTanks(event.skipDelay); }
 
 void RespawnManager::SubscribeAsClient()
 {
-	_clientSubs.push_back(_events->AddListener(_name, [this](const ClientInBonusTankPickupEvent& event)
-	{
-		this->OnBonusTank(event.name);
-	}));
-
-	_clientSubs.push_back(_events->AddListener(
-			_name,
-			[this](const ClientInRespawnTankEvent& event)
-			{
-				this->OnClientRespawn(event.type);
-			}));
+	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnClientInBonusTankPickup));
+	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnClientRespawn));
 }
+
+void RespawnManager::OnClientInBonusTankPickup(const ClientInBonusTankPickupEvent& event) { OnBonusTank(event.name); }
 
 void RespawnManager::UnsubscribeAsClient() { _clientSubs.clear(); }
 
@@ -183,8 +172,9 @@ void RespawnManager::OnBonusTank(const std::string& author)
 	}
 }
 
-void RespawnManager::OnClientRespawn(const TankType type)
+void RespawnManager::OnClientRespawn(const ClientInRespawnTankEvent& event)
 {
+	const TankType type = event.type;
 	switch (type)
 	{
 		case TankType::ENEMY1:
@@ -204,8 +194,9 @@ void RespawnManager::OnClientRespawn(const TankType type)
 	}
 }
 
-void RespawnManager::OnTankSpawn(const buuid& uuid)
+void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 {
+	const buuid& uuid = event.uuid;
 	if (const auto it = std::ranges::find(_slots, uuid, &SpawnSlot::uuid);
 		it != _slots.end())
 	{
@@ -253,8 +244,9 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 	}
 }
 
-void RespawnManager::OnTankDied(const buuid& uuid)
+void RespawnManager::OnTankDied(const TankDiedEvent& event)
 {
+	const buuid& uuid = event.uuid;
 	if (const auto it = std::ranges::find(_slots, uuid, &SpawnSlot::uuid);
 		it != _slots.end())
 	{

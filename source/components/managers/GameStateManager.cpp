@@ -4,7 +4,6 @@
 #include "components/events/GameModeEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
-#include "enums/GameMode.h"
 
 GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 	: _name{"GameStateManager"}
@@ -15,21 +14,23 @@ GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 
 void GameStateManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event)
-	{
-		this->_isPause = event.isPaused;
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const PreDrawUserInterfaceEvent&) { this->Draw(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { this->Reset(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const PlayersTeamIsWonEvent&) { this->_isGameWon = true; }));
-	_subs.push_back(_events->AddListener(_name, [this](const EnemiesTeamIsWonEvent&) { this->_isGameOver = true; }));
-	_subs.push_back(_events->AddListener(_name, [this](const GameModeChangedToEvent& event)
-	{
-		this->_gameMode = event.mode;
-	}));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPlayersTeamIsWon));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnEnemiesTeamIsWon));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameModeChangedTo));
 }
 
-void GameStateManager::Draw() const
+void GameStateManager::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
+
+void GameStateManager::OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&) { _isGameWon = true; }
+
+void GameStateManager::OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&) { _isGameOver = true; }
+
+void GameStateManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
+
+void GameStateManager::Draw(const PreDrawUserInterfaceEvent&) const
 {
 	if (_isPause)
 	{
@@ -47,7 +48,7 @@ void GameStateManager::Draw() const
 	}
 }
 
-void GameStateManager::Reset()
+void GameStateManager::Reset(const GameResetEvent&)
 {
 	_isPause = false;
 	_isGameOver = false;

@@ -13,8 +13,10 @@ SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 
 void SteelWall::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &SteelWall::OnDraw));
 }
+
+void SteelWall::OnDraw(const DrawEvent&) { Draw(); }
 
 void SteelWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
 {

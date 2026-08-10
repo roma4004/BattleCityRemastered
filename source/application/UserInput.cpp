@@ -33,26 +33,28 @@ UserInput::~UserInput()
 
 void UserInput::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_name, [this](const PauseStatusEvent& event)
-	{
-		this->_isPause = event.isPaused;
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const TabReleasedEvent&) { this->SwapControllers(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const PreTickUpdateEvent&) { this->Update(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event)
-	{
-		_isMenuDisplayed = event.isShown;
-	}));
-	_subs.push_back(_events->AddListener(_name, [this](const MenuPosChangedEvent& event)
-	{
-		_allTilesRect = {
-				.x = _menuPos.x + _allTilesRectDefault.x,
-				.y = _menuPos.y + _allTilesRectDefault.y,
-				.w = _allTilesRectDefault.w,
-				.h = _allTilesRectDefault.h
-		};
-		InitMouseHoverTiles(event.pos);
-	}));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnPauseStatus));
+	_subs.push_back(_events->AddListener(this, &UserInput::SwapControllers));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
+	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuPosChanged));
+}
+
+void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
+
+void UserInput::OnPreTickUpdate(const PreTickUpdateEvent&) { Update(); }
+
+void UserInput::OnMenuShowed(const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; }
+
+void UserInput::OnMenuPosChanged(const MenuPosChangedEvent& event)
+{
+	_allTilesRect = {
+			.x = _menuPos.x + _allTilesRectDefault.x,
+			.y = _menuPos.y + _allTilesRectDefault.y,
+			.w = _allTilesRectDefault.w,
+			.h = _allTilesRectDefault.h
+	};
+	InitMouseHoverTiles(event.pos);
 }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
@@ -74,7 +76,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 	}
 }
 
-void UserInput::SwapControllers()
+void UserInput::SwapControllers(const TabReleasedEvent&)
 {
 	_areControllersSwapped = !_areControllersSwapped;
 	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent

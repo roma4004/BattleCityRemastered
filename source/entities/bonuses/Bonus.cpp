@@ -43,30 +43,33 @@ Bonus::~Bonus()
 
 void Bonus::Subscribe()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const DrawEvent&) { this->Draw(); }));
+	_subs.push_back(_events->AddListener(this, &Bonus::OnDraw));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
+void Bonus::OnDraw(const DrawEvent&) { Draw(); }
+
 void Bonus::SubscribeAsHost()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const TickUpdateEvent& event)
-	{
-		this->TickUpdate(event.deltaTime);
-	}));
+	_subs.push_back(_events->AddListener(this, &Bonus::OnTickUpdate));
 }
+
+void Bonus::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
 
 void Bonus::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(_nameWithUuid, [this](const ClientInBonusDeSpawnEvent& event)
-	{
-		if (event.uuid != this->_uuid)
-		{
-			return;
-		}
+	_subs.push_back(_events->AddListener(this, &Bonus::OnClientInBonusDeSpawn));
+}
 
-		this->SetIsAlive(false);
-	}));
+void Bonus::OnClientInBonusDeSpawn(const ClientInBonusDeSpawnEvent& event)
+{
+	if (event.uuid != _uuid)
+	{
+		return;
+	}
+
+	SetIsAlive(false);
 }
 
 void Bonus::Draw() const

@@ -24,19 +24,17 @@ void Menu::Subscribe()
 {
 	if (_isMenuDisplayed)
 	{
-		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
 	}
 
-	_subs.push_back(_events->AddListener(_name, [this](const SelectedGameModeChangedToEvent& event)
-	{
-		this->_selectedGameMode = event.mode;
-	}));
+	_subs.push_back(_events->AddListener(this, &Menu::OnSelectedGameModeChangedTo));
 
-	_subs.push_back(_events->AddListener(_name, [this](const MenuShowedEvent& event)
-	{
-		DisplayMenu(event.isShown);
-	}));
+	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShowed));
 }
+
+void Menu::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
+void Menu::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
+void Menu::OnMenuShowed(const MenuShowedEvent& event) { DisplayMenu(event.isShown); }
 
 void Menu::Draw()
 {
@@ -115,7 +113,7 @@ void Menu::DisplayMenu(const bool isDisplayed)
 
 	if (_isMenuDisplayed)
 	{
-		_drawSub = _events->AddListener(_name, [this](const DrawUserInterfaceEvent&) { this->Draw(); });
+		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
 	}
 	else
 	{

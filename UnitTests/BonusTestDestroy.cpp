@@ -219,7 +219,7 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
 	unsigned short respawnActual{3u};
-	auto respawnSub = _events->AddListener("BonusTest", [&respawnActual](const RespawnCountChangedToEvent& event)
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
 	{
 		respawnActual = event.respawnCount;
 	});
