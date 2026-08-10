@@ -1,7 +1,5 @@
 #include "entities/bonuses/BonusHelmet.h"
 #include "components/EventSystem.h"
-#include "components/events/BonusPickupEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
 
@@ -13,7 +11,9 @@ BonusHelmet::BonusHelmet(const ObjRectangle& rect, const std::shared_ptr<EventSy
 
 BonusHelmet::~BonusHelmet() = default;
 
-void BonusHelmet::EmitPickupEvent(const std::string& author, const std::string&)
+void BonusHelmet::PickUpBonus(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(BonusHelmetPickupEvent{.author = author, .effectDuration = _effectDuration});
+	_events->EmitEvent("Statistics_BonusPickup", author, fraction);
+	_events->EmitEvent(_name + "_Pickup", author, _effectDuration);
+	TakeDamage(GetHealth(), _name, _fraction);
 }

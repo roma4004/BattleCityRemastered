@@ -1,9 +1,6 @@
 #include "components/managers/GameStateManager.h"
 #include "components/EventSystem.h"
-#include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
-#include "components/events/InputEvents.h"
-#include "components/events/RenderUIEvents.h"
+#include "enums/GameMode.h"
 
 GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 	: _name{"GameStateManager"}
@@ -12,43 +9,42 @@ GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
+GameStateManager::~GameStateManager() { Unsubscribe(); }
+
 void GameStateManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPlayersTeamIsWon));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnEnemiesTeamIsWon));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameModeChangedTo));
+	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
+	_events->AddListener("PreDrawUserInterface", _name, [this]() { this->Draw(); });
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+	_events->AddListener("PlayersTeamIsWon", _name, [this]() { this->_isGameWon = true; });
+	_events->AddListener("EnemiesTeamIsWon", _name, [this]() { this->_isGameOver = true; });
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_gameMode = newGameMode;
+	});
 }
 
-void GameStateManager::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
+void GameStateManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
-void GameStateManager::OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&) { _isGameWon = true; }
-
-void GameStateManager::OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&) { _isGameOver = true; }
-
-void GameStateManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
-
-void GameStateManager::Draw(const PreDrawUserInterfaceEvent&) const
+void GameStateManager::Draw() const
 {
 	if (_isPause)
 	{
-		_events->EmitEvent(RenderPauseTextEvent{});
+		_events->EmitEvent("RenderPauseText");
 	}
 
 	if (_isGameOver)
 	{
-		_events->EmitEvent(RenderGameOverTextEvent{});
+		_events->EmitEvent("RenderGameOverText");
 	}
 
 	if (_isGameWon)
 	{
-		_events->EmitEvent(RenderGameWonTextEvent{});
+		_events->EmitEvent("RenderGameWonText");
 	}
 }
 
-void GameStateManager::Reset(const GameResetEvent&)
+void GameStateManager::Reset()
 {
 	_isPause = false;
 	_isGameOver = false;

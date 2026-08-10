@@ -55,8 +55,8 @@ public:
 
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime);
-	void ResetVelocity();
+	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime) override;
+	void ResetVelocity() override;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(
 			double deltaTime, std::optional<Direction> excludeDirection) const override;
 };

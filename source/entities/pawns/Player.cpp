@@ -1,8 +1,5 @@
 #include "entities/pawns/Player.h"
-#include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
-#include "components/events/AnimationRenderEvents.h"
-#include "components/events/ReplicationEvents.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -11,16 +8,33 @@
 #include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig)
-	: Tank{std::move(pawnProperty), bulletPool, gameConfig}
+			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig, const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
 	, _inputProvider{std::move(inputProvider)}
 {
-	_inputProvider->Enable();
+	if (enableByDefault)
+	{
+		Enable();
+	}
 
 	_shootTimer.cooldown = std::chrono::milliseconds{500};
 }
 
 Player::~Player() = default;
+
+void Player::Enable()
+{
+	Tank::Enable();
+
+	_inputProvider->Enable();
+}
+
+void Player::Disable() const
+{
+	Tank::Disable();
+
+	_inputProvider->Disable();
+}
 
 void Player::Move(const Direction direction, const double deltaTime,
 				  std::vector<std::shared_ptr<BaseObj>>& outCollisions)
@@ -35,12 +49,12 @@ void Player::Move(const Direction direction, const double deltaTime,
 	if (const bool isMove = _moveBeh->Move(direction, deltaTime, outCollisions);
 		isNewDir || isMove)
 	{
-		const FPoint pos = GetPos();
-		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
 }
@@ -73,19 +87,14 @@ void Player::TickUpdate(const double deltaTime)
 		Move(Direction::RIGHT, deltaTime, outCollisions);
 	}
 
-	if (_effects.isTouchTheIce)
+	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
-		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
-			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
+
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			const FPoint pos = GetPos();
-			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
-
-			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
-			{
-				_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
-			}
-
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
 
@@ -94,10 +103,7 @@ void Player::TickUpdate(const double deltaTime)
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
-		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
-		{
-			moveBeh->ResetVelocity();
-		}
+		_moveBeh->ResetVelocity();
 	}
 
 	if (!outCollisions.empty())

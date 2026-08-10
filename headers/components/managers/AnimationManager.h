@@ -2,65 +2,57 @@
 
 #include "../EventSystem.h"
 #include "components/AnimatedObjects.h"
+#include "enums/GameMode.h"
+#include "network/commands/UuidSerialization.h"
 #include <memory>
 #include <vector>
 
 enum class AnimationType : char8_t;
 struct ObjRectangle;
 struct FPoint;
-struct AnimationTankUpdateEvent;
-struct AnimationCreateEvent;
-struct AnimationCreateTankExplosionEvent;
-struct AnimationCreateBulletExplosionEvent;
-struct AnimationCreateTankEvent;
-struct AnimationCreateWaterEvent;
-struct GameResetEvent;
-struct PostTickUpdateEvent;
-struct BonusHelmetAnimationChangeEvent;
-struct DrawEvent;
 class Tank;
 
-// Every animation is locally simulated: each side (host or client) creates and finishes its own
-// animations from state it already has (health/dispose/spawn/position replication), never from a
-// replicated animation-lifecycle event. Nothing here needs to know the game mode.
 class AnimationManager
 {
+	using buuid = boost::uuids::uuid;
+
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
-	std::vector<AnimatedObject> _autoAnimatedObjects{};//advanced on TickUpdate() (eg. explosions, spawn, helmet)
-	std::vector<AnimatedObject> _turnBasedTankObjects{};//advanced on movement (eg. tank move event)
-	std::vector<AnimatedObject> _autoAnimatedWaterObjects{};//advanced on TickUpdate(), separated to render water first
+	std::vector<AnimatedObject> _animatedObjects{};// all other (eg. explosion)
+	std::vector<AnimatedObject> _tankObjects{};//procedural animated (eg tanks )
+	std::vector<AnimatedObject> _waterObjects{};//idle animation
 	std::string _name = "AnimationManager";
+	GameMode _gameMode{};
 
 public:
 	explicit AnimationManager(const std::shared_ptr<EventSystem>& events);
 
-	~AnimationManager() = default;
+	~AnimationManager();
 
 	void Subscribe();
+	void SubscribeAsHost();
+	// void SubscribeAsClient();
 
+	void Unsubscribe() const;
+	void SetGameMode(GameMode newGameMode);
 	void Reset();
+	void CreateAnimationWater(ObjRectangle rect);
+	void CreateHelmetAnimation(ObjRectangle rect, const std::string& name);
+	void CreateAnimationTank(ObjRectangle rect, std::string name);
 	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
 	void DeleteTankAnimation(const std::string& name);
 
 private:
-	void OnGameReset(const GameResetEvent&);
-	void OnAnimationCreate(const AnimationCreateEvent& event);
-	void OnAnimationCreateTankExplosion(const AnimationCreateTankExplosionEvent& event);
-	void OnAnimationCreateBulletExplosion(const AnimationCreateBulletExplosionEvent& event);
-	void OnAnimationCreateTank(const AnimationCreateTankEvent& event);
-	void OnAnimationCreateWater(const AnimationCreateWaterEvent& event);
-	void OnBonusHelmetAnimationChange(const BonusHelmetAnimationChangeEvent& event);
-
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int limitOfFrames, int scale,
-				int animationSpeed, bool isInfinite = {});
-	void OnUpdate(const PostTickUpdateEvent&);
-	static void UpdateFrame(AnimatedObject& object);
-	void OnUpdateTank(const AnimationTankUpdateEvent& event);
-	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
+				bool isInfinite = {});
+	void Update();
+	static void UpdateFrame(AnimatedObject& object, int animationSpeed);
+	static void UpdateWaterFrame(AnimatedObject& object, int animationSpeed);
+	void UpdateTank(const std::string_view& name, const FPoint& pos, const Direction& dir);
+	void UpdateHelmetEffect(const std::string_view& name, const FPoint& pos);
 	void DeleteHelmetAnimation(const std::string& name);
 	void OnHelmetEffect(const std::string& name, bool isEnable);
-	static AnimatedObject* FindReusable(std::vector<AnimatedObject>& container, AnimationType type);
+	// void DisableTankAnimation(const std::string& name);
+	void AnimationSeqDisposer();
 	void DrawObject(const AnimatedObject& object) const;
-	void Draw(const DrawEvent&) const;
+	void Draw() const;
 };

@@ -10,19 +10,6 @@ class PlayerTest;
 class IShootable;
 class BulletPool;
 class GameConfig;
-struct ClientInPosEvent;
-struct BonusTimerReApplyOnSpawnEvent;
-struct PostDrawEvent;
-struct ScaleFactorChangedToEvent;
-struct ClientInShotEvent;
-struct ClientInBonusHelmetPickupEvent;
-struct ClientInBonusStarPickupEvent;
-struct ClientInBonusCaliberPickupEvent;
-struct BonusTimerStatusChangeEvent;
-struct BonusHelmetStatusChangeEvent;
-struct BonusGrenadePickupEvent;
-struct BonusStarPickupEvent;
-struct BonusCaliberPickupEvent;
 
 class Tank : public Pawn
 {
@@ -32,34 +19,24 @@ class Tank : public Pawn
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
-	// Whole-lifetime listeners registered directly in the constructor.
-	std::vector<EventSubscription> _permanentSubs{};
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
-	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);
-	void OnPostDraw(const PostDrawEvent&);
-	void OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event);
-	void OnClientInShot(const ClientInShotEvent& event);
-	void OnClientInBonusHelmetPickup(const ClientInBonusHelmetPickupEvent& event);
-	void OnClientInBonusStarPickup(const ClientInBonusStarPickupEvent&);
-	void OnClientInBonusCaliberPickup(const ClientInBonusCaliberPickupEvent&);
-	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
-	void OnBonusStarPickup(const BonusStarPickupEvent& event);
-	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
 
-	void OnBonusTimer(const BonusTimerStatusChangeEvent& event);
+	void OnBonusTimer(const std::string& fraction, bool isActive);
 	void OnBonusHelmet(const std::string& name, bool isActive);
 
-	void OnBonusGrenade(const BonusGrenadePickupEvent& event);
+	void OnBonusGrenade(const std::string& fraction);
 	void OnBonusStar(const std::string& author);
 	void OnBonusCaliber(const std::string& author);
+	void OnClientTankOnOff(buuid uuid, bool isEnable);
 
 protected:
 	BulletCalibre _calibre{};
 	Timer _shootTimer{};
 
 	void Subscribe() override;
+	void Unsubscribe() const override;
 
 	// bonuses
 	BonusEffectProperty _effects{};
@@ -67,15 +44,17 @@ protected:
 	void Shot(buuid withUuid = {});
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
-	void OnClientChangePos(const ClientInPosEvent& event);
+	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
 	void ApplyScaleToCalibre(float newScale);
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
 
-public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	virtual void Enable();
+	virtual void Disable() const;
 
-	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig);
+public:
+	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		 bool enableByDefault = false);
 
 	~Tank() override;
 
@@ -95,8 +74,8 @@ public:
 	[[nodiscard]] float GetBulletSpeed() const;
 	void SetBulletSpeed(float bulletSpeed);
 
-	[[nodiscard]] unsigned int GetBulletDamage() const;
-	void SetBulletDamage(unsigned int bulletDamage);
+	[[nodiscard]] int GetBulletDamage() const;
+	void SetBulletDamage(int bulletDamage);
 
 	[[nodiscard]] double GetBulletDamageRadius() const;
 	void SetBulletDamageRadius(double bulletDamageRadius);

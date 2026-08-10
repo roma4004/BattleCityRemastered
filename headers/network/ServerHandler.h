@@ -1,12 +1,8 @@
 #pragma once
 
 #include "Server.h"
-#include "components/EventSystem.h"
 #include "interfaces/INetworkNode.h"
 #include <thread>
-#include <vector>
-
-struct NetCommandUpdateEvent;
 
 namespace network::commands
 {
@@ -27,11 +23,10 @@ public:
 
 private:
 	void Subscribe();
+	void Unsubscribe() const;
 	void Shutdown();
-	void OnNetCommandUpdate(const NetCommandUpdateEvent&);
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
 	boost::asio::io_context _ioContext{};
 	std::string _name{};
 	std::thread _serverThread{};

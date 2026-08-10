@@ -1,7 +1,6 @@
 #pragma once
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
@@ -12,12 +11,12 @@ using buuid = boost::uuids::uuid;
 class TestUtils
 {
 public:
-	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
-														   std::vector<std::shared_ptr<BaseObj>>* allObjects)
+	static void WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
+							   std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	{
-		return events->AddListener([allObjects](const AddToSpawnQueueEvent& event)
+		events->AddListener("AddToSpawnQueue", "TestSpawnQueue", [allObjects](std::shared_ptr<BaseObj> obj)
 		{
-			allObjects->emplace_back(event.obj);
+			allObjects->emplace_back(std::move(obj));
 		});
 	}
 
@@ -77,8 +76,9 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, buuid uu
 			.speed = tankSpeed,
 			.dir = dir,
 			.gameMode = gameMode};
+	constexpr bool enableByDefault{true};
 
-	return std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig);
+	return std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig, enableByDefault);
 }
 
 template<>

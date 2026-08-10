@@ -3,7 +3,6 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
-#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -44,26 +43,26 @@ protected:
 	float _gridSize{};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
-	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events, *_respawnManager);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
-		_tankSize = _gridSize * 3.f;// for better turns
+		_tankSize = _gridSize * 3;// for better turns
 
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override
 	{
+		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 };
 
@@ -83,7 +82,7 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 
 	const Direction startDirCoop = coopBot->GetDirection();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const Direction endDirCoop = coopBot->GetDirection();
 
@@ -112,7 +111,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	const size_t sizeBefore = _allObjects.size();
 	EXPECT_EQ(sizeBefore, 2u);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	const size_t sizeAfter = _allObjects.size();
 	EXPECT_LT(sizeBefore, sizeAfter);// Bullet should be spawned
@@ -140,7 +139,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -166,7 +165,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -188,7 +187,7 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
@@ -210,7 +209,7 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -232,7 +231,7 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_LT(sizeBefore, _allObjects.size());
 }
@@ -254,7 +253,7 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -276,7 +275,7 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -298,7 +297,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -320,7 +319,7 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -342,7 +341,7 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }
@@ -364,7 +363,7 @@ TEST_F(CoopBotTest, CoopNoShootToIce)
 
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(sizeBefore, _allObjects.size());
 }

@@ -26,15 +26,18 @@ template<>
 			.speed = tankSpeed,
 			.dir = dir,
 			.gameMode = gameMode};
+	constexpr bool enableByDefault{true};
 
 	if (name == "Player1")
 	{
 		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(events);
 
-		return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig);
+		return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig,
+										enableByDefault);
 	}
 
 	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(events);
 
-	return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig);
+	return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig,
+									enableByDefault);
 }

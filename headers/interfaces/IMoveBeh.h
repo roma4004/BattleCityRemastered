@@ -22,6 +22,8 @@ public:
 
 	[[nodiscard]] virtual bool Move(Direction direction, double deltaTime,
 									std::vector<std::shared_ptr<BaseObj>>& outCollisions) = 0;
+	[[nodiscard]] virtual bool ApplyMoveVelocity(double deltaTime) = 0;
+	virtual void ResetVelocity() = 0;
 	[[nodiscard]] virtual std::vector<Direction> GetFreePathSides(
 			double deltaTime, std::optional<Direction> excludeDirection) const = 0;
 };

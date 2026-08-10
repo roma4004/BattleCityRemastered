@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "AnimationManager.h"
-#include "components/EventSystem.h"
+#include "Point.h"
 #include "enums/TextureOffset.h"
 #include <memory>
 
@@ -9,8 +9,6 @@ enum class Direction : char8_t;
 using Uint8 = uint8_t;
 class BaseObj;
 class EventSystem;
-struct DrawObjEvent;
-struct DrawAnimationEvent;
 
 class TextureManager final
 {
@@ -18,12 +16,12 @@ class TextureManager final
 	TextureOffset _offset{};
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
 
-	void Subscribe();
+	void Subscribe() const;
+	void Unsubscribe() const;
 
-	void Draw(const DrawObjEvent& event) const;
-	void DrawAnimation(const DrawAnimationEvent& event) const;
+	void Draw(ObjRectangle rect, Direction dir, const std::string& name) const;
+	void DrawAnimation(ObjRectangle rect, Direction dir, int step, int scale, const std::string& name) const;
 
 	[[nodiscard]] ObjRectangle GetAnimTextureRect(const std::string& name, ObjRectangle rect,
 												  ObjRectangle& destRect) const;
@@ -35,5 +33,5 @@ class TextureManager final
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);
 
-	~TextureManager() = default;
+	~TextureManager();
 };

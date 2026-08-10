@@ -2,10 +2,6 @@
 #include "application/GameConfig.h"
 #include "application/GameSuccess.h"
 #include "components/EventSystem.h"
-#include "components/events/GameModeEvents.h"
-#include "components/events/InputEvents.h"
-#include "components/events/RenderUIEvents.h"
-#include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 #include <SDL_events.h>
 #include <SDL_gamecontroller.h>
@@ -28,34 +24,30 @@ UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>
 
 UserInput::~UserInput()
 {
+	Unsubscribe();
+
 	_slotsForController.clear();
 }
 
 void UserInput::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &UserInput::OnPauseStatus));
-	_subs.push_back(_events->AddListener(this, &UserInput::SwapControllers));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnPreTickUpdate));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuShowed));
-	_subs.push_back(_events->AddListener(this, &UserInput::OnMenuPosChanged));
+	_events->AddListener("Pause_Status", _name, [this](const bool isPause) { this->_isPause = isPause; });
+	_events->AddListener("Tab_Released", _name, [this]() { this->SwapControllers(); });
+	_events->AddListener("PreTickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed) { _isMenuDisplayed = isDisplayed; });
+	_events->AddListener("MenuPosChanged", _name, [this](const Point& menuPos)
+	{
+		_allTilesRect = {
+				.x = _menuPos.x + _allTilesRectDefault.x,
+				.y = _menuPos.y + _allTilesRectDefault.y,
+				.w = _allTilesRectDefault.w,
+				.h = _allTilesRectDefault.h
+		};
+		InitMouseHoverTiles(menuPos);
+	});
 }
 
-void UserInput::OnPauseStatus(const PauseStatusEvent& event) { _isPause = event.isPaused; }
-
-void UserInput::OnPreTickUpdate(const PreTickUpdateEvent&) { Update(); }
-
-void UserInput::OnMenuShowed(const MenuShowedEvent& event) { _isMenuDisplayed = event.isShown; }
-
-void UserInput::OnMenuPosChanged(const MenuPosChangedEvent& event)
-{
-	_allTilesRect = {
-			.x = _menuPos.x + _allTilesRectDefault.x,
-			.y = _menuPos.y + _allTilesRectDefault.y,
-			.w = _allTilesRectDefault.w,
-			.h = _allTilesRectDefault.h
-	};
-	InitMouseHoverTiles(event.pos);
-}
+void UserInput::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void UserInput::WindowsMoveEvents(const SDL_Event& event)
 {
@@ -68,7 +60,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 			if (!_isPause)
 			{
 				_isPauseBeforeDragNDrop = true;
-				_events->EmitEvent(PauseStatusEvent{.isPaused = _isPauseBeforeDragNDrop});
+				_events->EmitEvent("Pause_Status", _isPauseBeforeDragNDrop);
 			}
 		}
 
@@ -76,7 +68,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 	}
 }
 
-void UserInput::SwapControllers(const TabReleasedEvent&)
+void UserInput::SwapControllers()
 {
 	_areControllersSwapped = !_areControllersSwapped;
 	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent
@@ -118,7 +110,7 @@ void UserInput::OnWindowMoveStop()
 			if (_isPauseBeforeDragNDrop)
 			{
 				_isPauseBeforeDragNDrop = false;
-				_events->EmitEvent(PauseStatusEvent{.isPaused = _isPauseBeforeDragNDrop});
+				_events->EmitEvent("Pause_Status", _isPauseBeforeDragNDrop);
 			}
 		}
 	}
@@ -136,7 +128,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		if (event.type == SDL_MOUSEBUTTONUP)
 		{
 			_mouseButtons.MouseLeftButton = false;
-			_events->EmitEvent(EnterEvent{.isPressed = true});
+			_events->EmitEvent("Enter", true);
 		}
 
 		return;
@@ -155,7 +147,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 					&& _selectedGameMode != gameMode)
 				{
 					_selectedGameMode = gameMode;
-					_events->EmitEvent(GameModeSelectedWithMouseEvent{.mode = _selectedGameMode});
+					_events->EmitEvent("GameModeSelectedWithMouse", _selectedGameMode);
 					break;
 				}
 			}
@@ -171,58 +163,58 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 	switch (event.key.keysym.sym)
 	{
 		case SDLK_w:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Up", isPressed);
 			break;
 		case SDLK_UP:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Up", isPressed);
 			break;
 		case SDLK_a:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Left", isPressed);
 			break;
 		case SDLK_LEFT:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Left", isPressed);
 			break;
 		case SDLK_s:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Down", isPressed);
 			break;
 		case SDLK_DOWN:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Down", isPressed);
 			break;
 		case SDLK_d:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardLeftSideTag + "_Move_Right", isPressed);
 			break;
 		case SDLK_RIGHT:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardRightSideTag + "_Move_Right", isPressed);
 			break;
 		case SDLK_SPACE:
-			_events->EmitEvent(Key(keyboardLeftSideTag), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardLeftSideTag + "_Fire", isPressed);
 			break;
 		case SDLK_RCTRL:
-			_events->EmitEvent(Key(keyboardRightSideTag), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(keyboardRightSideTag + "_Fire", isPressed);
 			break;
 		case SDLK_m:
 			if (isPressed == false)
 			{
-				_events->EmitEvent(MenuReleasedEvent{});
+				_events->EmitEvent("Menu_Released");
 			}
 			break;
 		case SDLK_p:
 			if (isPressed == false)
 			{
-				_events->EmitEvent(PauseReleasedEvent{});
+				_events->EmitEvent("Pause_Released");
 			}
 			break;
 		case SDLK_r:
-			_events->EmitEvent(ResetKeyEvent{.isPressed = isPressed});
+			_events->EmitEvent("Reset_", isPressed);
 			break;
 		case SDLK_TAB:
 			if (isPressed == false)
 			{
-				_events->EmitEvent(TabReleasedEvent{});
+				_events->EmitEvent("Tab_Released");
 			}
 			break;
 		case SDLK_RETURN:
-			_events->EmitEvent(EnterEvent{.isPressed = isPressed});
+			_events->EmitEvent("Enter", isPressed);
 			break;
 
 		default:
@@ -251,52 +243,43 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 		switch (event.cbutton.button)
 		{
 			case SDL_CONTROLLER_BUTTON_A:
-				_events->EmitEvent(Key(controllerTag), FireEvent{.isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_Fire", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_B:
-				//NOTE: no listener consumes this yet
-				_events->EmitEvent(GamepadButtonEvent{.controllerTag = controllerTag,
-													  .button = GamepadButton::B,
-													  .isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_B", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_X:
-				//NOTE: no listener consumes this yet
-				_events->EmitEvent(GamepadButtonEvent{.controllerTag = controllerTag,
-													  .button = GamepadButton::X,
-													  .isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_X", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_Y:
-				//NOTE: no listener consumes this yet
-				_events->EmitEvent(GamepadButtonEvent{.controllerTag = controllerTag,
-													  .button = GamepadButton::Y,
-													  .isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_Y", isPressed);
 				if (isPressed == false)
 				{
-					_events->EmitEvent(TabReleasedEvent{});
+					_events->EmitEvent("Tab_Released");
 				}
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
-				_events->EmitEvent(Key(controllerTag), MoveUpEvent{.isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_Move_Up", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-				_events->EmitEvent(Key(controllerTag), MoveDownEvent{.isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_Move_Down", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-				_events->EmitEvent(Key(controllerTag), MoveLeftEvent{.isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_Move_Left", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-				_events->EmitEvent(Key(controllerTag), MoveRightEvent{.isPressed = isPressed});
+				_events->EmitEvent(controllerTag + "_Move_Right", isPressed);
 				break;
 			case SDL_CONTROLLER_BUTTON_START:
 				if (isPressed == false)
 				{
-					_events->EmitEvent(MenuReleasedEvent{});
+					_events->EmitEvent("Menu_Released");
 				}
 				break;
 			case SDL_CONTROLLER_BUTTON_BACK:
 				if (isPressed == false)
 				{
-					_events->EmitEvent(PauseReleasedEvent{});
+					_events->EmitEvent("Pause_Released");
 				}
 				break;
 

@@ -44,7 +44,8 @@ public:
 
 	[[nodiscard]]
 	bool Move(Direction dir, double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
-	void Reset(const BulletCalibre& calibre);
+	[[nodiscard]] bool ApplyMoveVelocity(double deltaTime) override;
+	void ResetVelocity() override;
 	[[nodiscard]] std::vector<Direction> GetFreePathSides(
 			double deltaTime, std::optional<Direction> excludeDirection) const override;
 };

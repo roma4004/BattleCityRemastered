@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Command.h"
-#include "enums/StatisticsType.h"
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 #include <string>
@@ -12,7 +11,7 @@ class StatisticsChange : public Command
 {
 	friend class boost::serialization::access;
 
-	StatisticsType _type{};
+	std::string _eventName{};
 	std::string _author{};
 	std::string _fraction{};
 
@@ -21,11 +20,11 @@ public:
 	StatisticsChange();
 
 	//for serialization
-	StatisticsChange(StatisticsType type, std::string author, std::string fraction);
+	StatisticsChange(std::string eventName, std::string author, std::string fraction);
 
 	~StatisticsChange() override = default;
 
-	[[nodiscard]] StatisticsType GetType() const noexcept;
+	[[nodiscard]] std::string GetEventName() const noexcept;
 	[[nodiscard]] std::string GetAuthor() const noexcept;
 	[[nodiscard]] std::string GetFraction() const noexcept;
 
@@ -39,7 +38,7 @@ template<class Archive>
 void StatisticsChange::serialize(Archive& ar, const unsigned int)
 {
 	ar & boost::serialization::base_object<Command>(*this);
-	ar & _type;
+	ar & _eventName;
 	ar & _author;
 	ar & _fraction;
 }

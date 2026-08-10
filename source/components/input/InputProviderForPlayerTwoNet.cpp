@@ -1,31 +1,36 @@
 #include "components/input/InputProviderForPlayerTwoNet.h"
 #include "components/EventSystem.h"
-#include "components/events/InputEvents.h"
 
 InputProviderForPlayerTwoNet::InputProviderForPlayerTwoNet(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
+InputProviderForPlayerTwoNet::~InputProviderForPlayerTwoNet()
+{
+	Unsubscribe();
+}
+
 void InputProviderForPlayerTwoNet::Subscribe()
 {
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnMoveUp));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnMoveLeft));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnMoveDown));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnMoveRight));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnFire));
+	_events->AddListener("ServerReceive_P2_Move_Up", _name,
+						 [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
+	_events->AddListener("ServerReceive_P2_Move_Left", _name,
+						 [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
+	_events->AddListener("ServerReceive_P2_Move_Down", _name,
+						 [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
+	_events->AddListener("ServerReceive_P2_Move_Right", _name, [&btn = _playerKeys](const bool isPressed)
+	{
+		btn.right = isPressed;
+	});
+	_events->AddListener("ServerReceive_P2_Fire", _name,
+						 [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
 
-	_subs.push_back(_events->AddListener(this, &InputProviderForPlayerTwoNet::OnPauseReleased));
+	_events->AddListener("ServerReceive_Pause_Released", _name, [this](const bool /*isPaused*/)
+	{
+		_events->EmitEvent("Pause_Released");
+	});
 }
 
-void InputProviderForPlayerTwoNet::OnMoveUp(const ServerInMoveUpEvent& event) { _playerKeys.up = event.isPressed; }
-void InputProviderForPlayerTwoNet::OnMoveLeft(const ServerInMoveLeftEvent& event) { _playerKeys.left = event.isPressed; }
-void InputProviderForPlayerTwoNet::OnMoveDown(const ServerInMoveDownEvent& event) { _playerKeys.down = event.isPressed; }
-void InputProviderForPlayerTwoNet::OnMoveRight(const ServerInMoveRightEvent& event) { _playerKeys.right = event.isPressed; }
-void InputProviderForPlayerTwoNet::OnFire(const ServerInFireEvent& event) { _playerKeys.shot = event.isPressed; }
-
-void InputProviderForPlayerTwoNet::OnPauseReleased(const ServerInPauseReleasedEvent&)
-{
-	_events->EmitEvent(PauseReleasedEvent{});
-}
+void InputProviderForPlayerTwoNet::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void InputProviderForPlayerTwoNet::Enable()
 {
@@ -34,5 +39,5 @@ void InputProviderForPlayerTwoNet::Enable()
 
 void InputProviderForPlayerTwoNet::Disable() const
 {
-	_subs.clear();
+	Unsubscribe();
 }

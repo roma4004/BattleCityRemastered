@@ -1,21 +1,11 @@
 #pragma once
 
-#include "components/EventSystem.h"
-#include "enums/RespawnGroup.h"
+#include "enums/RespawnCount.h"
 #include <boost/uuid/uuid.hpp>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
-struct GameResetEvent;
-struct GameModeChangedToEvent;
-struct TankSpawnEvent;
-struct TankDiedEvent;
-struct BonusTankPickupEvent;
-struct PlayersBaseFinishedEvent;
-struct RespawnTanksEvent;
-struct ClientInBonusTankPickupEvent;
-struct ClientInRespawnTankEvent;
 
 class RespawnManager final
 {
@@ -25,10 +15,6 @@ class RespawnManager final
 	std::string _name{"RespawnManager"};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
-	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
-	std::vector<EventSubscription> _clientSubs{};
 
 	// TODO: use std::atomic when multithreading is used
 	std::vector<unsigned short> _respawnCount{20u, 3u, 3u};
@@ -36,8 +22,6 @@ class RespawnManager final
 	struct SpawnSlot
 	{
 		buuid uuid{};
-		TankType type{};
-		RespawnGroup group{};
 		bool isAvailable{};
 	};
 
@@ -48,18 +32,13 @@ class RespawnManager final
 	unsigned short _playersDeathCount{};
 
 	void OnBonusTank(const std::string& author);
-	void OnClientInBonusTankPickup(const ClientInBonusTankPickupEvent& event);
-	void OnClientRespawn(const ClientInRespawnTankEvent& event);
+	void OnClientRespawn(TankType type);
 
 	void Subscribe();
-	void OnGameReset(const GameResetEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
-	void OnBonusTankPickup(const BonusTankPickupEvent& event);
-	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
-	void OnRespawnTanks(const RespawnTanksEvent& event);
 	void SubscribeAsClient();
 
-	void UnsubscribeAsClient();
+	void Unsubscribe() const;
+	void UnsubscribeAsClient() const;
 
 	void SetEnemyNeedRespawn();
 	void SetPlayerNeedRespawn();
@@ -68,21 +47,19 @@ class RespawnManager final
 	void ResetSpawn();
 	void OnGameModeChange();
 
-	[[nodiscard]] static std::string RespawnCountEnumToString(RespawnGroup type);
-	void ChangeRespawnCount(int delta, RespawnGroup type);
+	static std::string RespawnCountEnumToString(RespawnCount type);
+	void ChangeRespawnCount(int delta, RespawnCount type);
 	void TriggerLastPlayersLife();
 
-	void OnTankSpawn(const TankSpawnEvent& event);
-	[[nodiscard]] static bool IsEnemyGroup(RespawnGroup group);
-	void OnEnemyDied(bool isAvailable);
-	void OnPlayerDied(bool isAvailable);
-	void OnTankDied(const TankDiedEvent& event);
-	void RespawnTanks(bool skipDelay);
+	void OnTankSpawn(const buuid& uuid);
+	void EnemyDied(bool isAvailable);
+	void PlayerDied(bool isAvailable);
+	void OnTankDied(const buuid& uuid);
 
 public:
 	std::vector<SpawnSlot> _slots{};
 
 	explicit RespawnManager(const std::shared_ptr<EventSystem>& events);
 
-	~RespawnManager() = default;
+	~RespawnManager();
 };

@@ -1,6 +1,4 @@
 #include "entities/Bonuses/BonusTank.h"
-#include "components/EventSystem.h"
-#include "components/events/BonusPickupEvents.h"
 #include "enums/BonusType.h"
 
 BonusTank::BonusTank(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
@@ -8,8 +6,3 @@ BonusTank::BonusTank(const ObjRectangle& rect, const std::shared_ptr<EventSystem
 	: Bonus{rect, events, lifeTime, "BonusTank", uuid, gameMode, BonusType::Tank} {}
 
 BonusTank::~BonusTank() = default;
-
-void BonusTank::EmitPickupEvent(const std::string& author, const std::string& fraction)
-{
-	_events->EmitEvent(BonusTankPickupEvent{.author = author, .fraction = fraction});
-}

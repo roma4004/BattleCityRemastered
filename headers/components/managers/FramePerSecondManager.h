@@ -1,19 +1,14 @@
 #pragma once
 
-#include "components/EventSystem.h"
 #include <chrono>
 
 class EventSystem;
 class GameConfig;
-struct CalculateActualFpsEvent;
-struct FrameStartEvent;
-struct PostDrawUserInterfaceEvent;
 
 class FramePerSecondManager
 {
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
 
 	std::chrono::duration<double> _targetFrameDuration{};
 	std::chrono::high_resolution_clock::time_point _startFrameTime{};
@@ -25,13 +20,12 @@ class FramePerSecondManager
 	GameConfig& _gameConfig;
 
 	void Subscribe();
-	void OnFrameStart(const FrameStartEvent&);
-	void OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&);
+	void Unsubscribe() const;
 
-	void CountFpsAndDeltaTime(const CalculateActualFpsEvent&);
+	void CountFpsAndDeltaTime();
 
 public:
 	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
-	~FramePerSecondManager() = default;
+	~FramePerSecondManager();
 };

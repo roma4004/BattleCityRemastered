@@ -19,47 +19,44 @@ Additional features or extended compare to the original title:
 2) Destroying bullet phisics obstacles, mean that bullet have explosion radius to cause AOE damage,
 3) Bullet damage randomized in range,
 4) Tank heath bar(with color gradation),
-5) Bonus spawn only on free spots
-6) Bonus can be destroyed
-7) Enemy and Coop bots can pickup bonus
-8) Coop AI game mode second player will be ally bot, thay will not shoot to fortress and player, but shoot other walls and enemies
-9) Network multiplayer (playing from two game process, one will start as host, other as client). Hotseat also available from local game.
-10) swaping controls of players (gamePads included), allow you to use playerTwo control scheme for playing playerOne (TAB key)
-11) Gamepads support, tested on Xbox and PlayStation controllers)
-12) Controling keys hint
-13) Parsing console argument to run host process and client process at the same time, with shifted window position and network game mode started 
-14) save\load settings into config INI-file, with default creating INI-file if not exist
-15) In bushes tank hide their health bar
-16) Mouse support, GameMode selecting\start level
-17) Extended ice logic, tanks on it have the velocity so they can drift even diagonally
+5) Coop AI game mode second player will be ally bot, thay will not shoot to fortress and player, but shoot other walls and enemies
+6) network multiplayer (playing from two game process, one will start as host, other as client). Hotseat also available from local game.
+9) swaping controls of players (gamePads included), allow you to use playerTwo control scheme for playing playerOne (TAB key)
+7) Gamepads support, tested on Xbox and PlayStation controllers)
+8) Controling keys hint
+9) Parsing console argument to run host process and client process at the same time, with shifted window position and network game mode started 
+10) save\load settings into config ini file, with default creating ini file if not exist
+11) In bushes tank hide their health bar
+12) Mouse support, GameMode selecting\start level
+13) extended ice logic, tanks on it have the velocity so they can drift even diagonaly
 
 Already reimplement(from scratch) features from original game title:
 1) Moving (for both players in one keyboard)
 2) Shooting with reload timer (reusing bullets instance),
 3) Destroying tanks/obstacles, indestructible obstacles and water that can't be passed but bullets traverse above it,
-3) Bot AI (Enemy\Coop),
+3) Bot AI (enemy\coop),
 4) Animated menu with game modes selecting\start level from keyboard,
 5) In game pause,
 6) Respawning tank and bonuses,
 7) Pickupable bonuses, for player and AI bots,
-8) Enemy can pickup bonus with opposite effect(inverse team logic) or self apply positive effect.
+8) Enemy can pickup bonus with oposite effect(inverse team logic) or self apply positive effect.
 9) Random bonus spawn each 60 sec, in random and free location,
 10) Bonus variations from the original game like:
   * Grenade (destroy opponents team tank),
   * Helmet (temporary invincibility, for 15 sec),
-  * Shovel (temporary turns brick walls around the fortress to SteelWall and repair destroyed parts, then after 15 sec, they turns into brickWall. In case enemy pickup just destroy fortressWalls),
+  * Shovel (temporarу turns brick walls around the fortress to SteelWall and repair destroyed parts, then after 15 sec, they turns into brickWall. In case enemy pickup just destroy fortressWalls),
   * Star (increases tank power, when pick up more than 2 can destroy steel walls),
   * Tank (extra life),
   * Timer (freeze enemy team, for 15 sec)
 11) Intro music
-12) Textures and animation based on original, with some small difference and extending
-13) Animation: tanks spawn, BonusHelmet effect, bullet explosion, tank explosion 
+12) Textures and animation based on original, with some small difference and extendings
+13) Animation: tankSpawn, BonusHelmet effect, bullet explosion, tank explosion 
 14) End game (win\lose condition) with score board (statistics)
-15) Right side bar with re-spawn counters and level number (just like in original)
-16) Auto-activating BonusHelmet for 5 second for each tank on its spawn
+15) Right side bar with respawn counters and level number (just like in oiginal)
+16) Auto-activating bonusHelmet for 5 second for each tank on its spawn
 17) Animation of Helmet bonus on tank (health bar also hide to visualize it)
-18) Bushes logic that hide tanks from his opponents
-19) Ice logic, tanks on it temporary continues driving after move input release
+18) Bushes logic that hide tanks from his oponents
+19) Ice logic, tanks on it temporary continus driving after move input release
 
 
 NOTE: For multiplayer game. 
@@ -76,7 +73,7 @@ Used technologies:
 * EventSystem,
 * SDL2, SDL2_TTF, SDL2_Image, SDL2_Mixer,
 * Boost (serialization, asio, property_tree/ini),
-* Google unit tests (170+ tests),
+* google unit tests (170+ tests),
 * NuGet dependencies for *.sln and lib source for CMake, so it can be compiled for both CMake (CLion) or *.sln project (Rider, Visual Studio)
 
 Used design patterns:

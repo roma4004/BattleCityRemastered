@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Point.h"
-#include "components/EventSystem.h"
 #include "interfaces/IGame.h"
 #include <chrono>
 
@@ -23,15 +22,6 @@ class GameStatistics;
 class RightSideBar;
 class Options;
 class GameConfig;
-struct AddToSpawnQueueEvent;
-struct PostTickUpdateEvent;
-struct DeltaTimeEvent;
-struct GameModeSelectedWithMouseEvent;
-struct PreviousGameModeEvent;
-struct NextGameModeEvent;
-struct ApplyGameModeEvent;
-struct ServerInClientReadyToStartGameEvent;
-struct GameModeChangedToEvent;
 
 class GameSuccess final : public IGame
 {
@@ -40,10 +30,6 @@ public:
 				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
 				std::unique_ptr<RightSideBar>& rightSideBar, std::unique_ptr<Options>& options,
 				GameMode gameMode);
-				std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager, GameMode gameMode);
-
-	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares the
-	//manager types held by unique_ptr below, so an in-header default would need them complete here.
 	~GameSuccess() override;
 
 	void MainLoop() override;
@@ -52,27 +38,23 @@ public:
 
 private:
 	void Subscribe();
+	void Unsubscribe() const;
 
-	void ApplyGameMode(GameMode gameMode);
-	void PrevGameMode(const PreviousGameModeEvent&);
-	void NextGameMode(const NextGameModeEvent&);
-	void OnApplyGameMode(const ApplyGameModeEvent&);
-
-	void OnAddToSpawnQueue(const AddToSpawnQueueEvent& event);
-	void OnPostTickUpdate(const PostTickUpdateEvent&);
-	void OnDeltaTime(const DeltaTimeEvent& event);
-	void OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event);
+	void ResetBattlefieldTo(GameMode gameMode);
+	void PrevGameMode();
+	void NextGameMode();
 
 	void DisposeDeadObject();
 	void FlushSpawnQueue();
 
-	void OnClientReady(const ServerInClientReadyToStartGameEvent&) const;
+	void OnClientReady() const;
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnGameModeChangedTo(GameMode newGameMode);
 
 	UPoint _windowSize{};
+	std::string _name{"Game"};
 
 	std::unique_ptr<INetworkNode> _networkNode{nullptr};
 	std::unique_ptr<Menu> _menu{nullptr};
@@ -84,15 +66,11 @@ private:
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
 	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
+	std::unique_ptr<GameStatistics> _statistics{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 	std::unique_ptr<Options> _options{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime on every GameModeChangedToEvent (host-only listener), independent of
-	// _subs's fixed subscribe-once-at-construction lifetime - assigning a new EventSubscription
-	// here auto-unsubscribes whatever was previously held.
-	EventSubscription _clientReadySub{};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};

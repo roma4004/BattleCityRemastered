@@ -1,20 +1,26 @@
 ﻿#include "entities/obstacles/BushTile.h"
 #include "components/EventSystem.h"
-#include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
 
 BushTile::BushTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 				   const GameMode gameMode)
-	: Obstacle{rect, 1, "Bush", events, uuid, gameMode, ObstacleType::Bush, kCollision}
+	: Obstacle{rect, 1, "Bush", events, uuid, gameMode, ObstacleType::Bush}
 {
+	BaseObj::SetIsPassable(true);
+	BaseObj::SetIsDestructible(false);
+	BaseObj::SetIsPenetrable(true);
+
 	Subscribe();
+}
+
+BushTile::~BushTile()
+{
+	Unsubscribe();
 }
 
 void BushTile::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &BushTile::OnPostDraw));
+	_events->AddListener("PostDraw", _nameWithUuid, [this]() { this->Draw(); });
 }
 
-void BushTile::OnPostDraw(const PostDrawEvent&) { Draw(); }
-
-void BushTile::EmitDeathStatistics(const std::string&, const std::string&) {}
+void BushTile::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }

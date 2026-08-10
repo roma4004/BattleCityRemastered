@@ -2,11 +2,6 @@
 #include "application/GameConfig.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
-#include "components/events/AnimationRenderEvents.h"
-#include "components/events/CoreLifecycleEvents.h"
-#include "components/events/ObjectLifecycleEvents.h"
-#include "components/events/ReplicationEvents.h"
-#include "components/events/StatisticsEvents.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/WaterTile.h"
@@ -19,11 +14,15 @@
 
 Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
 			   const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
+	: Pawn{std::move(pawnProperty), gameConfig}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {
-	// NOTE: needed only for tests, TODO in test use tank shoot for bulletPool use instead of creating bullet
+	BaseObj::SetIsPassable(true);
+	BaseObj::SetIsDestructible(true);
+	BaseObj::SetIsPenetrable(false);
+
+	// NOTE: needed only for tests, TODO in test use tank shoot instead of creating bullet
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, _calibre, _allObjects);
 
 	if (enableByDefault)
@@ -41,13 +40,14 @@ Bullet::~Bullet()
 	// 			<< ", name=" << _name
 	// 			<< ", name+UUID=" << _nameWithUuid
 	// 			<< '\n';
+	Unsubscribe();
 }
 
 void Bullet::Subscribe()
 {
 	Pawn::Subscribe();
 
-	_subs.push_back(_events->AddListener(this, &Bullet::OnDraw));
+	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
 
 	if (_gameMode == GameMode::PlayAsClient)
 	{
@@ -55,21 +55,35 @@ void Bullet::Subscribe()
 	}
 }
 
-void Bullet::OnDraw(const DrawEvent&) { Draw(); }
-
 void Bullet::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnClientInDispose));
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnClientChangePos));
+	_events->AddListener(
+			"ClientReceived_" + _name + "Dispose", _nameWithUuid,
+			[this](const buuid& uuid)
+			{
+				if (uuid != _uuid)
+				{
+					return;
+				}
+
+				this->SetIsAlive(false);
+			});
+	_events->AddListener(
+			"ClientReceived_" + _name + "Pos",
+			_nameWithUuid,
+			[this](const FPoint newPos, const Direction dir, const buuid& uuid)
+			{
+				OnClientChangePos(newPos, dir, uuid);
+			});
 }
 
-void Bullet::OnClientInDispose(const ClientInDisposeEvent&)
+void Bullet::Unsubscribe() const
 {
-	SetIsAlive(false);
-	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
+	Pawn::Unsubscribe();
+	_events->RemoveAllListeners(_nameWithUuid);
 }
 
-void Bullet::Draw() const { _events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .name = _name}); }
+void Bullet::Draw() const { _events->EmitEvent("DrawObj", _rect, _dir, _name); }
 
 using buuid = boost::uuids::uuid;
 
@@ -101,22 +115,14 @@ void Bullet::Disable() const
 
 void Bullet::Reset(BulletResetProperty resetProperty)
 {
-	Disable();//TODO: remove and unsubscribe in bullet pool on return
+	Disable();
 
 	SetRect(resetProperty.rect);
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
 
-	if (auto* moveBeh = dynamic_cast<MoveLikeBulletBeh*>(_moveBeh.get()))
-	{
-		moveBeh->Reset(resetProperty.calibre);
-	}
-	else
-	{
-		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, resetProperty.calibre,
-													   _allObjects);
-	}
-
+	//TODO: write reset for MoveLikeBulletBeh
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, resetProperty.calibre, _allObjects);
 	_author = std::move(resetProperty.author);
 	_fraction = std::move(resetProperty.fraction);
 	_calibre = resetProperty.calibre;
@@ -147,12 +153,12 @@ void Bullet::TickUpdate(const double deltaTime)
 
 		if (isMove && _gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent("ServerSend_Pos", _name, GetPos(), _dir, _uuid);
 		}
 	}
 }
 
-unsigned int Bullet::GetDamage() const { return _calibre.damage; }
+int Bullet::GetDamage() const { return _calibre.damage; }
 
 double Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
@@ -160,7 +166,7 @@ std::string Bullet::GetAuthor() const { return _author; }
 
 void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent(StatisticsBulletHitEvent{.author = author, .fraction = fraction});
+	_events->EmitEvent("Statistics_BulletHit", author, fraction);
 }
 
 void Bullet::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
@@ -206,11 +212,16 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
 	}
 
-	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
+	_events->EmitEvent("AnimationCreateBulletExplosion", _rect, _name);
 }
 
-void Bullet::OnClientChangePos(const ClientInPosEvent& event)
+void Bullet::OnClientChangePos(const FPoint newPos, const Direction dir, const buuid& uuid)
 {
-	SetDirection(event.dir);
-	SetPos(event.pos);
+	if (uuid != _uuid)//TODO: check maybe never true
+	{
+		return;
+	}
+
+	SetDirection(dir);
+	SetPos(newPos);
 }

@@ -20,6 +20,5 @@ public:
 
 	~BonusHelmet() override;
 
-protected:
-	void EmitPickupEvent(const std::string& author, const std::string& fraction) override;
+	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 };

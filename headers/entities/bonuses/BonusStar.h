@@ -17,7 +17,4 @@ public:
 			  buuid uuid, GameMode gameMode);
 
 	~BonusStar() override;
-
-protected:
-	void EmitPickupEvent(const std::string& author, const std::string& fraction) override;
 };

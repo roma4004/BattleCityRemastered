@@ -9,5 +9,5 @@ enum class AnimationType : char8_t
 	Helmet_Animation,
 	//EagleDeathAnimation,
 	Tank_Animation,
-	// Bullet_Animation
+	Bullet_Animation
 };

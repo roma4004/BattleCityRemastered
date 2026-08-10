@@ -1,10 +1,7 @@
 #include "components/managers/BonusEffectManager.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
-#include "components/events/BonusPickupEvents.h"
-#include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
-#include "components/events/TimingEvents.h"
+#include "entities/pawns/Tank.h"
+#include "enums/GameMode.h"
 #include "utils/TimeUtils.h"
 
 BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& events)
@@ -16,26 +13,44 @@ BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& event
 	Subscribe();
 }
 
+BonusEffectManager::~BonusEffectManager()
+{
+	Unsubscribe();
+}
+
 void BonusEffectManager::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnTickUpdate));
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnTimerBonus));
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnBonusHelmetPickup));
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnBonusShovelPickup));
-	//NOTE: continue effects after respawn
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::ApplyBonusEffectsOnSpawnTo));
+	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+
+	_events->AddListener("TickUpdate", _name, [this](const double deltaTime) { this->TickUpdate(deltaTime); });
+	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->OnGameModeChangedTo(newGameMode);
+	});
+
+	_events->AddListener(
+			"BonusTimer_Pickup", _name,
+			[this](const std::string& fraction, const milliseconds effectDuration)
+			{
+				this->OnTimerBonus(fraction, effectDuration);
+			});
+	_events->AddListener(
+			"BonusHelmet_Pickup", _name,
+			[this](const std::string& author, const milliseconds effectDuration)
+			{
+				this->OnHelmetBonusPickup(author, effectDuration);
+			});
+	_events->AddListener(
+			"BonusShovel_Pickup", _name,
+			[this](const std::string& fraction, const milliseconds effectDuration)
+			{
+				this->OnBonusShovelPickup(fraction, effectDuration);
+			});
+
+	_events->AddListener("SpawnEnabled", _name, [this](std::shared_ptr<Tank> tank) { this->OnSpawnEnabled(tank); });
 }
 
-void BonusEffectManager::OnGameReset(const GameResetEvent&) { Reset(); }
-
-void BonusEffectManager::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
-
-void BonusEffectManager::OnBonusHelmetPickup(const BonusHelmetPickupEvent& event)
-{
-	OnHelmetBonusPickup(event.author, event.effectDuration);
-}
+void BonusEffectManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void BonusEffectManager::Reset()
 {
@@ -46,19 +61,23 @@ void BonusEffectManager::Reset()
 	_helmetSlotsTankNames = {{}, {}, {}, {}, {}, {}};
 }
 
-void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const BonusEffectReApplyEvent& event)
+void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const std::string& tankName, const std::string& tankFraction)
 {
-	const bool isActive = event.fraction == "EnemyTeam" ? _timerEnemy.isActive : _timerPlayer.isActive;
-	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isActive});
+	if (tankFraction == "EnemyTeam")
+	{
+		_events->EmitEvent("BonusTimer_ReApplyOnSpawn", _timerEnemy.isActive, tankName);
+	}
+	else if (tankFraction == "PlayerTeam")
+	{
+		_events->EmitEvent("BonusTimer_ReApplyOnSpawn", _timerPlayer.isActive, tankName);
+	}
 
 	constexpr milliseconds effectDuration{std::chrono::seconds{5}};
-	OnHelmetBonusPickup(event.name, effectDuration);
+	OnHelmetBonusPickup(tankName, effectDuration);
 }
 
-void BonusEffectManager::OnTimerBonus(const BonusTimerPickupEvent& event)
+void BonusEffectManager::OnTimerBonus(const std::string& fraction, const milliseconds effectDuration)
 {
-	const std::string& fraction = event.fraction;
-	const milliseconds effectDuration = event.effectDuration;
 	if (fraction == "EnemyTeam")
 	{
 		StartTimer(_timerPlayer, "Timer", "PlayerTeam", effectDuration);
@@ -81,18 +100,7 @@ void BonusEffectManager::OnHelmetBonusPickup(const std::string& author, const mi
 
 void BonusEffectManager::OnBonusStatusChange(const std::string& event, const std::string& id, const bool isActive) const
 {
-	if (event == "Timer")
-	{
-		_events->EmitEvent(BonusTimerStatusChangeEvent{.fraction = id, .isActive = isActive});
-	}
-	else if (event == "Helmet")
-	{
-		_events->EmitEvent(BonusHelmetStatusChangeEvent{.name = id, .isActive = isActive});
-	}
-	else if (event == "Shovel")
-	{
-		_events->EmitEvent(BonusShovelStatusChangeEvent{.fraction = id, .isActive = isActive});
-	}
+	_events->EmitEvent("Bonus" + event + "_StatusChange", id, isActive);
 }
 
 void BonusEffectManager::StartTimer(Timer& timer, const std::string& event, const std::string& id,
@@ -156,10 +164,8 @@ Timer BonusEffectManager::GetHelmet(const size_t id) const
 	return _helmetSlots[id];
 }
 
-void BonusEffectManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
+void BonusEffectManager::OnBonusShovelPickup(const std::string& fraction, const milliseconds effectDuration)
 {
-	const std::string& fraction = event.fraction;
-	const milliseconds effectDuration = event.effectDuration;
 	if (fraction == "PlayerTeam")
 	{
 		StartTimer(_shovelPlayer, "Shovel", fraction, effectDuration);
@@ -170,7 +176,7 @@ void BonusEffectManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event
 	}
 }
 
-size_t BonusEffectManager::TankNameToId(const std::string& name)
+size_t BonusEffectManager::TankNameToId(const std::string_view& name)
 {
 	if (name == "Enemy1")
 	{
@@ -205,4 +211,19 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 	return static_cast<size_t>(-1);
 }
 
-void BonusEffectManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
+void BonusEffectManager::OnSpawnEnabled(std::shared_ptr<Tank>& tank)
+{
+	if (!tank)
+	{
+		return;
+	}
+
+	const std::string tankName{tank->GetName()};
+	const std::string tankFraction{tank->GetFraction()};
+	ApplyBonusEffectsOnSpawnTo(tankName, tankFraction);//NOTE: continue effects after respawn
+}
+
+void BonusEffectManager::OnGameModeChangedTo(const GameMode newGameMode)
+{
+	this->_gameMode = newGameMode;
+}

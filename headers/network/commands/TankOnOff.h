@@ -8,25 +8,28 @@
 
 namespace network::commands
 {
-// Host -> client: "materialize tank uuid now".
-class TankSpawnComplete : public Command
+class TankOnOff : public Command
 {
 	using buuid = boost::uuids::uuid;
 
 	friend class boost::serialization::access;
 
 	buuid _uuid{};
+	bool _isEnable{};
+	std::string _name{};
 
 public:
 	//for deserialization
-	TankSpawnComplete();
+	TankOnOff();
 
 	//for serialization
-	explicit TankSpawnComplete(buuid uuid);
+	explicit TankOnOff(buuid uuid, bool isEnable, std::string name);
 
-	~TankSpawnComplete() override = default;
+	~TankOnOff() override = default;
 
 	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] bool GetIsEnable() const noexcept;
+	[[nodiscard]] std::string GetName() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
@@ -35,11 +38,13 @@ public:
 };
 
 template<class Archive>
-void TankSpawnComplete::serialize(Archive& ar, const unsigned int)
+void TankOnOff::serialize(Archive& ar, const unsigned int)
 {
 	ar & boost::serialization::base_object<Command>(*this);
 	ar & _uuid;
+	ar & _isEnable;
+	ar & _name;
 }
 }//namespace network::commands
 
-BOOST_CLASS_EXPORT_KEY(network::commands::TankSpawnComplete);
+BOOST_CLASS_EXPORT_KEY(network::commands::TankOnOff);

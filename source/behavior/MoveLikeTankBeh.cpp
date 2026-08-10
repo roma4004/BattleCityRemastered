@@ -95,7 +95,7 @@ float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj
 {
 	const auto [maxX, maxY] = _windowSize;
 	auto minDist = static_cast<float>(maxX * maxY);
-	// float nearestDist = 0.f;
+	// float nearestDist = 0;
 	for (const auto& object: objects)
 	{
 		if (object != nullptr)

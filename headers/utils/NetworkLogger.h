@@ -13,25 +13,25 @@ public:
 	 * @brief Logging server receives
 	 * @param commandName Назва команди
 	 */
-	static void LogServerIn(const std::string& commandName);
+	static void LogServerReceive(const std::string& commandName);
 
 	/**
 	 * @brief Logging server sends
 	 * @param commandName Назва команди
 	 */
-	static void LogServerOut(const std::string& commandName);
+	static void LogServerSend(const std::string& commandName);
 
 	/**
 	 * @brief Logging client receives
 	 * @param commandName Назва команди
 	 */
-	static void LogClientIn(const std::string& commandName);
+	static void LogClientReceive(const std::string& commandName);
 
 	/**
 	 * @brief Logging client sends
 	 * @param commandName Назва команди
 	 */
-	static void LogClientOut(const std::string& commandName);
+	static void LogClientSend(const std::string& commandName);
 
 	/**
 	 * @brief Enabling/disabling log into file

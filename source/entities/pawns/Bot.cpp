@@ -2,8 +2,6 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "components/EventSystem.h"
 #include "components/LineOfSight.h"
-#include "components/events/AnimationRenderEvents.h"
-#include "components/events/ReplicationEvents.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
@@ -13,8 +11,9 @@
 #include "utils/RandUtils.h"
 #include <optional>
 
-Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
-	: Tank{std::move(pawnProperty), bulletPool, gameConfig}
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig,
+		 const bool enableByDefault)
+	: Tank{std::move(pawnProperty), bulletPool, gameConfig, enableByDefault}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {
 	_shootTimer.cooldown = std::chrono::seconds{1};
@@ -340,28 +339,24 @@ void Bot::TickUpdate(const double deltaTime)
 
 	if (isMove || oldDir != _dir)
 	{
-		const FPoint pos = GetPos();
-		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
 
 		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
 		{
-			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
 
-	// TODO: cover by unit test isTouchTheIce and ice movement logic
-	if (_effects.isTouchTheIce)
+	// TODO: cover by unit test isTouchTheIce and ice movement logic 
+	if (_effects.isTouchTheIce && _moveBeh->ApplyMoveVelocity(deltaTime))
 	{
-		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
-			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
-		{
-			const FPoint pos = GetPos();
-			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
+		FPoint pos = GetPos();
+		_events->EmitEvent("AnimationTankUpdate", GetName(), pos, _dir);
 
-			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
-			{
-				_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
-			}
+		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		{
+			_events->EmitEvent("ServerSend_Pos", _name, pos, _dir, _uuid);
 		}
 	}
 
@@ -376,10 +371,7 @@ void Bot::TickUpdate(const double deltaTime)
 		_effects.isTouchTheIce != isTouchTheIce)
 	{
 		_effects.isTouchTheIce = isTouchTheIce;
-		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get()))
-		{
-			moveBeh->ResetVelocity();
-		}
+		_moveBeh->ResetVelocity();
 	}
 
 	const std::shared_ptr<BaseObj> nearestSeenObstacle = HandleLineOfSight();

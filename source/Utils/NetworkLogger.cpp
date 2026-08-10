@@ -9,7 +9,7 @@ int NetworkLogger::_verbosityLevel = 1;
 std::string NetworkLogger::_logFilename = "network_log.txt";
 std::mutex NetworkLogger::_logMutex;
 
-void NetworkLogger::LogServerIn(const std::string& commandName)
+void NetworkLogger::LogServerReceive(const std::string& commandName)
 {
 	if (_verbosityLevel >= 1)
 	{
@@ -18,7 +18,7 @@ void NetworkLogger::LogServerIn(const std::string& commandName)
 	}
 }
 
-void NetworkLogger::LogServerOut(const std::string& commandName)
+void NetworkLogger::LogServerSend(const std::string& commandName)
 {
 	if (_verbosityLevel >= 1)
 	{
@@ -27,7 +27,7 @@ void NetworkLogger::LogServerOut(const std::string& commandName)
 	}
 }
 
-void NetworkLogger::LogClientIn(const std::string& commandName)
+void NetworkLogger::LogClientReceive(const std::string& commandName)
 {
 	if (_verbosityLevel >= 1)
 	{
@@ -36,7 +36,7 @@ void NetworkLogger::LogClientIn(const std::string& commandName)
 	}
 }
 
-void NetworkLogger::LogClientOut(const std::string& commandName)
+void NetworkLogger::LogClientSend(const std::string& commandName)
 {
 	if (_verbosityLevel >= 1)
 	{

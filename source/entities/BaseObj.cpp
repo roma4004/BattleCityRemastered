@@ -4,9 +4,8 @@
 #include "utils/UuidUtils.h"
 #include <utility>
 
-BaseObj::BaseObj(BaseObjProperty baseObjProperty, const CollisionTags collision)
+BaseObj::BaseObj(BaseObjProperty baseObjProperty)
 	: _health(baseObjProperty.health)
-	, _collision{collision}
 	, _uuid{baseObjProperty.uuid}
 	, _name{std::move(baseObjProperty.name)}
 	, _fraction{std::move(baseObjProperty.fraction)}
@@ -21,7 +20,6 @@ BaseObj::BaseObj(const BaseObj& other) = default;
 //Move ctor
 BaseObj::BaseObj(BaseObj&& other) noexcept
 	: _health(std::exchange(other._health, 0))
-	, _collision(other._collision)
 	, _uuid(other._uuid)
 	, _name(other._name)
 	, _nameWithUuid(other._nameWithUuid)
@@ -36,7 +34,6 @@ BaseObj& BaseObj::operator=(const BaseObj& other)
 	if (this != &other)
 	{
 		_health = other._health;
-		_collision = other._collision;
 		_uuid = other._uuid;
 		_name = other._name;
 		_nameWithUuid = other._nameWithUuid;
@@ -53,7 +50,6 @@ BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
 	if (this != &other)
 	{
 		_health = std::exchange(other._health, 0);
-		_collision = other._collision;
 		_uuid = other._uuid;
 		_name = other._name;
 		_nameWithUuid = other._nameWithUuid;
@@ -68,7 +64,7 @@ ObjRectangle BaseObj::GetRect() const { return _rect; }
 
 void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
-std::string BaseObj::GetName() const { return _name; }
+std::string_view BaseObj::GetName() const { return _name; }
 
 using buuid = boost::uuids::uuid;
 buuid BaseObj::GetUuid() const { return _uuid; }
@@ -124,12 +120,18 @@ bool BaseObj::GetIsAlive() const { return _isAlive; }
 void BaseObj::TakeDamage(const unsigned int damage, const std::string& /*damageAuthor*/,
 						 const std::string& /*damageFraction*/)
 {
-	_health -= static_cast<int>(damage);
+	_health -= damage;
 	_isAlive = _health > 0;
 }
 
-bool BaseObj::GetIsPassable() const { return _collision.passable; }
+bool BaseObj::GetIsPassable() const { return _isPassable; }
 
-bool BaseObj::GetIsDestructible() const { return _collision.destructible; }
+void BaseObj::SetIsPassable(const bool value) { _isPassable = value; }
 
-bool BaseObj::GetIsPenetrable() const { return _collision.penetrable; }
+bool BaseObj::GetIsDestructible() const { return _isDestructible; }
+
+void BaseObj::SetIsDestructible(const bool value) { _isDestructible = value; }
+
+bool BaseObj::GetIsPenetrable() const { return _isPenetrable; }
+
+void BaseObj::SetIsPenetrable(const bool value) { _isPenetrable = value; }

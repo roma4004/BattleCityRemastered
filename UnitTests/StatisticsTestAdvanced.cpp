@@ -1,7 +1,6 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
-#include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
@@ -25,12 +24,11 @@ protected:
 	float _tankSize{};
 	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};
-	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = gridSize * 3.f;// for better turns
@@ -40,6 +38,7 @@ protected:
 
 	void TearDown() override
 	{
+		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 
 	//TODO: use this style for others bullet creation
@@ -68,7 +67,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 1u);
@@ -81,7 +80,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);
 
-	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 1u);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 1u);

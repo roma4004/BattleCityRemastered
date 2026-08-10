@@ -2,10 +2,6 @@
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
-#include "components/events/AnimationRenderEvents.h"
-#include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
-#include "components/events/RenderUIEvents.h"
 #include "enums/GameMode.h"
 
 Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
@@ -20,21 +16,30 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
+Menu::~Menu()
+{
+	Unsubscribe();
+}
+
 void Menu::Subscribe()
 {
 	if (_isMenuDisplayed)
 	{
-		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
+		_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
 	}
 
-	_subs.push_back(_events->AddListener(this, &Menu::OnSelectedGameModeChangedTo));
+	_events->AddListener("SelectedGameModeChangedTo", _name, [this](const GameMode newGameMode)
+	{
+		this->_selectedGameMode = newGameMode;
+	});
 
-	_subs.push_back(_events->AddListener(this, &Menu::OnMenuShowed));
+	_events->AddListener("MenuShowed", _name, [this](const bool isDisplayed)
+	{
+		DisplayMenu(isDisplayed);
+	});
 }
 
-void Menu::OnDrawUserInterface(const DrawUserInterfaceEvent&) { Draw(); }
-void Menu::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
-void Menu::OnMenuShowed(const MenuShowedEvent& event) { DisplayMenu(event.isShown); }
+void Menu::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 void Menu::Draw()
 {
@@ -44,11 +49,11 @@ void Menu::Draw()
 		_yOffsetStart -= 3;
 		constexpr int padding{25};
 		_pos.y = padding + _yOffsetStart;
-		_events->EmitEvent(MenuPosChangedEvent{.pos = _pos});
+		_events->EmitEvent("MenuPosChanged", _pos);
 	}
 
-	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
-	_events->EmitEvent(RenderMenuLogoEvent{.pos = _pos});
+	_events->EmitEvent("RenderMenuBackground", _pos);
+	_events->EmitEvent("RenderMenuLogo", _pos);
 	DrawMenuText();
 	DrawControlHints();
 }
@@ -57,7 +62,7 @@ void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text)
 {
 	if (isSelected)
 	{
-		_events->EmitEvent(RenderMenuSelectorIconEvent{.pos = Point{.x = posText.x - 35, .y = posText.y - 10}});
+		_events->EmitEvent("RenderMenuSelectorIcon", Point{.x = posText.x - 35, .y = posText.y - 10});
 	}
 
 	DrawTextLine(posText, std::move(text));
@@ -66,7 +71,7 @@ void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text)
 void Menu::DrawTextLine(Point& posText, std::string text) const
 {
 	constexpr unsigned int color = {0xffffffffu};
-	_events->EmitEvent(RenderTextEvent{.pos = posText, .color = color, .text = text});
+	_events->EmitEvent("RenderText", posText, color, text);
 	posText.y += 30;
 }
 
@@ -95,9 +100,8 @@ void Menu::DrawControlHints() const
 	}
 
 	constexpr int yBaseLineForControls = 150;
-	_events->EmitEvent(RenderMenuXBoxHintEvent{.pos = Point{.x = relativePos.x + 245, .y = relativePos.y}});
-	_events->EmitEvent(RenderMenuPS5HintEvent{
-			.pos = Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls}});
+	_events->EmitEvent("RenderMenuXBoxHint", Point{.x = relativePos.x + 245, .y = relativePos.y});
+	_events->EmitEvent("RenderMenuPS5Hint", Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls});
 
 	Point posText{.x = _pos.x + 40, .y = _pos.y + yBaseLineForControls + 200};
 	DrawTextLine(posText, "Controls: P1/P2    XBox    PS");
@@ -114,10 +118,14 @@ void Menu::DisplayMenu(const bool isDisplayed)
 
 	if (_isMenuDisplayed)
 	{
-		_drawSub = _events->AddListener(this, &Menu::OnDrawUserInterface);
+		_events->AddListener("DrawUserInterface", _name, [this]() { this->Draw(); });
+
+		_events->EmitEvent("ShowMenu", true);
 	}
 	else
 	{
-		_drawSub = EventSubscription{};
+		_events->RemoveListener("DrawUserInterface", _name);
+
+		_events->EmitEvent("ShowMenu", false);
 	}
 }

@@ -1,23 +1,10 @@
 #pragma once
 
-#include "components/EventSystem.h"
 #include <memory>
 #include <string>
-#include <vector>
 
 enum class GameMode : char8_t;
 class EventSystem;
-struct MenuReleasedEvent;
-struct PauseReleasedEvent;
-struct GameModeChangedToEvent;
-struct GameResetEvent;
-struct PreTickUpdateEvent;
-struct ShowMenuEvent;
-struct MenuShowedEvent;
-struct MoveUpEvent;
-struct MoveDownEvent;
-struct EnterEvent;
-struct FireEvent;
 
 struct MenuKeys final
 {
@@ -32,35 +19,19 @@ class InputProviderForMenu final
 {
 	std::string _name{"InputProviderForMenu"};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime by EnableMenuInput()/DisableMenuInput(), independent of _subs's fixed
-	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
-	std::vector<EventSubscription> _menuNavSubs{};
 	GameMode _gameMode{};
 	MenuKeys _keys{};
-
-	void OnMenuReleased(const MenuReleasedEvent&);
-	void OnPauseReleased(const PauseReleasedEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
-	void OnGameReset(const GameResetEvent&);
-	void OnPreTickUpdate(const PreTickUpdateEvent&);
-	void OnShowMenu(const ShowMenuEvent& event);
-	void OnMenuShowed(const MenuShowedEvent& event);
-
-	void OnMenuNavUp(const MoveUpEvent& event);
-	void OnMenuNavDown(const MoveDownEvent& event);
-	void OnMenuNavEnter(const EnterEvent& event);
-	void OnMenuNavFire(const FireEvent& event);
 
 public:
 	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);
 
-	~InputProviderForMenu() = default;
+	~InputProviderForMenu();
 
 	void Subscribe();
+	void Unsubscribe() const;
 
 	void EnableMenuInput();
-	void DisableMenuInput();
+	void DisableMenuInput() const;
 	void ToggleMenuInputSubscription();
 	void Reset();
 	void MenuUpdate();

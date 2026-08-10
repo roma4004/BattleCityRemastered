@@ -3,22 +3,15 @@
 #include "Obstacle.h"
 #include <memory>
 
-struct DrawEvent;
-
 class SteelWall final : public Obstacle
 {
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
-	void OnDraw(const DrawEvent&);
-
-protected:
-	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+	void Unsubscribe() const override;
 
 public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{}};
-
 	SteelWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
-	~SteelWall() override = default;
+	~SteelWall() override;
 };
