@@ -1,6 +1,9 @@
 #include "components/BulletPool.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
@@ -22,11 +25,6 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<s
 	Subscribe();
 }
 
-BulletPool::~BulletPool()
-{
-	Unsubscribe();
-}
-
 std::string BulletPool::GetCurrentTimeString()
 {
 	const auto now = std::chrono::system_clock::now();
@@ -44,17 +42,13 @@ std::string BulletPool::GetCurrentTimeString()
 
 void BulletPool::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { Clear(); });
-
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode) { _gameMode = newGameMode; });
+	_subs.push_back(_events->AddListener(this, &BulletPool::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &BulletPool::OnGameModeChangedTo));
 }
 
-void BulletPool::Unsubscribe() const
-{
-	_events->RemoveListener("Reset", _name);
+void BulletPool::OnGameReset(const GameResetEvent&) { Clear(); }
 
-	_events->RemoveListener("GameModeChangedTo", _name);
-}
+void BulletPool::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
 
 std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
 {
@@ -119,7 +113,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		_events->EmitEvent("ServerSend_Dispose", bulletCast->GetUuid());
+		_events->EmitEvent(ServerOutDisposeEvent{.uuid = bulletCast->GetUuid()});
 	}
 }
 

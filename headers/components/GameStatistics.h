@@ -1,10 +1,16 @@
 #pragma once
 
+#include "components/EventSystem.h"
+#include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 enum class GameMode : char8_t;
 class EventSystem;
+struct GameResetEvent;
+struct GameModeChangedToEvent;
 
 struct StatisticsData final
 {
@@ -51,37 +57,55 @@ class GameStatistics final
 {
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
+	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
+	// subscribe-once-at-construction lifetime - clearing one of these vectors auto-unsubscribes
+	// just that group.
+	std::vector<EventSubscription> _hostSubs{};
+	std::vector<EventSubscription> _clientSubs{};
 	StatisticsData _data{};
 	GameMode _gameMode{};
 
 	void Subscribe();
 	void SubscribeHost();
 	void SubscribeAsClient();
-	void OnGameModeChangedTo(GameMode newGameMode);
-	void OnClientStatisticsChange(const std::string& type, const std::string& author, const std::string& fraction);
+	void OnGameReset(const GameResetEvent&);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
-	void Unsubscribe() const;
-	void UnsubscribeAsHost() const;
-	void UnsubscribeAsClient() const;
+	void UnsubscribeAsHost();
+	void UnsubscribeAsClient();
 
-	void OnBulletHit(const std::string& author, const std::string& fraction);
+	void OnBulletHit(const StatisticsBulletHitEvent& event);
+	void OnClientInBulletHit(const ClientInBulletHitEvent& event);
 	void OnEnemyHit(const std::string& author, const std::string& fraction);
+	void OnClientInEnemyHit(const ClientInEnemyHitEvent& event);
 	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerOneHit(const ClientInPlayerOneHitEvent& event);
 	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnTankHit(const std::string& who, const std::string& author, const std::string& fraction);
+	void OnClientInPlayerTwoHit(const ClientInPlayerTwoHitEvent& event);
+	void OnTankHit(const StatisticsTankHitEvent& event);
 	void OnEnemyDied(const std::string& author, const std::string& fraction);
+	void OnClientInEnemyDied(const ClientInEnemyDiedEvent& event);
 	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerOneDied(const ClientInPlayerOneDiedEvent& event);
 	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
-	void OnTankDied(const std::string& who, const std::string& author, const std::string& fraction);
-	void OnBrickWallDied(const std::string& author, const std::string& fraction);
-	void OnSteelWallDied(const std::string& author, const std::string& fraction);
-	void OnBonusPickup(const std::string& author, const std::string& fraction);
-	void OnBonusDestroyed(const std::string& author, const std::string& fraction);
+	void OnClientInPlayerTwoDied(const ClientInPlayerTwoDiedEvent& event);
+	void OnTankDied(const StatisticsTankDiedEvent& event);
+	void OnBrickWallDied(const StatisticsAttributionEvent& event);
+	void OnHostBrickWallDied(const BrickWallDiedEvent& event);
+	void OnClientInBrickWallDied(const ClientInBrickWallDiedEvent& event);
+	void OnSteelWallDied(const StatisticsAttributionEvent& event);
+	void OnHostSteelWallDied(const SteelWallDiedEvent& event);
+	void OnClientInSteelWallDied(const ClientInSteelWallDiedEvent& event);
+	void OnBonusPickup(const StatisticsBonusPickupEvent& event);
+	void OnClientInBonusPickup(const ClientInBonusPickupEvent& event);
+	void OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event);
+	void OnClientInBonusDestroyed(const ClientInBonusDestroyedEvent& event);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
 
-	~GameStatistics();
+	~GameStatistics() = default;
 
 	void Reset();
 

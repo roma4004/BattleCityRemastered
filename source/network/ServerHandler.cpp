@@ -1,5 +1,7 @@
 #include "network/ServerHandler.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
+#include "utils/NetworkLogger.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
@@ -26,12 +28,12 @@ ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_
 		catch (std::exception& e)
 		{
 			std::cerr << "ServerHandler thread " << e.what() << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog(std::string("ServerHandler thread exception: ") + e.what());
 		}
 		catch (...)
 		{
 			std::cerr << "ServerHandler thread error ..." << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog("ServerHandler thread error: unknown exception");
 		}
 	});
 
@@ -41,7 +43,6 @@ ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_
 ServerHandler::~ServerHandler()
 {
 	Shutdown();
-	Unsubscribe();
 }
 
 void ServerHandler::Shutdown()
@@ -73,15 +74,12 @@ void ServerHandler::Shutdown()
 
 void ServerHandler::Subscribe()
 {
-	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
-	{
-		this->ProcessNetworkCommands();
-	});
+	_subs.push_back(_events->AddListener(this, &ServerHandler::OnNetCommandUpdate));
+
+	//TODO: inline simple or empty delegate wrapper above to method call in lambda like this:
+	//_subs.push_back(_events->AddListener([this](const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }));
 }
 
-void ServerHandler::Unsubscribe() const
-{
-	_events->RemoveListener("NetCommandUpdate", _name);
-}
+void ServerHandler::OnNetCommandUpdate(const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }
 
 }//namespace network::commands

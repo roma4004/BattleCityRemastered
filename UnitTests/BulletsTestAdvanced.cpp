@@ -2,6 +2,7 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
@@ -24,11 +25,12 @@ protected:
 	float _gridSize{1};
 	unsigned short _bulletHealth{1};
 	GameMode _gameMode{GameMode::OnePlayer};
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 
 		_allObjects.reserve(4);
@@ -43,7 +45,6 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 };
 
@@ -60,7 +61,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 		EXPECT_EQ(steelWall->GetHealth(), 1);
 		EXPECT_EQ(bullet->GetTier(), 3u);
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_EQ(steelWall->GetHealth(), 0);
 

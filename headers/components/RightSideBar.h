@@ -1,10 +1,15 @@
 ﻿#pragma once
 #include "Point.h"
+#include "components/EventSystem.h"
 #include "enums/GameMode.h"
 #include <memory>
+#include <vector>
 
 struct ObjRectangle;
 class EventSystem;
+struct GameModeChangedToEvent;
+struct DrawUserInterfaceEvent;
+struct RespawnCountChangedToEvent;
 
 class RightSideBar
 {
@@ -19,14 +24,16 @@ class RightSideBar
 
 	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 
 	void Subscribe();
-	void Unsubscribe() const;
 	void Draw() const;
-	void OnRespawnCountChangedTo(const std::string& objectName, unsigned short respawnCount);
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnDrawUserInterface(const DrawUserInterfaceEvent&) const;
+	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 
 public:
 	explicit RightSideBar(const std::shared_ptr<EventSystem>& events);
 
-	~RightSideBar();
+	~RightSideBar() = default;
 };

@@ -3,11 +3,15 @@
 #include "../BaseObj.h"
 #include "BrickWall.h"
 #include "SteelWall.h"
+#include "components/EventSystem.h"
 #include "utils/Timer.h"
 #include <variant>
+#include <vector>
 
 enum class GameMode : char8_t;
 class EventSystem;
+struct BonusShovelStatusChangeEvent;
+struct ClientInFortressChangeEvent;
 
 class FortressWall final : public BaseObj//TODO: remove baseObj after changing to baseObj interface in allObjects
 {
@@ -15,6 +19,7 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 	using buuid = boost::uuids::uuid;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 
 	std::variant<std::unique_ptr<BrickWall>,
@@ -25,8 +30,7 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 
 	void Subscribe();
 	void SubscribeAsClient();
-
-	void Unsubscribe() const;
+	void OnClientInFortressChange(const ClientInFortressChangeEvent& event);
 
 	void OnEnemyPickupShovel();
 	void OnPlayerPickupShovel();
@@ -36,13 +40,13 @@ public:
 	FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 				 std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode);
 
-	~FortressWall() override;
+	~FortressWall() override = default;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
-	[[nodiscard]] std::string_view GetName() const override;
+	[[nodiscard]] std::string GetName() const override;
 	[[nodiscard]] buuid GetUuid() const override;
-	void OnBonusShovel(const std::string& fraction, bool isActive);
+	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
 
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
@@ -56,15 +60,9 @@ public:
 
 	[[nodiscard]] bool GetIsPassable() const override;
 
-	void SetIsPassable(bool value) override;
-
 	[[nodiscard]] bool GetIsDestructible() const override;
 
-	void SetIsDestructible(bool value) override;
-
 	[[nodiscard]] bool GetIsPenetrable() const override;
-
-	void SetIsPenetrable(bool value) override;
 
 	[[nodiscard]] ObjRectangle GetRect() const override;
 	void SetRect(ObjRectangle rect) override;

@@ -1,5 +1,7 @@
 #include "entities/Bonuses/BonusTimer.h"
 #include "components/EventSystem.h"
+#include "components/events/BonusPickupEvents.h"
+#include "components/events/ObstacleAndBonusEvents.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
 
@@ -11,9 +13,7 @@ BonusTimer::BonusTimer(const ObjRectangle& rect, const std::shared_ptr<EventSyst
 
 BonusTimer::~BonusTimer() = default;
 
-void BonusTimer::PickUpBonus(const std::string& author, const std::string& fraction)
+void BonusTimer::EmitPickupEvent(const std::string&, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BonusPickup", author, fraction);
-	_events->EmitEvent(_name + "_Pickup", fraction, _effectDuration);
-	TakeDamage(GetHealth(), _name, _fraction);
+	_events->EmitEvent(BonusTimerPickupEvent{.fraction = fraction, .effectDuration = _effectDuration});
 }

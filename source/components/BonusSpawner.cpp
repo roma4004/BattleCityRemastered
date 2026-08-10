@@ -2,6 +2,10 @@
 #include "Point.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/TimingEvents.h"
+#include "components/SpawnEvents.h"
 #include "entities/bonuses/BonusCaliber.h"
 #include "entities/bonuses/BonusGrenade.h"
 #include "entities/bonuses/BonusHelmet.h"
@@ -33,64 +37,64 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	Subscribe();
 }
 
-BonusSpawner::~BonusSpawner() { Unsubscribe(); }
-
 void BonusSpawner::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	{
-		this->_gameMode = newGameMode;
-
-		if (_gameMode == GameMode::PlayAsClient)
-		{
-			UnsubscribeAsHost();
-			SubscribeAsClient();
-		}
-		else
-		{
-			SubscribeAsHost();
-			UnsubscribeAsClient();
-		}
-	});
-
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
-	{
-		_distSpawnPosY = std::uniform_int_distribution<>{
-				0,
-				static_cast<int>(newSize.y) - _gameConfig.bonusSize};
-		_distSpawnPosX = std::uniform_int_distribution<>{
-				0,
-				static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
-	});
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWindowSizeChangedTo));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
+void BonusSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_gameMode = event.mode;
+
+	if (_gameMode == GameMode::PlayAsClient)
+	{
+		UnsubscribeAsHost();
+		SubscribeAsClient();
+	}
+	else
+	{
+		SubscribeAsHost();
+		UnsubscribeAsClient();
+	}
+}
+
+void BonusSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+{
+	const UPoint& newSize = event.newSize;
+	_distSpawnPosY = std::uniform_int_distribution<>{
+			0,
+			static_cast<int>(newSize.y) - _gameConfig.bonusSize};
+	_distSpawnPosX = std::uniform_int_distribution<>{
+			0,
+			static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
+}
+
 void BonusSpawner::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _name, [this](const double /*deltaTime*/) { this->Update(); });
+	_hostSub = _events->AddListener(this, &BonusSpawner::Update);
 }
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_events->AddListener(
-			"ClientReceived_BonusSpawn", _name,
-			[this](const FPoint pos, const BonusType type, const buuid& uuid)
-			{
-				const auto size = static_cast<float>(_gameConfig.bonusSize);
-				const ObjRectangle rect{.x = pos.x, .y = pos.y, .w = size, .h = size};
-				SpawnBonus(rect, type, uuid);
-			});
+	_clientSub = _events->AddListener(this, &BonusSpawner::OnClientInBonusSpawn);
 }
 
-void BonusSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
+void BonusSpawner::OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event)
+{
+	const auto size = static_cast<float>(_gameConfig.bonusSize);
+	const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
+	SpawnBonus(rect, event.type, event.uuid);
+}
 
-void BonusSpawner::UnsubscribeAsHost() const { _events->RemoveListener("TickUpdate", _name); }
+void BonusSpawner::UnsubscribeAsHost() { _hostSub = EventSubscription{}; }
 
-void BonusSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_BonusSpawn", _name); }
+void BonusSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
-void BonusSpawner::Update()
+void BonusSpawner::Update(const TickUpdateEvent&)
 {
 	if (_spawnTimer.IsCooldownFinish())
 	{
@@ -152,7 +156,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buu
 
 	if (bonus)
 	{
-		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{bonus});
+		_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::shared_ptr<BaseObj>{bonus}});
 	}
 }
 
@@ -162,7 +166,7 @@ void BonusSpawner::SpawnRandomBonus(const ObjRectangle rect)
 	SpawnBonus(rect, bonusType);
 }
 
-void BonusSpawner::Reset()
+void BonusSpawner::Reset(const GameResetEvent&)
 {
 	_spawnTimer.Reset();
 }

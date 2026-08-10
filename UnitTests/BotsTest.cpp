@@ -3,6 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -39,26 +40,26 @@ protected:
 	float _gridSize{};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events, *_respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
-		_tankSize = _gridSize * 3;// for better turns
+		_tankSize = _gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 };
 
@@ -84,7 +85,7 @@ TEST_F(BotsTest, BotsChangeDirectionIfOpponentSeen)
 	const Direction startDirCoop = coopBot->GetDirection();
 	const Direction startDirEnemy = enemyBot->GetDirection();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();
@@ -117,7 +118,7 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentSeen)
 	const Direction startDirCoop = coopBot->GetDirection();
 	const Direction startDirEnemy = enemyBot->GetDirection();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();
@@ -153,7 +154,7 @@ TEST_F(BotsTest, BotsChangeDirectionIfBonusSeenAndNoOneShoot)
 	const Direction startDirEnemy = enemyBot->GetDirection();
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();
@@ -207,7 +208,7 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindWater)
 	const Direction startDirEnemy = enemyBot->GetDirection();
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();
@@ -261,7 +262,7 @@ TEST_F(BotsTest, BotsCantSeeBonusBehindBush)
 	const Direction startDirEnemy = enemyBot->GetDirection();
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();
@@ -315,7 +316,7 @@ TEST_F(BotsTest, BotsCanSeeBonusBehindIce)
 	const Direction startDirEnemy = enemyBot->GetDirection();
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();
@@ -377,7 +378,7 @@ TEST_F(BotsTest, BotsCanSeeBonusInTheIce)
 	const Direction startDirEnemy = enemyBot->GetDirection();
 	const size_t sizeBefore = _allObjects.size();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	const Direction endDirCoop = coopBot->GetDirection();
 	const Direction endDirEnemy = enemyBot->GetDirection();

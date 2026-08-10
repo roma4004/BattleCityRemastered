@@ -1,16 +1,15 @@
 ﻿#include "entities/obstacles/WaterTile.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "enums/ObstacleType.h"
 
 WaterTile::WaterTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect, 1, "Water", events, uuid, gameMode, ObstacleType::Water}
+	: Obstacle{rect, 1, "Water", events, uuid, gameMode, ObstacleType::Water, kCollision}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(false);
-	BaseObj::SetIsPenetrable(true);
-
-	_events->EmitEvent("AnimationCreateWater", _rect);
+	_events->EmitEvent(AnimationCreateWaterEvent{.rect = _rect});
 }
 
 WaterTile::~WaterTile() = default;
+
+void WaterTile::EmitDeathStatistics(const std::string&, const std::string&) {}

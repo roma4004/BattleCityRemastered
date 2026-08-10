@@ -2,11 +2,15 @@
 #include "application/GameConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
-#include "components/managers/RespawnManager.h"
+#include "components/SpawnEvents.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -26,88 +30,89 @@
 #include <memory>
 
 TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<EventSystem>& events, RespawnManager& respawnManager)
+						 const std::shared_ptr<EventSystem>& events)
 	: _allObjects{allObjects}
 	, _events{events}
 	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
-	, _respawnManager{respawnManager}
 	, _gameConfig{gameConfig}
 {
 	Subscribe();
 }
 
-TankSpawner::~TankSpawner()
-{
-	Unsubscribe();
-}
-
 void TankSpawner::Subscribe()
 {
-	_events->AddListener("Reset", _name, [this]() { this->Reset(); });
+	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
 
 	//TODO: reuse existing tanks when game mode changed
-	_events->AddListener("GameModeChangedTo", _name, [this](const GameMode newGameMode)
-	{
-		this->_gameMode = newGameMode;
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnDelayFinished));
+	_subs.push_back(_events->AddListener(this, &TankSpawner::OnWindowSizeChangedTo));
+}
 
-		this->_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
-	});
+void TankSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+{
+	_gameMode = event.mode;
 
-	_events->AddListener(
-			"SpawnEnabled", _name,
-			[this](std::shared_ptr<Tank> tank)
-			{
-				if (!tank)
-				{
-					return;
-				}
+	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+}
 
-				tank->Enable();
-				const ObjRectangle rect{tank->GetRect()};
-				const std::string name{tank->GetName()};
-				_events->EmitEvent("AnimationCreateTank", rect, name);
-			});
+void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(event.type, event.uuid, event.skipDelay); }
 
-	_events->AddListener("RespawnTanks", _name, [this](const bool skipDelay) { this->RespawnTanks(skipDelay); });
+void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event)
+{
+	OnSpawnDelayFinished(event.uuid);
+}
 
-	_events->AddListener("WindowSizeChangedTo", _name, [this](const UPoint& newSize)
-	{
-		_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
-		const float newSizeY = static_cast<float>(newSize.y);
-		_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
-		_gameConfig.gridSize = _gameConfig.gridSizeDefault * _gameConfig.scaleFactor;
+void TankSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+{
+	const UPoint& newSize = event.newSize;
+	_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
+	const float newSizeY = static_cast<float>(newSize.y);
+	_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
+	_gameConfig.gridSize = _gameConfig.gridSizeDefault * _gameConfig.scaleFactor;
 
-		_gameConfig.gridOffset = (newSizeY * _gameConfig.scaleFactor) / _gameConfig.gridSize;
-		_gameConfig.tankSize = _gameConfig.gridOffset * 3.f;
+	_gameConfig.gridOffset = (newSizeY * _gameConfig.scaleFactor) / _gameConfig.gridSize;
+	_gameConfig.tankSize = _gameConfig.gridOffset * 3.f;
 
-		_gameConfig.tankSpeed = _gameConfig.tankSpeed * _gameConfig.scaleFactor / 2.f;
+	_gameConfig.tankSpeed = _gameConfig.tankSpeed * _gameConfig.scaleFactor / 2.f;
 
-		_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
+	_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
 
-		//scale bullet caliber
-		_events->EmitEvent("ScaleFactorChangedTo", _gameConfig.scaleFactor);
-	});
+	//scale bullet caliber
+	_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
 }
 
 void TankSpawner::SubscribeAsClient()
 {
-	_events->AddListener(
-			"ClientReceived_RespawnTank", _name,
-			[this](const TankType type, const buuid& uuid, const ObjRectangle rect)
-			{
-				this->OnClientRespawn(type, uuid, rect);
-			});
+	_clientRespawnSub = _events->AddListener(this, &TankSpawner::OnClientInRespawnTank);
+
+	// Sole materialize trigger on the client - DelayedSpawnManager's timer doesn't tick here.
+	_clientMaterializeSub = _events->AddListener(this, &TankSpawner::OnClientInTankSpawnComplete);
 }
 
-void TankSpawner::Unsubscribe() const { _events->RemoveAllListeners(_name); }
+void TankSpawner::OnClientInRespawnTank(const ClientInRespawnTankEvent& event)
+{
+	OnClientRespawn(event.type, event.uuid, event.rect);
+}
 
-void TankSpawner::UnsubscribeAsClient() const { _events->RemoveListener("ClientReceived_RespawnTank", _name); }
+void TankSpawner::OnClientInTankSpawnComplete(const ClientInTankSpawnCompleteEvent& event)
+{
+	OnSpawnDelayFinished(event.uuid);
+}
 
-void TankSpawner::Reset()
+void TankSpawner::UnsubscribeAsClient()
+{
+	_clientRespawnSub = EventSubscription{};
+	_clientMaterializeSub = EventSubscription{};
+}
+
+void TankSpawner::Reset(const GameResetEvent&)
 {
 	_enemySpawnTimer.cooldown = milliseconds{5000};
 	_enemySpawnTimer.isActive = false;
 	_enemySpawnTimer.activateTime = std::chrono::system_clock::now() - _enemySpawnTimer.cooldown;
+	_delayedSpawns.clear();
 }
 
 std::string TankSpawner::GetCurrentTimeString()
@@ -243,7 +248,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const
 										   skipDelay);
 	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_RespawnTank", type, uuid, spawnRect);
+		_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 	}
 }
 
@@ -311,7 +316,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("ServerSend_RespawnTank", type, uuid, spawnRect);
+			_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 		}
 	}
 	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
@@ -349,18 +354,6 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 		case TankType::COOP2:
 			RespawnPlayerTeam(type, uuid, skipDelay, rect);
 			break;
-	}
-}
-
-void TankSpawner::RespawnTanks(const bool skipDelay)
-{
-	for (size_t i = 0; i < _respawnManager._slots.size(); ++i)
-	{
-		if (const auto [uuid, isAvailable] = _respawnManager._slots[i];
-			isAvailable)
-		{
-			RespawnTank(static_cast<TankType>(i), uuid, skipDelay);
-		}
 	}
 }
 
@@ -406,30 +399,69 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std::string& name, std::string fraction,
-							const float speed, buuid uuid, const TankType type, const bool skipDelay)
+							const float speed, const buuid uuid, const TankType tankType, const bool skipDelay)
 {
-	BaseObjProperty baseObjProperty{.rect = rect,
-									.health = health,
-									.uuid = uuid,
-									.name = name,
-									.fraction = std::move(fraction)};
+	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
+											  .type = tankType,
+											  .rect = rect,
+											  .health = health,
+											  .name = name,
+											  .fraction = std::move(fraction),
+											  .speed = speed});
+
+	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
+
+	// On a real client (skipDelay false) skip this: DelayedSpawnManager's timer never ticks there,
+	// so a >0ms entry would just sit in _spawnDelays forever, never disposed.
+	if (skipDelay || _gameMode != GameMode::PlayAsClient)
+	{
+		const milliseconds delay{skipDelay ? 0 : 1000};
+		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
+	}
+
+	// Locally simulated: runs on both sides from already-replicated spawn data, no network relay.
+	constexpr auto type{AnimationType::Spawn_Animation};//TODO: refactor to call tankAnimationCreateEvent, no type here
+	_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
+}
+
+void TankSpawner::OnSpawnDelayFinished(const buuid uuid)
+{
+	const auto it = std::ranges::find(_delayedSpawns, uuid, &DelayedTankSpawn::uuid);
+	if (it == _delayedSpawns.end())
+	{
+		return;
+	}
+
+	MaterializeTank(*it);
+	_delayedSpawns.erase(it);
+}
+
+void TankSpawner::MaterializeTank(const DelayedTankSpawn& pending)
+{
+	BaseObjProperty baseObjProperty{.rect = pending.rect,
+									.health = pending.health,
+									.uuid = pending.uuid,
+									.name = pending.name,
+									.fraction = pending.fraction};
 
 	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
 							  .allObjects = _allObjects,
 							  .events = _events,
 							  .tier = 1u,
-							  .speed = speed,
+							  .speed = pending.speed,
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 
-	if (std::shared_ptr<Tank> tank{CreateTank(type, std::move(pawnProperty))})
+	if (std::shared_ptr<BaseObj> tank{CreateTank(pending.type, std::move(pawnProperty))})
 	{
-		_events->EmitEvent("AddToSpawnQueue", std::shared_ptr<BaseObj>{tank});
-		_events->EmitEvent("SpawnDelayStart", tank, milliseconds(skipDelay ? 0 : 1000));
+		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
+		_events->EmitEvent(AnimationCreateTankEvent{.rect = pending.rect, .name = pending.name});
+		_events->EmitEvent(
+				BonusEffectReApplyEvent{.uuid = pending.uuid, .name = pending.name, .fraction = pending.fraction});
 
-		if (_gameMode != GameMode::PlayAsClient)
+		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent("AnimationCreate", AnimationType::Spawn_Animation, rect, name);
+			_events->EmitEvent(ServerOutTankSpawnCompleteEvent{.uuid = pending.uuid});
 		}
 	}
 }

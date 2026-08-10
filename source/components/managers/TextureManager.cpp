@@ -1,8 +1,10 @@
 ﻿#include "components/managers/TextureManager.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/managers/AnimationManager.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
+#include <cassert>
 
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 	: _animationManager{std::make_unique<AnimationManager>(events)}
@@ -11,30 +13,11 @@ TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 	Subscribe();
 }
 
-TextureManager::~TextureManager()
+void TextureManager::Subscribe()
 {
-	Unsubscribe();
+	_subs.push_back(_events->AddListener(this, &TextureManager::Draw));
+	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
 }
-
-void TextureManager::Subscribe() const
-{
-	//TODO: RAII for subscribe, maybe unique ptr or any wrapper for auto unsubscribe when obj die.
-	_events->AddListener(
-			"DrawObj", _name,
-			[this](const ObjRectangle rect, const Direction dir, const std::string& name)
-			{
-				this->Draw(rect, dir, name);
-			});
-	_events->AddListener(
-			"DrawAnimation", _name,
-			[this](const ObjRectangle rect, const Direction dir, const int step, const int scale,
-				   const std::string& name)
-			{
-				this->DrawAnimation(rect, dir, step, scale, name);
-			});
-}
-
-void TextureManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
 
 ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 {
@@ -149,7 +132,7 @@ ObjRectangle TextureManager::GetBonusTextureRect(const std::string& name) const
 		return _offset.bonusCaliber;
 	}
 
-	//TODO: add assert
+	assert(false && "TextureManager::GetBonusTextureRect: unrecognized bonus name suffix");
 	return ObjRectangle{};
 }
 
@@ -170,7 +153,7 @@ ObjRectangle TextureManager::GetTextTextureRect(const std::string& name) const
 		return _offset.gameWonText;
 	}
 
-	//TODO: add assert
+	assert(false && "TextureManager::GetTextTextureRect: unrecognized text name prefix");
 	return ObjRectangle{};
 }
 
@@ -212,8 +195,11 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 	return textureRect;
 }
 
-void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const std::string& name) const
+void TextureManager::Draw(const DrawObjEvent& event) const
 {
+	const ObjRectangle& rect = event.rect;
+	const Direction dir = event.dir;
+	const std::string& name = event.name;
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
@@ -222,28 +208,33 @@ void TextureManager::Draw(const ObjRectangle rect, const Direction dir, const st
 		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 
-	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }
 
-void TextureManager::DrawAnimation(const ObjRectangle rect, const Direction dir, const int step, const int scale,
-								   const std::string& name) const
+void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
+	const ObjRectangle& rect = event.rect;
+	const Direction dir = event.dir;
+	const int step = event.frame;
+	const int scale = event.scale;
+	const std::string& name = event.name;
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
-	textureRect.x += static_cast<float>(step * scale);
+	const int direction = name == "Water" ? -1 : 1;//NOTE: water's frames are played back-to-front frames flow
+	textureRect.x += static_cast<float>(step * scale * direction);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.w, defaultSdlRect.w)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.h, defaultSdlRect.h))
 	{
-		_events->EmitEvent("RenderColorTexture", rect);
 		//NOTE: fallback draw to non-texture, rectangle filled by color
+		_events->EmitEvent(RenderColorTextureEvent{.rect = rect});
 	}
 
-	_events->EmitEvent("RenderTexture", textureRect, destRect, dir);
+	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
 }

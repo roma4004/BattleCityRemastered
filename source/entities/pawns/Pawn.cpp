@@ -1,14 +1,16 @@
 #include "entities/pawns/Pawn.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/ReplicationEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h" //NOTE: required for std::unique_ptr<IMoveBeh> Pawn::_moveBeh
 #include "utils/UuidUtils.h"
 // #include <iostream>
 
-Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig)
-	: BaseObj{std::move(pawnProperty.baseObjProperty)}
+Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, const CollisionTags collision)
+	: BaseObj{std::move(pawnProperty.baseObjProperty), collision}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}
 	, _allObjects{pawnProperty.allObjects}
@@ -36,23 +38,29 @@ void Pawn::SubscribeAsHost() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_" + _nameWithUuid + "Health", _nameWithUuid, [this](const int health)
-	{
-		this->SetHealth(health);
-	});
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnClientInHealth));
 }
+
+void Pawn::OnClientInHealth(const ClientInHealthEvent& event) { SetHealth(event.health); }
 
 void Pawn::SubscribeTickUpdate()
 {
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
+	//NOTE: guarded - Bullet::Enable() re-subscribes on pool reuse while already subscribed.
+	if (!_tickUpdateSub)
 	{
-		this->TickUpdate(deltaTime);
-	});
+		_tickUpdateSub = _events->AddListener(this, &Pawn::OnTickUpdate);
+	}
 }
 
-void Pawn::UnsubscribeTickUpdate() const { _events->RemoveListener("TickUpdate", _nameWithUuid); }
+void Pawn::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
 
-void Pawn::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+void Pawn::UnsubscribeTickUpdate() const { _tickUpdateSub = EventSubscription{}; }
+
+void Pawn::Unsubscribe() const
+{
+	_subs.clear();
+	_tickUpdateSub = EventSubscription{};
+}
 
 void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
 {
@@ -62,7 +70,7 @@ void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_Health", _name, GetHealth(), _uuid);
+		_events->EmitEvent(ServerOutHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }
 

@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"
@@ -37,7 +38,7 @@ float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& 
 								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	float minDist = static_cast<float>(_windowSize.x * _windowSize.y);
-	// float nearestDist = 0;
+	// float nearestDist = 0.f;
 	for (const auto& object: objects)
 	{
 		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
@@ -136,7 +137,7 @@ buuid ShootingBeh::Shot(const buuid uuid)
 
 	if (bulletAsBase != nullptr)
 	{
-		_events->EmitEvent("AddToSpawnQueue", bulletAsBase);
+		_events->EmitEvent(AddToSpawnQueueEvent{bulletAsBase});
 	}
 
 	return bulletAsBase->GetUuid();

@@ -35,8 +35,6 @@ const char* Command::GetCommandType() const noexcept
 			return "RESPAWN_TANK";
 		case CommandType::OBSTACLE_SPAWN:
 			return "OBSTACLE_SPAWN";
-		case CommandType::ANIMATION_CREATE:
-			return "ANIMATION_CREATE";
 		default:
 			return "UNKNOWN_COMMAND";
 	}

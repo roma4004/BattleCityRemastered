@@ -4,9 +4,10 @@
 #include <boost/uuid/nil_generator.hpp>
 
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							   const int frameLimit, const int scale, const bool isInfinite)
+							   const int frameLimit, const int scale, const int animationSpeed, const bool isInfinite)
 	: rect{rect}
 	, limitOfFrames{frameLimit}
+	, animationSpeed{animationSpeed}
 	, type(type)
 	, isInfinite{isInfinite}
 	, scale{scale}
@@ -21,9 +22,10 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 {
 	rect = other.rect;
 	dir = other.dir;
-	animationFrame = other.animationFrame;
-	elapsedFrames = other.elapsedFrames;
+	currentFrameIndex = other.currentFrameIndex;
+	ticksSinceLastFrame = other.ticksSinceLastFrame;
 	limitOfFrames = other.limitOfFrames;
+	animationSpeed = other.animationSpeed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -37,9 +39,10 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 {
 	rect = other.rect;
 	dir = other.dir;
-	animationFrame = other.animationFrame;
-	elapsedFrames = other.elapsedFrames;
+	currentFrameIndex = other.currentFrameIndex;
+	ticksSinceLastFrame = other.ticksSinceLastFrame;
 	limitOfFrames = other.limitOfFrames;
+	animationSpeed = other.animationSpeed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -56,9 +59,10 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 
 	rect = other.rect;
 	dir = other.dir;
-	animationFrame = other.animationFrame;
-	elapsedFrames = other.elapsedFrames;
+	currentFrameIndex = other.currentFrameIndex;
+	ticksSinceLastFrame = other.ticksSinceLastFrame;
 	limitOfFrames = other.limitOfFrames;
+	animationSpeed = other.animationSpeed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -77,9 +81,10 @@ AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 
 	rect = other.rect;
 	dir = other.dir;
-	animationFrame = other.animationFrame;
-	elapsedFrames = other.elapsedFrames;
+	currentFrameIndex = other.currentFrameIndex;
+	ticksSinceLastFrame = other.ticksSinceLastFrame;
 	limitOfFrames = other.limitOfFrames;
+	animationSpeed = other.animationSpeed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;

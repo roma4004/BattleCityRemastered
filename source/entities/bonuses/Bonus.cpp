@@ -1,6 +1,11 @@
 #include "entities/bonuses/Bonus.h"
 #include "Point.h"
 #include "components/EventSystem.h"
+#include "components/events/AnimationRenderEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/StatisticsEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
@@ -12,65 +17,65 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 							  .health = 1,
 							  .uuid = uuid,
 							  .name = std::move(name),
-							  .fraction = "Neutral"}}
+							  .fraction = "Neutral"},
+			  kCollision}
 	, _lifeTimeTimer{lifeTime, std::chrono::system_clock::now()}
 	, _gameMode{gameMode}
 	, _bonusType{bonusType}
 	, _events{events}
 {
-	BaseObj::SetIsPassable(false);
-	BaseObj::SetIsDestructible(true);
-	BaseObj::SetIsPenetrable(false);
-
 	Subscribe();
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_BonusSpawn", FPoint{.x = rect.x, .y = rect.y}, _bonusType, uuid);
+		_events->EmitEvent(
+				ServerOutBonusSpawnEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = _bonusType, .uuid = uuid});
 	}
 }
 
 Bonus::~Bonus()
 {
-	Unsubscribe();
-
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent("ServerSend_BonusDeSpawn", _uuid);
+		_events->EmitEvent(ServerOutBonusDeSpawnEvent{.uuid = _uuid});
 	}
 }
 
 void Bonus::Subscribe()
 {
-	_events->AddListener("Draw", _nameWithUuid, [this]() { this->Draw(); });
+	_subs.push_back(_events->AddListener(this, &Bonus::OnDraw));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
+void Bonus::OnDraw(const DrawEvent&) { Draw(); }
+
 void Bonus::SubscribeAsHost()
 {
-	_events->AddListener("TickUpdate", _nameWithUuid, [this](const double deltaTime)
-	{
-		this->TickUpdate(deltaTime);
-	});
+	_subs.push_back(_events->AddListener(this, &Bonus::OnTickUpdate));
 }
+
+void Bonus::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
 
 void Bonus::SubscribeAsClient()
 {
-	_events->AddListener("ClientReceived_BonusDeSpawn", _nameWithUuid, [this](const buuid& uuid)
-	{
-		if (uuid != this->_uuid)
-		{
-			return;
-		}
-
-		this->SetIsAlive(false);
-	});
+	_subs.push_back(_events->AddListener(this, &Bonus::OnClientInBonusDeSpawn));
 }
 
-void Bonus::Unsubscribe() const { _events->RemoveAllListeners(_nameWithUuid); }
+void Bonus::OnClientInBonusDeSpawn(const ClientInBonusDeSpawnEvent& event)
+{
+	if (event.uuid != _uuid)
+	{
+		return;
+	}
 
-void Bonus::Draw() const { _events->EmitEvent("DrawObj", _rect, Direction::UP, _name); }
+	SetIsAlive(false);
+}
+
+void Bonus::Draw() const
+{
+	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
+}
 
 void Bonus::TickUpdate(double /*deltaTime*/)
 {
@@ -83,15 +88,17 @@ void Bonus::TickUpdate(double /*deltaTime*/)
 
 void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
-	_events->EmitEvent("Statistics_BonusDestroyed", author, fraction);
+	_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = author, .fraction = fraction});
 }
 
 void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 {
 	if (GetIsAlive())
 	{
-		_events->EmitEvent("Statistics_BonusPickup", author, fraction);
-		_events->EmitEvent(_name + "_Pickup", author, fraction);
+		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author, .fraction = fraction});
+
+		EmitPickupEvent(author, fraction);
+
 		TakeDamage(GetHealth(), _name, _fraction);
 	}
 }

@@ -1,6 +1,9 @@
 #include "components/managers/FramePerSecondManager.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/RenderUIEvents.h"
+#include "components/events/TimingEvents.h"
 #include <cmath>//NOTE: need for cmake build
 #include <thread>
 
@@ -14,29 +17,24 @@ FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>&
 	Subscribe();
 }
 
-FramePerSecondManager::~FramePerSecondManager()
-{
-	Unsubscribe();
-}
-
 void FramePerSecondManager::Subscribe()
 {
-	_events->AddListener("CalculateActualFps", _name, [this]() { this->CountFpsAndDeltaTime(); });
-
-	_events->AddListener("FrameStart", _name, [this]()
-	{
-		this->_startFrameTime = std::chrono::high_resolution_clock::now();
-	});
-
-	_events->AddListener("PostDrawUserInterface", _name, [this]()
-	{
-		this->_events->EmitEvent("RenderFPS", _lastDisplayedFps);
-	});
+	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::CountFpsAndDeltaTime));
+	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::OnFrameStart));
+	_subs.push_back(_events->AddListener(this, &FramePerSecondManager::OnPostDrawUserInterface));
 }
 
-void FramePerSecondManager::Unsubscribe() const { _events->RemoveAllListeners(_name); }
+void FramePerSecondManager::OnFrameStart(const FrameStartEvent&)
+{
+	_startFrameTime = std::chrono::high_resolution_clock::now();
+}
 
-void FramePerSecondManager::CountFpsAndDeltaTime()
+void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&)
+{
+	_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
+}
+
+void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 {
 	if (const bool isVsyncOn = _gameConfig.Get<bool>("Window.vsync", false);
 		!isVsyncOn)
@@ -59,7 +57,7 @@ void FramePerSecondManager::CountFpsAndDeltaTime()
 	}
 
 	_deltaTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
-	_events->EmitEvent("DeltaTime", _deltaTime);
+	_events->EmitEvent(DeltaTimeEvent{.deltaTime = _deltaTime});
 
 	_frameCounter++;
 	_fpsAccumulatedTime += _deltaTime;

@@ -1,44 +1,30 @@
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/EventSystem.h"
+#include "components/events/InputEvents.h"
 
 InputProviderForPlayerOneNet::InputProviderForPlayerOneNet(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
-InputProviderForPlayerOneNet::~InputProviderForPlayerOneNet()
-{
-	Unsubscribe();
-}
-
 void InputProviderForPlayerOneNet::Subscribe()
 {
-	_events->AddListener("ServerReceive_P1_Move_Up", _name,
-						 [&btn = _playerKeys](const bool isPressed) { btn.up = isPressed; });
-	_events->AddListener("ServerReceive_P1_Move_Left", _name,
-						 [&btn = _playerKeys](const bool isPressed) { btn.left = isPressed; });
-	_events->AddListener("ServerReceive_P1_Move_Down", _name,
-						 [&btn = _playerKeys](const bool isPressed) { btn.down = isPressed; });
-	_events->AddListener("ServerReceive_P1_Move_Right", _name, [&btn = _playerKeys](const bool isPressed)
-	{
-		btn.right = isPressed;
-	});
-	_events->AddListener("ServerReceive_P1_Fire", _name,
-						 [&btn = _playerKeys](const bool isPressed) { btn.shot = isPressed; });
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOneNet::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOneNet::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOneNet::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOneNet::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForPlayerOneNet::OnFire));
 
-	_events->AddListener("ServerReceive_Pause_Released", _name, [this](const bool /*isPaused*/)
-	{
-		_events->EmitEvent("Pause_Released");
-	});
+	_subs.push_back(_events->AddListener(this, &InputProviderForPlayerOneNet::OnPauseReleased));
 }
 
-void InputProviderForPlayerOneNet::Unsubscribe() const
-{
-	_events->RemoveListener("ServerReceive_P1_Move_Up", _name);
-	_events->RemoveListener("ServerReceive_P1_Move_Left", _name);
-	_events->RemoveListener("ServerReceive_P1_Move_Down", _name);
-	_events->RemoveListener("ServerReceive_P1_Move_Right", _name);
-	_events->RemoveListener("ServerReceive_P1_Fire", _name);
+void InputProviderForPlayerOneNet::OnMoveUp(const ServerInMoveUpEvent& event) { _playerKeys.up = event.isPressed; }
+void InputProviderForPlayerOneNet::OnMoveLeft(const ServerInMoveLeftEvent& event) { _playerKeys.left = event.isPressed; }
+void InputProviderForPlayerOneNet::OnMoveDown(const ServerInMoveDownEvent& event) { _playerKeys.down = event.isPressed; }
+void InputProviderForPlayerOneNet::OnMoveRight(const ServerInMoveRightEvent& event) { _playerKeys.right = event.isPressed; }
+void InputProviderForPlayerOneNet::OnFire(const ServerInFireEvent& event) { _playerKeys.shot = event.isPressed; }
 
-	_events->RemoveListener("ServerReceive_Pause_Released", _name);
+void InputProviderForPlayerOneNet::OnPauseReleased(const ServerInPauseReleasedEvent&)
+{
+	_events->EmitEvent(PauseReleasedEvent{});
 }
 
 void InputProviderForPlayerOneNet::Enable()
@@ -48,5 +34,5 @@ void InputProviderForPlayerOneNet::Enable()
 
 void InputProviderForPlayerOneNet::Disable() const
 {
-	Unsubscribe();
+	_subs.clear();
 }

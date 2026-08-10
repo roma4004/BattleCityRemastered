@@ -179,8 +179,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeBulletBeh::GetCircleCollisionObjec
 	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
 }
 
-bool MoveLikeBulletBeh::ApplyMoveVelocity(const double /*deltaTime*/) { return false; }
-void MoveLikeBulletBeh::ResetVelocity() {}
+void MoveLikeBulletBeh::Reset(const BulletCalibre& calibre) { _calibre = calibre; }
 
 std::vector<Direction> MoveLikeBulletBeh::GetFreePathSides(const double /*deltaTime*/,
 														   const std::optional<Direction> /*excludeDirection*/) const

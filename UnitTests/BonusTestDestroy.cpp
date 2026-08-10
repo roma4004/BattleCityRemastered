@@ -3,6 +3,8 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
@@ -40,14 +42,15 @@ protected:
 	unsigned short _bulletHealth{1u};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events, *_respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
@@ -58,7 +61,6 @@ protected:
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 };
 
@@ -79,7 +81,7 @@ TEST_F(BonusTestDestroy, BonusDestroy)
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_FALSE(bonus->GetIsAlive());
 
@@ -106,7 +108,7 @@ TEST_F(BonusTestDestroy, BonusNotDestroy)
 	{
 		EXPECT_TRUE(bonus->GetIsAlive());
 
-		_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 		EXPECT_TRUE(bonus->GetIsAlive());
 
@@ -129,7 +131,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Timer);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	// spawn Enemy
 	const ObjRectangle rectEnemy{.x = _tankSize * 2, .y = _tankSize * 2, .w = _tankSize, .h = _tankSize};
@@ -141,7 +143,7 @@ TEST_F(BonusTestDestroy, TimerDestroyByPlayerAndEnemyStillMove)
 
 	const FPoint enemyPos = enemyBot->GetPos();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(enemyPos, enemyBot->GetPos());
 }
@@ -167,7 +169,7 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = 7.f, .w = _tankSize, .h = _tankSize}, BonusType::Helmet);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	// spawn Bullet2
 	const ObjRectangle rectBullet2{.x = _tankSize * 2 + 1.f, .y = 7.f, .w = 6.f, .h = 5.f};
@@ -179,7 +181,7 @@ TEST_F(BonusTestDestroy, HelmetDestroyAndBulletStillCanDamageTank)
 
 	const int playerHealth = player->GetHealth();
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_NE(playerHealth, player->GetHealth());
 }
@@ -208,7 +210,7 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(enemyBot->GetHealth(), 100);
 }
@@ -217,12 +219,10 @@ TEST_F(BonusTestDestroy, GrenadeDestroyEnemyHealthFull)
 TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 {
 	unsigned short respawnActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "BonusTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
-			{
-				respawnActual = respawnCount;
-			});
+	auto respawnSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		respawnActual = event.respawnCount;
+	});
 
 	// spawn Bullet
 	constexpr ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = 6.f, .h = 5.f};
@@ -236,11 +236,10 @@ TEST_F(BonusTestDestroy, TankDestroyNoExtraLife)
 
 	const unsigned short playerSpawnCount = respawnActual;
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(playerSpawnCount, respawnActual);
 
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 //Check that player destroys Star bonus and his tier counts remain the same
@@ -266,7 +265,7 @@ TEST_F(BonusTestDestroy, StarDestroyTierRemainTheSame)
 
 	EXPECT_EQ(player->GetTier(), 1u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(player->GetTier(), 1u);
 }
@@ -289,7 +288,7 @@ TEST_F(BonusTestDestroy, ShovelNotPickUpByPlayerThenfortressWallRemainTheSame)
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_TRUE(fortressWall->IsBrickWall());
 }

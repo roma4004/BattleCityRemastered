@@ -1,5 +1,7 @@
 #include "network/ClientHandler.h"
 #include "components/EventSystem.h"
+#include "components/events/TimingEvents.h"
+#include "utils/NetworkLogger.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
@@ -25,12 +27,12 @@ ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_
 		catch (std::exception& e)
 		{
 			std::cerr << "ClientHandler thread " << e.what() << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog(std::string("ClientHandler thread exception: ") + e.what());
 		}
 		catch (...)
 		{
 			std::cerr << "ClientHandler thread error ..." << '\n';
-			//TODO: write error to file
+			NetworkLogger::WriteLog("ClientHandler thread error: unknown exception");
 		}
 	});
 
@@ -40,7 +42,6 @@ ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_
 ClientHandler::~ClientHandler()
 {
 	Shutdown();
-	Unsubscribe();
 }
 
 void ClientHandler::Shutdown()
@@ -72,15 +73,9 @@ void ClientHandler::Shutdown()
 
 void ClientHandler::Subscribe()
 {
-	_events->AddListener("NetCommandUpdate", _name, [this](const double /*deltaTime*/)
-	{
-		this->ProcessNetworkCommands();
-	});
+	_subs.push_back(_events->AddListener(this, &ClientHandler::OnNetCommandUpdate));
 }
 
-void ClientHandler::Unsubscribe() const
-{
-	_events->RemoveListener("NetCommandUpdate", _name);
-}
+void ClientHandler::OnNetCommandUpdate(const NetCommandUpdateEvent&) { ProcessNetworkCommands(); }
 
 }//namespace network::commands

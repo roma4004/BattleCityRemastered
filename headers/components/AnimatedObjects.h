@@ -10,9 +10,10 @@ class AnimatedObject
 public:
 	ObjRectangle rect{};
 	Direction dir{};
-	int animationFrame{};
-	int elapsedFrames{};//TODO: Animation frame and the elapsed frame looks the same logically
+	int currentFrameIndex{};//NOTE: frame index currently shown, advances every animationSpeed ticks
+	int ticksSinceLastFrame{};//NOTE: tick counter throttling how often currentFrameIndex advances
 	int limitOfFrames{};
+	int animationSpeed{};//NOTE: ticks between frame advances;
 	AnimationType type{};
 	bool markToDispose{};
 	bool isInfinite{};
@@ -24,7 +25,7 @@ public:
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
 	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, int frameLimit, int scale,
-				   bool isInfinite = {});
+				   int animationSpeed, bool isInfinite = {});
 
 	~AnimatedObject();
 

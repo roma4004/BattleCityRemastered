@@ -12,6 +12,9 @@ class EventSystem;
 class BulletPool;
 class ShootingBeh;
 class GameConfig;
+struct DrawEvent;
+struct ClientInDisposeEvent;
+struct ClientInPosEvent;
 
 class Bullet final : public Pawn, public IDrawable
 {
@@ -27,20 +30,23 @@ class Bullet final : public Pawn, public IDrawable
 	void Enable();
 	void Disable() const;
 	void Reset(BulletResetProperty resetProperty);
+	void OnDraw(const DrawEvent&);
+	void OnClientInDispose(const ClientInDisposeEvent&);
 
 protected:
 	void Subscribe() override;
-	void Unsubscribe() const override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
 
 public:
+	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{}};
+
 	Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre = {},
 		   std::string author = "", bool enableByDefault = false);
 
 	~Bullet() override;
 
-	[[nodiscard]] int GetDamage() const;
+	[[nodiscard]] unsigned int GetDamage() const;
 
 	[[nodiscard]] double GetDamageRadius() const;
 
@@ -57,5 +63,5 @@ public:
 	[[nodiscard]] unsigned int GetTier() const;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
-	void OnClientChangePos(FPoint newPos, Direction dir, const buuid& uuid);
+	void OnClientChangePos(const ClientInPosEvent& event);
 };

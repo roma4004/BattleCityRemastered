@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entities/ObjRectangle.h"
+#include "entities/Tags.h"
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
@@ -14,6 +15,7 @@ class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public I
 	using buuid = boost::uuids::uuid;
 
 	int _health{0};
+	CollisionTags _collision;
 
 protected:
 	buuid _uuid{};
@@ -23,7 +25,7 @@ protected:
 	ObjRectangle _rect{};
 
 public:
-	explicit BaseObj(BaseObjProperty baseObjProperty);
+	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 
 	BaseObj(const BaseObj& other);
 	BaseObj(BaseObj&& other) noexcept;
@@ -63,18 +65,15 @@ public:
 							const std::string& /*damageFraction*/);
 
 	[[nodiscard]] bool GetIsPassable() const override;
-	void SetIsPassable(bool value) override;
 
 	[[nodiscard]] bool GetIsDestructible() const override;
-	void SetIsDestructible(bool value) override;
 
 	[[nodiscard]] bool GetIsPenetrable() const override;
-	void SetIsPenetrable(bool value) override;
 
 	[[nodiscard]] virtual ObjRectangle GetRect() const;
 	virtual void SetRect(ObjRectangle rect);
 
-	[[nodiscard]] virtual std::string_view GetName() const;
+	[[nodiscard]] virtual std::string GetName() const;
 	[[nodiscard]] virtual buuid GetUuid() const;
 	virtual void SetId(buuid uuid);
 	[[nodiscard]] std::string GetFraction() const override;

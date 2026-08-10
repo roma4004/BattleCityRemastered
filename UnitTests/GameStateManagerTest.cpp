@@ -3,6 +3,12 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
+#include "components/SpawnEvents.h"
+#include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/InputEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
@@ -32,7 +38,6 @@ protected:
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	std::string _name = "Player1";
 	double _deltaTimeOneFrame{1.f / 60.f};
 	buuid _uuid{};
 	float _tankSize{};
@@ -40,26 +45,26 @@ protected:
 	float _gridSize{};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
+	EventSubscription _spawnQueueSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events, *_respawnManager);
+		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
-		_tankSize = _gridSize * 3;// for better turns
+		_tankSize = _gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(4u);
 	}
 
 	void TearDown() override
 	{
-		_events->RemoveListener("AddToSpawnQueue", "TestSpawnQueue");
 	}
 };
 
@@ -70,8 +75,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManySpawnCounters;
 	howManySpawnCounters.reserve(4u);
-	_events->AddListener("TankSpawn", _name, [&howManySpawnCounters](const boost::uuids::uuid& uuid)
+	auto spawnCounterSub = _events->AddListener([&howManySpawnCounters](const TankSpawnEvent& tankSpawnEvent)
 	{
+		const auto& uuid = tankSpawnEvent.uuid;
 		const auto it = std::ranges::find_if(howManySpawnCounters,
 											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
 											 {
@@ -90,8 +96,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManyDiedCounters;
 	howManyDiedCounters.reserve(4u);
-	_events->AddListener("TankDied", _name, [&howManyDiedCounters](const boost::uuids::uuid& uuid)
+	auto diedCounterSub = _events->AddListener([&howManyDiedCounters](const TankDiedEvent& tankDiedEvent)
 	{
+		const auto& uuid = tankDiedEvent.uuid;
 		const auto it = std::ranges::find_if(howManyDiedCounters,
 											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
 											 {
@@ -108,7 +115,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		}
 	});
 
-	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
+	auto gameWonSub = _events->AddListener([&isGameWon](const PlayersTeamIsWonEvent&)
 	{
 		isGameWon = true;
 	});
@@ -116,27 +123,26 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};
 	unsigned short respawnPlayerTwoActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "GameStateManagerTest",
+	auto respawnCountSub = _events->AddListener(
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
-			const std::string& objectName, const unsigned short respawnCount)
+			const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnEnemyActual = respawnCount;
+					respawnEnemyActual = event.respawnCount;
 				}
-				else if (objectName == "Player1")
+				else if (event.objectName == "Player1")
 				{
-					respawnPlayerOneActual = respawnCount;
+					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (objectName == "Player2")
+				else if (event.objectName == "Player2")
 				{
-					respawnPlayerTwoActual = respawnCount;
+					respawnPlayerTwoActual = event.respawnCount;
 				}
 			});
 
 	EXPECT_FALSE(isGameWon);
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 5u; ++i)
 	{
 		_allObjects.clear();
@@ -144,7 +150,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 		EXPECT_EQ(respawnEnemyActual, 20u - i * 4u);
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		std::cout << "End of respawn round" << (i + 1u) << '\n';
 	}
 
@@ -165,10 +171,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
 	EXPECT_TRUE(isGameWon);
 
-	_events->RemoveListener("PlayersTeamIsWon", _name);
-	_events->RemoveListener("TankSpawn", _name);
-	_events->RemoveListener("TankDied", _name);
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 // Check that Player's team can win with enemy extra life
@@ -178,8 +180,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManySpawnCounters;
 	howManySpawnCounters.reserve(4u);
-	_events->AddListener("TankSpawn", _name, [&howManySpawnCounters](const boost::uuids::uuid& uuid)
+	auto spawnCounterSub = _events->AddListener([&howManySpawnCounters](const TankSpawnEvent& tankSpawnEvent)
 	{
+		const auto& uuid = tankSpawnEvent.uuid;
 		const auto it = std::ranges::find_if(howManySpawnCounters,
 											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
 											 {
@@ -198,8 +201,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManyDiedCounters;
 	howManyDiedCounters.reserve(4u);
-	_events->AddListener("TankDied", _name, [&howManyDiedCounters](const boost::uuids::uuid& uuid)
+	auto diedCounterSub = _events->AddListener([&howManyDiedCounters](const TankDiedEvent& tankDiedEvent)
 	{
+		const auto& uuid = tankDiedEvent.uuid;
 		const auto it = std::ranges::find_if(howManyDiedCounters,
 											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
 											 {
@@ -216,7 +220,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		}
 	});
 
-	_events->AddListener("PlayersTeamIsWon", _name, [&isGameWon]()
+	auto gameWonSub = _events->AddListener([&isGameWon](const PlayersTeamIsWonEvent&)
 	{
 		isGameWon = true;
 	});
@@ -224,22 +228,21 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};
 	unsigned short respawnPlayerTwoActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "GameStateManagerTest",
+	auto respawnCountSub = _events->AddListener(
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
-			const std::string& objectName, const unsigned short respawnCount)
+			const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnEnemyActual = respawnCount;
+					respawnEnemyActual = event.respawnCount;
 				}
-				else if (objectName == "Player1")
+				else if (event.objectName == "Player1")
 				{
-					respawnPlayerOneActual = respawnCount;
+					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (objectName == "Player2")
+				else if (event.objectName == "Player2")
 				{
-					respawnPlayerTwoActual = respawnCount;
+					respawnPlayerTwoActual = event.respawnCount;
 				}
 			});
 
@@ -257,19 +260,19 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 			BonusType::Tank);
 
 	//let enemy pick up
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(respawnEnemyActual, 21u);
 
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 4u; ++i)
 	{
 		_allObjects.clear();
 		EXPECT_EQ(_allObjects.size(), 0u);
 
 		EXPECT_EQ(respawnEnemyActual, 21u - i * 4u);
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		std::cout << "End of respawn round" << (i + 1u) << " with remain enemy respawn" << respawnEnemyActual << '\n';
 	}
 
@@ -280,10 +283,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_FALSE(isGameWon);//Check that we still not win
 
 	std::cout << "spawn extra life tank" << '\n';
-	_events->EmitEvent("RespawnTanks", skipDelay);//spawn 4 enemies
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});//spawn 4 enemies
 	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.pop_back();//remove one enemy tank	
-	_events->EmitEvent("RespawnTanks", skipDelay);//spawn use extra life
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});//spawn use extra life
 	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.clear();// remove all 4 enemy tank
 
@@ -302,30 +305,24 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
 	EXPECT_TRUE(isGameWon);
 
-	_events->RemoveListener("PlayersTeamIsWon", _name);
-	_events->RemoveListener("TankSpawn", _name);
-	_events->RemoveListener("TankDied", _name);
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 // Player team lose with broken base
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
+	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&) { isGameLose = true; });
 
 	unsigned short respawnActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "GameStateManagerTest",
-			[&respawnActual](const std::string& /*objectName*/, const unsigned short respawnCount)
-			{
-				respawnActual = respawnCount;
-			});
+	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		respawnActual = event.respawnCount;
+	});
 
 	EXPECT_EQ(respawnActual, 3u);
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
 	EXPECT_EQ(respawnActual, 2u);
 
@@ -337,46 +334,40 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 
 	EXPECT_TRUE(isGameLose);
 
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 // Player team lose with three deaths in a row
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 {
 	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
+	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&)
 	{
 		isGameLose = true;
 	});
 
 	unsigned short respawnActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "GameStateManagerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
-			{
-				if (objectName == "Player1")
-				{
-					respawnActual = respawnCount;
-				}
-			});
+	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player1")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	EXPECT_FALSE(isGameLose);
 
 	EXPECT_EQ(respawnActual, 3u);
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
 		constexpr bool skipDelay{true};
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		_allObjects.pop_back();
 	}
 
 	EXPECT_EQ(respawnActual, 0u);
 	EXPECT_TRUE(isGameLose);
 
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 // Player team lose with four deaths with extra life
@@ -391,78 +382,73 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 
 	bool isGameLose{false};
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Down", isPressed);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]()
+	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&)
 	{
 		isGameLose = true;
 	});
 
 	unsigned short respawnActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "GameStateManagerTest",
-			[&respawnActual](const std::string& objectName, const unsigned short respawnCount)
-			{
-				if (objectName == "Player1")
-				{
-					respawnActual = respawnCount;
-				}
-			});
+	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
+	{
+		if (event.objectName == "Player1")
+		{
+			respawnActual = event.respawnCount;
+		}
+	});
 
 	// Spawn bonus extra life
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
 	EXPECT_EQ(respawnActual, 3u);
 
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(respawnActual, 4u);
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
-		_events->EmitEvent("RespawnTanks", skipDelay);
+		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 		_allObjects.pop_back();
 	}
 	EXPECT_EQ(respawnActual, 1u);
 
 	EXPECT_FALSE(isGameLose);//Check that we still don't lose because of having extra life
 
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
 	EXPECT_EQ(respawnActual, 0u);
 	EXPECT_TRUE(isGameLose);//Check that we lose after one death after
 
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
 
 // Player team lose with broken base
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
 	bool isGameLose{false};
-	_events->AddListener("EnemiesTeamIsWon", _name, [&isGameLose]() { isGameLose = true; });
+	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&) { isGameLose = true; });
 
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};
 	unsigned short respawnPlayerTwoActual{3u};
-	_events->AddListener(
-			"RespawnCountChangedTo", "GameStateManagerTest",
+	auto respawnCountSub = _events->AddListener(
 			[&respawnEnemyActual, &respawnPlayerOneActual, &respawnPlayerTwoActual](
-			const std::string& objectName, const unsigned short respawnCount)
+			const RespawnCountChangedToEvent& event)
 			{
-				if (objectName == "Enemy")
+				if (event.objectName == "Enemy")
 				{
-					respawnEnemyActual = respawnCount;
+					respawnEnemyActual = event.respawnCount;
 				}
-				else if (objectName == "Player1")
+				else if (event.objectName == "Player1")
 				{
-					respawnPlayerOneActual = respawnCount;
+					respawnPlayerOneActual = event.respawnCount;
 				}
-				else if (objectName == "Player2")
+				else if (event.objectName == "Player2")
 				{
-					respawnPlayerTwoActual = respawnCount;
+					respawnPlayerTwoActual = event.respawnCount;
 				}
 			});
 
@@ -470,8 +456,8 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerOneActual, 3u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
 	constexpr bool skipDelay{true};
-	_events->EmitEvent("GameModeChangedTo", GameMode::OnePlayer);
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(respawnEnemyActual, 16u);
 	EXPECT_EQ(respawnPlayerOneActual, 2u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);//game mode one player so second should not respawn
@@ -495,8 +481,8 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	}
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent("P1_Move_Up", isPressed);
-	_events->EmitEvent("TickUpdate", _deltaTimeOneFrame);
+	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(respawnPlayerOneActual, 1u);
 
@@ -505,12 +491,10 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 
 	EXPECT_FALSE(isGameLose);
 
-	_events->EmitEvent("RespawnTanks", skipDelay);
+	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 
 	_allObjects.pop_back();//remove player again (last extra life)
 
 	EXPECT_TRUE(isGameLose);
 
-	_events->RemoveListener("EnemiesTeamIsWon", _name);
-	_events->RemoveListener("RespawnCountChangedTo", "GameStateManagerTest");
 }
