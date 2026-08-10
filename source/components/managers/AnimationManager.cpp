@@ -52,10 +52,7 @@ void AnimationManager::Subscribe()
 
 	_subs.push_back(_events->AddListener(_name, [this](const GameResetEvent&) { Reset(); }));
 	_subs.push_back(_events->AddListener(_name, [this](const PostTickUpdateEvent&) { Update(); }));
-	_subs.push_back(_events->AddListener(_name, [this](const AnimationTankUpdateEvent& event)
-	{
-		this->UpdateTank(event.name, event.pos, event.dir);
-	}));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::UpdateTank));
 	_subs.push_back(_events->AddListener(_name, [this](const BonusHelmetAnimationChangeEvent& event)
 	{
 		this->OnHelmetEffect(event.name, event.isEnable);
@@ -160,8 +157,9 @@ void AnimationManager::UpdateFrame(AnimatedObject& object)
 	}
 }
 
-void AnimationManager::UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir)
+void AnimationManager::UpdateTank(const AnimationTankUpdateEvent& event)
 {
+	const auto& name = event.name;
 	const auto it = std::ranges::find_if(_turnBasedTankObjects, [&name](const AnimatedObject& object)
 	{
 		return object.name.ends_with(name);
@@ -173,12 +171,12 @@ void AnimationManager::UpdateTank(const std::string& name, const FPoint& pos, co
 	}
 
 	//Update tank animation position and dir
-	it->rect.x = pos.x;
-	it->rect.y = pos.y;
-	it->dir = dir;
+	it->rect.x = event.pos.x;
+	it->rect.y = event.pos.y;
+	it->dir = event.dir;
 
 	UpdateFrame(*it);
-	UpdateHelmetEffect(name, pos);
+	UpdateHelmetEffect(name, event.pos);
 }
 
 void AnimationManager::UpdateHelmetEffect(const std::string& name, const FPoint& pos)

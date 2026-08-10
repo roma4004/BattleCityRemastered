@@ -422,6 +422,20 @@ public:
 		return AddListener(std::forward<CallableT>(callback));
 	}
 
+	// Sugar: AddListener(this, &Class::OnFoo) instead of a forwarding lambda. OnFoo takes the whole
+	// event struct, e.g. void OnFoo(const FooEvent& event).
+	template<typename Class, typename EventT>
+	[[nodiscard]] EventSubscription AddListener(Class* instance, void (Class::*method)(const EventT&))
+	{
+		return AddListener([instance, method](const EventT& event) { (instance->*method)(event); });
+	}
+
+	template<typename Class, typename EventT>
+	[[nodiscard]] EventSubscription AddListener(Class* instance, void (Class::*method)(const EventT&) const)
+	{
+		return AddListener([instance, method](const EventT& event) { (instance->*method)(event); });
+	}
+
 	// internal implementation for the concrete EventType (used in callable_signature)
 	template<typename EventType, Callable CallableT>
 	EventSubscription AddListenerImpl(CallableT&& callback)
@@ -457,6 +471,21 @@ public:
 	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& /*listenerName*/, CallableT&& callback)
 	{
 		return AddListener(Key(key), std::forward<CallableT>(callback));
+	}
+
+	// Sugar, keyed variant - see the plain-overload sugar above.
+	template<typename KeyT, typename Class, typename EventT>
+	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, Class* instance,
+												void (Class::*method)(const EventT&))
+	{
+		return AddListener(key, [instance, method](const EventT& event) { (instance->*method)(event); });
+	}
+
+	template<typename KeyT, typename Class, typename EventT>
+	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, Class* instance,
+												void (Class::*method)(const EventT&) const)
+	{
+		return AddListener(key, [instance, method](const EventT& event) { (instance->*method)(event); });
 	}
 
 	// internal implementation for the concrete keyed EventType (used in callable_signature)

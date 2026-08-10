@@ -8,6 +8,7 @@
 enum class AnimationType : char8_t;
 struct ObjRectangle;
 struct FPoint;
+struct AnimationTankUpdateEvent;
 class Tank;
 
 // Every animation is locally simulated: each side (host or client) creates and finishes its own
@@ -38,7 +39,7 @@ private:
 				int animationSpeed, bool isInfinite = {});
 	void Update();
 	static void UpdateFrame(AnimatedObject& object);
-	void UpdateTank(const std::string& name, const FPoint& pos, const Direction& dir);
+	void UpdateTank(const AnimationTankUpdateEvent& event);
 	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
 	void DeleteHelmetAnimation(const std::string& name);
 	void OnHelmetEffect(const std::string& name, bool isEnable);
