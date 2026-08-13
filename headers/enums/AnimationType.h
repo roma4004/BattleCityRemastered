@@ -2,12 +2,14 @@
 
 enum class AnimationType : char8_t
 {
-	Spawn_Animation,
-	Bullet_Explosion,
+	//DO NOT SORT THE ORDER
+	Tank_Spawn,
+	Tank_Move,
+	// Bullet_Move
 	Tank_Explosion,
-	Water_Animation,
-	Helmet_Animation,
-	//EagleDeathAnimation,
-	Tank_Animation,
-	// Bullet_Animation
+	Bullet_Explosion,
+	Water_Flow,
+	Helmet_Effect,
+	//Eagle_Death,
+	Count,
 };

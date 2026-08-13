@@ -5,7 +5,7 @@
 
 EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect, 1, "Eagle", events, uuid, gameMode, ObstacleType::Eagle, kCollision}
+	: Obstacle{rect, 1, "Eagle", events, uuid, gameMode, ObstacleType::Eagle, s_collision}
 {
 	Subscribe();
 }
@@ -20,6 +20,6 @@ void EagleTile::Subscribe()
 	_subs.push_back(_events->AddListener(this, &EagleTile::OnDraw));
 }
 
-void EagleTile::OnDraw(const DrawEvent&) { Draw(); }
+void EagleTile::OnDraw(const DrawEvent&) const { Draw(); }
 
 void EagleTile::EmitDeathStatistics(const std::string&, const std::string&) {}

@@ -5,7 +5,7 @@
 
 IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 				 const GameMode gameMode)
-	: Obstacle{rect, 1, "Ice", events, uuid, gameMode, ObstacleType::Ice, kCollision}
+	: Obstacle{rect, 1, "Ice", events, uuid, gameMode, ObstacleType::Ice, s_collision}
 {
 	Subscribe();
 }
@@ -15,6 +15,6 @@ void IceTile::Subscribe()
 	_subs.push_back(_events->AddListener(this, &IceTile::OnPreDraw));
 }
 
-void IceTile::OnPreDraw(const PreDrawEvent&) { Draw(); }
+void IceTile::OnPreDraw(const PreDrawEvent&) const { Draw(); }
 
 void IceTile::EmitDeathStatistics(const std::string&, const std::string&) {}

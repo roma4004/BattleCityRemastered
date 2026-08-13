@@ -29,7 +29,7 @@ void FramePerSecondManager::OnFrameStart(const FrameStartEvent&)
 	_startFrameTime = std::chrono::high_resolution_clock::now();
 }
 
-void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&)
+void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&) const
 {
 	_events->EmitEvent(RenderFPSEvent{.fps = _lastDisplayedFps});
 }

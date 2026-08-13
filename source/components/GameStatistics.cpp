@@ -66,7 +66,10 @@ void GameStatistics::OnClientInBulletHit(const ClientInBulletHitEvent& event)
 	OnBulletHit(StatisticsBulletHitEvent{.author = event.author, .fraction = event.fraction});
 }
 
-void GameStatistics::OnClientInEnemyHit(const ClientInEnemyHitEvent& event) { OnEnemyHit(event.author, event.fraction); }
+void GameStatistics::OnClientInEnemyHit(const ClientInEnemyHitEvent& event)
+{
+	OnEnemyHit(event.author, event.fraction);
+}
 
 void GameStatistics::OnClientInPlayerOneHit(const ClientInPlayerOneHitEvent& event)
 {
@@ -78,7 +81,10 @@ void GameStatistics::OnClientInPlayerTwoHit(const ClientInPlayerTwoHitEvent& eve
 	OnPlayerTwoHit(event.author, event.fraction);
 }
 
-void GameStatistics::OnClientInEnemyDied(const ClientInEnemyDiedEvent& event) { OnEnemyDied(event.author, event.fraction); }
+void GameStatistics::OnClientInEnemyDied(const ClientInEnemyDiedEvent& event)
+{
+	OnEnemyDied(event.author, event.fraction);
+}
 
 void GameStatistics::OnClientInPlayerOneDied(const ClientInPlayerOneDiedEvent& event)
 {

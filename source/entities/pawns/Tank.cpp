@@ -20,7 +20,7 @@
 #include "utils/ColliderUtils.h"
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
-	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
+	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
 {
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
 												 _allObjects, _effects, gameConfig);
@@ -78,7 +78,7 @@ void Tank::Subscribe()
 	SubscribeBonus();
 }
 
-void Tank::OnPostDraw(const PostDrawEvent&)
+void Tank::OnPostDraw(const PostDrawEvent&) const
 {
 	if (_effects.isHelmetActive || _effects.isTouchTheBushes)
 	{
@@ -196,7 +196,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 	{
 		_effects.isHelmetActive = isActive;
 
-		_events->EmitEvent(BonusHelmetAnimationChangeEvent{.name = _name, .isEnable = isActive});
+		_events->EmitEvent(AnimationBonusHelmetChangeEvent{.name = _name, .isEnable = isActive});
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{

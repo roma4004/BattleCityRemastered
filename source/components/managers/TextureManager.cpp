@@ -176,20 +176,20 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 	else if (name == "BulletExplosion")
 	{
 		destRect = rect.GetScaledBy(3.f);
-		textureRect = _offset.smallExplosion;
+		textureRect = _offset.bulletExplosion;
 	}
 	else if (name == "TankExplosion")
 	{
 		destRect = rect.GetScaledBy(1.3f);
-		textureRect = _offset.bigExplosion;
+		textureRect = _offset.tankExplosion;
 	}
-	else if (name == "SpawnAnimation")
+	else if (name == "TankSpawn")
 	{
-		textureRect = _offset.spawnAnim;
+		textureRect = _offset.tankSpawn;
 	}
-	else if (name.ends_with("HelmetAnimation"))
+	else if (name.ends_with("HelmetEffect"))
 	{
-		textureRect = _offset.helmetAnimationFrame;
+		textureRect = _offset.helmetEffect;
 	}
 
 	return textureRect;

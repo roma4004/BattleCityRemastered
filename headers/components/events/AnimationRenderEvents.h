@@ -5,7 +5,19 @@
 #include <string>
 
 enum class Direction : char8_t;
-enum class AnimationType : char8_t;
+
+struct AnimationCreateTankSpawnEvent
+{
+	ObjRectangle rect;
+	std::string name;
+};
+
+struct AnimationTankUpdateEvent
+{
+	std::string name;
+	FPoint pos;
+	Direction dir;
+};
 
 struct AnimationCreateExplosionEvent
 {
@@ -25,14 +37,13 @@ struct AnimationCreateBulletExplosionEvent
 	std::string name;
 };
 
-struct AnimationTankUpdateEvent
+struct AnimationCreateTankMoveEvent
 {
+	ObjRectangle rect;
 	std::string name;
-	FPoint pos;
-	Direction dir;
 };
 
-struct BonusHelmetAnimationChangeEvent
+struct AnimationBonusHelmetChangeEvent
 {
 	std::string name;
 	bool isEnable;

@@ -32,14 +32,14 @@ protected:
 
 	void TickUpdate(double deltaTime) override;
 	void Draw() const override;
-	void OnDraw(const DrawEvent&);
+	void OnDraw(const DrawEvent&) const;
 	void OnTickUpdate(const TickUpdateEvent& event);
 	void OnClientInBonusDeSpawn(const ClientInBonusDeSpawnEvent& event);
 
 	virtual void EmitPickupEvent(const std::string& author, const std::string& fraction) = 0;
 
 public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
 		  std::string name, buuid uuid, GameMode gameMode, BonusType bonusType);

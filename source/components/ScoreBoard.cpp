@@ -85,7 +85,7 @@ void ScoreBoard::OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&) { DisplayScore
 void ScoreBoard::OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&) { DisplayScore(true); }
 
 //TODO: optimize draw call with cache non changed text part
-void ScoreBoard::Draw()
+void ScoreBoard::Draw() const
 {
 	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
 	RenderStatistics();

@@ -36,7 +36,7 @@ class ObstacleSpawner final
 
 	void Subscribe();
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
-	void OnLoadMap(const LoadMapEvent&);
+	void OnLoadMap(const LoadMapEvent&) const;
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
 	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
 	void SubscribeAsClient();

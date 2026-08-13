@@ -12,8 +12,8 @@ public:
 	Direction dir{};
 	int currentFrameIndex{};//NOTE: frame index currently shown, advances every animationSpeed ticks
 	int ticksSinceLastFrame{};//NOTE: tick counter throttling how often currentFrameIndex advances
-	int limitOfFrames{};
-	int animationSpeed{};//NOTE: ticks between frame advances;
+	int size{};
+	int speed{};//NOTE: ticks between frame advances;
 	AnimationType type{};
 	bool markToDispose{};
 	bool isInfinite{};

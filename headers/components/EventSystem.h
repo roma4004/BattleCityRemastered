@@ -468,7 +468,8 @@ public:
 
 	// Compat shim, keyed variant - see the plain-overload shim above.
 	template<typename KeyT, Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& /*listenerName*/, CallableT&& callback)
+	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& /*listenerName*/,
+												CallableT&& callback)
 	{
 		return AddListener(Key(key), std::forward<CallableT>(callback));
 	}

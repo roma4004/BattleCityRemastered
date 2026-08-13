@@ -47,7 +47,7 @@ void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
 }
 
-void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) { LoadMap(); }
+void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) const { LoadMap(); }
 
 void ObstacleSpawner::OnSpawnObstacle(const SpawnObstacleEvent& event) { SpawnObstacle(event.rect, event.type); }
 

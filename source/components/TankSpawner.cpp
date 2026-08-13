@@ -11,6 +11,7 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
 #include "components/SpawnEvents.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
@@ -64,7 +65,7 @@ void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& ev
 	OnSpawnDelayFinished(event.uuid);
 }
 
-void TankSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+void TankSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event) const
 {
 	const UPoint& newSize = event.newSize;
 	_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
@@ -419,9 +420,7 @@ void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std
 		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
 	}
 
-	// Locally simulated: runs on both sides from already-replicated spawn data, no network relay.
-	constexpr auto type{AnimationType::Spawn_Animation};//TODO: refactor to call tankAnimationCreateEvent, no type here
-	_events->EmitEvent(AnimationCreateEvent{.type = type, .rect = rect, .name = name});
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .name = name});
 }
 
 void TankSpawner::OnSpawnDelayFinished(const buuid uuid)
@@ -455,7 +454,7 @@ void TankSpawner::MaterializeTank(const DelayedTankSpawn& pending)
 	if (std::shared_ptr<BaseObj> tank{CreateTank(pending.type, std::move(pawnProperty))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
-		_events->EmitEvent(AnimationCreateTankEvent{.rect = pending.rect, .name = pending.name});
+		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = pending.rect, .name = pending.name});
 		_events->EmitEvent(
 				BonusEffectReApplyEvent{.uuid = pending.uuid, .name = pending.name, .fraction = pending.fraction});
 

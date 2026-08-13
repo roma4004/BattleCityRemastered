@@ -38,7 +38,7 @@ class Tank : public Pawn
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
 	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);
-	void OnPostDraw(const PostDrawEvent&);
+	void OnPostDraw(const PostDrawEvent&) const;
 	void OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event);
 	void OnClientInShot(const ClientInShotEvent& event);
 	void OnClientInBonusHelmetPickup(const ClientInBonusHelmetPickupEvent& event);
@@ -73,7 +73,7 @@ protected:
 	[[nodiscard]] bool IsTouchIce() const;
 
 public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 	Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig);
 

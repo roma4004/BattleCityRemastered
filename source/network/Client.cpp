@@ -72,7 +72,8 @@ void Client::RegisterCommandHandlers()
 			{CommandType::BONUS_DESPAWN, [this](const std::shared_ptr<Command>& cmd) { OnBonusDeSpawn(cmd); }},
 			{CommandType::RESPAWN_TANK, [this](const std::shared_ptr<Command>& cmd) { OnRespawnTank(cmd); }},
 			{CommandType::OBSTACLE_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnObstacleSpawn(cmd); }},
-			{CommandType::TANK_SPAWN_COMPLETE, [this](const std::shared_ptr<Command>& cmd) { OnTankSpawnComplete(cmd); }},
+			{CommandType::TANK_SPAWN_COMPLETE,
+			 [this](const std::shared_ptr<Command>& cmd) { OnTankSpawnComplete(cmd); }},
 			{CommandType::BONUS_STATUS, [this](const std::shared_ptr<Command>& cmd) { OnBonusStatus(cmd); }},
 	};
 }

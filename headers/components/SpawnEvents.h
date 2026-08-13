@@ -2,7 +2,6 @@
 
 #include "Point.h"
 #include "entities/ObjRectangle.h"
-#include "enums/AnimationType.h"
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
@@ -18,19 +17,6 @@ using buuid = boost::uuids::uuid;
 struct AddToSpawnQueueEvent
 {
 	std::shared_ptr<BaseObj> obj;
-};
-
-struct AnimationCreateEvent
-{
-	AnimationType type;
-	ObjRectangle rect;
-	std::string name;
-};
-
-struct AnimationCreateTankEvent
-{
-	ObjRectangle rect;
-	std::string name;
 };
 
 struct ClientInRespawnTankEvent
@@ -80,7 +66,6 @@ struct SpawnDelayStartEvent
 	std::chrono::milliseconds delay;
 };
 
-// Broadcast: spawn-delay timer for uuid finished. TankSpawner listens and materializes the tank.
 struct TankSpawnDelayFinishedEvent
 {
 	buuid uuid;

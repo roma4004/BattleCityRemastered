@@ -64,7 +64,7 @@ class TankSpawner final
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnRespawnTank(const RespawnTankEvent& event);
 	void OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event);
-	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
+	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event) const;
 	void SubscribeAsClient();
 	void OnClientInRespawnTank(const ClientInRespawnTankEvent& event);
 	void OnClientInTankSpawnComplete(const ClientInTankSpawnCompleteEvent& event);

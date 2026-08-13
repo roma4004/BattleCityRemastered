@@ -26,7 +26,7 @@ class InputProviderForPlayerOneNet final : public IInputProvider
 	void OnMoveDown(const ServerInMoveDownEvent& event);
 	void OnMoveRight(const ServerInMoveRightEvent& event);
 	void OnFire(const ServerInFireEvent& event);
-	void OnPauseReleased(const ServerInPauseReleasedEvent&);
+	void OnPauseReleased(const ServerInPauseReleasedEvent&) const;
 
 public:
 	explicit InputProviderForPlayerOneNet(const std::shared_ptr<EventSystem>& events);

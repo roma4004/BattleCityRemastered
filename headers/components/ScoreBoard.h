@@ -66,5 +66,5 @@ public:
 	//GameStatistics, held below by unique_ptr, so an in-header default would need it complete here.
 	~ScoreBoard();
 
-	void Draw();
+	void Draw() const;
 };

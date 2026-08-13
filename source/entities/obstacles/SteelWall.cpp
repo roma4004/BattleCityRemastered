@@ -6,7 +6,7 @@
 
 SteelWall::SteelWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
 					 const GameMode gameMode)
-	: Obstacle{rect, 1, "SteelWall", events, uuid, gameMode, ObstacleType::Steel, kCollision}
+	: Obstacle{rect, 1, "SteelWall", events, uuid, gameMode, ObstacleType::Steel, s_collision}
 {
 	Subscribe();
 }
@@ -16,7 +16,7 @@ void SteelWall::Subscribe()
 	_subs.push_back(_events->AddListener(this, &SteelWall::OnDraw));
 }
 
-void SteelWall::OnDraw(const DrawEvent&) { Draw(); }
+void SteelWall::OnDraw(const DrawEvent&) const { Draw(); }
 
 void SteelWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
 {

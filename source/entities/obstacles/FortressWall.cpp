@@ -17,7 +17,7 @@
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
 	: BaseObj{BaseObjProperty{.rect = rect, .health = 1, .uuid = uuid, .name = "FortressWall", .fraction = "Neutral"},
-			  BrickWall::kCollision}//NOTE: FortressWall::GetIsPassable/Destructible/Penetrable fully delegate to
+			  BrickWall::s_collision}//NOTE: FortressWall::GetIsPassable/Destructible/Penetrable fully delegate to
 	//the held BrickWall/SteelWall variant below - this base value is never read,
 	//BrickWall's tags used simply because FortressWall always starts as one
 	, _events{events}

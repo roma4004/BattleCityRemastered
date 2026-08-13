@@ -12,7 +12,7 @@ class EagleTile final : public Obstacle
 	using buuid = boost::uuids::uuid;
 
 	void Subscribe() override;
-	void OnDraw(const DrawEvent&);
+	void OnDraw(const DrawEvent&) const;
 
 protected:
 	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),
@@ -20,9 +20,9 @@ protected:
 	//pure virtual hook.
 	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
 
-public:
-	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
+public:
 	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
 
 	~EagleTile() override;

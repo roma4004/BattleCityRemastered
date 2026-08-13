@@ -26,7 +26,7 @@ class FramePerSecondManager
 
 	void Subscribe();
 	void OnFrameStart(const FrameStartEvent&);
-	void OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&);
+	void OnPostDrawUserInterface(const PostDrawUserInterfaceEvent&) const;
 
 	void CountFpsAndDeltaTime(const CalculateActualFpsEvent&);
 

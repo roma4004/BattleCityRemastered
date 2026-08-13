@@ -17,12 +17,25 @@ void InputProviderForPlayerOneNet::Subscribe()
 }
 
 void InputProviderForPlayerOneNet::OnMoveUp(const ServerInMoveUpEvent& event) { _playerKeys.up = event.isPressed; }
-void InputProviderForPlayerOneNet::OnMoveLeft(const ServerInMoveLeftEvent& event) { _playerKeys.left = event.isPressed; }
-void InputProviderForPlayerOneNet::OnMoveDown(const ServerInMoveDownEvent& event) { _playerKeys.down = event.isPressed; }
-void InputProviderForPlayerOneNet::OnMoveRight(const ServerInMoveRightEvent& event) { _playerKeys.right = event.isPressed; }
+
+void InputProviderForPlayerOneNet::OnMoveLeft(const ServerInMoveLeftEvent& event)
+{
+	_playerKeys.left = event.isPressed;
+}
+
+void InputProviderForPlayerOneNet::OnMoveDown(const ServerInMoveDownEvent& event)
+{
+	_playerKeys.down = event.isPressed;
+}
+
+void InputProviderForPlayerOneNet::OnMoveRight(const ServerInMoveRightEvent& event)
+{
+	_playerKeys.right = event.isPressed;
+}
+
 void InputProviderForPlayerOneNet::OnFire(const ServerInFireEvent& event) { _playerKeys.shot = event.isPressed; }
 
-void InputProviderForPlayerOneNet::OnPauseReleased(const ServerInPauseReleasedEvent&)
+void InputProviderForPlayerOneNet::OnPauseReleased(const ServerInPauseReleasedEvent&) const
 {
 	_events->EmitEvent(PauseReleasedEvent{});
 }

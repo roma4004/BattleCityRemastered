@@ -18,7 +18,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 							  .uuid = uuid,
 							  .name = std::move(name),
 							  .fraction = "Neutral"},
-			  kCollision}
+			  s_collision}
 	, _lifeTimeTimer{lifeTime, std::chrono::system_clock::now()}
 	, _gameMode{gameMode}
 	, _bonusType{bonusType}
@@ -48,7 +48,7 @@ void Bonus::Subscribe()
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
 
-void Bonus::OnDraw(const DrawEvent&) { Draw(); }
+void Bonus::OnDraw(const DrawEvent&) const { Draw(); }
 
 void Bonus::SubscribeAsHost()
 {

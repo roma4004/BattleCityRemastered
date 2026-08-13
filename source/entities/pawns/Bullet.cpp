@@ -19,7 +19,7 @@
 
 Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
 			   const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
+	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {
@@ -55,7 +55,7 @@ void Bullet::Subscribe()
 	}
 }
 
-void Bullet::OnDraw(const DrawEvent&) { Draw(); }
+void Bullet::OnDraw(const DrawEvent&) const { Draw(); }
 
 void Bullet::SubscribeAsClient()
 {

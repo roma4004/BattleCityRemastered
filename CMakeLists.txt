@@ -5,7 +5,7 @@ project(BattleCity_remastered)
 #TODO: migrate to SDL2 to SDL2pp
 #TODO: migrate to MSYS2 to install all dependency
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden

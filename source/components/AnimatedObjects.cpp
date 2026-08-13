@@ -6,8 +6,8 @@
 AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
 							   const int frameLimit, const int scale, const int animationSpeed, const bool isInfinite)
 	: rect{rect}
-	, limitOfFrames{frameLimit}
-	, animationSpeed{animationSpeed}
+	, size{frameLimit}
+	, speed{animationSpeed}
 	, type(type)
 	, isInfinite{isInfinite}
 	, scale{scale}
@@ -24,8 +24,8 @@ AnimatedObject::AnimatedObject(const AnimatedObject& other)
 	dir = other.dir;
 	currentFrameIndex = other.currentFrameIndex;
 	ticksSinceLastFrame = other.ticksSinceLastFrame;
-	limitOfFrames = other.limitOfFrames;
-	animationSpeed = other.animationSpeed;
+	size = other.size;
+	speed = other.speed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -41,8 +41,8 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 	dir = other.dir;
 	currentFrameIndex = other.currentFrameIndex;
 	ticksSinceLastFrame = other.ticksSinceLastFrame;
-	limitOfFrames = other.limitOfFrames;
-	animationSpeed = other.animationSpeed;
+	size = other.size;
+	speed = other.speed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -55,14 +55,16 @@ AnimatedObject::AnimatedObject(AnimatedObject&& other) noexcept
 AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 {
 	if (this == &other)
+	{
 		return *this;
+	}
 
 	rect = other.rect;
 	dir = other.dir;
 	currentFrameIndex = other.currentFrameIndex;
 	ticksSinceLastFrame = other.ticksSinceLastFrame;
-	limitOfFrames = other.limitOfFrames;
-	animationSpeed = other.animationSpeed;
+	size = other.size;
+	speed = other.speed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
@@ -77,14 +79,16 @@ AnimatedObject& AnimatedObject::operator=(const AnimatedObject& other)
 AnimatedObject& AnimatedObject::operator=(AnimatedObject&& other) noexcept
 {
 	if (this == &other)
+	{
 		return *this;
+	}
 
 	rect = other.rect;
 	dir = other.dir;
 	currentFrameIndex = other.currentFrameIndex;
 	ticksSinceLastFrame = other.ticksSinceLastFrame;
-	limitOfFrames = other.limitOfFrames;
-	animationSpeed = other.animationSpeed;
+	size = other.size;
+	speed = other.speed;
 	type = other.type;
 	markToDispose = other.markToDispose;
 	isInfinite = other.isInfinite;
