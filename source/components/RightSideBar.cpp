@@ -6,8 +6,7 @@
 #include "components/events/RenderUIEvents.h"
 
 RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events)
-	: _name{std::string("RightSideBar")}
-	, _events{events}
+	: _events{events}
 {
 	Subscribe();
 }

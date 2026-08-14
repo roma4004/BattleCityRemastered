@@ -25,8 +25,6 @@ class Menu final
 	EventSubscription _drawSub{};
 	std::unique_ptr<InputProviderForMenu> _input{nullptr};
 
-	std::string _name{};
-
 	GameMode _selectedGameMode{};
 	bool _isMenuDisplayed{false};
 

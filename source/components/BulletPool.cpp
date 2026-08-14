@@ -10,8 +10,7 @@
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 					   GameConfig& gameConfig)
-	: _name{"BulletPool"}
-	, _events{events}
+	: _events{events}
 	, _allObjects{allObjects}
 	, _gameMode{GameMode::Demo}
 	, _gameConfig{gameConfig}

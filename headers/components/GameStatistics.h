@@ -55,7 +55,6 @@ struct StatisticsData final
 
 class GameStatistics final
 {
-	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed

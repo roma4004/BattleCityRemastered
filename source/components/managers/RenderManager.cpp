@@ -13,8 +13,7 @@
 #include <SDL_ttf.h>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig)
-	: _name{"RenderManager"}
-	, _events{events}
+	: _events{events}
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}
 	, _fpsRectangle{CalcFpsPos(gameConfig.windowSize)}

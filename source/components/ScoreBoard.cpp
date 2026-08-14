@@ -16,7 +16,6 @@ ScoreBoard::ScoreBoard(const UPoint windowSize, const std::shared_ptr<EventSyste
 	: _pos{.x = 25, .y = 25}
 	, _events{events}
 	, _statistics{std::make_unique<GameStatistics>(events)}
-	, _name{std::string("ScoreBoard")}
 {
 	Subscribe();
 

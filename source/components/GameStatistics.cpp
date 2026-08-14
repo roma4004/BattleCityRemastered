@@ -5,8 +5,7 @@
 #include "enums/GameMode.h"
 
 GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
-	: _name{"Statistics"}
-	, _events{events}
+	: _events{events}
 {
 	Subscribe();
 }

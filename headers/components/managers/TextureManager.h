@@ -14,7 +14,6 @@ struct DrawAnimationEvent;
 
 class TextureManager final
 {
-	std::string _name{"TextureManager"};
 	TextureOffset _offset{};
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};

@@ -30,7 +30,6 @@ class ScoreBoard final
 	// starts shown), independent of _subs's fixed subscribe-once-at-construction lifetime.
 	EventSubscription _drawSub{};
 
-	std::string _name{};
 	bool _isScoreBoardDisplayed{false};
 
 	unsigned short _enemyRespawnCount{20u};

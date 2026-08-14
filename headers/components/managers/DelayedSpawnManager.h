@@ -24,7 +24,6 @@ class DelayedSpawnManager
 		Timer timer;
 	};
 
-	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<SpawnDelay> _spawnDelays{};
 	std::vector<EventSubscription> _subs{};

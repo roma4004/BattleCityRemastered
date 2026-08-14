@@ -8,8 +8,7 @@
 #include <thread>
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
-	: _name{"FramePerSecondManager"}
-	, _events{events}
+	: _events{events}
 	, _gameConfig{gameConfig}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};

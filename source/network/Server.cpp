@@ -342,7 +342,6 @@ Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t po
 			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}
-	, _name{"Server"}
 	, _batch{std::make_shared<CommandBatch>()}
 {
 	DoAccept();

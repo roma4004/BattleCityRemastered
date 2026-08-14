@@ -22,8 +22,6 @@ class RespawnManager final
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-	std::string _name{"RespawnManager"};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed

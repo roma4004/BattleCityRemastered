@@ -9,8 +9,7 @@
 
 SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig)
-	: _name{"SpawnDelayManager"}
-	, _events{events}
+	: _events{events}
 	, _delayedSpawnManager{std::make_unique<DelayedSpawnManager>(events)}
 	, _bonusSpawner{std::make_unique<BonusSpawner>(events, allObjects, gameConfig)}
 	, _obstacleSpawner{std::make_unique<ObstacleSpawner>(events, allObjects, gameConfig.windowSize)}

@@ -2,7 +2,6 @@
 
 #include "components/EventSystem.h"
 #include <memory>
-#include <string>
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -30,7 +29,6 @@ struct MenuKeys final
 
 class InputProviderForMenu final
 {
-	std::string _name{"InputProviderForMenu"};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	// Toggled at runtime by EnableMenuInput()/DisableMenuInput(), independent of _subs's fixed

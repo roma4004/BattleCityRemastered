@@ -46,7 +46,6 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t po
 	, _reconnectTimer(ioContext)
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
 	, _events{events}
-	, _name{"Client"}
 	, _batch{std::make_shared<CommandBatch>()}
 {
 	Subscribe();

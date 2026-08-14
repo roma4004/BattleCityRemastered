@@ -8,8 +8,7 @@
 #include "utils/Timer.h"
 
 DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events)
-	: _name{"DelayedSpawnManager"}
-	, _events{events}
+	: _events{events}
 {
 	Subscribe();
 }

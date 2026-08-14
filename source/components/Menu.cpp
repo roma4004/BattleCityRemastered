@@ -14,7 +14,6 @@ Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
 	, _yOffsetStart{static_cast<int>(windowSize.y)}
 	, _events{events}
 	, _input{std::make_unique<InputProviderForMenu>(events)}
-	, _name{std::string("Menu")}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();

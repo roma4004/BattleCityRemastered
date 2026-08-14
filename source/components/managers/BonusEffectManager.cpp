@@ -8,8 +8,7 @@
 #include "utils/TimeUtils.h"
 
 BonusEffectManager::BonusEffectManager(const std::shared_ptr<EventSystem>& events)
-	: _name{"BonusEffectManager"}
-	, _events{events}
+	: _events{events}
 {
 	Reset();
 

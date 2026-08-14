@@ -415,13 +415,6 @@ public:
 		return callable_signature<std::decay_t<CallableT>>::call_add_listener(this, std::forward<CallableT>(callback));
 	}
 
-	// Compat shim: listenerName ignored, kept until call sites migrate off it.
-	template<Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(const std::string& /*listenerName*/, CallableT&& callback)
-	{
-		return AddListener(std::forward<CallableT>(callback));
-	}
-
 	// Sugar: AddListener(this, &Class::OnFoo) instead of a forwarding lambda. OnFoo takes the whole
 	// event struct, e.g. void OnFoo(const FooEvent& event).
 	template<typename Class, typename EventT>
@@ -457,21 +450,13 @@ public:
 		});
 	}
 
-	// Keyed overload. Uses Key() to disambiguate from the string-taking compat shim below - a raw
-	// KeyT would let a string literal silently bind to the wrong overload.
+	// Keyed overload. Uses Key() to disambiguate from a raw KeyT, which would let a string literal
+	// silently bind to the wrong overload.
 	template<typename KeyT, Callable CallableT>
 	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, CallableT&& callback)
 	{
 		return callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, key.value,
 			std::forward<CallableT>(callback));
-	}
-
-	// Compat shim, keyed variant - see the plain-overload shim above.
-	template<typename KeyT, Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(const KeyT& key, const std::string& /*listenerName*/,
-												CallableT&& callback)
-	{
-		return AddListener(Key(key), std::forward<CallableT>(callback));
 	}
 
 	// Sugar, keyed variant - see the plain-overload sugar above.

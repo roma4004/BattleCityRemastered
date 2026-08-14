@@ -14,7 +14,6 @@ ClientHandler::ClientHandler(const std::shared_ptr<EventSystem>& events)
 
 ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: _events{events}
-	, _name{"ClientHandler"}
 	, _client{std::make_shared<Client>(_ioContext, host, port, events)}
 {
 	_clientThread = std::thread([this]()

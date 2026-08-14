@@ -15,7 +15,6 @@ ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
 
 ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: _events{events}
-	, _name{"ServerHandler"}
 	, _server{_ioContext, host, port, events}
 {
 	_serverThread = std::thread([this]()

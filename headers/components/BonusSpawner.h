@@ -24,8 +24,6 @@ class BonusSpawner final
 	using milliseconds = std::chrono::milliseconds;
 	using buuid = boost::uuids::uuid;
 
-	std::string _name{"BonusSpawner"};
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};

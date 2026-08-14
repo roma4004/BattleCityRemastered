@@ -22,7 +22,6 @@ class RightSideBar
 	unsigned short _stageNumber{1u};
 	GameMode _gameMode{};
 
-	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 

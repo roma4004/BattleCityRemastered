@@ -21,7 +21,6 @@ class ObstacleSpawner final
 {
 	using buuid = boost::uuids::uuid;
 
-	std::string _name{"ObstacleSpawner"};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};

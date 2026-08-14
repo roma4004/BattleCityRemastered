@@ -20,7 +20,6 @@ class BulletPool final
 	using milliseconds = std::chrono::milliseconds;
 
 	std::mutex _bulletsMutex{};
-	std::string _name{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};

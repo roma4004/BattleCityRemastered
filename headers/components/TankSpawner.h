@@ -43,8 +43,6 @@ class TankSpawner final
 		float speed;
 	};
 
-	std::string _name{"TankSpawner"};
-
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::shared_ptr<EventSystem> _events{nullptr};

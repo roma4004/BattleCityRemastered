@@ -88,7 +88,6 @@ private:
 	boost::asio::streambuf _writeBuffer{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	std::string _name{};
 	network::NetworkCommandQueue _commandQueue;
 	std::mutex _batchWriteMutex;
 	std::shared_ptr<CommandBatch> _batch{nullptr};

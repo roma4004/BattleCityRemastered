@@ -161,7 +161,6 @@ private:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<Session>> _sessions;
-	std::string _name;
 
 	std::mutex _batchWriteMutex;
 	std::shared_ptr<CommandBatch> _batch{nullptr};

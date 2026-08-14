@@ -23,7 +23,6 @@ class BonusEffectManager
 	Timer _shovelPlayer{};
 	std::vector<Timer> _helmetSlots{};
 	std::vector<std::string> _helmetSlotsTankNames{};
-	std::string _name{};
 	GameMode _gameMode{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};

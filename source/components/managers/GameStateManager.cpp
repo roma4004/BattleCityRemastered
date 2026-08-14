@@ -6,8 +6,7 @@
 #include "components/events/RenderUIEvents.h"
 
 GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
-	: _name{"GameStateManager"}
-	, _events{events}
+	: _events{events}
 {
 	Subscribe();
 }
