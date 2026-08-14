@@ -22,7 +22,6 @@
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class GameStateManagerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {

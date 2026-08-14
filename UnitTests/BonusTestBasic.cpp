@@ -13,7 +13,6 @@
 #include "entities/obstacles/FortressWall.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Enemy.h"
-#include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"

@@ -10,7 +10,6 @@
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Enemy.h"
-#include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"

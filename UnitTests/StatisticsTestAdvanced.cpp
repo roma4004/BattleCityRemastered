@@ -4,7 +4,6 @@
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"

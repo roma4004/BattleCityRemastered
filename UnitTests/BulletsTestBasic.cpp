@@ -10,7 +10,6 @@
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Enemy.h"
-#include "entities/pawns/PawnProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"

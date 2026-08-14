@@ -13,7 +13,6 @@
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"
-#include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"

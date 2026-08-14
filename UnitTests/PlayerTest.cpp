@@ -18,7 +18,6 @@
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
