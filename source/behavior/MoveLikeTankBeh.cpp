@@ -5,6 +5,7 @@
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <ranges>
 

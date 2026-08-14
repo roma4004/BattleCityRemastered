@@ -2,6 +2,7 @@
 
 #include "Command.h"
 #include "enums/BonusType.h"
+#include <string>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
 

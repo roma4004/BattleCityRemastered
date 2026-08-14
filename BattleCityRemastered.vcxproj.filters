@@ -176,9 +176,6 @@
     <ClCompile Include="source\entities\pawns\Tank.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\network\commands\AnimationCreate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -222,9 +219,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\NetworkLogger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\utils\RandUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\Timer.cpp">
@@ -275,7 +269,7 @@
     <ClCompile Include="source\network\commands\SignalEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\network\commands\TankOnOff.cpp">
+    <ClCompile Include="source\network\commands\TankSpawnComplete.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -421,9 +415,6 @@
     <ClInclude Include="headers\enums\AnimationType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\network\commands\AnimationCreate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\components\Map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -538,9 +529,6 @@
     <ClInclude Include="headers\enums\CommandType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\enums\RespawnCount.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\enums\TankType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -646,13 +634,55 @@
     <ClInclude Include="headers\network\commands\SignalEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\network\commands\TankOnOff.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="headers\application\SDL_Config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\entities\obstacles\BushTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\SpawnEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\AnimationRenderEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\BonusPickupEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\CoreLifecycleEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\GameModeEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\InputEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\ObjectLifecycleEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\ObstacleAndBonusEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\RenderUIEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\ReplicationEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\StatisticsEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\components\events\TimingEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\network\commands\TankSpawnComplete.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\RespawnGroup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\enums\StatisticsType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

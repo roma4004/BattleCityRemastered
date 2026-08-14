@@ -16,7 +16,6 @@
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
-#include "enums/AnimationType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/TankType.h"
@@ -203,7 +202,7 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const buuid uuid, const Ta
 			<< ", Name = " << name
 			<< '\n';
 
-	SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 
 	return true;
 }
@@ -222,7 +221,7 @@ void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const 
 			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 			<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
 
-	SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
 
 void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const int health, const buuid uuid,
@@ -238,7 +237,7 @@ void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const
 			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
 			<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
 
-	SpawnTank(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
 
 void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const bool skipDelay,
@@ -358,30 +357,36 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 	}
 }
 
+//TODO: maybe we don't need spawn on client at all and just move the textures and animation?
 void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid, const ObjRectangle rect)
 {
 	constexpr bool skipDelay{false};
 	RespawnTank(type, uuid, skipDelay, rect);
 }
 
-std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type)
+namespace
 {
-	if (type == TankType::PLAYER1)
+template<typename TLocal, typename TNet>
+std::unique_ptr<IInputProvider> MakeProvider(const bool isNet, const std::shared_ptr<EventSystem>& events)
+{
+	if (isNet)
 	{
-		if (_gameMode == GameMode::PlayAsClient)
-		{
-			return std::make_unique<InputProviderForPlayerOneNet>(_events);
-		}
-
-		return std::make_unique<InputProviderForPlayerOne>(_events);
+		return std::make_unique<TNet>(events);
 	}
 
-	if (_gameMode == GameMode::PlayAsClient || _gameMode == GameMode::PlayAsHost)
-	{
-		return std::make_unique<InputProviderForPlayerTwoNet>(_events);
-	}
+	return std::make_unique<TLocal>(events);
+}
+}
 
-	return std::make_unique<InputProviderForPlayerTwo>(_events);
+std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type) const
+{
+	const bool isFirst = type == TankType::PLAYER1;
+	const bool isNet = _gameMode == GameMode::PlayAsClient
+					   || (_gameMode == GameMode::PlayAsHost && !isFirst);
+
+	return isFirst
+			   ? MakeProvider<InputProviderForPlayerOne, InputProviderForPlayerOneNet>(isNet, _events)
+			   : MakeProvider<InputProviderForPlayerTwo, InputProviderForPlayerTwoNet>(isNet, _events);
 }
 
 std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty)
@@ -399,11 +404,12 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 	return std::make_shared<Player>(std::move(pawnProperty), _bulletPool, GetInputProvider(type), _gameConfig);
 }
 
-void TankSpawner::SpawnTank(const ObjRectangle rect, const int health, const std::string& name, std::string fraction,
-							const float speed, const buuid uuid, const TankType tankType, const bool skipDelay)
+void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const std::string& name,
+									std::string fraction, const float speed, const buuid uuid, const TankType type,
+									const bool skipDelay)
 {
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
-											  .type = tankType,
+											  .type = type,
 											  .rect = rect,
 											  .health = health,
 											  .name = name,
@@ -431,36 +437,35 @@ void TankSpawner::OnSpawnDelayFinished(const buuid uuid)
 		return;
 	}
 
-	MaterializeTank(*it);
+	DelayedSpawnWith(*it);
 	_delayedSpawns.erase(it);
 }
 
-void TankSpawner::MaterializeTank(const DelayedTankSpawn& pending)
+void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 {
-	BaseObjProperty baseObjProperty{.rect = pending.rect,
-									.health = pending.health,
-									.uuid = pending.uuid,
-									.name = pending.name,
-									.fraction = pending.fraction};
+	BaseObjProperty baseObjProperty{.rect = params.rect,
+									.health = params.health,
+									.uuid = params.uuid,
+									.name = params.name,
+									.fraction = params.fraction};
 
 	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
 							  .allObjects = _allObjects,
 							  .events = _events,
 							  .tier = 1u,
-							  .speed = pending.speed,
+							  .speed = params.speed,
 							  .dir = Direction::UP,
 							  .gameMode = _gameMode};
 
-	if (std::shared_ptr<BaseObj> tank{CreateTank(pending.type, std::move(pawnProperty))})
+	if (const std::shared_ptr<BaseObj> tank{CreateTank(params.type, std::move(pawnProperty))})
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
-		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = pending.rect, .name = pending.name});
-		_events->EmitEvent(
-				BonusEffectReApplyEvent{.uuid = pending.uuid, .name = pending.name, .fraction = pending.fraction});
+		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .name = params.name});
+		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .fraction = params.fraction});
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerOutTankSpawnCompleteEvent{.uuid = pending.uuid});
+			_events->EmitEvent(ServerOutTankSpawnCompleteEvent{.uuid = params.uuid});
 		}
 	}
 }

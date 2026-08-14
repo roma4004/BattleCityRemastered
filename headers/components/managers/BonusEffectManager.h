@@ -11,7 +11,7 @@ struct GameModeChangedToEvent;
 struct BonusTimerPickupEvent;
 struct BonusHelmetPickupEvent;
 struct BonusShovelPickupEvent;
-struct BonusEffectReApplyEvent;
+struct BonusReApplyEvent;
 
 class BonusEffectManager
 {
@@ -41,7 +41,7 @@ public:
 
 	void Reset();
 
-	void ApplyBonusEffectsOnSpawnTo(const BonusEffectReApplyEvent& event);
+	void ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event);
 	void OnTimerBonus(const BonusTimerPickupEvent& event);
 	void OnHelmetBonusPickup(const std::string& author, milliseconds effectDuration);
 	void OnBonusStatusChange(const std::string& event, const std::string& id, bool isActive) const;

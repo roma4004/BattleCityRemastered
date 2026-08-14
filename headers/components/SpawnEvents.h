@@ -77,7 +77,7 @@ struct SpawnObstacleEvent
 	ObstacleType type;
 };
 
-struct BonusEffectReApplyEvent
+struct BonusReApplyEvent
 {
 	buuid uuid;
 	std::string name;

@@ -2,6 +2,7 @@
 #include "Circle.h"
 #include "entities/ObjRectangle.h"
 #include <algorithm>
+#include <cmath>
 
 bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) noexcept
 {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>  //NOTE: required for cmake
 #include <ostream>// for Google Test
 
 struct FPoint final

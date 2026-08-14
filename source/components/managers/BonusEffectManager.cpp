@@ -46,7 +46,7 @@ void BonusEffectManager::Reset()
 	_helmetSlotsTankNames = {{}, {}, {}, {}, {}, {}};
 }
 
-void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const BonusEffectReApplyEvent& event)
+void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 {
 	const bool isActive = event.fraction == "EnemyTeam" ? _timerEnemy.isActive : _timerPlayer.isActive;
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isActive});

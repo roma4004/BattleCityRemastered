@@ -73,7 +73,7 @@ class TankSpawner final
 	void Reset(const GameResetEvent&);
 
 	void OnSpawnDelayFinished(buuid uuid);
-	void MaterializeTank(const DelayedTankSpawn& pending);
+	void DelayedSpawnWith(const DelayedTankSpawn& params);
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
 	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, buuid uuid, TankType type, float speed, int health,
@@ -81,9 +81,9 @@ class TankSpawner final
 	void SpawnPlayer(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 	void SpawnCoopBot(ObjRectangle rect, float speed, int health, buuid uuid, TankType type, bool skipDelay = false);
 
-	void SpawnTank(ObjRectangle rect, int health, const std::string& name, std::string fraction, float speed,
-				   buuid uuid, TankType type, bool skipDelay = false);
-	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type);
+	void DelayedSpawnStart(ObjRectangle rect, int health, const std::string& name, std::string fraction, float speed,
+						   buuid uuid, TankType type, bool skipDelay = false);
+	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type) const;
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
 
 	void RespawnEnemyTanks(TankType type, buuid uuid, bool skipDelay = false,

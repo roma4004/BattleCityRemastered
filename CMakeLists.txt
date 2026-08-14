@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.15) #NOTE: cmake v3.15+ required by boost from 1.87
+
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
+
 project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
 #TODO: create compiler switch msvc, mingw(gcc)
@@ -7,9 +11,6 @@ project(BattleCity_remastered)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 
 # --- Dependency versions ---
 include(FetchContent)
@@ -191,9 +192,9 @@ set(SOURCE_FILES
         source/components/managers/GameStateManager.cpp
         source/components/managers/TextureManager.cpp
         source/entities/BaseObj.cpp
-        source/entities/Obstacles/EagleTile.cpp
-        source/entities/Obstacles/BushTile.cpp
-        source/entities/Obstacles/IceTile.cpp
+        source/entities/obstacles/EagleTile.cpp
+        source/entities/obstacles/BushTile.cpp
+        source/entities/obstacles/IceTile.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
         source/entities/bonuses/BonusGrenade.cpp
