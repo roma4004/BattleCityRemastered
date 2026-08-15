@@ -150,231 +150,12 @@ if not exist "$(ProjectDir)ThirdParty\SDL2\include\SDL.h" (git -C "$(ProjectDir)
 if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/ser20)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
+  <!-- Only the exe's own entry point; every other game source lives in GameCore.vcxproj (see its ClCompile group). -->
   <ItemGroup>
-    <ClCompile Include="source\application\ConfigFailure.cpp" />
-    <ClCompile Include="source\application\ConfigSuccess.cpp" />
-    <ClCompile Include="source\application\GameConfig.cpp" />
-    <ClCompile Include="source\application\GameFailure.cpp" />
-    <ClCompile Include="source\application\GameSuccess.cpp" />
-    <ClCompile Include="source\application\SDL_Config.cpp" />
-    <ClCompile Include="source\application\UserInput.cpp" />
-    <ClCompile Include="source\behavior\MoveLikeBulletBeh.cpp" />
-    <ClCompile Include="source\behavior\MoveLikeTankBeh.cpp" />
-    <ClCompile Include="source\behavior\ShootingBeh.cpp" />
-    <ClCompile Include="source\components\AnimatedObjects.cpp" />
-    <ClCompile Include="source\components\BonusSpawner.cpp" />
-    <ClCompile Include="source\components\BulletPool.cpp" />
-    <ClCompile Include="source\components\GameStatistics.cpp" />
-    <ClCompile Include="source\components\LineOfSight.cpp" />
-    <ClCompile Include="source\components\managers\AnimationManager.cpp" />
-    <ClCompile Include="source\components\managers\BonusEffectManager.cpp" />
-    <ClCompile Include="source\components\managers\DelayedSpawnManager.cpp" />
-    <ClCompile Include="source\components\managers\FramePerSecondManager.cpp" />
-    <ClCompile Include="source\components\managers\RenderManager.cpp" />
-    <ClCompile Include="source\components\managers\RespawnManager.cpp" />
-    <ClCompile Include="source\components\managers\SpawnManager.cpp" />
-    <ClCompile Include="source\components\managers\GameStateManager.cpp" />
-    <ClCompile Include="source\components\managers\TextureManager.cpp" />
-    <ClCompile Include="source\components\Map.cpp" />
-    <ClCompile Include="source\components\Menu.cpp" />
-    <ClCompile Include="source\components\ObstacleSpawner.cpp" />
-    <ClCompile Include="source\components\ScoreBoard.cpp" />
-    <ClCompile Include="source\components\RightSideBar.cpp" />
-    <ClCompile Include="source\components\TankSpawner.cpp" />
-    <ClCompile Include="source\components\input\InputProviderForMenu.cpp" />
-    <ClCompile Include="source\components\input\InputProviderForPlayerOne.cpp" />
-    <ClCompile Include="source\components\input\InputProviderForPlayerOneNet.cpp" />
-    <ClCompile Include="source\components\input\InputProviderForPlayerTwo.cpp" />
-    <ClCompile Include="source\components\input\InputProviderForPlayerTwoNet.cpp" />
-    <ClCompile Include="source\entities\BaseObj.cpp" />
-    <ClCompile Include="source\entities\bonuses\Bonus.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusCaliber.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusGrenade.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusHelmet.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusShovel.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusStar.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusTank.cpp" />
-    <ClCompile Include="source\entities\bonuses\BonusTimer.cpp" />
-    <ClCompile Include="source\entities\obstacles\BrickWall.cpp" />
-    <ClCompile Include="source\entities\obstacles\EagleTile.cpp" />
-    <ClCompile Include="source\entities\obstacles\FortressWall.cpp" />
-    <ClCompile Include="source\entities\obstacles\BushTile.cpp" />
-    <ClCompile Include="source\entities\obstacles\IceTile.cpp" />
-    <ClCompile Include="source\entities\obstacles\Obstacle.cpp" />
-    <ClCompile Include="source\entities\obstacles\SteelWall.cpp" />
-    <ClCompile Include="source\entities\obstacles\WaterTile.cpp" />
-    <ClCompile Include="source\entities\pawns\Bot.cpp" />
-    <ClCompile Include="source\entities\pawns\Bullet.cpp" />
-    <ClCompile Include="source\entities\pawns\CoopBot.cpp" />
-    <ClCompile Include="source\entities\pawns\Enemy.cpp" />
-    <ClCompile Include="source\entities\pawns\Pawn.cpp" />
-    <ClCompile Include="source\entities\pawns\Player.cpp" />
-    <ClCompile Include="source\entities\pawns\Tank.cpp" />
     <ClCompile Include="source\main.cpp" />
-    <ClCompile Include="source\network\Client.cpp" />
-    <ClCompile Include="source\network\ClientHandler.cpp" />
-    <ClCompile Include="source\network\commands\BonusStatus.cpp" />
-    <ClCompile Include="source\network\commands\GameStateChange.cpp" />
-    <ClCompile Include="source\network\commands\SignalEvent.cpp" />
-    <ClCompile Include="source\network\commands\TankSpawnComplete.cpp" />
-    <ClCompile Include="source\network\Server.cpp" />
-    <ClCompile Include="source\network\ServerHandler.cpp" />
-    <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
-    <ClCompile Include="source\network\commands\BonusSpawn.cpp" />
-    <ClCompile Include="source\network\commands\CommandBatch.cpp" />
-    <ClCompile Include="source\network\commands\Dispose.cpp" />
-    <ClCompile Include="source\network\commands\FortressChange.cpp" />
-    <ClCompile Include="source\network\commands\HealthChange.cpp" />
-    <ClCompile Include="source\network\commands\KeyStateChange.cpp" />
-    <ClCompile Include="source\network\commands\ObstacleSpawn.cpp" />
-    <ClCompile Include="source\network\commands\PositionChange.cpp" />
-    <ClCompile Include="source\network\commands\RespawnTank.cpp" />
-    <ClCompile Include="source\network\commands\StatisticsChange.cpp" />
-    <ClCompile Include="source\network\commands\TankShot.cpp" />
-    <ClCompile Include="source\utils\ColliderUtils.cpp" />
-    <ClCompile Include="source\utils\Logger.cpp" />
-    <ClCompile Include="source\utils\NetworkLogger.cpp" />
-    <ClCompile Include="source\utils\Timer.cpp" />
-    <ClCompile Include="source\utils\TimeUtils.cpp" />
-    <ClCompile Include="source\utils\UuidUtils.cpp" />
   </ItemGroup>
+  <!-- resource.h is the .rc's own header (Win32 resource IDs) - inherently exe-specific, stays here. Every other header moved to GameCore.vcxproj, matching the "only main.cpp stays" rule. -->
   <ItemGroup>
-    <ClInclude Include="headers\application\GameConfig.h" />
-    <ClInclude Include="headers\Circle.h" />
-    <ClInclude Include="headers\components\AnimatedObjects.h" />
-    <ClInclude Include="headers\components\SpawnEvents.h" />
-    <ClInclude Include="headers\components\events\AnimationRenderEvents.h" />
-    <ClInclude Include="headers\components\events\BonusPickupEvents.h" />
-    <ClInclude Include="headers\components\events\CoreLifecycleEvents.h" />
-    <ClInclude Include="headers\components\events\GameModeEvents.h" />
-    <ClInclude Include="headers\components\events\InputEvents.h" />
-    <ClInclude Include="headers\components\events\ObjectLifecycleEvents.h" />
-    <ClInclude Include="headers\components\events\ObstacleAndBonusEvents.h" />
-    <ClInclude Include="headers\components\events\RenderUIEvents.h" />
-    <ClInclude Include="headers\components\events\ReplicationEvents.h" />
-    <ClInclude Include="headers\components\events\StatisticsEvents.h" />
-    <ClInclude Include="headers\components\events\TimingEvents.h" />
-    <ClInclude Include="headers\components\managers\AnimationManager.h" />
-    <ClInclude Include="headers\components\managers\BonusEffectManager.h" />
-    <ClInclude Include="headers\components\managers\FramePerSecondManager.h" />
-    <ClInclude Include="headers\components\managers\RenderManager.h" />
-    <ClInclude Include="headers\components\managers\RespawnManager.h" />
-    <ClInclude Include="headers\components\managers\DelayedSpawnManager.h" />
-    <ClInclude Include="headers\components\managers\SpawnManager.h" />
-    <ClInclude Include="headers\components\managers\GameStateManager.h" />
-    <ClInclude Include="headers\components\managers\TextureManager.h" />
-    <ClInclude Include="headers\components\ScoreBoard.h" />
-    <ClInclude Include="headers\entities\BulletCalibre.h" />
-    <ClInclude Include="headers\components\RightSideBar.h" />
-    <ClInclude Include="headers\enums\AnimationType.h" />
-    <ClInclude Include="headers\enums\GameState.h" />
-    <ClInclude Include="headers\network\commands\BonusStatus.h" />
-    <ClInclude Include="headers\network\commands\GameStateChange.h" />
-    <ClInclude Include="headers\network\commands\SignalEvent.h" />
-    <ClInclude Include="headers\network\commands\TankSpawnComplete.h" />
-    <ClInclude Include="headers\Point.h" />
-    <ClInclude Include="headers\application\ConfigFailure.h" />
-    <ClInclude Include="headers\application\ConfigSuccess.h" />
-    <ClInclude Include="headers\application\GameFailure.h" />
-    <ClInclude Include="headers\application\GameSuccess.h" />
-    <ClInclude Include="headers\application\SDL_Config.h" />
-    <ClInclude Include="headers\application\UserInput.h" />
-    <ClInclude Include="headers\behavior\MoveLikeBulletBeh.h" />
-    <ClInclude Include="headers\behavior\MoveLikeTankBeh.h" />
-    <ClInclude Include="headers\behavior\ShootingBeh.h" />
-    <ClInclude Include="headers\components\BonusSpawner.h" />
-    <ClInclude Include="headers\components\BulletPool.h" />
-    <ClInclude Include="headers\components\EventSystem.h" />
-    <ClInclude Include="headers\components\GameStatistics.h" />
-    <ClInclude Include="headers\components\LineOfSight.h" />
-    <ClInclude Include="headers\components\Map.h" />
-    <ClInclude Include="headers\components\Menu.h" />
-    <ClInclude Include="headers\components\ObstacleSpawner.h" />
-    <ClInclude Include="headers\components\TankSpawner.h" />
-    <ClInclude Include="headers\components\input\InputProviderForMenu.h" />
-    <ClInclude Include="headers\components\input\InputProviderForPlayerOne.h" />
-    <ClInclude Include="headers\components\input\InputProviderForPlayerOneNet.h" />
-    <ClInclude Include="headers\components\input\InputProviderForPlayerTwo.h" />
-    <ClInclude Include="headers\components\input\InputProviderForPlayerTwoNet.h" />
-    <ClInclude Include="headers\components\input\MouseButton.h" />
-    <ClInclude Include="headers\components\input\PlayerKeys.h" />
-    <ClInclude Include="headers\entities\BaseObj.h" />
-    <ClInclude Include="headers\entities\BaseObjProperty.h" />
-    <ClInclude Include="headers\entities\BonusEffectProperty.h" />
-    <ClInclude Include="headers\entities\Tags.h" />
-    <ClInclude Include="headers\entities\ObjRectangle.h" />
-    <ClInclude Include="headers\entities\bonuses\Bonus.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusCaliber.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusGrenade.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusHelmet.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusShovel.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusStar.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusTank.h" />
-    <ClInclude Include="headers\entities\bonuses\BonusTimer.h" />
-    <ClInclude Include="headers\entities\obstacles\BrickWall.h" />
-    <ClInclude Include="headers\entities\obstacles\EagleTile.h" />
-    <ClInclude Include="headers\entities\obstacles\FortressWall.h" />
-    <ClInclude Include="headers\entities\obstacles\BushTile.h" />
-    <ClInclude Include="headers\entities\obstacles\IceTile.h" />
-    <ClInclude Include="headers\entities\obstacles\Obstacle.h" />
-    <ClInclude Include="headers\entities\obstacles\SteelWall.h" />
-    <ClInclude Include="headers\entities\obstacles\WaterTile.h" />
-    <ClInclude Include="headers\entities\pawns\Bot.h" />
-    <ClInclude Include="headers\entities\pawns\Bullet.h" />
-    <ClInclude Include="headers\entities\pawns\BulletResetProperty.h" />
-    <ClInclude Include="headers\entities\pawns\CoopBot.h" />
-    <ClInclude Include="headers\entities\pawns\Enemy.h" />
-    <ClInclude Include="headers\entities\pawns\Pawn.h" />
-    <ClInclude Include="headers\entities\pawns\PawnProperty.h" />
-    <ClInclude Include="headers\entities\pawns\Player.h" />
-    <ClInclude Include="headers\entities\pawns\Tank.h" />
-    <ClInclude Include="headers\enums\BonusType.h" />
-    <ClInclude Include="headers\enums\CommandType.h" />
-    <ClInclude Include="headers\enums\Direction.h" />
-    <ClInclude Include="headers\enums\GameMode.h" />
-    <ClInclude Include="headers\enums\ObstacleType.h" />
-    <ClInclude Include="headers\enums\RespawnGroup.h" />
-    <ClInclude Include="headers\enums\StatisticsType.h" />
-    <ClInclude Include="headers\enums\TankType.h" />
-    <ClInclude Include="headers\enums\TextureOffset.h" />
-    <ClInclude Include="headers\interfaces\IConfig.h" />
-    <ClInclude Include="headers\interfaces\IDrawable.h" />
-    <ClInclude Include="headers\interfaces\IGame.h" />
-    <ClInclude Include="headers\interfaces\IHaveFraction.h" />
-    <ClInclude Include="headers\interfaces\IInputProvider.h" />
-    <ClInclude Include="headers\interfaces\IMoveBeh.h" />
-    <ClInclude Include="headers\interfaces\INetworkNode.h" />
-    <ClInclude Include="headers\interfaces\IObstacle.h" />
-    <ClInclude Include="headers\interfaces\IPickupableBonus.h" />
-    <ClInclude Include="headers\interfaces\ISendableDamageStatistics.h" />
-    <ClInclude Include="headers\interfaces\IShootable.h" />
-    <ClInclude Include="headers\interfaces\ITickUpdatable.h" />
-    <ClInclude Include="headers\network\Client.h" />
-    <ClInclude Include="headers\network\ClientHandler.h" />
-    <ClInclude Include="headers\network\Server.h" />
-    <ClInclude Include="headers\network\ServerHandler.h" />
-    <ClInclude Include="headers\network\commands\BonusDeSpawn.h" />
-    <ClInclude Include="headers\network\commands\BonusSpawn.h" />
-    <ClInclude Include="headers\network\commands\AnyCommand.h" />
-    <ClInclude Include="headers\network\commands\CommandBatch.h" />
-    <ClInclude Include="headers\network\commands\Dispose.h" />
-    <ClInclude Include="headers\network\commands\FortressChange.h" />
-    <ClInclude Include="headers\network\commands\HealthChange.h" />
-    <ClInclude Include="headers\network\commands\KeyStateChange.h" />
-    <ClInclude Include="headers\network\commands\ObstacleSpawn.h" />
-    <ClInclude Include="headers\network\commands\PositionChange.h" />
-    <ClInclude Include="headers\network\commands\RespawnTank.h" />
-    <ClInclude Include="headers\network\commands\StatisticsChange.h" />
-    <ClInclude Include="headers\network\commands\TankShot.h" />
-    <ClInclude Include="headers\network\commands\UuidSerialization.h" />
-    <ClInclude Include="headers\utils\ColliderUtils.h" />
-    <ClInclude Include="headers\utils\Logger.h" />
-    <ClInclude Include="headers\utils\NetworkLogger.h" />
-    <ClInclude Include="headers\utils\PixelUtils.h" />
-    <ClInclude Include="headers\utils\RandUtils.h" />
-    <ClInclude Include="headers\utils\Timer.h" />
-    <ClInclude Include="headers\utils\TimeUtils.h" />
-    <ClInclude Include="headers\utils\UuidUtils.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -417,21 +198,14 @@ if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDi
   <ItemGroup>
     <Media Include="Resources\Sounds\levelStarted.wav" />
   </ItemGroup>
+  <!-- SDL2/ttf/image/mixer references moved to GameCore.vcxproj (that's where the SDL-dependent .cpp now live);
+       SDLmain stays here since only the real exe needs the WinMain->main entry-point hijack. -->
   <ItemGroup>
-    <ProjectReference Include="SDL2Wrappers\SDL2_mixer\SDL_mixer.vcxproj">
-      <Project>{f7e944b3-0815-40cd-b3e4-90b2a15b0e33}</Project>
-    </ProjectReference>
-    <ProjectReference Include="SDL2Wrappers\SDL2_image\SDL_image.vcxproj">
-      <Project>{2bd5534e-00e2-4bea-ac96-d9a92ea24696}</Project>
-    </ProjectReference>
-    <ProjectReference Include="SDL2Wrappers\SDL2_ttf\SDL_ttf.vcxproj">
-      <Project>{dddbd07d-dc76-4af6-8d02-3e2deb6ee255}</Project>
-    </ProjectReference>
-    <ProjectReference Include="SDL2Wrappers\SDL2\SDL.vcxproj">
-      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
-    </ProjectReference>
     <ProjectReference Include="ThirdParty\SDL2\VisualC\SDLmain\SDLmain.vcxproj">
       <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="GameCore\GameCore.vcxproj">
+      <Project>{6a1f9c3d-2e57-4b8a-9d10-4f7c2a8b5e91}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
