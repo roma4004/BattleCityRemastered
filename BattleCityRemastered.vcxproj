@@ -124,6 +124,30 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>setupapi.lib;winmm.lib;imm32.lib;version.lib;cfgmgr32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <!-- Copies the same asset set as CMake's GAME_ASSETS (CMakeLists.txt), next to the .exe. -->
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Resources\Fonts" mkdir "$(OutDir)Resources\Fonts"
+if not exist "$(OutDir)Resources\Images\PS5_Buttons" mkdir "$(OutDir)Resources\Images\PS5_Buttons"
+if not exist "$(OutDir)Resources\Images\Xbox_Buttons" mkdir "$(OutDir)Resources\Images\Xbox_Buttons"
+if not exist "$(OutDir)Resources\Sounds" mkdir "$(OutDir)Resources\Sounds"
+copy /Y "$(ProjectDir)Resources\Fonts\PressStart2P-vaV7.ttf" "$(OutDir)Resources\Fonts\PressStart2P-vaV7.ttf"
+copy /Y "$(ProjectDir)Resources\Images\Title.png" "$(OutDir)Resources\Images\Title.png"
+copy /Y "$(ProjectDir)Resources\Images\SpriteSheet.png" "$(OutDir)Resources\Images\SpriteSheet.png"
+copy /Y "$(ProjectDir)Resources\Images\menuSelectorP1.png" "$(OutDir)Resources\Images\menuSelectorP1.png"
+copy /Y "$(ProjectDir)Resources\Images\PS5_Buttons\Create.png" "$(OutDir)Resources\Images\PS5_Buttons\Create.png"
+copy /Y "$(ProjectDir)Resources\Images\PS5_Buttons\Cross.png" "$(OutDir)Resources\Images\PS5_Buttons\Cross.png"
+copy /Y "$(ProjectDir)Resources\Images\PS5_Buttons\D-Pad.png" "$(OutDir)Resources\Images\PS5_Buttons\D-Pad.png"
+copy /Y "$(ProjectDir)Resources\Images\PS5_Buttons\Home.png" "$(OutDir)Resources\Images\PS5_Buttons\Home.png"
+copy /Y "$(ProjectDir)Resources\Images\PS5_Buttons\Options.png" "$(OutDir)Resources\Images\PS5_Buttons\Options.png"
+copy /Y "$(ProjectDir)Resources\Images\PS5_Buttons\Triangle.png" "$(OutDir)Resources\Images\PS5_Buttons\Triangle.png"
+copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\D-Pad.png" "$(OutDir)Resources\Images\Xbox_Buttons\D-Pad.png"
+copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\Home.png" "$(OutDir)Resources\Images\Xbox_Buttons\Home.png"
+copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\Menu.png" "$(OutDir)Resources\Images\Xbox_Buttons\Menu.png"
+copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\View.png" "$(OutDir)Resources\Images\Xbox_Buttons\View.png"
+copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\A.png" "$(OutDir)Resources\Images\Xbox_Buttons\A.png"
+copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\Y.png" "$(OutDir)Resources\Images\Xbox_Buttons\Y.png"
+copy /Y "$(ProjectDir)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sounds\levelStarted.wav"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -154,16 +178,11 @@ if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDi
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
-  <!-- resource.h is the .rc's own header (Win32 resource IDs) - inherently exe-specific, stays here. Every other header moved to GameCore.vcxproj, matching the "only main.cpp stays" rule. -->
-  <ItemGroup>
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
+  <!-- Assets are loose files, never embedded into the exe; copied next to the .exe by the PostBuildEvent below, mirroring CMake's GAME_ASSETS. -->
   <ItemGroup>
     <Content Include=".aiignore" />
     <Content Include="Resources\Fonts\backup\bc7x7.ttf" />
     <Content Include="Resources\Fonts\backup\M10 battle cities.ttf" />
-    <Content Include="Resources\Fonts\info.txt" />
-    <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Fonts\info.txt" />
     <Content Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
     <Content Include="Resources\Images\menuSelectorP2.png" />
@@ -177,6 +196,7 @@ if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDi
     <Content Include="Resources\Images\PS5_Buttons\Options.png" />
     <Content Include="Resources\Images\PS5_Buttons\Triangle.png" />
     <Content Include="Resources\Images\SpriteSheet.png" />
+    <Content Include="Resources\Images\Title.png" />
     <Content Include="Resources\Images\Xbox_Buttons\- A Message from the Creator.txt" />
     <Content Include="Resources\Images\Xbox_Buttons\A.png" />
     <Content Include="Resources\Images\Xbox_Buttons\D-Pad.png" />
@@ -185,18 +205,7 @@ if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDi
     <Content Include="Resources\Images\Xbox_Buttons\Menu.png" />
     <Content Include="Resources\Images\Xbox_Buttons\View.png" />
     <Content Include="Resources\Images\Xbox_Buttons\Y.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="BattleCityRemastered.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Resources\Images\Title.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Font Include="Resources\Fonts\PressStart2P-vaV7.ttf" />
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="Resources\Sounds\levelStarted.wav" />
+    <Content Include="Resources\Sounds\levelStarted.wav" />
   </ItemGroup>
   <!-- SDL2/ttf/image/mixer references moved to GameCore.vcxproj (that's where the SDL-dependent .cpp now live);
        SDLmain stays here since only the real exe needs the WinMain->main entry-point hijack. -->
