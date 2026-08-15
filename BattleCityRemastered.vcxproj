@@ -75,7 +75,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/headers;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/headers;$(ProjectDir)/ThirdParty/ser20/include;$(ProjectDir)/ThirdParty/boost/align/include;$(ProjectDir)/ThirdParty/boost/any/include;$(ProjectDir)/ThirdParty/boost/asio/include;$(ProjectDir)/ThirdParty/boost/assert/include;$(ProjectDir)/ThirdParty/boost/bind/include;$(ProjectDir)/ThirdParty/boost/config/include;$(ProjectDir)/ThirdParty/boost/container_hash/include;$(ProjectDir)/ThirdParty/boost/winapi/include;$(ProjectDir)/ThirdParty/boost/preprocessor/include;$(ProjectDir)/ThirdParty/boost/predef/include;$(ProjectDir)/ThirdParty/boost/mp11/include;$(ProjectDir)/ThirdParty/boost/tuple/include;$(ProjectDir)/ThirdParty/boost/utility/include;$(ProjectDir)/ThirdParty/boost/core/include;$(ProjectDir)/ThirdParty/boost/integer/include;$(ProjectDir)/ThirdParty/boost/iterator/include;$(ProjectDir)/ThirdParty/boost/mpl/include;$(ProjectDir)/ThirdParty/boost/multi_index/include;$(ProjectDir)/ThirdParty/boost/optional/include;$(ProjectDir)/ThirdParty/boost/pool/include;$(ProjectDir)/ThirdParty/boost/property_tree/include;$(ProjectDir)/ThirdParty/boost/range/include;$(ProjectDir)/ThirdParty/boost/system/include;$(ProjectDir)/ThirdParty/boost/throw_exception/include;$(ProjectDir)/ThirdParty/boost/type_index/include;$(ProjectDir)/ThirdParty/boost/type_traits/include;$(ProjectDir)/ThirdParty/boost/uuid/include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -144,6 +144,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <PreBuildEvent>
+      <Command>if not exist "$(ProjectDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/boost)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\application\ConfigFailure.cpp" />
@@ -216,7 +221,6 @@
     <ClCompile Include="source\network\ServerHandler.cpp" />
     <ClCompile Include="source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="source\network\commands\BonusSpawn.cpp" />
-    <ClCompile Include="source\network\commands\Command.cpp" />
     <ClCompile Include="source\network\commands\CommandBatch.cpp" />
     <ClCompile Include="source\network\commands\Dispose.cpp" />
     <ClCompile Include="source\network\commands\FortressChange.cpp" />
@@ -351,7 +355,7 @@
     <ClInclude Include="headers\network\ServerHandler.h" />
     <ClInclude Include="headers\network\commands\BonusDeSpawn.h" />
     <ClInclude Include="headers\network\commands\BonusSpawn.h" />
-    <ClInclude Include="headers\network\commands\Command.h" />
+    <ClInclude Include="headers\network\commands\AnyCommand.h" />
     <ClInclude Include="headers\network\commands\CommandBatch.h" />
     <ClInclude Include="headers\network\commands\Dispose.h" />
     <ClInclude Include="headers\network\commands\FortressChange.h" />
@@ -424,8 +428,6 @@
     <Import Project="packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets" Condition="Exists('packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets')" />
     <Import Project="packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets" Condition="Exists('packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets')" />
     <Import Project="packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets" Condition="Exists('packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets')" />
-    <Import Project="packages\boost.1.87.0\build\boost.targets" Condition="Exists('packages\boost.1.87.0\build\boost.targets')" />
-    <Import Project="packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets" Condition="Exists('packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" />
     <Import Project="packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets" Condition="Exists('packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets')" />
     <Import Project="packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets" Condition="Exists('packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets')" />
   </ImportGroup>
@@ -439,8 +441,6 @@
     <Error Condition="!Exists('packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets'))" />
     <Error Condition="!Exists('packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets'))" />
     <Error Condition="!Exists('packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets'))" />
-    <Error Condition="!Exists('packages\boost.1.87.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.87.0\build\boost.targets'))" />
-    <Error Condition="!Exists('packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets'))" />
     <Error Condition="!Exists('packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets'))" />
     <Error Condition="!Exists('packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets'))" />
   </Target>

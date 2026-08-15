@@ -1,20 +1,12 @@
 #include "network/commands/FortressChange.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-
-BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::FortressChange)
 
 namespace network::commands
 {
-FortressChange::FortressChange()
-	: Command{CommandType::FORTRESS_CHANGE} {}
-
 FortressChange::FortressChange(std::string state, const buuid uuid)
-	: Command{CommandType::FORTRESS_CHANGE}
-	, _state{std::move(state)}
+	: _state{std::move(state)}
 	, _uuid{uuid} {}
+
+CommandType FortressChange::GetType() const noexcept { return _type; }
 
 std::string FortressChange::GetState() const noexcept { return _state; }
 

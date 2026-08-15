@@ -1,7 +1,6 @@
 #pragma once
 
 #include "NetworkCommandQueue.h"
-#include "commands/Command.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <atomic>
@@ -44,7 +43,7 @@ public:
 	void Shutdown();
 
 private:
-	using CommandHandler = std::function<void(const std::shared_ptr<Command>&)>;
+	using CommandHandler = std::function<void(const AnyCommand&)>;
 
 	void Subscribe();
 	void RegisterCommandHandlers();
@@ -62,37 +61,36 @@ private:
 	void OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event);
 
 	void SendKeyState(const std::string& key, bool state);
-	void OnPositionChange(const std::shared_ptr<Command>& command);
-	void OnTankShot(const std::shared_ptr<Command>& command);
-	void OnHealthChange(const std::shared_ptr<Command>& command);
-	void OnDispose(const std::shared_ptr<Command>& command);
-	void OnStatisticsChange(const std::shared_ptr<Command>& command);
-	void OnKeyStateChange(const std::shared_ptr<Command>& command);
-	void OnGameStateChange(const std::shared_ptr<Command>& command);
-	void OnFortressChange(const std::shared_ptr<Command>& command);
-	void OnBonusSpawn(const std::shared_ptr<Command>& command);
-	void OnBonusDeSpawn(const std::shared_ptr<Command>& command);
-	void OnRespawnTank(const std::shared_ptr<Command>& command);
-	void OnObstacleSpawn(const std::shared_ptr<Command>& command);
-	void OnTankSpawnComplete(const std::shared_ptr<Command>& command);
-	void OnCommandBatch(const std::shared_ptr<Command>& commands);
-	void OnBonusStatus(const std::shared_ptr<Command>& command);
-	void ProcessClientCommand(const std::shared_ptr<Command>& command);
+	void OnPositionChange(const AnyCommand& command);
+	void OnTankShot(const AnyCommand& command);
+	void OnHealthChange(const AnyCommand& command);
+	void OnDispose(const AnyCommand& command);
+	void OnStatisticsChange(const AnyCommand& command);
+	void OnKeyStateChange(const AnyCommand& command);
+	void OnGameStateChange(const AnyCommand& command);
+	void OnFortressChange(const AnyCommand& command);
+	void OnBonusSpawn(const AnyCommand& command);
+	void OnBonusDeSpawn(const AnyCommand& command);
+	void OnRespawnTank(const AnyCommand& command);
+	void OnObstacleSpawn(const AnyCommand& command);
+	void OnTankSpawnComplete(const AnyCommand& command);
+	void OnBonusStatus(const AnyCommand& command);
+	void ProcessClientCommand(const AnyCommand& command);
 	void ProcessReceivedData(const std::string& archiveData);
-	void SendCommand(const std::shared_ptr<Command>& command);
+	void SendCommand(const CommandBatch& command);
 
 	tcp::socket _socket;
 	boost::asio::steady_timer _reconnectTimer;
 	tcp::endpoint _endpoint;
 	boost::asio::streambuf _readBuffer{};
 	boost::asio::streambuf _writeBuffer{};
-	std::shared_ptr<EventSystem> _events{nullptr};
+	std::shared_ptr<EventSystem> _events{};
 	std::vector<EventSubscription> _subs{};
 	network::NetworkCommandQueue _commandQueue;
 	std::mutex _batchWriteMutex;
-	std::shared_ptr<CommandBatch> _batch{nullptr};
+	CommandBatch _batch{};
 	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
-	std::atomic<bool> _isConnected{false};
+	std::atomic<bool> _isConnected{};
 	unsigned char _reconnectAttempts{0u};
 	static constexpr unsigned char MaxReconnectAttempts{10u};
 	static constexpr unsigned short ReconnectDelayMs{500u};

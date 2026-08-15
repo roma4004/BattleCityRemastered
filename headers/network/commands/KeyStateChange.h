@@ -1,44 +1,38 @@
 #pragma once
 
-#include "Command.h"
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
+#include "enums/CommandType.h"
+#include <ser20/types/string.hpp>
 #include <string>
 
 namespace network::commands
 {
-class KeyStateChange : public Command
+class KeyStateChange
 {
-	friend class boost::serialization::access;
-
+	CommandType _type{CommandType::KEY_STATE_CHANGE};
 	std::string _keyState{};
 	bool _isPressed{};
 
 public:
 	//for deserialization
-	KeyStateChange();
+	KeyStateChange() = default;
 
 	//for serialization
 	KeyStateChange(std::string keyState, bool isPressed);
 
-	~KeyStateChange() override = default;
-
+	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] std::string GetKeyState() const noexcept;
 	[[nodiscard]] bool GetIsEnable() const noexcept;
+	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
-
-	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>
 void KeyStateChange::serialize(Archive& ar, const unsigned int)
 {
-	ar & boost::serialization::base_object<Command>(*this);
+	ar & _type;
 	ar & _keyState;
 	ar & _isPressed;
 }
 }//namespace network::commands
-
-BOOST_CLASS_EXPORT_KEY(network::commands::KeyStateChange);

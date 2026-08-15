@@ -182,9 +182,6 @@
     <ClCompile Include="source\network\commands\BonusSpawn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\network\commands\Command.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\network\commands\CommandBatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -541,7 +538,7 @@
     <ClInclude Include="headers\network\commands\BonusSpawn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="headers\network\commands\Command.h">
+    <ClInclude Include="headers\network\commands\AnyCommand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\network\commands\CommandBatch.h">

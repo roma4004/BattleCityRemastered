@@ -1,52 +1,46 @@
 #pragma once
 
-#include "Command.h"
 #include "Point.h"
 #include "UuidSerialization.h"
 #include "enums/BonusType.h"
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
+#include "enums/CommandType.h"
+#include <ser20/types/common.hpp>
 #include <boost/uuid/uuid.hpp>
 
 namespace network::commands
 {
-class BonusSpawn : public Command
+class BonusSpawn
 {
 	using buuid = boost::uuids::uuid;
 
-	friend class boost::serialization::access;
-
+	CommandType _type{CommandType::BONUS_SPAWN};
 	FPoint _pos{};
 	BonusType _bonusType{};
 	buuid _uuid{};
 
 public:
 	//for deserialization
-	BonusSpawn();
+	BonusSpawn() = default;
 
 	//for serialization
 	BonusSpawn(FPoint pos, BonusType bonusType, buuid uuid);
 
-	~BonusSpawn() override = default;
-
+	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] FPoint GetPos() const noexcept;
 	[[nodiscard]] BonusType GetBonusType() const noexcept;
 	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
-
-	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>
 void BonusSpawn::serialize(Archive& ar, const unsigned int)
 {
-	ar & boost::serialization::base_object<Command>(*this);
+	ar & _type;
 	ar & _pos;
 	ar & _bonusType;
 	ar & _uuid;
 }
 }//namespace network::commands
-
-BOOST_CLASS_EXPORT_KEY(network::commands::BonusSpawn);

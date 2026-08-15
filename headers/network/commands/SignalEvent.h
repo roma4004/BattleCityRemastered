@@ -1,41 +1,35 @@
 #pragma once
 
-#include "Command.h"
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
+#include "enums/CommandType.h"
+#include <ser20/types/string.hpp>
 #include <string>
 
 namespace network::commands
 {
-class SignalEvent : public Command
+class SignalEvent
 {
-	friend class boost::serialization::access;
-
+	CommandType _type{CommandType::SIGNAL_EVENT};
 	std::string _signalName{};
 
 public:
 	//for deserialization
-	SignalEvent();
+	SignalEvent() = default;
 
 	//for serialization
-	SignalEvent(std::string signalName);
+	explicit SignalEvent(std::string signalName);
 
-	~SignalEvent() override = default;
-
+	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] std::string GetSignalName() const noexcept;
+	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
-
-	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>
 void SignalEvent::serialize(Archive& ar, const unsigned int)
 {
-	ar & boost::serialization::base_object<Command>(*this);
+	ar & _type;
 	ar & _signalName;
 }
 }//namespace network::commands
-
-BOOST_CLASS_EXPORT_KEY(network::commands::SignalEvent);

@@ -1,29 +1,25 @@
 #pragma once
 
-#include "Command.h"
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
+#include "AnyCommand.h"
+#include <ser20/types/vector.hpp>
+#include <string>
+#include <vector>
 
 namespace network::commands
 {
-class CommandBatch : public Command
+class CommandBatch
 {
-	friend class boost::serialization::access;
-
-	std::vector<std::shared_ptr<Command>> _commands;
+	std::vector<AnyCommand> _commands;
 
 public:
-	CommandBatch();
-	~CommandBatch() override = default;
+	CommandBatch() = default;
 
-	void AddCommand(const std::shared_ptr<Command>& command);
-	[[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetCommands() const noexcept;
+	void AddCommand(AnyCommand command);
+	[[nodiscard]] const std::vector<AnyCommand>& GetCommands() const noexcept;
 
-	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 	[[nodiscard]] size_t GetSize() const noexcept;
 	[[nodiscard]] bool IsEmpty() const noexcept;
+	[[nodiscard]] std::string GetClassNamesW() const;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
@@ -32,9 +28,6 @@ public:
 template<class Archive>
 void CommandBatch::serialize(Archive& ar, const unsigned int)
 {
-	ar & boost::serialization::base_object<Command>(*this);
 	ar & _commands;
 }
 }//namespace network::commands
-
-BOOST_CLASS_EXPORT_KEY(network::commands::CommandBatch);

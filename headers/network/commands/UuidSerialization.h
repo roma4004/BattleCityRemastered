@@ -1,16 +1,16 @@
 #pragma once
 
-#include <boost/serialization/binary_object.hpp>
+#include <ser20/ser20.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>//NOTE: required for commands serialization
 
-namespace boost::serialization
+namespace ser20
 {
-using buuid = uuids::uuid;
+using buuid = boost::uuids::uuid;
 
 template<class Archive>
 void serialize(Archive& ar, buuid& uuid, const unsigned int /*version*/)
 {
-	ar & make_binary_object(&uuid, sizeof(uuid));
+	ar & binary_data(&uuid, sizeof(uuid));
 }
-}// namespace boost::serialization
+}// namespace ser20

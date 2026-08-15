@@ -1,20 +1,12 @@
 #include "network/commands/Dispose.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-
-BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::Dispose);
 
 namespace network::commands
 {
-Dispose::Dispose()
-	: Command{CommandType::DISPOSE} {}
-
 Dispose::Dispose(std::string who, const buuid uuid)
-	: Command{CommandType::DISPOSE}
-	, _who{std::move(who)}
+	: _who{std::move(who)}
 	, _uuid{uuid} {}
+
+CommandType Dispose::GetType() const noexcept { return _type; }
 
 std::string Dispose::GetWho() const noexcept { return _who; }
 

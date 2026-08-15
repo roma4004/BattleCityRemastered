@@ -11,26 +11,10 @@
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/TankType.h"
-#include "network/commands/BonusDeSpawn.h"
-#include "network/commands/BonusSpawn.h"
-#include "network/commands/BonusStatus.h"
 #include "network/commands/CommandBatch.h"
-#include "network/commands/Dispose.h"
-#include "network/commands/FortressChange.h"
-#include "network/commands/GameStateChange.h"
-#include "network/commands/HealthChange.h"
-#include "network/commands/KeyStateChange.h"
-#include "network/commands/ObstacleSpawn.h"
-#include "network/commands/PositionChange.h"
-#include "network/commands/RespawnTank.h"
-#include "network/commands/SignalEvent.h"
-#include "network/commands/StatisticsChange.h"
-#include "network/commands/TankSpawnComplete.h"
-#include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 #include <algorithm>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <ser20/archives/portable_binary.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <iostream>
 #include <mutex>
@@ -48,9 +32,8 @@ Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
 void Session::RegisterCommandHandlers()
 {
 	_commandHandlers = {
-			{CommandType::COMMAND_BATCH, [this](const std::shared_ptr<Command>& cmd) { OnCommandBatch(cmd); }},
-			{CommandType::SIGNAL_EVENT, [this](const std::shared_ptr<Command>& cmd) { OnSignalEvent(cmd); }},
-			{CommandType::KEY_STATE_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnKeyStateChange(cmd); }},
+			{CommandType::SIGNAL_EVENT, [this](const AnyCommand& cmd) { OnSignalEvent(cmd); }},
+			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
 	};
 }
 
@@ -112,13 +95,16 @@ void Session::ProcessReceivedData(const std::string& archiveData)
 	try
 	{
 		std::istringstream archiveStream(archiveData);
-		boost::archive::text_iarchive ia(archiveStream);
+		ser20::PortableBinaryInputArchive ia(archiveStream);
 
-		std::shared_ptr<Command> command;
-		ia >> command;
+		CommandBatch batch;
+		ia(batch);
 
 		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
-		ProcessServerCommand(command);
+		for (const auto& command: batch.GetCommands())
+		{
+			ProcessServerCommand(command);
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -139,100 +125,79 @@ void Session::ProcessReceivedData(const std::string& archiveData)
 	}
 }
 
-void Session::OnCommandBatch(const std::shared_ptr<Command>& commands)
+void Session::OnSignalEvent(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
+	const auto& cmd = std::get<SignalEvent>(command);
+	const std::string signalName = cmd.GetSignalName();
+
+	_commandQueue.Enqueue([this, signalName]()
 	{
-		for (const auto& command: cmd->GetCommands())
+		if (signalName == "ClientOut_ReadyToPlay")
 		{
-			ProcessServerCommand(command);
+			_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
 		}
-	}
+		else
+		{
+			NetworkLogger::WriteLog("Session::OnSignalEvent: unrecognized signal \"" + signalName + "\"");
+		}
+	});
 }
 
-void Session::OnSignalEvent(const std::shared_ptr<Command>& command)
+void Session::OnKeyStateChange(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<SignalEvent*>(command.get()))
-	{
-		const std::string signalName = cmd->GetSignalName();
+	const auto& cmd = std::get<KeyStateChange>(command);
+	const auto keyState = cmd.GetKeyState();
+	const auto isEnable = cmd.GetIsEnable();
 
-		_commandQueue.Enqueue([this, signalName]()
+	_commandQueue.Enqueue([this, keyState, isEnable]()//TODO: validate each command, security risk
+	{
+		if (keyState.starts_with("P1_") || keyState.starts_with("P2_"))
 		{
-			if (signalName == "ClientOut_ReadyToPlay")
+			const std::string tag = keyState.substr(0, 2);
+			const std::string action = keyState.substr(3);
+
+			if (action == "Move_Up")
 			{
-				_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+				_events->EmitEvent(Key(tag), ServerInMoveUpEvent{.isPressed = isEnable});
+			}
+			else if (action == "Move_Down")
+			{
+				_events->EmitEvent(Key(tag), ServerInMoveDownEvent{.isPressed = isEnable});
+			}
+			else if (action == "Move_Left")
+			{
+				_events->EmitEvent(Key(tag), ServerInMoveLeftEvent{.isPressed = isEnable});
+			}
+			else if (action == "Move_Right")
+			{
+				_events->EmitEvent(Key(tag), ServerInMoveRightEvent{.isPressed = isEnable});
+			}
+			else if (action == "Fire")
+			{
+				_events->EmitEvent(Key(tag), ServerInFireEvent{.isPressed = isEnable});
 			}
 			else
 			{
-				NetworkLogger::WriteLog("Session::OnSignalEvent: unrecognized signal \"" + signalName + "\"");
+				NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized tagged action \"" + action
+										+ "\"");
 			}
-		});
-	}
-}
-
-void Session::OnKeyStateChange(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
-	{
-		const auto keyState = cmd->GetKeyState();
-		const auto isEnable = cmd->GetIsEnable();
-
-		_commandQueue.Enqueue([this, keyState, isEnable]()//TODO: validate each command, security risk
+		}
+		else if (keyState == "Pause_Released")
 		{
-			if (keyState.starts_with("P1_") || keyState.starts_with("P2_"))
-			{
-				const std::string tag = keyState.substr(0, 2);
-				const std::string action = keyState.substr(3);
-
-				if (action == "Move_Up")
-				{
-					_events->EmitEvent(Key(tag), ServerInMoveUpEvent{.isPressed = isEnable});
-				}
-				else if (action == "Move_Down")
-				{
-					_events->EmitEvent(Key(tag), ServerInMoveDownEvent{.isPressed = isEnable});
-				}
-				else if (action == "Move_Left")
-				{
-					_events->EmitEvent(Key(tag), ServerInMoveLeftEvent{.isPressed = isEnable});
-				}
-				else if (action == "Move_Right")
-				{
-					_events->EmitEvent(Key(tag), ServerInMoveRightEvent{.isPressed = isEnable});
-				}
-				else if (action == "Fire")
-				{
-					_events->EmitEvent(Key(tag), ServerInFireEvent{.isPressed = isEnable});
-				}
-				else
-				{
-					NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized tagged action \"" + action
-											+ "\"");
-				}
-			}
-			else if (keyState == "Pause_Released")
-			{
-				_events->EmitEvent(ServerInPauseReleasedEvent{.isPaused = isEnable});
-			}
-			else
-			{
-				NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
-			}
-		});
-	}
+			_events->EmitEvent(ServerInPauseReleasedEvent{.isPaused = isEnable});
+		}
+		else
+		{
+			NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
+		}
+	});
 }
 
-void Session::ProcessServerCommand(const std::shared_ptr<Command>& command)
+void Session::ProcessServerCommand(const AnyCommand& command)
 {
-	if (!command)
-	{
-		return;
-	}
-
-	// auto classNameW = std::string(command->GetClassNameW());
-	// auto commandName = std::string("client receive:" + classNameW);
+	// auto commandName = std::string("client receive:") + GetClassNameW(command);
 	// NetworkLogger::LogClientIn(commandName);
-	if (const auto it = _commandHandlers.find(command->GetType()); it != _commandHandlers.end())
+	if (const auto it = _commandHandlers.find(GetCommandType(command)); it != _commandHandlers.end())
 	{
 		it->second(command);
 	}
@@ -262,8 +227,6 @@ void Session::DoRead()
 			{
 				const std::string archiveData(buffers_begin(_readBuffer.data()),
 											  buffers_begin(_readBuffer.data()) + length);
-				std::istringstream archiveStream(archiveData);
-				boost::archive::text_iarchive ia(archiveStream);
 
 				this->ProcessReceivedData(archiveData);
 
@@ -342,7 +305,6 @@ Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t po
 			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
 	, _events{events}
-	, _batch{std::make_shared<CommandBatch>()}
 {
 	DoAccept();
 	StartSendThread();
@@ -357,7 +319,7 @@ void Server::StartSendThread()
 	{
 		while (this->_isRunning.load())
 		{
-			std::shared_ptr<CommandBatch> batch;
+			CommandBatch batch;
 			{
 				std::unique_lock<std::mutex> lock(this->_sendQueueMutex);
 				this->_sendCondition.wait(
@@ -369,11 +331,11 @@ void Server::StartSendThread()
 				if (this->_sendQueue.empty())
 					continue;
 
-				batch = this->_sendQueue.front();
+				batch = std::move(this->_sendQueue.front());
 				this->_sendQueue.pop();
 			}
 
-			if (batch && !batch->IsEmpty())
+			if (!batch.IsEmpty())
 			{
 				try
 				{
@@ -385,7 +347,7 @@ void Server::StartSendThread()
 
 					// retry send
 					std::scoped_lock lock(this->_sendQueueMutex);
-					this->_sendQueue.push(batch);
+					this->_sendQueue.push(std::move(batch));
 				}
 				catch (...)
 				{
@@ -459,14 +421,14 @@ void Server::Subscribe()
 
 void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
-	auto batch{std::make_shared<CommandBatch>()};
+	CommandBatch batch;
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		std::swap(batch, _batch);
 	}
 	{
 		std::scoped_lock lock(_sendQueueMutex);
-		_sendQueue.emplace(batch);
+		_sendQueue.push(std::move(batch));
 	}
 	_sendCondition.notify_one();
 }
@@ -474,61 +436,61 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 void Server::OnPauseStatus(const ServerOutPauseStatusEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Status", event.isPaused));
+	_batch.AddCommand(KeyStateChange{"Pause_Status", event.isPaused});
 }
 
 void Server::OnPlayersTeamIsWon(const ServerOutPlayersTeamIsWonEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<GameStateChange>("PlayersTeamIsWon"));
+	_batch.AddCommand(GameStateChange{"PlayersTeamIsWon"});
 }
 
 void Server::OnEnemiesTeamIsWon(const ServerOutEnemiesTeamIsWonEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<GameStateChange>("EnemiesTeamIsWon"));
+	_batch.AddCommand(GameStateChange{"EnemiesTeamIsWon"});
 }
 
 void Server::OnPos(const ServerOutPosEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<PositionChange>(event.who, event.pos, event.dir, event.uuid));
+	_batch.AddCommand(PositionChange{event.who, event.pos, event.dir, event.uuid});
 }
 
 void Server::OnShot(const ServerOutShotEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<TankShot>(event.who, event.dir, event.bulletUuid));
+	_batch.AddCommand(TankShot{event.who, event.dir, event.bulletUuid});
 }
 
 void Server::OnHealth(const ServerOutHealthEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<HealthChange>(event.who, event.health, event.uuid));
+	_batch.AddCommand(HealthChange{event.who, event.health, event.uuid});
 }
 
 void Server::OnDispose(const ServerOutDisposeEvent& event)//TODO: add who,
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<Dispose>("Bullet", event.uuid));
+	_batch.AddCommand(Dispose{"Bullet", event.uuid});
 }
 
 void Server::OnRespawnTank(const ServerOutRespawnTankEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<RespawnTank>(event.type, event.uuid, event.rect));
+	_batch.AddCommand(RespawnTank{event.type, event.uuid, event.rect});
 }
 
 void Server::OnObstacleSpawn(const ServerOutObstacleSpawnEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<ObstacleSpawn>(event.rect, event.type, event.uuid));
+	_batch.AddCommand(ObstacleSpawn{event.rect, event.type, event.uuid});
 }
 
 void Server::OnTankSpawnComplete(const ServerOutTankSpawnCompleteEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<TankSpawnComplete>(event.uuid));
+	_batch.AddCommand(TankSpawnComplete{event.uuid});
 }
 
 //NOTE: GameStatistics.cpp emits one of these 11 distinct types directly. StatisticsChange's own
@@ -552,75 +514,67 @@ void Server::SubscribeStatistics()
 void Server::OnBulletHit(const ServerOutBulletHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::BulletHit, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::BulletHit, event.author, event.fraction});
 }
 
 void Server::OnEnemyHit(const ServerOutEnemyHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::EnemyHit, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::EnemyHit, event.author, event.fraction});
 }
 
 void Server::OnPlayerOneHit(const ServerOutPlayerOneHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::PlayerOneHit, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerOneHit, event.author, event.fraction});
 }
 
 void Server::OnPlayerTwoHit(const ServerOutPlayerTwoHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoHit, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerTwoHit, event.author, event.fraction});
 }
 
 void Server::OnEnemyDied(const ServerOutEnemyDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<StatisticsChange>(StatisticsType::EnemyDied, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::EnemyDied, event.author, event.fraction});
 }
 
 void Server::OnPlayerOneDied(const ServerOutPlayerOneDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::PlayerOneDied, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerOneDied, event.author, event.fraction});
 }
 
 void Server::OnPlayerTwoDied(const ServerOutPlayerTwoDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::PlayerTwoDied, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerTwoDied, event.author, event.fraction});
 }
 
 void Server::OnBrickWallDied(const ServerOutBrickWallDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::BrickWallDied, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::BrickWallDied, event.author, event.fraction});
 }
 
 void Server::OnSteelWallDied(const ServerOutSteelWallDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::SteelWallDied, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::SteelWallDied, event.author, event.fraction});
 }
 
 void Server::OnBonusPickup(const ServerOutBonusPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::BonusPickup, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::BonusPickup, event.author, event.fraction});
 }
 
 void Server::OnBonusDestroyed(const ServerOutBonusDestroyedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(
-			std::make_shared<StatisticsChange>(StatisticsType::BonusDestroyed, event.author, event.fraction));
+	_batch.AddCommand(StatisticsChange{StatisticsType::BonusDestroyed, event.author, event.fraction});
 }
 
 void Server::SubscribeBonus()
@@ -637,43 +591,43 @@ void Server::SubscribeBonus()
 void Server::OnBonusSpawn(const ServerOutBonusSpawnEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<BonusSpawn>(event.pos, event.type, event.uuid));
+	_batch.AddCommand(BonusSpawn{event.pos, event.type, event.uuid});
 }
 
 void Server::OnBonusDeSpawn(const ServerOutBonusDeSpawnEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<BonusDeSpawn>(event.uuid));
+	_batch.AddCommand(BonusDeSpawn{event.uuid});
 }
 
 void Server::OnFortressChange(const ServerOutFortressChangeEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<FortressChange>(event.state, event.uuid));
+	_batch.AddCommand(FortressChange{event.state, event.uuid});
 }
 
 void Server::OnBonusHelmetPickup(const ServerOutBonusHelmetPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<BonusStatus>(event.name, BonusType::Helmet, event.isActive));
+	_batch.AddCommand(BonusStatus{event.name, BonusType::Helmet, event.isActive});
 }
 
 void Server::OnBonusStarPickup(const ServerOutBonusStarPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<BonusStatus>(event.author, BonusType::Star));
+	_batch.AddCommand(BonusStatus{event.author, BonusType::Star});
 }
 
 void Server::OnBonusCaliberPickup(const ServerOutBonusCaliberPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<BonusStatus>(event.author, BonusType::Caliber));
+	_batch.AddCommand(BonusStatus{event.author, BonusType::Caliber});
 }
 
 void Server::OnBonusTankPickup(const ServerOutBonusTankPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<BonusStatus>(event.author, BonusType::Tank));
+	_batch.AddCommand(BonusStatus{event.author, BonusType::Tank});
 }
 
 void Server::DoAccept()
@@ -733,13 +687,15 @@ void Server::SendToAll(const std::string& message)
 	}
 }
 
-void Server::SendCommand(const std::shared_ptr<Command>& command)
+void Server::SendCommand(const CommandBatch& command)
 {
 	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << command;
+	{
+		ser20::PortableBinaryOutputArchive oa(archiveStream);
+		oa(command);
+	}
 
-	// NetworkLogger::LogServerOut(command->GetClassNameW());
+	// NetworkLogger::LogServerOut(command.GetClassNamesW());
 
 	const auto& basicString = archiveStream.str();
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);

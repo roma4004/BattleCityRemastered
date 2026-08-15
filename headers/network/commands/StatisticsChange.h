@@ -1,48 +1,43 @@
 #pragma once
 
-#include "Command.h"
+#include "enums/CommandType.h"
 #include "enums/StatisticsType.h"
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
+#include <ser20/types/common.hpp>
+#include <ser20/types/string.hpp>
 #include <string>
 
 namespace network::commands
 {
-class StatisticsChange : public Command
+class StatisticsChange
 {
-	friend class boost::serialization::access;
-
-	StatisticsType _type{};
+	CommandType _type{CommandType::STATISTICS_CHANGE};
+	StatisticsType _statisticsType{};
 	std::string _author{};
 	std::string _fraction{};
 
 public:
 	//for deserialization
-	StatisticsChange();
+	StatisticsChange() = default;
 
 	//for serialization
 	StatisticsChange(StatisticsType type, std::string author, std::string fraction);
 
-	~StatisticsChange() override = default;
-
-	[[nodiscard]] StatisticsType GetType() const noexcept;
+	[[nodiscard]] CommandType GetType() const noexcept;
+	[[nodiscard]] StatisticsType GetStatisticsType() const noexcept;
 	[[nodiscard]] std::string GetAuthor() const noexcept;
 	[[nodiscard]] std::string GetFraction() const noexcept;
+	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>
 	void serialize(Archive& ar, unsigned int /*version*/);
-
-	[[nodiscard]] const char* GetClassNameW() const noexcept override;
 };
 
 template<class Archive>
 void StatisticsChange::serialize(Archive& ar, const unsigned int)
 {
-	ar & boost::serialization::base_object<Command>(*this);
 	ar & _type;
+	ar & _statisticsType;
 	ar & _author;
 	ar & _fraction;
 }
 }//namespace network::commands
-
-BOOST_CLASS_EXPORT_KEY(network::commands::StatisticsChange);

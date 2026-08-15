@@ -36,7 +36,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)ThirdParty\googletest\googletest\include;$(SolutionDir)ThirdParty\googletest\googletest;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)ThirdParty\googletest\googletest\include;$(SolutionDir)ThirdParty\googletest\googletest;$(SolutionDir)ThirdParty\ser20\include;$(SolutionDir)ThirdParty\boost\align\include;$(SolutionDir)ThirdParty\boost\any\include;$(SolutionDir)ThirdParty\boost\asio\include;$(SolutionDir)ThirdParty\boost\assert\include;$(SolutionDir)ThirdParty\boost\bind\include;$(SolutionDir)ThirdParty\boost\config\include;$(SolutionDir)ThirdParty\boost\container_hash\include;$(SolutionDir)ThirdParty\boost\winapi\include;$(SolutionDir)ThirdParty\boost\preprocessor\include;$(SolutionDir)ThirdParty\boost\predef\include;$(SolutionDir)ThirdParty\boost\mp11\include;$(SolutionDir)ThirdParty\boost\tuple\include;$(SolutionDir)ThirdParty\boost\utility\include;$(SolutionDir)ThirdParty\boost\context\include;$(SolutionDir)ThirdParty\boost\core\include;$(SolutionDir)ThirdParty\boost\date_time\include;$(SolutionDir)ThirdParty\boost\integer\include;$(SolutionDir)ThirdParty\boost\iterator\include;$(SolutionDir)ThirdParty\boost\mpl\include;$(SolutionDir)ThirdParty\boost\multi_index\include;$(SolutionDir)ThirdParty\boost\optional\include;$(SolutionDir)ThirdParty\boost\pool\include;$(SolutionDir)ThirdParty\boost\property_tree\include;$(SolutionDir)ThirdParty\boost\range\include;$(SolutionDir)ThirdParty\boost\system\include;$(SolutionDir)ThirdParty\boost\throw_exception\include;$(SolutionDir)ThirdParty\boost\type_index\include;$(SolutionDir)ThirdParty\boost\type_traits\include;$(SolutionDir)ThirdParty\boost\uuid\include;</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\source\application\GameConfig.cpp" />
@@ -50,7 +50,6 @@
     <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusStatus.cpp" />
-    <ClCompile Include="..\source\network\commands\Command.cpp" />
     <ClCompile Include="..\source\network\commands\CommandBatch.cpp" />
     <ClCompile Include="..\source\network\commands\Dispose.cpp" />
     <ClCompile Include="..\source\network\commands\FortressChange.cpp" />
@@ -137,7 +136,8 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>if not exist "$(SolutionDir)ThirdParty\googletest\googletest\src\gtest-all.cc" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/googletest)</Command>
+      <Command>if not exist "$(SolutionDir)ThirdParty\googletest\googletest\src\gtest-all.cc" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/googletest)
+if not exist "$(SolutionDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/boost)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
@@ -219,9 +219,5 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\boost.1.87.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.87.0\build\boost.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets'))" />
   </Target>
-  <Import Project="..\packages\boost.1.87.0\build\boost.targets" Condition="Exists('..\packages\boost.1.87.0\build\boost.targets')" />
-  <Import Project="..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets" Condition="Exists('..\packages\boost_serialization-vc143.1.87.0\build\boost_serialization-vc143.targets')" />
 </Project>

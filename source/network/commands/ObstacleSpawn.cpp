@@ -1,23 +1,15 @@
 #include "network/commands/ObstacleSpawn.h"
 #include "entities/ObjRectangle.h"
 #include "enums/ObstacleType.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-
-BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::ObstacleSpawn)
 
 namespace network::commands
 {
-ObstacleSpawn::ObstacleSpawn()
-	: Command{CommandType::OBSTACLE_SPAWN} {}
-
 ObstacleSpawn::ObstacleSpawn(const ObjRectangle rect, const ObstacleType obstacleType, const buuid uuid)
-	: Command{CommandType::OBSTACLE_SPAWN}
-	, _rect{rect}
+	: _rect{rect}
 	, _obstacleType{obstacleType}
 	, _uuid{uuid} {}
+
+CommandType ObstacleSpawn::GetType() const noexcept { return _type; }
 
 ObjRectangle ObstacleSpawn::GetRect() const noexcept { return _rect; }
 

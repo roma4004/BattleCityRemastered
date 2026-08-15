@@ -22,8 +22,6 @@ set(SDL2_IMG_URL "https://github.com/libsdl-org/SDL_image.git")
 set(SDL2_IMG_TAG "release-2.8.12")
 set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
 set(SDL2_MXR_TAG "release-2.8.2")
-set(BOOST_URL "https://github.com/boostorg/boost.git")
-set(BOOST_VERSION "1.91.0")
 
 # --- Global build/fetch settings ---
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required (e.g. SDL2 itself), unrelated to our own cmake_minimum_required above
@@ -31,10 +29,6 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 set(vendored_default FALSE)
 set(DEP_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/libraries)
 set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
-
-if (DEFINED VCPKG_TARGET_TRIPLET)
-    message(STATUS "Using VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
-endif ()
 
 # --- SDL2 (+ ttf/image/mixer) ---
 set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
@@ -55,101 +49,64 @@ FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MX
 
 FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image SDL2_mixer)
 
-# --- Boost ---
-set(BOOST_INCLUDE_LIBRARIES serialization uuid asio property_tree)
-set(BUILD_TESTING OFF) # keep Boost's own ~172 internal test suites out of our build graph
+# --- Boost --- (per-library git submodules under ThirdParty/boost/*, same set .sln uses)
+set(BUILD_TESTING OFF) # skip each submodule's own test/ subdirectory
 
-set(BOOST_SUBMODULES
-        "tools/cmake
-        tools/build
-        tools/boost_install
-        libs/align
-        libs/array
-        libs/asio
-        libs/assert
-        libs/bind
-        libs/config
-        libs/core
-        libs/date_time
-        libs/detail
-        libs/function
-        libs/headers
-        libs/integer
-        libs/io
-        libs/iterator
-        libs/move
-        libs/mpl
-        libs/numeric
-        libs/optional
-        libs/predef
-        libs/preprocessor
-        libs/serialization
-        libs/smart_ptr
-        libs/spirit
-        libs/static_assert
-        libs/system
-        libs/throw_exception
-        libs/type_traits
-        libs/utility
-        libs/winapi
-        libs/uuid
-        libs/property_tree
-        libs/any
-        libs/type_index
-        libs/container_hash
-        libs/multi_index
-        libs/tuple
-        libs/describe
-        libs/mp11
-        libs/unordered
-        libs/variant
-        libs/range
-        libs/algorithm
-        libs/compat
-        libs/concept_check
-        libs/context
-        libs/conversion
-        libs/endian
-        libs/exception
-        libs/function_types
-        libs/fusion
-        libs/lexical_cast
-        libs/pool
-        libs/regex
-        libs/variant2
-        libs/container
-        libs/phoenix
-        libs/tokenizer
-        libs/typeof
-        libs/functional
-        libs/intrusive
-        libs/proto
-        libs/thread
-        libs/atomic
-        libs/chrono
-        libs/ratio"
-)
+# property_tree hard-requires a Boost::serialization target structurally (unused by our code, ser20
+# replaced it) - stub instead of building the real library.
+add_library(boost_serialization_stub INTERFACE)
+add_library(Boost::serialization ALIAS boost_serialization_stub)
 
-FetchContent_Declare(Boost
-        GIT_REPOSITORY ${BOOST_URL}
-        GIT_TAG        "boost-${BOOST_VERSION}"
-        GIT_PROGRESS   1
-        GIT_SHALLOW    TRUE
-        GIT_SUBMODULES ${BOOST_SUBMODULES}
-)
-FetchContent_MakeAvailable(Boost)
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/ThirdParty/boost/uuid/CMakeLists.txt")
+    find_package(Git QUIET)
+    if(NOT Git_FOUND)
+        message(FATAL_ERROR "ThirdParty/boost submodules are not initialized and git was not found. Run: git submodule update --init --recursive")
+    endif()
+    message(STATUS "ThirdParty/boost submodules are not initialized, fetching them now...")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ThirdParty/boost
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            RESULT_VARIABLE BOOST_SUBMODULE_RESULT
+    )
+    if(NOT BOOST_SUBMODULE_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to fetch ThirdParty/boost submodules. Run manually: git submodule update --init --recursive")
+    endif()
+endif()
 
-# --- googletest ---
-FetchContent_Declare(googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG        release-1.11.0
-        GIT_PROGRESS   1
-        GIT_SHALLOW    TRUE
-)
+set(BOOST_LIBS
+        algorithm align any array asio assert bind compat concept_check config container container_hash
+        conversion core describe detail exception function function_types fusion integer intrusive io
+        iterator lexical_cast move mp11 mpl multi_index numeric_conversion optional pool predef
+        preprocessor property_tree range regex smart_ptr system throw_exception tokenizer tuple
+        type_index type_traits typeof unordered utility uuid variant2 winapi)
+foreach(lib ${BOOST_LIBS})
+    add_subdirectory(ThirdParty/boost/${lib})
+endforeach()
+
+# --- ser20 (replaces Boost.Serialization, C++20 fork of cereal) ---
+add_subdirectory(ThirdParty/ser20)
+
+# --- googletest (shared submodule with .sln/UnitTests.vcxproj) ---
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/ThirdParty/googletest/CMakeLists.txt")
+    find_package(Git QUIET)
+    if(Git_FOUND)
+        message(STATUS "ThirdParty/googletest submodule is not initialized, fetching it now...")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ThirdParty/googletest
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                RESULT_VARIABLE GTEST_SUBMODULE_RESULT
+        )
+        if(NOT GTEST_SUBMODULE_RESULT EQUAL 0)
+            message(FATAL_ERROR "Failed to fetch ThirdParty/googletest submodule. Run manually: git submodule update --init --recursive")
+        endif()
+    else()
+        message(FATAL_ERROR "ThirdParty/googletest submodule is not initialized and git was not found. Run: git submodule update --init --recursive")
+    endif()
+endif()
 
 set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
-FetchContent_MakeAvailable(googletest)
+add_subdirectory(ThirdParty/googletest)
 enable_testing()
 
 # --- Source files ---
@@ -226,7 +183,6 @@ set(SOURCE_FILES
         source/network/commands/TankSpawnComplete.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
-        source/network/commands/Command.cpp
         source/network/commands/CommandBatch.cpp
         source/network/commands/Dispose.cpp
         source/network/commands/FortressChange.cpp
@@ -302,7 +258,6 @@ set(SOURCE_FILES_FOR_UNIT_TESTS
         source/network/commands/TankSpawnComplete.cpp
         source/network/commands/BonusDeSpawn.cpp
         source/network/commands/BonusSpawn.cpp
-        source/network/commands/Command.cpp
         source/network/commands/CommandBatch.cpp
         source/network/commands/Dispose.cpp
         source/network/commands/FortressChange.cpp
@@ -351,7 +306,7 @@ target_include_directories(unit_tests PRIVATE headers)
 target_link_libraries(unit_tests
         gtest
         gtest_main
-        Boost::serialization Boost::uuid Boost::asio Boost::property_tree
+        ser20::ser20 Boost::uuid Boost::asio_core Boost::property_tree
         ${PLATFORM_NETWORK_LIBS}
 )
 
@@ -361,7 +316,7 @@ gtest_discover_tests(unit_tests)
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(${PROJECT_NAME}
         SDL2-static SDL2main SDL2_ttf SDL2_image SDL2_mixer
-        Boost::serialization Boost::uuid Boost::asio Boost::property_tree
+        ser20::ser20 Boost::uuid Boost::asio_core Boost::property_tree
         ${PLATFORM_NETWORK_LIBS}
 )
 

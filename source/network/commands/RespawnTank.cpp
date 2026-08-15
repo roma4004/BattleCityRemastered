@@ -1,21 +1,13 @@
 #include "network/commands/RespawnTank.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-
-BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::RespawnTank)
 
 namespace network::commands
 {
-RespawnTank::RespawnTank()
-	: Command{CommandType::RESPAWN_TANK} {}
-
 RespawnTank::RespawnTank(const TankType tankType, const buuid uuid, const ObjRectangle rect)
-	: Command{CommandType::RESPAWN_TANK}
-	, _tankType{tankType}
+	: _tankType{tankType}
 	, _uuid{uuid}
 	, _rect{rect} {}
+
+CommandType RespawnTank::GetType() const noexcept { return _type; }
 
 using buuid = boost::uuids::uuid;
 buuid RespawnTank::GetUuid() const noexcept { return _uuid; }

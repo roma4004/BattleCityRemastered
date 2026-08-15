@@ -1,7 +1,6 @@
 #pragma once
 
 #include "NetworkCommandQueue.h"
-#include "commands/Command.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <boost/asio.hpp>
@@ -67,16 +66,15 @@ public:
 	void Shutdown();
 
 private:
-	using CommandHandler = std::function<void(const std::shared_ptr<Command>&)>;
+	using CommandHandler = std::function<void(const AnyCommand&)>;
 
 	void DoRead();
 
 	void ProcessReceivedData(const std::string& archiveData);
-	void ProcessServerCommand(const std::shared_ptr<Command>& command);
+	void ProcessServerCommand(const AnyCommand& command);
 	void RegisterCommandHandlers();
-	void OnCommandBatch(const std::shared_ptr<Command>& commands);
-	void OnSignalEvent(const std::shared_ptr<Command>& command);
-	void OnKeyStateChange(const std::shared_ptr<Command>& command);
+	void OnSignalEvent(const AnyCommand& command);
+	void OnKeyStateChange(const AnyCommand& command);
 
 	tcp::socket _socket;
 	boost::asio::streambuf _readBuffer{};
@@ -116,7 +114,7 @@ private:
 	void StartSendThread();
 	void StopSendThread();
 
-	void SendCommand(const std::shared_ptr<Command>& command);
+	void SendCommand(const CommandBatch& command);
 
 	void Subscribe();
 	void SubscribeStatistics();
@@ -163,9 +161,9 @@ private:
 	std::vector<std::shared_ptr<Session>> _sessions;
 
 	std::mutex _batchWriteMutex;
-	std::shared_ptr<CommandBatch> _batch{nullptr};
+	CommandBatch _batch{};
 
-	std::queue<std::shared_ptr<CommandBatch>> _sendQueue;
+	std::queue<CommandBatch> _sendQueue;
 	std::mutex _sendQueueMutex;
 	std::condition_variable _sendCondition;
 	std::thread _sendThread;

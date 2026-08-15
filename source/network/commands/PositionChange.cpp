@@ -1,22 +1,14 @@
 #include "network/commands/PositionChange.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-
-BOOST_CLASS_EXPORT_IMPLEMENT(network::commands::PositionChange)
 
 namespace network::commands
 {
-PositionChange::PositionChange()
-	: Command{CommandType::POSITION_CHANGE} {}
-
 PositionChange::PositionChange(std::string who, const FPoint pos, const Direction dir, const buuid uuid)
-	: Command{CommandType::POSITION_CHANGE}
-	, _who{std::move(who)}
+	: _who{std::move(who)}
 	, _pos{pos}
 	, _dir{dir}
 	, _uuid{uuid} {}
+
+CommandType PositionChange::GetType() const noexcept { return _type; }
 
 std::string PositionChange::GetWho() const noexcept { return _who; }
 

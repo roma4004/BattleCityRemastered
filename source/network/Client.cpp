@@ -12,27 +12,10 @@
 #include "enums/CommandType.h"
 #include "enums/StatisticsType.h"
 #include "enums/TankType.h"
-#include "network/commands/BonusDeSpawn.h"
-#include "network/commands/BonusSpawn.h"
-#include "network/commands/Command.h"
 #include "network/commands/CommandBatch.h"
-#include "network/commands/Dispose.h"
-#include "network/commands/FortressChange.h"
-#include "network/commands/HealthChange.h"
-#include "network/commands/KeyStateChange.h"
-#include "network/commands/ObstacleSpawn.h"
-#include "network/commands/PositionChange.h"
-#include "network/commands/RespawnTank.h"
-#include "network/commands/StatisticsChange.h"
-#include "network/commands/TankShot.h"
 #include "utils/NetworkLogger.h"
 // #include <fstream>
-#include "network/commands/BonusStatus.h"
-#include "network/commands/GameStateChange.h"
-#include "network/commands/SignalEvent.h"
-#include "network/commands/TankSpawnComplete.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <ser20/archives/portable_binary.hpp>
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -46,7 +29,6 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t po
 	, _reconnectTimer(ioContext)
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
 	, _events{events}
-	, _batch{std::make_shared<CommandBatch>()}
 {
 	Subscribe();
 	RegisterCommandHandlers();
@@ -57,23 +39,21 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t po
 void Client::RegisterCommandHandlers()
 {
 	_commandHandlers = {
-			{CommandType::COMMAND_BATCH, [this](const std::shared_ptr<Command>& cmd) { OnCommandBatch(cmd); }},
-			{CommandType::POSITION_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnPositionChange(cmd); }},
+			{CommandType::POSITION_CHANGE, [this](const AnyCommand& cmd) { OnPositionChange(cmd); }},
 			//TODO: refactored tankShot event to bullet pool spawn with bulletId
-			{CommandType::TANK_SHOT, [this](const std::shared_ptr<Command>& cmd) { OnTankShot(cmd); }},
-			{CommandType::HEALTH_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnHealthChange(cmd); }},
-			{CommandType::DISPOSE, [this](const std::shared_ptr<Command>& cmd) { OnDispose(cmd); }},
-			{CommandType::STATISTICS_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnStatisticsChange(cmd); }},
-			{CommandType::KEY_STATE_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnKeyStateChange(cmd); }},
-			{CommandType::GAME_STATE_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnGameStateChange(cmd); }},
-			{CommandType::FORTRESS_CHANGE, [this](const std::shared_ptr<Command>& cmd) { OnFortressChange(cmd); }},
-			{CommandType::BONUS_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnBonusSpawn(cmd); }},
-			{CommandType::BONUS_DESPAWN, [this](const std::shared_ptr<Command>& cmd) { OnBonusDeSpawn(cmd); }},
-			{CommandType::RESPAWN_TANK, [this](const std::shared_ptr<Command>& cmd) { OnRespawnTank(cmd); }},
-			{CommandType::OBSTACLE_SPAWN, [this](const std::shared_ptr<Command>& cmd) { OnObstacleSpawn(cmd); }},
-			{CommandType::TANK_SPAWN_COMPLETE,
-			 [this](const std::shared_ptr<Command>& cmd) { OnTankSpawnComplete(cmd); }},
-			{CommandType::BONUS_STATUS, [this](const std::shared_ptr<Command>& cmd) { OnBonusStatus(cmd); }},
+			{CommandType::TANK_SHOT, [this](const AnyCommand& cmd) { OnTankShot(cmd); }},
+			{CommandType::HEALTH_CHANGE, [this](const AnyCommand& cmd) { OnHealthChange(cmd); }},
+			{CommandType::DISPOSE, [this](const AnyCommand& cmd) { OnDispose(cmd); }},
+			{CommandType::STATISTICS_CHANGE, [this](const AnyCommand& cmd) { OnStatisticsChange(cmd); }},
+			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
+			{CommandType::GAME_STATE_CHANGE, [this](const AnyCommand& cmd) { OnGameStateChange(cmd); }},
+			{CommandType::FORTRESS_CHANGE, [this](const AnyCommand& cmd) { OnFortressChange(cmd); }},
+			{CommandType::BONUS_SPAWN, [this](const AnyCommand& cmd) { OnBonusSpawn(cmd); }},
+			{CommandType::BONUS_DESPAWN, [this](const AnyCommand& cmd) { OnBonusDeSpawn(cmd); }},
+			{CommandType::RESPAWN_TANK, [this](const AnyCommand& cmd) { OnRespawnTank(cmd); }},
+			{CommandType::OBSTACLE_SPAWN, [this](const AnyCommand& cmd) { OnObstacleSpawn(cmd); }},
+			{CommandType::TANK_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnTankSpawnComplete(cmd); }},
+			{CommandType::BONUS_STATUS, [this](const AnyCommand& cmd) { OnBonusStatus(cmd); }},
 	};
 }
 
@@ -97,7 +77,7 @@ void Client::TryConnect()
 			this->ReadResponse();
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				this->_batch->AddCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
+				this->_batch.AddCommand(SignalEvent{"ClientOut_ReadyToPlay"});
 			}
 		}
 		else
@@ -182,13 +162,13 @@ void Client::Subscribe()
 
 void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 {
-	auto batch{std::make_shared<CommandBatch>()};
+	CommandBatch batch;
 	{
 		std::scoped_lock lock(_batchWriteMutex);
 		std::swap(batch, _batch);
 	}
 
-	if (batch && !batch->IsEmpty())
+	if (!batch.IsEmpty())
 	{
 		SendCommand(batch);
 	}
@@ -203,13 +183,13 @@ void Client::OnFire(const FireEvent& event) { SendKeyState("P2_Fire", event.isPr
 void Client::OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<SignalEvent>("ClientOut_ReadyToPlay"));
+	_batch.AddCommand(SignalEvent{"ClientOut_ReadyToPlay"});
 }
 
 void Client::OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<KeyStateChange>("Pause_Released", event.isPaused));
+	_batch.AddCommand(KeyStateChange{"Pause_Released", event.isPaused});
 }
 
 void Client::ReadResponse()
@@ -251,302 +231,257 @@ void Client::SendKeyState(const std::string& key, const bool state)
 {
 	// NetworkLogger::LogClientOut(state);
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch->AddCommand(std::make_shared<KeyStateChange>(key, state));
+	_batch.AddCommand(KeyStateChange{key, state});
 }
 
-void Client::OnPositionChange(const std::shared_ptr<Command>& command)
+void Client::OnPositionChange(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<PositionChange*>(command.get()))
-	{
-		const auto pos = cmd->GetPos();
-		const auto dir = cmd->GetDir();
-		const auto uuid = cmd->GetUuid();
+	const auto& cmd = std::get<PositionChange>(command);
+	const auto pos = cmd.GetPos();
+	const auto dir = cmd.GetDir();
+	const auto uuid = cmd.GetUuid();
 
-		_commandQueue.Enqueue([this, pos, dir, uuid]()
-		{
-			_events->EmitEvent(Key(uuid), ClientInPosEvent{.pos = pos, .dir = dir});
-		});
-	}
+	_commandQueue.Enqueue([this, pos, dir, uuid]()
+	{
+		_events->EmitEvent(Key(uuid), ClientInPosEvent{.pos = pos, .dir = dir});
+	});
 }
 
-void Client::OnTankShot(const std::shared_ptr<Command>& command)
+void Client::OnTankShot(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<TankShot*>(command.get()))
-	{
-		const auto who = cmd->GetWho();
-		const auto dir = cmd->GetDir();
-		const auto uuid = cmd->GetUuid();
+	const auto& cmd = std::get<TankShot>(command);
+	const auto who = cmd.GetWho();
+	const auto dir = cmd.GetDir();
+	const auto uuid = cmd.GetUuid();
 
-		_commandQueue.Enqueue([this, who, dir, uuid]()
-		{
-			_events->EmitEvent(Key(who), ClientInShotEvent{.dir = dir, .bulletUuid = uuid});
-		});
-	}
+	_commandQueue.Enqueue([this, who, dir, uuid]()
+	{
+		_events->EmitEvent(Key(who), ClientInShotEvent{.dir = dir, .bulletUuid = uuid});
+	});
 }
 
-void Client::OnHealthChange(const std::shared_ptr<Command>& command)
+void Client::OnHealthChange(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<HealthChange*>(command.get()))
-	{
-		const auto uuid = cmd->GetUuid();
-		const auto health = cmd->GetHealth();
+	const auto& cmd = std::get<HealthChange>(command);
+	const auto uuid = cmd.GetUuid();
+	const auto health = cmd.GetHealth();
 
-		_commandQueue.Enqueue([this, uuid, health]()
-		{
-			_events->EmitEvent(Key(uuid), ClientInHealthEvent{.health = health});
-		});
-	}
+	_commandQueue.Enqueue([this, uuid, health]()
+	{
+		_events->EmitEvent(Key(uuid), ClientInHealthEvent{.health = health});
+	});
 }
 
-void Client::OnDispose(const std::shared_ptr<Command>& command)
+void Client::OnDispose(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<Dispose*>(command.get()))
-	{
-		const auto uuid = cmd->GetUuid();
+	const auto& cmd = std::get<Dispose>(command);
+	const auto uuid = cmd.GetUuid();
 
-		_commandQueue.Enqueue([this, uuid]()
-		{
-			_events->EmitEvent(Key(uuid), ClientInDisposeEvent{});
-		});
-	}
+	_commandQueue.Enqueue([this, uuid]()
+	{
+		_events->EmitEvent(Key(uuid), ClientInDisposeEvent{});
+	});
 }
 
-void Client::OnStatisticsChange(const std::shared_ptr<Command>& command)
+void Client::OnStatisticsChange(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<StatisticsChange*>(command.get()))
+	const auto& cmd = std::get<StatisticsChange>(command);
+	const auto type = cmd.GetStatisticsType();
+	const auto author = cmd.GetAuthor();
+	const auto fraction = cmd.GetFraction();
+
+	_commandQueue.Enqueue([this, type, author, fraction]()
 	{
-		const auto type = cmd->GetType();
-		const auto author = cmd->GetAuthor();
-		const auto fraction = cmd->GetFraction();
-
-		_commandQueue.Enqueue([this, type, author, fraction]()
+		switch (type)
 		{
-			switch (type)
-			{
-				case StatisticsType::BulletHit:
-					_events->EmitEvent(ClientInBulletHitEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::EnemyHit:
-					_events->EmitEvent(ClientInEnemyHitEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::PlayerOneHit:
-					_events->EmitEvent(ClientInPlayerOneHitEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::PlayerTwoHit:
-					_events->EmitEvent(ClientInPlayerTwoHitEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::EnemyDied:
-					_events->EmitEvent(ClientInEnemyDiedEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::PlayerOneDied:
-					_events->EmitEvent(ClientInPlayerOneDiedEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::PlayerTwoDied:
-					_events->EmitEvent(ClientInPlayerTwoDiedEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::BrickWallDied:
-					_events->EmitEvent(ClientInBrickWallDiedEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::SteelWallDied:
-					_events->EmitEvent(ClientInSteelWallDiedEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::BonusPickup:
-					_events->EmitEvent(ClientInBonusPickupEvent{.author = author, .fraction = fraction});
-					break;
-				case StatisticsType::BonusDestroyed:
-					_events->EmitEvent(ClientInBonusDestroyedEvent{.author = author, .fraction = fraction});
-					break;
-			}
-		});
-	}
-}
-
-void Client::OnKeyStateChange(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<KeyStateChange*>(command.get()))
-	{
-		const auto keyState = cmd->GetKeyState();
-		const auto isEnable = cmd->GetIsEnable();
-
-		_commandQueue.Enqueue([this, keyState, isEnable]()
-		{
-			if (keyState == "Pause_Status")
-			{
-				this->_events->EmitEvent(PauseStatusEvent{.isPaused = isEnable});
-			}
-			else
-			{
-				NetworkLogger::WriteLog("Client::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
-			}
-		});
-	}
-}
-
-void Client::OnGameStateChange(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<GameStateChange*>(command.get()))
-	{
-		const auto gameState = cmd->GetGameState();
-
-		_commandQueue.Enqueue([this, gameState]()
-		{
-			if (gameState == "PlayersTeamIsWon")
-			{
-				this->_events->EmitEvent(PlayersTeamIsWonEvent{});
-			}
-			else if (gameState == "EnemiesTeamIsWon")
-			{
-				this->_events->EmitEvent(EnemiesTeamIsWonEvent{});
-			}
-			else
-			{
-				NetworkLogger::WriteLog("Client::OnGameStateChange: unrecognized game state \"" + gameState + "\"");
-			}
-		});
-	}
-}
-
-void Client::OnFortressChange(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<FortressChange*>(command.get()))
-	{
-		const std::string state = cmd->GetState();
-		const auto uuid = cmd->GetUuid();
-
-		_commandQueue.Enqueue([this, state, uuid]()
-		{
-			_events->EmitEvent(Key(uuid), ClientInFortressChangeEvent{.state = state});
-		});
-	}
-}
-
-void Client::OnBonusSpawn(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<BonusSpawn*>(command.get()))
-	{
-		const auto pos = cmd->GetPos();
-		const auto bonusType = cmd->GetBonusType();
-		const auto uuid = cmd->GetUuid();
-
-		_commandQueue.Enqueue([this, pos, bonusType, uuid]()
-		{
-			_events->EmitEvent(ClientInBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
-		});
-	}
-}
-
-void Client::OnBonusDeSpawn(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<BonusDeSpawn*>(command.get()))
-	{
-		const auto uuid = cmd->GetUuid();
-
-		_commandQueue.Enqueue([this, uuid]()
-		{
-			_events->EmitEvent(ClientInBonusDeSpawnEvent{.uuid = uuid});
-		});
-	}
-}
-
-void Client::OnRespawnTank(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<RespawnTank*>(command.get()))
-	{
-		const auto tankType = cmd->GetTankType();
-		const auto uuid = cmd->GetUuid();
-		const auto rect = cmd->GetRect();
-
-		_commandQueue.Enqueue([this, tankType, uuid, rect]()
-		{
-			_events->EmitEvent(ClientInRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
-		});
-	}
-}
-
-void Client::OnObstacleSpawn(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<ObstacleSpawn*>(command.get()))
-	{
-		const auto rect = cmd->GetRect();
-		const auto obstacleType = cmd->GetObstacleType();
-		const auto uuid = cmd->GetUuid();
-
-		_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
-		{
-			_events->EmitEvent(ClientInObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
-		});
-	}
-}
-
-void Client::OnTankSpawnComplete(const std::shared_ptr<Command>& command)
-{
-	if (const auto* cmd = dynamic_cast<TankSpawnComplete*>(command.get()))
-	{
-		const auto uuid = cmd->GetUuid();
-
-		_commandQueue.Enqueue([this, uuid]()
-		{
-			_events->EmitEvent(ClientInTankSpawnCompleteEvent{.uuid = uuid});
-		});
-	}
-}
-
-void Client::OnCommandBatch(const std::shared_ptr<Command>& commands)
-{
-	if (const auto* cmd = dynamic_cast<CommandBatch*>(commands.get()))
-	{
-		for (const auto& command: cmd->GetCommands())
-		{
-			ProcessClientCommand(command);
+			case StatisticsType::BulletHit:
+				_events->EmitEvent(ClientInBulletHitEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::EnemyHit:
+				_events->EmitEvent(ClientInEnemyHitEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::PlayerOneHit:
+				_events->EmitEvent(ClientInPlayerOneHitEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::PlayerTwoHit:
+				_events->EmitEvent(ClientInPlayerTwoHitEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::EnemyDied:
+				_events->EmitEvent(ClientInEnemyDiedEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::PlayerOneDied:
+				_events->EmitEvent(ClientInPlayerOneDiedEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::PlayerTwoDied:
+				_events->EmitEvent(ClientInPlayerTwoDiedEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::BrickWallDied:
+				_events->EmitEvent(ClientInBrickWallDiedEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::SteelWallDied:
+				_events->EmitEvent(ClientInSteelWallDiedEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::BonusPickup:
+				_events->EmitEvent(ClientInBonusPickupEvent{.author = author, .fraction = fraction});
+				break;
+			case StatisticsType::BonusDestroyed:
+				_events->EmitEvent(ClientInBonusDestroyedEvent{.author = author, .fraction = fraction});
+				break;
 		}
-	}
+	});
 }
 
-void Client::OnBonusStatus(const std::shared_ptr<Command>& command)
+void Client::OnKeyStateChange(const AnyCommand& command)
 {
-	if (const auto* cmd = dynamic_cast<BonusStatus*>(command.get()))
-	{
-		const auto bonusType = cmd->GetBonusType();
-		const auto name = cmd->GetName();
-		const auto isEnable = cmd->GetIsEnable();
+	const auto& cmd = std::get<KeyStateChange>(command);
+	const auto keyState = cmd.GetKeyState();
+	const auto isEnable = cmd.GetIsEnable();
 
-		_commandQueue.Enqueue([this, bonusType, name, isEnable]()
+	_commandQueue.Enqueue([this, keyState, isEnable]()
+	{
+		if (keyState == "Pause_Status")
 		{
-			switch (bonusType)
-			{
-				case BonusType::Helmet:
-					_events->EmitEvent(Key(name), ClientInBonusHelmetPickupEvent{.isEnable = isEnable});
-					break;
-				case BonusType::Star:
-					_events->EmitEvent(Key(name), ClientInBonusStarPickupEvent{});
-					break;
-				case BonusType::Caliber:
-					_events->EmitEvent(Key(name), ClientInBonusCaliberPickupEvent{});
-					break;
-				case BonusType::Tank:
-					_events->EmitEvent(ClientInBonusTankPickupEvent{.name = name});
-					break;
-				default:
-					//NOTE: Server only ever constructs BonusStatus with Helmet/Star/Caliber/Tank
-					//(see Server.cpp), so reaching here means a new BonusType wasn't wired up above
-					assert(false && "Client::OnBonusStatus: unhandled BonusType");
-					break;
-			}
-		});
-	}
+			this->_events->EmitEvent(PauseStatusEvent{.isPaused = isEnable});
+		}
+		else
+		{
+			NetworkLogger::WriteLog("Client::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
+		}
+	});
 }
 
-void Client::ProcessClientCommand(const std::shared_ptr<Command>& command)
+void Client::OnGameStateChange(const AnyCommand& command)
 {
-	if (!command)
-	{
-		return;
-	}
+	const auto& cmd = std::get<GameStateChange>(command);
+	const auto gameState = cmd.GetGameState();
 
-	// auto classNameW = std::string(command->GetClassNameW());
-	// auto commandName = std::string("client receive:" + classNameW);
+	_commandQueue.Enqueue([this, gameState]()
+	{
+		if (gameState == "PlayersTeamIsWon")
+		{
+			this->_events->EmitEvent(PlayersTeamIsWonEvent{});
+		}
+		else if (gameState == "EnemiesTeamIsWon")
+		{
+			this->_events->EmitEvent(EnemiesTeamIsWonEvent{});
+		}
+		else
+		{
+			NetworkLogger::WriteLog("Client::OnGameStateChange: unrecognized game state \"" + gameState + "\"");
+		}
+	});
+}
+
+void Client::OnFortressChange(const AnyCommand& command)
+{
+	const auto& cmd = std::get<FortressChange>(command);
+	const std::string state = cmd.GetState();
+	const auto uuid = cmd.GetUuid();
+
+	_commandQueue.Enqueue([this, state, uuid]()
+	{
+		_events->EmitEvent(Key(uuid), ClientInFortressChangeEvent{.state = state});
+	});
+}
+
+void Client::OnBonusSpawn(const AnyCommand& command)
+{
+	const auto& cmd = std::get<BonusSpawn>(command);
+	const auto pos = cmd.GetPos();
+	const auto bonusType = cmd.GetBonusType();
+	const auto uuid = cmd.GetUuid();
+
+	_commandQueue.Enqueue([this, pos, bonusType, uuid]()
+	{
+		_events->EmitEvent(ClientInBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
+	});
+}
+
+void Client::OnBonusDeSpawn(const AnyCommand& command)
+{
+	const auto& cmd = std::get<BonusDeSpawn>(command);
+	const auto uuid = cmd.GetUuid();
+
+	_commandQueue.Enqueue([this, uuid]()
+	{
+		_events->EmitEvent(ClientInBonusDeSpawnEvent{.uuid = uuid});
+	});
+}
+
+void Client::OnRespawnTank(const AnyCommand& command)
+{
+	const auto& cmd = std::get<RespawnTank>(command);
+	const auto tankType = cmd.GetTankType();
+	const auto uuid = cmd.GetUuid();
+	const auto rect = cmd.GetRect();
+
+	_commandQueue.Enqueue([this, tankType, uuid, rect]()
+	{
+		_events->EmitEvent(ClientInRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
+	});
+}
+
+void Client::OnObstacleSpawn(const AnyCommand& command)
+{
+	const auto& cmd = std::get<ObstacleSpawn>(command);
+	const auto rect = cmd.GetRect();
+	const auto obstacleType = cmd.GetObstacleType();
+	const auto uuid = cmd.GetUuid();
+
+	_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
+	{
+		_events->EmitEvent(ClientInObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
+	});
+}
+
+void Client::OnTankSpawnComplete(const AnyCommand& command)
+{
+	const auto& cmd = std::get<TankSpawnComplete>(command);
+	const auto uuid = cmd.GetUuid();
+
+	_commandQueue.Enqueue([this, uuid]()
+	{
+		_events->EmitEvent(ClientInTankSpawnCompleteEvent{.uuid = uuid});
+	});
+}
+
+void Client::OnBonusStatus(const AnyCommand& command)
+{
+	const auto& cmd = std::get<BonusStatus>(command);
+	const auto bonusType = cmd.GetBonusType();
+	const auto name = cmd.GetName();
+	const auto isEnable = cmd.GetIsEnable();
+
+	_commandQueue.Enqueue([this, bonusType, name, isEnable]()
+	{
+		switch (bonusType)
+		{
+			case BonusType::Helmet:
+				_events->EmitEvent(Key(name), ClientInBonusHelmetPickupEvent{.isEnable = isEnable});
+				break;
+			case BonusType::Star:
+				_events->EmitEvent(Key(name), ClientInBonusStarPickupEvent{});
+				break;
+			case BonusType::Caliber:
+				_events->EmitEvent(Key(name), ClientInBonusCaliberPickupEvent{});
+				break;
+			case BonusType::Tank:
+				_events->EmitEvent(ClientInBonusTankPickupEvent{.name = name});
+				break;
+			default:
+				//NOTE: Server only ever constructs BonusStatus with Helmet/Star/Caliber/Tank
+				//(see Server.cpp), so reaching here means a new BonusType wasn't wired up above
+				assert(false && "Client::OnBonusStatus: unhandled BonusType");
+				break;
+		}
+	});
+}
+
+void Client::ProcessClientCommand(const AnyCommand& command)
+{
+	// auto commandName = std::string("client receive:") + GetClassNameW(command);
 	// NetworkLogger::LogClientIn(commandName);
-	if (const auto it = _commandHandlers.find(command->GetType()); it != _commandHandlers.end())
+	if (const auto it = _commandHandlers.find(GetCommandType(command)); it != _commandHandlers.end())
 	{
 		it->second(command);
 	}
@@ -557,13 +492,16 @@ void Client::ProcessReceivedData(const std::string& archiveData)
 	try
 	{
 		std::istringstream archiveStream(archiveData);
-		boost::archive::text_iarchive ia(archiveStream);
+		ser20::PortableBinaryInputArchive ia(archiveStream);
 
-		std::shared_ptr<Command> command;
-		ia >> command;
+		CommandBatch batch;
+		ia(batch);
 
 		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
-		ProcessClientCommand(command);
+		for (const auto& command: batch.GetCommands())
+		{
+			ProcessClientCommand(command);
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -584,7 +522,7 @@ void Client::ProcessReceivedData(const std::string& archiveData)
 	}
 }
 
-void Client::SendCommand(const std::shared_ptr<Command>& command)
+void Client::SendCommand(const CommandBatch& command)
 {
 	if (!_isConnected)
 	{
@@ -595,8 +533,10 @@ void Client::SendCommand(const std::shared_ptr<Command>& command)
 	}
 
 	std::ostringstream archiveStream;
-	boost::archive::text_oarchive oa(archiveStream);
-	oa << command;
+	{
+		ser20::PortableBinaryOutputArchive oa(archiveStream);
+		oa(command);
+	}
 
 	{
 		std::ostream os(&_writeBuffer);
