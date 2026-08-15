@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15) #NOTE: cmake v3.15+ required by boost from 1.87
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -Wextra -Wpedantic -Weverything -Wconversion -Wnrvo -g") #-fvisibility=hidden
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wcast-align -Wunused -Woverloaded-virtual -Wnon-virtual-dtor -Wnull-dereference -Wdouble-promotion -Wformat=2 -Wuseless-cast -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wnrvo") #NOTE: GCC has no single -Weverything switch (Clang-only); this is the closest curated "maximal warnings" set #-fvisibility=hidden
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
 
 project(BattleCity_remastered)
@@ -12,102 +12,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-# --- Dependency versions ---
-include(FetchContent)
-set(SDL2_URL "https://github.com/libsdl-org/SDL.git")
-set(SDL2_TAG "release-2.32.10")
-set(SDL2_TTF_URL "https://github.com/libsdl-org/SDL_ttf.git")
-set(SDL2_TTF_TAG "release-2.24.0")
-set(SDL2_IMG_URL "https://github.com/libsdl-org/SDL_image.git")
-set(SDL2_IMG_TAG "release-2.8.12")
-set(SDL2_MXR_URL "https://github.com/libsdl-org/SDL_mixer.git")
-set(SDL2_MXR_TAG "release-2.8.2")
-
-# --- Global build/fetch settings ---
+# --- Global build settings ---
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required (e.g. SDL2 itself), unrelated to our own cmake_minimum_required above
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-set(vendored_default FALSE)
-set(DEP_DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/libraries)
-set(FETCHCONTENT_BASE_DIR ${DEP_DOWNLOAD_DIR})
 
-# --- SDL2 (+ ttf/image/mixer) ---
-set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
-
-set(SDL2MIXER_MIDI    OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MP3     OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_FLAC    OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MOD     OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OGG     OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OPUS    OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_VORBIS  OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(SDL2       GIT_REPOSITORY ${SDL2_URL}     GIT_TAG ${SDL2_TAG}     GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-FetchContent_Declare(SDL2_ttf   GIT_REPOSITORY ${SDL2_TTF_URL} GIT_TAG ${SDL2_TTF_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-FetchContent_Declare(SDL2_image GIT_REPOSITORY ${SDL2_IMG_URL} GIT_TAG ${SDL2_IMG_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-FetchContent_Declare(SDL2_mixer GIT_REPOSITORY ${SDL2_MXR_URL} GIT_TAG ${SDL2_MXR_TAG} GIT_SUBMODULES_RECURSE ON GIT_PROGRESS 1 GIT_SHALLOW TRUE)
-
-FetchContent_MakeAvailable(SDL2 SDL2_ttf SDL2_image SDL2_mixer)
-
-# --- Boost --- (per-library git submodules under ThirdParty/boost/*, same set .sln uses)
-set(BUILD_TESTING OFF) # skip each submodule's own test/ subdirectory
-
-# property_tree hard-requires a Boost::serialization target structurally (unused by our code, ser20
-# replaced it) - stub instead of building the real library.
-add_library(boost_serialization_stub INTERFACE)
-add_library(Boost::serialization ALIAS boost_serialization_stub)
-
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/ThirdParty/boost/uuid/CMakeLists.txt")
-    find_package(Git QUIET)
-    if(NOT Git_FOUND)
-        message(FATAL_ERROR "ThirdParty/boost submodules are not initialized and git was not found. Run: git submodule update --init --recursive")
-    endif()
-    message(STATUS "ThirdParty/boost submodules are not initialized, fetching them now...")
-    execute_process(
-            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ThirdParty/boost
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            RESULT_VARIABLE BOOST_SUBMODULE_RESULT
-    )
-    if(NOT BOOST_SUBMODULE_RESULT EQUAL 0)
-        message(FATAL_ERROR "Failed to fetch ThirdParty/boost submodules. Run manually: git submodule update --init --recursive")
-    endif()
-endif()
-
-set(BOOST_LIBS
-        algorithm align any array asio assert bind compat concept_check config container container_hash
-        conversion core describe detail exception function function_types fusion integer intrusive io
-        iterator lexical_cast move mp11 mpl multi_index numeric_conversion optional pool predef
-        preprocessor property_tree range regex smart_ptr system throw_exception tokenizer tuple
-        type_index type_traits typeof unordered utility uuid variant2 winapi)
-foreach(lib ${BOOST_LIBS})
-    add_subdirectory(ThirdParty/boost/${lib})
-endforeach()
-
-# --- ser20 (replaces Boost.Serialization, C++20 fork of cereal) ---
-add_subdirectory(ThirdParty/ser20)
-
-# --- googletest (shared submodule with .sln/UnitTests.vcxproj) ---
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/ThirdParty/googletest/CMakeLists.txt")
-    find_package(Git QUIET)
-    if(Git_FOUND)
-        message(STATUS "ThirdParty/googletest submodule is not initialized, fetching it now...")
-        execute_process(
-                COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ThirdParty/googletest
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                RESULT_VARIABLE GTEST_SUBMODULE_RESULT
-        )
-        if(NOT GTEST_SUBMODULE_RESULT EQUAL 0)
-            message(FATAL_ERROR "Failed to fetch ThirdParty/googletest submodule. Run manually: git submodule update --init --recursive")
-        endif()
-    else()
-        message(FATAL_ERROR "ThirdParty/googletest submodule is not initialized and git was not found. Run: git submodule update --init --recursive")
-    endif()
-endif()
-
-set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)
-set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
-add_subdirectory(ThirdParty/googletest)
-enable_testing()
+# --- Third-party dependencies (submodule fetch + configure + add_subdirectory) ---
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/ThirdParty) # suppress warnings from vendored headers, own code isn't under this prefix
+include(cmake/ConfigureDependencies.cmake)
 
 # --- Source files ---
 include_directories(headers)
@@ -203,8 +114,8 @@ set(SOURCE_FILES
 
 set(SOURCE_FILES_FOR_UNIT_TESTS
         source/application/GameConfig.cpp
-        source/Utils/ColliderUtils.cpp
-        source/Utils/TimeUtils.cpp
+        source/utils/ColliderUtils.cpp
+        source/utils/TimeUtils.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -304,9 +215,9 @@ endif ()
 
 target_include_directories(unit_tests PRIVATE headers)
 target_link_libraries(unit_tests
-        gtest
-        gtest_main
-        ser20::ser20 Boost::uuid Boost::asio_core Boost::property_tree
+        gtest gtest_main
+        Boost::uuid Boost::asio_core Boost::property_tree
+        ser20::ser20
         ${PLATFORM_NETWORK_LIBS}
 )
 
@@ -316,7 +227,8 @@ gtest_discover_tests(unit_tests)
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 target_link_libraries(${PROJECT_NAME}
         SDL2-static SDL2main SDL2_ttf SDL2_image SDL2_mixer
-        ser20::ser20 Boost::uuid Boost::asio_core Boost::property_tree
+        Boost::uuid Boost::asio_core Boost::property_tree
+        ser20::ser20
         ${PLATFORM_NETWORK_LIBS}
 )
 

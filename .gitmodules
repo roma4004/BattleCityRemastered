@@ -154,3 +154,15 @@
 [submodule "ThirdParty/boost/typeof"]
 	path = ThirdParty/boost/typeof
 	url = https://github.com/boostorg/typeof.git
+[submodule "ThirdParty/SDL2"]
+	path = ThirdParty/SDL2
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "ThirdParty/SDL2_ttf"]
+	path = ThirdParty/SDL2_ttf
+	url = https://github.com/libsdl-org/SDL_ttf.git
+[submodule "ThirdParty/SDL2_image"]
+	path = ThirdParty/SDL2_image
+	url = https://github.com/libsdl-org/SDL_image.git
+[submodule "ThirdParty/SDL2_mixer"]
+	path = ThirdParty/SDL2_mixer
+	url = https://github.com/libsdl-org/SDL_mixer.git

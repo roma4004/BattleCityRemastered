@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -75,7 +75,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/headers;$(ProjectDir)/ThirdParty/ser20/include;$(ProjectDir)/ThirdParty/boost/align/include;$(ProjectDir)/ThirdParty/boost/any/include;$(ProjectDir)/ThirdParty/boost/asio/include;$(ProjectDir)/ThirdParty/boost/assert/include;$(ProjectDir)/ThirdParty/boost/bind/include;$(ProjectDir)/ThirdParty/boost/config/include;$(ProjectDir)/ThirdParty/boost/container_hash/include;$(ProjectDir)/ThirdParty/boost/winapi/include;$(ProjectDir)/ThirdParty/boost/preprocessor/include;$(ProjectDir)/ThirdParty/boost/predef/include;$(ProjectDir)/ThirdParty/boost/mp11/include;$(ProjectDir)/ThirdParty/boost/tuple/include;$(ProjectDir)/ThirdParty/boost/utility/include;$(ProjectDir)/ThirdParty/boost/core/include;$(ProjectDir)/ThirdParty/boost/integer/include;$(ProjectDir)/ThirdParty/boost/iterator/include;$(ProjectDir)/ThirdParty/boost/mpl/include;$(ProjectDir)/ThirdParty/boost/multi_index/include;$(ProjectDir)/ThirdParty/boost/optional/include;$(ProjectDir)/ThirdParty/boost/pool/include;$(ProjectDir)/ThirdParty/boost/property_tree/include;$(ProjectDir)/ThirdParty/boost/range/include;$(ProjectDir)/ThirdParty/boost/system/include;$(ProjectDir)/ThirdParty/boost/throw_exception/include;$(ProjectDir)/ThirdParty/boost/type_index/include;$(ProjectDir)/ThirdParty/boost/type_traits/include;$(ProjectDir)/ThirdParty/boost/uuid/include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/headers;$(ProjectDir)/ThirdParty/ser20/include;$(ProjectDir)/ThirdParty/boost/align/include;$(ProjectDir)/ThirdParty/boost/any/include;$(ProjectDir)/ThirdParty/boost/asio/include;$(ProjectDir)/ThirdParty/boost/assert/include;$(ProjectDir)/ThirdParty/boost/bind/include;$(ProjectDir)/ThirdParty/boost/config/include;$(ProjectDir)/ThirdParty/boost/container_hash/include;$(ProjectDir)/ThirdParty/boost/winapi/include;$(ProjectDir)/ThirdParty/boost/preprocessor/include;$(ProjectDir)/ThirdParty/boost/predef/include;$(ProjectDir)/ThirdParty/boost/mp11/include;$(ProjectDir)/ThirdParty/boost/tuple/include;$(ProjectDir)/ThirdParty/boost/utility/include;$(ProjectDir)/ThirdParty/boost/core/include;$(ProjectDir)/ThirdParty/boost/integer/include;$(ProjectDir)/ThirdParty/boost/iterator/include;$(ProjectDir)/ThirdParty/boost/mpl/include;$(ProjectDir)/ThirdParty/boost/multi_index/include;$(ProjectDir)/ThirdParty/boost/optional/include;$(ProjectDir)/ThirdParty/boost/pool/include;$(ProjectDir)/ThirdParty/boost/property_tree/include;$(ProjectDir)/ThirdParty/boost/range/include;$(ProjectDir)/ThirdParty/boost/system/include;$(ProjectDir)/ThirdParty/boost/throw_exception/include;$(ProjectDir)/ThirdParty/boost/type_index/include;$(ProjectDir)/ThirdParty/boost/type_traits/include;$(ProjectDir)/ThirdParty/boost/uuid/include;$(ProjectDir)/ThirdParty/SDL2/include;$(ProjectDir)/ThirdParty/SDL2_ttf;$(ProjectDir)/ThirdParty/SDL2_image/include;$(ProjectDir)/ThirdParty/SDL2_mixer/include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,7 +84,6 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -101,7 +100,6 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -118,12 +116,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>setupapi.lib;winmm.lib;imm32.lib;version.lib;cfgmgr32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,7 +134,6 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -147,7 +145,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>if not exist "$(ProjectDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/boost)</Command>
+      <Command>if not exist "$(ProjectDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/boost)
+if not exist "$(ProjectDir)ThirdParty\SDL2\include\SDL.h" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/SDL2 ThirdParty/SDL2_ttf ThirdParty/SDL2_image ThirdParty/SDL2_mixer)
+if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/ser20)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -418,30 +418,21 @@
     <Media Include="Resources\Sounds\levelStarted.wav" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="SDL2Wrappers\SDL2_mixer\SDL_mixer.vcxproj">
+      <Project>{f7e944b3-0815-40cd-b3e4-90b2a15b0e33}</Project>
+    </ProjectReference>
+    <ProjectReference Include="SDL2Wrappers\SDL2_image\SDL_image.vcxproj">
+      <Project>{2bd5534e-00e2-4bea-ac96-d9a92ea24696}</Project>
+    </ProjectReference>
+    <ProjectReference Include="SDL2Wrappers\SDL2_ttf\SDL_ttf.vcxproj">
+      <Project>{dddbd07d-dc76-4af6-8d02-3e2deb6ee255}</Project>
+    </ProjectReference>
+    <ProjectReference Include="SDL2Wrappers\SDL2\SDL.vcxproj">
+      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
+    </ProjectReference>
+    <ProjectReference Include="ThirdParty\SDL2\VisualC\SDLmain\SDLmain.vcxproj">
+      <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\sdl2_ttf.nuget.redist.2.24.0\build\native\sdl2_ttf.nuget.redist.targets" Condition="Exists('packages\sdl2_ttf.nuget.redist.2.24.0\build\native\sdl2_ttf.nuget.redist.targets')" />
-    <Import Project="packages\sdl2_ttf.nuget.2.24.0\build\native\sdl2_ttf.nuget.targets" Condition="Exists('packages\sdl2_ttf.nuget.2.24.0\build\native\sdl2_ttf.nuget.targets')" />
-    <Import Project="packages\sdl2_image.nuget.redist.2.8.8\build\native\sdl2_image.nuget.redist.targets" Condition="Exists('packages\sdl2_image.nuget.redist.2.8.8\build\native\sdl2_image.nuget.redist.targets')" />
-    <Import Project="packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets" Condition="Exists('packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets')" />
-    <Import Project="packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets" Condition="Exists('packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets')" />
-    <Import Project="packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets" Condition="Exists('packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets')" />
-    <Import Project="packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets" Condition="Exists('packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets')" />
-    <Import Project="packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets" Condition="Exists('packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('packages\sdl2_ttf.nuget.redist.2.24.0\build\native\sdl2_ttf.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_ttf.nuget.redist.2.24.0\build\native\sdl2_ttf.nuget.redist.targets'))" />
-    <Error Condition="!Exists('packages\sdl2_ttf.nuget.2.24.0\build\native\sdl2_ttf.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_ttf.nuget.2.24.0\build\native\sdl2_ttf.nuget.targets'))" />
-    <Error Condition="!Exists('packages\sdl2_image.nuget.redist.2.8.8\build\native\sdl2_image.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_image.nuget.redist.2.8.8\build\native\sdl2_image.nuget.redist.targets'))" />
-    <Error Condition="!Exists('packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_image.nuget.2.8.8\build\native\sdl2_image.nuget.targets'))" />
-    <Error Condition="!Exists('packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.redist.2.8.1\build\native\sdl2_mixer.nuget.redist.targets'))" />
-    <Error Condition="!Exists('packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2_mixer.nuget.2.8.1\build\native\sdl2_mixer.nuget.targets'))" />
-    <Error Condition="!Exists('packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.redist.2.32.8\build\native\sdl2.nuget.redist.targets'))" />
-    <Error Condition="!Exists('packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\sdl2.nuget.2.32.8\build\native\sdl2.nuget.targets'))" />
-  </Target>
 </Project>
