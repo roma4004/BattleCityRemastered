@@ -62,7 +62,7 @@ private:
 	void DisposeDeadObject();
 	void FlushSpawnQueue();
 
-	void OnClientReady(const ServerInClientReadyToStartGameEvent&) const;
+	void OnClientReady(const ServerInClientReadyToStartGameEvent&);
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
@@ -95,4 +95,6 @@ private:
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
+	//NOTE: PauseReleasedEvent is a toggle, so a repeated client-ready would re-pause and reload the map
+	bool _isClientReadyHandled{false};
 };

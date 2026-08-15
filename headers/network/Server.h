@@ -1,11 +1,14 @@
 #pragma once
 
+#include "MessageFraming.h"
 #include "NetworkCommandQueue.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
+#include <array>
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -62,13 +65,17 @@ public:
 	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
 
 	void Start();
-	void DoWrite(const std::string& message);
+	//NOTE: shared, not copied - the same frame goes to every session and stays alive while it is written
+	void DoWrite(std::shared_ptr<const std::string> message);
 	void Shutdown();
 
 private:
 	using CommandHandler = std::function<void(const AnyCommand&)>;
 
 	void DoRead();
+	void ReadPayload(std::uint32_t payloadLength);
+	void WriteNextFrame();
+	void TryStartWrite();
 
 	void ProcessReceivedData(const std::string& archiveData);
 	void ProcessServerCommand(const AnyCommand& command);
@@ -77,8 +84,12 @@ private:
 	void OnKeyStateChange(const AnyCommand& command);
 
 	tcp::socket _socket;
-	boost::asio::streambuf _readBuffer{};
-	boost::asio::streambuf _writeBuffer{};
+	//NOTE: fixed-size buffers + write queue instead of streambufs - see Client.h
+	std::array<char, network::kFrameHeaderSize> _readHeader{};
+	std::vector<char> _readPayload{};
+	std::deque<std::shared_ptr<const std::string>> _writeQueue{};
+	bool _writeInProgress{false};
+	std::mutex _writeQueueMutex;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	network::NetworkCommandQueue _commandQueue;
 	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
@@ -152,7 +163,7 @@ private:
 	void OnBonusCaliberPickup(const ServerOutBonusCaliberPickupEvent& event);
 	void OnBonusTankPickup(const ServerOutBonusTankPickupEvent& event);
 
-	void SendToAll(const std::string& message);
+	void SendToAll(const std::shared_ptr<const std::string>& message);
 	void CleanupDeadSessions();
 
 	tcp::acceptor _acceptor;

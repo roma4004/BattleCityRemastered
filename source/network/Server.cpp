@@ -208,7 +208,7 @@ void Session::DoRead()
 	try
 	{
 		auto self(shared_from_this());
-		auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
+		auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
 		{
 			//NOTE: self is captured only to keep this Session alive for the duration of the async
 			//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
@@ -216,33 +216,32 @@ void Session::DoRead()
 
 			if (ec)
 			{
-				_readBuffer.consume(length);
-
 				if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
 				{
 					std::cerr << "DoRead error ..." << ec << '\n';
 				}
+
+				return;
 			}
-			else
+
+			const std::uint32_t payloadLength = network::DecodeFrameHeader(_readHeader.data());
+			if (payloadLength == 0u || payloadLength > network::kMaxFramePayloadSize)
 			{
-				const std::string archiveData(buffers_begin(_readBuffer.data()),
-											  buffers_begin(_readBuffer.data()) + length);
-
-				this->ProcessReceivedData(archiveData);
-
-				// Respond back to a client
-				// self->DoWrite({123, "Test", {"Name1", "Name2"}});
-
-				_readBuffer.consume(length);
-				DoRead();
+				NetworkLogger::WriteLog("Session::DoRead: bogus frame length "
+										+ std::to_string(payloadLength) + ", dropping connection");
+				boost::system::error_code closeEc;
+				std::ignore = _socket.close(closeEc);
+				return;
 			}
+
+			ReadPayload(payloadLength);
 		};
 
-		boost::asio::async_read_until(_socket, _readBuffer, "\n\n", lambda);
+		boost::asio::async_read(_socket, boost::asio::buffer(_readHeader), lambda);
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Exception in DoWrite: " << e.what() << '\n';
+		std::cerr << "Exception in DoRead: " << e.what() << '\n';
 	}
 	catch (...)
 	{
@@ -250,7 +249,34 @@ void Session::DoRead()
 	}
 }
 
-void Session::DoWrite(const std::string& message)
+void Session::ReadPayload(const std::uint32_t payloadLength)
+{
+	_readPayload.resize(payloadLength);
+
+	auto self(shared_from_this());
+	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
+	{
+		std::ignore = self;
+
+		if (ec)
+		{
+			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
+			{
+				std::cerr << "ReadPayload error ..." << ec << '\n';
+			}
+
+			return;
+		}
+
+		this->ProcessReceivedData(std::string(_readPayload.data(), _readPayload.size()));
+
+		DoRead();
+	};
+
+	boost::asio::async_read(_socket, boost::asio::buffer(_readPayload), lambda);
+}
+
+void Session::DoWrite(std::shared_ptr<const std::string> message)
 {
 	try
 	{
@@ -260,34 +286,19 @@ void Session::DoWrite(const std::string& message)
 			return;
 		}
 
-		{
-			std::ostream os(&_writeBuffer);
-			os << message;
-		}
-
+		//NOTE: called from the send thread, but the write starts on the io_context one (see Client.h)
 		auto self(shared_from_this());
-		auto lambda = [self](const boost::system::error_code& ec, const std::size_t length)
+		boost::asio::post(_socket.get_executor(), [this, self, message = std::move(message)]() mutable
 		{
-			self->_writeBuffer.consume(length);// Now we can consume the written data
+			std::ignore = self;
 
-			if (ec)
 			{
-				if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
-				{
-					std::cout << "Session Connection closed normally" << '\n';
-				}
-				else
-				{
-					std::cerr << "Session Write error: " << ec.message() << '\n';
-					//TODO: need handle close connection and delete session
-				}
-
-				self->_socket.close();
+				std::scoped_lock lock(_writeQueueMutex);
+				_writeQueue.push_back(std::move(message));
 			}
-		};
 
-		// Start async write operation
-		boost::asio::async_write(_socket, _writeBuffer.data(), std::move(lambda));
+			TryStartWrite();
+		});
 	}
 	catch (const std::exception& e)
 	{
@@ -299,6 +310,75 @@ void Session::DoWrite(const std::string& message)
 		std::cerr << "Session error ..." << '\n';
 		NetworkLogger::WriteLog("Session error in DoWrite: unknown exception");
 	}
+}
+
+void Session::TryStartWrite()
+{
+	{
+		std::scoped_lock lock(_writeQueueMutex);
+		if (_writeQueue.empty() || _writeInProgress)
+		{
+			return;
+		}
+
+		_writeInProgress = true;
+	}
+
+	WriteNextFrame();
+}
+
+void Session::WriteNextFrame()
+{
+	//NOTE: shared, so the queue stays free to change while the write is in flight
+	const auto frame = [this]
+	{
+		std::scoped_lock lock(_writeQueueMutex);
+		return _writeQueue.front();
+	}();
+
+	auto self(shared_from_this());
+	auto lambda = [this, self, frame](const boost::system::error_code& ec, const std::size_t /*length*/)
+	{
+		std::ignore = self;
+		std::ignore = frame;
+
+		if (ec)
+		{
+			if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
+			{
+				std::cout << "Session Connection closed normally" << '\n';
+			}
+			else
+			{
+				std::cerr << "Session Write error: " << ec.message() << '\n';
+				//TODO: need handle close connection and delete session
+			}
+
+			//NOTE: undelivered frame stays queued; the session is discarded whole once the socket closes
+			{
+				std::scoped_lock lock(_writeQueueMutex);
+				_writeInProgress = false;
+			}
+
+			_socket.close();
+			return;
+		}
+
+		{
+			std::scoped_lock lock(_writeQueueMutex);
+			_writeQueue.pop_front();
+
+			if (_writeQueue.empty())
+			{
+				_writeInProgress = false;
+				return;
+			}
+		}
+
+		WriteNextFrame();
+	};
+
+	boost::asio::async_write(_socket, boost::asio::buffer(*frame), std::move(lambda));
 }
 
 Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
@@ -674,7 +754,7 @@ void Server::CleanupDeadSessions()
 	});
 }
 
-void Server::SendToAll(const std::string& message)
+void Server::SendToAll(const std::shared_ptr<const std::string>& message)
 {
 	CleanupDeadSessions();
 
@@ -699,6 +779,6 @@ void Server::SendCommand(const CommandBatch& command)
 
 	const auto& basicString = archiveStream.str();
 	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
-	SendToAll(basicString + "\n\n");
+	SendToAll(std::make_shared<const std::string>(network::FrameMessage(basicString)));
 }
 }//namespace network::commands

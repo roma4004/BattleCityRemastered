@@ -91,6 +91,7 @@ void GameSuccess::ApplyGameMode(const GameMode gameMode)
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 	_pendingSpawns.clear();
+	_isClientReadyHandled = false;
 
 	_events->EmitEvent(GameResetEvent{});
 
@@ -171,8 +172,15 @@ void GameSuccess::FlushSpawnQueue()
 
 //TODO: recheck rule of 3/5 for all classes
 
-void GameSuccess::OnClientReady(const ServerInClientReadyToStartGameEvent&) const
+void GameSuccess::OnClientReady(const ServerInClientReadyToStartGameEvent&)
 {
+	if (_isClientReadyHandled)
+	{
+		return;
+	}
+
+	_isClientReadyHandled = true;
+
 	_events->EmitEvent(LoadMapEvent{});
 	_events->EmitEvent(PauseReleasedEvent{});
 }

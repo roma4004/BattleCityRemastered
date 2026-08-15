@@ -334,6 +334,7 @@
     <ClInclude Include="..\headers\network\commands\TankShot.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h" />
+    <ClInclude Include="..\headers\network\MessageFraming.h" />
     <ClInclude Include="..\headers\network\Server.h" />
     <ClInclude Include="..\headers\network\ServerHandler.h" />
     <ClInclude Include="..\headers\Point.h" />

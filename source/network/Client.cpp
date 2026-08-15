@@ -79,6 +79,8 @@ void Client::TryConnect()
 				std::scoped_lock lock(_batchWriteMutex);
 				this->_batch.AddCommand(SignalEvent{"ClientOut_ReadyToPlay"});
 			}
+
+			TryStartWrite();
 		}
 		else
 		{
@@ -195,7 +197,7 @@ void Client::OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event)
 void Client::ReadResponse()
 {
 	auto self(shared_from_this());
-	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
+	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
 	{
 		//NOTE: self is captured only to keep this Client alive for the duration of the async
 		//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
@@ -203,28 +205,57 @@ void Client::ReadResponse()
 
 		if (ec)
 		{
-			_readBuffer.consume(length);
-
 			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
 			{
 				std::cerr << ec.message() << '\n';
 			}
+
+			return;
 		}
-		else
+
+		const std::uint32_t payloadLength = network::DecodeFrameHeader(_readHeader.data());
+		if (payloadLength == 0u || payloadLength > network::kMaxFramePayloadSize)
 		{
-			const std::string archiveData(buffers_begin(_readBuffer.data()),
-										  buffers_begin(_readBuffer.data()) + length);
-
-			_readBuffer.consume(length);
-
-			ProcessReceivedData(archiveData);
-
-			// Since we want to keep listening, initiate reading again
-			this->ReadResponse();
+			NetworkLogger::WriteLog("Client::ReadResponse: bogus frame length "
+									+ std::to_string(payloadLength) + ", dropping connection");
+			_isConnected = false;
+			boost::system::error_code closeEc;
+			std::ignore = _socket.close(closeEc);
+			return;
 		}
+
+		ReadPayload(payloadLength);
 	};
 
-	boost::asio::async_read_until(_socket, _readBuffer, "\n\n", std::move(lambda));
+	boost::asio::async_read(_socket, boost::asio::buffer(_readHeader), std::move(lambda));
+}
+
+void Client::ReadPayload(const std::uint32_t payloadLength)
+{
+	_readPayload.resize(payloadLength);
+
+	auto self(shared_from_this());
+	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
+	{
+		std::ignore = self;
+
+		if (ec)
+		{
+			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
+			{
+				std::cerr << ec.message() << '\n';
+			}
+
+			return;
+		}
+
+		ProcessReceivedData(std::string(_readPayload.data(), _readPayload.size()));
+
+		// Since we want to keep listening, initiate reading again
+		this->ReadResponse();
+	};
+
+	boost::asio::async_read(_socket, boost::asio::buffer(_readPayload), std::move(lambda));
 }
 
 void Client::SendKeyState(const std::string& key, const bool state)
@@ -524,33 +555,68 @@ void Client::ProcessReceivedData(const std::string& archiveData)
 
 void Client::SendCommand(const CommandBatch& command)
 {
-	if (!_isConnected)
-	{
-		//NOTE: not an invariant violation - reconnect windows/disconnects are expected at runtime,
-		//so log instead of asserting
-		NetworkLogger::WriteLog("Client::SendCommand: dropped, not connected");
-		return;
-	}
-
 	std::ostringstream archiveStream;
 	{
 		ser20::PortableBinaryOutputArchive oa(archiveStream);
 		oa(command);
 	}
 
-	{
-		std::ostream os(&_writeBuffer);
-		os << archiveStream.str() + "\n\n";
-	}
-
+	//NOTE: writes always start on the io_context thread - async_write must not race the read chain
 	auto self(shared_from_this());
-	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t length)
+	boost::asio::post(_socket.get_executor(),
+					  [this, self,
+					   framed = std::make_shared<const std::string>(
+							   network::FrameMessage(archiveStream.str()))]() mutable
 	{
-		//NOTE: self is captured only to keep this Client alive for the duration of the async
-		//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
 		std::ignore = self;
 
-		_writeBuffer.consume(length);
+		{
+			std::scoped_lock lock(_writeQueueMutex);
+
+			if (_writeQueue.size() >= MaxPendingFrames)
+			{
+				_writeQueue.pop_front();
+				NetworkLogger::WriteLog("Client::SendCommand: pending queue full, dropped oldest frame");
+			}
+
+			_writeQueue.push_back(std::move(framed));
+		}
+
+		TryStartWrite();
+	});
+}
+
+//NOTE: nothing reaches the wire until connected - frames pile up and the connect handler kicks them off
+void Client::TryStartWrite()
+{
+	{
+		std::scoped_lock lock(_writeQueueMutex);
+		if (_writeQueue.empty() || !_isConnected || _writeInProgress)
+		{
+			return;
+		}
+
+		_writeInProgress = true;
+	}
+
+	WriteNextFrame();
+}
+
+void Client::WriteNextFrame()
+{
+	//NOTE: shared, so the queue stays free to change while the write is in flight
+	const auto frame = [this]
+	{
+		std::scoped_lock lock(_writeQueueMutex);
+		return _writeQueue.front();
+	}();
+
+	auto self(shared_from_this());
+	auto lambda = [this, self, frame](const boost::system::error_code& ec, const std::size_t /*length*/)
+	{
+		//NOTE: self and frame are captured to outlive the async operation, never dereferenced here
+		std::ignore = self;
+		std::ignore = frame;
 
 		if (ec)
 		{
@@ -564,11 +630,31 @@ void Client::SendCommand(const CommandBatch& command)
 				//TODO: need handle close connection and delete session
 			}
 
+			//NOTE: undelivered frame stays at the head, to be re-sent whole on the next connection
+			{
+				std::scoped_lock lock(_writeQueueMutex);
+				_writeInProgress = false;
+			}
+
 			_isConnected = false;
 			_socket.close();
+			return;
 		}
+
+		{
+			std::scoped_lock lock(_writeQueueMutex);
+			_writeQueue.pop_front();
+
+			if (_writeQueue.empty())
+			{
+				_writeInProgress = false;
+				return;
+			}
+		}
+
+		WriteNextFrame();
 	};
 
-	boost::asio::async_write(_socket, _writeBuffer.data(), std::move(lambda));
+	boost::asio::async_write(_socket, boost::asio::buffer(*frame), std::move(lambda));
 }
 }//namespace network::commands
