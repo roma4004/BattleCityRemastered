@@ -590,6 +590,9 @@
     <ClInclude Include="..\headers\enums\Direction.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\FortressState.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\GameMode.h">
       <Filter>headers\enums</Filter>
     </ClInclude>

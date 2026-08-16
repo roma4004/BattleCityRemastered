@@ -3,10 +3,12 @@
 #include "Point.h"
 #include "entities/ObjRectangle.h"
 #include <boost/uuid/uuid.hpp>
+#include <cstdint>
 #include <string>
 
 enum class BonusType : char8_t;
 enum class ObstacleType : char8_t;
+enum class FortressState : std::uint8_t;
 
 struct StatisticsAttributionEvent
 {
@@ -17,20 +19,18 @@ struct StatisticsAttributionEvent
 
 struct ServerOutFortressChangeEvent
 {
-	std::string state;
+	FortressState state;
 	boost::uuids::uuid uuid;
 };
 
-//NOTE: kept distinct from ServerOutFortressChangeEvent (used server-trigger-side) rather than
-//reused, because in-process code (e.g. UnitTests/NetworkTest.cpp, which constructs both a
-//ServerHandler and a ClientHandler on the same EventSystem instance to simulate a round trip)
-//would otherwise have a direct emit loop back into its own "received" listener before any real
-//network round trip happens. Matches every other replicated pair's pattern, e.g. ServerOutPosEvent
-//vs ClientInPosEvent.
-struct ClientInFortressChangeEvent
-{
-	std::string state;
-};
+//NOTE: separate types from ServerOutFortressChangeEvent above - NetworkTest puts a ServerHandler and
+//a ClientHandler on one EventSystem, where a shared type would loop the host's own emit straight into
+//the receiving listener, with no round trip in between
+struct ClientInFortressDiedEvent {};
+
+struct ClientInFortressToBrickEvent {};
+
+struct ClientInFortressToSteelEvent {};
 
 struct ServerOutBonusSpawnEvent
 {

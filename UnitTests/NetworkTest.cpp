@@ -11,6 +11,7 @@
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
+#include "enums/FortressState.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
 #include "network/ClientHandler.h"
@@ -321,45 +322,45 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<std::string> promiseDied1{};
+	std::promise<void> promiseDied1{};
 	auto futureDied1 = promiseDied1.get_future();
-	std::promise<std::string> promiseDied2{};
+	std::promise<void> promiseDied2{};
 	auto futureDied2 = promiseDied2.get_future();
 
-	std::promise<std::string> promiseToBrick1{};
+	std::promise<void> promiseToBrick1{};
 	auto futureToBrick1 = promiseToBrick1.get_future();
-	std::promise<std::string> promiseToBrick2{};
+	std::promise<void> promiseToBrick2{};
 	auto futureToBrick2 = promiseToBrick2.get_future();
 
-	std::promise<std::string> promiseToSteel1{};
+	std::promise<void> promiseToSteel1{};
 	auto futureToSteel1 = promiseToSteel1.get_future();
-	std::promise<std::string> promiseToSteel2{};
+	std::promise<void> promiseToSteel2{};
 	auto futureToSteel2 = promiseToSteel2.get_future();
 
-	// NOTE: keyed by each event's own uuid - delivery itself proves uuid routing is correct,
-	// no need to compare event.uuid inside the callback anymore.
+	// NOTE: keyed by each event's own uuid, and each uuid listens for one transition type only -
+	// delivery alone proves both the uuid routing and the state, so the payload carries nothing.
 	auto diedSub1 = events->AddListener(Key(uuid1Died),
-			[&promiseDied1](const ClientInFortressChangeEvent& event) { promiseDied1.set_value(event.state); });
+			[&promiseDied1](const ClientInFortressDiedEvent&) { promiseDied1.set_value(); });
 	auto toBrickSub1 = events->AddListener(Key(uuid1ToBrick),
-			[&promiseToBrick1](const ClientInFortressChangeEvent& event) { promiseToBrick1.set_value(event.state); });
+			[&promiseToBrick1](const ClientInFortressToBrickEvent&) { promiseToBrick1.set_value(); });
 	auto toSteelSub1 = events->AddListener(Key(uuid1ToSteel),
-			[&promiseToSteel1](const ClientInFortressChangeEvent& event) { promiseToSteel1.set_value(event.state); });
+			[&promiseToSteel1](const ClientInFortressToSteelEvent&) { promiseToSteel1.set_value(); });
 
 	auto diedSub2 = events->AddListener(Key(uuid2Died),
-			[&promiseDied2](const ClientInFortressChangeEvent& event) { promiseDied2.set_value(event.state); });
+			[&promiseDied2](const ClientInFortressDiedEvent&) { promiseDied2.set_value(); });
 	auto toBrickSub2 = events->AddListener(Key(uuid2ToBrick),
-			[&promiseToBrick2](const ClientInFortressChangeEvent& event) { promiseToBrick2.set_value(event.state); });
+			[&promiseToBrick2](const ClientInFortressToBrickEvent&) { promiseToBrick2.set_value(); });
 	auto toSteelSub2 = events->AddListener(Key(uuid2ToSteel),
-			[&promiseToSteel2](const ClientInFortressChangeEvent& event) { promiseToSteel2.set_value(event.state); });
+			[&promiseToSteel2](const ClientInFortressToSteelEvent&) { promiseToSteel2.set_value(); });
 
 	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = uuid1Died});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToBrick", .uuid = uuid1ToBrick});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToSteel", .uuid = uuid1ToSteel});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = uuid1Died});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = uuid1ToBrick});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = uuid1ToSteel});
 
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = uuid2Died});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToBrick", .uuid = uuid2ToBrick});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToSteel", .uuid = uuid2ToSteel});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = uuid2Died});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = uuid2ToBrick});
+	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = uuid2ToSteel});
 
 	events->EmitEvent(NetworkEndFrameEvent{});
 
@@ -383,7 +384,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToDied1, std::future_status::ready);
-			EXPECT_EQ("Died", futureDied1.get());
 		}
 		{//brick1 test
 			auto statusToBrick1 = std::future_status::timeout;
@@ -400,7 +400,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToBrick1, std::future_status::ready);
-			EXPECT_EQ("ToBrick", futureToBrick1.get());
 		}
 		{//steel1 test
 			auto statusToSteel1 = std::future_status::timeout;
@@ -417,7 +416,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToSteel1, std::future_status::ready);
-			EXPECT_EQ("ToSteel", futureToSteel1.get());
 		}
 	}
 	{//test second fortressWall
@@ -436,7 +434,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToDied2, std::future_status::ready);
-			EXPECT_EQ("Died", futureDied2.get());
 		}
 		{//brick2 test
 			auto statusToBrick2 = std::future_status::timeout;
@@ -453,7 +450,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToBrick2, std::future_status::ready);
-			EXPECT_EQ("ToBrick", futureToBrick2.get());
 		}
 		{//steel2 test
 			auto statusToSteel2 = std::future_status::timeout;
@@ -470,7 +466,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			}
 
 			ASSERT_EQ(statusToSteel2, std::future_status::ready);
-			EXPECT_EQ("ToSteel", futureToSteel2.get());
 		}
 	}
 }

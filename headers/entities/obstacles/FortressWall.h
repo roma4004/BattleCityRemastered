@@ -11,7 +11,9 @@
 enum class GameMode : char8_t;
 class EventSystem;
 struct BonusShovelStatusChangeEvent;
-struct ClientInFortressChangeEvent;
+struct ClientInFortressDiedEvent;
+struct ClientInFortressToBrickEvent;
+struct ClientInFortressToSteelEvent;
 
 class FortressWall final : public BaseObj//TODO: remove baseObj after changing to baseObj interface in allObjects
 {
@@ -30,7 +32,9 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 
 	void Subscribe();
 	void SubscribeAsClient();
-	void OnClientInFortressChange(const ClientInFortressChangeEvent& event);
+	void OnClientInFortressDied(const ClientInFortressDiedEvent& event);
+	void OnClientInFortressToBrick(const ClientInFortressToBrickEvent& event);
+	void OnClientInFortressToSteel(const ClientInFortressToSteelEvent& event);
 
 	void OnEnemyPickupShovel();
 	void OnPlayerPickupShovel();

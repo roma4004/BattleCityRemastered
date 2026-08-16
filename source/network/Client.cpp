@@ -10,13 +10,13 @@
 #include "components/events/StatisticsEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/CommandType.h"
+#include "enums/FortressState.h"
 #include "enums/StatisticsType.h"
 #include "enums/TankType.h"
 #include "network/commands/CommandBatch.h"
 #include "utils/NetworkLogger.h"
 #include <ser20/archives/portable_binary.hpp>
 #include <cassert>
-#include <iostream>
 #include <string>
 #include <tuple>
 
@@ -383,12 +383,28 @@ void Client::OnGameStateChange(const AnyCommand& command)
 void Client::OnFortressChange(const AnyCommand& command)
 {
 	const auto& cmd = std::get<FortressChange>(command);
-	const std::string state = cmd.GetState();
+	const FortressState state = cmd.GetState();
 	const auto uuid = cmd.GetUuid();
 
 	_commandQueue.Enqueue([this, state, uuid]()
 	{
-		_events->EmitEvent(Key(uuid), ClientInFortressChangeEvent{.state = state});
+		//NOTE: no default - the compiler flags an unhandled state, and only an off-enum value from the
+		//wire reaches past the switch
+		switch (state)
+		{
+			case FortressState::Died:
+				_events->EmitEvent(Key(uuid), ClientInFortressDiedEvent{});
+				return;
+			case FortressState::ToBrick:
+				_events->EmitEvent(Key(uuid), ClientInFortressToBrickEvent{});
+				return;
+			case FortressState::ToSteel:
+				_events->EmitEvent(Key(uuid), ClientInFortressToSteelEvent{});
+				return;
+		}
+
+		NetworkLogger::WriteError("Client::OnFortressChange: unknown state "
+								  + std::to_string(static_cast<int>(state)));
 	});
 }
 

@@ -7,6 +7,7 @@
 #include "entities/Pawns/Pawn.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
+#include "enums/FortressState.h"
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
@@ -46,27 +47,18 @@ void FortressWall::Subscribe()
 
 void FortressWall::SubscribeAsClient()
 {
-	//NOTE: Client.cpp emits ClientInFortressChangeEvent here, split off the
-	//ServerOutFortressChangeEvent the host side (below, PlayAsHost branches) uses for its own local
-	//trigger - see ObstacleAndBonusEvents.h for why.
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressChange));
+	//NOTE: Client.cpp emits these, split off the ServerOutFortressChangeEvent the host side (below,
+	//PlayAsHost branches) uses for its own local trigger - see ObstacleAndBonusEvents.h for why.
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressDied));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressToBrick));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressToSteel));
 }
 
-void FortressWall::OnClientInFortressChange(const ClientInFortressChangeEvent& event)
-{
-	if (event.state == "Died")
-	{
-		OnEnemyPickupShovel();
-	}
-	else if (event.state == "ToBrick")
-	{
-		OnShovelCooldownEnd();
-	}
-	else if (event.state == "ToSteel")
-	{
-		OnPlayerPickupShovel();
-	}
-}
+void FortressWall::OnClientInFortressDied(const ClientInFortressDiedEvent&) { OnEnemyPickupShovel(); }
+
+void FortressWall::OnClientInFortressToBrick(const ClientInFortressToBrickEvent&) { OnShovelCooldownEnd(); }
+
+void FortressWall::OnClientInFortressToSteel(const ClientInFortressToSteelEvent&) { OnPlayerPickupShovel(); }
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
@@ -87,7 +79,7 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{
-		_events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = _uuid});
+		_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = _uuid});
 	}
 }
 
@@ -110,7 +102,7 @@ void FortressWall::OnPlayerPickupShovel()
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToSteel", .uuid = _uuid});
+			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = _uuid});
 		}
 	}
 }
@@ -126,7 +118,7 @@ void FortressWall::OnShovelCooldownEnd()
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerOutFortressChangeEvent{.state = "ToBrick", .uuid = _uuid});
+			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = _uuid});
 		}
 	}
 }
@@ -161,7 +153,7 @@ void FortressWall::TakeDamage(const unsigned int damage, const std::string& dama
 
 		if (_gameMode == GameMode::PlayAsHost)
 		{
-			_events->EmitEvent(ServerOutFortressChangeEvent{.state = "Died", .uuid = _uuid});
+			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = _uuid});
 		}
 	}
 }
