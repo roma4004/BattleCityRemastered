@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="headers">
+      <UniqueIdentifier>{b87936df-0363-9916-57ce-2b7c84079204}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\application">
+      <UniqueIdentifier>{8e8423b0-40a1-607b-c6cd-758629d0621d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\behavior">
+      <UniqueIdentifier>{dad10c37-8189-a9b6-b623-46f50d271542}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\components">
+      <UniqueIdentifier>{c284b163-cb4b-2ed2-1369-199c225ab904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\components\events">
+      <UniqueIdentifier>{a817babe-073b-7bb7-affd-2871ad08997a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\components\input">
+      <UniqueIdentifier>{c1fa6c32-bfcf-30b4-229f-a51c8cf958fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\components\managers">
+      <UniqueIdentifier>{8cff987a-38bf-2f96-eafb-cc4660b23c90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\entities">
+      <UniqueIdentifier>{87950965-3ae6-cdc7-ed3d-700abb5e5b0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\entities\bonuses">
+      <UniqueIdentifier>{5d4fc483-db59-2202-4174-863528e7936c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\entities\obstacles">
+      <UniqueIdentifier>{a038d537-2a92-3dc1-2348-b6dd153dcce6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\entities\pawns">
+      <UniqueIdentifier>{862181a4-50ad-614e-f83b-a1b06674e316}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\enums">
+      <UniqueIdentifier>{d5a24b93-9ddb-8363-8ca9-4e28cf920b89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\interfaces">
+      <UniqueIdentifier>{cc75c02b-f431-3866-1b8d-5654a68dc3be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\network">
+      <UniqueIdentifier>{8b4c3c9e-d0ed-97b0-8fd2-a17cde1c46bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\network\commands">
+      <UniqueIdentifier>{9252d744-64aa-d6ce-52d0-a2d249fdb1be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\utils">
+      <UniqueIdentifier>{db0d532d-a858-6684-72ff-86c898ecb9e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{f2ebaa59-6fc7-0118-29e4-efae98d1ffae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\application">
+      <UniqueIdentifier>{60cc343a-c78d-8fcc-581b-523b82dd1d14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\behavior">
+      <UniqueIdentifier>{1a3335f6-4c26-fe8c-8b87-b6a237ecaba7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\components">
+      <UniqueIdentifier>{69efdab6-20df-7c95-a035-e15a64281597}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\components\input">
+      <UniqueIdentifier>{644a30a8-0813-5285-9424-58f7bb7de35c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\components\managers">
+      <UniqueIdentifier>{bd5ceea0-1814-2c64-cfeb-b94bf47ff52d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\entities">
+      <UniqueIdentifier>{e6e64dd1-46bd-9b16-0274-31fca2cfe991}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\entities\bonuses">
+      <UniqueIdentifier>{af3a9123-d5bc-4ea5-ea43-bae2c1b3f0cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\entities\obstacles">
+      <UniqueIdentifier>{80ac57f8-c0fd-6391-7dbc-37cbd3fd6ccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\entities\pawns">
+      <UniqueIdentifier>{a5b24dc1-b6aa-61a2-7500-9f92772fe9c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\network">
+      <UniqueIdentifier>{a44093d8-ccc4-2597-53ff-dbd2f91279d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\network\commands">
+      <UniqueIdentifier>{6bca3e29-2091-56e8-16ff-d9c7443e3ba1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\utils">
+      <UniqueIdentifier>{b9ff25f0-4ddc-9157-3fcf-57a5653d87ba}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\application\CommandLineParser.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\ConfigFailure.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\ConfigSuccess.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\GameConfig.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\GameFailure.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\GameSuccess.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\SDL_Config.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\UserInput.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp">
+      <Filter>source\behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp">
+      <Filter>source\behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\behavior\ShootingBeh.cpp">
+      <Filter>source\behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\AnimatedObjects.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\BonusSpawner.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\BulletPool.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\GameStatistics.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp">
+      <Filter>source\components\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\input\InputProviderForPlayerOne.cpp">
+      <Filter>source\components\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\input\InputProviderForPlayerOneNet.cpp">
+      <Filter>source\components\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\input\InputProviderForPlayerTwo.cpp">
+      <Filter>source\components\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\input\InputProviderForPlayerTwoNet.cpp">
+      <Filter>source\components\input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\LineOfSight.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\AnimationManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\FramePerSecondManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\GameStateManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\RenderManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\RespawnManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\SpawnManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\TextureManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\Map.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\Menu.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\ObstacleSpawner.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\RightSideBar.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\ScoreBoard.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\TankSpawner.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\BaseObj.cpp">
+      <Filter>source\entities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\Bonus.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusCaliber.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusGrenade.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusHelmet.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusShovel.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusStar.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusTank.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\bonuses\BonusTimer.cpp">
+      <Filter>source\entities\bonuses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\BrickWall.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\BushTile.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\EagleTile.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\FortressWall.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\IceTile.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\Obstacle.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\SteelWall.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\obstacles\WaterTile.cpp">
+      <Filter>source\entities\obstacles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\Bot.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\Bullet.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\CoopBot.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\Enemy.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\Pawn.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\Player.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\entities\pawns\Tank.cpp">
+      <Filter>source\entities\pawns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\Client.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\ClientHandler.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\BonusSpawn.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\BonusStatus.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\CommandBatch.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\Dispose.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\FortressChange.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\GameStateChange.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\HealthChange.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\KeyStateChange.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\ObstacleSpawn.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\PositionChange.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\RespawnTank.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\SignalEvent.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\StatisticsChange.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\TankShot.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\commands\TankSpawnComplete.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\Server.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\ServerHandler.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\ColliderUtils.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\Logger.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\NetworkLogger.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\Timer.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\TimeUtils.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\UuidUtils.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\headers\application\CommandLineParser.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\ConfigFailure.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\ConfigSuccess.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\GameConfig.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\GameFailure.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\GameSuccess.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\LaunchOptions.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\SDL_Config.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\UserInput.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h">
+      <Filter>headers\behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\behavior\MoveLikeTankBeh.h">
+      <Filter>headers\behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\behavior\ShootingBeh.h">
+      <Filter>headers\behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\Circle.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\AnimatedObjects.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\BonusSpawner.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\BulletPool.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\AnimationRenderEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\BonusPickupEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\CoreLifecycleEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\GameModeEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\InputEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\ObjectLifecycleEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\ObstacleAndBonusEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\RenderUIEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\ReplicationEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\StatisticsEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\events\TimingEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\EventSystem.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\GameStatistics.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\InputProviderForMenu.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\InputProviderForPlayerOne.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\InputProviderForPlayerOneNet.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\InputProviderForPlayerTwo.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\InputProviderForPlayerTwoNet.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\MouseButton.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\input\PlayerKeys.h">
+      <Filter>headers\components\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\LineOfSight.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\AnimationManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\BonusEffectManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\DelayedSpawnManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\FramePerSecondManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\GameStateManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\RenderManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\RespawnManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\SpawnManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\TextureManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\Map.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\Menu.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\ObstacleSpawner.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\RightSideBar.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\ScoreBoard.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\SpawnEvents.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\TankSpawner.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\BaseObj.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\BaseObjProperty.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\BonusEffectProperty.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\Bonus.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusCaliber.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusGrenade.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusHelmet.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusShovel.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusStar.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusTank.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\bonuses\BonusTimer.h">
+      <Filter>headers\entities\bonuses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\BulletCalibre.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\ObjRectangle.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\BrickWall.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\BushTile.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\EagleTile.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\FortressWall.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\IceTile.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\Obstacle.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\SteelWall.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\WaterTile.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\Bot.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\Bullet.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\BulletResetProperty.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\CoopBot.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\Enemy.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\Pawn.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\PawnProperty.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\Player.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\pawns\Tank.h">
+      <Filter>headers\entities\pawns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\Tags.h">
+      <Filter>headers\entities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\AnimationType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\BonusType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\CommandType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\Direction.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\GameMode.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\GameState.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\ObstacleType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\RespawnGroup.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\StatisticsType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\TankType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\TextureOffset.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IConfig.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IDrawable.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IGame.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IHaveFraction.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IInputProvider.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IMoveBeh.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\INetworkNode.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IObstacle.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IPickupableBonus.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\ISendableDamageStatistics.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\IShootable.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\interfaces\ITickUpdatable.h">
+      <Filter>headers\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\Client.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\ClientHandler.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\AnyCommand.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\BonusDeSpawn.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\BonusSpawn.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\BonusStatus.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\CommandBatch.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\Dispose.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\FortressChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\GameStateChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\HealthChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\KeyStateChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\ObstacleSpawn.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\PositionChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\RespawnTank.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\SignalEvent.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\StatisticsChange.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\TankShot.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\UuidSerialization.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\MessageFraming.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\Server.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\ServerHandler.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\Point.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\ColliderUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\Logger.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\NetworkLogger.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\PixelUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\RandUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\Timer.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\TimeUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\UuidUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

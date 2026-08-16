@@ -1,6 +1,5 @@
 #include "components/Menu.h"
 #include "application/GameConfig.h"
-#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"

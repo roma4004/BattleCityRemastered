@@ -140,8 +140,9 @@ if (WIN32)
     set(PLATFORM_NETWORK_LIBS wsock32 ws2_32) #NOTE: Winsock, needed for boost::asio sockets on Windows; POSIX systems already have sockets in libc
 endif ()
 
-# game_core: every game source except main.cpp, compiled exactly once. A STATIC library so the linker
-# can pull in only what a consumer actually references - unit_tests links this without ever needing SDL2.
+# game_core: every game source except main.cpp, compiled once. STATIC, so the linker takes only the
+# .obj members a consumer references. SDL2 still reaches unit_tests - a static lib propagates its
+# deps (PRIVATE too, as LINK_ONLY); only a separate SDL-facing target would stop that.
 add_library(game_core STATIC ${GAME_CORE_SOURCES})
 target_link_libraries(game_core PUBLIC
         SDL2-static SDL2_ttf SDL2_image SDL2_mixer
@@ -188,7 +189,7 @@ set(GAME_ASSETS
 foreach (asset ${GAME_ASSETS})
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "../${asset}"
+            "${CMAKE_SOURCE_DIR}/${asset}" #NOTE: absolute - "../" breaks when the build dir moves
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${asset}")
 endforeach ()
 

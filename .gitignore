@@ -9,19 +9,11 @@ libraries
 
 # JetBrains IDE files
 .idea
-cmake-build-release-mingw
 *.sln.DotSettings.user
 
 # Visual Studio files
 .vs
-cmake-build-debug
 *.vcxproj.user
-
-# Compiled files
-x64/
-x32/
-UnitTests/x64/
-UnitTests/x32/
 
 # Ignore NuGet Packages
 *.nupkg
@@ -85,7 +77,9 @@ config.ini
 game_log.txt
 network_log.txt
 
-# Build trees and IDE temporaries not covered above
-cmake-build-debug-mingw/
+# Build output: both systems write here (MSBuild via Directory.Build.props, CMake via CMakePresets)
+build/
+
+# IDE and package-manager leftovers
 BattleCi.*/
 packages/

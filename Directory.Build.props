@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Imported into every project of the solution: output paths set once, instead of MSBuild's defaults
+     that scattered x64\ folders over the repo. $(MSBuildThisFileDirectory), not $(SolutionDir) -
+     no solution context when a project is built on its own. -->
+<Project>
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)build\msbuild\bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)build\msbuild\obj\$(Platform)\$(Configuration)\$(MSBuildProjectName)\</IntDir>
+  </PropertyGroup>
+</Project>

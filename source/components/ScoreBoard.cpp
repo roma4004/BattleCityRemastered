@@ -1,5 +1,4 @@
 #include "components/ScoreBoard.h"
-#include "application/UserInput.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/SpawnEvents.h"

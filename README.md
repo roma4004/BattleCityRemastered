@@ -71,7 +71,7 @@ The game in host\client mode looks the same, but with strict host authority, so 
   * The host is auto paused while waiting for the client to join
   * Replicating all visual events (move, shot, died, spawn, statistics, animation)
   * Logic is computed on the host, which accepts client inputs and partially mirrors the result back to the client to create the visual consequence 
-Hint: `scripts/run-host-and-client.bat`/`.sh` starts both windows at once, with offset. First argument - path to the exe, default is `cmake-build-debug-mingw/`.
+Hint: `scripts/run-host-and-client.bat`/`.sh` starts both windows at once, with position offset (and optional argument - path to the exe).
 `scripts/run-host-and-client-skipintro.*` - same, but the client skips the intro autoplay (sound stays on), so it doesn't play twice.
 `scripts/run-host-and-client-tiled.*` - an example of the `pos`/`size` arguments: two 800x600 windows side by side.
   * CMake/CLion: targets `run_host_and_client` / `run_host_and_client_skipintro` / `run_host_and_client_tiled`
