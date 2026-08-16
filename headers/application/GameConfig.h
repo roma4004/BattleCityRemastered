@@ -9,7 +9,7 @@ struct LaunchOptions;
 class GameConfig
 {
 public:
-	explicit GameConfig(std::string filePath, bool skipIniLoad = false);
+	explicit GameConfig(std::string filePath, bool skipIni = false);
 	~GameConfig();
 
 	void LoadIni(const std::string& filePath);

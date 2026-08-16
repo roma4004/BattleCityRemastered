@@ -48,7 +48,7 @@ public:
 
 	[[nodiscard]] unsigned int GetDamage() const;
 
-	[[nodiscard]] double GetDamageRadius() const;
+	[[nodiscard]] float GetDamageRadius() const;
 
 	[[nodiscard]] std::string GetAuthor() const;
 

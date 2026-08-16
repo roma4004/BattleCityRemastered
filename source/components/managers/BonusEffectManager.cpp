@@ -149,8 +149,10 @@ Timer BonusEffectManager::GetTimerPlayer() const { return _timerPlayer; }
 
 Timer BonusEffectManager::GetHelmet(const size_t id) const
 {
-	if (id < 0 || id >= _helmetSlots.size())
+	if (id >= _helmetSlots.size())
+	{
 		return {};
+	}
 
 	return _helmetSlots[id];
 }

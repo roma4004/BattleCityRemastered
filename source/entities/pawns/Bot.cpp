@@ -282,8 +282,8 @@ void Bot::SetRandomDirection(const double deltaTime, const bool excludeCurrentDi
 
 	if (!freePath.empty())
 	{
-		const int max{static_cast<int>(freePath.size() - 1)};
-		const int pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution{0, max})};
+		const std::size_t maxIndex{freePath.size() - 1u};
+		const auto pathIndex{RandUtils::GetRandNumber(std::uniform_int_distribution<std::size_t>{0u, maxIndex})};
 		SetDirection(freePath[pathIndex]);
 
 		_randomChangeDirTimer.Reset(milliseconds{RandUtils::GetRandNumber(_distTurnRate)});

@@ -47,7 +47,7 @@ protected:
 	{
 		const BulletCalibre calibre{.speed = 300.f,
 									.damage = 1u,
-									.damageRadius = 12.0,
+									.damageRadius = 12.f,
 									.tier = tier,
 									.size{.x = 6.f, .y = 5.f}};
 		// spawn Bullet

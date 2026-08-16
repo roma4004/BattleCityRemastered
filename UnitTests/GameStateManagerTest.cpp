@@ -155,12 +155,12 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 
 	_allObjects.clear();
 
-	for (const auto [spawnCount, uuid]: howManySpawnCounters)
+	for (const auto& [spawnCount, uuid]: howManySpawnCounters)
 	{
 		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count spawn: " << spawnCount << '\n';
 	}
 
-	for (const auto [diedCount, uuid]: howManyDiedCounters)
+	for (const auto& [diedCount, uuid]: howManyDiedCounters)
 	{
 		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count died: " << diedCount << '\n';
 	}
@@ -289,12 +289,12 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.clear();// remove all 4 enemy tank
 
-	for (const auto [spawnCount, uuid]: howManySpawnCounters)
+	for (const auto& [spawnCount, uuid]: howManySpawnCounters)
 	{
 		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count spawn: " << spawnCount << '\n';
 	}
 
-	for (const auto [diedCount, uuid]: howManyDiedCounters)
+	for (const auto& [diedCount, uuid]: howManyDiedCounters)
 	{
 		std::cout << "UUID: " << UuidUtils::GetStringUuid(uuid) << ", Count died: " << diedCount << '\n';
 	}

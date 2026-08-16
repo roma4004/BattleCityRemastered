@@ -30,8 +30,8 @@ bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) no
 
 bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) noexcept
 {
-	const double deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
-	const double deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
+	const float deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
+	const float deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
 
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }

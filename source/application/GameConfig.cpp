@@ -4,8 +4,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-GameConfig::GameConfig(std::string filePath, const bool skipIniLoad)
-	: skipIniLoad{skipIniLoad}
+GameConfig::GameConfig(std::string filePath, const bool skipIni)
+	: skipIniLoad{skipIni}
 	, _filePath(std::move(filePath))
 {
 	if (skipIniLoad)

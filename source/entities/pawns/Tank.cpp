@@ -171,9 +171,9 @@ unsigned int Tank::GetBulletDamage() const { return _calibre.damage; }
 
 void Tank::SetBulletDamage(const unsigned int bulletDamage) { _calibre.damage = bulletDamage; }
 
-double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
+float Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
 
-void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
+void Tank::SetBulletDamageRadius(const float bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
@@ -209,7 +209,10 @@ void Tank::OnBonusGrenade(const BonusGrenadePickupEvent& event)
 {
 	if (event.fraction != _fraction)
 	{
-		TakeDamage(GetHealth(), "Grenade", event.fraction);
+		if (const int health = GetHealth(); health > 0)
+		{
+			TakeDamage(static_cast<unsigned int>(health), "Grenade", event.fraction);
+		}
 	}
 }
 

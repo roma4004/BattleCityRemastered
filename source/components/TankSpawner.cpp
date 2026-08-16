@@ -149,7 +149,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 														   {quartFieldSizeX * 3.f, battleFieldSizeX}};
 
 
-	const int randomRange = static_cast<int>(type);
+	const auto randomRange = static_cast<std::size_t>(type);
 	auto [minX, maxX] = spawnRanges[randomRange];
 	const std::uniform_real_distribution<float> distRandX{minX, maxX};
 	const float randomX = RandUtils::GetRandNumber(distRandX);
@@ -311,7 +311,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 		|| _gameMode == GameMode::TwoPlayers
 		|| _gameMode == GameMode::PlayAsHost
 		|| _gameMode == GameMode::PlayAsClient
-		|| _gameMode == GameMode::CoopWithBot && isFirst)
+		|| (_gameMode == GameMode::CoopWithBot && isFirst))
 	{
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (_gameMode == GameMode::PlayAsHost)

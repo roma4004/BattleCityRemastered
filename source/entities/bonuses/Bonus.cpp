@@ -99,6 +99,6 @@ void Bonus::PickUpBonus(const std::string& author, const std::string& fraction)
 
 		EmitPickupEvent(author, fraction);
 
-		TakeDamage(GetHealth(), _name, _fraction);
+		TakeDamage(static_cast<unsigned int>(GetHealth()), _name, _fraction);
 	}
 }

@@ -51,8 +51,7 @@ void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 	}
 
 	const bool isDisplayed = event.isShown;
-	if (isDisplayed && !_keys.pause
-		|| !isDisplayed && _keys.pause)
+	if (isDisplayed != _keys.pause)//NOTE: menu visibility and the pause flag drifted apart
 	{
 		TogglePause();
 	}

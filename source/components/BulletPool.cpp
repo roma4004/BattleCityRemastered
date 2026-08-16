@@ -30,8 +30,11 @@ std::string BulletPool::GetCurrentTimeString()
 	const auto nowTime = std::chrono::system_clock::to_time_t(now);
 	const auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
-	std::tm timeInfo;
-	localtime_s(&timeInfo, &nowTime);
+	std::tm timeInfo{};
+	if (localtime_s(&timeInfo, &nowTime) != 0)
+	{
+		return {};
+	}
 
 	std::stringstream ss;
 	ss << std::put_time(&timeInfo, "%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << ms.count();
@@ -63,28 +66,18 @@ std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 {
 	std::scoped_lock lock(_bulletsMutex);
 
+	std::shared_ptr<BaseObj> bullet;
 	if (_bullets.empty())
 	{
-		return CreateNewBullet();
+		bullet = CreateNewBullet();
 	}
-
-	std::shared_ptr<BaseObj> bulletAsBase = _bullets.front();
-	_bullets.pop();
-
-	if (const auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get());
-		bulletAsBase != nullptr && bullet != nullptr)
+	else
 	{
-		// std::cout << "[" << GetCurrentTimeString() << "] "
-		// 		<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-		// 		<< "Bullet REUSED and Bullet pool size =" << _bullets.size()
-		// 		<< ", Author=" << author
-		// 		<< ", Direction=" << static_cast<int>(dir)
-		// 		<< ", Fraction=" << fraction
-		// 		<< ", UUID=" << bullet->GetUuid()
-		// 		<< '\n';
+		bullet = _bullets.front();
+		_bullets.pop();
 	}
 
-	return bulletAsBase;
+	return bullet;
 }
 
 void BulletPool::ReturnBullet(BaseObj* bullet)

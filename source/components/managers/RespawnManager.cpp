@@ -134,9 +134,9 @@ std::string RespawnManager::RespawnCountEnumToString(const RespawnGroup type)
 void RespawnManager::ChangeRespawnCount(const int delta, RespawnGroup type)
 {
 	const auto id = static_cast<size_t>(type);
-	if (_respawnCount[id] + delta >= 0u)
+	if (const int newCount = _respawnCount[id] + delta; newCount >= 0)
 	{
-		_respawnCount[id] += static_cast<unsigned short>(delta);
+		_respawnCount[id] = static_cast<unsigned short>(newCount);
 	}
 
 	const std::string who = RespawnCountEnumToString(type);
@@ -189,7 +189,8 @@ void RespawnManager::OnClientRespawn(const ClientInRespawnTankEvent& event)
 									   ? RespawnGroup::PLAYER_ONE
 									   : RespawnGroup::PLAYER_TWO);
 			break;
-		default:
+		case TankType::COOP1:
+		case TankType::COOP2:
 			break;
 	}
 }

@@ -11,7 +11,7 @@ class GameConfig;
 
 struct SDL_Config final
 {
-	explicit SDL_Config(GameConfig& gameConfig);
+	explicit SDL_Config(GameConfig& config);
 	~SDL_Config();
 
 	[[nodiscard]] std::unique_ptr<IConfig> Init();

@@ -12,8 +12,8 @@
 
 class IConfig;
 
-SDL_Config::SDL_Config(GameConfig& gameConfig)
-	: gameConfig{gameConfig} {}
+SDL_Config::SDL_Config(GameConfig& config)
+	: gameConfig{config} {}
 
 SDL_Config::~SDL_Config()
 {
@@ -472,7 +472,7 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow
 std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 {
 	Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
-	if (const bool vsync = gameConfig.Get<bool>("Window.vsync", false))
+	if (gameConfig.Get<bool>("Window.vsync", false))
 	{
 		renderFlags |= SDL_RENDERER_PRESENTVSYNC;//TODO: recreate render if vsync change
 	}

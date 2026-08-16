@@ -98,6 +98,6 @@ public:
 	[[nodiscard]] unsigned int GetBulletDamage() const;
 	void SetBulletDamage(unsigned int bulletDamage);
 
-	[[nodiscard]] double GetBulletDamageRadius() const;
-	void SetBulletDamageRadius(double bulletDamageRadius);
+	[[nodiscard]] float GetBulletDamageRadius() const;
+	void SetBulletDamageRadius(float bulletDamageRadius);
 };

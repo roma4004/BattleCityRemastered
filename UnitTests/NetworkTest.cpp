@@ -26,9 +26,9 @@
 
 class NetworkTest : public testing::Test
 {
+protected:
 	using buuid = boost::uuids::uuid;
 
-protected:
 	buuid _uuid{boost::uuids::string_generator()("01234567-89ab-cdef-0123-456789abcdef")};
 
 	void SetUp() override {}
@@ -94,7 +94,6 @@ TEST_F(NetworkTest, PosEventReplication)
 
 TEST_F(NetworkTest, ShotEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -201,7 +200,6 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 TEST_F(NetworkTest, DisposeEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -301,7 +299,6 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 
 TEST_F(NetworkTest, FortressChangeEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	buuid uuid1Died{boost::uuids::string_generator()("11234567-89ab-cdef-0123-456789abcdef")};
 	buuid uuid1ToBrick{boost::uuids::string_generator()("21234567-89ab-cdef-0123-456789abcdef")};
@@ -480,7 +477,6 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -535,7 +531,6 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 
 TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -682,7 +677,6 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -741,7 +735,6 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -827,7 +820,6 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 
 TEST_F(NetworkTest, RespawnTankEventReplication)
 {
-	using buuid = boost::uuids::uuid;
 
 	auto events = std::make_shared<EventSystem>();
 	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);

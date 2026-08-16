@@ -6,7 +6,7 @@ struct BulletCalibre
 {
 	float speed{};
 	unsigned int damage{};
-	double damageRadius{};
+	float damageRadius{};
 	unsigned short tier{};
 	FPoint size{};
 };

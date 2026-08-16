@@ -12,7 +12,7 @@ struct Timer
 
 	Timer();
 
-	Timer(milliseconds cooldown, std::chrono::system_clock::time_point activateTime);
+	Timer(milliseconds newCooldown, std::chrono::system_clock::time_point startTime);
 
 	~Timer();
 

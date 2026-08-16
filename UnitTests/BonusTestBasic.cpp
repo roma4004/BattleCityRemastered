@@ -39,7 +39,7 @@ protected:
 	float _gridSize{};
 	float _tankSpeed{142};
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};

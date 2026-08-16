@@ -107,7 +107,7 @@ TEST_F(BotsTest, BotsNoChangeDirectionIfOpponentSeen)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Enemy
-	const ObjRectangle rectEnemy{.x = _tankSize /*+ 1.f#1#, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectEnemy{.x = _tankSize, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
 					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,

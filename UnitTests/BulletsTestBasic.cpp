@@ -24,7 +24,7 @@ protected:
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	buuid _uuid{};
 	float _gridSize{1};
 	unsigned short _bulletHealth{1u};

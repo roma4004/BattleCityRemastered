@@ -24,8 +24,8 @@ public:
 	AnimatedObject(const AnimatedObject& other);
 	AnimatedObject(AnimatedObject&& other) noexcept;
 
-	AnimatedObject(const std::string& name, ObjRectangle rect, AnimationType type, int frameLimit, int scale,
-				   int animationSpeed, bool isInfinite = {});
+	AnimatedObject(const std::string& objName, ObjRectangle objRect, AnimationType objType, int frameLimit,
+				   int objScale, int animationSpeed, bool infinite = {});
 
 	~AnimatedObject();
 

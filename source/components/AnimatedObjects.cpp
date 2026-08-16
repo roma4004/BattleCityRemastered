@@ -3,16 +3,16 @@
 #include "utils/UuidUtils.h"
 #include <boost/uuid/nil_generator.hpp>
 
-AnimatedObject::AnimatedObject(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							   const int frameLimit, const int scale, const int animationSpeed, const bool isInfinite)
-	: rect{rect}
+AnimatedObject::AnimatedObject(const std::string& objName, const ObjRectangle objRect, const AnimationType objType,
+							   const int frameLimit, const int objScale, const int animationSpeed, const bool infinite)
+	: rect{objRect}
 	, size{frameLimit}
 	, speed{animationSpeed}
-	, type(type)
-	, isInfinite{isInfinite}
-	, scale{scale}
-	, name{name}
-	, nameWithUuid{name + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())} {}
+	, type(objType)
+	, isInfinite{infinite}
+	, scale{objScale}
+	, name{objName}
+	, nameWithUuid{objName + UuidUtils::GetStringUuid(UuidUtils::GetRandomUuid())} {}
 
 
 AnimatedObject::~AnimatedObject() = default;
