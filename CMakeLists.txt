@@ -22,16 +22,22 @@ include(cmake/ConfigureDependencies.cmake)
 # --- Source files ---
 include_directories(headers)
 
-# game_core sources: every game .cpp except main.cpp (the exe's own entry point)
-set(GAME_CORE_SOURCES
-        source/application/CommandLineParser.cpp
+# game_platform sources: the only .cpp files that include an SDL header, kept apart so game_core
+# below stays free of SDL - see the game_platform target for why that matters
+set(GAME_PLATFORM_SOURCES
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
-        source/application/GameConfig.cpp
-        source/application/GameFailure.cpp
         source/application/GameSuccess.cpp
         source/application/SDL_Config.cpp
         source/application/UserInput.cpp
+        source/components/managers/RenderManager.cpp
+)
+
+# game_core sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above
+set(GAME_CORE_SOURCES
+        source/application/CommandLineParser.cpp
+        source/application/GameConfig.cpp
+        source/application/GameFailure.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -56,7 +62,6 @@ set(GAME_CORE_SOURCES
         source/components/managers/DelayedSpawnManager.cpp
         source/components/managers/FramePerSecondManager.cpp
         source/components/managers/GameStateManager.cpp
-        source/components/managers/RenderManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnManager.cpp
         source/components/managers/TextureManager.cpp
@@ -137,15 +142,23 @@ if (WIN32)
     set(PLATFORM_NETWORK_LIBS wsock32 ws2_32) #NOTE: Winsock, needed for boost::asio sockets on Windows; POSIX systems already have sockets in libc
 endif ()
 
-# game_core: every game source except main.cpp, compiled once. STATIC, so the linker takes only the
-# .obj members a consumer references. SDL2 still reaches unit_tests - a static lib propagates its
-# deps (PRIVATE too, as LINK_ONLY); only a separate SDL-facing target would stop that.
+# game_core: game logic, no SDL. A static lib propagates its deps to every consumer (PRIVATE ones too,
+# as LINK_ONLY), so anything linked here would reach unit_tests as well - that is exactly why SDL lives
+# in game_platform instead. Nothing here may include an SDL header: SDL's include dirs come from its
+# targets, so such an include simply fails to resolve.
 add_library(game_core STATIC ${GAME_CORE_SOURCES})
 target_link_libraries(game_core PUBLIC
-        SDL2-static SDL2_ttf SDL2_image SDL2_mixer
         Boost::uuid Boost::asio_core Boost::property_tree
         ser20::ser20
         ${PLATFORM_NETWORK_LIBS}
+)
+
+# game_platform: the SDL-facing edge (window/render/audio/input + the game loop that drives them).
+# Depends on game_core, never the other way round.
+add_library(game_platform STATIC ${GAME_PLATFORM_SOURCES})
+target_link_libraries(game_platform PUBLIC
+        game_core
+        SDL2-static SDL2_ttf SDL2_image SDL2_mixer
 )
 
 add_executable(${PROJECT_NAME} source/main.cpp)
@@ -159,8 +172,8 @@ gtest_discover_tests(unit_tests)
 
 #NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 # SDL2main forces an undefined SDL_main reference unconditionally (that's how it hijacks the entry
-# point) - it must stay off game_core's PUBLIC link set or it'd force-link into unit_tests too.
-target_link_libraries(${PROJECT_NAME} game_core SDL2main)
+# point) - it must stay off game_platform's PUBLIC link set, exe-only.
+target_link_libraries(${PROJECT_NAME} game_platform SDL2main)
 
 # --- Game assets (copied next to the exe post-build) ---
 set(GAME_ASSETS

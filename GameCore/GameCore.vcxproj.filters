@@ -93,25 +93,10 @@
     <ClCompile Include="..\source\application\CommandLineParser.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\application\ConfigFailure.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\application\ConfigSuccess.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\application\GameConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
     <ClCompile Include="..\source\application\GameFailure.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\application\GameSuccess.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\application\SDL_Config.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\application\UserInput.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp">
@@ -166,9 +151,6 @@
       <Filter>source\components\managers</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\managers\GameStateManager.cpp">
-      <Filter>source\components\managers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\components\managers\RenderManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\managers\RespawnManager.cpp">
@@ -353,28 +335,13 @@
     <ClInclude Include="..\headers\application\CommandLineParser.h">
       <Filter>headers\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\application\ConfigFailure.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\application\ConfigSuccess.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\application\GameConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\GameFailure.h">
       <Filter>headers\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\application\GameSuccess.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\application\LaunchOptions.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\application\SDL_Config.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\application\UserInput.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h">
@@ -474,9 +441,6 @@
       <Filter>headers\components\managers</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\GameStateManager.h">
-      <Filter>headers\components\managers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\components\managers\RenderManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\RespawnManager.h">

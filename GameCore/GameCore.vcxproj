@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Every game source except main.cpp (kept in BattleCityRemastered.vcxproj as the exe's own entry point). Compiled once, consumed by both BattleCityRemastered.vcxproj and UnitTests\UnitTests.vcxproj via ProjectReference. A real StaticLibrary (not an object-list) - the linker pulls in only the .obj members a consumer actually references, so UnitTests never needs SDL2 even though SDL-dependent files (RenderManager.cpp etc.) live here too. Mirrors CMake's game_core STATIC library. -->
+<!-- Game logic, no SDL: every game source except main.cpp (the exe's own entry point in BattleCityRemastered.vcxproj) and the SDL-facing files in GamePlatform\GamePlatform.vcxproj. Compiled once, consumed by GamePlatform and UnitTests\UnitTests.vcxproj via ProjectReference. Keeping SDL out of here is what stops UnitTests from building SDL2/freetype at all - the SDL2 include paths and ProjectReferences deliberately live in GamePlatform only, so an SDL include added here simply fails to resolve. Mirrors CMake's game_core STATIC library. -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -72,7 +72,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)/ThirdParty/ser20/include;$(SolutionDir)/ThirdParty/boost/align/include;$(SolutionDir)/ThirdParty/boost/any/include;$(SolutionDir)/ThirdParty/boost/asio/include;$(SolutionDir)/ThirdParty/boost/assert/include;$(SolutionDir)/ThirdParty/boost/bind/include;$(SolutionDir)/ThirdParty/boost/config/include;$(SolutionDir)/ThirdParty/boost/container_hash/include;$(SolutionDir)/ThirdParty/boost/winapi/include;$(SolutionDir)/ThirdParty/boost/preprocessor/include;$(SolutionDir)/ThirdParty/boost/predef/include;$(SolutionDir)/ThirdParty/boost/mp11/include;$(SolutionDir)/ThirdParty/boost/tuple/include;$(SolutionDir)/ThirdParty/boost/utility/include;$(SolutionDir)/ThirdParty/boost/core/include;$(SolutionDir)/ThirdParty/boost/integer/include;$(SolutionDir)/ThirdParty/boost/iterator/include;$(SolutionDir)/ThirdParty/boost/mpl/include;$(SolutionDir)/ThirdParty/boost/multi_index/include;$(SolutionDir)/ThirdParty/boost/optional/include;$(SolutionDir)/ThirdParty/boost/pool/include;$(SolutionDir)/ThirdParty/boost/property_tree/include;$(SolutionDir)/ThirdParty/boost/range/include;$(SolutionDir)/ThirdParty/boost/system/include;$(SolutionDir)/ThirdParty/boost/throw_exception/include;$(SolutionDir)/ThirdParty/boost/type_index/include;$(SolutionDir)/ThirdParty/boost/type_traits/include;$(SolutionDir)/ThirdParty/boost/uuid/include;$(SolutionDir)/ThirdParty/SDL2/include;$(SolutionDir)/ThirdParty/SDL2_ttf;$(SolutionDir)/ThirdParty/SDL2_image/include;$(SolutionDir)/ThirdParty/SDL2_mixer/include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)/ThirdParty/ser20/include;$(SolutionDir)/ThirdParty/boost/align/include;$(SolutionDir)/ThirdParty/boost/any/include;$(SolutionDir)/ThirdParty/boost/asio/include;$(SolutionDir)/ThirdParty/boost/assert/include;$(SolutionDir)/ThirdParty/boost/bind/include;$(SolutionDir)/ThirdParty/boost/config/include;$(SolutionDir)/ThirdParty/boost/container_hash/include;$(SolutionDir)/ThirdParty/boost/winapi/include;$(SolutionDir)/ThirdParty/boost/preprocessor/include;$(SolutionDir)/ThirdParty/boost/predef/include;$(SolutionDir)/ThirdParty/boost/mp11/include;$(SolutionDir)/ThirdParty/boost/tuple/include;$(SolutionDir)/ThirdParty/boost/utility/include;$(SolutionDir)/ThirdParty/boost/core/include;$(SolutionDir)/ThirdParty/boost/integer/include;$(SolutionDir)/ThirdParty/boost/iterator/include;$(SolutionDir)/ThirdParty/boost/mpl/include;$(SolutionDir)/ThirdParty/boost/multi_index/include;$(SolutionDir)/ThirdParty/boost/optional/include;$(SolutionDir)/ThirdParty/boost/pool/include;$(SolutionDir)/ThirdParty/boost/property_tree/include;$(SolutionDir)/ThirdParty/boost/range/include;$(SolutionDir)/ThirdParty/boost/system/include;$(SolutionDir)/ThirdParty/boost/throw_exception/include;$(SolutionDir)/ThirdParty/boost/type_index/include;$(SolutionDir)/ThirdParty/boost/type_traits/include;$(SolutionDir)/ThirdParty/boost/uuid/include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -122,13 +122,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\source\application\CommandLineParser.cpp" />
-    <ClCompile Include="..\source\application\ConfigFailure.cpp" />
-    <ClCompile Include="..\source\application\ConfigSuccess.cpp" />
     <ClCompile Include="..\source\application\GameConfig.cpp" />
     <ClCompile Include="..\source\application\GameFailure.cpp" />
-    <ClCompile Include="..\source\application\GameSuccess.cpp" />
-    <ClCompile Include="..\source\application\SDL_Config.cpp" />
-    <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp" />
     <ClCompile Include="..\source\behavior\MoveLikeTankBeh.cpp" />
     <ClCompile Include="..\source\behavior\ShootingBeh.cpp" />
@@ -147,7 +142,6 @@
     <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp" />
     <ClCompile Include="..\source\components\managers\FramePerSecondManager.cpp" />
     <ClCompile Include="..\source\components\managers\GameStateManager.cpp" />
-    <ClCompile Include="..\source\components\managers\RenderManager.cpp" />
     <ClCompile Include="..\source\components\managers\RespawnManager.cpp" />
     <ClCompile Include="..\source\components\managers\SpawnManager.cpp" />
     <ClCompile Include="..\source\components\managers\TextureManager.cpp" />
@@ -211,14 +205,9 @@
   <!-- Headers matching the .cpp files above; moved here from BattleCityRemastered.vcxproj so header+impl live in the same project. -->
   <ItemGroup>
     <ClInclude Include="..\headers\application\CommandLineParser.h" />
-    <ClInclude Include="..\headers\application\ConfigFailure.h" />
-    <ClInclude Include="..\headers\application\ConfigSuccess.h" />
     <ClInclude Include="..\headers\application\GameConfig.h" />
     <ClInclude Include="..\headers\application\LaunchOptions.h" />
     <ClInclude Include="..\headers\application\GameFailure.h" />
-    <ClInclude Include="..\headers\application\GameSuccess.h" />
-    <ClInclude Include="..\headers\application\SDL_Config.h" />
-    <ClInclude Include="..\headers\application\UserInput.h" />
     <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h" />
     <ClInclude Include="..\headers\behavior\MoveLikeTankBeh.h" />
     <ClInclude Include="..\headers\behavior\ShootingBeh.h" />
@@ -252,7 +241,6 @@
     <ClInclude Include="..\headers\components\managers\DelayedSpawnManager.h" />
     <ClInclude Include="..\headers\components\managers\FramePerSecondManager.h" />
     <ClInclude Include="..\headers\components\managers\GameStateManager.h" />
-    <ClInclude Include="..\headers\components\managers\RenderManager.h" />
     <ClInclude Include="..\headers\components\managers\RespawnManager.h" />
     <ClInclude Include="..\headers\components\managers\SpawnManager.h" />
     <ClInclude Include="..\headers\components\managers\TextureManager.h" />
@@ -356,19 +344,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SDL2Wrappers\SDL2_mixer\SDL_mixer.vcxproj">
-      <Project>{f7e944b3-0815-40cd-b3e4-90b2a15b0e33}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SDL2Wrappers\SDL2_image\SDL_image.vcxproj">
-      <Project>{2bd5534e-00e2-4bea-ac96-d9a92ea24696}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SDL2Wrappers\SDL2_ttf\SDL_ttf.vcxproj">
-      <Project>{dddbd07d-dc76-4af6-8d02-3e2deb6ee255}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SDL2Wrappers\SDL2\SDL.vcxproj">
-      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
-    </ProjectReference>
-  </ItemGroup>
+  <!-- No SDL2 ProjectReference here on purpose: they belong to GamePlatform, so a consumer that needs
+       only the logic (UnitTests) never drags the SDL2 build in. -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

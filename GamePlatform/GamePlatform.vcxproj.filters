@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="headers">
+      <UniqueIdentifier>{b87936df-0363-9916-57ce-2b7c84079204}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\application">
+      <UniqueIdentifier>{8e8423b0-40a1-607b-c6cd-758629d0621d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\components">
+      <UniqueIdentifier>{c284b163-cb4b-2ed2-1369-199c225ab904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\components\managers">
+      <UniqueIdentifier>{8cff987a-38bf-2f96-eafb-cc4660b23c90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{f2ebaa59-6fc7-0118-29e4-efae98d1ffae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\application">
+      <UniqueIdentifier>{60cc343a-c78d-8fcc-581b-523b82dd1d14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\components">
+      <UniqueIdentifier>{69efdab6-20df-7c95-a035-e15a64281597}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\components\managers">
+      <UniqueIdentifier>{bd5ceea0-1814-2c64-cfeb-b94bf47ff52d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\application\ConfigFailure.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\ConfigSuccess.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\GameSuccess.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\SDL_Config.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\UserInput.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\managers\RenderManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\headers\application\ConfigFailure.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\ConfigSuccess.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\GameSuccess.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\SDL_Config.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\UserInput.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\RenderManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
