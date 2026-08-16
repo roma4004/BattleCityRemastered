@@ -1,16 +1,11 @@
 #pragma once
 
+#include "NetworkNodeBase.h"
 #include "Server.h"
-#include "components/EventSystem.h"
-#include "interfaces/INetworkNode.h"
-#include <thread>
-#include <vector>
-
-struct NetCommandUpdateEvent;
 
 namespace network::commands
 {
-class ServerHandler : public INetworkNode
+class ServerHandler final : public NetworkNodeBase
 {
 public:
 	explicit ServerHandler(const std::shared_ptr<EventSystem>& events);
@@ -18,22 +13,11 @@ public:
 
 	~ServerHandler() override;
 
-	void ProcessNetworkCommands() override
-	{
-		_server.ProcessNetworkCommands();
-	}
+	void ProcessNetworkCommands() override { _server.ProcessNetworkCommands(); }
 
 	[[nodiscard]] uint16_t GetBoundPort() const { return _server.GetBoundPort(); }
 
 private:
-	void Subscribe();
-	void Shutdown();
-	void OnNetCommandUpdate(const NetCommandUpdateEvent&);
-
-	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
-	boost::asio::io_context _ioContext{};
-	std::thread _serverThread{};
 	Server _server;
 };
 

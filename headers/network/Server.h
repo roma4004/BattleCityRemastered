@@ -1,22 +1,23 @@
 #pragma once
 
-#include "MessageFraming.h"
+#include "CommandDispatcher.h"
+#include "enums/InputSignal.h"
+#include "enums/PlayerTag.h"
+#include "FrameChannel.h"
 #include "NetworkCommandQueue.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
-#include <array>
-#include <boost/asio.hpp>
+#include <atomic>
+#include <functional>
+#include <unordered_map>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <condition_variable>
-#include <deque>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
 #include <thread>
-#include <atomic>
-#include <unordered_map>
 #include <vector>
 
 class EventSystem;
@@ -61,8 +62,8 @@ public:
 
 	~Session();
 
-	[[nodiscard]] bool IsSocketOpen() const { return _socket.is_open(); }
-	[[nodiscard]] network::NetworkCommandQueue& GetCommandQueue() { return _commandQueue; }
+	[[nodiscard]] bool IsSocketOpen() const { return _channel->IsOpen(); }
+	void ProcessCommandQueue() { _commandQueue.ProcessAll(); }
 
 	void Start();
 	//NOTE: shared, not copied - the same frame goes to every session and stays alive while it is written
@@ -70,30 +71,18 @@ public:
 	void Shutdown();
 
 private:
-	using CommandHandler = std::function<void(const AnyCommand&)>;
+	using InputEmitter = std::function<void(EventSystem&, const std::string&, bool)>;
 
-	void DoRead();
-	void ReadPayload(std::uint32_t payloadLength);
-	void WriteNextFrame();
-	void TryStartWrite();
-
-	void ProcessReceivedData(const std::string& archiveData);
-	void ProcessServerCommand(const AnyCommand& command);
 	void RegisterCommandHandlers();
 	void OnSignalEvent(const AnyCommand& command);
 	void OnKeyStateChange(const AnyCommand& command);
 
-	//NOTE: built on its own strand in Server::DoAccept - hence no mutex on _writeQueue (see Client.h)
-	tcp::socket _socket;
-	//NOTE: fixed-size buffers + write queue instead of streambufs - see Client.h
-	std::array<char, network::kFrameHeaderSize> _readHeader{};
-	std::vector<char> _readPayload{};
-	std::deque<std::shared_ptr<const std::string>> _writeQueue{};
-	bool _writeInProgress{false};
+	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
+
+	std::shared_ptr<network::FrameChannel> _channel;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	network::NetworkCommandQueue _commandQueue;
-	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
-
+	network::CommandDispatcher _dispatcher;
 };
 
 class Server final

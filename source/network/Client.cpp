@@ -14,7 +14,6 @@
 #include "enums/TankType.h"
 #include "network/commands/CommandBatch.h"
 #include "utils/NetworkLogger.h"
-// #include <fstream>
 #include <ser20/archives/portable_binary.hpp>
 #include <cassert>
 #include <iostream>
@@ -26,10 +25,11 @@ namespace network::commands
 Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _strand(boost::asio::make_strand(ioContext))
-	, _socket(_strand)
+	, _channel(std::make_shared<network::FrameChannel>(tcp::socket(_strand), "Client"))
 	, _reconnectTimer(_strand)
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
 	, _events{events}
+	, _dispatcher{"Client"}
 {
 	Subscribe();
 	RegisterCommandHandlers();
@@ -39,9 +39,8 @@ Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t po
 
 void Client::RegisterCommandHandlers()
 {
-	_commandHandlers = {
+	_dispatcher.RegisterAll({
 			{CommandType::POSITION_CHANGE, [this](const AnyCommand& cmd) { OnPositionChange(cmd); }},
-			//TODO: refactored tankShot event to bullet pool spawn with bulletId
 			{CommandType::TANK_SHOT, [this](const AnyCommand& cmd) { OnTankShot(cmd); }},
 			{CommandType::HEALTH_CHANGE, [this](const AnyCommand& cmd) { OnHealthChange(cmd); }},
 			{CommandType::DISPOSE, [this](const AnyCommand& cmd) { OnDispose(cmd); }},
@@ -55,39 +54,39 @@ void Client::RegisterCommandHandlers()
 			{CommandType::OBSTACLE_SPAWN, [this](const AnyCommand& cmd) { OnObstacleSpawn(cmd); }},
 			{CommandType::TANK_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnTankSpawnComplete(cmd); }},
 			{CommandType::BONUS_STATUS, [this](const AnyCommand& cmd) { OnBonusStatus(cmd); }},
-	};
+	});
 }
 
 //TODO: fix reconnect for minGW when we too fast run host and client
 void Client::TryConnect()
 {
-	if (_socket.is_open())
+	auto& socket = _channel->Socket();
+	if (socket.is_open())
 	{
 		boost::system::error_code ec;
-		std::ignore = _socket.close(ec);// NOTE: error captured via ec, return value intentionally discarded
+		std::ignore = socket.close(ec);// NOTE: error captured via ec, return value intentionally discarded
 	}
 
-	_socket.open(_endpoint.protocol());
-	_socket.async_connect(_endpoint, [this](const boost::system::error_code& ec)
+	socket.open(_endpoint.protocol());
+	socket.async_connect(_endpoint, [this](const boost::system::error_code& ec)
 	{
 		if (!ec)
 		{
 			// std::cout << "Client connected successfully" << '\n';
 			_reconnectAttempts = 0;
 			_isConnected = true;
-			this->ReadResponse();
+			this->StartReading();
+			_channel->SetWriteEnabled(true);
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				this->_batch.AddCommand(SignalEvent{"ClientOut_ReadyToPlay"});
+				this->_batch.AddCommand(SignalEvent{ClientSignal::ReadyToPlay});
 			}
-
-			TryStartWrite();
 		}
 		else
 		{
 			++_reconnectAttempts;
-			std::cerr << "Client connect failed (attempt " << _reconnectAttempts
-					<< "/" << MaxReconnectAttempts << "): " << ec.message() << '\n';
+			NetworkLogger::WriteError("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
+										  + std::to_string(MaxReconnectAttempts) + "): " + ec.message());
 
 			if (_reconnectAttempts < MaxReconnectAttempts)
 			{
@@ -95,7 +94,7 @@ void Client::TryConnect()
 			}
 			else
 			{
-				std::cerr << "Client gave up after " << MaxReconnectAttempts << " attempts" << '\n';
+				NetworkLogger::WriteError("Client gave up after " + std::to_string(MaxReconnectAttempts) + " attempts");
 			}
 		}
 	});
@@ -110,16 +109,22 @@ void Client::ScheduleReconnect()
 
 	_reconnectPending = true;
 
-	auto self(shared_from_this());
+	//NOTE: weak for the same reason as in StartReading - the timer is our own member, so a shared
+	//capture would keep this Client alive through its own pending handler
+	const std::weak_ptr<Client> weakSelf = weak_from_this();
 	_reconnectTimer.expires_after(std::chrono::milliseconds(ReconnectDelayMs));
-	_reconnectTimer.async_wait([this, self](const boost::system::error_code& timerEc)
+	_reconnectTimer.async_wait([weakSelf](const boost::system::error_code& timerEc)
 	{
-		std::ignore = self;
-
-		_reconnectPending = false;
-		if (!timerEc && !_isShuttingDown)
+		const auto self = weakSelf.lock();
+		if (!self)
 		{
-			TryConnect();
+			return;
+		}
+
+		self->_reconnectPending = false;
+		if (!timerEc && !self->_isShuttingDown)
+		{
+			self->TryConnect();
 		}
 	});
 }
@@ -132,12 +137,13 @@ void Client::HandleDisconnect()
 	}
 
 	_isConnected = false;
-	_writeInProgress = false;//NOTE: the failed write never completes, so nothing else would clear it
+	_channel->SetWriteEnabled(false);
+	_channel->ResetWriteState();
 
-	if (_socket.is_open())
+	if (_channel->IsOpen())
 	{
 		boost::system::error_code ec;
-		std::ignore = _socket.close(ec);
+		std::ignore = _channel->Socket().close(ec);
 	}
 
 	_reconnectAttempts = 0;//NOTE: a drop starts a fresh budget, it is not a failed connect attempt
@@ -151,45 +157,17 @@ Client::~Client()
 
 void Client::Shutdown()
 {
-	try
-	{
-		_isShuttingDown = true;//NOTE: before cancelling - handlers must not read the cancel as a drop
-		_reconnectTimer.cancel();
+	_isShuttingDown = true;//NOTE: before cancelling - handlers must not read the cancel as a drop
 
-		if (_socket.is_open())
-		{
-			boost::system::error_code ec;
-			std::ignore = _socket.cancel(ec);
-			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
-			if (ec)
-			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
-			}
-
-			std::ignore = _socket.close(ec);
-			if (ec)
-			{
-				std::cerr << "Error during socket close: " << ec.message() << '\n';
-			}
-		}
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << "Exception in Client::Shutdown: " << e.what() << '\n';
-	}
-	catch (...)
-	{
-		std::cerr << "Unknown error in Client::Shutdown" << '\n';
-	}
+	std::ignore = _reconnectTimer.cancel();//NOTE: no-throw, so ~Client is safe without a catch-all
+	_channel->Close();
 }
 
 void Client::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
 
-	// NOTE: local dispatch is keyed (MoveUpEvent/"P2") but the wire format sent via SendKeyState is
-	// unchanged ("P2_Move_Up" etc.) - Session::OnKeyStateChange on the host still parses that
-	// literal tag+action string out of the KeyStateChange command payload.
+	//NOTE: local dispatch is keyed by the "P2" string; on the wire the tag is PlayerTag::P2
 	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveUp));
 	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveLeft));
 	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveDown));
@@ -214,93 +192,54 @@ void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 	}
 }
 
-void Client::OnMoveUp(const MoveUpEvent& event) { SendKeyState("P2_Move_Up", event.isPressed); }
-void Client::OnMoveLeft(const MoveLeftEvent& event) { SendKeyState("P2_Move_Left", event.isPressed); }
-void Client::OnMoveDown(const MoveDownEvent& event) { SendKeyState("P2_Move_Down", event.isPressed); }
-void Client::OnMoveRight(const MoveRightEvent& event) { SendKeyState("P2_Move_Right", event.isPressed); }
-void Client::OnFire(const FireEvent& event) { SendKeyState("P2_Fire", event.isPressed); }
+void Client::OnMoveUp(const MoveUpEvent& event) { SendKeyState(InputSignal::MoveUp, event.isPressed); }
+void Client::OnMoveLeft(const MoveLeftEvent& event) { SendKeyState(InputSignal::MoveLeft, event.isPressed); }
+void Client::OnMoveDown(const MoveDownEvent& event) { SendKeyState(InputSignal::MoveDown, event.isPressed); }
+void Client::OnMoveRight(const MoveRightEvent& event) { SendKeyState(InputSignal::MoveRight, event.isPressed); }
+void Client::OnFire(const FireEvent& event) { SendKeyState(InputSignal::Fire, event.isPressed); }
 
 void Client::OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(SignalEvent{"ClientOut_ReadyToPlay"});
+	_batch.AddCommand(SignalEvent{ClientSignal::ReadyToPlay});
 }
 
 void Client::OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(KeyStateChange{"Pause_Released", event.isPaused});
+	_batch.AddCommand(KeyStateChange{PlayerTag::None, InputSignal::PauseReleased, event.isPaused});
 }
 
-void Client::ReadResponse()
+void Client::StartReading()
 {
-	auto self(shared_from_this());
-	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
-	{
-		//NOTE: self is captured only to keep this Client alive for the duration of the async
-		//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
-		std::ignore = self;
-
-		if (ec)
-		{
-			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
+	//NOTE: weak, not shared - the channel outlives nothing here, but it *stores* these callbacks,
+	//so capturing a shared_ptr would close the loop Client -> channel -> callback -> Client
+	const std::weak_ptr<Client> weakSelf = weak_from_this();
+	_channel->SetHandlers(
+			[weakSelf](const std::string& frame)
 			{
-				std::cerr << ec.message() << '\n';
-			}
+				if (const auto self = weakSelf.lock())
+				{
+					self->_dispatcher.Dispatch(frame);
+				}
+			},
+			[weakSelf]
+			{
+				if (const auto self = weakSelf.lock())
+				{
+					self->HandleDisconnect();
+				}
+			});
 
-			HandleDisconnect();
-			return;
-		}
-
-		const std::uint32_t payloadLength = network::DecodeFrameHeader(_readHeader.data());
-		if (payloadLength == 0u || payloadLength > network::kMaxFramePayloadSize)
-		{
-			NetworkLogger::WriteLog("Client::ReadResponse: bogus frame length "
-									+ std::to_string(payloadLength) + ", dropping connection");
-			HandleDisconnect();
-			return;
-		}
-
-		ReadPayload(payloadLength);
-	};
-
-	boost::asio::async_read(_socket, boost::asio::buffer(_readHeader), std::move(lambda));
+	_channel->StartReading();
 }
 
-void Client::ReadPayload(const std::uint32_t payloadLength)
-{
-	_readPayload.resize(payloadLength);
 
-	auto self(shared_from_this());
-	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
-	{
-		std::ignore = self;
-
-		if (ec)
-		{
-			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
-			{
-				std::cerr << ec.message() << '\n';
-			}
-
-			HandleDisconnect();
-			return;
-		}
-
-		ProcessReceivedData(std::string(_readPayload.data(), _readPayload.size()));
-
-		// Since we want to keep listening, initiate reading again
-		this->ReadResponse();
-	};
-
-	boost::asio::async_read(_socket, boost::asio::buffer(_readPayload), std::move(lambda));
-}
-
-void Client::SendKeyState(const std::string& key, const bool state)
+void Client::SendKeyState(const InputSignal action, const bool state)
 {
 	// NetworkLogger::LogClientOut(state);
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(KeyStateChange{key, state});
+	_batch.AddCommand(KeyStateChange{PlayerTag::P2, action, state});
 }
 
 void Client::OnPositionChange(const AnyCommand& command)
@@ -403,19 +342,19 @@ void Client::OnStatisticsChange(const AnyCommand& command)
 void Client::OnKeyStateChange(const AnyCommand& command)
 {
 	const auto& cmd = std::get<KeyStateChange>(command);
-	const auto keyState = cmd.GetKeyState();
-	const auto isEnable = cmd.GetIsEnable();
+	const InputSignal signal = cmd.GetAction();
+	const bool isEnable = cmd.GetIsEnable();
 
-	_commandQueue.Enqueue([this, keyState, isEnable]()
+	_commandQueue.Enqueue([this, signal, isEnable]()
 	{
-		if (keyState == "Pause_Status")
+		if (signal == InputSignal::PauseStatus)
 		{
-			this->_events->EmitEvent(PauseStatusEvent{.isPaused = isEnable});
+			_events->EmitEvent(PauseStatusEvent{.isPaused = isEnable});
+			return;
 		}
-		else
-		{
-			NetworkLogger::WriteLog("Client::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
-		}
+
+		NetworkLogger::WriteLog("Client::OnKeyStateChange: unexpected signal "
+								+ std::to_string(static_cast<int>(signal)));
 	});
 }
 
@@ -546,50 +485,6 @@ void Client::OnBonusStatus(const AnyCommand& command)
 	});
 }
 
-void Client::ProcessClientCommand(const AnyCommand& command)
-{
-	// auto commandName = std::string("client receive:") + GetClassNameW(command);
-	// NetworkLogger::LogClientIn(commandName);
-	if (const auto it = _commandHandlers.find(GetCommandType(command)); it != _commandHandlers.end())
-	{
-		it->second(command);
-	}
-}
-
-void Client::ProcessReceivedData(const std::string& archiveData)
-{
-	try
-	{
-		std::istringstream archiveStream(archiveData);
-		ser20::PortableBinaryInputArchive ia(archiveStream);
-
-		CommandBatch batch;
-		ia(batch);
-
-		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
-		for (const auto& command: batch.GetCommands())
-		{
-			ProcessClientCommand(command);
-		}
-	}
-	catch (const std::exception& e)
-	{
-		const std::string errorMsg = std::string("error deserialization: ") + e.what();
-		NetworkLogger::WriteLog(errorMsg);
-
-		if (archiveData.length() < 200)
-		{
-			NetworkLogger::WriteLog("raw data: " + archiveData);
-		}
-		else
-		{
-			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
-		}
-
-		std::cerr << "Deserialization error: " << e.what() << '\n';
-		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
-	}
-}
 
 void Client::SendCommand(const CommandBatch& command)
 {
@@ -599,81 +494,6 @@ void Client::SendCommand(const CommandBatch& command)
 		oa(command);
 	}
 
-	//NOTE: called from the game thread - the post is what moves the queue access onto the strand
-	auto self(shared_from_this());
-	boost::asio::post(_socket.get_executor(),
-					  [this, self,
-						  framed = std::make_shared<const std::string>(
-								  network::FrameMessage(archiveStream.str()))]() mutable
-					  {
-						  std::ignore = self;
-
-						  if (_writeQueue.size() >= MaxPendingFrames)
-						  {
-							  _writeQueue.pop_front();
-							  NetworkLogger::WriteLog(
-									  "Client::SendCommand: pending queue full, dropped oldest frame");
-						  }
-
-						  _writeQueue.push_back(std::move(framed));
-
-						  TryStartWrite();
-					  });
-}
-
-//NOTE: nothing reaches the wire until connected - frames pile up and the connect handler kicks them off
-void Client::TryStartWrite()
-{
-	if (_writeQueue.empty() || !_isConnected || _writeInProgress)
-	{
-		return;
-	}
-
-	_writeInProgress = true;
-
-	WriteNextFrame();
-}
-
-void Client::WriteNextFrame()
-{
-	//NOTE: shared, so the queue stays free to change while the write is in flight
-	const auto frame = _writeQueue.front();
-
-	auto self(shared_from_this());
-	auto lambda = [this, self, frame](const boost::system::error_code& ec, const std::size_t /*length*/)
-	{
-		//NOTE: self and frame are captured to outlive the async operation, never dereferenced here
-		std::ignore = self;
-		std::ignore = frame;
-
-		if (ec)
-		{
-			if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
-			{
-				std::cout << "Connection closed normally" << '\n';
-			}
-			else
-			{
-				std::cerr << "Write error: " << ec.message() << '\n';
-				//TODO: need handle close connection and delete session
-			}
-
-			//NOTE: undelivered frame stays at the head, to be re-sent whole on the next connection
-			HandleDisconnect();
-			return;
-		}
-
-		_writeQueue.pop_front();
-
-		if (_writeQueue.empty())
-		{
-			_writeInProgress = false;
-			return;
-		}
-
-		WriteNextFrame();
-	};
-
-	boost::asio::async_write(_socket, boost::asio::buffer(*frame), std::move(lambda));
+	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(archiveStream.str())));
 }
 }//namespace network::commands

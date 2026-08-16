@@ -177,6 +177,9 @@
     <ClCompile Include="..\source\entities\pawns\Tank.cpp" />
     <ClCompile Include="..\source\network\Client.cpp" />
     <ClCompile Include="..\source\network\ClientHandler.cpp" />
+    <ClCompile Include="..\source\network\CommandDispatcher.cpp" />
+    <ClCompile Include="..\source\network\FrameChannel.cpp" />
+    <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusStatus.cpp" />
@@ -285,6 +288,9 @@
     <ClInclude Include="..\headers\enums\AnimationType.h" />
     <ClInclude Include="..\headers\enums\BonusType.h" />
     <ClInclude Include="..\headers\enums\CommandType.h" />
+    <ClInclude Include="..\headers\enums\ClientSignal.h" />
+    <ClInclude Include="..\headers\enums\InputSignal.h" />
+    <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
     <ClInclude Include="..\headers\enums\GameMode.h" />
     <ClInclude Include="..\headers\enums\GameState.h" />
@@ -307,6 +313,9 @@
     <ClInclude Include="..\headers\interfaces\ITickUpdatable.h" />
     <ClInclude Include="..\headers\network\Client.h" />
     <ClInclude Include="..\headers\network\ClientHandler.h" />
+    <ClInclude Include="..\headers\network\CommandDispatcher.h" />
+    <ClInclude Include="..\headers\network\FrameChannel.h" />
+    <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />
     <ClInclude Include="..\headers\network\commands\BonusDeSpawn.h" />
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h" />

@@ -2,12 +2,12 @@
 
 namespace network::commands
 {
-SignalEvent::SignalEvent(std::string signalName)
-	: _signalName{std::move(signalName)} {}
+SignalEvent::SignalEvent(const ClientSignal signal)
+	: _signal{signal} {}
 
 CommandType SignalEvent::GetType() const noexcept { return _type; }
 
-std::string SignalEvent::GetSignalName() const noexcept { return _signalName; }
+ClientSignal SignalEvent::GetSignal() const noexcept { return _signal; }
 
 const char* SignalEvent::GetClassNameW() const noexcept { return "SignalEvent"; }
 }//namespace network::commands

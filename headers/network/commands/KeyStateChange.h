@@ -1,15 +1,16 @@
 #pragma once
 
 #include "enums/CommandType.h"
-#include <ser20/types/string.hpp>
-#include <string>
+#include "enums/InputSignal.h"
+#include "enums/PlayerTag.h"
 
 namespace network::commands
 {
 class KeyStateChange
 {
 	CommandType _type{CommandType::KEY_STATE_CHANGE};
-	std::string _keyState{};
+	PlayerTag _tag{PlayerTag::None};
+	InputSignal _action{};
 	bool _isPressed{};
 
 public:
@@ -17,10 +18,11 @@ public:
 	KeyStateChange() = default;
 
 	//for serialization
-	KeyStateChange(std::string keyState, bool isPressed);
+	KeyStateChange(PlayerTag tag, InputSignal action, bool isPressed);
 
 	[[nodiscard]] CommandType GetType() const noexcept;
-	[[nodiscard]] std::string GetKeyState() const noexcept;
+	[[nodiscard]] PlayerTag GetTag() const noexcept;
+	[[nodiscard]] InputSignal GetAction() const noexcept;
 	[[nodiscard]] bool GetIsEnable() const noexcept;
 	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
@@ -32,7 +34,8 @@ template<class Archive>
 void KeyStateChange::serialize(Archive& ar, const unsigned int)
 {
 	ar & _type;
-	ar & _keyState;
+	ar & _tag;
+	ar & _action;
 	ar & _isPressed;
 }
 }//namespace network::commands

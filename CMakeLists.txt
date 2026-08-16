@@ -90,6 +90,9 @@ set(GAME_CORE_SOURCES
         source/entities/pawns/Tank.cpp
         source/network/Client.cpp
         source/network/ClientHandler.cpp
+        source/network/CommandDispatcher.cpp
+        source/network/FrameChannel.cpp
+        source/network/NetworkNodeBase.cpp
         source/network/Server.cpp
         source/network/ServerHandler.cpp
         source/network/commands/BonusDeSpawn.cpp

@@ -68,6 +68,12 @@ public:
 	static void WriteLog(const std::string& message, bool skipEndl = false);
 
 	/**
+	 * @brief same as WriteLog, but the console half goes to stderr and the file line is tagged ERROR
+	 * @param message message that will be in log
+	 */
+	static void WriteError(const std::string& message);
+
+	/**
 	 * @brief Отримати поточний час як рядок
 	 * @return Рядок з поточним часом у форматі [HH:MM:SS.mmm]
 	 */

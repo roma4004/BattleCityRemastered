@@ -258,6 +258,9 @@
     <ClCompile Include="..\source\network\ClientHandler.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\CommandDispatcher.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp">
       <Filter>source\network\commands</Filter>
     </ClCompile>
@@ -305,6 +308,12 @@
     </ClCompile>
     <ClCompile Include="..\source\network\commands\TankSpawnComplete.cpp">
       <Filter>source\network\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\FrameChannel.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\network\NetworkNodeBase.cpp">
+      <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\Server.cpp">
       <Filter>source\network</Filter>
@@ -572,6 +581,9 @@
     <ClInclude Include="..\headers\enums\BonusType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\ClientSignal.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\CommandType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -584,7 +596,13 @@
     <ClInclude Include="..\headers\enums\GameState.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\InputSignal.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\ObstacleType.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\enums\PlayerTag.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\RespawnGroup.h">
@@ -641,6 +659,9 @@
     <ClInclude Include="..\headers\network\ClientHandler.h">
       <Filter>headers\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\CommandDispatcher.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\AnyCommand.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -695,7 +716,13 @@
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\FrameChannel.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\MessageFraming.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\NetworkNodeBase.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Server.h">

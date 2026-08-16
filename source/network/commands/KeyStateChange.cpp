@@ -2,13 +2,16 @@
 
 namespace network::commands
 {
-KeyStateChange::KeyStateChange(std::string keyState, const bool isPressed)
-	: _keyState{std::move(keyState)}
+KeyStateChange::KeyStateChange(const PlayerTag tag, const InputSignal action, const bool isPressed)
+	: _tag{tag}
+	, _action{action}
 	, _isPressed{isPressed} {}
 
 CommandType KeyStateChange::GetType() const noexcept { return _type; }
 
-std::string KeyStateChange::GetKeyState() const noexcept { return _keyState; }
+PlayerTag KeyStateChange::GetTag() const noexcept { return _tag; }
+
+InputSignal KeyStateChange::GetAction() const noexcept { return _action; }
 
 bool KeyStateChange::GetIsEnable() const noexcept { return _isPressed; }
 

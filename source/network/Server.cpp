@@ -11,26 +11,26 @@
 #include "network/commands/CommandBatch.h"
 #include "utils/NetworkLogger.h"
 #include <algorithm>
+#include <boost/asio/strand.hpp>
 #include <ser20/archives/portable_binary.hpp>
-#include <iostream>
 #include <mutex>
 
-// std::ofstream error_log("error_log.txt");
 namespace network::commands
 {
 Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
-	: _socket(std::move(sock))
+	: _channel(std::make_shared<network::FrameChannel>(std::move(sock), "Session"))
 	, _events(events)
+	, _dispatcher{"Session"}
 {
 	RegisterCommandHandlers();
 }
 
 void Session::RegisterCommandHandlers()
 {
-	_commandHandlers = {
+	_dispatcher.RegisterAll({
 			{CommandType::SIGNAL_EVENT, [this](const AnyCommand& cmd) { OnSignalEvent(cmd); }},
 			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
-	};
+	});
 }
 
 Session::~Session()
@@ -38,329 +38,97 @@ Session::~Session()
 	Shutdown();
 }
 
-void Session::Shutdown()
-{
-	try
-	{
-		if (_socket.is_open())
-		{
-			boost::system::error_code ec;
-			std::ignore = _socket.cancel(ec);
-
-			std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
-			if (ec)
-			{
-				std::cerr << "Error during socket shutdown: " << ec.message() << '\n';
-			}
-
-			std::ignore = _socket.close(ec);
-			if (ec)
-			{
-				std::cerr << "Error closing socket socket: " << ec.message() << '\n';
-			}
-		}
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << "Exception in Session::Shutdown: " << e.what() << '\n';
-	}
-	catch (...)
-	{
-		std::cerr << "Unknown error in Session::Shutdown" << '\n';
-	}
-}
+void Session::Shutdown() { _channel->Close(); }
 
 void Session::Start()
 {
-	try
-	{
-		DoRead();
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
-	catch (...)
-	{
-		std::cerr << "error ..." << '\n';
-	}
-}
+	//NOTE: weak, not shared - the channel stores these callbacks, so a shared_ptr would close the
+	//loop Session -> channel -> callback -> Session
+	const std::weak_ptr<Session> weakSelf = weak_from_this();
+	_channel->SetHandlers(
+			[weakSelf](const std::string& frame)
+			{
+				if (const auto self = weakSelf.lock())
+				{
+					self->_dispatcher.Dispatch(frame);
+				}
+			},
+			//NOTE: closing is what makes the session collectable - Server::CleanupDeadSessions
+			//goes by IsSocketOpen()
+			[weakSelf]
+			{
+				if (const auto self = weakSelf.lock())
+				{
+					self->_channel->Close();
+				}
+			});
 
-void Session::ProcessReceivedData(const std::string& archiveData)
-{
-	try
-	{
-		std::istringstream archiveStream(archiveData);
-		ser20::PortableBinaryInputArchive ia(archiveStream);
-
-		CommandBatch batch;
-		ia(batch);
-
-		// NetworkLogger::WriteLog("\nraw data: " + archiveData+" =", true);
-		for (const auto& command: batch.GetCommands())
-		{
-			ProcessServerCommand(command);
-		}
-	}
-	catch (const std::exception& e)
-	{
-		const std::string errorMsg = std::string("error deserialization: ") + e.what();
-		NetworkLogger::WriteLog(errorMsg);
-
-		if (archiveData.length() < 200)
-		{
-			NetworkLogger::WriteLog("raw data: " + archiveData);
-		}
-		else
-		{
-			NetworkLogger::WriteLog("raw data (first 200 sym): " + archiveData.substr(0, 200) + "...");
-		}
-
-		std::cerr << "Deserialization error: " << e.what() << '\n';
-		std::cerr << "Raw data size: " << archiveData.length() << " bytes" << '\n';
-	}
+	_channel->StartReading();
 }
 
 void Session::OnSignalEvent(const AnyCommand& command)
 {
 	const auto& cmd = std::get<SignalEvent>(command);
-	const std::string signalName = cmd.GetSignalName();
+	const ClientSignal signal = cmd.GetSignal();
 
-	_commandQueue.Enqueue([this, signalName]()
+	_commandQueue.Enqueue([this, signal]()
 	{
-		if (signalName == "ClientOut_ReadyToPlay")
+		switch (signal)
 		{
-			_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
-		}
-		else
-		{
-			NetworkLogger::WriteLog("Session::OnSignalEvent: unrecognized signal \"" + signalName + "\"");
+			case ClientSignal::ReadyToPlay:
+				_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
+				break;
 		}
 	});
 }
+
+//NOTE: dispatch table instead of a switch, same shape as the command handlers above
+const std::unordered_map<InputSignal, Session::InputEmitter> Session::kInputEmitters{
+		{InputSignal::MoveUp,
+		 [](EventSystem& events, const std::string& tag, const bool pressed)
+		 { events.EmitEvent(Key(tag), ServerInMoveUpEvent{.isPressed = pressed}); }},
+		{InputSignal::MoveDown,
+		 [](EventSystem& events, const std::string& tag, const bool pressed)
+		 { events.EmitEvent(Key(tag), ServerInMoveDownEvent{.isPressed = pressed}); }},
+		{InputSignal::MoveLeft,
+		 [](EventSystem& events, const std::string& tag, const bool pressed)
+		 { events.EmitEvent(Key(tag), ServerInMoveLeftEvent{.isPressed = pressed}); }},
+		{InputSignal::MoveRight,
+		 [](EventSystem& events, const std::string& tag, const bool pressed)
+		 { events.EmitEvent(Key(tag), ServerInMoveRightEvent{.isPressed = pressed}); }},
+		{InputSignal::Fire,
+		 [](EventSystem& events, const std::string& tag, const bool pressed)
+		 { events.EmitEvent(Key(tag), ServerInFireEvent{.isPressed = pressed}); }},
+		{InputSignal::PauseReleased,
+		 [](EventSystem& events, const std::string&, const bool pressed)
+		 { events.EmitEvent(ServerInPauseReleasedEvent{.isPaused = pressed}); }},
+};
 
 void Session::OnKeyStateChange(const AnyCommand& command)
 {
 	const auto& cmd = std::get<KeyStateChange>(command);
-	const auto keyState = cmd.GetKeyState();
-	const auto isEnable = cmd.GetIsEnable();
+	const PlayerTag tag = cmd.GetTag();
+	const InputSignal action = cmd.GetAction();
+	const bool isEnable = cmd.GetIsEnable();
 
-	_commandQueue.Enqueue([this, keyState, isEnable]()//TODO: validate each command, security risk
+	_commandQueue.Enqueue([this, tag, action, isEnable]()//TODO: validate each command, security risk
 	{
-		if (keyState.starts_with("P1_") || keyState.starts_with("P2_"))
+		const auto it = kInputEmitters.find(action);
+		if (it == kInputEmitters.end())
 		{
-			const std::string tag = keyState.substr(0, 2);
-			const std::string action = keyState.substr(3);
+			NetworkLogger::WriteError("Session::OnKeyStateChange: unhandled input signal "
+									  + std::to_string(static_cast<int>(action)));
+			return;
+		}
 
-			if (action == "Move_Up")
-			{
-				_events->EmitEvent(Key(tag), ServerInMoveUpEvent{.isPressed = isEnable});
-			}
-			else if (action == "Move_Down")
-			{
-				_events->EmitEvent(Key(tag), ServerInMoveDownEvent{.isPressed = isEnable});
-			}
-			else if (action == "Move_Left")
-			{
-				_events->EmitEvent(Key(tag), ServerInMoveLeftEvent{.isPressed = isEnable});
-			}
-			else if (action == "Move_Right")
-			{
-				_events->EmitEvent(Key(tag), ServerInMoveRightEvent{.isPressed = isEnable});
-			}
-			else if (action == "Fire")
-			{
-				_events->EmitEvent(Key(tag), ServerInFireEvent{.isPressed = isEnable});
-			}
-			else
-			{
-				NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized tagged action \"" + action
-										+ "\"");
-			}
-		}
-		else if (keyState == "Pause_Released")
-		{
-			_events->EmitEvent(ServerInPauseReleasedEvent{.isPaused = isEnable});
-		}
-		else
-		{
-			NetworkLogger::WriteLog("Session::OnKeyStateChange: unrecognized key state \"" + keyState + "\"");
-		}
+		//NOTE: the local bus is still keyed by the "P1"/"P2" string, only the wire is typed
+		it->second(*_events, tag == PlayerTag::P1 ? "P1" : "P2", isEnable);
 	});
 }
 
-void Session::ProcessServerCommand(const AnyCommand& command)
-{
-	// auto commandName = std::string("client receive:") + GetClassNameW(command);
-	// NetworkLogger::LogClientIn(commandName);
-	if (const auto it = _commandHandlers.find(GetCommandType(command)); it != _commandHandlers.end())
-	{
-		it->second(command);
-	}
-}
 
-void Session::DoRead()
-{
-	try
-	{
-		auto self(shared_from_this());
-		auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
-		{
-			//NOTE: self is captured only to keep this Session alive for the duration of the async
-			//operation (shared_from_this() lifetime extension) - never dereferenced explicitly
-			std::ignore = self;
+void Session::DoWrite(std::shared_ptr<const std::string> message) { _channel->Send(std::move(message)); }
 
-			if (ec)
-			{
-				if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
-				{
-					std::cerr << "DoRead error ..." << ec << '\n';
-				}
-
-				Shutdown();//NOTE: CleanupDeadSessions goes by IsSocketOpen(), so it must be closed here
-				return;
-			}
-
-			const std::uint32_t payloadLength = network::DecodeFrameHeader(_readHeader.data());
-			if (payloadLength == 0u || payloadLength > network::kMaxFramePayloadSize)
-			{
-				NetworkLogger::WriteLog("Session::DoRead: bogus frame length "
-										+ std::to_string(payloadLength) + ", dropping connection");
-				boost::system::error_code closeEc;
-				std::ignore = _socket.close(closeEc);
-				return;
-			}
-
-			ReadPayload(payloadLength);
-		};
-
-		boost::asio::async_read(_socket, boost::asio::buffer(_readHeader), lambda);
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << "Exception in DoRead: " << e.what() << '\n';
-	}
-	catch (...)
-	{
-		std::cerr << "error ..." << '\n';
-	}
-}
-
-void Session::ReadPayload(const std::uint32_t payloadLength)
-{
-	_readPayload.resize(payloadLength);
-
-	auto self(shared_from_this());
-	auto lambda = [this, self](const boost::system::error_code& ec, const std::size_t /*length*/)
-	{
-		std::ignore = self;
-
-		if (ec)
-		{
-			if (ec != boost::asio::error::eof && ec != boost::asio::error::operation_aborted)
-			{
-				std::cerr << "ReadPayload error ..." << ec << '\n';
-			}
-
-			Shutdown();
-			return;
-		}
-
-		this->ProcessReceivedData(std::string(_readPayload.data(), _readPayload.size()));
-
-		DoRead();
-	};
-
-	boost::asio::async_read(_socket, boost::asio::buffer(_readPayload), lambda);
-}
-
-void Session::DoWrite(std::shared_ptr<const std::string> message)
-{
-	try
-	{
-		if (!_socket.is_open())
-		{
-			std::cerr << "Session Socket is not open. Cannot write.";
-			return;
-		}
-
-		//NOTE: called from the send thread - the post is what moves the queue access onto the strand
-		auto self(shared_from_this());
-		boost::asio::post(_socket.get_executor(), [this, self, message = std::move(message)]() mutable
-		{
-			std::ignore = self;
-
-			_writeQueue.push_back(std::move(message));
-
-			TryStartWrite();
-		});
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << "Session Exception in DoWrite: " << e.what() << '\n';
-		NetworkLogger::WriteLog(std::string("Session Exception in DoWrite: ") + e.what());
-	}
-	catch (...)
-	{
-		std::cerr << "Session error ..." << '\n';
-		NetworkLogger::WriteLog("Session error in DoWrite: unknown exception");
-	}
-}
-
-void Session::TryStartWrite()
-{
-	if (_writeQueue.empty() || _writeInProgress)
-	{
-		return;
-	}
-
-	_writeInProgress = true;
-
-	WriteNextFrame();
-}
-
-void Session::WriteNextFrame()
-{
-	//NOTE: shared, so the queue stays free to change while the write is in flight
-	const auto frame = _writeQueue.front();
-
-	auto self(shared_from_this());
-	auto lambda = [this, self, frame](const boost::system::error_code& ec, const std::size_t /*length*/)
-	{
-		std::ignore = self;
-		std::ignore = frame;
-
-		if (ec)
-		{
-			if (ec == boost::asio::error::eof || ec == boost::asio::error::operation_aborted)
-			{
-				std::cout << "Session Connection closed normally" << '\n';
-			}
-			else
-			{
-				std::cerr << "Session Write error: " << ec.message() << '\n';
-				//TODO: need handle close connection and delete session
-			}
-
-			//NOTE: undelivered frame stays queued; the session is discarded whole once the socket closes
-			_writeInProgress = false;
-			_socket.close();
-			return;
-		}
-
-		_writeQueue.pop_front();
-
-		if (_writeQueue.empty())
-		{
-			_writeInProgress = false;
-			return;
-		}
-
-		WriteNextFrame();
-	};
-
-	boost::asio::async_write(_socket, boost::asio::buffer(*frame), std::move(lambda));
-}
 
 Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
@@ -404,7 +172,7 @@ void Server::StartSendThread()
 				}
 				catch (const std::exception& e)
 				{
-					std::cerr << "Server Exception in send thread: " << e.what() << '\n';
+					NetworkLogger::WriteError(std::string("Server send thread: ") + e.what());
 
 					// retry send
 					std::scoped_lock lock(this->_sendQueueMutex);
@@ -412,8 +180,7 @@ void Server::StartSendThread()
 				}
 				catch (...)
 				{
-					std::cerr << "Server thread error ..." << '\n';
-					NetworkLogger::WriteLog("Server send thread error: unknown exception");
+					NetworkLogger::WriteError("Server send thread error: unknown exception");
 				}
 			}
 		}
@@ -497,7 +264,7 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 void Server::OnPauseStatus(const ServerOutPauseStatusEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(KeyStateChange{"Pause_Status", event.isPaused});
+	_batch.AddCommand(KeyStateChange{PlayerTag::None, InputSignal::PauseStatus, event.isPaused});
 }
 
 void Server::OnPlayersTeamIsWon(const ServerOutPlayersTeamIsWonEvent&)
@@ -701,7 +468,7 @@ void Server::DoAccept()
 		{
 			if (ec != boost::asio::error::operation_aborted)
 			{
-				std::cerr << "Accept error: " << ec.message() << '\n';
+				NetworkLogger::WriteError("Server accept: " + ec.message());
 			}
 		}
 		else
@@ -719,11 +486,11 @@ void Server::DoAccept()
 			}
 			catch (const std::exception& e)
 			{
-				std::cerr << "Exception on new session start: " << e.what() << '\n';
+				NetworkLogger::WriteError(std::string("Server new session start: ") + e.what());
 			}
 			catch (...)
 			{
-				std::cerr << "error ..." << '\n';
+				NetworkLogger::WriteError("Server new session start: unknown exception");
 			}
 			DoAccept();
 		}
@@ -769,7 +536,7 @@ void Server::ProcessNetworkCommands() const
 	{
 		if (session && session->IsSocketOpen())
 		{
-			session->GetCommandQueue().ProcessAll();//TODO: refactor to session->ProcessCommandQueue()
+			session->ProcessCommandQueue();
 		}
 	}
 }
