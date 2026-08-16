@@ -6,7 +6,6 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
-#include "network/Client.h"
 
 InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
