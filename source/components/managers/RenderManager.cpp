@@ -498,8 +498,7 @@ void RenderManager::RenderFPS(const RenderFPSEvent& event)
 
 void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
 {
-	const ObjRectangle rect = event.rect;
-	const int health = event.health;
+	const auto& [rect, health] = event;
 	const float pixelsPerHealthPoint = static_cast<float>(rect.w) / 100.0f;
 	const float healthWidth = static_cast<float>(health) * pixelsPerHealthPoint;
 	if (healthWidth <= 0.f)

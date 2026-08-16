@@ -28,7 +28,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir) const override;
 	[[nodiscard]] ObjRectangle GetNextPos(double deltaTime) const;
-	[[nodiscard]] FPoint GetBulletNextPoint(double deltaTime) const;
+	[[nodiscard]] FPoint GetBlowCenter(double deltaTime) const;
 
 protected:
 	[[nodiscard]] bool MoveUp(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;

@@ -42,10 +42,11 @@ ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 	// }
 }
 
-FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
+// Where the bullet would have been this frame had nothing blocked it - the blast is centred there
+FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime) const
 {
 	const float speed = _calibre.speed * static_cast<float>(deltaTime);
-	const auto [x, y, w, h] = _rect;
+	const auto [x, y] = _rect.Center();
 	if (_direction == Direction::UP)
 	{
 		return FPoint{.x = x, .y = y - speed};
@@ -62,9 +63,7 @@ FPoint MoveLikeBulletBeh::GetBulletNextPoint(const double deltaTime) const
 	}
 
 	//_direction == Direction::RIGHT
-	// {
 	return FPoint{.x = x + speed, .y = y};
-	// }
 }
 
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction /*dir*/) const
@@ -105,7 +104,7 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 	}
 
 	// Self-destroy with deal damage when the edge of windows is reached
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime));
 
 	return false;
 }
@@ -119,7 +118,7 @@ bool MoveLikeBulletBeh::MoveUp(const double deltaTime, std::vector<std::shared_p
 		return true;
 	}
 
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime));
 
 	return false;
 }
@@ -133,7 +132,7 @@ bool MoveLikeBulletBeh::MoveLeft(const double deltaTime, std::vector<std::shared
 		return true;
 	}
 
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime));
 
 	return false;
 }
@@ -147,7 +146,7 @@ bool MoveLikeBulletBeh::MoveDown(const double deltaTime, std::vector<std::shared
 		return true;
 	}
 
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime));
 
 	return false;
 }
@@ -161,7 +160,7 @@ bool MoveLikeBulletBeh::MoveRight(const double deltaTime, std::vector<std::share
 		return true;
 	}
 
-	outCollisions = GetCircleCollisionObjects(GetBulletNextPoint(deltaTime));
+	outCollisions = GetCircleCollisionObjects(GetBlowCenter(deltaTime));
 
 	return false;
 }

@@ -2,7 +2,6 @@
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/managers/AnimationManager.h"
-#include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
 #include <cassert>
 
@@ -197,9 +196,7 @@ ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const O
 
 void TextureManager::Draw(const DrawObjEvent& event) const
 {
-	const ObjRectangle& rect = event.rect;
-	const Direction dir = event.dir;
-	const std::string& name = event.name;
+	const auto& [rect, dir, name] = event;
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
@@ -217,15 +214,11 @@ void TextureManager::Draw(const DrawObjEvent& event) const
 
 void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
-	const ObjRectangle& rect = event.rect;
-	const Direction dir = event.dir;
-	const int step = event.frame;
-	const int scale = event.scale;
-	const std::string& name = event.name;
+	const auto& [rect, dir, frame, scale, name] = event;
 	ObjRectangle destRect = rect;
 	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
 	const int direction = name == "Water" ? -1 : 1;//NOTE: water's frames are played back-to-front frames flow
-	textureRect.x += static_cast<float>(step * scale * direction);
+	textureRect.x += static_cast<float>(frame * scale * direction);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)

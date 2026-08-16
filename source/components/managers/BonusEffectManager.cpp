@@ -56,8 +56,7 @@ void BonusEffectManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& eve
 
 void BonusEffectManager::OnTimerBonus(const BonusTimerPickupEvent& event)
 {
-	const std::string& fraction = event.fraction;
-	const milliseconds effectDuration = event.effectDuration;
+	const auto& [fraction, effectDuration] = event;
 	if (fraction == "EnemyTeam")
 	{
 		StartTimer(_timerPlayer, "Timer", "PlayerTeam", effectDuration);
@@ -159,8 +158,7 @@ Timer BonusEffectManager::GetHelmet(const size_t id) const
 
 void BonusEffectManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
 {
-	const std::string& fraction = event.fraction;
-	const milliseconds effectDuration = event.effectDuration;
+	const auto& [fraction, effectDuration] = event;
 	if (fraction == "PlayerTeam")
 	{
 		StartTimer(_shovelPlayer, "Shovel", fraction, effectDuration);

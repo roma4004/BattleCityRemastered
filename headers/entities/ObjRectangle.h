@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Point.h"
+
 struct ObjRectangle final
 {
 	float x{}, y{}, w{}, h{};
@@ -15,6 +17,8 @@ struct ObjRectangle final
 	// Get the y-coordinate of the bottom side
 	[[nodiscard]] float Bottom() const;
 
+	[[nodiscard]] FPoint Center() const;
+
 	[[nodiscard]] ObjRectangle GetScaledBy(float scale) const;
 };
 
@@ -23,6 +27,8 @@ inline float ObjRectangle::Area() const { return w * h; }
 inline float ObjRectangle::Right() const { return x + w; }
 
 inline float ObjRectangle::Bottom() const { return y + h; }
+
+inline FPoint ObjRectangle::Center() const { return FPoint{.x = x + w / 2.f, .y = y + h / 2.f}; }
 
 inline ObjRectangle ObjRectangle::GetScaledBy(const float scale) const
 {
