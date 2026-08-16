@@ -4,7 +4,7 @@
 #include "behavior/ShootingBeh.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"

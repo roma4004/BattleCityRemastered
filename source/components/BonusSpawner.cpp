@@ -5,7 +5,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/TimingEvents.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "entities/bonuses/BonusCaliber.h"
 #include "entities/bonuses/BonusGrenade.h"
 #include "entities/bonuses/BonusHelmet.h"

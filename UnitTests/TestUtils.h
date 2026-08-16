@@ -1,7 +1,7 @@
 #pragma once
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"

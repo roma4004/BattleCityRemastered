@@ -249,7 +249,7 @@
     <ClInclude Include="..\headers\components\ObstacleSpawner.h" />
     <ClInclude Include="..\headers\components\RightSideBar.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />
-    <ClInclude Include="..\headers\components\SpawnEvents.h" />
+    <ClInclude Include="..\headers\components\events\SpawnEvents.h" />
     <ClInclude Include="..\headers\components\TankSpawner.h" />
     <ClInclude Include="..\headers\entities\BaseObj.h" />
     <ClInclude Include="..\headers\entities\BaseObjProperty.h" />

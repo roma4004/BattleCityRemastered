@@ -1,6 +1,6 @@
 #include "network/Client.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
@@ -25,8 +25,9 @@ namespace network::commands
 {
 Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
-	: _socket(ioContext)
-	, _reconnectTimer(ioContext)
+	: _strand(boost::asio::make_strand(ioContext))
+	, _socket(_strand)
+	, _reconnectTimer(_strand)
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
 	, _events{events}
 {
@@ -90,14 +91,7 @@ void Client::TryConnect()
 
 			if (_reconnectAttempts < MaxReconnectAttempts)
 			{
-				_reconnectTimer.expires_after(std::chrono::milliseconds(ReconnectDelayMs));
-				_reconnectTimer.async_wait([this](const boost::system::error_code& timerEc)
-				{
-					if (!timerEc)
-					{
-						TryConnect();
-					}
-				});
+				ScheduleReconnect();
 			}
 			else
 			{
@@ -105,6 +99,49 @@ void Client::TryConnect()
 			}
 		}
 	});
+}
+
+void Client::ScheduleReconnect()
+{
+	if (_reconnectPending || _isShuttingDown)
+	{
+		return;
+	}
+
+	_reconnectPending = true;
+
+	auto self(shared_from_this());
+	_reconnectTimer.expires_after(std::chrono::milliseconds(ReconnectDelayMs));
+	_reconnectTimer.async_wait([this, self](const boost::system::error_code& timerEc)
+	{
+		std::ignore = self;
+
+		_reconnectPending = false;
+		if (!timerEc && !_isShuttingDown)
+		{
+			TryConnect();
+		}
+	});
+}
+
+void Client::HandleDisconnect()
+{
+	if (_isShuttingDown || _reconnectPending)
+	{
+		return;
+	}
+
+	_isConnected = false;
+	_writeInProgress = false;//NOTE: the failed write never completes, so nothing else would clear it
+
+	if (_socket.is_open())
+	{
+		boost::system::error_code ec;
+		std::ignore = _socket.close(ec);
+	}
+
+	_reconnectAttempts = 0;//NOTE: a drop starts a fresh budget, it is not a failed connect attempt
+	ScheduleReconnect();
 }
 
 Client::~Client()
@@ -116,6 +153,7 @@ void Client::Shutdown()
 {
 	try
 	{
+		_isShuttingDown = true;//NOTE: before cancelling - handlers must not read the cancel as a drop
 		_reconnectTimer.cancel();
 
 		if (_socket.is_open())
@@ -210,6 +248,7 @@ void Client::ReadResponse()
 				std::cerr << ec.message() << '\n';
 			}
 
+			HandleDisconnect();
 			return;
 		}
 
@@ -218,9 +257,7 @@ void Client::ReadResponse()
 		{
 			NetworkLogger::WriteLog("Client::ReadResponse: bogus frame length "
 									+ std::to_string(payloadLength) + ", dropping connection");
-			_isConnected = false;
-			boost::system::error_code closeEc;
-			std::ignore = _socket.close(closeEc);
+			HandleDisconnect();
 			return;
 		}
 
@@ -246,6 +283,7 @@ void Client::ReadPayload(const std::uint32_t payloadLength)
 				std::cerr << ec.message() << '\n';
 			}
 
+			HandleDisconnect();
 			return;
 		}
 
@@ -561,7 +599,7 @@ void Client::SendCommand(const CommandBatch& command)
 		oa(command);
 	}
 
-	//NOTE: writes always start on the io_context thread - async_write must not race the read chain
+	//NOTE: called from the game thread - the post is what moves the queue access onto the strand
 	auto self(shared_from_this());
 	boost::asio::post(_socket.get_executor(),
 					  [this, self,
@@ -570,18 +608,14 @@ void Client::SendCommand(const CommandBatch& command)
 					  {
 						  std::ignore = self;
 
+						  if (_writeQueue.size() >= MaxPendingFrames)
 						  {
-							  std::scoped_lock lock(_writeQueueMutex);
-
-							  if (_writeQueue.size() >= MaxPendingFrames)
-							  {
-								  _writeQueue.pop_front();
-								  NetworkLogger::WriteLog(
-										  "Client::SendCommand: pending queue full, dropped oldest frame");
-							  }
-
-							  _writeQueue.push_back(std::move(framed));
+							  _writeQueue.pop_front();
+							  NetworkLogger::WriteLog(
+									  "Client::SendCommand: pending queue full, dropped oldest frame");
 						  }
+
+						  _writeQueue.push_back(std::move(framed));
 
 						  TryStartWrite();
 					  });
@@ -590,15 +624,12 @@ void Client::SendCommand(const CommandBatch& command)
 //NOTE: nothing reaches the wire until connected - frames pile up and the connect handler kicks them off
 void Client::TryStartWrite()
 {
+	if (_writeQueue.empty() || !_isConnected || _writeInProgress)
 	{
-		std::scoped_lock lock(_writeQueueMutex);
-		if (_writeQueue.empty() || !_isConnected || _writeInProgress)
-		{
-			return;
-		}
-
-		_writeInProgress = true;
+		return;
 	}
+
+	_writeInProgress = true;
 
 	WriteNextFrame();
 }
@@ -606,11 +637,7 @@ void Client::TryStartWrite()
 void Client::WriteNextFrame()
 {
 	//NOTE: shared, so the queue stays free to change while the write is in flight
-	const auto frame = [this]
-	{
-		std::scoped_lock lock(_writeQueueMutex);
-		return _writeQueue.front();
-	}();
+	const auto frame = _writeQueue.front();
 
 	auto self(shared_from_this());
 	auto lambda = [this, self, frame](const boost::system::error_code& ec, const std::size_t /*length*/)
@@ -632,25 +659,16 @@ void Client::WriteNextFrame()
 			}
 
 			//NOTE: undelivered frame stays at the head, to be re-sent whole on the next connection
-			{
-				std::scoped_lock lock(_writeQueueMutex);
-				_writeInProgress = false;
-			}
-
-			_isConnected = false;
-			_socket.close();
+			HandleDisconnect();
 			return;
 		}
 
-		{
-			std::scoped_lock lock(_writeQueueMutex);
-			_writeQueue.pop_front();
+		_writeQueue.pop_front();
 
-			if (_writeQueue.empty())
-			{
-				_writeInProgress = false;
-				return;
-			}
+		if (_writeQueue.empty())
+		{
+			_writeInProgress = false;
+			return;
 		}
 
 		WriteNextFrame();

@@ -1,7 +1,7 @@
 #include "components/ScoreBoard.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"

@@ -1,6 +1,6 @@
 #include "components/managers/BonusEffectManager.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"

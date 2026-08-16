@@ -392,6 +392,9 @@
     <ClInclude Include="..\headers\components\events\ReplicationEvents.h">
       <Filter>headers\components\events</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\events\SpawnEvents.h">
+      <Filter>headers\components\events</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\events\StatisticsEvents.h">
       <Filter>headers\components\events</Filter>
     </ClInclude>
@@ -465,9 +468,6 @@
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\ScoreBoard.h">
-      <Filter>headers\components</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\components\SpawnEvents.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\TankSpawner.h">

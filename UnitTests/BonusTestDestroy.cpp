@@ -3,7 +3,7 @@
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"

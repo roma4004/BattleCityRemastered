@@ -2,7 +2,7 @@
 #include "Point.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "entities/BulletCalibre.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/BulletResetProperty.h"

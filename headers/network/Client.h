@@ -84,7 +84,12 @@ private:
 	void SendCommand(const CommandBatch& command);
 	void WriteNextFrame();
 	void TryStartWrite();
+	//NOTE: idempotent - a read error and a write error can both report the same drop
+	void HandleDisconnect();
+	void ScheduleReconnect();
 
+	//NOTE: socket and timer share it, so their handlers are serialised - that is why _writeQueue needs no mutex
+	boost::asio::strand<boost::asio::io_context::executor_type> _strand;
 	tcp::socket _socket;
 	boost::asio::steady_timer _reconnectTimer;
 	tcp::endpoint _endpoint;
@@ -97,7 +102,6 @@ private:
 	std::deque<std::shared_ptr<const std::string>> _writeQueue{};
 	//NOTE: not queue size - a failed frame stays queued while nothing is being written
 	bool _writeInProgress{false};
-	std::mutex _writeQueueMutex;
 	std::shared_ptr<EventSystem> _events{};
 	std::vector<EventSubscription> _subs{};
 	network::NetworkCommandQueue _commandQueue;
@@ -105,6 +109,9 @@ private:
 	CommandBatch _batch{};
 	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
 	std::atomic<bool> _isConnected{};
+	bool _reconnectPending{false};
+	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect
+	std::atomic<bool> _isShuttingDown{false};
 	unsigned char _reconnectAttempts{0u};
 	static constexpr unsigned char MaxReconnectAttempts{10u};
 	static constexpr unsigned short ReconnectDelayMs{500u};

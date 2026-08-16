@@ -1,6 +1,6 @@
 ﻿#include "components/Map.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/ObstacleType.h"
 

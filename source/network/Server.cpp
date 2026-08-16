@@ -1,7 +1,6 @@
 #include "network/Server.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
-#include "components/events/AnimationRenderEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
@@ -9,13 +8,10 @@
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "entities/ObjRectangle.h"
-#include "enums/TankType.h"
 #include "network/commands/CommandBatch.h"
 #include "utils/NetworkLogger.h"
 #include <algorithm>
 #include <ser20/archives/portable_binary.hpp>
-#include <boost/uuid/uuid.hpp>
 #include <iostream>
 #include <mutex>
 
@@ -221,6 +217,7 @@ void Session::DoRead()
 					std::cerr << "DoRead error ..." << ec << '\n';
 				}
 
+				Shutdown();//NOTE: CleanupDeadSessions goes by IsSocketOpen(), so it must be closed here
 				return;
 			}
 
@@ -265,6 +262,7 @@ void Session::ReadPayload(const std::uint32_t payloadLength)
 				std::cerr << "ReadPayload error ..." << ec << '\n';
 			}
 
+			Shutdown();
 			return;
 		}
 
@@ -286,16 +284,13 @@ void Session::DoWrite(std::shared_ptr<const std::string> message)
 			return;
 		}
 
-		//NOTE: called from the send thread, but the write starts on the io_context one (see Client.h)
+		//NOTE: called from the send thread - the post is what moves the queue access onto the strand
 		auto self(shared_from_this());
 		boost::asio::post(_socket.get_executor(), [this, self, message = std::move(message)]() mutable
 		{
 			std::ignore = self;
 
-			{
-				std::scoped_lock lock(_writeQueueMutex);
-				_writeQueue.push_back(std::move(message));
-			}
+			_writeQueue.push_back(std::move(message));
 
 			TryStartWrite();
 		});
@@ -314,15 +309,12 @@ void Session::DoWrite(std::shared_ptr<const std::string> message)
 
 void Session::TryStartWrite()
 {
+	if (_writeQueue.empty() || _writeInProgress)
 	{
-		std::scoped_lock lock(_writeQueueMutex);
-		if (_writeQueue.empty() || _writeInProgress)
-		{
-			return;
-		}
-
-		_writeInProgress = true;
+		return;
 	}
+
+	_writeInProgress = true;
 
 	WriteNextFrame();
 }
@@ -330,11 +322,7 @@ void Session::TryStartWrite()
 void Session::WriteNextFrame()
 {
 	//NOTE: shared, so the queue stays free to change while the write is in flight
-	const auto frame = [this]
-	{
-		std::scoped_lock lock(_writeQueueMutex);
-		return _writeQueue.front();
-	}();
+	const auto frame = _writeQueue.front();
 
 	auto self(shared_from_this());
 	auto lambda = [this, self, frame](const boost::system::error_code& ec, const std::size_t /*length*/)
@@ -355,24 +343,17 @@ void Session::WriteNextFrame()
 			}
 
 			//NOTE: undelivered frame stays queued; the session is discarded whole once the socket closes
-			{
-				std::scoped_lock lock(_writeQueueMutex);
-				_writeInProgress = false;
-			}
-
+			_writeInProgress = false;
 			_socket.close();
 			return;
 		}
 
-		{
-			std::scoped_lock lock(_writeQueueMutex);
-			_writeQueue.pop_front();
+		_writeQueue.pop_front();
 
-			if (_writeQueue.empty())
-			{
-				_writeInProgress = false;
-				return;
-			}
+		if (_writeQueue.empty())
+		{
+			_writeInProgress = false;
+			return;
 		}
 
 		WriteNextFrame();
@@ -470,7 +451,7 @@ void Server::Shutdown()
 		std::ignore = _acceptor.close(ec);
 	}
 
-	for (const auto& session: _sessions)
+	for (const auto& session: SnapshotSessions())
 	{
 		if (session)
 		{
@@ -712,7 +693,9 @@ void Server::OnBonusTankPickup(const ServerOutBonusTankPickupEvent& event)
 
 void Server::DoAccept()
 {
-	_acceptor.async_accept([this](const boost::system::error_code& ec, tcp::socket socket)
+	//NOTE: own strand per socket - serialises that session's handlers against each other
+	_acceptor.async_accept(boost::asio::make_strand(_acceptor.get_executor()),
+						   [this](const boost::system::error_code& ec, tcp::socket socket)
 	{
 		if (ec)
 		{
@@ -726,12 +709,13 @@ void Server::DoAccept()
 			try
 			{
 				//TODO: add feature to restart game with existing session
-				_sessions.emplace_back(std::make_shared<Session>(std::move(socket), _events));
-				if (const auto& lastSession = _sessions.back(); lastSession)
+				auto session = std::make_shared<Session>(std::move(socket), _events);
 				{
-					// _events->EmitEvent("NewClientConnected");
-					lastSession->Start();
+					std::scoped_lock lock(_sessionsMutex);
+					_sessions.emplace_back(session);
 				}
+				// _events->EmitEvent("NewClientConnected");
+				session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
 			}
 			catch (const std::exception& e)
 			{
@@ -746,23 +730,46 @@ void Server::DoAccept()
 	});
 }
 
+std::vector<std::shared_ptr<Session>> Server::SnapshotSessions() const
+{
+	std::scoped_lock lock(_sessionsMutex);
+	return _sessions;
+}
+
 void Server::CleanupDeadSessions()
 {
-	std::erase_if(_sessions, [](const std::shared_ptr<Session>& session)
+	std::vector<std::shared_ptr<Session>> dead;//NOTE: ~Session closes a socket - not under the lock
 	{
-		return !session || !session->IsSocketOpen();
-	});
+		std::scoped_lock lock(_sessionsMutex);
+		auto removed = std::ranges::remove_if(_sessions, [](const std::shared_ptr<Session>& session)
+		{
+			return !session || !session->IsSocketOpen();
+		});
+		dead.insert(dead.end(), std::make_move_iterator(removed.begin()), std::make_move_iterator(removed.end()));
+		_sessions.erase(removed.begin(), removed.end());
+	}
 }
 
 void Server::SendToAll(const std::shared_ptr<const std::string>& message)
 {
 	CleanupDeadSessions();
 
-	for (const auto& session: _sessions)
+	for (const auto& session: SnapshotSessions())
 	{
 		if (session && session->IsSocketOpen())
 		{
 			session->DoWrite(message);
+		}
+	}
+}
+
+void Server::ProcessNetworkCommands() const
+{
+	for (const auto& session: SnapshotSessions())
+	{
+		if (session && session->IsSocketOpen())
+		{
+			session->GetCommandQueue().ProcessAll();//TODO: refactor to session->ProcessCommandQueue()
 		}
 	}
 }

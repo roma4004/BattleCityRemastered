@@ -4,7 +4,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/Map.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
 #include "entities/obstacles/FortressWall.h"

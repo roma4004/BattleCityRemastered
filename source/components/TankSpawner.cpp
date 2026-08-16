@@ -10,7 +10,7 @@
 #include "components/input/InputProviderForPlayerOneNet.h"
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/input/InputProviderForPlayerTwoNet.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "entities/pawns/CoopBot.h"
 #include "entities/pawns/Enemy.h"

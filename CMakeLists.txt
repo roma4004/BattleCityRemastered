@@ -22,8 +22,7 @@ include(cmake/ConfigureDependencies.cmake)
 # --- Source files ---
 include_directories(headers)
 
-# game_platform sources: the only .cpp files that include an SDL header, kept apart so game_core
-# below stays free of SDL - see the game_platform target for why that matters
+# the SDL-facing files, kept apart so game_core below stays free of SDL
 set(GAME_PLATFORM_SOURCES
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
@@ -142,10 +141,8 @@ if (WIN32)
     set(PLATFORM_NETWORK_LIBS wsock32 ws2_32) #NOTE: Winsock, needed for boost::asio sockets on Windows; POSIX systems already have sockets in libc
 endif ()
 
-# game_core: game logic, no SDL. A static lib propagates its deps to every consumer (PRIVATE ones too,
-# as LINK_ONLY), so anything linked here would reach unit_tests as well - that is exactly why SDL lives
-# in game_platform instead. Nothing here may include an SDL header: SDL's include dirs come from its
-# targets, so such an include simply fails to resolve.
+# game logic, no SDL: a static lib propagates its deps to consumers (PRIVATE ones too, as LINK_ONLY),
+# so anything linked here would reach unit_tests as well
 add_library(game_core STATIC ${GAME_CORE_SOURCES})
 target_link_libraries(game_core PUBLIC
         Boost::uuid Boost::asio_core Boost::property_tree
@@ -153,8 +150,7 @@ target_link_libraries(game_core PUBLIC
         ${PLATFORM_NETWORK_LIBS}
 )
 
-# game_platform: the SDL-facing edge (window/render/audio/input + the game loop that drives them).
-# Depends on game_core, never the other way round.
+# window/render/audio/input + the game loop; depends on game_core, never the other way round
 add_library(game_platform STATIC ${GAME_PLATFORM_SOURCES})
 target_link_libraries(game_platform PUBLIC
         game_core

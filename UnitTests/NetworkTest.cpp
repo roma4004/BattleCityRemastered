@@ -1,6 +1,6 @@
 #include "Point.h"
 #include "components/EventSystem.h"
-#include "components/SpawnEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
@@ -892,6 +892,54 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		EXPECT_EQ((FPoint{.x = rectOrigin.x, .y = rectOrigin.y}), posReplicated);
 	}
 
+}
+
+//NOTE: exercises the link itself, not a command travelling over it
+TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
+{
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const uint16_t port = server->GetBoundPort();
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, events);
+
+	//NOTE: the network runs on its own threads; this just drives the game-side events MainLoop would
+	const auto pumpUntil = [&events](auto&& predicate, const std::chrono::milliseconds timeout)
+	{
+		const auto start = std::chrono::steady_clock::now();
+		while (!predicate() && std::chrono::steady_clock::now() - start < timeout)
+		{
+			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+		return predicate();
+	};
+
+	ASSERT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{5000}));
+
+	server.reset();
+
+	ASSERT_TRUE(pumpUntil([&client] { return !client->IsConnected(); }, std::chrono::milliseconds{5000}))
+			<< "client never noticed the link dropped";
+
+	//NOTE: same port - the client keeps its endpoint; retried, the old listener may still hold it
+	ASSERT_TRUE(pumpUntil([&]
+	{
+		if (!server)
+		{
+			try
+			{
+				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, events);
+			}
+			catch (const std::exception&)
+			{
+				return false;
+			}
+		}
+		return true;
+	}, std::chrono::milliseconds{5000})) << "could not re-bind the host port";
+
+	EXPECT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{10000}))
+			<< "client did not reconnect after the host came back";
 }
 
 //TODO: other bonus effect replication test after write this replication

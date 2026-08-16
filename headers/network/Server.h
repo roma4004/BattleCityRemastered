@@ -83,13 +83,13 @@ private:
 	void OnSignalEvent(const AnyCommand& command);
 	void OnKeyStateChange(const AnyCommand& command);
 
+	//NOTE: built on its own strand in Server::DoAccept - hence no mutex on _writeQueue (see Client.h)
 	tcp::socket _socket;
 	//NOTE: fixed-size buffers + write queue instead of streambufs - see Client.h
 	std::array<char, network::kFrameHeaderSize> _readHeader{};
 	std::vector<char> _readPayload{};
 	std::deque<std::shared_ptr<const std::string>> _writeQueue{};
 	bool _writeInProgress{false};
-	std::mutex _writeQueueMutex;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	network::NetworkCommandQueue _commandQueue;
 	std::unordered_map<CommandType, CommandHandler> _commandHandlers{};
@@ -108,19 +108,12 @@ public:
 
 	[[nodiscard]] uint16_t GetBoundPort() const { return _acceptor.local_endpoint().port(); }
 
-	void ProcessNetworkCommands() const
-	{
-		for (const auto& session: _sessions)
-		{
-			if (session && session->IsSocketOpen())
-			{
-				session->GetCommandQueue().ProcessAll();//TODO: refactor to session->ProcessCommandQueue()
-			}
-		}
-	}
+	void ProcessNetworkCommands() const;
 
 private:
 	void DoAccept();
+
+	[[nodiscard]] std::vector<std::shared_ptr<Session>> SnapshotSessions() const;
 
 	void StartSendThread();
 	void StopSendThread();
@@ -169,7 +162,11 @@ private:
 	tcp::acceptor _acceptor;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
+
+	//NOTE: reached by the io_context, send and main threads; readers copy it via SnapshotSessions
+	//and work outside the lock, so no foreign code ever runs while it is held
 	std::vector<std::shared_ptr<Session>> _sessions;
+	mutable std::mutex _sessionsMutex;
 
 	std::mutex _batchWriteMutex;
 	CommandBatch _batch{};
