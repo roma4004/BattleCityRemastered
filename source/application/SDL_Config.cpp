@@ -439,7 +439,7 @@ std::unique_ptr<IConfig> SDL_Config::Init()
 					if (const int playResult = Mix_PlayChannel(-1, levelIntroMusic.get(), 0); playResult == -1)
 					{
 						std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError()
-								  << '\n';
+								<< '\n';
 					}
 				}
 			}

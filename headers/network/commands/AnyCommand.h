@@ -22,9 +22,9 @@
 namespace network::commands
 {
 using AnyCommand = std::variant<
-		BonusDeSpawn, BonusSpawn, BonusStatus, Dispose, FortressChange, GameStateChange, HealthChange,
-		KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
-		TankSpawnComplete>;
+	BonusDeSpawn, BonusSpawn, BonusStatus, Dispose, FortressChange, GameStateChange, HealthChange,
+	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
+	TankSpawnComplete>;
 
 inline CommandType GetCommandType(const AnyCommand& command)
 {

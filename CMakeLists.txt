@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15) #NOTE: cmake v3.15+ required by boost from 1.87
+cmake_minimum_required(VERSION 3.25) #NOTE: 3.25 for add_subdirectory(<dir> SYSTEM); boost from 1.87 needs 3.15+
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wcast-align -Wunused -Woverloaded-virtual -Wnon-virtual-dtor -Wnull-dereference -Wdouble-promotion -Wformat=2 -Wuseless-cast -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wnrvo") #NOTE: GCC has no single -Weverything switch (Clang-only); this is the closest curated "maximal warnings" set #-fvisibility=hidden
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
@@ -22,10 +22,7 @@ include(cmake/ConfigureDependencies.cmake)
 # --- Source files ---
 include_directories(headers)
 
-# game_core sources: every game .cpp except main.cpp (the exe's own entry point). Compiled once into
-# the game_core STATIC library below; the game exe and unit_tests both link against it. A real STATIC
-# library (not OBJECT) lets the linker pull in only the .obj members a consumer actually references,
-# so unit_tests never needs SDL2 even though SDL-dependent files (RenderManager.cpp etc.) live here too.
+# game_core sources: every game .cpp except main.cpp (the exe's own entry point)
 set(GAME_CORE_SOURCES
         source/application/CommandLineParser.cpp
         source/application/ConfigFailure.cpp

@@ -13,7 +13,7 @@ set(SDL2MIXER_VORBIS  OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
 
 foreach(dir ${SDL2_SUBMODULES})
-    add_subdirectory(${dir})
+    add_subdirectory(${dir} SYSTEM)
 endforeach()
 
 # --- Boost --- (per-library git submodules under ThirdParty/boost/*, same set .sln uses)
@@ -31,14 +31,14 @@ set(BOOST_LIBS
         preprocessor property_tree range regex smart_ptr system throw_exception tokenizer tuple
         type_index type_traits typeof unordered utility uuid variant2 winapi)
 foreach(lib ${BOOST_LIBS})
-    add_subdirectory(ThirdParty/boost/${lib})
+    add_subdirectory(ThirdParty/boost/${lib} SYSTEM)
 endforeach()
 
 # --- ser20 (replaces Boost.Serialization, C++20 fork of cereal) ---
-add_subdirectory(ThirdParty/ser20)
+add_subdirectory(ThirdParty/ser20 SYSTEM)
 
 # --- googletest (shared submodule with .sln/UnitTests.vcxproj) ---
 set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
-add_subdirectory(ThirdParty/googletest)
+add_subdirectory(ThirdParty/googletest SYSTEM)
 enable_testing()

@@ -14,12 +14,12 @@ bool CommandBatch::IsEmpty() const noexcept { return _commands.empty(); }
 std::string CommandBatch::GetClassNamesW() const
 {
 	return std::accumulate(_commands.begin(), _commands.end(), std::string{},
-							[](std::string acc, const AnyCommand& command)
-							{
-								if (!acc.empty())
-									acc += ", ";
-								acc += GetClassNameW(command);
-								return acc;
-							});
+						   [](std::string acc, const AnyCommand& command)
+						   {
+							   if (!acc.empty())
+								   acc += ", ";
+							   acc += GetClassNameW(command);
+							   return acc;
+						   });
 }
 }//namespace network::commands

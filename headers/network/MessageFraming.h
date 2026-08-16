@@ -15,9 +15,9 @@ inline constexpr std::uint32_t kMaxFramePayloadSize = 4u * 1024u * 1024u;
 inline std::uint32_t DecodeFrameHeader(const char* data)
 {
 	return (static_cast<std::uint32_t>(static_cast<unsigned char>(data[0])) << 24)
-		 | (static_cast<std::uint32_t>(static_cast<unsigned char>(data[1])) << 16)
-		 | (static_cast<std::uint32_t>(static_cast<unsigned char>(data[2])) << 8)
-		 | static_cast<std::uint32_t>(static_cast<unsigned char>(data[3]));
+		   | (static_cast<std::uint32_t>(static_cast<unsigned char>(data[1])) << 16)
+		   | (static_cast<std::uint32_t>(static_cast<unsigned char>(data[2])) << 8)
+		   | static_cast<std::uint32_t>(static_cast<unsigned char>(data[3]));
 }
 
 inline std::string FrameMessage(const std::string& payload)

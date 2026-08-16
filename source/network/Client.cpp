@@ -565,25 +565,26 @@ void Client::SendCommand(const CommandBatch& command)
 	auto self(shared_from_this());
 	boost::asio::post(_socket.get_executor(),
 					  [this, self,
-					   framed = std::make_shared<const std::string>(
-							   network::FrameMessage(archiveStream.str()))]() mutable
-	{
-		std::ignore = self;
+						  framed = std::make_shared<const std::string>(
+								  network::FrameMessage(archiveStream.str()))]() mutable
+					  {
+						  std::ignore = self;
 
-		{
-			std::scoped_lock lock(_writeQueueMutex);
+						  {
+							  std::scoped_lock lock(_writeQueueMutex);
 
-			if (_writeQueue.size() >= MaxPendingFrames)
-			{
-				_writeQueue.pop_front();
-				NetworkLogger::WriteLog("Client::SendCommand: pending queue full, dropped oldest frame");
-			}
+							  if (_writeQueue.size() >= MaxPendingFrames)
+							  {
+								  _writeQueue.pop_front();
+								  NetworkLogger::WriteLog(
+										  "Client::SendCommand: pending queue full, dropped oldest frame");
+							  }
 
-			_writeQueue.push_back(std::move(framed));
-		}
+							  _writeQueue.push_back(std::move(framed));
+						  }
 
-		TryStartWrite();
-	});
+						  TryStartWrite();
+					  });
 }
 
 //NOTE: nothing reaches the wire until connected - frames pile up and the connect handler kicks them off
