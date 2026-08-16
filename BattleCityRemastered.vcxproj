@@ -174,9 +174,7 @@ copy /Y "$(ProjectDir)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sou
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>if not exist "$(ProjectDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/boost)
-if not exist "$(ProjectDir)ThirdParty\SDL2\include\SDL.h" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/SDL2 ThirdParty/SDL2_ttf ThirdParty/SDL2_image ThirdParty/SDL2_mixer)
-if not exist "$(ProjectDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(ProjectDir)." submodule update --init --recursive ThirdParty/ser20)</Command>
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(ProjectDir)scripts\fetch-submodules.ps1" -Root "$(ProjectDir)."</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <!-- Only the exe's own entry point; every other game source lives in GameCore.vcxproj (see its ClCompile group). -->

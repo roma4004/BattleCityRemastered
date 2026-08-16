@@ -352,9 +352,7 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>if not exist "$(SolutionDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/boost)
-if not exist "$(SolutionDir)ThirdParty\SDL2\include\SDL.h" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/SDL2 ThirdParty/SDL2_ttf ThirdParty/SDL2_image ThirdParty/SDL2_mixer)
-if not exist "$(SolutionDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/ser20)
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\fetch-submodules.ps1" -Root "$(SolutionDir)."
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>

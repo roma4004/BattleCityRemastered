@@ -2,6 +2,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/FetchSubmodules.cmake)
 
 # --- SDL2 (+ ttf/image/mixer) --- (per-library git submodules under ThirdParty/SDL2*, same set .sln uses)
 set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
+# Pinned OFF, not left to SDL's "off when built as a subproject" default: FetchSubmodules.cmake skips
+# their external/* on purpose, so flipping these on would configure against directories we never clone.
+set(SDL2IMAGE_VENDORED OFF CACHE BOOL "Use vendored codecs inside SDL2_image" FORCE)
+set(SDL2MIXER_VENDORED OFF CACHE BOOL "Use vendored codecs inside SDL2_mixer" FORCE)
 
 set(SDL2MIXER_MIDI    OFF CACHE BOOL "" FORCE)
 set(SDL2MIXER_MP3     OFF CACHE BOOL "" FORCE)

@@ -73,9 +73,7 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>if not exist "$(SolutionDir)ThirdParty\googletest\googletest\src\gtest-all.cc" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/googletest)
-if not exist "$(SolutionDir)ThirdParty\boost\uuid\CMakeLists.txt" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/boost)
-if not exist "$(SolutionDir)ThirdParty\ser20\CMakeLists.txt" (git -C "$(SolutionDir)." submodule update --init --recursive ThirdParty/ser20)</Command>
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\fetch-submodules.ps1" -Root "$(SolutionDir)."</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
