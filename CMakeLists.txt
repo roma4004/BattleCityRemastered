@@ -7,7 +7,6 @@ project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
 #TODO: create compiler switch msvc, mingw(gcc)
 #TODO: migrate to SDL2 to SDL2pp
-#TODO: migrate to MSYS2 to install all dependency
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -28,6 +27,7 @@ include_directories(headers)
 # library (not OBJECT) lets the linker pull in only the .obj members a consumer actually references,
 # so unit_tests never needs SDL2 even though SDL-dependent files (RenderManager.cpp etc.) live here too.
 set(GAME_CORE_SOURCES
+        source/application/CommandLineParser.cpp
         source/application/ConfigFailure.cpp
         source/application/ConfigSuccess.cpp
         source/application/GameConfig.cpp
@@ -122,6 +122,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BotsTest.cpp
         UnitTests/BulletsTestAdvanced.cpp
         UnitTests/BulletsTestBasic.cpp
+        UnitTests/CommandLineParserTest.cpp
         UnitTests/CoopBotTest.cpp
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
@@ -189,4 +190,20 @@ foreach (asset ${GAME_ASSETS})
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "../${asset}"
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${asset}")
+endforeach ()
+
+# --- Convenience targets: host + client side by side, no IDE-specific run configuration needed ---
+if (WIN32)
+    set(RUN_BOTH_EXT bat)
+else ()
+    set(RUN_BOTH_EXT sh)
+endif ()
+foreach (variant "" "-skipintro" "-tiled")
+    file(TO_NATIVE_PATH ${CMAKE_SOURCE_DIR}/scripts/run-host-and-client${variant}.${RUN_BOTH_EXT} script) #NOTE: cmd.exe reads a forward-slash path as switches
+    string(REPLACE "-" "_" suffix "${variant}")
+    add_custom_target(run_host_and_client${suffix}
+            COMMAND ${script} $<TARGET_FILE:${PROJECT_NAME}>
+            DEPENDS ${PROJECT_NAME}
+            USES_TERMINAL
+            COMMENT "Launching host + client${variant}")
 endforeach ()

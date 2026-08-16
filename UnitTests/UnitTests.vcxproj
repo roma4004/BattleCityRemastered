@@ -46,6 +46,7 @@
     <ClCompile Include="BotsTest.cpp" />
     <ClCompile Include="BulletsTestAdvanced.cpp" />
     <ClCompile Include="BulletsTestBasic.cpp" />
+    <ClCompile Include="CommandLineParserTest.cpp" />
     <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="EnemyBotTest.cpp" />
     <ClCompile Include="GameStateManagerTest.cpp" />

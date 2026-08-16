@@ -121,6 +121,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\application\CommandLineParser.cpp" />
     <ClCompile Include="..\source\application\ConfigFailure.cpp" />
     <ClCompile Include="..\source\application\ConfigSuccess.cpp" />
     <ClCompile Include="..\source\application\GameConfig.cpp" />
@@ -209,9 +210,11 @@
   </ItemGroup>
   <!-- Headers matching the .cpp files above; moved here from BattleCityRemastered.vcxproj so header+impl live in the same project. -->
   <ItemGroup>
+    <ClInclude Include="..\headers\application\CommandLineParser.h" />
     <ClInclude Include="..\headers\application\ConfigFailure.h" />
     <ClInclude Include="..\headers\application\ConfigSuccess.h" />
     <ClInclude Include="..\headers\application\GameConfig.h" />
+    <ClInclude Include="..\headers\application\LaunchOptions.h" />
     <ClInclude Include="..\headers\application\GameFailure.h" />
     <ClInclude Include="..\headers\application\GameSuccess.h" />
     <ClInclude Include="..\headers\application\SDL_Config.h" />

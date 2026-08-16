@@ -1,0 +1,48 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "Debug-MinGW",
+      "displayName": "Debug-MinGW",
+      "description": "Ninja + Debug. Compilers come from the IDE toolchain / PATH, not from here - they are machine specific.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/cmake-build-debug-mingw",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "Release-MinGW",
+      "displayName": "Release-MinGW",
+      "inherits": "Debug-MinGW",
+      "binaryDir": "${sourceDir}/cmake-build-release-mingw",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug-MinGW",
+      "configurePreset": "Debug-MinGW"
+    },
+    {
+      "name": "Release-MinGW",
+      "configurePreset": "Release-MinGW"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Debug-MinGW",
+      "configurePreset": "Debug-MinGW",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

@@ -433,10 +433,14 @@ std::unique_ptr<IConfig> SDL_Config::Init()
 				levelIntroMusic != nullptr)
 			{
 				//TODO: move to soundManager
-				if (const int playResult = Mix_PlayChannel(-1, levelIntroMusic.get(), 0);
-					playResult == -1)
+				//NOTE: autoplay only - device and chunk stay ready
+				if (!gameConfig.skipIntroMusic)
 				{
-					std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError() << '\n';
+					if (const int playResult = Mix_PlayChannel(-1, levelIntroMusic.get(), 0); playResult == -1)
+					{
+						std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError()
+								  << '\n';
+					}
 				}
 			}
 			else
@@ -481,7 +485,8 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 	SDL_Window* sdlWindowRaw = sdlWindow.get();
 	SDL_GetWindowBordersSize(sdlWindowRaw, &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
-	if (monitorIndex != -1)
+	//NOTE: centering would override an explicit pos
+	if (monitorIndex != -1 && !gameConfig.hasExplicitWindowPos)
 	{
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};

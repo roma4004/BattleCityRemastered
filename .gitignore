@@ -77,3 +77,15 @@ project.assets.json
 *.exe
 *.out
 *.app
+
+CMakeUserPresets.json
+
+# Runtime artifacts (settings and logs are written next to the exe / into the cwd)
+config.ini
+game_log.txt
+network_log.txt
+
+# Build trees and IDE temporaries not covered above
+cmake-build-debug-mingw/
+BattleCi.*/
+packages/

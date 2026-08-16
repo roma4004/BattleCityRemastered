@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Same as run-host-and-client.sh, but the client skips the intro autoplay.
+game_exe=${1:-$(dirname "$0")/../cmake-build-debug-mingw/BattleCity_remastered}
+# assets are copied next to the exe, so the cwd must be its folder
+cd "$(dirname "$game_exe")" || exit 1
+exe=./$(basename "$game_exe")
+"$exe" host &
+"$exe" client skipintro &
+wait

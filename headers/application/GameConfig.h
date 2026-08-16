@@ -4,6 +4,8 @@
 #include <memory>
 #include <boost/property_tree/ptree.hpp>
 
+struct LaunchOptions;
+
 class GameConfig
 {
 public:
@@ -13,6 +15,7 @@ public:
 	void LoadIni(const std::string& filePath);
 	void DefaultInitIni();
 	void SaveIni(const std::string& filePath) const;
+	void Apply(const LaunchOptions& launchOptions);
 	void ApplyWindowOffsetAsHost();
 	void ApplyWindowOffsetAsClient();
 
@@ -32,6 +35,8 @@ public:
 	float tankSpeedDefault{142};
 	int bonusSize{static_cast<int>(gridOffset * 3)};
 	bool skipIniLoad{false};
+	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
+	bool hasExplicitWindowPos{false};//NOTE: explicit pos wins over monitor centering
 
 	template<typename T>
 	[[nodiscard]] T Get(const std::string& key, const T& defaultValue) const

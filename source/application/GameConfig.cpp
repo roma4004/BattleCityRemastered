@@ -1,4 +1,5 @@
 ﻿#include "../../headers/application/GameConfig.h"
+#include "../../headers/application/LaunchOptions.h"
 #include <iostream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -117,6 +118,32 @@ void GameConfig::SaveIni(const std::string& filePath) const
 // 2. Read specific keys using dot notation (Section.Key)
 //std::string dbHost = pt.get<std::string>("Settings.theme");
 //int dbPort = pt.get<int>("Database.port");
+
+void GameConfig::Apply(const LaunchOptions& launchOptions)
+{
+	//NOTE: size first - the host/client offset below is half a window wide
+	if (launchOptions.windowSize)
+	{
+		windowSize = *launchOptions.windowSize;
+	}
+
+	if (launchOptions.windowPos)
+	{
+		windowPos = *launchOptions.windowPos;
+		hasExplicitWindowPos = true;
+	}
+
+	if (launchOptions.gameMode == GameMode::PlayAsHost)
+	{
+		ApplyWindowOffsetAsHost();
+	}
+	else if (launchOptions.gameMode == GameMode::PlayAsClient)
+	{
+		ApplyWindowOffsetAsClient();
+	}
+
+	skipIntroMusic = launchOptions.skipIntroMusic;
+}
 
 void GameConfig::ApplyWindowOffsetAsHost() { windowsPosOffset.x -= windowSize.x / 2; }
 

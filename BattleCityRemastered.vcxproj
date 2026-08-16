@@ -77,6 +77,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/headers;$(ProjectDir)/ThirdParty/ser20/include;$(ProjectDir)/ThirdParty/boost/align/include;$(ProjectDir)/ThirdParty/boost/any/include;$(ProjectDir)/ThirdParty/boost/asio/include;$(ProjectDir)/ThirdParty/boost/assert/include;$(ProjectDir)/ThirdParty/boost/bind/include;$(ProjectDir)/ThirdParty/boost/config/include;$(ProjectDir)/ThirdParty/boost/container_hash/include;$(ProjectDir)/ThirdParty/boost/winapi/include;$(ProjectDir)/ThirdParty/boost/preprocessor/include;$(ProjectDir)/ThirdParty/boost/predef/include;$(ProjectDir)/ThirdParty/boost/mp11/include;$(ProjectDir)/ThirdParty/boost/tuple/include;$(ProjectDir)/ThirdParty/boost/utility/include;$(ProjectDir)/ThirdParty/boost/core/include;$(ProjectDir)/ThirdParty/boost/integer/include;$(ProjectDir)/ThirdParty/boost/iterator/include;$(ProjectDir)/ThirdParty/boost/mpl/include;$(ProjectDir)/ThirdParty/boost/multi_index/include;$(ProjectDir)/ThirdParty/boost/optional/include;$(ProjectDir)/ThirdParty/boost/pool/include;$(ProjectDir)/ThirdParty/boost/property_tree/include;$(ProjectDir)/ThirdParty/boost/range/include;$(ProjectDir)/ThirdParty/boost/system/include;$(ProjectDir)/ThirdParty/boost/throw_exception/include;$(ProjectDir)/ThirdParty/boost/type_index/include;$(ProjectDir)/ThirdParty/boost/type_traits/include;$(ProjectDir)/ThirdParty/boost/uuid/include;$(ProjectDir)/ThirdParty/SDL2/include;$(ProjectDir)/ThirdParty/SDL2_ttf;$(ProjectDir)/ThirdParty/SDL2_image/include;$(ProjectDir)/ThirdParty/SDL2_mixer/include;</IncludePath>
   </PropertyGroup>
+  <!-- Debugger cwd = exe folder, same as the CMake build: assets are copied next to the exe and loaded by relative path.
+       A local .vcxproj.user overrides this, delete the property there to pick it up. -->
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
