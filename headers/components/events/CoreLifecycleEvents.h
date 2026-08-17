@@ -1,8 +1,20 @@
 #pragma once
 
 #include "Point.h"
+#include "enums/DisconnectReason.h"
 
 struct ServerInClientReadyToStartGameEvent {};
+
+//NOTE: only a deliberate leave produces these - a dropped link never does
+struct ServerInDisconnectEvent
+{
+	DisconnectReason reason;
+};
+
+struct ClientInDisconnectEvent
+{
+	DisconnectReason reason;
+};
 
 //NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL2 on this
 //MinGW/Windows toolchain) declares a WinAPI function literally named `ResetEvent` (synchapi.h),

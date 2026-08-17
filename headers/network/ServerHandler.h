@@ -17,6 +17,10 @@ public:
 
 	[[nodiscard]] uint16_t GetBoundPort() const { return _server.GetBoundPort(); }
 
+	//NOTE: no goodbye, the way a crashed host would go - the peer sees a bare EOF and reconnects,
+	//unlike the destructor's announced leave
+	void Abort() { _server.Shutdown(); }
+
 private:
 	Server _server;
 };

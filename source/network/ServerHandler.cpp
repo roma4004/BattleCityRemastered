@@ -15,6 +15,9 @@ ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_
 
 ServerHandler::~ServerHandler()
 {
-	StopIoThread([this] { _server.Shutdown(); });
+	StopIoThread([this](std::function<void()> done)
+	{
+		_server.Shutdown(DisconnectReason::HostShutdown, std::move(done));
+	});
 }
 }//namespace network::commands

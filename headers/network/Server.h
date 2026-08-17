@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CommandDispatcher.h"
+#include "enums/DisconnectReason.h"
 #include "enums/InputSignal.h"
-#include "enums/PlayerTag.h"
 #include "FrameChannel.h"
 #include "NetworkCommandQueue.h"
 #include "commands/CommandBatch.h"
@@ -63,6 +63,7 @@ public:
 	~Session();
 
 	[[nodiscard]] bool IsSocketOpen() const { return _channel->IsOpen(); }
+	[[nodiscard]] bool HasPendingCommands() const { return _commandQueue.Size() > 0u; }
 	void ProcessCommandQueue() { _commandQueue.ProcessAll(); }
 
 	void Start();
@@ -70,12 +71,16 @@ public:
 	void DoWrite(std::shared_ptr<const std::string> message);
 	void Shutdown();
 
+	//NOTE: onClosed fires once the goodbye is written, or turned out undeliverable
+	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
+
 private:
 	using InputEmitter = std::function<void(EventSystem&, const std::string&, bool)>;
 
 	void RegisterCommandHandlers();
 	void OnSignalEvent(const AnyCommand& command);
 	void OnKeyStateChange(const AnyCommand& command);
+	void OnDisconnect(const AnyCommand& command);
 
 	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
 
@@ -94,6 +99,9 @@ public:
 	~Server();
 
 	void Shutdown();
+
+	//NOTE: closes once every session is flushed
+	void Shutdown(DisconnectReason reason, const std::function<void()>& onClosed);
 
 	[[nodiscard]] uint16_t GetBoundPort() const { return _acceptor.local_endpoint().port(); }
 
@@ -147,6 +155,7 @@ private:
 
 	void SendToAll(const std::shared_ptr<const std::string>& message);
 	void CleanupDeadSessions();
+	void CloseAcceptor();
 
 	tcp::acceptor _acceptor;
 	std::shared_ptr<EventSystem> _events{nullptr};

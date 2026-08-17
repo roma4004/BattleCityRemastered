@@ -4,7 +4,6 @@
 #include <boost/asio/post.hpp>
 #include <chrono>
 #include <future>
-#include <iostream>
 #include <utility>
 
 namespace network::commands
@@ -36,7 +35,7 @@ void NetworkNodeBase::StartIoThread()
 	});
 }
 
-void NetworkNodeBase::StopIoThread(const std::function<void()>& shutdownNode)
+void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()>)>& shutdownNode)
 {
 	//NOTE: the node is shut down on its own io_context thread, not here - closing sockets from
 	//outside would race the handlers still queued on it
@@ -47,8 +46,15 @@ void NetworkNodeBase::StopIoThread(const std::function<void()>& shutdownNode)
 
 		boost::asio::post(_ioContext, [shutdownNode, shutdownDone]
 		{
-			shutdownNode();
-			shutdownDone->set_value();
+			//NOTE: guarded - a node with several links reports each one, and set_value twice throws
+			shutdownNode([shutdownDone, isDone = std::make_shared<bool>(false)]
+			{
+				if (!*isDone)
+				{
+					*isDone = true;
+					shutdownDone->set_value();
+				}
+			});
 		});
 
 		shutdownFuture.wait_for(std::chrono::milliseconds(ShutdownTimeoutMs));

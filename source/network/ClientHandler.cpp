@@ -15,6 +15,10 @@ ClientHandler::ClientHandler(std::string host, uint16_t port, const std::shared_
 
 ClientHandler::~ClientHandler()
 {
-	StopIoThread([client = _client] { client->Shutdown(); });
+	//NOTE: only the local player leaves through here - a host-side teardown arrives as a command
+	StopIoThread([client = _client](std::function<void()> done)
+	{
+		client->Shutdown(DisconnectReason::PlayerQuit, std::move(done));
+	});
 }
 }//namespace network::commands

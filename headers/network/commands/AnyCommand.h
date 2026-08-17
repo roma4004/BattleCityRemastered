@@ -3,6 +3,7 @@
 #include "BonusDeSpawn.h"
 #include "BonusSpawn.h"
 #include "BonusStatus.h"
+#include "Disconnect.h"
 #include "Dispose.h"
 #include "FortressChange.h"
 #include "GameStateChange.h"
@@ -16,15 +17,17 @@
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
 #include "enums/CommandType.h"
+//NOTE: no name from it appears here - it teaches ser20 how to (de)serialise a variant, found via ADL
 #include <ser20/types/variant.hpp>
 #include <variant>
 
 namespace network::commands
 {
+//NOTE: ser20 puts the alternative index on the wire - append only, inserting renumbers everything after
 using AnyCommand = std::variant<
 	BonusDeSpawn, BonusSpawn, BonusStatus, Dispose, FortressChange, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
-	TankSpawnComplete>;
+	TankSpawnComplete, Disconnect>;
 
 inline CommandType GetCommandType(const AnyCommand& command)
 {

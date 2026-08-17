@@ -30,6 +30,8 @@ struct PreviousGameModeEvent;
 struct NextGameModeEvent;
 struct ApplyGameModeEvent;
 struct ServerInClientReadyToStartGameEvent;
+struct ServerInDisconnectEvent;
+struct ClientInDisconnectEvent;
 struct GameModeChangedToEvent;
 
 class GameSuccess final : public IGame
@@ -49,6 +51,7 @@ public:
 private:
 	void Subscribe();
 
+	void ResetBattlefield();
 	void ApplyGameMode(GameMode gameMode);
 	void PrevGameMode(const PreviousGameModeEvent&);
 	void NextGameMode(const NextGameModeEvent&);
@@ -63,6 +66,8 @@ private:
 	void FlushSpawnQueue();
 
 	void OnClientReady(const ServerInClientReadyToStartGameEvent&);
+	void OnClientLeft(const ServerInDisconnectEvent& event);
+	void OnHostLeft(const ClientInDisconnectEvent& event);
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
@@ -88,6 +93,9 @@ private:
 	// _subs's fixed subscribe-once-at-construction lifetime - assigning a new EventSubscription
 	// here auto-unsubscribes whatever was previously held.
 	EventSubscription _clientReadySub{};
+	// Same runtime-toggled lifetime as _clientReadySub: only the side that can actually be left
+	// listens - the host for a leaving client, the client for a leaving host.
+	std::vector<EventSubscription> _peerLeftSubs{};
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
@@ -97,4 +105,9 @@ private:
 	double _deltaTime{};
 	//NOTE: PauseReleasedEvent is a toggle, so a repeated client-ready would re-pause and reload the map
 	bool _isClientReadyHandled{false};
+	//NOTE: the host's goodbye is delivered while the network node is mid-call on the game thread, and
+	//leaving the mode destroys that very node - so the switch waits for the end of the frame
+	bool _isReturnToMenuPending{false};
+	//NOTE: same deferral, host side - wiping _allObjects mid-frame pulls it from under the tick
+	bool _isBattlefieldResetPending{false};
 };

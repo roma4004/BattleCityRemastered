@@ -25,8 +25,9 @@ protected:
 
 	void StartIoThread();
 
-	//NOTE: call from the derived destructor, while the node it shuts down is still alive
-	void StopIoThread(const std::function<void()>& shutdownNode);
+	//NOTE: call from the derived destructor, while the node it shuts down is still alive. `done`
+	//instead of a plain return: the goodbye is a frame write, so it finishes asynchronously.
+	void StopIoThread(const std::function<void(std::function<void()>)>& shutdownNode);
 
 	//NOTE: not in the constructor - it would expose a half-built object through ProcessNetworkCommands
 	void SubscribeToNetCommandUpdate();

@@ -184,6 +184,7 @@
     <ClCompile Include="..\source\network\commands\BonusSpawn.cpp" />
     <ClCompile Include="..\source\network\commands\BonusStatus.cpp" />
     <ClCompile Include="..\source\network\commands\CommandBatch.cpp" />
+    <ClCompile Include="..\source\network\commands\Disconnect.cpp" />
     <ClCompile Include="..\source\network\commands\Dispose.cpp" />
     <ClCompile Include="..\source\network\commands\FortressChange.cpp" />
     <ClCompile Include="..\source\network\commands\GameStateChange.cpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="..\headers\enums\BonusType.h" />
     <ClInclude Include="..\headers\enums\CommandType.h" />
     <ClInclude Include="..\headers\enums\ClientSignal.h" />
+    <ClInclude Include="..\headers\enums\DisconnectReason.h" />
     <ClInclude Include="..\headers\enums\InputSignal.h" />
     <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
@@ -322,6 +324,7 @@
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h" />
     <ClInclude Include="..\headers\network\commands\BonusStatus.h" />
     <ClInclude Include="..\headers\network\commands\CommandBatch.h" />
+    <ClInclude Include="..\headers\network\commands\Disconnect.h" />
     <ClInclude Include="..\headers\network\commands\Dispose.h" />
     <ClInclude Include="..\headers\network\commands\FortressChange.h" />
     <ClInclude Include="..\headers\network\commands\GameStateChange.h" />

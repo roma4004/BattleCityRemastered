@@ -76,6 +76,21 @@ void GameSuccess::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
 	FlushSpawnQueue();
 	DisposeDeadObject();
+
+	if (_isBattlefieldResetPending)
+	{
+		_isBattlefieldResetPending = false;
+		ResetBattlefield();
+		//NOTE: after the reset, never before - GameResetEvent clears the pause flag itself
+		_events->EmitEvent(PauseStatusEvent{.isPaused = true});
+	}
+
+	if (_isReturnToMenuPending)
+	{
+		_isReturnToMenuPending = false;
+		ApplyGameMode(GameMode::Demo);
+		_events->EmitEvent(ShowMenuEvent{.show = true});
+	}
 }
 
 void GameSuccess::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }
@@ -86,14 +101,20 @@ void GameSuccess::OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEve
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
-void GameSuccess::ApplyGameMode(const GameMode gameMode)
+void GameSuccess::ResetBattlefield()
 {
 	_allObjects.clear();
 	_allObjects.reserve(1000);
 	_pendingSpawns.clear();
-	_isClientReadyHandled = false;
 
 	_events->EmitEvent(GameResetEvent{});
+}
+
+void GameSuccess::ApplyGameMode(const GameMode gameMode)
+{
+	ResetBattlefield();
+	_isClientReadyHandled = false;
+	_isBattlefieldResetPending = false;
 
 	SetCurrentGameMode(gameMode);
 
@@ -185,6 +206,19 @@ void GameSuccess::OnClientReady(const ServerInClientReadyToStartGameEvent&)
 	_events->EmitEvent(PauseReleasedEvent{});
 }
 
+void GameSuccess::OnClientLeft(const ServerInDisconnectEvent&)
+{
+	//NOTE: back to the pre-game wait - the next client's ready reloads the map, which would stack
+	//onto the running one if the field were kept
+	_isClientReadyHandled = false;
+	_isBattlefieldResetPending = true;
+}
+
+void GameSuccess::OnHostLeft(const ClientInDisconnectEvent&)
+{
+	_isReturnToMenuPending = true;
+}
+
 void GameSuccess::MainLoop()
 {
 	try
@@ -252,20 +286,27 @@ void GameSuccess::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
 
+	_peerLeftSubs.clear();
+
+	//NOTE: the old node goes first - assigning over it would build the new one (same port, new
+	//connect) while the outgoing one still holds both
+	_networkNode.reset();
+
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
 		_clientReadySub = _events->AddListener(this, &GameSuccess::OnClientReady);
+		_peerLeftSubs.push_back(_events->AddListener(this, &GameSuccess::OnClientLeft));
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
 		_clientReadySub = EventSubscription{};
+		_peerLeftSubs.push_back(_events->AddListener(this, &GameSuccess::OnHostLeft));
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else
 	{
 		_clientReadySub = EventSubscription{};
-		_networkNode = nullptr;
 	}
 }

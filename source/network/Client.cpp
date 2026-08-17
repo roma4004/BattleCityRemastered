@@ -54,6 +54,7 @@ void Client::RegisterCommandHandlers()
 			{CommandType::OBSTACLE_SPAWN, [this](const AnyCommand& cmd) { OnObstacleSpawn(cmd); }},
 			{CommandType::TANK_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnTankSpawnComplete(cmd); }},
 			{CommandType::BONUS_STATUS, [this](const AnyCommand& cmd) { OnBonusStatus(cmd); }},
+			{CommandType::DISCONNECT, [this](const AnyCommand& cmd) { OnDisconnect(cmd); }},
 	});
 }
 
@@ -136,6 +137,15 @@ void Client::HandleDisconnect()
 		return;
 	}
 
+	//NOTE: the expected tail of an announced leave - reconnecting would hammer a closing port
+	if (_isHostGone)
+	{
+		_isConnected = false;
+		_channel->SetWriteEnabled(false);
+		_channel->Close();
+		return;
+	}
+
 	_isConnected = false;
 	_channel->SetWriteEnabled(false);
 	_channel->ResetWriteState();
@@ -161,6 +171,30 @@ void Client::Shutdown()
 
 	std::ignore = _reconnectTimer.cancel();//NOTE: no-throw, so ~Client is safe without a catch-all
 	_channel->Close();
+}
+
+void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClosed)
+{
+	_isShuttingDown = true;
+	std::ignore = _reconnectTimer.cancel();
+
+	//NOTE: nobody to tell - there is no link, so this degrades to the plain shutdown above
+	if (!_isConnected)
+	{
+		_channel->Close();
+		if (onClosed)
+		{
+			onClosed();
+		}
+		return;
+	}
+
+	CommandBatch farewell;
+	farewell.AddCommand(Disconnect{reason});
+	SendCommand(farewell);
+
+	_isConnected = false;
+	_channel->CloseAfterFlush(std::move(onClosed));
 }
 
 void Client::Subscribe()
@@ -501,6 +535,21 @@ void Client::OnBonusStatus(const AnyCommand& command)
 	});
 }
 
+
+void Client::OnDisconnect(const AnyCommand& command)
+{
+	const auto& cmd = std::get<Disconnect>(command);
+	const DisconnectReason reason = cmd.GetReason();
+
+	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
+	//thread drains the queue, and HandleDisconnect must already know why
+	_isHostGone = true;
+
+	_commandQueue.Enqueue([this, reason]()
+	{
+		_events->EmitEvent(ClientInDisconnectEvent{.reason = reason});
+	});
+}
 
 void Client::SendCommand(const CommandBatch& command)
 {

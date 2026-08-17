@@ -2,6 +2,7 @@
 
 #include "CommandDispatcher.h"
 #include "FrameChannel.h"
+#include "enums/DisconnectReason.h"
 #include "enums/InputSignal.h"
 #include "NetworkCommandQueue.h"
 #include "commands/CommandBatch.h"
@@ -11,6 +12,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -43,6 +45,9 @@ public:
 
 	void Shutdown();
 
+	//NOTE: onClosed fires once the goodbye is on the wire, or turned out undeliverable
+	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
+
 private:
 	void Subscribe();
 	void RegisterCommandHandlers();
@@ -74,6 +79,7 @@ private:
 	void OnObstacleSpawn(const AnyCommand& command);
 	void OnTankSpawnComplete(const AnyCommand& command);
 	void OnBonusStatus(const AnyCommand& command);
+	void OnDisconnect(const AnyCommand& command);
 	void SendCommand(const CommandBatch& command);
 	//NOTE: idempotent - a read error and a write error can both report the same drop
 	void HandleDisconnect();
@@ -94,6 +100,8 @@ private:
 	bool _reconnectPending{false};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect
 	std::atomic<bool> _isShuttingDown{false};
+	//NOTE: same, from the other end - the EOF after a goodbye is expected, so no reconnect
+	std::atomic<bool> _isHostGone{false};
 	unsigned char _reconnectAttempts{0u};
 	static constexpr unsigned char MaxReconnectAttempts{10u};
 	static constexpr unsigned short ReconnectDelayMs{500u};

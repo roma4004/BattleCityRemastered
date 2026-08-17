@@ -11,6 +11,7 @@
 #include "entities/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
+#include "enums/DisconnectReason.h"
 #include "enums/FortressState.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
@@ -20,6 +21,7 @@
 #include <chrono>
 #include <future>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/string_generator.hpp>
@@ -906,6 +908,8 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 
 	ASSERT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{5000}));
 
+	//NOTE: Abort, not just reset - an announced leave stops the reconnect, and this test wants one
+	server->Abort();
 	server.reset();
 
 	ASSERT_TRUE(pumpUntil([&client] { return !client->IsConnected(); }, std::chrono::milliseconds{5000}))
@@ -937,6 +941,98 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 
 	EXPECT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{10000}))
 			<< "client did not reconnect after the host came back";
+}
+
+//NOTE: like the reconnect test above - about the link, not about a command riding it
+TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
+{
+	auto events = std::make_shared<EventSystem>();
+	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	const uint16_t port = server->GetBoundPort();
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, events);
+
+	const auto pumpUntil = [&events](auto&& predicate, const std::chrono::milliseconds timeout)
+	{
+		const auto start = std::chrono::steady_clock::now();
+		while (!predicate() && std::chrono::steady_clock::now() - start < timeout)
+		{
+			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+		return predicate();
+	};
+
+	ASSERT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{5000}));
+
+	std::optional<DisconnectReason> received{};
+	auto disconnectSub = events->AddListener([&received](const ClientInDisconnectEvent& event)
+	{
+		received = event.reason;
+	});
+
+	server.reset();//NOTE: the goodbye goes out from inside the destructor, before the socket closes
+
+	ASSERT_TRUE(pumpUntil([&received] { return received.has_value(); }, std::chrono::milliseconds{5000}))
+			<< "client never got the host's goodbye";
+	EXPECT_EQ(DisconnectReason::HostShutdown, *received);
+
+	//NOTE: the point of the reason - a plain drop would have the client retrying this very port
+	const bool reBound = pumpUntil([&]
+	{
+		if (!server)
+		{
+			try
+			{
+				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, events);
+			}
+			catch (const std::exception&)
+			{
+				return false;
+			}
+		}
+		return true;
+	}, std::chrono::milliseconds{1500});
+
+	if (!reBound)
+	{
+		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
+	}
+
+	//NOTE: longer than the whole reconnect budget (MaxReconnectAttempts * ReconnectDelayMs ~ 5s)
+	EXPECT_FALSE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{6000}))
+			<< "client reconnected after the host said it was leaving on purpose";
+}
+
+TEST_F(NetworkTest, ClientQuitTellsHostWhy)
+{
+	auto events = std::make_shared<EventSystem>();
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+
+	const auto pumpUntil = [&events](auto&& predicate, const std::chrono::milliseconds timeout)
+	{
+		const auto start = std::chrono::steady_clock::now();
+		while (!predicate() && std::chrono::steady_clock::now() - start < timeout)
+		{
+			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+		return predicate();
+	};
+
+	ASSERT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{5000}));
+
+	std::optional<DisconnectReason> received{};
+	auto disconnectSub = events->AddListener([&received](const ServerInDisconnectEvent& event)
+	{
+		received = event.reason;
+	});
+
+	client.reset();
+
+	ASSERT_TRUE(pumpUntil([&received] { return received.has_value(); }, std::chrono::milliseconds{5000}))
+			<< "host never got the client's goodbye";
+	EXPECT_EQ(DisconnectReason::PlayerQuit, *received);
 }
 
 //TODO: other bonus effect replication test after write this replication

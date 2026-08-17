@@ -24,6 +24,43 @@ void FrameChannel::Close()
 	_onFrame = nullptr;
 	_onError = nullptr;
 	CloseSocket();
+	FinishDraining();//NOTE: a Close mid-drain still owes the waiter its callback, or teardown hangs
+}
+
+void FrameChannel::CloseAfterFlush(DrainHandler onClosed)
+{
+	//NOTE: posted, not run here - Send() posts too, so the goodbye is still on its way to the queue;
+	//inline would find it empty and close before writing it
+	auto self(shared_from_this());
+	boost::asio::post(_socket.get_executor(), [this, self, onClosed = std::move(onClosed)]() mutable
+	{
+		//NOTE: dropped, or the owner would read our own shutdown as a dropped link
+		_onFrame = nullptr;
+		_onError = nullptr;
+		_onDrained = std::move(onClosed);
+
+		if (IsDrained() || !_writeEnabled || !_socket.is_open())
+		{
+			CloseSocket();
+			FinishDraining();
+			return;
+		}
+
+		TryStartWrite();
+	});
+}
+
+void FrameChannel::FinishDraining()
+{
+	if (!_onDrained)
+	{
+		return;
+	}
+
+	//NOTE: moved out before the call - the handler may destroy the owner that keeps us alive
+	const DrainHandler onDrained = std::move(_onDrained);
+	_onDrained = nullptr;
+	onDrained();
 }
 
 //NOTE: cancel before shutdown/close - an abrupt close reads as a reset (WSAECONNRESET) on the peer
@@ -177,6 +214,15 @@ void FrameChannel::WriteNextFrame()
 
 									 //NOTE: undelivered frame stays at the head, re-sent whole next time
 									 _writeInProgress = false;
+
+									 //NOTE: undeliverable goodbye - waiting on a dead link would stall
+									 if (_onDrained)
+									 {
+										 CloseSocket();
+										 FinishDraining();
+										 return;
+									 }
+
 									 ReportError();
 									 return;
 								 }
@@ -186,6 +232,13 @@ void FrameChannel::WriteNextFrame()
 								 if (_writeQueue.empty())
 								 {
 									 _writeInProgress = false;
+
+									 if (_onDrained)
+									 {
+										 CloseSocket();
+										 FinishDraining();
+									 }
+
 									 return;
 								 }
 

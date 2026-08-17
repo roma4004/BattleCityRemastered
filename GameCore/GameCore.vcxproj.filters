@@ -273,6 +273,9 @@
     <ClCompile Include="..\source\network\commands\CommandBatch.cpp">
       <Filter>source\network\commands</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\commands\Disconnect.cpp">
+      <Filter>source\network\commands</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\commands\Dispose.cpp">
       <Filter>source\network\commands</Filter>
     </ClCompile>
@@ -590,6 +593,9 @@
     <ClInclude Include="..\headers\enums\Direction.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\DisconnectReason.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\FortressState.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -678,6 +684,9 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\CommandBatch.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\Disconnect.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\Dispose.h">

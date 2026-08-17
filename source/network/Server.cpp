@@ -1,4 +1,5 @@
 #include "network/Server.h"
+#include "enums/PlayerTag.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
@@ -30,6 +31,7 @@ void Session::RegisterCommandHandlers()
 	_dispatcher.RegisterAll({
 			{CommandType::SIGNAL_EVENT, [this](const AnyCommand& cmd) { OnSignalEvent(cmd); }},
 			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
+			{CommandType::DISCONNECT, [this](const AnyCommand& cmd) { OnDisconnect(cmd); }},
 	});
 }
 
@@ -39,6 +41,46 @@ Session::~Session()
 }
 
 void Session::Shutdown() { _channel->Close(); }
+
+void Session::Shutdown(const DisconnectReason reason, std::function<void()> onClosed)
+{
+	if (!_channel->IsOpen())
+	{
+		if (onClosed)
+		{
+			onClosed();
+		}
+		return;
+	}
+
+	CommandBatch farewell;
+	farewell.AddCommand(Disconnect{reason});
+
+	std::ostringstream archiveStream;
+	{
+		ser20::PortableBinaryOutputArchive oa(archiveStream);
+		oa(farewell);
+	}
+
+	//NOTE: straight to the channel - Server's batch is flushed by the send thread once a frame,
+	//and shutdown is exactly when that stops happening
+	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(archiveStream.str())));
+	_channel->CloseAfterFlush(std::move(onClosed));
+}
+
+void Session::OnDisconnect(const AnyCommand& command)
+{
+	const auto& cmd = std::get<Disconnect>(command);
+	const DisconnectReason reason = cmd.GetReason();
+
+	_commandQueue.Enqueue([this, reason]()
+	{
+		//NOTE: on the game thread, not the network one - closing makes the session collectable, and
+		//collecting it before this queue is drained would take the event with it
+		_channel->Close();
+		_events->EmitEvent(ServerInDisconnectEvent{.reason = reason});
+	});
+}
 
 void Session::Start()
 {
@@ -211,12 +253,7 @@ Server::~Server()
 
 void Server::Shutdown()
 {
-	if (_acceptor.is_open())
-	{
-		boost::system::error_code ec;
-		std::ignore = _acceptor.cancel(ec);
-		std::ignore = _acceptor.close(ec);
-	}
+	CloseAcceptor();
 
 	for (const auto& session: SnapshotSessions())
 	{
@@ -225,6 +262,53 @@ void Server::Shutdown()
 			session->Shutdown();
 		}
 	}
+}
+
+void Server::Shutdown(const DisconnectReason reason, const std::function<void()>& onClosed)
+{
+	CloseAcceptor();
+
+	const auto sessions = SnapshotSessions();
+	//NOTE: counted, not per-session - the caller is told once, after the last goodbye is out
+	const auto pending = std::make_shared<std::size_t>(sessions.size());
+
+	if (sessions.empty())
+	{
+		if (onClosed)
+		{
+			onClosed();
+		}
+		return;
+	}
+
+	for (const auto& session: sessions)
+	{
+		if (!session)
+		{
+			--*pending;
+			continue;
+		}
+
+		session->Shutdown(reason, [pending, onClosed]
+		{
+			if (--*pending == 0u && onClosed)
+			{
+				onClosed();
+			}
+		});
+	}
+}
+
+void Server::CloseAcceptor()
+{
+	if (!_acceptor.is_open())
+	{
+		return;
+	}
+
+	boost::system::error_code ec;
+	std::ignore = _acceptor.cancel(ec);
+	std::ignore = _acceptor.close(ec);
 }
 
 void Server::Subscribe()
@@ -510,7 +594,8 @@ void Server::CleanupDeadSessions()
 		std::scoped_lock lock(_sessionsMutex);
 		auto removed = std::ranges::remove_if(_sessions, [](const std::shared_ptr<Session>& session)
 		{
-			return !session || !session->IsSocketOpen();
+			//NOTE: a closed session with commands still queued is not dead yet - its goodbye is unread
+			return !session || (!session->IsSocketOpen() && !session->HasPendingCommands());
 		});
 		dead.insert(dead.end(), std::make_move_iterator(removed.begin()), std::make_move_iterator(removed.end()));
 		_sessions.erase(removed.begin(), removed.end());
@@ -534,7 +619,8 @@ void Server::ProcessNetworkCommands() const
 {
 	for (const auto& session: SnapshotSessions())
 	{
-		if (session && session->IsSocketOpen())
+		//NOTE: no IsSocketOpen check - frames already read stay valid, and the last is the goodbye
+		if (session)
 		{
 			session->ProcessCommandQueue();
 		}

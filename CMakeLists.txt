@@ -99,6 +99,7 @@ set(GAME_CORE_SOURCES
         source/network/commands/BonusSpawn.cpp
         source/network/commands/BonusStatus.cpp
         source/network/commands/CommandBatch.cpp
+        source/network/commands/Disconnect.cpp
         source/network/commands/Dispose.cpp
         source/network/commands/FortressChange.cpp
         source/network/commands/GameStateChange.cpp
