@@ -47,7 +47,6 @@ void TankSpawner::Subscribe()
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnDelayFinished));
-	_subs.push_back(_events->AddListener(this, &TankSpawner::OnWindowSizeChangedTo));
 }
 
 void TankSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
@@ -62,25 +61,6 @@ void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(eve
 void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
-}
-
-void TankSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event) const
-{
-	const UPoint& newSize = event.newSize;
-	_gameConfig.defaultScaleFactor = _gameConfig.scaleFactor;
-	const float newSizeY = static_cast<float>(newSize.y);
-	_gameConfig.scaleFactor = newSizeY / static_cast<float>(_gameConfig.windowSizeDefault.y);
-	_gameConfig.gridSize = _gameConfig.gridSizeDefault * _gameConfig.scaleFactor;
-
-	_gameConfig.gridOffset = (newSizeY * _gameConfig.scaleFactor) / _gameConfig.gridSize;
-	_gameConfig.tankSize = _gameConfig.gridOffset * 3.f;
-
-	_gameConfig.tankSpeed = _gameConfig.tankSpeed * _gameConfig.scaleFactor / 2.f;
-
-	_gameConfig.bonusSize = static_cast<int>(_gameConfig.gridOffset * 3.f);
-
-	//scale bullet caliber
-	_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
 }
 
 void TankSpawner::SubscribeAsClient()

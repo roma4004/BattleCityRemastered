@@ -1,4 +1,4 @@
-#include "application/GameSuccess.h"
+#include "application/Game.h"
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
@@ -17,10 +17,12 @@
 #include "components/managers/RenderManager.h"
 #include "components/managers/SpawnManager.h"
 #include "components/managers/TextureManager.h"
+#include "components/managers/WorldScaleManager.h"
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <memory>
 //#include <fstream>
@@ -28,20 +30,19 @@
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSystem>& events,
-						 std::unique_ptr<Menu>& menu, std::unique_ptr<RenderManager>& renderManager,
-						 const GameMode gameMode)
-	: _menu{std::move(menu)}
-	, _textureManager(std::make_unique<TextureManager>(events))
-	, _stateManager{std::make_unique<GameStateManager>(events)}
-	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, events, gameConfig)}
-	, _fpsManager{std::make_unique<FramePerSecondManager>(events, gameConfig)}
-	, _spawnManager{std::make_unique<SpawnManager>(events, &_allObjects, gameConfig)}
-	, _renderManager{std::move(renderManager)}
-	, _bonusEffectManager{std::make_unique<BonusEffectManager>(events)}
-	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, events)}
-	, _rightSideBar{std::make_unique<RightSideBar>(events)}
-	, _events{events}
+Game::Game(GameConfig& gameConfig, SDL_Config& sdlConfig, const GameMode gameMode)
+	: _events{std::make_shared<EventSystem>()}
+	, _menu{std::make_unique<Menu>(gameConfig.windowSize, _events)}
+	, _textureManager(std::make_unique<TextureManager>(_events))
+	, _stateManager{std::make_unique<GameStateManager>(_events)}
+	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, _events, gameConfig)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, gameConfig)}
+	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
+	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}
+	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
+	, _bonusEffectManager{std::make_unique<BonusEffectManager>(_events)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, _events)}
+	, _rightSideBar{std::make_unique<RightSideBar>(_events)}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
@@ -54,25 +55,51 @@ GameSuccess::GameSuccess(GameConfig& gameConfig, const std::shared_ptr<EventSyst
 	}
 }
 
-GameSuccess::~GameSuccess() = default;
+Game::~Game() = default;
 
-void GameSuccess::Subscribe()
+void Game::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &GameSuccess::PrevGameMode));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::NextGameMode));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::OnApplyGameMode));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::OnGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::OnAddToSpawnQueue));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::OnPostTickUpdate));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::OnDeltaTime));
-	_subs.push_back(_events->AddListener(this, &GameSuccess::OnGameModeSelectedWithMouse));
+	_subs.push_back(_events->AddListener(this, &Game::PrevGameMode));
+	_subs.push_back(_events->AddListener(this, &Game::NextGameMode));
+	_subs.push_back(_events->AddListener(this, &Game::OnApplyGameMode));
+	_subs.push_back(_events->AddListener(this, &Game::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &Game::OnAddToSpawnQueue));
+	_subs.push_back(_events->AddListener(this, &Game::OnPostTickUpdate));
+	_subs.push_back(_events->AddListener(this, &Game::OnDeltaTime));
+	_subs.push_back(_events->AddListener(this, &Game::OnGameModeSelectedWithMouse));
+	_subs.push_back(_events->AddListener(this, &Game::OnWorldGeometryChanged));
 }
 
-void GameSuccess::OnApplyGameMode(const ApplyGameModeEvent&) { ApplyGameMode(_selectedGameMode); }
+//NOTE: whoever already stands on the field keeps its place in cells, not in pixels - so every rect
+//is scaled by how much the cell itself changed. Obstacles spawned after this already use the new one.
+void Game::OnWorldGeometryChanged(const WorldGeometryChangedEvent& event)
+{
+	constexpr float kNoticeableCellChange{0.001f};
+	if (event.previousCellSize <= 0.f
+		|| std::abs(event.cellSize - event.previousCellSize) < kNoticeableCellChange)
+	{
+		return;
+	}
 
-void GameSuccess::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event) { _pendingSpawns.push_back(event.obj); }
+	const float ratio = event.cellSize / event.previousCellSize;
+	for (const std::shared_ptr<BaseObj>& obj: _allObjects)
+	{
+		if (!obj)
+		{
+			continue;
+		}
 
-void GameSuccess::OnPostTickUpdate(const PostTickUpdateEvent&)
+		obj->SetPos(FPoint{.x = obj->GetX() * ratio, .y = obj->GetY() * ratio});
+		obj->SetWidth(obj->GetWidth() * ratio);
+		obj->SetHeight(obj->GetHeight() * ratio);
+	}
+}
+
+void Game::OnApplyGameMode(const ApplyGameModeEvent&) { ApplyGameMode(_selectedGameMode); }
+
+void Game::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event) { _pendingSpawns.push_back(event.obj); }
+
+void Game::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
 	FlushSpawnQueue();
 	DisposeDeadObject();
@@ -93,15 +120,15 @@ void GameSuccess::OnPostTickUpdate(const PostTickUpdateEvent&)
 	}
 }
 
-void GameSuccess::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }
+void Game::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }
 
-void GameSuccess::OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event)
+void Game::OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event)
 {//TODO: merge with SelectedGameModeChangedToEvent
 	_selectedGameMode = event.mode;
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
-void GameSuccess::ResetBattlefield()
+void Game::ResetBattlefield()
 {
 	_allObjects.clear();
 	_allObjects.reserve(1000);
@@ -110,7 +137,7 @@ void GameSuccess::ResetBattlefield()
 	_events->EmitEvent(GameResetEvent{});
 }
 
-void GameSuccess::ApplyGameMode(const GameMode gameMode)
+void Game::ApplyGameMode(const GameMode gameMode)
 {
 	ResetBattlefield();
 	_isClientReadyHandled = false;
@@ -129,7 +156,7 @@ void GameSuccess::ApplyGameMode(const GameMode gameMode)
 	}
 }
 
-void GameSuccess::PrevGameMode(const PreviousGameModeEvent&)
+void Game::PrevGameMode(const PreviousGameModeEvent&)
 {
 	int mode = static_cast<int>(_selectedGameMode);
 	--mode;
@@ -142,7 +169,7 @@ void GameSuccess::PrevGameMode(const PreviousGameModeEvent&)
 	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 }
 
-void GameSuccess::NextGameMode(const NextGameModeEvent&)
+void Game::NextGameMode(const NextGameModeEvent&)
 {
 	int mode = static_cast<int>(_selectedGameMode);
 	++mode;
@@ -156,7 +183,7 @@ void GameSuccess::NextGameMode(const NextGameModeEvent&)
 }
 
 //TODO: push other tank mechanic like velosity with ice effect
-// void GameSuccess::DisposeDeadObject()//TODO: add verbosity level for debug only ifndef
+// void Game::DisposeDeadObject()//TODO: add verbosity level for debug only ifndef
 // {
 // 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };
 // 	const auto it = std::ranges::remove_if(_allObjects, predicate).begin();
@@ -179,12 +206,12 @@ void GameSuccess::NextGameMode(const NextGameModeEvent&)
 // 	_allObjects.erase(it, _allObjects.end());
 // }
 
-void GameSuccess::DisposeDeadObject()
+void Game::DisposeDeadObject()
 {
 	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
 }
 
-void GameSuccess::FlushSpawnQueue()
+void Game::FlushSpawnQueue()
 {
 	_allObjects.insert(_allObjects.end(), std::make_move_iterator(_pendingSpawns.begin()),
 					   std::make_move_iterator(_pendingSpawns.end()));
@@ -193,7 +220,7 @@ void GameSuccess::FlushSpawnQueue()
 
 //TODO: recheck rule of 3/5 for all classes
 
-void GameSuccess::OnClientReady(const ServerInClientReadyToStartGameEvent&)
+void Game::OnClientReady(const ServerInClientReadyToStartGameEvent&)
 {
 	if (_isClientReadyHandled)
 	{
@@ -206,7 +233,7 @@ void GameSuccess::OnClientReady(const ServerInClientReadyToStartGameEvent&)
 	_events->EmitEvent(PauseReleasedEvent{});
 }
 
-void GameSuccess::OnClientLeft(const ServerInDisconnectEvent&)
+void Game::OnClientLeft(const ServerInDisconnectEvent&)
 {
 	//NOTE: back to the pre-game wait - the next client's ready reloads the map, which would stack
 	//onto the running one if the field were kept
@@ -214,12 +241,12 @@ void GameSuccess::OnClientLeft(const ServerInDisconnectEvent&)
 	_isBattlefieldResetPending = true;
 }
 
-void GameSuccess::OnHostLeft(const ClientInDisconnectEvent&)
+void Game::OnHostLeft(const ClientInDisconnectEvent&)
 {
 	_isReturnToMenuPending = true;
 }
 
-void GameSuccess::MainLoop()
+void Game::Run()
 {
 	try
 	{
@@ -271,18 +298,18 @@ void GameSuccess::MainLoop()
 	}
 }
 
-int GameSuccess::Result() const { return 0; }
+int Game::Result() const { return 0; }
 
-GameMode GameSuccess::GetCurrentGameMode() const { return _gameMode; }
+GameMode Game::GetCurrentGameMode() const { return _gameMode; }
 
-void GameSuccess::SetCurrentGameMode(const GameMode selectedGameMode)
+void Game::SetCurrentGameMode(const GameMode selectedGameMode)
 {
 	_gameMode = selectedGameMode;
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = _gameMode});
 }
 
-void GameSuccess::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+void Game::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
 
@@ -295,14 +322,14 @@ void GameSuccess::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	if (_gameMode == GameMode::PlayAsHost)
 	{
 		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
-		_clientReadySub = _events->AddListener(this, &GameSuccess::OnClientReady);
-		_peerLeftSubs.push_back(_events->AddListener(this, &GameSuccess::OnClientLeft));
+		_clientReadySub = _events->AddListener(this, &Game::OnClientReady);
+		_peerLeftSubs.push_back(_events->AddListener(this, &Game::OnClientLeft));
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (_gameMode == GameMode::PlayAsClient)
 	{
 		_clientReadySub = EventSubscription{};
-		_peerLeftSubs.push_back(_events->AddListener(this, &GameSuccess::OnHostLeft));
+		_peerLeftSubs.push_back(_events->AddListener(this, &Game::OnHostLeft));
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
 	}
 	else

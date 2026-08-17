@@ -44,6 +44,7 @@
     <ClCompile Include="BonusTestDestroy.cpp" />
     <ClCompile Include="BonusTestEnemy.cpp" />
     <ClCompile Include="BotsTest.cpp" />
+    <ClCompile Include="MapTest.cpp" />
     <ClCompile Include="BulletsTestAdvanced.cpp" />
     <ClCompile Include="BulletsTestBasic.cpp" />
     <ClCompile Include="CommandLineParserTest.cpp" />

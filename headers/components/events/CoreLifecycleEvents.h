@@ -76,3 +76,18 @@ struct WindowSizeChangedToEvent
 {
 	UPoint newSize;
 };
+
+//NOTE: the map's own size, not the window's - this is what the geometry is fitted to
+struct MapLoadedEvent
+{
+	std::size_t cols;
+	std::size_t rows;
+};
+
+//NOTE: carries both sizes because whoever already stands on the field has to be rescaled by their
+//ratio - the new size alone does not say by how much
+struct WorldGeometryChangedEvent
+{
+	float cellSize;
+	float previousCellSize;
+};

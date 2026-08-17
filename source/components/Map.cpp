@@ -1,54 +1,47 @@
-﻿#include "components/Map.h"
+#include "components/Map.h"
 #include "components/EventSystem.h"
+#include "components/MapLoader.h"
 #include "components/events/SpawnEvents.h"
 #include "entities/ObjRectangle.h"
 #include "enums/ObstacleType.h"
+
+namespace
+{
+//NOTE: the eagle is drawn as one 4x4-cell piece from a single cell, the way the fortress ring
+//around it is laid out in the file
+constexpr float kEagleCellSpan{4.f};
+}
 
 Map::Map(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
 Map::~Map() = default;
 
-void Map::ParseAndCreateObstacle(const float gridSize) const
+std::expected<void, MapError> Map::LoadFromFile(const std::string& path)
 {
-	for (size_t vertical = 0ul; vertical < 52ul; ++vertical)
-	{
-		for (size_t horizontal = 0ul; horizontal < 50ul; ++horizontal)
-		{
-			const float x = static_cast<float>(vertical) * gridSize;
-			const float y = static_cast<float>(horizontal) * gridSize;
-			ObjRectangle rect = {.x = x, .y = y, .w = gridSize, .h = gridSize};
+	return MapLoader::LoadFromFile(path).transform([this](MapData data) { _data = std::move(data); });
+}
 
-			switch (fieldLevelOne[horizontal][vertical])
+void Map::CreateObstacles(const float cellSize) const
+{
+	for (std::size_t row = 0u; row < _data.rows; ++row)
+	{
+		for (std::size_t col = 0u; col < _data.cols; ++col)
+		{
+			//NOTE: checked here too, not only in the loader - MapData is a plain struct anyone can fill
+			const ObstacleType type = _data.At(col, row);
+			if (!IsSpawnableObstacle(type))
 			{
-				case 0:
-					break;
-				case 1:
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Brick});
-					break;
-				case 2:
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Steel});
-					break;
-				case 3:
-					rect.w += gridSize * 3;
-					rect.h += gridSize * 3;
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Eagle});
-					break;
-				case 4:
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Fortress});
-					break;
-				case 5:
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Water});
-					break;
-				case 6:
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Bush});
-					break;
-				case 7:
-					_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = ObstacleType::Ice});
-					break;
-				default:
-					break;
+				continue;
 			}
+
+			const float span = type == ObstacleType::Eagle ? kEagleCellSpan : 1.f;
+			const ObjRectangle rect{.x = static_cast<float>(col) * cellSize,
+									.y = static_cast<float>(row) * cellSize,
+									.w = cellSize * span,
+									.h = cellSize * span};
+
+			_events->EmitEvent(SpawnObstacleEvent{.rect = rect, .type = type});
 		}
 	}
 }

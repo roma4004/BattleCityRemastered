@@ -15,7 +15,7 @@ class EventSystem;
 class GameConfig;
 struct GameResetEvent;
 struct GameModeChangedToEvent;
-struct WindowSizeChangedToEvent;
+struct WorldGeometryChangedEvent;
 struct TickUpdateEvent;
 struct ClientInBonusSpawnEvent;
 
@@ -45,7 +45,7 @@ class BonusSpawner final
 
 	void Subscribe();
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
-	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
+	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
 	void SubscribeAsHost();
 	void SubscribeAsClient();
 	void OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event);

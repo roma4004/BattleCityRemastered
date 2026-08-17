@@ -134,6 +134,7 @@
       <Command>if not exist "$(OutDir)Resources\Fonts" mkdir "$(OutDir)Resources\Fonts"
 if not exist "$(OutDir)Resources\Images\PS5_Buttons" mkdir "$(OutDir)Resources\Images\PS5_Buttons"
 if not exist "$(OutDir)Resources\Images\Xbox_Buttons" mkdir "$(OutDir)Resources\Images\Xbox_Buttons"
+if not exist "$(OutDir)Resources\Maps" mkdir "$(OutDir)Resources\Maps"
 if not exist "$(OutDir)Resources\Sounds" mkdir "$(OutDir)Resources\Sounds"
 copy /Y "$(ProjectDir)Resources\Fonts\PressStart2P-vaV7.ttf" "$(OutDir)Resources\Fonts\PressStart2P-vaV7.ttf"
 copy /Y "$(ProjectDir)Resources\Images\Title.png" "$(OutDir)Resources\Images\Title.png"
@@ -151,6 +152,7 @@ copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\Menu.png" "$(OutDir)Resource
 copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\View.png" "$(OutDir)Resources\Images\Xbox_Buttons\View.png"
 copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\A.png" "$(OutDir)Resources\Images\Xbox_Buttons\A.png"
 copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\Y.png" "$(OutDir)Resources\Images\Xbox_Buttons\Y.png"
+copy /Y "$(ProjectDir)Resources\Maps\level1.map" "$(OutDir)Resources\Maps\level1.map"
 copy /Y "$(ProjectDir)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sounds\levelStarted.wav"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -208,6 +210,7 @@ copy /Y "$(ProjectDir)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sou
     <Content Include="Resources\Images\Xbox_Buttons\Menu.png" />
     <Content Include="Resources\Images\Xbox_Buttons\View.png" />
     <Content Include="Resources\Images\Xbox_Buttons\Y.png" />
+    <Content Include="Resources\Maps\level1.map" />
     <Content Include="Resources\Sounds\levelStarted.wav" />
   </ItemGroup>
   <!-- SDL2/ttf/image/mixer references moved to GameCore.vcxproj (that's where the SDL-dependent .cpp now live);

@@ -24,9 +24,7 @@ include_directories(headers)
 
 # the SDL-facing files, kept apart so game_core below stays free of SDL
 set(GAME_PLATFORM_SOURCES
-        source/application/ConfigFailure.cpp
-        source/application/ConfigSuccess.cpp
-        source/application/GameSuccess.cpp
+        source/application/Game.cpp
         source/application/SDL_Config.cpp
         source/application/UserInput.cpp
         source/components/managers/RenderManager.cpp
@@ -36,7 +34,6 @@ set(GAME_PLATFORM_SOURCES
 set(GAME_CORE_SOURCES
         source/application/CommandLineParser.cpp
         source/application/GameConfig.cpp
-        source/application/GameFailure.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -46,6 +43,8 @@ set(GAME_CORE_SOURCES
         source/components/GameStatistics.cpp
         source/components/LineOfSight.cpp
         source/components/Map.cpp
+        source/components/MapLoader.cpp
+        source/components/WorldGeometry.cpp
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/RightSideBar.cpp
@@ -64,6 +63,7 @@ set(GAME_CORE_SOURCES
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnManager.cpp
         source/components/managers/TextureManager.cpp
+        source/components/managers/WorldScaleManager.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
         source/entities/bonuses/BonusCaliber.cpp
@@ -125,6 +125,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BonusTestDestroy.cpp
         UnitTests/BonusTestEnemy.cpp
         UnitTests/BotsTest.cpp
+        UnitTests/MapTest.cpp
         UnitTests/BulletsTestAdvanced.cpp
         UnitTests/BulletsTestBasic.cpp
         UnitTests/CommandLineParserTest.cpp
@@ -193,6 +194,7 @@ set(GAME_ASSETS
         Resources/Images/Xbox_Buttons/View.png
         Resources/Images/Xbox_Buttons/A.png
         Resources/Images/Xbox_Buttons/Y.png
+        Resources/Maps/level1.map
         Resources/Sounds/levelStarted.wav
 )
 

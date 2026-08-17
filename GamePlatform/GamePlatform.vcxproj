@@ -121,18 +121,15 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\application\ConfigFailure.cpp" />
-    <ClCompile Include="..\source\application\ConfigSuccess.cpp" />
-    <ClCompile Include="..\source\application\GameSuccess.cpp" />
+    <ClCompile Include="..\source\application\Game.cpp" />
     <ClCompile Include="..\source\application\SDL_Config.cpp" />
     <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\components\managers\RenderManager.cpp" />
   </ItemGroup>
   <!-- Headers matching the .cpp files above; header+impl live in the same project. -->
   <ItemGroup>
-    <ClInclude Include="..\headers\application\ConfigFailure.h" />
-    <ClInclude Include="..\headers\application\ConfigSuccess.h" />
-    <ClInclude Include="..\headers\application\GameSuccess.h" />
+    <ClInclude Include="..\headers\application\Game.h" />
+    <ClInclude Include="..\headers\application\InitError.h" />
     <ClInclude Include="..\headers\application\SDL_Config.h" />
     <ClInclude Include="..\headers\application\UserInput.h" />
     <ClInclude Include="..\headers\components\managers\RenderManager.h" />

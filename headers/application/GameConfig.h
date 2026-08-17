@@ -5,6 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 struct LaunchOptions;
+struct WorldGeometry;
 
 class GameConfig
 {
@@ -16,6 +17,8 @@ public:
 	void DefaultInitIni();
 	void SaveIni(const std::string& filePath) const;
 	void Apply(const LaunchOptions& launchOptions);
+	//NOTE: the one place where a cell size turns into every other size - keep derivations out of the spawners
+	void ApplyGeometry(const WorldGeometry& geometry, std::size_t mapRows);
 	void ApplyWindowOffsetAsHost();
 	void ApplyWindowOffsetAsClient();
 
@@ -26,7 +29,7 @@ public:
 	size_t sideBarWidth{175u};
 	int tankHealth{100};
 	float scaleFactor{1.f};
-	float defaultScaleFactor{1.f};
+	//NOTE: gridSize is a count - how many cells fit vertically; gridOffset is one cell in pixels
 	float gridSize{50.f};
 	float gridSizeDefault{50.f};
 	float gridOffset{600 / gridSize};

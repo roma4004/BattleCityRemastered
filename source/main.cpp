@@ -1,9 +1,9 @@
 #include "application/CommandLineParser.h"
+#include "application/Game.h"
 #include "application/GameConfig.h"
 #include "application/SDL_Config.h"
-#include "interfaces/IConfig.h"
-#include "interfaces/IGame.h"
 #include "utils/NetworkLogger.h"
+#include <iostream>
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main(const int argc, char* argv[])
@@ -18,10 +18,15 @@ int main(const int argc, char* argv[])
 	gameConfig.Apply(launchOptions);
 
 	SDL_Config sdlEnv{gameConfig};
-	const std::unique_ptr<IConfig> sdl = sdlEnv.Init();
-	const std::unique_ptr<IGame> game = sdl->CreateGame(launchOptions.gameMode, sdlEnv);
+	if (const auto init = sdlEnv.Init(); !init)
+	{
+		std::cerr << init.error().stage << ": " << init.error().detail << '\n';
 
-	game->MainLoop();
+		return 1;
+	}
 
-	return 0;
+	Game game{gameConfig, sdlEnv, launchOptions.gameMode};
+	game.Run();
+
+	return game.Result();
 }

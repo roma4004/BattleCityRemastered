@@ -56,6 +56,7 @@ class UserInput final
 	void GamepadEvents(const SDL_Event& event);
 	void OnWindowMoveStop();
 	void WindowsMoveEvents(const SDL_Event& event);
+	void OnWindowResized(UPoint newSize);
 
 	void Subscribe();
 	void OnPauseStatus(const PauseStatusEvent& event);

@@ -1,7 +1,7 @@
 #include "application/UserInput.h"
 #include "application/GameConfig.h"
-#include "application/GameSuccess.h"
 #include "components/EventSystem.h"
+#include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
@@ -339,6 +339,23 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 	}
 }
 
+//NOTE: SDL fires this for every pixel of a drag, and each one refits the world and rescales every
+//object on the field - so the size is snapped to a step and a repeat of the same size is dropped
+void UserInput::OnWindowResized(const UPoint newSize)
+{
+	constexpr std::size_t step{50u};
+	const UPoint snapped{.x = std::max(step, (newSize.x + step / 2u) / step * step),
+						 .y = std::max(step, (newSize.y + step / 2u) / step * step)};
+
+	if (snapped.x == _windowSize.x && snapped.y == _windowSize.y)
+	{
+		return;
+	}
+
+	_windowSize = snapped;
+	_events->EmitEvent(WindowSizeChangedToEvent{.newSize = snapped});
+}
+
 void UserInput::Update()
 {
 	SDL_Event event;
@@ -349,17 +366,11 @@ void UserInput::Update()
 			_isShutdown = true;
 		}
 
-		//TODO: WIP, need scale for game objects and shift pos after winSizeChange
-		// if (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-		// {
-		// 	constexpr int step{50};
-		// 	const auto newWidth = static_cast<unsigned int>(event.window.data1);
-		// 	const auto newHeight = static_cast<unsigned int>(event.window.data2);
-		// 	const auto snappedWidth = static_cast<unsigned int>(std::round(newWidth / step)) * step;
-		// 	const auto snappedHeight = static_cast<unsigned int>(std::round(newHeight / step)) * step;
-		// 	const UPoint point{.x = snappedWidth, .y = snappedHeight};
-		// 	_events->EmitEvent("WindowSizeChangedTo", point);
-		// }
+		if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		{
+			OnWindowResized(UPoint{.x = static_cast<unsigned>(event.window.data1),
+								   .y = static_cast<unsigned>(event.window.data2)});
+		}
 		WindowsMoveEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);

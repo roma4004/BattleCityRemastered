@@ -1,5 +1,6 @@
 ﻿#include "../../headers/application/GameConfig.h"
 #include "../../headers/application/LaunchOptions.h"
+#include "../../headers/components/WorldGeometry.h"
 #include <iostream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -143,6 +144,22 @@ void GameConfig::Apply(const LaunchOptions& launchOptions)
 	}
 
 	skipIntroMusic = launchOptions.skipIntroMusic;
+}
+
+void GameConfig::ApplyGeometry(const WorldGeometry& geometry, const std::size_t mapRows)
+{
+	gridSize = static_cast<float>(mapRows);
+	gridOffset = geometry.cellSize;
+	sideBarWidth = geometry.sideBarWidth;
+
+	tankSize = gridOffset * 3.f;
+	bonusSize = static_cast<int>(tankSize);
+
+	//NOTE: derived from the defaults, never from the current values - scaling the current ones makes
+	//every refit compound on the last one, which is how tankSpeed used to drift on each resize
+	const float defaultCellSize = static_cast<float>(windowSizeDefault.y) / gridSizeDefault;
+	scaleFactor = gridOffset / defaultCellSize;
+	tankSpeed = tankSpeedDefault * scaleFactor;
 }
 
 void GameConfig::ApplyWindowOffsetAsHost() { windowsPosOffset.x -= windowSize.x / 2; }

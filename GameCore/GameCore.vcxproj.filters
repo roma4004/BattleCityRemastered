@@ -96,9 +96,6 @@
     <ClCompile Include="..\source\application\GameConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\application\GameFailure.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp">
       <Filter>source\behavior</Filter>
     </ClCompile>
@@ -162,7 +159,13 @@
     <ClCompile Include="..\source\components\managers\TextureManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\managers\WorldScaleManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\Map.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\MapLoader.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\Menu.cpp">
@@ -178,6 +181,9 @@
       <Filter>source\components</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\TankSpawner.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\WorldGeometry.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\BaseObj.cpp">
@@ -350,9 +356,6 @@
     <ClInclude Include="..\headers\application\GameConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\application\GameFailure.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\application\LaunchOptions.h">
       <Filter>headers\application</Filter>
     </ClInclude>
@@ -467,7 +470,16 @@
     <ClInclude Include="..\headers\components\managers\TextureManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\managers\WorldScaleManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\Map.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\MapData.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\MapLoader.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\Menu.h">
@@ -483,6 +495,9 @@
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\TankSpawner.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\WorldGeometry.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\BaseObj.h">
@@ -626,13 +641,7 @@
     <ClInclude Include="..\headers\enums\TextureOffset.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\interfaces\IConfig.h">
-      <Filter>headers\interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\interfaces\IDrawable.h">
-      <Filter>headers\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\interfaces\IGame.h">
       <Filter>headers\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\interfaces\IHaveFraction.h">

@@ -98,7 +98,7 @@ void RenderManager::OnRenderText(const RenderTextEvent& event) const
 
 void RenderManager::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
 {
-	_gameConfig.windowSize = event.newSize;//TODO: find better place for this responsibility
+	//NOTE: windowSize itself is WorldScaleManager's to set - it subscribes first, so by now it has
 	_fpsRectangle = CalcFpsPos(event.newSize);
 
 	SDL_RenderSetLogicalSize(_sdlConfig.renderer.get(), static_cast<int>(event.newSize.x),

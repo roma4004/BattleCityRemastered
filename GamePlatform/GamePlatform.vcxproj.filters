@@ -27,13 +27,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\application\ConfigFailure.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\application\ConfigSuccess.cpp">
-      <Filter>source\application</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\application\GameSuccess.cpp">
+    <ClCompile Include="..\source\application\Game.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
     <ClCompile Include="..\source\application\SDL_Config.cpp">
@@ -47,13 +41,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\headers\application\ConfigFailure.h">
+    <ClInclude Include="..\headers\application\Game.h">
       <Filter>headers\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\application\ConfigSuccess.h">
-      <Filter>headers\application</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\application\GameSuccess.h">
+    <ClInclude Include="..\headers\application\InitError.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\SDL_Config.h">

@@ -40,7 +40,7 @@ void BonusSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWindowSizeChangedTo));
+	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
 
 	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
 }
@@ -61,15 +61,17 @@ void BonusSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	}
 }
 
-void BonusSpawner::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+//NOTE: on the geometry, not on the window - bonusSize and sideBarWidth are only settled once the
+//new cell size has been worked out, and this event is emitted after that
+void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
 {
-	const UPoint& newSize = event.newSize;
+	const UPoint& windowSize = _gameConfig.windowSize;
 	_distSpawnPosY = std::uniform_int_distribution<>{
 			0,
-			static_cast<int>(newSize.y) - _gameConfig.bonusSize};
+			static_cast<int>(windowSize.y) - _gameConfig.bonusSize};
 	_distSpawnPosX = std::uniform_int_distribution<>{
 			0,
-			static_cast<int>(newSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
+			static_cast<int>(windowSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
 }
 
 void BonusSpawner::SubscribeAsHost()

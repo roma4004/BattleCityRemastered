@@ -1,12 +1,15 @@
 #pragma once
+#include "InitError.h"
 #include <SDL.h>//NOTE: do not replace with forward declaration, required for minGW
 #include <SDL_mixer.h>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
+#include <expected>
 #include <memory>
+#include <span>
+#include <string_view>
 #include <vector>
 
-class IConfig;
 class GameConfig;
 
 struct SDL_Config final
@@ -14,7 +17,8 @@ struct SDL_Config final
 	explicit SDL_Config(GameConfig& config);
 	~SDL_Config();
 
-	[[nodiscard]] std::unique_ptr<IConfig> Init();
+	//NOTE: the environment is this object's own fields - success carries nothing, failure says what refused
+	[[nodiscard]] std::expected<void, InitError> Init();
 
 	GameConfig& gameConfig;
 
@@ -37,6 +41,25 @@ struct SDL_Config final
 	std::vector<std::shared_ptr<SDL_Surface>> surfaceXBox;
 
 private:
+	//NOTE: one group per subsystem - each either fills the fields above or names what refused
+	[[nodiscard]] std::expected<void, InitError> InitVideo();
+	[[nodiscard]] std::expected<void, InitError> InitFonts();
+	[[nodiscard]] std::expected<void, InitError> InitTextures();
+	//NOTE: can fail like the rest; whether that is fatal is decided in Init(), not here
+	[[nodiscard]] std::expected<void, InitError> InitAudio();
+
+	[[nodiscard]] std::string PathFromConfig(std::string_view configKey) const;
+	[[nodiscard]] static std::expected<std::shared_ptr<SDL_Surface>, InitError> LoadSurface(const std::string& path);
+	[[nodiscard]] std::expected<std::shared_ptr<SDL_Texture>, InitError> CreateTexture(
+			const std::shared_ptr<SDL_Surface>& surface, const std::string& path) const;
+	[[nodiscard]] std::expected<void, InitError> LoadTexturePair(std::string_view configKey,
+																 std::shared_ptr<SDL_Surface>& outSurface,
+																 std::shared_ptr<SDL_Texture>& outTexture);
+	[[nodiscard]] std::expected<void, InitError> LoadPadHints(std::span<const char* const> configKeys,
+															  std::vector<std::shared_ptr<SDL_Surface>>& outSurfaces,
+															  std::vector<std::shared_ptr<SDL_Texture>>& outTextures);
+	[[nodiscard]] std::expected<void, InitError> LoadAtlas();
+
 	[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow() const;
 	[[nodiscard]] std::shared_ptr<SDL_Renderer> InitRender() const;
 };

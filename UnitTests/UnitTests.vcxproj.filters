@@ -2,24 +2,83 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="ThirdParty">
-      <UniqueIdentifier>{a1b2c3d4-0001-4000-8000-000000000001}</UniqueIdentifier>
+      <UniqueIdentifier>{69efd7df-9648-ea8c-9014-0d0d01fa033e}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty\googletest">
-      <UniqueIdentifier>{a1b2c3d4-0002-4000-8000-000000000002}</UniqueIdentifier>
+      <UniqueIdentifier>{2bcd0879-5e89-bf65-5d55-9fa489198ddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\googletest\googletest">
+      <UniqueIdentifier>{928a2f66-c322-574c-a1e3-f8b8e3d975f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\googletest\googletest\src">
+      <UniqueIdentifier>{2f0961f1-7287-bb3b-1c4b-e8242d2d9765}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest-all.cc">
-      <Filter>ThirdParty\googletest</Filter>
-    </ClCompile>
     <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest_main.cc">
-      <Filter>ThirdParty\googletest</Filter>
+      <Filter>ThirdParty\googletest\googletest\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\googletest\googletest\src\gtest-all.cc">
+      <Filter>ThirdParty\googletest\googletest\src</Filter>
+    </ClCompile>
+    <ClCompile Include="BonusTestBasic.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="BonusTestDestroy.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="BonusTestEnemy.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="BotsTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="BulletsTestAdvanced.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="BulletsTestBasic.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="CommandLineParserTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="CoopBotTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyBotTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="GameStateManagerTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="MapTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="RespawnManagerTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="StatisticsTestAdvanced.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="StatisticsTestBasic.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="TankSpawnerTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="TestUtils.cpp">
+      <Filter></Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="TestUtils.h" />
+    <ClInclude Include="TestUtils.h">
+      <Filter></Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,16 +1,22 @@
 #include "application/SDL_Config.h"
-#include "application/ConfigFailure.h"
-#include "application/ConfigSuccess.h"
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
+#include <array>
 #include <iostream>
 #include <memory>
 
-class IConfig;
+namespace
+{
+//NOTE: positional - RenderManager draws these vectors by index, so the order is part of the contract
+constexpr std::array kPs5Keys{"Images.PS5_Create", "Images.PS5_Cross", "Images.PS5_D-Pad",
+							  "Images.PS5_Home", "Images.PS5_Options", "Images.PS5_Triangle"};
+constexpr std::array kXBoxKeys{"Images.XBox_D-Pad", "Images.XBox_Home", "Images.XBox_Menu",
+							   "Images.XBox_View", "Images.XBox_A", "Images.XBox_Y"};
+}
 
 SDL_Config::SDL_Config(GameConfig& config)
 	: gameConfig{config} {}
@@ -25,436 +31,221 @@ SDL_Config::~SDL_Config()
 	SDL_Quit();
 }
 
-std::unique_ptr<IConfig> SDL_Config::Init()
+std::expected<void, InitError> SDL_Config::Init()
+{
+	//NOTE: every group fills this object's fields; and_then stops at the first one that refuses, so
+	//no later group ever runs on a half-built environment
+	return InitVideo()
+			.and_then([this] { return InitFonts(); })
+			.and_then([this] { return InitTextures(); })
+			.transform([this]
+			{
+				//NOTE: the game runs without sound, so this one failure is reported and dropped. The
+				//decision to ignore it belongs here, at the call site - not inside InitAudio, which
+				//has no business deciding how much its own failure matters.
+				if (const auto audio = InitAudio();
+					!audio)
+				{
+					std::cerr << audio.error().stage << ": " << audio.error().detail << '\n';
+				}
+			});
+}
+
+std::expected<void, InitError> SDL_Config::InitVideo()
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
-		return std::make_unique<ConfigFailure>("SDL_Init Error: ", SDL_GetError());
+		return std::unexpected(InitError{.stage = "SDL_Init Error", .detail = SDL_GetError()});
 	}
 
-	// creating window
 	if (sdlWindow = InitWindow();
 		sdlWindow == nullptr)
 	{
-		return std::make_unique<ConfigFailure>("SDL_CreateWindow Error", SDL_GetError());
+		return std::unexpected(InitError{.stage = "SDL_CreateWindow Error", .detail = SDL_GetError()});
 	}
 
-	// creating renderer
 	if (renderer = InitRender();
 		renderer == nullptr)
 	{
-		return std::make_unique<ConfigFailure>("SDL_CreateRenderer Error", SDL_GetError());
+		return std::unexpected(InitError{.stage = "SDL_CreateRenderer Error", .detail = SDL_GetError()});
 	}
 
 	SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
 
-	// font init and loading
+	return {};
+}
+
+std::expected<void, InitError> SDL_Config::InitFonts()
+{
+	if (TTF_Init() == -1)
 	{
-		const auto fontPathName(
-				gameConfig.Get<std::string>("Fonts.BattleCity", "Fonts.BattleCity path from config.ini"));
-		if (TTF_Init() == -1)
-		{
-			return std::make_unique<ConfigFailure>("TTF_Init Error", TTF_GetError());
-		}
-
-		if (fontSmall = {TTF_OpenFont(fontPathName.c_str(), 14), TTF_CloseFont};
-			fontSmall == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
-		}
-
-		if (fontMedium = {TTF_OpenFont(fontPathName.c_str(), 24), TTF_CloseFont};
-			fontMedium == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("TTF font loading Error", TTF_GetError());
-		}
+		return std::unexpected(InitError{.stage = "TTF_Init Error", .detail = TTF_GetError()});
 	}
 
+	const std::string fontPath = PathFromConfig("Fonts.BattleCity");
+
+	if (fontSmall = {TTF_OpenFont(fontPath.c_str(), 14), TTF_CloseFont};
+		fontSmall == nullptr)
+	{
+		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = TTF_GetError()});
+	}
+
+	if (fontMedium = {TTF_OpenFont(fontPath.c_str(), 24), TTF_CloseFont};
+		fontMedium == nullptr)
+	{
+		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = TTF_GetError()});
+	}
+
+	return {};
+}
+
+std::expected<void, InitError> SDL_Config::InitTextures()
+{
 	if (!IMG_Init(IMG_INIT_PNG))
 	{
-		return std::make_unique<ConfigFailure>("IMG_Init Error", IMG_GetError());
+		return std::unexpected(InitError{.stage = "IMG_Init Error", .detail = IMG_GetError()});
 	}
 
-	//TODO: split surface loading and texture creation to recreate all texture if vsync change
-	// texture logo loading
-	{
-		const auto logoPathName(
-				gameConfig.Get<std::string>("Images.Logo", "Images.Logo path from config.ini"));
-		if (logoSurface = {IMG_Load(logoPathName.c_str()), SDL_FreeSurface};
-			logoSurface == nullptr)//TODO: Store all surface to recreate all texture if vsync change
-		{
-			return std::make_unique<ConfigFailure>("IMG Logo Loading Error", IMG_GetError());
-		}
+	return LoadTexturePair("Images.Logo", logoSurface, logoTexture)
+			.and_then([this] { return LoadTexturePair("Images.MenuSelectorP1", selectorIconSurface, selectorIconTexture); })
+			.and_then([this] { return LoadPadHints(kPs5Keys, surfacePS5, ps5Textures); })
+			.and_then([this] { return LoadPadHints(kXBoxKeys, surfaceXBox, xboxTextures); })
+			.and_then([this] { return LoadAtlas(); });
+}
 
-		if (logoTexture = {
-					SDL_CreateTextureFromSurface(renderer.get(), logoSurface.get()),
-					SDL_DestroyTexture};
-			logoTexture == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG Logo Texture Creating Error", IMG_GetError());
-		}
+std::expected<void, InitError> SDL_Config::InitAudio()
+{
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+	{
+		return std::unexpected(InitError{.stage = "Mix_OpenAudio Error, sound off", .detail = Mix_GetError()});
 	}
 
-	// texture selector icon loading
+	const std::string introMusicPath = PathFromConfig("Music.LevelStarted");
+	if (levelIntroMusic = {Mix_LoadWAV(introMusicPath.c_str()), Mix_FreeChunk};
+		levelIntroMusic == nullptr)
 	{
-		const auto selectorIconPathName(
-				gameConfig.Get<std::string>("Images.MenuSelectorP1",
-											"Images.MenuSelectorP1 path from config.ini"));
-		if (selectorIconSurface = {IMG_Load(selectorIconPathName.c_str()), SDL_FreeSurface};
-			selectorIconSurface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG Selector Icon Loading Error", IMG_GetError());
-		}
-
-		if (selectorIconTexture = {
-					SDL_CreateTextureFromSurface(renderer.get(), selectorIconSurface.get()),
-					SDL_DestroyTexture};
-			selectorIconTexture == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG Selector Ion Texture Creating Error", IMG_GetError());
-		}
+		return std::unexpected(InitError{.stage = "Mix_LoadWAV Error, sound off", .detail = Mix_GetError()});
 	}
 
-	// texture PS5 controls hint loading
+	//TODO: move to soundManager
+	//NOTE: autoplay only - device and chunk stay ready
+	if (gameConfig.skipIntroMusic)
 	{
-		std::string id = "Images.PS5_Create";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
+		return {};
+	}
+
+	if (Mix_PlayChannel(-1, levelIntroMusic.get(), 0) == -1)
+	{
+		return std::unexpected(InitError{.stage = "Mix_PlayChannel Error, intro not played",
+										 .detail = Mix_GetError()});
+	}
+
+	return {};
+}
+
+std::string SDL_Config::PathFromConfig(const std::string_view configKey) const
+{
+	const std::string key{configKey};
+
+	return gameConfig.Get<std::string>(key, key + " path from config.ini");
+}
+
+std::expected<std::shared_ptr<SDL_Surface>, InitError> SDL_Config::LoadSurface(const std::string& path)
+{
+	std::shared_ptr<SDL_Surface> surface{IMG_Load(path.c_str()), SDL_FreeSurface};
+	if (surface == nullptr)
+	{
+		return std::unexpected(InitError{.stage = "IMG " + path + " Loading Error", .detail = IMG_GetError()});
+	}
+
+	return surface;
+}
+
+std::expected<std::shared_ptr<SDL_Texture>, InitError> SDL_Config::CreateTexture(
+		const std::shared_ptr<SDL_Surface>& surface, const std::string& path) const
+{
+	std::shared_ptr<SDL_Texture> texture{SDL_CreateTextureFromSurface(renderer.get(), surface.get()),
+										 SDL_DestroyTexture};
+	if (texture == nullptr)
+	{
+		return std::unexpected(InitError{.stage = "IMG " + path + " Texture Creating Error", .detail = IMG_GetError()});
+	}
+
+	return texture;
+}
+
+//TODO: split surface loading and texture creation to recreate all texture if vsync change
+std::expected<void, InitError> SDL_Config::LoadTexturePair(const std::string_view configKey,
+														   std::shared_ptr<SDL_Surface>& outSurface,
+														   std::shared_ptr<SDL_Texture>& outTexture)
+{
+	const std::string path = PathFromConfig(configKey);
+
+	//NOTE: the surface is kept, not dropped after the texture - it is what a vsync change would rebuild from
+	return LoadSurface(path).and_then([&](std::shared_ptr<SDL_Surface> surface)
+	{
+		return CreateTexture(surface, path).transform([&](std::shared_ptr<SDL_Texture> texture)
+		{
+			outSurface = std::move(surface);
+			outTexture = std::move(texture);
+		});
+	});
+}
+
+std::expected<void, InitError> SDL_Config::LoadPadHints(const std::span<const char* const> configKeys,
+														std::vector<std::shared_ptr<SDL_Surface>>& outSurfaces,
+														std::vector<std::shared_ptr<SDL_Texture>>& outTextures)
+{
+	outSurfaces.reserve(configKeys.size());
+	outTextures.reserve(configKeys.size());
+
+	for (const char* key: configKeys)
+	{
 		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfacePS5.push_back(surface);
-
 		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
+
+		if (auto loaded = LoadTexturePair(key, surface, texture);
+			!loaded)
 		{
-			ps5Textures.push_back(texture);
+			return loaded;
 		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
+
+		outSurfaces.push_back(std::move(surface));
+		outTextures.push_back(std::move(texture));
 	}
+
+	return {};
+}
+
+//NOTE: not LoadTexturePair - the atlas needs its colour key punched into the surface in between
+std::expected<void, InitError> SDL_Config::LoadAtlas()
+{
+	const std::string path = PathFromConfig("Images.SpriteSheet");
+
+	auto surface = LoadSurface(path);
+	if (!surface)
 	{
-		std::string id = "Images.PS5_Cross";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfacePS5.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			ps5Textures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
+		return std::unexpected(surface.error());
 	}
+
+	SDL_Surface* rawSurface = surface->get();
+	if (SDL_SetColorKey(rawSurface, SDL_TRUE, SDL_MapRGB(rawSurface->format, 0, 0, 1)) != 0)
 	{
-		std::string id = "Images.PS5_D-Pad";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfacePS5.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			ps5Textures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
+		return std::unexpected(InitError{.stage = "IMG atlas SetColorKey Error", .detail = SDL_GetError()});
 	}
+
+	auto texture = CreateTexture(*surface, path);
+	if (!texture)
 	{
-		std::string id = "Images.PS5_Home";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfacePS5.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			ps5Textures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.PS5_Options";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfacePS5.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			ps5Textures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.PS5_Triangle";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfacePS5.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			ps5Textures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
+		return std::unexpected(texture.error());
 	}
 
-	// texture XBox controls hint loading
-	{
-		std::string id = "Images.XBox_D-Pad";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
+	SDL_SetTextureBlendMode(texture->get(), SDL_BLENDMODE_BLEND);
 
-		surfaceXBox.push_back(surface);
+	atlasSurface = std::move(*surface);
+	atlasTexture = std::move(*texture);
 
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			xboxTextures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.XBox_Home";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfaceXBox.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			xboxTextures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.XBox_Menu";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfaceXBox.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			xboxTextures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.XBox_View";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfaceXBox.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			xboxTextures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.XBox_A";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfaceXBox.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			xboxTextures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-	{
-		std::string id = "Images.XBox_Y";
-		const auto pathName(gameConfig.Get<std::string>(id, id + " path from config.ini"));
-		std::shared_ptr<SDL_Surface> surface{nullptr};
-		if (surface = {IMG_Load(pathName.c_str()), SDL_FreeSurface};
-			surface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Loading Error", IMG_GetError());
-		}
-
-		surfaceXBox.push_back(surface);
-
-		std::shared_ptr<SDL_Texture> texture{nullptr};
-		if (texture = {SDL_CreateTextureFromSurface(renderer.get(), surface.get()), SDL_DestroyTexture};
-			texture != nullptr)
-		{
-			xboxTextures.push_back(texture);
-		}
-		else
-		{
-			return std::make_unique<ConfigFailure>("IMG " + pathName + " Texture Creating Error", IMG_GetError());
-		}
-	}
-
-	// texture atlas loading
-	{
-		const auto textureAtlasPath(
-				gameConfig.Get<std::string>("Images.SpriteSheet", "Images.SpriteSheet path from config.ini"));
-		if (atlasSurface = {IMG_Load(textureAtlasPath.c_str()), SDL_FreeSurface};
-			atlasSurface == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG atlas Surface Loading Error", IMG_GetError());
-		}
-
-		const auto rawSurface = atlasSurface.get();
-		if (const int result = SDL_SetColorKey(rawSurface, SDL_TRUE, SDL_MapRGB(rawSurface->format, 0, 0, 1));
-			result != 0)
-		{
-			return std::make_unique<ConfigFailure>("IMG atlas SetColorKey Error", SDL_GetError());
-		}
-
-		if (atlasTexture = {SDL_CreateTextureFromSurface(renderer.get(), rawSurface),
-							SDL_DestroyTexture};
-			atlasTexture == nullptr)
-		{
-			return std::make_unique<ConfigFailure>("IMG atlas Texture Creating Error", IMG_GetError());
-		}
-
-		SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND);
-	}
-
-	// Audio loading and play
-	{
-		if (const int audioResult = Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-			audioResult >= 0)
-		{
-			const auto introMusicPathName(
-					gameConfig.Get<std::string>("Music.LevelStarted", "Music.LevelStarted path from config.ini"));
-			if (levelIntroMusic = {Mix_LoadWAV(introMusicPathName.c_str()), Mix_FreeChunk};
-				levelIntroMusic != nullptr)
-			{
-				//TODO: move to soundManager
-				//NOTE: autoplay only - device and chunk stay ready
-				if (!gameConfig.skipIntroMusic)
-				{
-					if (const int playResult = Mix_PlayChannel(-1, levelIntroMusic.get(), 0); playResult == -1)
-					{
-						std::cout << "Mix_PlayChannel, can't play levelStarted.wav, sound off, " << Mix_GetError()
-								<< '\n';
-					}
-				}
-			}
-			else
-			{
-				std::cout << "Mix_LoadWAV, can't load levelStarted.wav, sound off, " << Mix_GetError() << '\n';
-			}
-		}
-		else
-		{
-			std::cout << "Mix_OpenAudio, can't initialize sound card, sound off, " << Mix_GetError() << '\n';
-		}
-	}
-
-	return std::make_unique<ConfigSuccess>(gameConfig);
+	return {};
 }
 
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
