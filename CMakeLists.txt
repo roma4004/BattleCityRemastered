@@ -1,15 +1,21 @@
 cmake_minimum_required(VERSION 3.25) #NOTE: 3.25 for add_subdirectory(<dir> SYSTEM); boost from 1.87 needs 3.15+
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wcast-align -Wunused -Woverloaded-virtual -Wnon-virtual-dtor -Wnull-dereference -Wdouble-promotion -Wformat=2 -Wuseless-cast -Wlogical-op -Wduplicated-cond -Wduplicated-branches -Wnrvo") #NOTE: GCC has no single -Weverything switch (Clang-only); this is the closest curated "maximal warnings" set #-fvisibility=hidden
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
+# --- Compiler choice: g++ -> clang++ -> MSVC. Must run before project(), which locks the answer in. ---
+# Optimisation and debug-info flags are deliberately not set here: CMake's own per-compiler defaults
+# already know that Debug means -g for GCC and /Zi /Od for MSVC. Warnings live on the project_warnings
+# target in cmake/CompilerSetup.cmake, the only place that can branch on the compiler - this point in
+# the file is read before one has been probed.
+include(cmake/SelectCompiler.cmake)
 
 project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
-#TODO: create compiler switch msvc, mingw(gcc)
 #TODO: migrate to SDL2 to SDL2pp
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
+# --- Per-compiler warnings + toolchain capability gate ---
+include(cmake/CompilerSetup.cmake)
 
 # --- Global build settings ---
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required (e.g. SDL2 itself), unrelated to our own cmake_minimum_required above
@@ -150,6 +156,7 @@ endif ()
 # game logic, no SDL: a static lib propagates its deps to consumers (PRIVATE ones too, as LINK_ONLY),
 # so anything linked here would reach unit_tests as well
 add_library(game_core STATIC ${GAME_CORE_SOURCES})
+target_link_libraries(game_core PRIVATE project_warnings)
 target_link_libraries(game_core PUBLIC
         Boost::uuid Boost::asio_core Boost::property_tree
         ser20::ser20
@@ -158,6 +165,7 @@ target_link_libraries(game_core PUBLIC
 
 # window/render/audio/input + the game loop; depends on game_core, never the other way round
 add_library(game_platform STATIC ${GAME_PLATFORM_SOURCES})
+target_link_libraries(game_platform PRIVATE project_warnings)
 target_link_libraries(game_platform PUBLIC
         game_core
         SDL2-static SDL2_ttf SDL2_image SDL2_mixer
@@ -167,15 +175,14 @@ add_executable(${PROJECT_NAME} source/main.cpp)
 add_executable(unit_tests ${UNIT_TESTS_SOURCES})
 
 target_include_directories(unit_tests PRIVATE headers)
-target_link_libraries(unit_tests game_core gtest gtest_main)
+target_link_libraries(unit_tests PRIVATE project_warnings game_core gtest gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 
-#NOTE: If you are targeting a 64-bit platform, make sure to use x86_64-w64-mingw32 instead of mingw32 for the linker.
 # SDL2main forces an undefined SDL_main reference unconditionally (that's how it hijacks the entry
 # point) - it must stay off game_platform's PUBLIC link set, exe-only.
-target_link_libraries(${PROJECT_NAME} game_platform SDL2main)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings game_platform SDL2main)
 
 # --- Game assets (copied next to the exe post-build) ---
 set(GAME_ASSETS

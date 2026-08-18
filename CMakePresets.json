@@ -23,6 +23,25 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "Debug-Clang",
+      "displayName": "Debug-Clang",
+      "description": "Clang 19+ required: older Clang cannot see libstdc++'s <expected> - configure fails with an explanation.",
+      "inherits": "Debug-MinGW",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "Release-Clang",
+      "displayName": "Release-Clang",
+      "inherits": "Debug-Clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
@@ -33,12 +52,27 @@
     {
       "name": "Release-MinGW",
       "configurePreset": "Release-MinGW"
+    },
+    {
+      "name": "Debug-Clang",
+      "configurePreset": "Debug-Clang"
+    },
+    {
+      "name": "Release-Clang",
+      "configurePreset": "Release-Clang"
     }
   ],
   "testPresets": [
     {
       "name": "Debug-MinGW",
       "configurePreset": "Debug-MinGW",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Debug-Clang",
+      "configurePreset": "Debug-Clang",
       "output": {
         "outputOnFailure": true
       }

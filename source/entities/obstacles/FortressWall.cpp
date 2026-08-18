@@ -4,7 +4,7 @@
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/BaseObjProperty.h"
-#include "entities/Pawns/Pawn.h"
+#include "entities/pawns/Pawn.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "enums/FortressState.h"

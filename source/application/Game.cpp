@@ -21,7 +21,6 @@
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <memory>

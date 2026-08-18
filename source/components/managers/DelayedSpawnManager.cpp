@@ -4,7 +4,6 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/TimingEvents.h"
-#include "entities/pawns/Tank.h"
 #include "utils/Timer.h"
 
 DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events)

@@ -8,7 +8,6 @@
 #include "enums/GameMode.h"
 #include "interfaces/IInputProvider.h"
 #include "interfaces/IMoveBeh.h"
-#include "utils/TimeUtils.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
 			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig)

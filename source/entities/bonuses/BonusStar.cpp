@@ -1,4 +1,4 @@
-#include "entities/Bonuses/BonusStar.h"
+#include "entities/bonuses/BonusStar.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
 #include "enums/BonusType.h"

@@ -1,9 +1,10 @@
 #pragma once
 
+#include "entities/ObjRectangle.h"//NOTE: complete type needed - a std::vector<ObjRectangle> member is instantiated below
+
 #include <memory>
 #include <vector>
 
-struct ObjRectangle;
 struct UPoint;
 struct FPoint;
 class BaseObj;
