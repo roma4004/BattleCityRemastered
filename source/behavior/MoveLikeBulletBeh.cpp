@@ -1,14 +1,14 @@
 #include "behavior/MoveLikeBulletBeh.h"
 #include "Circle.h"
 #include "application/GameConfig.h"
-#include "components/EventSystem.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
 #include <algorithm>
 #include <memory>
+#include <ranges>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, GameConfig& gameConfig,
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, GameConfig& gameConfig,
 									 const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}

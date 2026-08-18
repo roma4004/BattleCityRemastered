@@ -67,7 +67,7 @@ void DelayedSpawnManager::Disposer()
 	});
 }
 
-void DelayedSpawnManager::SpawnDelayStart(const buuid& uuid, const milliseconds delay)
+void DelayedSpawnManager::SpawnDelayStart(const Uuid& uuid, const milliseconds delay)
 {
 	if (delay == milliseconds{0})
 	{

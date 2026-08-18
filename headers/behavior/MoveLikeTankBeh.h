@@ -3,7 +3,7 @@
 #include "Point.h"
 #include "entities/ObjRectangle.h"
 #include "interfaces/IMoveBeh.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <functional>
 #include <memory>
 #include <optional>
@@ -15,9 +15,7 @@ class GameConfig;
 
 class MoveLikeTankBeh final : public IMoveBeh
 {
-	using buuid = boost::uuids::uuid;
-
-	buuid& _uuid;
+	Uuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
 	float& _speed;
@@ -47,7 +45,7 @@ protected:
 	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 
 public:
-	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
+	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, UPoint& windowSize,
 					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 					BonusEffectProperty& effects, GameConfig& gameConfig);
 

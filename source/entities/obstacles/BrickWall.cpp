@@ -4,7 +4,7 @@
 #include "components/events/StatisticsEvents.h"
 #include "enums/ObstacleType.h"
 
-BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
+BrickWall::BrickWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 					 const GameMode gameMode)
 	: Obstacle{rect, 1, {"BrickWall"}, events, uuid, gameMode, ObstacleType::Brick, s_collision}
 {

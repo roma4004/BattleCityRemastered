@@ -4,7 +4,7 @@
 #include "enums/BonusType.h"
 
 BonusStar::BonusStar(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-					 const buuid uuid, const GameMode gameMode)
+					 const Uuid uuid, const GameMode gameMode)
 	: Bonus{rect, events, lifeTime, "BonusStar", uuid, gameMode, BonusType::Star} {}
 
 BonusStar::~BonusStar() = default;

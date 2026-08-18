@@ -3,28 +3,26 @@
 #include "UuidSerialization.h"
 #include "enums/CommandType.h"
 #include "enums/FortressState.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 
 namespace network::commands
 {
 class FortressChange
 {
-	using buuid = boost::uuids::uuid;
-
 	CommandType _type{CommandType::FORTRESS_CHANGE};
 	FortressState _state{};
-	buuid _uuid{};
+	Uuid _uuid{};
 
 public:
 	//for deserialization
 	FortressChange() = default;
 
 	//for serialization
-	FortressChange(FortressState state, buuid uuid);
+	FortressChange(FortressState state, Uuid uuid);
 
 	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] FortressState GetState() const noexcept;
-	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] Uuid GetUuid() const noexcept;
 	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>

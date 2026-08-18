@@ -1,4 +1,5 @@
 #include "network/ServerHandler.h"
+#include "network/Server.h"
 
 namespace network::commands
 {
@@ -7,7 +8,7 @@ ServerHandler::ServerHandler(const std::shared_ptr<EventSystem>& events)
 
 ServerHandler::ServerHandler(std::string host, uint16_t port, const std::shared_ptr<EventSystem>& events)
 	: NetworkNodeBase(events, "ServerHandler")
-	, _server{IoContext(), std::move(host), port, events}
+	, _server{std::make_unique<Server>(IoContext(), std::move(host), port, events)}
 {
 	StartIoThread();
 	SubscribeToNetCommandUpdate();
@@ -17,7 +18,13 @@ ServerHandler::~ServerHandler()
 {
 	StopIoThread([this](std::function<void()> done)
 	{
-		_server.Shutdown(DisconnectReason::HostShutdown, std::move(done));
+		_server->Shutdown(DisconnectReason::HostShutdown, std::move(done));
 	});
 }
+
+void ServerHandler::ProcessNetworkCommands() { _server->ProcessNetworkCommands(); }
+
+uint16_t ServerHandler::GetBoundPort() const { return _server->GetBoundPort(); }
+
+void ServerHandler::Abort() { _server->Shutdown(); }
 }//namespace network::commands

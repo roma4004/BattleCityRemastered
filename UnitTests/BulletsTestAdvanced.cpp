@@ -9,19 +9,16 @@
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
-#include <boost/uuid/random_generator.hpp>
 
 class BulletTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 3u, .size{.x = 6.f, .y = 5.f}};
-	buuid _uuid{};
+	Uuid _uuid{};
 	float _gridSize{1};
 	unsigned short _bulletHealth{1};
 	GameMode _gameMode{GameMode::OnePlayer};

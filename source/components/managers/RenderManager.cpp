@@ -9,6 +9,7 @@
 #include "components/events/TimingEvents.h"
 #include "enums/Direction.h"
 #include "enums/TextureOffset.h"
+#include <ranges>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
 

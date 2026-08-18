@@ -29,8 +29,6 @@ class Tank : public Pawn
 	friend class TankSpawner;
 
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
 	// Whole-lifetime listeners registered directly in the constructor.
 	std::vector<EventSubscription> _permanentSubs{};
@@ -64,7 +62,7 @@ protected:
 	// bonuses
 	BonusEffectProperty _effects{};
 
-	void Shot(buuid withUuid = {});
+	void Shot(Uuid withUuid = {});
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnClientChangePos(const ClientInPosEvent& event);

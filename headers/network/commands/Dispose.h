@@ -2,30 +2,28 @@
 
 #include "UuidSerialization.h"
 #include "enums/CommandType.h"
+#include "utils/Uuid.h"
 #include <ser20/types/string.hpp>
-#include <boost/uuid/uuid.hpp>
 #include <string>
 
 namespace network::commands
 {
 class Dispose
 {
-	using buuid = boost::uuids::uuid;
-
 	CommandType _type{CommandType::DISPOSE};
 	std::string _who{};
-	buuid _uuid{};
+	Uuid _uuid{};
 
 public:
 	//for deserialization
 	Dispose() = default;
 
 	//for serialization
-	Dispose(std::string who, buuid uuid);
+	Dispose(std::string who, Uuid uuid);
 
 	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] std::string GetWho() const noexcept;
-	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] Uuid GetUuid() const noexcept;
 	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>

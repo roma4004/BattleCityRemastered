@@ -9,8 +9,6 @@ struct DrawEvent;
 
 class EagleTile final : public Obstacle
 {
-	using buuid = boost::uuids::uuid;
-
 	void Subscribe() override;
 	void OnDraw(const DrawEvent&) const;
 
@@ -23,7 +21,7 @@ protected:
 	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 public:
-	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
+	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);
 
 	~EagleTile() override;
 };

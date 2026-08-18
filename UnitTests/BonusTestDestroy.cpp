@@ -22,8 +22,6 @@
 
 class BonusTestDestroy : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -40,7 +38,7 @@ protected:
 	float _tankSpeed{142};
 	unsigned short _tankHealth{100u};
 	unsigned short _bulletHealth{1u};
-	buuid _uuid{};
+	Uuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 

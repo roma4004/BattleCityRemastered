@@ -5,20 +5,18 @@
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
 #include "interfaces/ISendableDamageStatistics.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 
 struct FPoint;
 struct BaseObjProperty;
 
 class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public IObstacle
 {
-	using buuid = boost::uuids::uuid;
-
 	int _health{0};
 	CollisionTags _collision;
 
 protected:
-	buuid _uuid{};
+	Uuid _uuid{};
 	std::string _name{};
 	std::string _nameWithUuid{};
 	std::string _fraction{};
@@ -74,7 +72,7 @@ public:
 	virtual void SetRect(ObjRectangle rect);
 
 	[[nodiscard]] virtual std::string GetName() const;
-	[[nodiscard]] virtual buuid GetUuid() const;
-	virtual void SetId(buuid uuid);
+	[[nodiscard]] virtual Uuid GetUuid() const;
+	virtual void SetId(Uuid uuid);
 	[[nodiscard]] std::string GetFraction() const override;
 };

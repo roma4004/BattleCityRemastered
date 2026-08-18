@@ -2,7 +2,7 @@
 
 #include "Point.h"
 #include "entities/ObjRectangle.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <cstdint>
 #include <string>
 
@@ -20,7 +20,7 @@ struct StatisticsAttributionEvent
 struct ServerOutFortressChangeEvent
 {
 	FortressState state;
-	boost::uuids::uuid uuid;
+	Uuid uuid;
 };
 
 //NOTE: separate types from ServerOutFortressChangeEvent above - NetworkTest puts a ServerHandler and
@@ -36,22 +36,22 @@ struct ServerOutBonusSpawnEvent
 {
 	FPoint pos;
 	BonusType type;
-	boost::uuids::uuid uuid;
+	Uuid uuid;
 };
 
 struct ServerOutObstacleSpawnEvent
 {
 	ObjRectangle rect;
 	ObstacleType type;
-	boost::uuids::uuid uuid;
+	Uuid uuid;
 };
 
 struct ServerOutBonusDeSpawnEvent
 {
-	boost::uuids::uuid uuid;
+	Uuid uuid;
 };
 
 struct ClientInBonusDeSpawnEvent
 {
-	boost::uuids::uuid uuid;
+	Uuid uuid;
 };

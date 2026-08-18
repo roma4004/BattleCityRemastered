@@ -4,7 +4,6 @@
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
 #include "entities/pawns/Bullet.h"
-#include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
@@ -12,15 +11,13 @@
 
 class StatisticsTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	Uuid _uuid{};
 	float _tankSize{};
 	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};

@@ -12,8 +12,6 @@ class LineOfSight;
 class Bot : public Tank
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	std::uniform_int_distribution<> _distTurnRate{};
 	Timer _randomChangeDirTimer{};
 

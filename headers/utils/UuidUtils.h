@@ -1,18 +1,16 @@
 #pragma once
 
+#include "utils/Uuid.h"
 #include <string>
+#include <string_view>
 
-namespace boost::uuids
-{
-struct uuid;
-}
-
+//NOTE: the only place allowed to know boost::uuids - everything else speaks Uuid
 class UuidUtils final
 {
-	using buuid = boost::uuids::uuid;
-
 public:
-	[[nodiscard]] static buuid GetRandomUuid();
-	[[nodiscard]] static buuid GetNilUuid();
-	[[nodiscard]] static std::string GetStringUuid(buuid uuid);
+	[[nodiscard]] static Uuid GetRandomUuid();
+	[[nodiscard]] static Uuid GetNilUuid();
+	[[nodiscard]] static std::string GetStringUuid(Uuid uuid);
+	//NOTE: throws on malformed input, so it is for literals in tests and fixtures, not for the wire
+	[[nodiscard]] static Uuid GetUuidFromString(std::string_view text);
 };

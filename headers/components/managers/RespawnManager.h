@@ -2,7 +2,8 @@
 
 #include "components/EventSystem.h"
 #include "enums/RespawnGroup.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
+#include <chrono>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
@@ -20,8 +21,6 @@ struct ClientInRespawnTankEvent;
 class RespawnManager final
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
@@ -33,7 +32,7 @@ class RespawnManager final
 
 	struct SpawnSlot
 	{
-		buuid uuid{};
+		Uuid uuid{};
 		TankType type{};
 		RespawnGroup group{};
 		bool isAvailable{};

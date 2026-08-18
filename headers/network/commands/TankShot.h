@@ -3,33 +3,31 @@
 #include "UuidSerialization.h"
 #include "enums/CommandType.h"
 #include "enums/Direction.h"
+#include "utils/Uuid.h"
 #include <ser20/types/common.hpp>
 #include <ser20/types/string.hpp>
-#include <boost/uuid/uuid.hpp>
 #include <string>
 
 namespace network::commands
 {
 class TankShot
 {
-	using buuid = boost::uuids::uuid;
-
 	CommandType _type{CommandType::TANK_SHOT};
 	std::string _who{};
 	Direction _dir{};
-	buuid _uuid{};
+	Uuid _uuid{};
 
 public:
 	//for deserialization
 	TankShot() = default;
 
 	//for serialization
-	TankShot(std::string who, Direction dir, buuid uuid);
+	TankShot(std::string who, Direction dir, Uuid uuid);
 
 	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] std::string GetWho() const noexcept;
 	[[nodiscard]] Direction GetDir() const noexcept;
-	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] Uuid GetUuid() const noexcept;
 	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>

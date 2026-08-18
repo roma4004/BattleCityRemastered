@@ -18,8 +18,6 @@
 
 class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
@@ -31,7 +29,7 @@ protected:
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	float _tankSize{};
 	float _tankSpeed{142.f};
-	buuid _uuid{};
+	Uuid _uuid{};
 	unsigned short _tankHealth{1u};
 	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};

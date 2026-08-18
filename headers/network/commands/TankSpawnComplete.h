@@ -2,27 +2,25 @@
 
 #include "UuidSerialization.h"
 #include "enums/CommandType.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 
 namespace network::commands
 {
 // Host -> client: "materialize tank uuid now".
 class TankSpawnComplete
 {
-	using buuid = boost::uuids::uuid;
-
 	CommandType _type{CommandType::TANK_SPAWN_COMPLETE};
-	buuid _uuid{};
+	Uuid _uuid{};
 
 public:
 	//for deserialization
 	TankSpawnComplete() = default;
 
 	//for serialization
-	explicit TankSpawnComplete(buuid uuid);
+	explicit TankSpawnComplete(Uuid uuid);
 
 	[[nodiscard]] CommandType GetType() const noexcept;
-	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] Uuid GetUuid() const noexcept;
 	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>

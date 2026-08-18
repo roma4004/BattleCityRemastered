@@ -1,7 +1,6 @@
 ﻿#include "components/AnimatedObjects.h"
 #include "enums/AnimationType.h"
 #include "utils/UuidUtils.h"
-#include <boost/uuid/nil_generator.hpp>
 
 AnimatedObject::AnimatedObject(const std::string& objName, const ObjRectangle objRect, const AnimationType objType,
 							   const int frameLimit, const int objScale, const int animationSpeed, const bool infinite)

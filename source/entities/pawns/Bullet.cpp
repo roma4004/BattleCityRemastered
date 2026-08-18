@@ -71,9 +71,7 @@ void Bullet::OnClientInDispose(const ClientInDisposeEvent&)
 
 void Bullet::Draw() const { _events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .name = _name}); }
 
-using buuid = boost::uuids::uuid;
-
-buuid Bullet::GetUuid() const
+Uuid Bullet::GetUuid() const
 {
 	return _uuid;
 }

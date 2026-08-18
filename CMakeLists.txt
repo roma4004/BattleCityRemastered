@@ -40,6 +40,7 @@ set(GAME_CORE_SOURCES
         source/components/AnimatedObjects.cpp
         source/components/BonusSpawner.cpp
         source/components/BulletPool.cpp
+        source/components/EventSystem.cpp
         source/components/GameStatistics.cpp
         source/components/LineOfSight.cpp
         source/components/Map.cpp

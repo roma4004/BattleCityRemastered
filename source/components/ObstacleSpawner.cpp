@@ -59,7 +59,7 @@ void ObstacleSpawner::OnClientInObstacleSpawn(const ClientInObstacleSpawnEvent& 
 
 void ObstacleSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
-void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, buuid uuid)
+void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, Uuid uuid)
 {
 	if (uuid == UuidUtils::GetNilUuid())
 	{

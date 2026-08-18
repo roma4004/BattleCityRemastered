@@ -7,6 +7,9 @@
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include <chrono>
+#include <iomanip>
+#include <iostream>
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 					   GameConfig& gameConfig)

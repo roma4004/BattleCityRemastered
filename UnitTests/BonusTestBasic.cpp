@@ -22,8 +22,6 @@
 
 class BonusTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -40,7 +38,7 @@ protected:
 	float _tankSpeed{142};
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
-	buuid _uuid{};
+	Uuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
 

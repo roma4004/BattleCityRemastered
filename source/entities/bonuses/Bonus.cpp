@@ -9,10 +9,9 @@
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
-#include "utils/TimeUtils.h"
 
 Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, const milliseconds lifeTime,
-			 std::string name, const buuid uuid, const GameMode gameMode, const BonusType bonusType)
+			 std::string name, const Uuid uuid, const GameMode gameMode, const BonusType bonusType)
 	: BaseObj{BaseObjProperty{.rect = rect,
 							  .health = 1,
 							  .uuid = uuid,

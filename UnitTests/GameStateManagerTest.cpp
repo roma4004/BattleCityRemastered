@@ -21,12 +21,11 @@
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
+#include <iostream>
 #include <memory>
 
 class GameStateManagerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -38,7 +37,7 @@ protected:
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	Uuid _uuid{};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};
@@ -72,13 +71,13 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 {
 	bool isGameWon{false};
 
-	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManySpawnCounters;
+	std::vector<std::pair<unsigned short, Uuid>> howManySpawnCounters;
 	howManySpawnCounters.reserve(4u);
 	auto spawnCounterSub = _events->AddListener([&howManySpawnCounters](const TankSpawnEvent& tankSpawnEvent)
 	{
 		const auto& uuid = tankSpawnEvent.uuid;
 		const auto it = std::ranges::find_if(howManySpawnCounters,
-											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
+											 [&uuid](const std::pair<unsigned short, Uuid>& p)
 											 {
 												 return p.second == uuid;
 											 });
@@ -93,13 +92,13 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		}
 	});
 
-	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManyDiedCounters;
+	std::vector<std::pair<unsigned short, Uuid>> howManyDiedCounters;
 	howManyDiedCounters.reserve(4u);
 	auto diedCounterSub = _events->AddListener([&howManyDiedCounters](const TankDiedEvent& tankDiedEvent)
 	{
 		const auto& uuid = tankDiedEvent.uuid;
 		const auto it = std::ranges::find_if(howManyDiedCounters,
-											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
+											 [&uuid](const std::pair<unsigned short, Uuid>& p)
 											 {
 												 return p.second == uuid;
 											 });
@@ -177,13 +176,13 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 {
 	bool isGameWon{false};
 
-	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManySpawnCounters;
+	std::vector<std::pair<unsigned short, Uuid>> howManySpawnCounters;
 	howManySpawnCounters.reserve(4u);
 	auto spawnCounterSub = _events->AddListener([&howManySpawnCounters](const TankSpawnEvent& tankSpawnEvent)
 	{
 		const auto& uuid = tankSpawnEvent.uuid;
 		const auto it = std::ranges::find_if(howManySpawnCounters,
-											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
+											 [&uuid](const std::pair<unsigned short, Uuid>& p)
 											 {
 												 return p.second == uuid;
 											 });
@@ -198,13 +197,13 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		}
 	});
 
-	std::vector<std::pair<unsigned short, boost::uuids::uuid>> howManyDiedCounters;
+	std::vector<std::pair<unsigned short, Uuid>> howManyDiedCounters;
 	howManyDiedCounters.reserve(4u);
 	auto diedCounterSub = _events->AddListener([&howManyDiedCounters](const TankDiedEvent& tankDiedEvent)
 	{
 		const auto& uuid = tankDiedEvent.uuid;
 		const auto it = std::ranges::find_if(howManyDiedCounters,
-											 [&uuid](const std::pair<unsigned short, boost::uuids::uuid>& p)
+											 [&uuid](const std::pair<unsigned short, Uuid>& p)
 											 {
 												 return p.second == uuid;
 											 });

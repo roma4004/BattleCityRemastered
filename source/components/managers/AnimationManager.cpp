@@ -9,6 +9,8 @@
 #include "Point.h"
 #include "utils/RandUtils.h"
 #include <algorithm>
+#include <array>
+#include <iostream>
 #include <memory>
 #include <ranges>
 

@@ -129,6 +129,7 @@
     <ClCompile Include="..\source\components\AnimatedObjects.cpp" />
     <ClCompile Include="..\source\components\BonusSpawner.cpp" />
     <ClCompile Include="..\source\components\BulletPool.cpp" />
+    <ClCompile Include="..\source\components\EventSystem.cpp" />
     <ClCompile Include="..\source\components\GameStatistics.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForPlayerOne.cpp" />
@@ -352,6 +353,7 @@
     <ClInclude Include="..\headers\utils\RandUtils.h" />
     <ClInclude Include="..\headers\utils\Timer.h" />
     <ClInclude Include="..\headers\utils\TimeUtils.h" />
+    <ClInclude Include="..\headers\utils\Uuid.h" />
     <ClInclude Include="..\headers\utils\UuidUtils.h" />
   </ItemGroup>
   <ItemDefinitionGroup>

@@ -3,7 +3,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
 
-EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
+EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 					 const GameMode gameMode)
 	: Obstacle{rect, 1, "Eagle", events, uuid, gameMode, ObstacleType::Eagle, s_collision}
 {

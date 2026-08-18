@@ -12,5 +12,4 @@ public:
 	~Enemy() override;
 
 private:
-	using buuid = boost::uuids::uuid;
 };

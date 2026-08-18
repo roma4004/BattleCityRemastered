@@ -1,4 +1,5 @@
 #include "network/ClientHandler.h"
+#include "network/Client.h"
 
 namespace network::commands
 {
@@ -21,4 +22,14 @@ ClientHandler::~ClientHandler()
 		client->Shutdown(DisconnectReason::PlayerQuit, std::move(done));
 	});
 }
+
+void ClientHandler::ProcessNetworkCommands()
+{
+	if (_client)
+	{
+		_client->ProcessCommandQueue();
+	}
+}
+
+bool ClientHandler::IsConnected() const { return _client && _client->IsConnected(); }
 }//namespace network::commands

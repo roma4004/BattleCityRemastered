@@ -9,8 +9,6 @@ struct PostDrawEvent;
 
 class BushTile final : public Obstacle
 {
-	using buuid = boost::uuids::uuid;
-
 	void Subscribe() override;
 	void OnPostDraw(const PostDrawEvent&) const;
 
@@ -22,7 +20,7 @@ protected:
 	static constexpr CollisionTags s_collision{tags::Passable{}, tags::Indestructible{}, tags::Penetrable{}};
 
 public:
-	BushTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
+	BushTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);
 
 	~BushTile() override = default;
 };

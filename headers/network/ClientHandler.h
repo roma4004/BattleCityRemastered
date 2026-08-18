@@ -1,10 +1,14 @@
 #pragma once
 
-#include "Client.h"
 #include "NetworkNodeBase.h"
+#include <cstdint>
+#include <memory>
+#include <string>
 
 namespace network::commands
 {
+class Client;
+
 class ClientHandler final : public NetworkNodeBase
 {
 public:
@@ -13,17 +17,12 @@ public:
 
 	~ClientHandler() override;
 
-	void ProcessNetworkCommands() override
-	{
-		if (_client)
-		{
-			_client->ProcessCommandQueue();
-		}
-	}
+	void ProcessNetworkCommands() override;
 
-	[[nodiscard]] bool IsConnected() const { return _client && _client->IsConnected(); }
+	[[nodiscard]] bool IsConnected() const;
 
 private:
+	//NOTE: Client stays incomplete here - it is what drags asio in, and only the .cpp needs it
 	std::shared_ptr<Client> _client{nullptr};
 };
 

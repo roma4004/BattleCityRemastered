@@ -4,7 +4,7 @@
 
 namespace network::commands
 {
-ObstacleSpawn::ObstacleSpawn(const ObjRectangle rect, const ObstacleType obstacleType, const buuid uuid)
+ObstacleSpawn::ObstacleSpawn(const ObjRectangle rect, const ObstacleType obstacleType, const Uuid uuid)
 	: _rect{rect}
 	, _obstacleType{obstacleType}
 	, _uuid{uuid} {}
@@ -15,8 +15,7 @@ ObjRectangle ObstacleSpawn::GetRect() const noexcept { return _rect; }
 
 ObstacleType ObstacleSpawn::GetObstacleType() const noexcept { return _obstacleType; }
 
-using buuid = boost::uuids::uuid;
-buuid ObstacleSpawn::GetUuid() const noexcept { return _uuid; }
+Uuid ObstacleSpawn::GetUuid() const noexcept { return _uuid; }
 
 const char* ObstacleSpawn::GetClassNameW() const noexcept { return "ObstacleSpawn"; }
 }//namespace network::commands

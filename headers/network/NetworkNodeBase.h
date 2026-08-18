@@ -2,7 +2,6 @@
 
 #include "components/EventSystem.h"
 #include "interfaces/INetworkNode.h"
-#include <boost/asio/io_context.hpp>
 #include <functional>
 #include <memory>
 #include <string>
@@ -10,6 +9,13 @@
 #include <vector>
 
 struct NetCommandUpdateEvent;
+
+//NOTE: declared, not included - <boost/asio/io_context.hpp> costs ~239k lines after preprocessing,
+//and nothing above the network layer ever needs to see the type
+namespace boost::asio
+{
+class io_context;
+}
 
 namespace network::commands
 {
@@ -32,7 +38,7 @@ protected:
 	//NOTE: not in the constructor - it would expose a half-built object through ProcessNetworkCommands
 	void SubscribeToNetCommandUpdate();
 
-	[[nodiscard]] boost::asio::io_context& IoContext() { return _ioContext; }
+	[[nodiscard]] boost::asio::io_context& IoContext();
 	[[nodiscard]] const std::shared_ptr<EventSystem>& Events() const { return _events; }
 
 private:
@@ -40,7 +46,8 @@ private:
 
 	std::shared_ptr<EventSystem> _events;
 	std::string _name;
-	boost::asio::io_context _ioContext{};
+	//NOTE: by pointer only so the header can keep asio out; the node owns it either way
+	std::unique_ptr<boost::asio::io_context> _ioContext;
 	std::thread _thread{};
 	std::vector<EventSubscription> _subs{};
 

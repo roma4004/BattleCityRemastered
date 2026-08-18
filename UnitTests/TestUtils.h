@@ -7,8 +7,6 @@
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 
-using buuid = boost::uuids::uuid;
-
 class TestUtils
 {
 public:
@@ -23,13 +21,13 @@ public:
 
 	template<class T>
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
-			ObjRectangle rect, int health, buuid uuid, std::string name, std::string fraction,
+			ObjRectangle rect, int health, Uuid uuid, std::string name, std::string fraction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 			float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 			GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, int health, buuid uuid, std::string name, std::string fraction,
+			ObjRectangle rect, int health, Uuid uuid, std::string name, std::string fraction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
 			const BulletCalibre& calibre, Direction dir, GameMode gameMode, GameConfig& gameConfig, std::string author)
 	{
@@ -56,7 +54,7 @@ public:
 };
 
 template<class T>
-std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, buuid uuid, std::string name,
+std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uuid, std::string name,
 										 std::string fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 										 std::shared_ptr<EventSystem> events,
 										 unsigned short tier, float tankSpeed, Direction dir, GameMode gameMode,
@@ -83,7 +81,7 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, buuid uu
 
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		ObjRectangle rect, int tankHealth, buuid uuid, std::string name, std::string fraction,
+		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, std::string fraction,
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		GameConfig& gameConfig);

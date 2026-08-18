@@ -21,8 +21,6 @@
 
 class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -34,7 +32,7 @@ protected:
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};// boost::uuids::uuid is internally 8-byte aligned (uses a uint64_t for alignment)
+	Uuid _uuid{};// Uuid keeps boost::uuids::uuid's 8-byte alignment
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};

@@ -18,8 +18,6 @@ struct ClientInFortressToSteelEvent;
 class FortressWall final : public BaseObj//TODO: remove baseObj after changing to baseObj interface in allObjects
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
@@ -42,14 +40,14 @@ class FortressWall final : public BaseObj//TODO: remove baseObj after changing t
 
 public:
 	FortressWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
-				 std::vector<std::shared_ptr<BaseObj>>* allObjects, buuid uuid, GameMode gameMode);
+				 std::vector<std::shared_ptr<BaseObj>>* allObjects, Uuid uuid, GameMode gameMode);
 
 	~FortressWall() override = default;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	[[nodiscard]] std::string GetName() const override;
-	[[nodiscard]] buuid GetUuid() const override;
+	[[nodiscard]] Uuid GetUuid() const override;
 	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
 
 	//BaseObj overrides

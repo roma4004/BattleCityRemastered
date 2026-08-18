@@ -12,7 +12,6 @@
 #include "enums/CommandType.h"
 #include "enums/FortressState.h"
 #include "enums/StatisticsType.h"
-#include "enums/TankType.h"
 #include "network/commands/CommandBatch.h"
 #include "utils/NetworkLogger.h"
 #include <ser20/archives/portable_binary.hpp>

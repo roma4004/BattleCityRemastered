@@ -1,6 +1,7 @@
 #include "network/NetworkNodeBase.h"
 #include "components/events/TimingEvents.h"
 #include "utils/NetworkLogger.h"
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
 #include <future>
@@ -11,10 +12,13 @@ namespace network::commands
 NetworkNodeBase::NetworkNodeBase(std::shared_ptr<EventSystem> events, std::string name)
 	: _events(std::move(events))
 	, _name(std::move(name))
+	, _ioContext{std::make_unique<boost::asio::io_context>()}
 {
 }
 
 NetworkNodeBase::~NetworkNodeBase() = default;
+
+boost::asio::io_context& NetworkNodeBase::IoContext() { return *_ioContext; }
 
 void NetworkNodeBase::StartIoThread()
 {
@@ -22,7 +26,7 @@ void NetworkNodeBase::StartIoThread()
 	{
 		try
 		{
-			_ioContext.run();
+			_ioContext->run();
 		}
 		catch (const std::exception& e)
 		{
@@ -39,12 +43,12 @@ void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()
 {
 	//NOTE: the node is shut down on its own io_context thread, not here - closing sockets from
 	//outside would race the handlers still queued on it
-	if (shutdownNode && !_ioContext.stopped())
+	if (shutdownNode && !_ioContext->stopped())
 	{
 		auto shutdownDone{std::make_shared<std::promise<void>>()};
 		const std::future<void> shutdownFuture{shutdownDone->get_future()};
 
-		boost::asio::post(_ioContext, [shutdownNode, shutdownDone]
+		boost::asio::post(*_ioContext, [shutdownNode, shutdownDone]
 		{
 			//NOTE: guarded - a node with several links reports each one, and set_value twice throws
 			shutdownNode([shutdownDone, isDone = std::make_shared<bool>(false)]
@@ -60,9 +64,9 @@ void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()
 		shutdownFuture.wait_for(std::chrono::milliseconds(ShutdownTimeoutMs));
 	}
 
-	if (!_ioContext.stopped())
+	if (!_ioContext->stopped())
 	{
-		_ioContext.stop();
+		_ioContext->stop();
 	}
 
 	if (_thread.joinable())

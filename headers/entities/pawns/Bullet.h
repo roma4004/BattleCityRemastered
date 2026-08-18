@@ -3,7 +3,7 @@
 #include "Pawn.h"
 #include "entities/BulletCalibre.h"
 #include "interfaces/IDrawable.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <string>
 
 struct BulletResetProperty;
@@ -20,8 +20,6 @@ class Bullet final : public Pawn, public IDrawable
 {
 	friend BulletPool;
 	friend ShootingBeh;
-
-	using buuid = boost::uuids::uuid;
 
 	std::string _author{};
 	BulletCalibre _calibre{};
@@ -52,7 +50,7 @@ public:
 
 	[[nodiscard]] std::string GetAuthor() const;
 
-	[[nodiscard]] buuid GetUuid() const override;
+	[[nodiscard]] Uuid GetUuid() const override;
 	[[nodiscard]] const std::string& GetUuidStr() const;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;

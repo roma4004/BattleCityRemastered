@@ -1,22 +1,20 @@
 #pragma once
 
-#include <boost/uuid/uuid.hpp>
-
-using buuid = boost::uuids::uuid;
+#include "utils/Uuid.h"
 
 struct TankSpawnEvent
 {
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct TankDiedEvent
 {
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct ServerOutDisposeEvent
 {
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct ClientInDisposeEvent {};

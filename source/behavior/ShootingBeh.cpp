@@ -12,7 +12,7 @@
 #include <memory>
 // #include <boost/uuid/uuid_io.hpp>
 
-ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
+ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, UPoint& windowSize, std::string& name,
 						 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
 						 const std::shared_ptr<EventSystem>& events)
@@ -101,9 +101,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	return bulletRect;
 }
 
-using buuid = boost::uuids::uuid;
-
-buuid ShootingBeh::Shot(const buuid uuid)
+Uuid ShootingBeh::Shot(const Uuid uuid)
 {
 	const ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.f || rect.y < 0.f)

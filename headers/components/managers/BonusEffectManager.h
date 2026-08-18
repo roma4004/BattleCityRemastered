@@ -1,7 +1,7 @@
 #pragma once
 #include "components/EventSystem.h"
 #include "utils/Timer.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 
 enum class GameMode : char8_t;
 class EventSystem;
@@ -16,8 +16,6 @@ struct BonusReApplyEvent;
 class BonusEffectManager
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	Timer _timerEnemy{};
 	Timer _timerPlayer{};
 	Timer _shovelPlayer{};

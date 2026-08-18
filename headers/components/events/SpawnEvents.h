@@ -5,14 +5,12 @@
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
 #include <string>
 
 class BaseObj;
-
-using buuid = boost::uuids::uuid;
 
 struct AddToSpawnQueueEvent
 {
@@ -22,14 +20,14 @@ struct AddToSpawnQueueEvent
 struct ClientInRespawnTankEvent
 {
 	TankType type;
-	buuid uuid;
+	Uuid uuid;
 	ObjRectangle rect;
 };
 
 struct RespawnTankEvent
 {
 	TankType type;
-	buuid uuid;
+	Uuid uuid;
 	bool skipDelay;
 };
 
@@ -37,14 +35,14 @@ struct ClientInBonusSpawnEvent
 {
 	FPoint pos;
 	BonusType type;
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct ClientInObstacleSpawnEvent
 {
 	ObjRectangle rect;
 	ObstacleType type;
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct RespawnCountChangedToEvent
@@ -56,19 +54,19 @@ struct RespawnCountChangedToEvent
 struct ServerOutRespawnTankEvent
 {
 	TankType type;
-	buuid uuid;
+	Uuid uuid;
 	ObjRectangle rect;
 };
 
 struct SpawnDelayStartEvent
 {
-	buuid uuid;
+	Uuid uuid;
 	std::chrono::milliseconds delay;
 };
 
 struct TankSpawnDelayFinishedEvent
 {
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct SpawnObstacleEvent
@@ -79,7 +77,7 @@ struct SpawnObstacleEvent
 
 struct BonusReApplyEvent
 {
-	buuid uuid;
+	Uuid uuid;
 	std::string name;
 	std::string fraction;
 };

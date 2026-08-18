@@ -114,6 +114,9 @@
     <ClCompile Include="..\source\components\BulletPool.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\EventSystem.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\GameStatistics.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
@@ -774,6 +777,9 @@
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\TimeUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\Uuid.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\UuidUtils.h">

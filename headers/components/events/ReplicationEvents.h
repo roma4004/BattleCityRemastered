@@ -2,37 +2,35 @@
 
 #include "Point.h"
 #include "enums/Direction.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <string>
-
-using buuid = boost::uuids::uuid;
 
 struct ServerOutPosEvent
 {
 	std::string who;
 	FPoint pos;
 	Direction dir;
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct ServerOutShotEvent
 {
 	std::string who;
 	Direction dir;
-	buuid bulletUuid;
+	Uuid bulletUuid;
 };
 
 struct ServerOutHealthEvent
 {
 	std::string who;
 	int health;
-	buuid uuid;
+	Uuid uuid;
 };
 
 // Host -> client: "materialize the tank with this uuid now".
 struct ServerOutTankSpawnCompleteEvent
 {
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct ServerOutBonusHelmetPickupEvent
@@ -50,13 +48,13 @@ struct ClientInPosEvent
 struct ClientInShotEvent
 {
 	Direction dir;
-	buuid bulletUuid;
+	Uuid bulletUuid;
 };
 
 // Broadcast: no Tank exists yet to key against. TankSpawner looks up uuid in its pending-spawn stash.
 struct ClientInTankSpawnCompleteEvent
 {
-	buuid uuid;
+	Uuid uuid;
 };
 
 struct ClientInBonusHelmetPickupEvent

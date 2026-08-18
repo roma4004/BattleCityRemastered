@@ -2,7 +2,7 @@
 
 #include "entities/BulletCalibre.h"
 #include "interfaces/IMoveBeh.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <memory>
 #include <optional>
 
@@ -15,9 +15,7 @@ class GameConfig;
 
 class MoveLikeBulletBeh final : public IMoveBeh
 {
-	using buuid = boost::uuids::uuid;
-
-	buuid& _uuid;
+	Uuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
 	GameConfig& _gameConfig;
@@ -37,7 +35,7 @@ protected:
 	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 
 public:
-	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, GameConfig& gameConfig,
+	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, GameConfig& gameConfig,
 					  const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;

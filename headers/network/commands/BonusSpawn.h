@@ -4,31 +4,29 @@
 #include "UuidSerialization.h"
 #include "enums/BonusType.h"
 #include "enums/CommandType.h"
+#include "utils/Uuid.h"
 #include <ser20/types/common.hpp>
-#include <boost/uuid/uuid.hpp>
 
 namespace network::commands
 {
 class BonusSpawn
 {
-	using buuid = boost::uuids::uuid;
-
 	CommandType _type{CommandType::BONUS_SPAWN};
 	FPoint _pos{};
 	BonusType _bonusType{};
-	buuid _uuid{};
+	Uuid _uuid{};
 
 public:
 	//for deserialization
 	BonusSpawn() = default;
 
 	//for serialization
-	BonusSpawn(FPoint pos, BonusType bonusType, buuid uuid);
+	BonusSpawn(FPoint pos, BonusType bonusType, Uuid uuid);
 
 	[[nodiscard]] CommandType GetType() const noexcept;
 	[[nodiscard]] FPoint GetPos() const noexcept;
 	[[nodiscard]] BonusType GetBonusType() const noexcept;
-	[[nodiscard]] buuid GetUuid() const noexcept;
+	[[nodiscard]] Uuid GetUuid() const noexcept;
 	[[nodiscard]] const char* GetClassNameW() const noexcept;
 
 	template<class Archive>

@@ -23,9 +23,10 @@
 #include "utils/Logger.h"
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
+#include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
-#include <boost/uuid/uuid.hpp>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 
@@ -162,7 +163,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 	return rect;
 }
 
-bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const buuid uuid, const TankType type, const float speed,
+bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const float speed,
 							 const int health, const bool skipDelay)
 {
 	if (ColliderUtils::AreEqualAbsolute(rect.y, -1.f))
@@ -187,7 +188,7 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const buuid uuid, const Ta
 	return true;
 }
 
-void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const int health, const buuid uuid,
+void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const int health, const Uuid uuid,
 							  const TankType type, const bool skipDelay)
 {
 	const bool isFirst = type == TankType::PLAYER1;
@@ -204,7 +205,7 @@ void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const 
 	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
 
-void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const int health, const buuid uuid,
+void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const int health, const Uuid uuid,
 							   const TankType type, const bool skipDelay)
 {
 	const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
@@ -220,7 +221,7 @@ void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const
 	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
 
-void TankSpawner::RespawnEnemyTanks(const TankType type, const buuid uuid, const bool skipDelay,
+void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const bool skipDelay,
 									const std::optional<ObjRectangle> rect)
 {
 	const ObjRectangle spawnRect = rect.has_value() ? *rect : GetEnemyRandomPosX(type);
@@ -277,7 +278,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 	return rect;
 }
 
-void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const bool skipDelay,
+void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid, const bool skipDelay,
 									const std::optional<ObjRectangle> rect)
 {
 	const bool isFirst = type == TankType::PLAYER1;
@@ -306,7 +307,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const buuid uuid, const
 	}
 }
 
-void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool skipDelay,
+void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const bool skipDelay,
 							  const std::optional<ObjRectangle> rect)
 {
 	switch (type)
@@ -338,7 +339,7 @@ void TankSpawner::RespawnTank(const TankType type, const buuid uuid, const bool 
 }
 
 //TODO: maybe we don't need spawn on client at all and just move the textures and animation?
-void TankSpawner::OnClientRespawn(const TankType type, const buuid uuid, const ObjRectangle rect)
+void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const ObjRectangle rect)
 {
 	constexpr bool skipDelay{false};
 	RespawnTank(type, uuid, skipDelay, rect);
@@ -385,7 +386,7 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const std::string& name,
-									std::string fraction, const float speed, const buuid uuid, const TankType type,
+									std::string fraction, const float speed, const Uuid uuid, const TankType type,
 									const bool skipDelay)
 {
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
@@ -409,7 +410,7 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, c
 	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .name = name});
 }
 
-void TankSpawner::OnSpawnDelayFinished(const buuid uuid)
+void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
 {
 	const auto it = std::ranges::find(_delayedSpawns, uuid, &DelayedTankSpawn::uuid);
 	if (it == _delayedSpawns.end())

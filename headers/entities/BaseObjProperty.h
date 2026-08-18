@@ -1,16 +1,14 @@
 #pragma once
 
 #include "entities/ObjRectangle.h"
-#include <boost/uuid/uuid.hpp>//TODO: use PCH
+#include "utils/Uuid.h"
 #include <string>
 
 struct BaseObjProperty
 {
-	using buuid = boost::uuids::uuid;
-
 	ObjRectangle rect{};
 	int health{0};
-	buuid uuid{};
+	Uuid uuid{};
 	std::string name{};
 	std::string fraction{};
 	bool isAlive{true};

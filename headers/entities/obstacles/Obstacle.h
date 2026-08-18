@@ -14,8 +14,6 @@ struct ClientInHealthEvent;
 
 class Obstacle : public BaseObj, public IDrawable
 {
-	using buuid = boost::uuids::uuid;
-
 	virtual void Subscribe();
 	virtual void SubscribeAsClient();
 	void OnClientInHealth(const ClientInHealthEvent& event);
@@ -36,7 +34,7 @@ protected:
 	virtual void EmitDeathStatistics(const std::string& author, const std::string& fraction) = 0;
 
 public:
-	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, buuid uuid,
+	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, Uuid uuid,
 			 GameMode gameMode, ObstacleType obstacleType, CollisionTags collision);
 
 	~Obstacle() override;

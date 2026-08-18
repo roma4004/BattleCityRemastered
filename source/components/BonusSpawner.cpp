@@ -116,7 +116,7 @@ void BonusSpawner::Update(const TickUpdateEvent&)
 	}
 }
 
-void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, buuid uuid)
+void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uuid uuid)
 {
 	constexpr milliseconds lifetime{std::chrono::seconds{15}};
 	constexpr milliseconds duration{std::chrono::seconds{15}};

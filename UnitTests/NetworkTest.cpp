@@ -18,21 +18,19 @@
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include "gtest/gtest.h"
+#include "utils/Uuid.h"
+#include <array>
 #include <chrono>
 #include <future>
 #include <memory>
 #include <optional>
 #include <thread>
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/string_generator.hpp>
-#include <boost/uuid/uuid.hpp>
+#include "utils/UuidUtils.h"
 
 class NetworkTest : public testing::Test
 {
 protected:
-	using buuid = boost::uuids::uuid;
-
-	buuid _uuid{boost::uuids::string_generator()("01234567-89ab-cdef-0123-456789abcdef")};
+	Uuid _uuid{UuidUtils::GetUuidFromString("01234567-89ab-cdef-0123-456789abcdef")};
 
 	void SetUp() override {}
 
@@ -113,7 +111,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 	constexpr Direction direction{Direction::UP};
 
-	std::promise<std::pair<Direction, buuid>> promise{};
+	std::promise<std::pair<Direction, Uuid>> promise{};
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
@@ -217,7 +215,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<buuid> promise{};
+	std::promise<Uuid> promise{};
 	auto future = promise.get_future();
 
 	auto disposeSub = events->AddListener(Key(_uuid),
@@ -303,13 +301,13 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 TEST_F(NetworkTest, FortressChangeEventReplication)
 {
 
-	buuid uuid1Died{boost::uuids::string_generator()("11234567-89ab-cdef-0123-456789abcdef")};
-	buuid uuid1ToBrick{boost::uuids::string_generator()("21234567-89ab-cdef-0123-456789abcdef")};
-	buuid uuid1ToSteel{boost::uuids::string_generator()("31234567-89ab-cdef-0123-456789abcdef")};
+	Uuid uuid1Died{UuidUtils::GetUuidFromString("11234567-89ab-cdef-0123-456789abcdef")};
+	Uuid uuid1ToBrick{UuidUtils::GetUuidFromString("21234567-89ab-cdef-0123-456789abcdef")};
+	Uuid uuid1ToSteel{UuidUtils::GetUuidFromString("31234567-89ab-cdef-0123-456789abcdef")};
 
-	buuid uuid2Died{boost::uuids::string_generator()("41234567-89ab-cdef-0123-456789abcdef")};
-	buuid uuid2ToBrick{boost::uuids::string_generator()("51234567-89ab-cdef-0123-456789abcdef")};
-	buuid uuid2ToSteel{boost::uuids::string_generator()("61234567-89ab-cdef-0123-456789abcdef")};
+	Uuid uuid2Died{UuidUtils::GetUuidFromString("41234567-89ab-cdef-0123-456789abcdef")};
+	Uuid uuid2ToBrick{UuidUtils::GetUuidFromString("51234567-89ab-cdef-0123-456789abcdef")};
+	Uuid uuid2ToSteel{UuidUtils::GetUuidFromString("61234567-89ab-cdef-0123-456789abcdef")};
 
 	auto events = std::make_shared<EventSystem>();
 	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
@@ -488,7 +486,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<std::tuple<FPoint, BonusType, buuid>> promise{};
+	std::promise<std::tuple<FPoint, BonusType, Uuid>> promise{};
 	auto future = promise.get_future();
 
 	auto bonusSpawnSub = events->AddListener([&promise](const ClientInBonusSpawnEvent& event)
@@ -542,7 +540,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<buuid> promise;
+	std::promise<Uuid> promise;
 	auto future = promise.get_future();
 
 	auto bonusDeSpawnSub = events->AddListener(
@@ -691,7 +689,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	constexpr auto obstacleType = ObstacleType::Brick;
 	constexpr ObjRectangle rectOrigin{.x = 42.0f, .y = 43.0f, .w = 44.0f, .h = 45.0f};
 
-	std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>> promise{};
+	std::promise<std::tuple<ObjRectangle, ObstacleType, Uuid>> promise{};
 	auto future = promise.get_future();
 
 	auto obstacleSpawnSub = events->AddListener([&promise](const ClientInObstacleSpawnEvent& event)
@@ -758,7 +756,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 		bricksRect.emplace_back(value, value + 1, value + 2, value + 3);
 	}
 
-	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, buuid>>> promises(itemsInMassiveTest);
+	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, Uuid>>> promises(itemsInMassiveTest);
 
 	std::mutex mtx;
 	std::atomic<size_t> count{0u};
@@ -831,7 +829,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::vector<std::promise<std::tuple<TankType, buuid, FPoint>>> promises(6u);
+	std::vector<std::promise<std::tuple<TankType, Uuid, FPoint>>> promises(6u);
 
 	size_t count = 0u;
 	auto respawnTankSub = events->AddListener(

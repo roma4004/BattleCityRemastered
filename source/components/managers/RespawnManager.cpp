@@ -9,8 +9,9 @@
 #include "enums/RespawnGroup.h"
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <memory>
+#include <ranges>
 
 RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
@@ -197,7 +198,7 @@ void RespawnManager::OnClientRespawn(const ClientInRespawnTankEvent& event)
 
 void RespawnManager::OnTankSpawn(const TankSpawnEvent& event)
 {
-	const buuid& uuid = event.uuid;
+	const Uuid& uuid = event.uuid;
 	if (const auto it = std::ranges::find(_slots, uuid, &SpawnSlot::uuid);
 		it != _slots.end())
 	{
@@ -247,7 +248,7 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 
 void RespawnManager::OnTankDied(const TankDiedEvent& event)
 {
-	const buuid& uuid = event.uuid;
+	const Uuid& uuid = event.uuid;
 	if (const auto it = std::ranges::find(_slots, uuid, &SpawnSlot::uuid);
 		it != _slots.end())
 	{

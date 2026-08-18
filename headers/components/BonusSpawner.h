@@ -2,7 +2,7 @@
 
 #include "components/EventSystem.h"
 #include "utils/Timer.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <random>
 #include <vector>
 
@@ -22,8 +22,6 @@ struct ClientInBonusSpawnEvent;
 class BonusSpawner final
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -64,5 +62,5 @@ public:
 
 	void SpawnRandomBonus(ObjRectangle rect);
 
-	void SpawnBonus(ObjRectangle rect, BonusType type, buuid uuid = {});//NOTE: for unit tests
+	void SpawnBonus(ObjRectangle rect, BonusType type, Uuid uuid = {});//NOTE: for unit tests
 };

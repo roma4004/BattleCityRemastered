@@ -3,7 +3,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"
 
-IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const buuid uuid,
+IceTile::IceTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events, const Uuid uuid,
 				 const GameMode gameMode)
 	: Obstacle{rect, 1, "Ice", events, uuid, gameMode, ObstacleType::Ice, s_collision}
 {

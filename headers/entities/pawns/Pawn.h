@@ -18,8 +18,6 @@ struct TickUpdateEvent;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
-	using buuid = boost::uuids::uuid;
-
 public:
 	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, CollisionTags collision);
 

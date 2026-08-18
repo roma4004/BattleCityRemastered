@@ -11,12 +11,12 @@
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
+#include "utils/Uuid.h"
 #include <algorithm>
-#include <boost/uuid/uuid.hpp>
 #include <string>
 
 FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventSystem>& events,
-						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const buuid uuid, const GameMode gameMode)
+						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const Uuid uuid, const GameMode gameMode)
 	: BaseObj{BaseObjProperty{.rect = rect, .health = 1, .uuid = uuid, .name = "FortressWall", .fraction = "Neutral"},
 			  BrickWall::s_collision}//NOTE: FortressWall::GetIsPassable/Destructible/Penetrable fully delegate to
 	//the held BrickWall/SteelWall variant below - this base value is never read,
@@ -254,12 +254,10 @@ std::string FortressWall::GetName() const
 	}, _obstacle);
 }
 
-using buuid = boost::uuids::uuid;
-
-buuid FortressWall::GetUuid() const
+Uuid FortressWall::GetUuid() const
 {
-	return std::visit([this](auto&& obstacle) -> buuid
+	return std::visit([this](auto&& obstacle) -> Uuid
 	{
-		return obstacle ? obstacle->GetUuid() : buuid{};
+		return obstacle ? obstacle->GetUuid() : Uuid{};
 	}, _obstacle);
 }

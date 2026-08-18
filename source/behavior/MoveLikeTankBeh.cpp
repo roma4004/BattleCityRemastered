@@ -9,7 +9,7 @@
 #include <memory>
 #include <ranges>
 
-MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, buuid& uuid, UPoint& windowSize,
+MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, UPoint& windowSize,
 								 std::string& name, std::string& fraction,
 								 std::vector<std::shared_ptr<BaseObj>>* allObjects, BonusEffectProperty& effects,
 								 GameConfig& gameConfig)

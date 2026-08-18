@@ -16,9 +16,7 @@ class BulletPool;
 
 class ShootingBeh final : public IShootable
 {
-	using buuid = boost::uuids::uuid;
-
-	buuid& _uuid;
+	Uuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
 	UPoint& _windowSize;
@@ -37,12 +35,12 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
-	ShootingBeh(ObjRectangle& rect, Direction& dir, buuid& uuid, UPoint& windowSize, std::string& name,
+	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, UPoint& windowSize, std::string& name,
 				std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
 				const std::shared_ptr<EventSystem>& events);
 
 	~ShootingBeh() override;
 
-	[[nodiscard]] buuid Shot(buuid uuid = {}) override;
+	[[nodiscard]] Uuid Shot(Uuid uuid = {}) override;
 };

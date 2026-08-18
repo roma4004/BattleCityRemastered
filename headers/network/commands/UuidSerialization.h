@@ -1,15 +1,14 @@
 #pragma once
 
+#include "utils/Uuid.h"
 #include <ser20/ser20.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>//NOTE: required for commands serialization
 
 namespace ser20
 {
-using buuid = boost::uuids::uuid;
-
+//NOTE: Uuid lives outside ser20, so the overload goes here where ser20's own lookup finds it.
+//16 raw bytes - the same wire format boost::uuids::uuid had.
 template<class Archive>
-void serialize(Archive& ar, buuid& uuid, const unsigned int /*version*/)
+void serialize(Archive& ar, Uuid& uuid, const unsigned int /*version*/)
 {
 	ar & binary_data(&uuid, sizeof(uuid));
 }

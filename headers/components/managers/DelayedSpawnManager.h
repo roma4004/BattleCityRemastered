@@ -3,7 +3,7 @@
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 #include "utils/Timer.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 
 class BaseObj;
 class EventSystem;
@@ -16,11 +16,9 @@ struct PostTickUpdateEvent;
 class DelayedSpawnManager
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 	struct SpawnDelay
 	{
-		buuid uuid;
+		Uuid uuid;
 		Timer timer;
 	};
 
@@ -46,5 +44,5 @@ public:
 
 	void PreTickUpdate(double deltaTime);
 	void Disposer();
-	void SpawnDelayStart(const buuid& uuid, milliseconds delay);
+	void SpawnDelayStart(const Uuid& uuid, milliseconds delay);
 };

@@ -25,8 +25,6 @@
 
 class CoopBotTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -38,7 +36,7 @@ protected:
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
-	buuid _uuid{};
+	Uuid _uuid{};
 	float _tankSize{};
 	float _tankSpeed{142};
 	float _gridSize{};

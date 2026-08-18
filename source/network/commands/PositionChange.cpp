@@ -2,7 +2,7 @@
 
 namespace network::commands
 {
-PositionChange::PositionChange(std::string who, const FPoint pos, const Direction dir, const buuid uuid)
+PositionChange::PositionChange(std::string who, const FPoint pos, const Direction dir, const Uuid uuid)
 	: _who{std::move(who)}
 	, _pos{pos}
 	, _dir{dir}
@@ -16,8 +16,7 @@ FPoint PositionChange::GetPos() const noexcept { return _pos; }
 
 Direction PositionChange::GetDir() const noexcept { return _dir; }
 
-using buuid = boost::uuids::uuid;
-buuid PositionChange::GetUuid() const noexcept { return _uuid; }
+Uuid PositionChange::GetUuid() const noexcept { return _uuid; }
 
 const char* PositionChange::GetClassNameW() const noexcept { return "PositionChange"; }
 }//namespace network::commands

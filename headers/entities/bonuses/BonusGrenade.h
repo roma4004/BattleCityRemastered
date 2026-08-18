@@ -10,11 +10,9 @@ class EventSystem;
 class BonusGrenade final : public Bonus
 {
 	using milliseconds = std::chrono::milliseconds;
-	using buuid = boost::uuids::uuid;
-
 public:
 	BonusGrenade(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-				 buuid uuid, GameMode gameMode);
+				 Uuid uuid, GameMode gameMode);
 
 	~BonusGrenade() override;
 

@@ -70,10 +70,9 @@ void BaseObj::SetRect(const ObjRectangle rect) { _rect = rect; }
 
 std::string BaseObj::GetName() const { return _name; }
 
-using buuid = boost::uuids::uuid;
-buuid BaseObj::GetUuid() const { return _uuid; }
+Uuid BaseObj::GetUuid() const { return _uuid; }
 
-void BaseObj::SetId(const buuid uuid) { _uuid = uuid; }
+void BaseObj::SetId(const Uuid uuid) { _uuid = uuid; }
 
 std::string BaseObj::GetFraction() const { return _fraction; }
 

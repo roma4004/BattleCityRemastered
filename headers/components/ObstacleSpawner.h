@@ -2,7 +2,7 @@
 
 #include "Point.h"
 #include "components/EventSystem.h"
-#include <boost/uuid/uuid.hpp>
+#include "utils/Uuid.h"
 #include <vector>
 
 enum class GameMode : char8_t;
@@ -19,8 +19,6 @@ struct ClientInObstacleSpawnEvent;
 
 class ObstacleSpawner final
 {
-	using buuid = boost::uuids::uuid;
-
 	//TODO: to the level select, once there is more than one map
 	static constexpr auto kMapPath{"Resources/Maps/level1.map"};
 
@@ -46,7 +44,7 @@ class ObstacleSpawner final
 	void UnsubscribeAsClient();
 
 	void LoadMap() const;
-	void SpawnObstacle(ObjRectangle rect, ObstacleType type, buuid uuid = {});
+	void SpawnObstacle(ObjRectangle rect, ObstacleType type, Uuid uuid = {});
 	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:

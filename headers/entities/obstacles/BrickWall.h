@@ -10,7 +10,6 @@ class FortressWall;
 
 class BrickWall final : public Obstacle
 {
-	using buuid = boost::uuids::uuid;
 	friend FortressWall;
 
 	void Subscribe() override;
@@ -22,7 +21,7 @@ protected:
 	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 public:
-	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
+	BrickWall(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);
 
 	~BrickWall() override = default;
 };

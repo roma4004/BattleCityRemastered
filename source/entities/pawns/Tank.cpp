@@ -18,6 +18,7 @@
 #include "enums/GameMode.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
+#include <ranges>
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
@@ -143,9 +144,9 @@ void Tank::TakeDamage(const unsigned int damage, const std::string& damageAuthor
 
 unsigned int Tank::GetTier() const { return _tier; }
 
-void Tank::Shot(const buuid withUuid)
+void Tank::Shot(const Uuid withUuid)
 {
-	const buuid bulletUuid = _shootingBeh->Shot(withUuid);
+	const Uuid bulletUuid = _shootingBeh->Shot(withUuid);
 
 	if (_gameMode == GameMode::PlayAsHost)
 	{

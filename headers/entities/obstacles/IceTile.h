@@ -9,8 +9,6 @@ struct PreDrawEvent;
 
 class IceTile final : public Obstacle
 {
-	using buuid = boost::uuids::uuid;
-
 	void Subscribe() override;
 	void OnPreDraw(const PreDrawEvent&) const;
 
@@ -22,7 +20,7 @@ protected:
 	static constexpr CollisionTags s_collision{tags::Passable{}, tags::Indestructible{}, tags::Penetrable{}};
 
 public:
-	IceTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, buuid uuid, GameMode gameMode);
+	IceTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);
 
 	~IceTile() override = default;
 };

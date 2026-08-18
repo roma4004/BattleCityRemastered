@@ -1,13 +1,18 @@
 #pragma once
 
+// NOTE: 65 TUs include this, so each include here is paid 65 times. No <ranges> on purpose: a
+// `| views::` pipeline costs ~52k lines, a projection on an <algorithm> range algorithm does not.
+// Keep pipelines, and anything needing <iostream>/<cassert>, in EventSystem.cpp.
 #include <algorithm>
-#include <cassert>
+#include <exception>
 #include <functional>
-#include <iostream>
+#include <iterator>
 #include <list>
 #include <memory>
-#include <ranges>
+#include <source_location>
+#include <type_traits>
 #include <typeindex>
+#include <unordered_map>
 
 class EventSystem;
 
@@ -97,6 +102,76 @@ struct first_type<T, Rest...>
 
 template<typename... Args>
 using first_type_t = first_type<Args...>::type;
+
+// nullptr `what` = non-std exception; origin.line() == 0 = release build.
+void ReportListenerException(const char* context, const char* what, const std::source_location& origin) noexcept;
+
+// A throwing listener is reported by its registration site - the only identity a type-erased
+// callback has - and every remaining listener still gets its event.
+template<typename ListenerT, typename... CallArgs>
+void InvokeGuarded(const char* const context, ListenerT& listener, const CallArgs&... args) noexcept
+{
+	try
+	{
+		listener.callback(args...);
+	}
+	catch (const std::exception& e)
+	{
+		ReportListenerException(context, e.what(), listener.Origin());
+	}
+	catch (...)
+	{
+		ReportListenerException(context, nullptr, listener.Origin());
+	}
+}
+
+// Shared by both dispatch paths. Advance before invoking: a self-unsubscribing callback erases its
+// own node mid-loop, and std::list node addresses are what make that safe.
+template<typename ListenerListT, typename... CallArgs>
+void EmitToList(const char* const context, ListenerListT& listeners, const CallArgs&... args)
+{
+	for (auto it = listeners.begin(); it != listeners.end();)
+	{
+		const auto next = std::next(it);
+		InvokeGuarded(context, *it, args...);
+		it = next;
+	}
+}
+
+// Stored listener. Debug also keeps its AddListener site; release has no such member at all.
+template<typename CallbackT>
+struct Listener
+{
+	Listener(CallbackT&& cb, [[maybe_unused]] const std::source_location& where)
+		: callback{std::move(cb)}
+#ifndef NDEBUG
+		, origin{where}
+#endif
+	{
+	}
+
+	// Both diagnostics go through this, so the #ifdef lives here and nowhere else.
+	[[nodiscard]] const std::source_location& Origin() const noexcept
+	{
+#ifndef NDEBUG
+		return origin;
+#else
+		static constexpr std::source_location kUnknown{};
+		return kUnknown;
+#endif
+	}
+
+	CallbackT callback;
+#ifndef NDEBUG
+	std::source_location origin;
+#endif
+};
+
+#ifndef NDEBUG
+// Defined in EventSystem.cpp, same reason as ReportListenerException above.
+void ReportLeftoverListener(const char* kind, const char* eventTypeName,
+							const std::source_location& origin) noexcept;
+#endif
 }// namespace detail
 
 // Wrap a per-instance dispatch key (e.g. a tank's uuid) for the keyed EmitEvent/AddListener
@@ -123,8 +198,10 @@ struct callable_signature<T> : callable_signature<decltype(&T::operator())> {};
 // one. Every event - even ones that used to carry no data - gets a uniquely-named struct (an
 // empty tag struct if it truly has no fields) and the listener takes it by value/const-ref,
 // e.g. `[](const FrameStartEvent&){}` instead of `[](){}`.
+// Templated on Class only so the assert stays dependent and fires on instantiation, not on sight -
+// same trick as callable_signature_args below, which exists for the same de-duplication reason.
 template<typename Class>
-struct callable_signature<void (Class::*)() const>
+struct callable_signature_zero_args
 {
 	static_assert(sizeof(Class) == 0,
 				  "EventSystem: listener must take exactly one event-struct parameter (e.g. "
@@ -133,13 +210,10 @@ struct callable_signature<void (Class::*)() const>
 };
 
 template<typename Class>
-struct callable_signature<void (Class::*)()>
-{
-	static_assert(sizeof(Class) == 0,
-				  "EventSystem: listener must take exactly one event-struct parameter (e.g. "
-				  "`[](const FooEvent&){}`), even for events with no data - give it an empty tag "
-				  "struct instead. Zero-parameter listeners are no longer supported.");
-};
+struct callable_signature<void (Class::*)() const> : callable_signature_zero_args<Class> {};
+
+template<typename Class>
+struct callable_signature<void (Class::*)()> : callable_signature_zero_args<Class> {};
 
 // Shared body for every callable shape below that carries a concrete Args... pack (const lambda,
 // mutable lambda, function pointer, std::function) - all four previously repeated this verbatim,
@@ -158,15 +232,18 @@ struct callable_signature_args
 
 	// Identity-free: O(1) unsubscribe via captured (Event*, iterator), no name lookup.
 	template<typename CallableT>
-	static EventSubscription call_add_listener(auto* eventSystem, CallableT&& callback)
+	static EventSubscription call_add_listener(auto* eventSystem, CallableT&& callback,
+											   const std::source_location& origin)
 	{
-		return eventSystem->template AddListenerImpl<EventType>(std::forward<CallableT>(callback));
+		return eventSystem->template AddListenerImpl<EventType>(std::forward<CallableT>(callback), origin);
 	}
 
 	template<typename KeyT, typename CallableT>
-	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, CallableT&& callback)
+	static EventSubscription call_add_keyed_listener(auto* eventSystem, const KeyT& key, CallableT&& callback,
+													 const std::source_location& origin)
 	{
-		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, std::forward<CallableT>(callback));
+		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, std::forward<CallableT>(callback),
+																		  origin);
 	}
 };
 
@@ -195,6 +272,9 @@ class BaseEvent
 public:
 	virtual ~BaseEvent() = default;
 	virtual bool HasListeners() const = 0;
+#ifndef NDEBUG
+	virtual void ReportLeftoverListeners(const char* kind, const char* eventTypeName) const = 0;
+#endif
 };
 
 // std::list, not a name-keyed map: node addresses stay stable, so a subscription can carry
@@ -204,46 +284,39 @@ class Event final : public BaseEvent
 {
 public:
 	using callbackType = std::function<void(Args...)>;
-	using ListenerHandle = std::list<callbackType>::iterator;
+	using ListenerList = std::list<detail::Listener<callbackType>>;
+	using ListenerHandle = ListenerList::iterator;
 
-	ListenerHandle AddListener(callbackType callback)
+	ListenerHandle AddListener(callbackType callback, const std::source_location& origin)
 	{
-		_listeners.push_back(std::move(callback));
+		_listeners.emplace_back(std::move(callback), origin);
 		return std::prev(_listeners.end());
 	}
 
+	// args are copied into every listener, never forwarded: several listeners can share one event
+	// type, and the first one's by-value std::function parameter would move out of a forwarded arg.
 	template<typename... FwdArgs>
 	void Emit(FwdArgs&&... args)
 	{
-		// Advance before invoking: a self-unsubscribing callback erases this node mid-loop.
-		for (auto it = _listeners.begin(); it != _listeners.end();)
-		{
-			const auto next = std::next(it);
-
-			try
-			{
-				(*it)(args...);
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Exception in event callback: " << e.what() << '\n';
-				// continue listening to other events
-			}
-			catch (...)
-			{
-				std::cerr << "Unknown exception in event callback" << '\n';
-			}
-
-			it = next;
-		}
+		detail::EmitToList("event callback", _listeners, args...);
 	}
 
 	void RemoveListener(ListenerHandle handle) { _listeners.erase(handle); }
 
 	bool HasListeners() const override { return !_listeners.empty(); }
 
+#ifndef NDEBUG
+	void ReportLeftoverListeners(const char* const kind, const char* const eventTypeName) const override
+	{
+		for (const auto& listener: _listeners)
+		{
+			detail::ReportLeftoverListener(kind, eventTypeName, listener.origin);
+		}
+	}
+#endif
+
 private:
-	std::list<callbackType> _listeners;
+	ListenerList _listeners;
 };
 
 // Parallel to BaseEvent/Event<Args...> - backs the keyed (per-instance) dispatch overloads.
@@ -253,6 +326,9 @@ class BaseKeyedEvent
 public:
 	virtual ~BaseKeyedEvent() = default;
 	virtual bool HasListeners() const = 0;
+#ifndef NDEBUG
+	virtual void ReportLeftoverListeners(const char* kind, const char* eventTypeName) const = 0;
+#endif
 };
 
 template<typename KeyT, typename... Args>
@@ -260,44 +336,24 @@ class KeyedEvent final : public BaseKeyedEvent
 {
 public:
 	using callbackType = std::function<void(Args...)>;
-	using ListenerList = std::list<callbackType>;
+	using ListenerList = std::list<detail::Listener<callbackType>>;
+	using ListenerMap = std::unordered_map<KeyT, ListenerList>;
 	using ListenerHandle = ListenerList::iterator;
 
-	ListenerHandle AddListener(const KeyT& key, callbackType callback)
+	ListenerHandle AddListener(const KeyT& key, callbackType callback, const std::source_location& origin)
 	{
 		auto& listeners = _listeners[key];
-		listeners.push_back(std::move(callback));
+		listeners.emplace_back(std::move(callback), origin);
 		return std::prev(listeners.end());
 	}
 
+	// Copies rather than forwards, for the same reason as Event<Args...>::Emit - see its comment.
 	template<typename... FwdArgs>
 	void Emit(const KeyT& key, FwdArgs&&... args)
 	{
-		const auto it = _listeners.find(key);
-		if (it == _listeners.end())
+		if (const auto it = _listeners.find(key); it != _listeners.end())
 		{
-			return;
-		}
-
-		// Same next-iterator-first guarantee as Event<Args...>::Emit above - see its comment.
-		for (auto lit = it->second.begin(); lit != it->second.end();)
-		{
-			const auto next = std::next(lit);
-
-			try
-			{
-				(*lit)(args...);
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Exception in keyed event callback: " << e.what() << '\n';
-			}
-			catch (...)
-			{
-				std::cerr << "Unknown exception in keyed event callback" << '\n';
-			}
-
-			lit = next;
+			detail::EmitToList("keyed event callback", it->second, args...);
 		}
 	}
 
@@ -309,14 +365,28 @@ public:
 		}
 	}
 
+	// Projection, not `| views::values` - see the include block on why.
 	bool HasListeners() const override
 	{
-		return std::ranges::any_of(_listeners | std::views::values,
-								   [](const auto& perKeyListeners) { return !perKeyListeners.empty(); });
+		return std::ranges::any_of(_listeners, std::not_fn(&ListenerList::empty),
+								   &ListenerMap::value_type::second);
 	}
 
+#ifndef NDEBUG
+	void ReportLeftoverListeners(const char* const kind, const char* const eventTypeName) const override
+	{
+		for (const auto& [key, listeners]: _listeners)
+		{
+			for (const auto& listener: listeners)
+			{
+				detail::ReportLeftoverListener(kind, eventTypeName, listener.origin);
+			}
+		}
+	}
+#endif
+
 private:
-	std::unordered_map<KeyT, ListenerList> _listeners;
+	ListenerMap _listeners;
 };
 
 // enable_shared_from_this so AddListener can hand the EventSubscription it returns a
@@ -373,65 +443,40 @@ class EventSystem final : public std::enable_shared_from_this<EventSystem>
 public:
 	EventSystem() = default;
 
-	~EventSystem()
-	{
-#ifndef NDEBUG
-		// If something's still subscribed when the bus itself is being torn down, some object's
-		// Unsubscribe() was never called (or ran too late/never at all) - a real cleanup bug, since
-		// nothing will ever deliver to these listeners again anyway. Loud on purpose, same as the
-		// EmitEvent mismatch check used to be: this is a debug-only diagnostic, a no-op in release.
-		bool anyLeftoverListeners = false;
-
-		for (const auto& [eventType, eventInfo]: _events)
-		{
-			if (eventInfo.event->HasListeners())
-			{
-				std::cerr << "EventSystem: event type \"" << eventType.name() << "\" still has listeners at "
-						<< "shutdown - some object's Unsubscribe()/RemoveListener() was never called.\n";
-				anyLeftoverListeners = true;
-			}
-		}
-
-		for (const auto& [eventType, keyedEventInfo]: _keyedEvents)
-		{
-			if (keyedEventInfo.event->HasListeners())
-			{
-				std::cerr << "EventSystem: keyed event type \"" << eventType.name() << "\" still has listeners "
-						<< "at shutdown - some object's Unsubscribe()/RemoveListener() was never called.\n";
-				anyLeftoverListeners = true;
-			}
-		}
-
-		assert(!anyLeftoverListeners && "EventSystem: listeners still registered at destruction, see stderr");
-#endif
-	}
+	~EventSystem();
 
 	// Auto-deduces EventType from the listener's parameter (type_index(typeid(EventType))).
 	// Identity-free. Keep the returned EventSubscription alive while the listener should stay
-	// registered.
+	// registered. Never pass `origin` by hand: as a default argument it resolves at the call site,
+	// which is the whole point - only the overloads below forward it on.
 	template<Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(CallableT&& callback)
+	[[nodiscard]] EventSubscription AddListener(CallableT&& callback,
+												const std::source_location& origin = std::source_location::current())
 	{
-		return callable_signature<std::decay_t<CallableT>>::call_add_listener(this, std::forward<CallableT>(callback));
+		return callable_signature<std::decay_t<CallableT>>::call_add_listener(
+				this, std::forward<CallableT>(callback), origin);
 	}
 
 	// Sugar: AddListener(this, &Class::OnFoo) instead of a forwarding lambda. OnFoo takes the whole
-	// event struct, e.g. void OnFoo(const FooEvent& event).
+	// event struct, e.g. void OnFoo(const FooEvent& event). Forwards origin - defaulting it again
+	// would report this header.
 	template<typename Class, typename EventT>
-	[[nodiscard]] EventSubscription AddListener(Class* instance, void (Class::*method)(const EventT&))
+	[[nodiscard]] EventSubscription AddListener(Class* instance, void (Class::*method)(const EventT&),
+												const std::source_location& origin = std::source_location::current())
 	{
-		return AddListener([instance, method](const EventT& event) { (instance->*method)(event); });
+		return AddListener([instance, method](const EventT& event) { (instance->*method)(event); }, origin);
 	}
 
 	template<typename Class, typename EventT>
-	[[nodiscard]] EventSubscription AddListener(Class* instance, void (Class::*method)(const EventT&) const)
+	[[nodiscard]] EventSubscription AddListener(Class* instance, void (Class::*method)(const EventT&) const,
+												const std::source_location& origin = std::source_location::current())
 	{
-		return AddListener([instance, method](const EventT& event) { (instance->*method)(event); });
+		return AddListener([instance, method](const EventT& event) { (instance->*method)(event); }, origin);
 	}
 
 	// internal implementation for the concrete EventType (used in callable_signature)
 	template<typename EventType, Callable CallableT>
-	EventSubscription AddListenerImpl(CallableT&& callback)
+	EventSubscription AddListenerImpl(CallableT&& callback, const std::source_location& origin)
 	{
 		const std::type_index key(typeid(EventType));
 
@@ -442,7 +487,7 @@ public:
 		}
 
 		auto* event = GetTypedEvent<EventType>();
-		const auto handle = event->AddListener(std::forward<CallableT>(callback));
+		const auto handle = event->AddListener(std::forward<CallableT>(callback), origin);
 
 		return EventSubscription(shared_from_this(), [event, handle]()
 		{
@@ -453,30 +498,33 @@ public:
 	// Keyed overload. Uses Key() to disambiguate from a raw KeyT, which would let a string literal
 	// silently bind to the wrong overload.
 	template<typename KeyT, Callable CallableT>
-	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, CallableT&& callback)
+	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, CallableT&& callback,
+												const std::source_location& origin = std::source_location::current())
 	{
-		return callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(this, key.value,
-			std::forward<CallableT>(callback));
+		return callable_signature<std::decay_t<CallableT>>::call_add_keyed_listener(
+				this, key.value, std::forward<CallableT>(callback), origin);
 	}
 
 	// Sugar, keyed variant - see the plain-overload sugar above.
 	template<typename KeyT, typename Class, typename EventT>
 	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, Class* instance,
-												void (Class::*method)(const EventT&))
+												void (Class::*method)(const EventT&),
+												const std::source_location& origin = std::source_location::current())
 	{
-		return AddListener(key, [instance, method](const EventT& event) { (instance->*method)(event); });
+		return AddListener(key, [instance, method](const EventT& event) { (instance->*method)(event); }, origin);
 	}
 
 	template<typename KeyT, typename Class, typename EventT>
 	[[nodiscard]] EventSubscription AddListener(detail::EventKey<KeyT> key, Class* instance,
-												void (Class::*method)(const EventT&) const)
+												void (Class::*method)(const EventT&) const,
+												const std::source_location& origin = std::source_location::current())
 	{
-		return AddListener(key, [instance, method](const EventT& event) { (instance->*method)(event); });
+		return AddListener(key, [instance, method](const EventT& event) { (instance->*method)(event); }, origin);
 	}
 
 	// internal implementation for the concrete keyed EventType (used in callable_signature)
 	template<typename KeyT, typename EventType, Callable CallableT>
-	EventSubscription AddKeyedListenerImpl(const KeyT& key, CallableT&& callback)
+	EventSubscription AddKeyedListenerImpl(const KeyT& key, CallableT&& callback, const std::source_location& origin)
 	{
 		const std::type_index typeKey(typeid(EventType));
 
@@ -486,7 +534,7 @@ public:
 		}
 
 		auto* event = GetTypedKeyedEvent<KeyT, EventType>();
-		const auto handle = event->AddListener(key, std::forward<CallableT>(callback));
+		const auto handle = event->AddListener(key, std::forward<CallableT>(callback), origin);
 
 		return EventSubscription(shared_from_this(), [event, key, handle]()
 		{

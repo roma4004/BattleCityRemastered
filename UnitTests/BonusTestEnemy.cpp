@@ -19,8 +19,6 @@
 
 class BonusTestEnemy : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
-	using buuid = boost::uuids::uuid;
-
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -30,7 +28,7 @@ protected:
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
 	GameConfig _gameConfig{"", true};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	buuid _uuid{};
+	Uuid _uuid{};
 	double _deltaTimeOneFrame{1.f / 60.f};
 	float _tankSize{};
 	float _gridSize{};
