@@ -4,11 +4,9 @@
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
-#include "enums/GameMode.h"
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 					   GameConfig& gameConfig)

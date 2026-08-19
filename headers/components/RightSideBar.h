@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
-#include "enums/GameMode.h"
 #include <memory>
 #include <vector>
 

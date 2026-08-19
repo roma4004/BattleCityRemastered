@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geometry/Point.h"
 #include "components/EventSystem.h"
 
 class GameConfig;

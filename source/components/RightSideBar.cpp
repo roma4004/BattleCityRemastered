@@ -3,7 +3,6 @@
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
 
 RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)

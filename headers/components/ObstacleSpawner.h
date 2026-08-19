@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "utils/Uuid.h"
 #include <vector>

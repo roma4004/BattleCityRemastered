@@ -1,6 +1,5 @@
 #include "components/ObstacleSpawner.h"
 #include "utils/Log.h"
-#include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"

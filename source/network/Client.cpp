@@ -8,7 +8,6 @@
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "geometry/ObjRectangle.h"
 #include "enums/CommandType.h"
 #include "enums/FortressState.h"
 #include "enums/StatisticsType.h"
