@@ -1,4 +1,7 @@
 #pragma once
+#include "geometry/Point.h"
+#include <cmath>
+#include <ostream>
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
@@ -85,3 +88,28 @@ template<>
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		GameConfig& gameConfig);
+
+//NOTE: an epsilon comparison is not transitive, so it is no equivalence relation and has no
+//business being spelled == on the type. Production never compares FPoints; the tests do.
+[[nodiscard]] inline bool operator==(const FPoint& lhs, const FPoint& rhs) noexcept
+{
+	static constexpr float epsilon = 1e-4f;
+	return std::abs(lhs.x - rhs.x) < epsilon && std::abs(lhs.y - rhs.y) < epsilon;
+}
+
+//NOTE: here, not in Point.h, to keep <ostream> out of the ~40 files that never print a point.
+//Found by ADL, so the test TU has to include this header.
+inline void PrintTo(const FPoint& point, std::ostream* os)
+{
+	*os << "FPoint(x: " << point.x << ", y: " << point.y << ")";
+}
+
+inline void PrintTo(const Point& point, std::ostream* os)
+{
+	*os << "Point(x: " << point.x << ", y: " << point.y << ")";
+}
+
+inline void PrintTo(const UPoint& point, std::ostream* os)
+{
+	*os << "UPoint(x: " << point.x << ", y: " << point.y << ")";
+}

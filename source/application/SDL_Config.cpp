@@ -1,4 +1,6 @@
 #include "application/SDL_Config.h"
+#include "application/ProjectConfig.h"
+#include "utils/Log.h"
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include <SDL.h>
@@ -6,7 +8,6 @@
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 #include <array>
-#include <iostream>
 #include <memory>
 
 namespace
@@ -18,8 +19,9 @@ constexpr std::array kXBoxKeys{"Images.XBox_D-Pad", "Images.XBox_Home", "Images.
 							   "Images.XBox_View", "Images.XBox_A", "Images.XBox_Y"};
 }
 
-SDL_Config::SDL_Config(GameConfig& config)
-	: gameConfig{config} {}
+SDL_Config::SDL_Config(GameConfig& config, const ProjectConfig& project)
+	: gameConfig{config}
+	, projectConfig{project} {}
 
 SDL_Config::~SDL_Config()
 {
@@ -46,7 +48,7 @@ std::expected<void, InitError> SDL_Config::Init()
 				if (const auto audio = InitAudio();
 					!audio)
 				{
-					std::cerr << audio.error().stage << ": " << audio.error().detail << '\n';
+					Log::Error(audio.error().stage + ": " + audio.error().detail);
 				}
 			});
 }
@@ -82,7 +84,7 @@ std::expected<void, InitError> SDL_Config::InitFonts()
 		return std::unexpected(InitError{.stage = "TTF_Init Error", .detail = TTF_GetError()});
 	}
 
-	const std::string fontPath = PathFromConfig("Fonts.BattleCity");
+	const std::string fontPath = projectConfig.ResourcePath("Fonts.BattleCity").string();
 
 	if (fontSmall = {TTF_OpenFont(fontPath.c_str(), 14), TTF_CloseFont};
 		fontSmall == nullptr)
@@ -120,7 +122,7 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 		return std::unexpected(InitError{.stage = "Mix_OpenAudio Error, sound off", .detail = Mix_GetError()});
 	}
 
-	const std::string introMusicPath = PathFromConfig("Music.LevelStarted");
+	const std::string introMusicPath = projectConfig.ResourcePath("Music.LevelStarted").string();
 	if (levelIntroMusic = {Mix_LoadWAV(introMusicPath.c_str()), Mix_FreeChunk};
 		levelIntroMusic == nullptr)
 	{
@@ -143,32 +145,27 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 	return {};
 }
 
-std::string SDL_Config::PathFromConfig(const std::string_view configKey) const
+std::expected<std::shared_ptr<SDL_Surface>, InitError> SDL_Config::LoadSurface(const std::filesystem::path& path)
 {
-	const std::string key{configKey};
-
-	return gameConfig.Get<std::string>(key, key + " path from config.ini");
-}
-
-std::expected<std::shared_ptr<SDL_Surface>, InitError> SDL_Config::LoadSurface(const std::string& path)
-{
-	std::shared_ptr<SDL_Surface> surface{IMG_Load(path.c_str()), SDL_FreeSurface};
+	std::shared_ptr<SDL_Surface> surface{IMG_Load(path.string().c_str()), SDL_FreeSurface};
 	if (surface == nullptr)
 	{
-		return std::unexpected(InitError{.stage = "IMG " + path + " Loading Error", .detail = IMG_GetError()});
+		return std::unexpected(
+				InitError{.stage = "IMG " + path.string() + " Loading Error", .detail = IMG_GetError()});
 	}
 
 	return surface;
 }
 
 std::expected<std::shared_ptr<SDL_Texture>, InitError> SDL_Config::CreateTexture(
-		const std::shared_ptr<SDL_Surface>& surface, const std::string& path) const
+		const std::shared_ptr<SDL_Surface>& surface, const std::filesystem::path& path) const
 {
 	std::shared_ptr<SDL_Texture> texture{SDL_CreateTextureFromSurface(renderer.get(), surface.get()),
 										 SDL_DestroyTexture};
 	if (texture == nullptr)
 	{
-		return std::unexpected(InitError{.stage = "IMG " + path + " Texture Creating Error", .detail = IMG_GetError()});
+		return std::unexpected(
+				InitError{.stage = "IMG " + path.string() + " Texture Creating Error", .detail = IMG_GetError()});
 	}
 
 	return texture;
@@ -179,7 +176,7 @@ std::expected<void, InitError> SDL_Config::LoadTexturePair(const std::string_vie
 														   std::shared_ptr<SDL_Surface>& outSurface,
 														   std::shared_ptr<SDL_Texture>& outTexture)
 {
-	const std::string path = PathFromConfig(configKey);
+	const std::filesystem::path path = projectConfig.ResourcePath(std::string{configKey});
 
 	//NOTE: the surface is kept, not dropped after the texture - it is what a vsync change would rebuild from
 	return LoadSurface(path).and_then([&](std::shared_ptr<SDL_Surface> surface)
@@ -220,7 +217,7 @@ std::expected<void, InitError> SDL_Config::LoadPadHints(const std::span<const ch
 //NOTE: not LoadTexturePair - the atlas needs its colour key punched into the surface in between
 std::expected<void, InitError> SDL_Config::LoadAtlas()
 {
-	const std::string path = PathFromConfig("Images.SpriteSheet");
+	const std::filesystem::path path = projectConfig.ResourcePath("Images.SpriteSheet");
 
 	auto surface = LoadSurface(path);
 	if (!surface)
@@ -263,12 +260,12 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow
 std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 {
 	Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
-	if (gameConfig.Get<bool>("Window.vsync", false))
+	if (projectConfig.IsVsyncOn())
 	{
 		renderFlags |= SDL_RENDERER_PRESENTVSYNC;//TODO: recreate render if vsync change
 	}
 
-	const int monitorIndex = gameConfig.Get<int>("Window.MonitorNumber", 1) - 1;
+	const int monitorIndex = projectConfig.MonitorNumber() - 1;
 	SDL_Rect bounds;
 	SDL_GetDisplayBounds(monitorIndex, &bounds);
 

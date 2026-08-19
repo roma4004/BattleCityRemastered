@@ -1,5 +1,5 @@
 #include "behavior/MoveLikeBulletBeh.h"
-#include "Circle.h"
+#include "geometry/Circle.h"
 #include "application/GameConfig.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"

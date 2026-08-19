@@ -20,14 +20,12 @@
 #include "enums/GameMode.h"
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
-#include "utils/Logger.h"
+#include "utils/Log.h"
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
 #include <algorithm>
-#include <iomanip>
-#include <iostream>
 #include <memory>
 
 TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -54,7 +52,7 @@ void TankSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
 
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
 }
 
 void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(event.type, event.uuid, event.skipDelay); }
@@ -94,22 +92,6 @@ void TankSpawner::Reset(const GameResetEvent&)
 	_enemySpawnTimer.isActive = false;
 	_enemySpawnTimer.activateTime = std::chrono::system_clock::now() - _enemySpawnTimer.cooldown;
 	_delayedSpawns.clear();
-}
-
-std::string TankSpawner::GetCurrentTimeString()
-{
-	const auto now = std::chrono::system_clock::now();
-	const auto nowTime = std::chrono::system_clock::to_time_t(now);
-	const auto ms = std::chrono::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
-
-	std::tm timeInfo;
-	std::ignore = localtime_s(&timeInfo, &nowTime);
-
-	std::stringstream ss;
-	ss << std::put_time(&timeInfo, "%H:%M:%S") << '.'
-			<< std::setfill('0') << std::setw(3) << ms.count();
-
-	return ss.str();
 }
 
 ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
@@ -174,14 +156,7 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const Tan
 	const std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
 	std::string fraction{"EnemyTeam"};
 
-	// Log enemy tank spawn
-	const std::string uuidString = UuidUtils::GetStringUuid(uuid);
-	Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
-	std::cout << "[" << GetCurrentTimeString() << "] "
-			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-			<< "SpawnEnemy  UUID = " << uuidString
-			<< ", Name = " << name
-			<< '\n';
+	Log::Info("spawn " + name + " (" + fraction + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
 	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 
@@ -195,12 +170,7 @@ void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const 
 	const std::string name{isFirst ? "Player1" : "Player2"};
 	std::string fraction{"PlayerTeam"};
 
-	// Log tank spawn
-	const std::string uuidString = UuidUtils::GetStringUuid(uuid);
-	Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
-	std::cout << "[" << GetCurrentTimeString() << "] "
-			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-			<< "SpawnPlayer UUID = " << uuidString << ", Name = " << name << '\n';
+	Log::Info("spawn " + name + " (" + fraction + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
 	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
@@ -211,12 +181,7 @@ void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const
 	const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
 	std::string fraction{"PlayerTeam"};
 
-	// Log coop bot spawn
-	const std::string uuidString = UuidUtils::GetStringUuid(uuid);
-	Logger::GetInstance().LogTankSpawn(name, fraction, uuidString);
-	std::cout << "[" << GetCurrentTimeString() << "] "
-			<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-			<< "SpawnEnemy  UUID = " << uuidString << ", Name = " << name << '\n';
+	Log::Info("spawn " + name + " (" + fraction + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
 	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
 }
@@ -227,7 +192,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const 
 	const ObjRectangle spawnRect = rect.has_value() ? *rect : GetEnemyRandomPosX(type);
 	const bool isSuccessSpawn = SpawnEnemy(spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth,
 										   skipDelay);
-	if (isSuccessSpawn && _gameMode == GameMode::PlayAsHost)
+	if (isSuccessSpawn && IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 	}
@@ -290,17 +255,16 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid, const 
 
 	if (_gameMode == GameMode::OnePlayer
 		|| _gameMode == GameMode::TwoPlayers
-		|| _gameMode == GameMode::PlayAsHost
-		|| _gameMode == GameMode::PlayAsClient
+		|| IsNetworkGame(_gameMode)
 		|| (_gameMode == GameMode::CoopWithBot && isFirst))
 	{
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
 		}
 	}
-	else if (_gameMode == GameMode::Demo || _gameMode == GameMode::CoopWithBot)
+	else if (UsesCoopBots(_gameMode))
 	{
 		SpawnCoopBot(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid,
 					 isFirst ? TankType::COOP1 : TankType::COOP2, skipDelay);
@@ -362,8 +326,7 @@ std::unique_ptr<IInputProvider> MakeProvider(const bool isNet, const std::shared
 std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type) const
 {
 	const bool isFirst = type == TankType::PLAYER1;
-	const bool isNet = _gameMode == GameMode::PlayAsClient
-					   || (_gameMode == GameMode::PlayAsHost && !isFirst);
+	const bool isNet = IsClient(_gameMode) || (IsHost(_gameMode) && !isFirst);
 
 	return isFirst
 			   ? MakeProvider<InputProviderForPlayerOne, InputProviderForPlayerOneNet>(isNet, _events)
@@ -401,7 +364,7 @@ void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, c
 
 	// On a real client (skipDelay false) skip this: DelayedSpawnManager's timer never ticks there,
 	// so a >0ms entry would just sit in _spawnDelays forever, never disposed.
-	if (skipDelay || _gameMode != GameMode::PlayAsClient)
+	if (skipDelay || IsAuthority(_gameMode))
 	{
 		const milliseconds delay{skipDelay ? 0 : 1000};
 		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
@@ -444,7 +407,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .name = params.name});
 		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .fraction = params.fraction});
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutTankSpawnCompleteEvent{.uuid = params.uuid});
 		}

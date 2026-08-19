@@ -1,14 +1,14 @@
 ﻿#include "components/managers/AnimationManager.h"
+#include "utils/Log.h"
 #include "components/AnimatedObjects.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "enums/AnimationType.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <memory>
 #include <ranges>
 
@@ -247,7 +247,7 @@ void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnab
 
 	if (tankIt == _turnBasedTankObjects.end())
 	{
-		std::cout << "AnimationManager [DEBUG] Fail to CreateHelmetEffect: " << "name = " << name << '\n';
+		Log::Error("AnimationManager: no turn-based tank named " + name + " for the helmet effect");
 
 		return;
 	}

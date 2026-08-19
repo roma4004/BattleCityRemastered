@@ -3,11 +3,11 @@
 #include "components/EventSystem.h"
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/StatisticsEvents.h"
+#include "enums/GameMode.h"
 #include <memory>
 #include <string>
 #include <vector>
 
-enum class GameMode : char8_t;
 class EventSystem;
 struct GameResetEvent;
 struct GameModeChangedToEvent;
@@ -60,18 +60,28 @@ class GameStatistics final
 	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
 	// subscribe-once-at-construction lifetime - clearing one of these vectors auto-unsubscribes
 	// just that group.
-	std::vector<EventSubscription> _hostSubs{};
+	std::vector<EventSubscription> _authoritySubs{};
 	std::vector<EventSubscription> _clientSubs{};
 	StatisticsData _data{};
 	GameMode _gameMode{};
 
+	//NOTE: the host republishes the fact it just counted; anywhere else this is a no-op
+	template<typename EventT>
+	void EmitReplicated(const EventT& event) const
+	{
+		if (IsHost(_gameMode))
+		{
+			_events->EmitEvent(event);
+		}
+	}
+
 	void Subscribe();
-	void SubscribeHost();
+	void SubscribeAsAuthority();
 	void SubscribeAsClient();
 	void OnGameReset(const GameResetEvent&);
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
-	void UnsubscribeAsHost();
+	void UnsubscribeAsAuthority();
 	void UnsubscribeAsClient();
 
 	void OnBulletHit(const StatisticsBulletHitEvent& event);
@@ -91,10 +101,10 @@ class GameStatistics final
 	void OnClientInPlayerTwoDied(const ClientInPlayerTwoDiedEvent& event);
 	void OnTankDied(const StatisticsTankDiedEvent& event);
 	void OnBrickWallDied(const StatisticsAttributionEvent& event);
-	void OnHostBrickWallDied(const BrickWallDiedEvent& event);
+	void OnAuthorityBrickWallDied(const BrickWallDiedEvent& event);
 	void OnClientInBrickWallDied(const ClientInBrickWallDiedEvent& event);
 	void OnSteelWallDied(const StatisticsAttributionEvent& event);
-	void OnHostSteelWallDied(const SteelWallDiedEvent& event);
+	void OnAuthoritySteelWallDied(const SteelWallDiedEvent& event);
 	void OnClientInSteelWallDied(const ClientInSteelWallDiedEvent& event);
 	void OnBonusPickup(const StatisticsBonusPickupEvent& event);
 	void OnClientInBonusPickup(const ClientInBonusPickupEvent& event);

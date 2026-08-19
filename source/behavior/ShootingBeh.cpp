@@ -1,5 +1,8 @@
 #include "behavior/ShootingBeh.h"
-#include "Point.h"
+#include "utils/Log.h"
+#include "utils/UuidUtils.h"
+#include "application/GameConfig.h"
+#include "geometry/Point.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
@@ -12,14 +15,13 @@
 #include <memory>
 // #include <boost/uuid/uuid_io.hpp>
 
-ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, UPoint& windowSize, std::string& name,
-						 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-						 const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
-						 const std::shared_ptr<EventSystem>& events)
+ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, std::string& fraction,
+						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<BulletPool>& bulletPool,
+						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
-	, _windowSize{windowSize}
+	, _gameConfig{gameConfig}
 	, _name{name}
 	, _fraction{fraction}
 	, _calibre{calibre}
@@ -37,7 +39,7 @@ ShootingBeh::~ShootingBeh() = default;
 float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	float minDist = static_cast<float>(_windowSize.x * _windowSize.y);
+	float minDist = static_cast<float>(_gameConfig.windowSize.x * _gameConfig.windowSize.y);
 	// float nearestDist = 0.f;
 	for (const auto& object: objects)
 	{
@@ -87,12 +89,12 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 		bulletRect.x = tankPos.x - bulletWidth - 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_windowSize.y))
+	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_gameConfig.windowSize.y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY + 1;
 	}
-	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_windowSize.x))
+	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_gameConfig.windowSize.x))
 	{
 		bulletRect.x = tankRightX + 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -127,10 +129,7 @@ Uuid ShootingBeh::Shot(const Uuid uuid)
 
 		bullet->Reset(std::move(bulletResetProperty));
 
-		// std::cout << "[" << "bullet->Reset" << "] "
-		// 			<< ", name=" << bullet->GetName()
-		// 			<< ", UUID=" << UuidUtils::ToStringUuid(bullet->GetUuid())
-		// 			<< '\n';
+		Log::Detail("bullet reset " + bullet->GetName() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
 	}
 
 	if (bulletAsBase != nullptr)

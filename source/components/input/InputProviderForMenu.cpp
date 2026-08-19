@@ -1,4 +1,5 @@
 #include "components/input/InputProviderForMenu.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
@@ -7,8 +8,9 @@
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 
-InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events)
+InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _events{events}
+	, _gameConfig{gameConfig}
 {
 	Subscribe();
 }
@@ -17,7 +19,6 @@ void InputProviderForMenu::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuReleased));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPauseReleased));
-	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameReset));
 
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPreTickUpdate));
@@ -28,7 +29,6 @@ void InputProviderForMenu::Subscribe()
 
 void InputProviderForMenu::OnMenuReleased(const MenuReleasedEvent&) { ToggleMenuInputSubscription(); }
 void InputProviderForMenu::OnPauseReleased(const PauseReleasedEvent&) { TogglePause(); }
-void InputProviderForMenu::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
 void InputProviderForMenu::OnGameReset(const GameResetEvent&) { Reset(); }
 void InputProviderForMenu::OnPreTickUpdate(const PreTickUpdateEvent&) { MenuUpdate(); }
 
@@ -44,8 +44,11 @@ void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 
 void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 {
-	if (_gameMode == GameMode::Demo
-		|| _gameMode == GameMode::PlayAsHost)
+	//NOTE: Demo runs behind an always-open menu, PlayAsHost stays paused until the client is ready
+	//(both set up in Game) - there the pause flag belongs to them, not to menu visibility
+	//TODO: the PlayAsHost half stands in for a Lobby phase the state machine does not have yet
+	if (_gameConfig.gameMode == GameMode::Demo
+		|| _gameConfig.gameMode == GameMode::PlayAsHost)
 	{
 		return;
 	}
@@ -127,7 +130,7 @@ void InputProviderForMenu::SetPause(bool value)
 	_keys.pause = value;
 	_events->EmitEvent(PauseStatusEvent{.isPaused = _keys.pause});
 
-	if (_gameMode != GameMode::PlayAsClient)
+	if (_gameConfig.IsHost())
 	{
 		_events->EmitEvent(ServerOutPauseStatusEvent{.isPaused = _keys.pause});
 	}

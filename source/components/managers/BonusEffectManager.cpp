@@ -1,9 +1,9 @@
 #include "components/managers/BonusEffectManager.h"
+#include "utils/Uuid.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
 #include "components/events/TimingEvents.h"
 #include "utils/TimeUtils.h"
 
@@ -19,7 +19,6 @@ void BonusEffectManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnGameReset));
 	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnTickUpdate));
-	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnTimerBonus));
 	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnBonusHelmetPickup));
 	_subs.push_back(_events->AddListener(this, &BonusEffectManager::OnBonusShovelPickup));
@@ -204,4 +203,3 @@ size_t BonusEffectManager::TankNameToId(const std::string& name)
 	return static_cast<size_t>(-1);
 }
 
-void BonusEffectManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }

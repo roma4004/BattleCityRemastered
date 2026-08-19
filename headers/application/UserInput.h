@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Point.h"
+#include "geometry/Point.h"
 #include "../components/input/MouseButton.h"
 #include "components/EventSystem.h"
 #include "components/input/InputProviderForMenu.h"
@@ -36,6 +36,8 @@ class UserInput final
 	bool _isMenuDisplayed{false};
 	GameMode _selectedGameMode{};
 	bool _areControllersSwapped{false};
+	//NOTE: the last size we announced, not a copy of the config - drops a repeat without depending
+	//on who listened to the previous one
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -74,7 +76,7 @@ class UserInput final
 	void InitMouseHoverTiles(Point menuPos);
 
 public:
-	UserInput(UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	UserInput(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 	~UserInput();
 
 	void Update();

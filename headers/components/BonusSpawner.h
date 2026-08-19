@@ -38,17 +38,17 @@ class BonusSpawner final
 	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
 	// subscribe-once-at-construction lifetime - assigning a new EventSubscription here
 	// auto-unsubscribes whatever was previously held.
-	EventSubscription _hostSub{};
+	EventSubscription _authoritySub{};
 	EventSubscription _clientSub{};
 
 	void Subscribe();
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
-	void SubscribeAsHost();
+	void SubscribeAsAuthority();
 	void SubscribeAsClient();
 	void OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event);
 
-	void UnsubscribeAsHost();
+	void UnsubscribeAsAuthority();
 	void UnsubscribeAsClient();
 
 	void Update(const TickUpdateEvent&);

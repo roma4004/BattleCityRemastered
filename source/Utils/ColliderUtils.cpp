@@ -1,6 +1,6 @@
 #include "utils/ColliderUtils.h"
-#include "Circle.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/Circle.h"
+#include "geometry/ObjRectangle.h"
 #include <algorithm>
 #include <cmath>
 

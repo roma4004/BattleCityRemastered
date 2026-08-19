@@ -23,7 +23,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 {
 	Obstacle::Subscribe();
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = _rect, .type = _obstacleType, .uuid = uuid});
 	}
@@ -33,7 +33,7 @@ Obstacle::~Obstacle() = default;
 
 void Obstacle::Subscribe()
 {
-	if (_gameMode == GameMode::PlayAsClient)
+	if (IsClient(_gameMode))
 	{
 		Obstacle::SubscribeAsClient();
 	}
@@ -65,7 +65,7 @@ void Obstacle::TakeDamage(const unsigned int damage, const std::string& damageAu
 
 	SendDamageStatistics(damageAuthor, damageFraction);
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "entities/Tags.h"
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"

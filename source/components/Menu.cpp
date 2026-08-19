@@ -1,4 +1,5 @@
 #include "components/Menu.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -6,12 +7,12 @@
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameMode.h"
 
-Menu::Menu(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+Menu::Menu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 0}
-	, _windowHeight{static_cast<int>(windowSize.y)}
-	, _yOffsetStart{static_cast<int>(windowSize.y)}
+	, _windowHeight{static_cast<int>(gameConfig.windowSize.y)}
+	, _yOffsetStart{static_cast<int>(gameConfig.windowSize.y)}
 	, _events{events}
-	, _input{std::make_unique<InputProviderForMenu>(events)}
+	, _input{std::make_unique<InputProviderForMenu>(events, gameConfig)}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();

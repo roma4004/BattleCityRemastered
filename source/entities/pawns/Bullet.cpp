@@ -1,4 +1,5 @@
 ﻿#include "entities/pawns/Bullet.h"
+#include "utils/Log.h"
 #include "application/GameConfig.h"
 #include "behavior/MoveLikeBulletBeh.h"
 #include "components/EventSystem.h"
@@ -15,8 +16,7 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
-// #include <iostream>
-
+// 
 Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
 			   const bool enableByDefault)
 	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
@@ -36,11 +36,7 @@ Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCa
 
 Bullet::~Bullet()
 {
-	// std::cout << "[" << "Bullet::~Bullet()" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< '\n';
+	Log::Detail("bullet destroyed " + _nameWithUuid);
 }
 
 void Bullet::Subscribe()
@@ -49,7 +45,7 @@ void Bullet::Subscribe()
 
 	_subs.push_back(_events->AddListener(this, &Bullet::OnDraw));
 
-	if (_gameMode == GameMode::PlayAsClient)
+	if (IsClient(_gameMode))
 	{
 		SubscribeAsClient();
 	}
@@ -88,11 +84,7 @@ void Bullet::Enable()
 
 void Bullet::Disable() const
 {
-	// std::cout << "[" << "Bullet::Disable()" << "] "
-	// 			<< "[" << (_gameMode == PlayAsHost ? "SERVER" : "CLIENT") << "] "
-	// 			<< ", name=" << _name
-	// 			<< ", name+UUID=" << _nameWithUuid
-	// 			<< '\n';
+	Log::Detail("bullet disabled " + _nameWithUuid);
 
 	Unsubscribe();
 }
@@ -143,7 +135,7 @@ void Bullet::TickUpdate(const double deltaTime)
 			outCollisions.clear();
 		}
 
-		if (isMove && _gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		if (isMove && IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
 		}

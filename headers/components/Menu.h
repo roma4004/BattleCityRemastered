@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/input/InputProviderForMenu.h"
 #include <vector>
 
+class GameConfig;
 class EventSystem;
 class GameStatistics;
 class InputProviderForMenu;
@@ -41,7 +42,7 @@ class Menu final
 	void DisplayMenu(bool isDisplayed);
 
 public:
-	Menu(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+	Menu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	~Menu() = default;
 

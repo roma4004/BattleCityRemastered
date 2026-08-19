@@ -1,7 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
 #include <optional>
@@ -86,7 +86,6 @@ class TankSpawner final
 	void RespawnPlayerTeam(TankType type, Uuid uuid, bool skipDelay = false,
 						   std::optional<ObjRectangle> rect = std::nullopt);
 	void RespawnTank(TankType type, Uuid uuid, bool skipDelay, std::optional<ObjRectangle> rect = std::nullopt);
-	[[nodiscard]] static std::string GetCurrentTimeString();
 
 	void OnClientRespawn(TankType type, Uuid uuid, ObjRectangle rect);
 

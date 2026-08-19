@@ -1,4 +1,4 @@
-#include "Point.h"
+#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
@@ -8,7 +8,7 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/DisconnectReason.h"
@@ -17,13 +17,13 @@
 #include "enums/TankType.h"
 #include "network/ClientHandler.h"
 #include "network/CommandDispatcher.h"
+#include "network/Serializer.h"
 #include "network/commands/CommandBatch.h"
 #include "network/commands/Disconnect.h"
 #include "network/ServerHandler.h"
 #include "gtest/gtest.h"
 #include "utils/Uuid.h"
 #include <array>
-#include <ser20/archives/portable_binary.hpp>
 #include <sstream>
 #include <chrono>
 #include <future>
@@ -31,6 +31,7 @@
 #include <optional>
 #include <thread>
 #include "utils/UuidUtils.h"
+#include "TestUtils.h"//NOTE: PrintTo for the Point types
 
 class NetworkTest : public testing::Test
 {
@@ -1042,22 +1043,6 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
 
-namespace
-{
-//NOTE: the wire format Client/Session produce - a hand-rolled buffer would test a shape
-//that cannot occur
-std::string Serialize(const network::commands::CommandBatch& batch)
-{
-	std::ostringstream archiveStream;
-	{
-		ser20::PortableBinaryOutputArchive oa(archiveStream);
-		oa(batch);
-	}
-
-	return archiveStream.str();
-}
-}//namespace
-
 TEST(CommandDispatcherTest, UnreadableFrameIsReportedNotSwallowed)
 {
 	network::CommandDispatcher dispatcher{"test"};
@@ -1077,12 +1062,12 @@ TEST(CommandDispatcherTest, RegisteredHandlerRunsOnAGoodFrame)
 	std::optional<DisconnectReason> seen{};
 	dispatcher.RegisterAll({{CommandType::DISCONNECT,
 							 [&seen](const network::commands::AnyCommand& command)
-							 { seen = std::get<network::commands::Disconnect>(command).GetReason(); }}});
+							 { seen = std::get<network::commands::Disconnect>(command).reason; }}});
 
 	network::commands::CommandBatch batch;
-	batch.AddCommand(network::commands::Disconnect{DisconnectReason::GameOver});
+	batch.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
 
-	EXPECT_TRUE(dispatcher.Dispatch(Serialize(batch)).has_value());
+	EXPECT_TRUE(dispatcher.Dispatch(network::Serialize(batch)).has_value());
 	ASSERT_TRUE(seen.has_value());
 	EXPECT_EQ(*seen, DisconnectReason::GameOver);
 }
@@ -1092,7 +1077,7 @@ TEST(CommandDispatcherTest, CommandWithNoHandlerIsNotAFailure)
 	network::CommandDispatcher dispatcher{"test"};
 
 	network::commands::CommandBatch batch;
-	batch.AddCommand(network::commands::Disconnect{DisconnectReason::GameOver});
+	batch.commands.emplace_back(network::commands::Disconnect{.reason = DisconnectReason::GameOver});
 
-	EXPECT_TRUE(dispatcher.Dispatch(Serialize(batch)).has_value());
+	EXPECT_TRUE(dispatcher.Dispatch(network::Serialize(batch)).has_value());
 }

@@ -1,5 +1,6 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
@@ -19,7 +20,8 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
-	GameConfig _gameConfig{"", true};
+	ProjectConfig _projectConfig{"", true};
+	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	EventSubscription _spawnQueueSub{};
 
@@ -31,7 +33,7 @@ protected:
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_respawnManager = std::make_shared<RespawnManager>(_events);
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
-		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events);
+		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
 	}
 
 	void TearDown() override

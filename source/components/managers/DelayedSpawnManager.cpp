@@ -1,4 +1,5 @@
 #include "components/managers/DelayedSpawnManager.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -6,8 +7,9 @@
 #include "components/events/TimingEvents.h"
 #include "utils/Timer.h"
 
-DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events)
+DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _events{events}
+	, _gameConfig{gameConfig}
 {
 	Subscribe();
 }
@@ -16,7 +18,6 @@ void DelayedSpawnManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnGameReset));
 	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnSpawnDelayStart));
-	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &DelayedSpawnManager::OnPostTickUpdate));
 }
@@ -27,8 +28,6 @@ void DelayedSpawnManager::OnSpawnDelayStart(const SpawnDelayStartEvent& event)
 {
 	SpawnDelayStart(event.uuid, event.delay);
 }
-
-void DelayedSpawnManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
 
 void DelayedSpawnManager::OnPreTickUpdate(const PreTickUpdateEvent& event) { PreTickUpdate(event.deltaTime); }
 
@@ -42,7 +41,7 @@ void DelayedSpawnManager::Reset()
 void DelayedSpawnManager::PreTickUpdate(const double /*deltaTime*/)
 {
 	// Doesn't tick on the client - it materializes only via TankSpawnComplete from the host.
-	if (_gameMode == GameMode::PlayAsClient)
+	if (_gameConfig.IsClient())
 	{
 		return;
 	}

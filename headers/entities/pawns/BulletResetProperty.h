@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "../BulletCalibre.h"
 #include "utils/Uuid.h"
 #include <string>

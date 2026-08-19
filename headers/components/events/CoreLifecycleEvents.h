@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 #include "enums/DisconnectReason.h"
 
 struct ServerInClientReadyToStartGameEvent {};

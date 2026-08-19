@@ -40,6 +40,7 @@ set(GAME_PLATFORM_SOURCES
 set(GAME_CORE_SOURCES
         source/application/CommandLineParser.cpp
         source/application/GameConfig.cpp
+        source/application/ProjectConfig.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
         source/behavior/ShootingBeh.cpp
@@ -102,26 +103,9 @@ set(GAME_CORE_SOURCES
         source/network/NetworkNodeBase.cpp
         source/network/Server.cpp
         source/network/ServerHandler.cpp
-        source/network/commands/BonusDeSpawn.cpp
-        source/network/commands/BonusSpawn.cpp
-        source/network/commands/BonusStatus.cpp
-        source/network/commands/CommandBatch.cpp
-        source/network/commands/Disconnect.cpp
-        source/network/commands/Dispose.cpp
-        source/network/commands/FortressChange.cpp
-        source/network/commands/GameStateChange.cpp
-        source/network/commands/HealthChange.cpp
-        source/network/commands/KeyStateChange.cpp
-        source/network/commands/ObstacleSpawn.cpp
-        source/network/commands/PositionChange.cpp
-        source/network/commands/RespawnTank.cpp
-        source/network/commands/SignalEvent.cpp
-        source/network/commands/StatisticsChange.cpp
-        source/network/commands/TankShot.cpp
-        source/network/commands/TankSpawnComplete.cpp
+        source/network/Serializer.cpp
         source/utils/ColliderUtils.cpp
-        source/utils/Logger.cpp
-        source/utils/NetworkLogger.cpp
+        source/utils/Log.cpp
         source/utils/TimeUtils.cpp
         source/utils/Timer.cpp
         source/utils/UuidUtils.cpp

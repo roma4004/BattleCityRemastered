@@ -2,6 +2,7 @@
 #include "components/WorldGeometry.h"
 #include <gtest/gtest.h>
 #include <filesystem>
+#include "TestUtils.h"//NOTE: PrintTo for the Point types
 
 namespace
 {

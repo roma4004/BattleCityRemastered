@@ -1,5 +1,5 @@
 #include "entities/BaseObj.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include "entities/BaseObjProperty.h"
 #include "utils/UuidUtils.h"
 #include <utility>

@@ -2,6 +2,7 @@
 
 #include "enums/ObstacleType.h"
 #include <cstddef>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -21,7 +22,7 @@ struct MapData
 
 struct MapError
 {
-	std::string path{};
+	std::filesystem::path path{};
 	std::string reason{};
 	//NOTE: 1-based, 0 when the whole file is at fault rather than one line of it
 	std::size_t line{};

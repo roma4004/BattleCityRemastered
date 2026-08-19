@@ -1,6 +1,7 @@
-#include "Point.h"
+#include "geometry/Point.h"
 #include "TestUtils.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
@@ -19,7 +20,8 @@ class BulletTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	GameConfig _gameConfig{"", true};
+	ProjectConfig _projectConfig{"", true};
+	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
@@ -54,13 +56,11 @@ TEST_F(BulletTest, BulletSetPos)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	const FPoint startPos = bullet->GetPos();
-
 	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
 	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
 	bullet->SetPos({.x = windowWidth, .y = windowHeight});
 
-	EXPECT_LT(startPos, bullet->GetPos());
+	EXPECT_EQ(bullet->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
 }
 
 // Check that bullet set their direction correctly

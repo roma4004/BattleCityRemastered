@@ -8,13 +8,13 @@
 #include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "enums/CommandType.h"
 #include "enums/FortressState.h"
 #include "enums/StatisticsType.h"
 #include "network/commands/CommandBatch.h"
-#include "utils/NetworkLogger.h"
-#include <ser20/archives/portable_binary.hpp>
+#include "network/Serializer.h"
+#include "utils/Log.h"
 #include <cassert>
 #include <string>
 #include <tuple>
@@ -72,20 +72,20 @@ void Client::TryConnect()
 	{
 		if (!ec)
 		{
-			// std::cout << "Client connected successfully" << '\n';
+			Log::Info("client connected");
 			_reconnectAttempts = 0;
 			_isConnected = true;
 			this->StartReading();
 			_channel->SetWriteEnabled(true);
 			{
 				std::scoped_lock lock(_batchWriteMutex);
-				this->_batch.AddCommand(SignalEvent{ClientSignal::ReadyToPlay});
+				this->_batch.commands.emplace_back(SignalEvent{.signal = ClientSignal::ReadyToPlay});
 			}
 		}
 		else
 		{
 			++_reconnectAttempts;
-			NetworkLogger::WriteError("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
+			Log::Error("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
 										  + std::to_string(MaxReconnectAttempts) + "): " + ec.message());
 
 			if (_reconnectAttempts < MaxReconnectAttempts)
@@ -94,7 +94,7 @@ void Client::TryConnect()
 			}
 			else
 			{
-				NetworkLogger::WriteError("Client gave up after " + std::to_string(MaxReconnectAttempts) + " attempts");
+				Log::Error("Client gave up after " + std::to_string(MaxReconnectAttempts) + " attempts");
 			}
 		}
 	});
@@ -208,7 +208,7 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 	}
 
 	CommandBatch farewell;
-	farewell.AddCommand(Disconnect{reason});
+	farewell.commands.emplace_back(Disconnect{.reason = reason});
 	SendCommand(farewell);
 
 	_isConnected = false;
@@ -238,7 +238,7 @@ void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 		std::swap(batch, _batch);
 	}
 
-	if (!batch.IsEmpty())
+	if (!batch.commands.empty())
 	{
 		SendCommand(batch);
 	}
@@ -253,13 +253,13 @@ void Client::OnFire(const FireEvent& event) { SendKeyState(InputSignal::Fire, ev
 void Client::OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(SignalEvent{ClientSignal::ReadyToPlay});
+	_batch.commands.emplace_back(SignalEvent{.signal = ClientSignal::ReadyToPlay});
 }
 
 void Client::OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(KeyStateChange{PlayerTag::None, InputSignal::PauseReleased, event.isPaused});
+	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::None, .action = InputSignal::PauseReleased, .isPressed = event.isPaused});
 }
 
 void Client::StartReading()
@@ -286,106 +286,82 @@ void Client::StartReading()
 	_channel->StartReading();
 }
 
-
 void Client::SendKeyState(const InputSignal action, const bool state)
 {
-	// NetworkLogger::LogClientOut(state);
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(KeyStateChange{PlayerTag::P2, action, state});
+	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::P2, .action = action, .isPressed = state});
 }
 
 void Client::OnPositionChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<PositionChange>(command);
-	const auto pos = cmd.GetPos();
-	const auto dir = cmd.GetDir();
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, pos, dir, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<PositionChange>(command)]()
 	{
-		_events->EmitEvent(Key(uuid), ClientInPosEvent{.pos = pos, .dir = dir});
+		_events->EmitEvent(Key(cmd.uuid), ClientInPosEvent{.pos = cmd.pos, .dir = cmd.dir});
 	});
 }
 
 void Client::OnTankShot(const AnyCommand& command)
 {
-	const auto& cmd = std::get<TankShot>(command);
-	const auto who = cmd.GetWho();
-	const auto dir = cmd.GetDir();
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, who, dir, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<TankShot>(command)]()
 	{
-		_events->EmitEvent(Key(who), ClientInShotEvent{.dir = dir, .bulletUuid = uuid});
+		_events->EmitEvent(Key(cmd.who), ClientInShotEvent{.dir = cmd.dir, .bulletUuid = cmd.uuid});
 	});
 }
 
 void Client::OnHealthChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<HealthChange>(command);
-	const auto uuid = cmd.GetUuid();
-	const auto health = cmd.GetHealth();
-
-	_commandQueue.Enqueue([this, uuid, health]()
+	_commandQueue.Enqueue([this, cmd = std::get<HealthChange>(command)]()
 	{
-		_events->EmitEvent(Key(uuid), ClientInHealthEvent{.health = health});
+		_events->EmitEvent(Key(cmd.uuid), ClientInHealthEvent{.health = cmd.health});
 	});
 }
 
 void Client::OnDispose(const AnyCommand& command)
 {
-	const auto& cmd = std::get<Dispose>(command);
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<Dispose>(command)]()
 	{
-		_events->EmitEvent(Key(uuid), ClientInDisposeEvent{});
+		_events->EmitEvent(Key(cmd.uuid), ClientInDisposeEvent{});
 	});
 }
 
 void Client::OnStatisticsChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<StatisticsChange>(command);
-	const auto type = cmd.GetStatisticsType();
-	const auto author = cmd.GetAuthor();
-	const auto fraction = cmd.GetFraction();
-
-	_commandQueue.Enqueue([this, type, author, fraction]()
+	_commandQueue.Enqueue([this, cmd = std::get<StatisticsChange>(command)]()
 	{
-		switch (type)
+		switch (cmd.statisticsType)
 		{
 			case StatisticsType::BulletHit:
-				_events->EmitEvent(ClientInBulletHitEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInBulletHitEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::EnemyHit:
-				_events->EmitEvent(ClientInEnemyHitEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInEnemyHitEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::PlayerOneHit:
-				_events->EmitEvent(ClientInPlayerOneHitEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInPlayerOneHitEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::PlayerTwoHit:
-				_events->EmitEvent(ClientInPlayerTwoHitEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInPlayerTwoHitEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::EnemyDied:
-				_events->EmitEvent(ClientInEnemyDiedEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInEnemyDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::PlayerOneDied:
-				_events->EmitEvent(ClientInPlayerOneDiedEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInPlayerOneDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::PlayerTwoDied:
-				_events->EmitEvent(ClientInPlayerTwoDiedEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInPlayerTwoDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::BrickWallDied:
-				_events->EmitEvent(ClientInBrickWallDiedEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInBrickWallDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::SteelWallDied:
-				_events->EmitEvent(ClientInSteelWallDiedEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInSteelWallDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::BonusPickup:
-				_events->EmitEvent(ClientInBonusPickupEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInBonusPickupEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 			case StatisticsType::BonusDestroyed:
-				_events->EmitEvent(ClientInBonusDestroyedEvent{.author = author, .fraction = fraction});
+				_events->EmitEvent(ClientInBonusDestroyedEvent{.author = cmd.author, .fraction = cmd.fraction});
 				break;
 		}
 	});
@@ -393,156 +369,119 @@ void Client::OnStatisticsChange(const AnyCommand& command)
 
 void Client::OnKeyStateChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<KeyStateChange>(command);
-	const InputSignal signal = cmd.GetAction();
-	const bool isEnable = cmd.GetIsEnable();
-
-	_commandQueue.Enqueue([this, signal, isEnable]()
+	_commandQueue.Enqueue([this, cmd = std::get<KeyStateChange>(command)]()
 	{
-		if (signal == InputSignal::PauseStatus)
+		if (cmd.action == InputSignal::PauseStatus)
 		{
-			_events->EmitEvent(PauseStatusEvent{.isPaused = isEnable});
+			_events->EmitEvent(PauseStatusEvent{.isPaused = cmd.isPressed});
 			return;
 		}
 
-		NetworkLogger::WriteLog("Client::OnKeyStateChange: unexpected signal "
-								+ std::to_string(static_cast<int>(signal)));
+		Log::Info("Client::OnKeyStateChange: unexpected signal "
+								+ std::to_string(static_cast<int>(cmd.action)));
 	});
 }
 
 void Client::OnGameStateChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<GameStateChange>(command);
-	const auto gameState = cmd.GetGameState();
-
-	_commandQueue.Enqueue([this, gameState]()
+	_commandQueue.Enqueue([this, cmd = std::get<GameStateChange>(command)]()
 	{
-		if (gameState == "PlayersTeamIsWon")
+		if (cmd.gameState == "PlayersTeamIsWon")
 		{
 			this->_events->EmitEvent(PlayersTeamIsWonEvent{});
 		}
-		else if (gameState == "EnemiesTeamIsWon")
+		else if (cmd.gameState == "EnemiesTeamIsWon")
 		{
 			this->_events->EmitEvent(EnemiesTeamIsWonEvent{});
 		}
 		else
 		{
-			NetworkLogger::WriteLog("Client::OnGameStateChange: unrecognized game state \"" + gameState + "\"");
+			Log::Info("Client::OnGameStateChange: unrecognized game state \"" + cmd.gameState + "\"");
 		}
 	});
 }
 
 void Client::OnFortressChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<FortressChange>(command);
-	const FortressState state = cmd.GetState();
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, state, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<FortressChange>(command)]()
 	{
 		//NOTE: no default - the compiler flags an unhandled state, and only an off-enum value from the
 		//wire reaches past the switch
-		switch (state)
+		switch (cmd.state)
 		{
 			case FortressState::Died:
-				_events->EmitEvent(Key(uuid), ClientInFortressDiedEvent{});
+				_events->EmitEvent(Key(cmd.uuid), ClientInFortressDiedEvent{});
 				return;
 			case FortressState::ToBrick:
-				_events->EmitEvent(Key(uuid), ClientInFortressToBrickEvent{});
+				_events->EmitEvent(Key(cmd.uuid), ClientInFortressToBrickEvent{});
 				return;
 			case FortressState::ToSteel:
-				_events->EmitEvent(Key(uuid), ClientInFortressToSteelEvent{});
+				_events->EmitEvent(Key(cmd.uuid), ClientInFortressToSteelEvent{});
 				return;
 		}
 
-		NetworkLogger::WriteError("Client::OnFortressChange: unknown state "
-								  + std::to_string(static_cast<int>(state)));
+		Log::Error("Client::OnFortressChange: unknown state "
+								  + std::to_string(static_cast<int>(cmd.state)));
 	});
 }
 
 void Client::OnBonusSpawn(const AnyCommand& command)
 {
-	const auto& cmd = std::get<BonusSpawn>(command);
-	const auto pos = cmd.GetPos();
-	const auto bonusType = cmd.GetBonusType();
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, pos, bonusType, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<BonusSpawn>(command)]()
 	{
-		_events->EmitEvent(ClientInBonusSpawnEvent{.pos = pos, .type = bonusType, .uuid = uuid});
+		_events->EmitEvent(ClientInBonusSpawnEvent{.pos = cmd.pos, .type = cmd.bonusType, .uuid = cmd.uuid});
 	});
 }
 
 void Client::OnBonusDeSpawn(const AnyCommand& command)
 {
-	const auto& cmd = std::get<BonusDeSpawn>(command);
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<BonusDeSpawn>(command)]()
 	{
-		_events->EmitEvent(ClientInBonusDeSpawnEvent{.uuid = uuid});
+		_events->EmitEvent(ClientInBonusDeSpawnEvent{.uuid = cmd.uuid});
 	});
 }
 
 void Client::OnRespawnTank(const AnyCommand& command)
 {
-	const auto& cmd = std::get<RespawnTank>(command);
-	const auto tankType = cmd.GetTankType();
-	const auto uuid = cmd.GetUuid();
-	const auto rect = cmd.GetRect();
-
-	_commandQueue.Enqueue([this, tankType, uuid, rect]()
+	_commandQueue.Enqueue([this, cmd = std::get<RespawnTank>(command)]()
 	{
-		_events->EmitEvent(ClientInRespawnTankEvent{.type = tankType, .uuid = uuid, .rect = rect});
+		_events->EmitEvent(ClientInRespawnTankEvent{.type = cmd.tankType, .uuid = cmd.uuid, .rect = cmd.rect});
 	});
 }
 
 void Client::OnObstacleSpawn(const AnyCommand& command)
 {
-	const auto& cmd = std::get<ObstacleSpawn>(command);
-	const auto rect = cmd.GetRect();
-	const auto obstacleType = cmd.GetObstacleType();
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, rect, obstacleType, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<ObstacleSpawn>(command)]()
 	{
-		_events->EmitEvent(ClientInObstacleSpawnEvent{.rect = rect, .type = obstacleType, .uuid = uuid});
+		_events->EmitEvent(ClientInObstacleSpawnEvent{.rect = cmd.rect, .type = cmd.obstacleType, .uuid = cmd.uuid});
 	});
 }
 
 void Client::OnTankSpawnComplete(const AnyCommand& command)
 {
-	const auto& cmd = std::get<TankSpawnComplete>(command);
-	const auto uuid = cmd.GetUuid();
-
-	_commandQueue.Enqueue([this, uuid]()
+	_commandQueue.Enqueue([this, cmd = std::get<TankSpawnComplete>(command)]()
 	{
-		_events->EmitEvent(ClientInTankSpawnCompleteEvent{.uuid = uuid});
+		_events->EmitEvent(ClientInTankSpawnCompleteEvent{.uuid = cmd.uuid});
 	});
 }
 
 void Client::OnBonusStatus(const AnyCommand& command)
 {
-	const auto& cmd = std::get<BonusStatus>(command);
-	const auto bonusType = cmd.GetBonusType();
-	const auto name = cmd.GetName();
-	const auto isEnable = cmd.GetIsEnable();
-
-	_commandQueue.Enqueue([this, bonusType, name, isEnable]()
+	_commandQueue.Enqueue([this, cmd = std::get<BonusStatus>(command)]()
 	{
-		switch (bonusType)
+		switch (cmd.bonusType)
 		{
 			case BonusType::Helmet:
-				_events->EmitEvent(Key(name), ClientInBonusHelmetPickupEvent{.isEnable = isEnable});
+				_events->EmitEvent(Key(cmd.name), ClientInBonusHelmetPickupEvent{.isEnable = cmd.isEnable});
 				break;
 			case BonusType::Star:
-				_events->EmitEvent(Key(name), ClientInBonusStarPickupEvent{});
+				_events->EmitEvent(Key(cmd.name), ClientInBonusStarPickupEvent{});
 				break;
 			case BonusType::Caliber:
-				_events->EmitEvent(Key(name), ClientInBonusCaliberPickupEvent{});
+				_events->EmitEvent(Key(cmd.name), ClientInBonusCaliberPickupEvent{});
 				break;
 			case BonusType::Tank:
-				_events->EmitEvent(ClientInBonusTankPickupEvent{.name = name});
+				_events->EmitEvent(ClientInBonusTankPickupEvent{.name = cmd.name});
 				break;
 			default:
 				//NOTE: Server only ever constructs BonusStatus with Helmet/Star/Caliber/Tank
@@ -553,11 +492,9 @@ void Client::OnBonusStatus(const AnyCommand& command)
 	});
 }
 
-
 void Client::OnDisconnect(const AnyCommand& command)
 {
-	const auto& cmd = std::get<Disconnect>(command);
-	const DisconnectReason reason = cmd.GetReason();
+	const auto reason = std::get<Disconnect>(command).reason;
 
 	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
 	//thread drains the queue, and HandleDisconnect must already know why
@@ -571,12 +508,6 @@ void Client::OnDisconnect(const AnyCommand& command)
 
 void Client::SendCommand(const CommandBatch& command)
 {
-	std::ostringstream archiveStream;
-	{
-		ser20::PortableBinaryOutputArchive oa(archiveStream);
-		oa(command);
-	}
-
-	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(archiveStream.str())));
+	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(network::Serialize(command))));
 }
 }//namespace network::commands

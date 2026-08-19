@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 #include "enums/Direction.h"
 #include "utils/Uuid.h"
 #include <string>

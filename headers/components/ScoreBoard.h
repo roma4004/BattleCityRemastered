@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "enums/GameMode.h"
 
 #include <memory>
 #include <vector>
 
+class GameConfig;
 class EventSystem;
 class GameStatistics;
 struct GameResetEvent;
-struct GameModeChangedToEvent;
 struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
 struct MenuShowedEvent;
@@ -35,12 +35,11 @@ class ScoreBoard final
 	unsigned short _enemyRespawnCount{20u};
 	unsigned short _playerOneRepawnCount{3u};
 	unsigned short _playerTwoRespawnCount{3u};
-	GameMode _gameMode{};
+	GameConfig& _gameConfig;
 
 	void Subscribe();
 
 	void OnGameReset(const GameResetEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
 	void OnMenuShowed(const MenuShowedEvent& event);
@@ -59,7 +58,7 @@ class ScoreBoard final
 	void DisplayScore(bool isDisplayed);
 
 public:
-	ScoreBoard(UPoint windowSize, const std::shared_ptr<EventSystem>& events);
+	ScoreBoard(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares
 	//GameStatistics, held below by unique_ptr, so an in-header default would need it complete here.

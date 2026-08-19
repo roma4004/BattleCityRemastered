@@ -45,7 +45,7 @@ public:
 	~Bonus() override;
 
 	void Subscribe();
-	void SubscribeAsHost();
+	void SubscribeAsAuthority();
 	void SubscribeAsClient();
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;

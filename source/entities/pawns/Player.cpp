@@ -37,7 +37,7 @@ void Player::Move(const Direction direction, const double deltaTime,
 		const FPoint pos = GetPos();
 		_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
-		if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
@@ -80,7 +80,7 @@ void Player::TickUpdate(const double deltaTime)
 			const FPoint pos = GetPos();
 			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});
 
-			if (_gameMode == GameMode::PlayAsHost)// NOTE: replication position to the client
+			if (IsHost(_gameMode))
 			{
 				_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 			}

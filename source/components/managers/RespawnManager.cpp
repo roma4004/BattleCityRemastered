@@ -47,7 +47,7 @@ void RespawnManager::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
 
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
 
 	OnGameModeChange();
 }
@@ -110,7 +110,7 @@ void RespawnManager::SetPlayerNeedRespawn()
 	constexpr auto player1Id = static_cast<size_t>(TankType::PLAYER1);
 	_slots[player1Id].isAvailable = true;
 
-	if (_gameMode != GameMode::OnePlayer)
+	if (HasSecondPlayer(_gameMode))
 	{
 		constexpr auto player2Id = static_cast<size_t>(TankType::PLAYER2);
 		_slots[player2Id].isAvailable = true;
@@ -167,7 +167,7 @@ void RespawnManager::OnBonusTank(const std::string& author)
 		ChangeRespawnCount(1, RespawnGroup::PLAYER_TWO);
 	}
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutBonusTankPickupEvent{.author = author});
 	}
@@ -226,7 +226,7 @@ void RespawnManager::OnEnemyDied(const bool isAvailable)
 	if (isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
 	{
 		_events->EmitEvent(PlayersTeamIsWonEvent{});
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutPlayersTeamIsWonEvent{});
 		}
@@ -239,7 +239,7 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 	if (isAvailable == false && _playersSpawnCount == _playersDeathCount)
 	{
 		_events->EmitEvent(EnemiesTeamIsWonEvent{});
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutEnemiesTeamIsWonEvent{});
 		}

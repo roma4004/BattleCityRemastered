@@ -1,5 +1,5 @@
 #include "components/managers/RenderManager.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "application/SDL_Config.h"
 #include "components/EventSystem.h"

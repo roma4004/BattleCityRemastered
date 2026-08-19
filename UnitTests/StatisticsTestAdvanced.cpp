@@ -1,5 +1,6 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
@@ -14,7 +15,8 @@ class StatisticsTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-pa
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	GameConfig _gameConfig{"", true};
+	ProjectConfig _projectConfig{"", true};
+	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
 	Uuid _uuid{};

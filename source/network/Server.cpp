@@ -10,10 +10,10 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "network/commands/CommandBatch.h"
-#include "utils/NetworkLogger.h"
+#include "network/Serializer.h"
+#include "utils/Log.h"
 #include <algorithm>
 #include <boost/asio/strand.hpp>
-#include <ser20/archives/portable_binary.hpp>
 #include <mutex>
 
 namespace network::commands
@@ -54,31 +54,22 @@ void Session::Shutdown(const DisconnectReason reason, std::function<void()> onCl
 	}
 
 	CommandBatch farewell;
-	farewell.AddCommand(Disconnect{reason});
-
-	std::ostringstream archiveStream;
-	{
-		ser20::PortableBinaryOutputArchive oa(archiveStream);
-		oa(farewell);
-	}
+	farewell.commands.emplace_back(Disconnect{.reason = reason});
 
 	//NOTE: straight to the channel - Server's batch is flushed by the send thread once a frame,
 	//and shutdown is exactly when that stops happening
-	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(archiveStream.str())));
+	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(network::Serialize(farewell))));
 	_channel->CloseAfterFlush(std::move(onClosed));
 }
 
 void Session::OnDisconnect(const AnyCommand& command)
 {
-	const auto& cmd = std::get<Disconnect>(command);
-	const DisconnectReason reason = cmd.GetReason();
-
-	_commandQueue.Enqueue([this, reason]()
+	_commandQueue.Enqueue([this, cmd = std::get<Disconnect>(command)]()
 	{
 		//NOTE: on the game thread, not the network one - closing makes the session collectable, and
 		//collecting it before this queue is drained would take the event with it
 		_channel->Close();
-		_events->EmitEvent(ServerInDisconnectEvent{.reason = reason});
+		_events->EmitEvent(ServerInDisconnectEvent{.reason = cmd.reason});
 	});
 }
 
@@ -112,12 +103,9 @@ void Session::Start()
 
 void Session::OnSignalEvent(const AnyCommand& command)
 {
-	const auto& cmd = std::get<SignalEvent>(command);
-	const ClientSignal signal = cmd.GetSignal();
-
-	_commandQueue.Enqueue([this, signal]()
+	_commandQueue.Enqueue([this, cmd = std::get<SignalEvent>(command)]()
 	{
-		switch (signal)
+		switch (cmd.signal)
 		{
 			case ClientSignal::ReadyToPlay:
 				_events->EmitEvent(ServerInClientReadyToStartGameEvent{});
@@ -150,29 +138,22 @@ const std::unordered_map<InputSignal, Session::InputEmitter> Session::kInputEmit
 
 void Session::OnKeyStateChange(const AnyCommand& command)
 {
-	const auto& cmd = std::get<KeyStateChange>(command);
-	const PlayerTag tag = cmd.GetTag();
-	const InputSignal action = cmd.GetAction();
-	const bool isEnable = cmd.GetIsEnable();
-
-	_commandQueue.Enqueue([this, tag, action, isEnable]()//TODO: validate each command, security risk
+	_commandQueue.Enqueue([this, cmd = std::get<KeyStateChange>(command)]()//TODO: validate each command, security risk
 	{
-		const auto it = kInputEmitters.find(action);
+		const auto it = kInputEmitters.find(cmd.action);
 		if (it == kInputEmitters.end())
 		{
-			NetworkLogger::WriteError("Session::OnKeyStateChange: unhandled input signal "
-									  + std::to_string(static_cast<int>(action)));
+			Log::Error("Session::OnKeyStateChange: unhandled input signal "
+									  + std::to_string(static_cast<int>(cmd.action)));
 			return;
 		}
 
 		//NOTE: the local bus is still keyed by the "P1"/"P2" string, only the wire is typed
-		it->second(*_events, tag == PlayerTag::P1 ? "P1" : "P2", isEnable);
+		it->second(*_events, cmd.tag == PlayerTag::P1 ? "P1" : "P2", cmd.isPressed);
 	});
 }
 
-
 void Session::DoWrite(std::shared_ptr<const std::string> message) { _channel->Send(std::move(message)); }
-
 
 Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
@@ -208,7 +189,7 @@ void Server::StartSendThread()
 				this->_sendQueue.pop();
 			}
 
-			if (!batch.IsEmpty())
+			if (!batch.commands.empty())
 			{
 				try
 				{
@@ -216,7 +197,7 @@ void Server::StartSendThread()
 				}
 				catch (const std::exception& e)
 				{
-					NetworkLogger::WriteError(std::string("Server send thread: ") + e.what());
+					Log::Error(std::string("Server send thread: ") + e.what());
 
 					// retry send
 					std::scoped_lock lock(this->_sendQueueMutex);
@@ -224,7 +205,7 @@ void Server::StartSendThread()
 				}
 				catch (...)
 				{
-					NetworkLogger::WriteError("Server send thread error: unknown exception");
+					Log::Error("Server send thread error: unknown exception");
 				}
 			}
 		}
@@ -350,61 +331,61 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 void Server::OnPauseStatus(const ServerOutPauseStatusEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(KeyStateChange{PlayerTag::None, InputSignal::PauseStatus, event.isPaused});
+	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::None, .action = InputSignal::PauseStatus, .isPressed = event.isPaused});
 }
 
 void Server::OnPlayersTeamIsWon(const ServerOutPlayersTeamIsWonEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(GameStateChange{"PlayersTeamIsWon"});
+	_batch.commands.emplace_back(GameStateChange{.gameState = "PlayersTeamIsWon"});
 }
 
 void Server::OnEnemiesTeamIsWon(const ServerOutEnemiesTeamIsWonEvent&)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(GameStateChange{"EnemiesTeamIsWon"});
+	_batch.commands.emplace_back(GameStateChange{.gameState = "EnemiesTeamIsWon"});
 }
 
 void Server::OnPos(const ServerOutPosEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(PositionChange{event.who, event.pos, event.dir, event.uuid});
+	_batch.commands.emplace_back(PositionChange{.who = event.who, .pos = event.pos, .dir = event.dir, .uuid = event.uuid});
 }
 
 void Server::OnShot(const ServerOutShotEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(TankShot{event.who, event.dir, event.bulletUuid});
+	_batch.commands.emplace_back(TankShot{.who = event.who, .dir = event.dir, .uuid = event.bulletUuid});
 }
 
 void Server::OnHealth(const ServerOutHealthEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(HealthChange{event.who, event.health, event.uuid});
+	_batch.commands.emplace_back(HealthChange{.who = event.who, .health = event.health, .uuid = event.uuid});
 }
 
 void Server::OnDispose(const ServerOutDisposeEvent& event)//TODO: add who,
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(Dispose{"Bullet", event.uuid});
+	_batch.commands.emplace_back(Dispose{.who = "Bullet", .uuid = event.uuid});
 }
 
 void Server::OnRespawnTank(const ServerOutRespawnTankEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(RespawnTank{event.type, event.uuid, event.rect});
+	_batch.commands.emplace_back(RespawnTank{.tankType = event.type, .uuid = event.uuid, .rect = event.rect});
 }
 
 void Server::OnObstacleSpawn(const ServerOutObstacleSpawnEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(ObstacleSpawn{event.rect, event.type, event.uuid});
+	_batch.commands.emplace_back(ObstacleSpawn{.rect = event.rect, .obstacleType = event.type, .uuid = event.uuid});
 }
 
 void Server::OnTankSpawnComplete(const ServerOutTankSpawnCompleteEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(TankSpawnComplete{event.uuid});
+	_batch.commands.emplace_back(TankSpawnComplete{.uuid = event.uuid});
 }
 
 //NOTE: GameStatistics.cpp emits one of these 11 distinct types directly. StatisticsChange's own
@@ -428,67 +409,67 @@ void Server::SubscribeStatistics()
 void Server::OnBulletHit(const ServerOutBulletHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::BulletHit, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::BulletHit, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnEnemyHit(const ServerOutEnemyHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::EnemyHit, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::EnemyHit, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnPlayerOneHit(const ServerOutPlayerOneHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerOneHit, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::PlayerOneHit, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnPlayerTwoHit(const ServerOutPlayerTwoHitEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerTwoHit, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::PlayerTwoHit, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnEnemyDied(const ServerOutEnemyDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::EnemyDied, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::EnemyDied, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnPlayerOneDied(const ServerOutPlayerOneDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerOneDied, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::PlayerOneDied, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnPlayerTwoDied(const ServerOutPlayerTwoDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::PlayerTwoDied, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::PlayerTwoDied, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnBrickWallDied(const ServerOutBrickWallDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::BrickWallDied, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::BrickWallDied, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnSteelWallDied(const ServerOutSteelWallDiedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::SteelWallDied, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::SteelWallDied, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnBonusPickup(const ServerOutBonusPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::BonusPickup, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::BonusPickup, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::OnBonusDestroyed(const ServerOutBonusDestroyedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(StatisticsChange{StatisticsType::BonusDestroyed, event.author, event.fraction});
+	_batch.commands.emplace_back(StatisticsChange{.statisticsType = StatisticsType::BonusDestroyed, .author = event.author, .fraction = event.fraction});
 }
 
 void Server::SubscribeBonus()
@@ -505,43 +486,43 @@ void Server::SubscribeBonus()
 void Server::OnBonusSpawn(const ServerOutBonusSpawnEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(BonusSpawn{event.pos, event.type, event.uuid});
+	_batch.commands.emplace_back(BonusSpawn{.pos = event.pos, .bonusType = event.type, .uuid = event.uuid});
 }
 
 void Server::OnBonusDeSpawn(const ServerOutBonusDeSpawnEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(BonusDeSpawn{event.uuid});
+	_batch.commands.emplace_back(BonusDeSpawn{.uuid = event.uuid});
 }
 
 void Server::OnFortressChange(const ServerOutFortressChangeEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(FortressChange{event.state, event.uuid});
+	_batch.commands.emplace_back(FortressChange{.state = event.state, .uuid = event.uuid});
 }
 
 void Server::OnBonusHelmetPickup(const ServerOutBonusHelmetPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(BonusStatus{event.name, BonusType::Helmet, event.isActive});
+	_batch.commands.emplace_back(BonusStatus{.name = event.name, .bonusType = BonusType::Helmet, .isEnable = event.isActive});
 }
 
 void Server::OnBonusStarPickup(const ServerOutBonusStarPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(BonusStatus{event.author, BonusType::Star});
+	_batch.commands.emplace_back(BonusStatus{.name = event.author, .bonusType = BonusType::Star});
 }
 
 void Server::OnBonusCaliberPickup(const ServerOutBonusCaliberPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(BonusStatus{event.author, BonusType::Caliber});
+	_batch.commands.emplace_back(BonusStatus{.name = event.author, .bonusType = BonusType::Caliber});
 }
 
 void Server::OnBonusTankPickup(const ServerOutBonusTankPickupEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.AddCommand(BonusStatus{event.author, BonusType::Tank});
+	_batch.commands.emplace_back(BonusStatus{.name = event.author, .bonusType = BonusType::Tank});
 }
 
 void Server::DoAccept()
@@ -554,7 +535,7 @@ void Server::DoAccept()
 		{
 			if (ec != boost::asio::error::operation_aborted)
 			{
-				NetworkLogger::WriteError("Server accept: " + ec.message());
+				Log::Error("Server accept: " + ec.message());
 			}
 		}
 		else
@@ -572,11 +553,11 @@ void Server::DoAccept()
 			}
 			catch (const std::exception& e)
 			{
-				NetworkLogger::WriteError(std::string("Server new session start: ") + e.what());
+				Log::Error(std::string("Server new session start: ") + e.what());
 			}
 			catch (...)
 			{
-				NetworkLogger::WriteError("Server new session start: unknown exception");
+				Log::Error("Server new session start: unknown exception");
 			}
 			DoAccept();
 		}
@@ -631,16 +612,8 @@ void Server::ProcessNetworkCommands() const
 
 void Server::SendCommand(const CommandBatch& command)
 {
-	std::ostringstream archiveStream;
-	{
-		ser20::PortableBinaryOutputArchive oa(archiveStream);
-		oa(command);
-	}
 
-	// NetworkLogger::LogServerOut(command.GetClassNamesW());
-
-	const auto& basicString = archiveStream.str();
-	// NetworkLogger::WriteLog("\nraw data: " + basicString +" =", true);
+	const std::string basicString = network::Serialize(command);
 	SendToAll(std::make_shared<const std::string>(network::FrameMessage(basicString)));
 }
 }//namespace network::commands

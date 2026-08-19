@@ -4,7 +4,7 @@
 #include <chrono>
 
 class EventSystem;
-class GameConfig;
+class ProjectConfig;
 struct CalculateActualFpsEvent;
 struct FrameStartEvent;
 struct PostDrawUserInterfaceEvent;
@@ -21,7 +21,7 @@ class FramePerSecondManager
 	unsigned int _targetFps{60u};
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
-	GameConfig& _gameConfig;
+	const ProjectConfig& _projectConfig;
 
 	void Subscribe();
 	void OnFrameStart(const FrameStartEvent&);
@@ -30,7 +30,7 @@ class FramePerSecondManager
 	void CountFpsAndDeltaTime(const CalculateActualFpsEvent&);
 
 public:
-	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	FramePerSecondManager(const std::shared_ptr<EventSystem>& events, const ProjectConfig& projectConfig);
 
 	~FramePerSecondManager() = default;
 };

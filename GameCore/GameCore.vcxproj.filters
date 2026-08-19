@@ -22,6 +22,9 @@
     <Filter Include="headers\components\managers">
       <UniqueIdentifier>{8cff987a-38bf-2f96-eafb-cc4660b23c90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers\geometry">
+      <UniqueIdentifier>{a7f3c1e2-4b5d-4e6f-8a90-1c2d3e4f5a6b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="headers\entities">
       <UniqueIdentifier>{87950965-3ae6-cdc7-ed3d-700abb5e5b0f}</UniqueIdentifier>
     </Filter>
@@ -82,9 +85,6 @@
     <Filter Include="source\network">
       <UniqueIdentifier>{a44093d8-ccc4-2597-53ff-dbd2f91279d0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\network\commands">
-      <UniqueIdentifier>{6bca3e29-2091-56e8-16ff-d9c7443e3ba1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source\utils">
       <UniqueIdentifier>{b9ff25f0-4ddc-9157-3fcf-57a5653d87ba}</UniqueIdentifier>
     </Filter>
@@ -94,6 +94,9 @@
       <Filter>source\application</Filter>
     </ClCompile>
     <ClCompile Include="..\source\application\GameConfig.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\application\ProjectConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp">
@@ -270,57 +273,6 @@
     <ClCompile Include="..\source\network\CommandDispatcher.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\network\commands\BonusDeSpawn.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\BonusSpawn.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\BonusStatus.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\CommandBatch.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\Disconnect.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\Dispose.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\FortressChange.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\GameStateChange.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\HealthChange.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\KeyStateChange.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\ObstacleSpawn.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\PositionChange.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\RespawnTank.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\SignalEvent.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\StatisticsChange.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\TankShot.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\commands\TankSpawnComplete.cpp">
-      <Filter>source\network\commands</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\network\FrameChannel.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -333,13 +285,13 @@
     <ClCompile Include="..\source\network\ServerHandler.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\Serializer.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\utils\ColliderUtils.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\utils\Logger.cpp">
-      <Filter>source\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\utils\NetworkLogger.cpp">
+    <ClCompile Include="..\source\utils\Log.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\source\utils\Timer.cpp">
@@ -359,6 +311,9 @@
     <ClInclude Include="..\headers\application\GameConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\application\ProjectConfig.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\application\LaunchOptions.h">
       <Filter>headers\application</Filter>
     </ClInclude>
@@ -371,8 +326,8 @@
     <ClInclude Include="..\headers\behavior\ShootingBeh.h">
       <Filter>headers\behavior</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\Circle.h">
-      <Filter>headers</Filter>
+    <ClInclude Include="..\headers\geometry\Circle.h">
+      <Filter>headers\geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\AnimatedObjects.h">
       <Filter>headers\components</Filter>
@@ -539,8 +494,8 @@
     <ClInclude Include="..\headers\entities\BulletCalibre.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\entities\ObjRectangle.h">
-      <Filter>headers\entities</Filter>
+    <ClInclude Include="..\headers\geometry\ObjRectangle.h">
+      <Filter>headers\geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h">
       <Filter>headers\entities\obstacles</Filter>
@@ -698,6 +653,9 @@
     <ClInclude Include="..\headers\network\commands\CommandBatch.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\CommandSerialization.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\Disconnect.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -737,6 +695,12 @@
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\ObjRectangleSerialization.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\PointSerialization.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -755,16 +719,16 @@
     <ClInclude Include="..\headers\network\ServerHandler.h">
       <Filter>headers\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\Point.h">
-      <Filter>headers</Filter>
+    <ClInclude Include="..\headers\network\Serializer.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\geometry\Point.h">
+      <Filter>headers\geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ColliderUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\utils\Logger.h">
-      <Filter>headers\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\utils\NetworkLogger.h">
+    <ClInclude Include="..\headers\utils\Log.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\PixelUtils.h">

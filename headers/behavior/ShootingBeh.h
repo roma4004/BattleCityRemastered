@@ -8,9 +8,9 @@
 enum class Direction : char8_t;
 struct BulletCalibre;
 struct FPoint;
-struct UPoint;
 struct ObjRectangle;
 class BaseObj;
+class GameConfig;
 class EventSystem;
 class BulletPool;
 
@@ -19,7 +19,7 @@ class ShootingBeh final : public IShootable
 	Uuid& _uuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
-	UPoint& _windowSize;
+	const GameConfig& _gameConfig;
 	std::string& _name;
 	std::string& _fraction;
 	BulletCalibre& _calibre;
@@ -35,10 +35,9 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
-	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, UPoint& windowSize, std::string& name,
-				std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
-				const std::shared_ptr<EventSystem>& events);
+	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, std::string& fraction,
+				std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<BulletPool>& bulletPool,
+				BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~ShootingBeh() override;
 

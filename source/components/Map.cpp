@@ -2,7 +2,7 @@
 #include "components/EventSystem.h"
 #include "components/MapLoader.h"
 #include "components/events/SpawnEvents.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "enums/ObstacleType.h"
 
 namespace
@@ -17,7 +17,7 @@ Map::Map(const std::shared_ptr<EventSystem>& events)
 
 Map::~Map() = default;
 
-std::expected<void, MapError> Map::LoadFromFile(const std::string& path)
+std::expected<void, MapError> Map::LoadFromFile(const std::filesystem::path& path)
 {
 	return MapLoader::LoadFromFile(path).transform([this](MapData data) { _data = std::move(data); });
 }

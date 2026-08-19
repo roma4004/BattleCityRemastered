@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Point.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/Uuid.h"
 #include <functional>
@@ -25,7 +24,6 @@ class MoveLikeTankBeh final : public IMoveBeh
 	float _downVelocity{};
 	float _rightVelocity{};
 	float _driftMultiplicator{1.5f};
-	UPoint& _windowSize;
 	std::string& _name;
 	std::string& _fraction;
 	GameConfig& _gameConfig;
@@ -45,8 +43,8 @@ protected:
 	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 
 public:
-	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, UPoint& windowSize,
-					std::string& name, std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
+					std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 					BonusEffectProperty& effects, GameConfig& gameConfig);
 
 	~MoveLikeTankBeh() override = default;

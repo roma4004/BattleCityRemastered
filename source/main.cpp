@@ -1,45 +1,46 @@
 #include "application/CommandLineParser.h"
 #include "application/Game.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "application/SDL_Config.h"
-#include "utils/NetworkLogger.h"
-#include <iostream>
+#include "utils/Log.h"
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
 int main(const int argc, char* argv[])
 {
-	NetworkLogger::SetConsoleLogging(true);
-	NetworkLogger::SetFileLogging(true, "network_log.txt");
-	NetworkLogger::SetVerbosityLevel(1);
+	Log::SetConsole(true);
+	Log::SetFile(true);
+	Log::SetLevel(Log::Level::Normal);
 
 	const auto launchOptions = CommandLineParser::Parse(argc, argv);
 	if (!launchOptions)
 	{
-		std::cerr << "bad argument '" << launchOptions.error().arg << "': " << launchOptions.error().reason << '\n';
+		Log::Error("bad argument '" + launchOptions.error().arg + "': " + launchOptions.error().reason);
 
 		return 1;
 	}
 
-	GameConfig gameConfig{"config.ini"};//TODO: refactor to std::filesystem::path and ResourceManager
+	const ProjectConfig projectConfig{"config.ini"};
 	//NOTE: not fatal - defaults play fine. Said out loud because the file is kept as it is, so
 	//otherwise the settings would just look ignored.
-	if (const auto& configError = gameConfig.LoadError())
+	if (const auto& configError = projectConfig.LoadError())
 	{
-		std::cerr << "config " << configError->path << " line " << configError->line << ": " << configError->reason
-				  << ", running on defaults and leaving the file untouched" << '\n';
+		Log::Error("config " + configError->path.string() + " line " + std::to_string(configError->line) + ": "
+				   + configError->reason + ", running on defaults and leaving the file untouched");
 	}
 
+	GameConfig gameConfig{projectConfig};
 	gameConfig.Apply(*launchOptions);
 
-	SDL_Config sdlEnv{gameConfig};
+	SDL_Config sdlEnv{gameConfig, projectConfig};
 	if (const auto init = sdlEnv.Init(); !init)
 	{
-		std::cerr << init.error().stage << ": " << init.error().detail << '\n';
+		Log::Error(init.error().stage + ": " + init.error().detail);
 
 		return 1;
 	}
 
-	Game game{gameConfig, sdlEnv, launchOptions->gameMode};
+	Game game{gameConfig, projectConfig, sdlEnv, launchOptions->gameMode};
 	game.Run();
 
 	return game.Result();

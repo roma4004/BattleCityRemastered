@@ -1,28 +1,25 @@
 #include "components/EventSystem.h"
 
 #include <cassert>
-#include <iostream>
+#include "utils/Log.h"
+#include <string>
 
 namespace detail
 {
 void ReportListenerException(const char* const context, const char* const what,
 							 const std::source_location& origin) noexcept
 {
-	std::cerr << (what ? "Exception in " : "Unknown exception in ") << context << " registered at ";
-	if (origin.line() > 0u)
-	{
-		std::cerr << origin.file_name() << ':' << origin.line();
-	}
-	else
-	{
-		std::cerr << "unknown location";
-	}
-
+	std::string message = what ? "Exception in " : "Unknown exception in ";
+	message += context;
+	message += " registered at ";
+	message += origin.line() > 0u ? std::string{origin.file_name()} + ':' + std::to_string(origin.line())
+								  : std::string{"unknown location"};
 	if (what)
 	{
-		std::cerr << ": " << what;
+		message += std::string{": "} + what;
 	}
-	std::cerr << '\n';
+
+	Log::Error(message);
 	//NOTE: deliberately swallowed - the remaining listeners still get their event
 }
 
@@ -30,9 +27,9 @@ void ReportListenerException(const char* const context, const char* const what,
 void ReportLeftoverListener(const char* const kind, const char* const eventTypeName,
 							const std::source_location& origin) noexcept
 {
-	std::cerr << "EventSystem: " << kind << " \"" << eventTypeName << "\" still has a listener registered at "
-			<< origin.file_name() << ':' << origin.line() << " (" << origin.function_name()
-			<< ") - its Unsubscribe()/RemoveListener() was never called.\n";
+	Log::Error(std::string{"EventSystem: "} + kind + " \"" + eventTypeName + "\" still has a listener registered at "
+			   + origin.file_name() + ':' + std::to_string(origin.line()) + " (" + origin.function_name()
+			   + ") - its Unsubscribe()/RemoveListener() was never called.");
 }
 #endif
 }// namespace detail

@@ -1,5 +1,6 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -29,7 +30,8 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
-	GameConfig _gameConfig{"", true};
+	ProjectConfig _projectConfig{"", true};
+	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};

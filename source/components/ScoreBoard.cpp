@@ -1,4 +1,5 @@
 #include "components/ScoreBoard.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/GameStatistics.h"
 #include "components/events/SpawnEvents.h"
@@ -11,14 +12,15 @@
 #include <iomanip>
 #include <sstream>
 
-ScoreBoard::ScoreBoard(const UPoint windowSize, const std::shared_ptr<EventSystem>& events)
+ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 25}
 	, _events{events}
 	, _statistics{std::make_unique<GameStatistics>(events)}
+	, _gameConfig{gameConfig}
 {
 	Subscribe();
 
-	_windowHeight = static_cast<int>(windowSize.y);
+	_windowHeight = static_cast<int>(gameConfig.windowSize.y);
 }
 
 ScoreBoard::~ScoreBoard() = default;
@@ -27,8 +29,6 @@ void ScoreBoard::Subscribe()
 {
 	//NOTE: avoid showing score on game start
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameReset));
-
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameModeChangedTo));
 
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnRespawnCountChangedTo));
 
@@ -45,7 +45,6 @@ void ScoreBoard::Subscribe()
 }
 
 void ScoreBoard::OnGameReset(const GameResetEvent&) { DisplayScore(false); }
-void ScoreBoard::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
 
 void ScoreBoard::OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event)
 {
@@ -201,7 +200,7 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
 {
-	if (isDisplayed && _gameMode == GameMode::Demo)
+	if (isDisplayed && _gameConfig.gameMode == GameMode::Demo)
 	{
 		return;
 	}

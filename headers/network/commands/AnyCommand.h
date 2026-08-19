@@ -17,8 +17,6 @@
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
 #include "enums/CommandType.h"
-//NOTE: no name from it appears here - it teaches ser20 how to (de)serialise a variant, found via ADL
-#include <ser20/types/variant.hpp>
 #include <variant>
 
 namespace network::commands
@@ -31,11 +29,7 @@ using AnyCommand = std::variant<
 
 inline CommandType GetCommandType(const AnyCommand& command)
 {
-	return std::visit([](const auto& cmd) { return cmd.GetType(); }, command);
+	return std::visit([](const auto& cmd) { return cmd.type; }, command);
 }
 
-inline const char* GetClassNameW(const AnyCommand& command)
-{
-	return std::visit([](const auto& cmd) { return cmd.GetClassNameW(); }, command);
-}
 }//namespace network::commands

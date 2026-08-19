@@ -29,7 +29,7 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	Subscribe();
 
 	//disable replication for fortress _obstacle
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = _rect, .type = ObstacleType::Fortress, .uuid = _uuid});
 	}
@@ -37,7 +37,7 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 
 void FortressWall::Subscribe()
 {
-	if (_gameMode == GameMode::PlayAsClient)
+	if (IsClient(_gameMode))
 	{
 		SubscribeAsClient();
 	}
@@ -77,7 +77,7 @@ void FortressWall::OnEnemyPickupShovel()
 {
 	_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = _uuid});
 	}
@@ -100,7 +100,7 @@ void FortressWall::OnPlayerPickupShovel()
 	{
 		_obstacle = std::make_unique<SteelWall>(_rect, _events, _uuid, _gameMode);
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = _uuid});
 		}
@@ -116,7 +116,7 @@ void FortressWall::OnShovelCooldownEnd()
 			_obstacle = std::make_unique<BrickWall>(_rect, _events, _uuid, _gameMode);
 		}
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = _uuid});
 		}
@@ -151,7 +151,7 @@ void FortressWall::TakeDamage(const unsigned int damage, const std::string& dama
 	{
 		_obstacle = std::unique_ptr<BrickWall>(nullptr);
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = _uuid});
 		}

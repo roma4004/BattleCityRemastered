@@ -1,5 +1,6 @@
 #pragma once
 #include "InitError.h"
+#include <filesystem>
 #include <SDL.h>//NOTE: do not replace with forward declaration, required for minGW
 #include <SDL_mixer.h>
 #include <SDL_render.h>
@@ -11,16 +12,18 @@
 #include <vector>
 
 class GameConfig;
+class ProjectConfig;
 
 struct SDL_Config final
 {
-	explicit SDL_Config(GameConfig& config);
+	SDL_Config(GameConfig& config, const ProjectConfig& projectConfig);
 	~SDL_Config();
 
 	//NOTE: the environment is this object's own fields - success carries nothing, failure says what refused
 	[[nodiscard]] std::expected<void, InitError> Init();
 
 	GameConfig& gameConfig;
+	const ProjectConfig& projectConfig;
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
@@ -48,10 +51,10 @@ private:
 	//NOTE: can fail like the rest; whether that is fatal is decided in Init(), not here
 	[[nodiscard]] std::expected<void, InitError> InitAudio();
 
-	[[nodiscard]] std::string PathFromConfig(std::string_view configKey) const;
-	[[nodiscard]] static std::expected<std::shared_ptr<SDL_Surface>, InitError> LoadSurface(const std::string& path);
+	[[nodiscard]] static std::expected<std::shared_ptr<SDL_Surface>, InitError> LoadSurface(
+			const std::filesystem::path& path);
 	[[nodiscard]] std::expected<std::shared_ptr<SDL_Texture>, InitError> CreateTexture(
-			const std::shared_ptr<SDL_Surface>& surface, const std::string& path) const;
+			const std::shared_ptr<SDL_Surface>& surface, const std::filesystem::path& path) const;
 	[[nodiscard]] std::expected<void, InitError> LoadTexturePair(std::string_view configKey,
 																 std::shared_ptr<SDL_Surface>& outSurface,
 																 std::shared_ptr<SDL_Texture>& outTexture);

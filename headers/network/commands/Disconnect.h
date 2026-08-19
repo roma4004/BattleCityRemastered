@@ -5,30 +5,10 @@
 
 namespace network::commands
 {
-class Disconnect
+//NOTE: wire DTO - serialization lives in CommandSerialization.h
+struct Disconnect final
 {
-	CommandType _type{CommandType::DISCONNECT};
-	DisconnectReason _reason{};
-
-public:
-	//for deserialization
-	Disconnect() = default;
-
-	//for serialization
-	explicit Disconnect(DisconnectReason reason);
-
-	[[nodiscard]] CommandType GetType() const noexcept;
-	[[nodiscard]] DisconnectReason GetReason() const noexcept;
-	[[nodiscard]] const char* GetClassNameW() const noexcept;
-
-	template<class Archive>
-	void serialize(Archive& ar, unsigned int /*version*/);
+	CommandType type{CommandType::DISCONNECT};
+	DisconnectReason reason{};
 };
-
-template<class Archive>
-void Disconnect::serialize(Archive& ar, const unsigned int)
-{
-	ar & _type;
-	ar & _reason;
-}
 }//namespace network::commands

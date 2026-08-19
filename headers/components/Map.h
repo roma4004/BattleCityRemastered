@@ -19,7 +19,7 @@ public:
 
 	~Map();
 
-	[[nodiscard]] std::expected<void, MapError> LoadFromFile(const std::string& path);
+	[[nodiscard]] std::expected<void, MapError> LoadFromFile(const std::filesystem::path& path);
 
 	[[nodiscard]] std::size_t GetCols() const { return _data.cols; }
 	[[nodiscard]] std::size_t GetRows() const { return _data.rows; }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Point.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/Point.h"
+#include "geometry/ObjRectangle.h"
 #include "utils/Uuid.h"
 #include <cstdint>
 #include <string>

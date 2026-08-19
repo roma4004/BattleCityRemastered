@@ -1,5 +1,5 @@
 #include "network/FrameChannel.h"
-#include "utils/NetworkLogger.h"
+#include "utils/Log.h"
 #include <boost/asio/post.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
@@ -77,13 +77,13 @@ void FrameChannel::CloseSocket()
 	std::ignore = _socket.shutdown(tcp::socket::shutdown_both, ec);
 	if (ec && ec != boost::asio::error::not_connected)
 	{
-		NetworkLogger::WriteError(_ownerName + " socket shutdown: " + ec.message());
+		Log::Error(_ownerName + " socket shutdown: " + ec.message());
 	}
 
 	std::ignore = _socket.close(ec);
 	if (ec)
 	{
-		NetworkLogger::WriteError(_ownerName + " socket close: " + ec.message());
+		Log::Error(_ownerName + " socket close: " + ec.message());
 	}
 }
 
@@ -108,7 +108,7 @@ void FrameChannel::ReadHeader()
 									if (ec != boost::asio::error::eof
 										&& ec != boost::asio::error::operation_aborted)
 									{
-										NetworkLogger::WriteError(_ownerName + " read: " + ec.message());
+										Log::Error(_ownerName + " read: " + ec.message());
 									}
 
 									ReportError();
@@ -118,7 +118,7 @@ void FrameChannel::ReadHeader()
 								const std::uint32_t payloadLength = DecodeFrameHeader(_readHeader.data());
 								if (payloadLength == 0u || payloadLength > kMaxFramePayloadSize)
 								{
-									NetworkLogger::WriteLog(_ownerName + ": bogus frame length "
+									Log::Info(_ownerName + ": bogus frame length "
 															+ std::to_string(payloadLength)
 															+ ", dropping connection");
 									ReportError();
@@ -142,7 +142,7 @@ void FrameChannel::ReadPayload(const std::uint32_t payloadLength)
 									if (ec != boost::asio::error::eof
 										&& ec != boost::asio::error::operation_aborted)
 									{
-										NetworkLogger::WriteError(_ownerName + " read: " + ec.message());
+										Log::Error(_ownerName + " read: " + ec.message());
 									}
 
 									ReportError();
@@ -175,7 +175,7 @@ void FrameChannel::Send(std::shared_ptr<const std::string> frame)
 		if (_writeQueue.size() >= MaxPendingFrames)
 		{
 			_writeQueue.pop_front();
-			NetworkLogger::WriteLog(_ownerName + ": pending queue full, dropped oldest frame");
+			Log::Info(_ownerName + ": pending queue full, dropped oldest frame");
 		}
 
 		_writeQueue.push_back(std::move(frame));
@@ -209,7 +209,7 @@ void FrameChannel::WriteNextFrame()
 									 if (ec != boost::asio::error::eof
 										 && ec != boost::asio::error::operation_aborted)
 									 {
-										NetworkLogger::WriteError(_ownerName + " write: " + ec.message());
+										Log::Error(_ownerName + " write: " + ec.message());
 									 }
 
 									 //NOTE: undelivered frame stays at the head, re-sent whole next time

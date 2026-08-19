@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Point.h"
-#include "entities/ObjRectangle.h"
+#include "geometry/Point.h"
+#include "geometry/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"

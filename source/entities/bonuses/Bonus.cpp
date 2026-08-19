@@ -1,5 +1,5 @@
 #include "entities/bonuses/Bonus.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -25,7 +25,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 {
 	Subscribe();
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(
 				ServerOutBonusSpawnEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = _bonusType, .uuid = uuid});
@@ -34,7 +34,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 
 Bonus::~Bonus()
 {
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutBonusDeSpawnEvent{.uuid = _uuid});
 	}
@@ -44,12 +44,12 @@ void Bonus::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Bonus::OnDraw));
 
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	IsAuthority(_gameMode) ? SubscribeAsAuthority() : SubscribeAsClient();
 }
 
 void Bonus::OnDraw(const DrawEvent&) const { Draw(); }
 
-void Bonus::SubscribeAsHost()
+void Bonus::SubscribeAsAuthority()
 {
 	_subs.push_back(_events->AddListener(this, &Bonus::OnTickUpdate));
 }

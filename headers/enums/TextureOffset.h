@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entities/ObjRectangle.h"
+#include "geometry/ObjRectangle.h"
 
 struct TextureOffset
 {

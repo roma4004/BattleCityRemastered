@@ -1,5 +1,5 @@
 #include "components/managers/FramePerSecondManager.h"
-#include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
@@ -7,9 +7,10 @@
 #include <cmath>//NOTE: need for cmake build
 #include <thread>
 
-FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events,
+											 const ProjectConfig& projectConfig)
 	: _events{events}
-	, _gameConfig{gameConfig}
+	, _projectConfig{projectConfig}
 {
 	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
 
@@ -35,8 +36,7 @@ void FramePerSecondManager::OnPostDrawUserInterface(const PostDrawUserInterfaceE
 
 void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 {
-	if (const bool isVsyncOn = _gameConfig.Get<bool>("Window.vsync", false);
-		!isVsyncOn)
+	if (!_projectConfig.IsVsyncOn())
 	{
 		const auto currentFrameDuration = std::chrono::duration<double>(
 				std::chrono::high_resolution_clock::now() - _startFrameTime);

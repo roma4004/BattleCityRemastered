@@ -13,7 +13,6 @@ class BaseObj;
 class EventSystem;
 class GameConfig;
 struct GameResetEvent;
-struct GameModeChangedToEvent;
 
 class BulletPool final
 {
@@ -24,12 +23,10 @@ class BulletPool final
 	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 	std::queue<std::shared_ptr<BaseObj>> _bullets{};
-	GameMode _gameMode{};
 	GameConfig& _gameConfig;
 	bool _isClearing{};
 
 	void OnGameReset(const GameResetEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
@@ -47,5 +44,4 @@ public:
 
 	void Clear();
 
-	[[nodiscard]] static std::string GetCurrentTimeString();
 };

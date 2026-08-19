@@ -1,13 +1,10 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 
 struct ObjRectangle final
 {
 	float x{}, y{}, w{}, h{};
-
-	template<class Archive>
-	void serialize(Archive& ar, unsigned int version);
 
 	[[nodiscard]] float Area() const;
 
@@ -37,13 +34,4 @@ inline ObjRectangle ObjRectangle::GetScaledBy(const float scale) const
 	rectAfterScale.y -= (rectAfterScale.h - h) / 2;
 
 	return rectAfterScale;
-}
-
-template<class Archive>
-void ObjRectangle::serialize(Archive& ar, const unsigned int /*version*/)
-{
-	ar & x;
-	ar & y;
-	ar & w;
-	ar & h;
 }

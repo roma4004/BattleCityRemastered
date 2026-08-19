@@ -1,5 +1,5 @@
 #include "behavior/MoveLikeTankBeh.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
@@ -9,16 +9,14 @@
 #include <memory>
 #include <ranges>
 
-MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, UPoint& windowSize,
-								 std::string& name, std::string& fraction,
-								 std::vector<std::shared_ptr<BaseObj>>* allObjects, BonusEffectProperty& effects,
-								 GameConfig& gameConfig)
+MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
+								 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+								 BonusEffectProperty& effects, GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
 	, _speed{speed}
 	, _effects{effects}
-	, _windowSize{windowSize}
 	, _name{name}
 	, _fraction{fraction}
 	, _gameConfig{gameConfig}
@@ -94,7 +92,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const d
 float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 									   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	const auto [maxX, maxY] = _windowSize;
+	const auto [maxX, maxY] = _gameConfig.windowSize;
 	auto minDist = static_cast<float>(maxX * maxY);
 	// float nearestDist = 0.f;
 	for (const auto& object: objects)
@@ -238,7 +236,7 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.Bottom() + speed < static_cast<float>(_windowSize.y))
+		_rect.Bottom() + speed < static_cast<float>(_gameConfig.windowSize.y))
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
@@ -280,7 +278,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 
 bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const float maxX = static_cast<float>(_windowSize.x - _gameConfig.sideBarWidth);
+	const float maxX = static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth);
 	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Right() + speed < maxX)
 	{
@@ -365,7 +363,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < static_cast<float>(_windowSize.y))
+		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < static_cast<float>(_gameConfig.windowSize.y))
 		{
 			_rect.y += std::floor(speed);
 		}
@@ -375,7 +373,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 	}
 
 
-	const float maxX = static_cast<float>(_windowSize.x - _gameConfig.sideBarWidth);
+	const float maxX = static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth);
 	if (_rightVelocity > speed)
 	{
 		if (_rightVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay

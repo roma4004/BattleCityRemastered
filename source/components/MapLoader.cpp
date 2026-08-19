@@ -29,7 +29,7 @@ constexpr char kFirstSymbol{'0'};
 }
 }
 
-std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::string& path)
+std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::filesystem::path& path)
 {
 	std::ifstream file{path};
 	if (!file)
@@ -43,7 +43,7 @@ std::expected<MapData, MapError> MapLoader::LoadFromFile(const std::string& path
 	return Parse(contents.str(), path);
 }
 
-std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, std::string path)
+std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, std::filesystem::path path)
 {
 	MapData map{};
 	std::size_t lineNumber{0u};

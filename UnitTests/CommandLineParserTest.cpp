@@ -1,11 +1,13 @@
 #include "application/CommandLineParser.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include "TestUtils.h"//NOTE: PrintTo for the Point types
 
 namespace
 {
@@ -91,7 +93,8 @@ TEST(CommandLineParserTest, EachWindowOptionIsIndependent)
 	EXPECT_TRUE(posOnly.windowPos.has_value());
 	EXPECT_FALSE(posOnly.windowSize.has_value());
 
-	GameConfig gameConfig{"unused.ini", true};
+	const ProjectConfig projectConfig{"unused.ini", true};
+	GameConfig gameConfig{projectConfig};
 	const UPoint iniSize = gameConfig.windowSize;
 	gameConfig.Apply(posOnly);
 
@@ -126,7 +129,8 @@ TEST(CommandLineParserTest, ArgumentsAfterABadOneAreNotParsed)
 //NOTE: values reach the config, and an explicit pos raises the flag that stops monitor centering in SDL_Config
 TEST(CommandLineParserTest, ApplyOverridesConfigAndPinsPosition)
 {
-	GameConfig gameConfig{"unused.ini", true};
+	const ProjectConfig projectConfig{"unused.ini", true};
+	GameConfig gameConfig{projectConfig};
 	gameConfig.Apply(Parse({"pos=10,20", "size=1024,768"}));
 
 	EXPECT_EQ(gameConfig.windowPos, (UPoint{.x = 10u, .y = 20u}));
@@ -137,7 +141,8 @@ TEST(CommandLineParserTest, ApplyOverridesConfigAndPinsPosition)
 //NOTE: the other half of Apply - an empty optional must leave the ini values in place, not overwrite them with defaults
 TEST(CommandLineParserTest, ApplyLeavesConfigAloneWithoutArguments)
 {
-	GameConfig gameConfig{"unused.ini", true};
+	const ProjectConfig projectConfig{"unused.ini", true};
+	GameConfig gameConfig{projectConfig};
 	const UPoint iniPos = gameConfig.windowPos;
 	const UPoint iniSize = gameConfig.windowSize;
 
@@ -153,19 +158,21 @@ TEST(CommandLineParserTest, ApplyLeavesConfigAloneWithoutArguments)
 //Guards the planned "save window last position" TODO in GameConfig.cpp from persisting them by accident.
 TEST(CommandLineParserTest, ApplyDoesNotWriteBackToTheIni)
 {
-	GameConfig gameConfig{"unused.ini", true};
+	const ProjectConfig projectConfig{"unused.ini", true};
+	GameConfig gameConfig{projectConfig};
 	gameConfig.Apply(Parse({"pos=10,20", "size=1024,768"}));
 
-	EXPECT_EQ(gameConfig.Get<unsigned>("Window.width", 0u), 800u);
-	EXPECT_EQ(gameConfig.Get<unsigned>("Window.height", 0u), 600u);
-	EXPECT_EQ(gameConfig.Get<unsigned>("Window.posX", 0u), 100u);
-	EXPECT_EQ(gameConfig.Get<unsigned>("Window.posY", 0u), 100u);
+	EXPECT_EQ(projectConfig.Get<unsigned>("Window.width", 0u), 800u);
+	EXPECT_EQ(projectConfig.Get<unsigned>("Window.height", 0u), 600u);
+	EXPECT_EQ(projectConfig.Get<unsigned>("Window.posX", 0u), 100u);
+	EXPECT_EQ(projectConfig.Get<unsigned>("Window.posY", 0u), 100u);
 }
 
 //NOTE: pins the order inside Apply - the offset is half a window wide, so size must be applied before it
 TEST(CommandLineParserTest, HostOffsetUsesTheSizeFromTheCommandLine)
 {
-	GameConfig gameConfig{"unused.ini", true};
+	const ProjectConfig projectConfig{"unused.ini", true};
+	GameConfig gameConfig{projectConfig};
 	gameConfig.Apply(Parse({"host", "size=1024,768"}));
 
 	EXPECT_EQ(gameConfig.windowsPosOffset.x, static_cast<size_t>(0) - 1024u / 2u);
@@ -194,7 +201,7 @@ public:
 
 	~TempIni() { std::filesystem::remove(_path); }
 
-	[[nodiscard]] std::string Path() const { return _path.string(); }
+	[[nodiscard]] const std::filesystem::path& Path() const { return _path; }
 	[[nodiscard]] bool Exists() const { return std::filesystem::exists(_path); }
 
 	[[nodiscard]] std::string Read() const
@@ -208,27 +215,29 @@ public:
 };
 }//namespace
 
-TEST(GameConfigTest, MissingFileIsWrittenAndNotReported)
+TEST(ProjectConfigTest, MissingFileIsWrittenAndNotReported)
 {
 	const TempIni ini{"battlecity_missing.ini"};
 
 	{
-		const GameConfig gameConfig{ini.Path()};
-		EXPECT_FALSE(gameConfig.LoadError().has_value());
+		const ProjectConfig projectConfig{ini.Path()};
+		EXPECT_FALSE(projectConfig.LoadError().has_value());
 	}
 
 	EXPECT_TRUE(ini.Exists());
 }
 
 //NOTE: the file used to be replaced by defaults, erasing the very line that needed fixing
-TEST(GameConfigTest, UnparseableFileIsReportedAndLeftUntouched)
+TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 {
 	constexpr std::string_view broken{"[Window]\nwidth=800\n=nokey\n"};//NOTE: boost: "key expected", line 3
 	const TempIni ini{"battlecity_broken.ini", broken};
 
 	{
-		const GameConfig gameConfig{ini.Path()};
-		EXPECT_EQ(gameConfig.LoadError().value_or(ConfigError{}).line, 3u);
+		const ProjectConfig projectConfig{ini.Path()};
+		EXPECT_EQ(projectConfig.LoadError().value_or(ConfigError{}).line, 3u);
+
+		const GameConfig gameConfig{projectConfig};
 		EXPECT_EQ(gameConfig.windowSize, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults, not the file's 800
 	}
 

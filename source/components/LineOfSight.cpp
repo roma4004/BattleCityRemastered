@@ -1,5 +1,5 @@
 #include "components/LineOfSight.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/WaterTile.h"

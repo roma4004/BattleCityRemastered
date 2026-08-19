@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include <chrono>
 
@@ -22,6 +22,7 @@ class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
 class GameConfig;
+class ProjectConfig;
 struct SDL_Config;
 struct AddToSpawnQueueEvent;
 struct PostTickUpdateEvent;
@@ -39,7 +40,7 @@ struct WorldGeometryChangedEvent;
 class Game final
 {
 public:
-	Game(GameConfig& gameConfig, SDL_Config& sdlConfig, GameMode gameMode);
+	Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, SDL_Config& sdlConfig, GameMode gameMode);
 
 	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares the
 	//manager types held by unique_ptr below, so an in-header default would need them complete here.
@@ -112,6 +113,8 @@ private:
 	//TODO: modify only under mutex lock (main and network thread can add)
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
+
+	GameConfig& _gameConfig;
 
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};

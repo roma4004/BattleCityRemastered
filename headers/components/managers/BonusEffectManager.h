@@ -1,13 +1,10 @@
 #pragma once
 #include "components/EventSystem.h"
 #include "utils/Timer.h"
-#include "utils/Uuid.h"
 
-enum class GameMode : char8_t;
 class EventSystem;
 struct GameResetEvent;
 struct TickUpdateEvent;
-struct GameModeChangedToEvent;
 struct BonusTimerPickupEvent;
 struct BonusHelmetPickupEvent;
 struct BonusShovelPickupEvent;
@@ -21,7 +18,6 @@ class BonusEffectManager
 	Timer _shovelPlayer{};
 	std::vector<Timer> _helmetSlots{};
 	std::vector<std::string> _helmetSlotsTankNames{};
-	GameMode _gameMode{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -45,7 +41,6 @@ public:
 	void StartTimer(Timer& timer, const std::string& event, const std::string& id, milliseconds effectDuration) const;
 	void FinishTimer(Timer& timer, const std::string& event, const std::string& id) const;
 	void OnBonusShovelPickup(const BonusShovelPickupEvent& event);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	static size_t TankNameToId(const std::string& name);
 
 	void TickUpdate(double deltaTime);

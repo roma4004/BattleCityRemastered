@@ -1,6 +1,7 @@
-﻿#include "Point.h"
+﻿#include "geometry/Point.h"
 #include "TestUtils.h"
 #include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/SteelWall.h"
@@ -14,7 +15,8 @@ class BulletTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	GameConfig _gameConfig{"", true};
+	ProjectConfig _projectConfig{"", true};
+	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.f / 60.f};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 3u, .size{.x = 6.f, .y = 5.f}};

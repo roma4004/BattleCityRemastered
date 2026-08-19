@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entities/ObjRectangle.h"//NOTE: complete type needed - a std::vector<ObjRectangle> member is instantiated below
+#include "geometry/ObjRectangle.h"//NOTE: complete type needed - a std::vector<ObjRectangle> member is instantiated below
 
 #include <memory>
 #include <vector>

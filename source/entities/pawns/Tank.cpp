@@ -23,7 +23,7 @@
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
 {
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _gameConfig.windowSize, _name, _fraction,
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _name, _fraction,
 												 _allObjects, _effects, gameConfig);
 	_calibre = BulletCalibre{.speed = 300.f,
 							 .damage = 15,
@@ -32,12 +32,12 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 							 .size{.x = 9.f, .y = 9.f}};
 	ApplyScaleToCalibre(gameConfig.scaleFactor);
 
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _gameConfig.windowSize, _name, _fraction,
-												 _allObjects, bulletPool, _calibre, _events);
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _fraction, _allObjects, bulletPool,
+												 _calibre, _events, _gameConfig);
 
 	Tank::Subscribe();
 
-	if (_gameMode == GameMode::PlayAsClient)
+	if (IsClient(_gameMode))
 	{
 		_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnClientChangePos));
 	}
@@ -71,7 +71,7 @@ void Tank::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Tank::OnPostDraw));
 	_subs.push_back(_events->AddListener(this, &Tank::OnScaleFactorChangedTo));
 
-	if (_gameMode == GameMode::PlayAsClient)
+	if (IsClient(_gameMode))
 	{
 		SubscribeAsClient();
 	}
@@ -148,7 +148,7 @@ void Tank::Shot(const Uuid withUuid)
 {
 	const Uuid bulletUuid = _shootingBeh->Shot(withUuid);
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ServerOutShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
 	}
@@ -199,7 +199,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 
 		_events->EmitEvent(AnimationBonusHelmetChangeEvent{.name = _name, .isEnable = isActive});
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutBonusHelmetPickupEvent{.name = _name, .isActive = isActive});
 		}
@@ -236,7 +236,7 @@ void Tank::OnBonusStar(const std::string& author)
 		_calibre.tier = _tier;
 		_shootTimer.cooldown -= milliseconds{150};
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutBonusStarPickupEvent{.author = author});
 		}
@@ -262,7 +262,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 		_calibre.tier = _tier;
 		_shootTimer.cooldown -= milliseconds{450};
 
-		if (_gameMode == GameMode::PlayAsHost)
+		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(ServerOutBonusCaliberPickupEvent{.author = author});
 		}

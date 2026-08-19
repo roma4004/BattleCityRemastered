@@ -1,4 +1,5 @@
 #include "application/Game.h"
+#include "utils/Log.h"
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
 #include "components/EventSystem.h"
@@ -22,26 +23,26 @@
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include <cmath>
-#include <iostream>
 #include <memory>
 //#include <fstream>
 
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-Game::Game(GameConfig& gameConfig, SDL_Config& sdlConfig, const GameMode gameMode)
+Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, SDL_Config& sdlConfig, const GameMode gameMode)
 	: _events{std::make_shared<EventSystem>()}
-	, _menu{std::make_unique<Menu>(gameConfig.windowSize, _events)}
+	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
 	, _stateManager{std::make_unique<GameStateManager>(_events)}
-	, _userInput{std::make_unique<UserInput>(gameConfig.windowSize, _events, gameConfig)}
-	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, gameConfig)}
+	, _userInput{std::make_unique<UserInput>(_events, gameConfig)}
+	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _bonusEffectManager{std::make_unique<BonusEffectManager>(_events)}
-	, _scoreBoard{std::make_unique<ScoreBoard>(gameConfig.windowSize, _events)}
-	, _rightSideBar{std::make_unique<RightSideBar>(_events)}
+	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig)}
+	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
+	, _gameConfig{gameConfig}
 	, _selectedGameMode{GameMode::OnePlayer}
 {
 	Subscribe();
@@ -138,18 +139,22 @@ void Game::ResetBattlefield()
 
 void Game::ApplyGameMode(const GameMode gameMode)
 {
+	//NOTE: before the reset - listeners of GameResetEvent read the mode off the config, so it has
+	//to be the new one already
+	_gameConfig.gameMode = gameMode;
+
 	ResetBattlefield();
 	_isClientReadyHandled = false;
 	_isBattlefieldResetPending = false;
 
 	SetCurrentGameMode(gameMode);
 
-	if (gameMode != GameMode::PlayAsClient && gameMode != GameMode::PlayAsHost)
+	if (IsLocalGame(gameMode))
 	{
 		_events->EmitEvent(LoadMapEvent{});//TODO: move to obstacle spawner which should spawn when unpause
 	}
 
-	if (gameMode == GameMode::PlayAsClient)
+	if (IsClient(gameMode))
 	{
 		_events->EmitEvent(ClientOutReadyToPlayEvent{});
 	}
@@ -182,28 +187,6 @@ void Game::NextGameMode(const NextGameModeEvent&)
 }
 
 //TODO: push other tank mechanic like velosity with ice effect
-// void Game::DisposeDeadObject()//TODO: add verbosity level for debug only ifndef
-// {
-// 	auto predicate = [](const auto& obj) { return !obj.get() || !obj->GetIsAlive(); };
-// 	const auto it = std::ranges::remove_if(_allObjects, predicate).begin();
-//
-// 	for (auto itCopy = it; itCopy != _allObjects.end(); ++itCopy)
-// 	{
-// 		if (*itCopy == nullptr)
-// 		{
-// 			std::cout << "Disposing object nullptr " << '\n';
-// 			continue;
-// 		}
-// 		const auto& baseObj = *itCopy;
-// 		std::cout << "[" << "Disposing object" << "] "
-// 				<< "[" << (_gameMode == GameMode::PlayAsHost ? "SERVER" : "CLIENT") << "] "
-// 				<< ", name=" << baseObj->GetName()
-// 				<< ", UUID=" << boost::uuids::to_string(baseObj->GetUuid())
-// 				<< '\n';
-// 	}
-//
-// 	_allObjects.erase(it, _allObjects.end());
-// }
 
 void Game::DisposeDeadObject()
 {
@@ -257,7 +240,7 @@ void Game::Run()
 
 			if (!_userInput->IsPause())
 			{
-				if (_gameMode != GameMode::PlayAsClient)
+				if (IsAuthority(_gameMode))
 				{
 					constexpr bool skipDelay{false};
 					_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
@@ -279,7 +262,7 @@ void Game::Run()
 			_events->EmitEvent(DrawUserInterfaceEvent{});
 			_events->EmitEvent(PostDrawUserInterfaceEvent{});
 
-			if (_gameMode == GameMode::PlayAsHost || _gameMode == GameMode::PlayAsClient)
+			if (IsNetworkGame(_gameMode))
 			{
 				_events->EmitEvent(NetworkEndFrameEvent{});
 			}
@@ -289,11 +272,11 @@ void Game::Run()
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << '\n';
+		Log::Error(e.what());
 	}
 	catch (...)
 	{
-		std::cerr << "error ..." << '\n';
+		Log::Error("unknown exception in the main loop");
 	}
 }
 
@@ -318,14 +301,14 @@ void Game::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 	//connect) while the outgoing one still holds both
 	_networkNode.reset();
 
-	if (_gameMode == GameMode::PlayAsHost)
+	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
 		_clientReadySub = _events->AddListener(this, &Game::OnClientReady);
 		_peerLeftSubs.push_back(_events->AddListener(this, &Game::OnClientLeft));
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
-	else if (_gameMode == GameMode::PlayAsClient)
+	else if (IsClient(_gameMode))
 	{
 		_clientReadySub = EventSubscription{};
 		_peerLeftSubs.push_back(_events->AddListener(this, &Game::OnHostLeft));

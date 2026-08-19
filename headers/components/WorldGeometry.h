@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Point.h"
+#include "geometry/Point.h"
 #include <cstddef>
 
 //NOTE: the single place that turns "a map of cols x rows cells" into pixels. The window is fixed -

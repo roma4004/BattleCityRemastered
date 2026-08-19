@@ -6,10 +6,10 @@
 #include "utils/Uuid.h"
 
 class BaseObj;
+class GameConfig;
 class EventSystem;
 struct GameResetEvent;
 struct SpawnDelayStartEvent;
-struct GameModeChangedToEvent;
 struct PreTickUpdateEvent;
 struct PostTickUpdateEvent;
 
@@ -25,16 +25,15 @@ class DelayedSpawnManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<SpawnDelay> _spawnDelays{};
 	std::vector<EventSubscription> _subs{};
-	GameMode _gameMode{};
+	GameConfig& _gameConfig;
 
 	void OnGameReset(const GameResetEvent&);
 	void OnSpawnDelayStart(const SpawnDelayStartEvent& event);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnPreTickUpdate(const PreTickUpdateEvent& event);
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
 
 public:
-	explicit DelayedSpawnManager(const std::shared_ptr<EventSystem>& events);
+	DelayedSpawnManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	~DelayedSpawnManager() = default;
 

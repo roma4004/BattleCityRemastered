@@ -1,24 +1,24 @@
 ﻿#include "components/RightSideBar.h"
+#include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
 
-RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events)
-	: _events{events}
+RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+	: _gameConfig{gameConfig}
+	, _events{events}
 {
 	Subscribe();
 }
 
 void RightSideBar::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &RightSideBar::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnDrawUserInterface));
 	_subs.push_back(_events->AddListener(this, &RightSideBar::OnRespawnCountChangedTo));
 }
 
-void RightSideBar::OnGameModeChangedTo(const GameModeChangedToEvent& event) { _gameMode = event.mode; }
 void RightSideBar::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Draw(); }
 
 void RightSideBar::Draw() const
@@ -27,7 +27,7 @@ void RightSideBar::Draw() const
 	_events->EmitEvent(RenderEnemyIconBackgroundEvent{});
 	_events->EmitEvent(RenderEnemyIconsEvent{.count = _enemiesRespawnCount});
 	_events->EmitEvent(RenderPlayerOneIconEvent{.respawnCount = _playerOneRespawnCount});
-	if (_gameMode != GameMode::OnePlayer)
+	if (_gameConfig.HasSecondPlayer())
 	{
 		_events->EmitEvent(RenderPlayerTwoIconEvent{.respawnCount = _playerTwoRespawnCount});
 	}

@@ -1,7 +1,7 @@
 #include "network/CommandDispatcher.h"
 #include "network/commands/CommandBatch.h"
-#include "utils/NetworkLogger.h"
-#include <ser20/archives/portable_binary.hpp>
+#include "network/Serializer.h"
+#include "utils/Log.h"
 #include <sstream>
 #include <utility>
 
@@ -19,27 +19,21 @@ void CommandDispatcher::RegisterAll(std::initializer_list<std::pair<const Comman
 
 std::expected<void, DispatchError> CommandDispatcher::Dispatch(const std::string& archiveData)
 {
-	commands::CommandBatch batch;
-	try
-	{
-		std::istringstream archiveStream(archiveData);
-		ser20::PortableBinaryInputArchive ia(archiveStream);
-		ia(batch);
-	}
-	catch (const std::exception& e)
+	const auto batch = Deserialize(archiveData);
+	if (!batch)
 	{
 		constexpr std::size_t maxLoggedBytes{200};
 		const std::string rawData = archiveData.length() < maxLoggedBytes
 											? archiveData
 											: archiveData.substr(0, maxLoggedBytes) + "...";
 
-		NetworkLogger::WriteError(_ownerName + " deserialization: " + e.what() + ", raw size "
+		Log::Error(_ownerName + " deserialization: " + batch.error().reason + ", raw size "
 								  + std::to_string(archiveData.length()) + ", raw data: " + rawData);
 
-		return std::unexpected(DispatchError{.reason = e.what(), .frameSize = archiveData.length()});
+		return std::unexpected(DispatchError{.reason = batch.error().reason, .frameSize = archiveData.length()});
 	}
 
-	for (const auto& command: batch.GetCommands())
+	for (const auto& command: batch->commands)
 	{
 		if (const auto it = _handlers.find(commands::GetCommandType(command)); it != _handlers.end())
 		{
@@ -47,7 +41,7 @@ std::expected<void, DispatchError> CommandDispatcher::Dispatch(const std::string
 		}
 		else
 		{
-			NetworkLogger::WriteError(_ownerName + " unhandled command type "
+			Log::Error(_ownerName + " unhandled command type "
 									  + std::to_string(static_cast<int>(commands::GetCommandType(command))));
 		}
 	}

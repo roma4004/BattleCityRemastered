@@ -1,6 +1,6 @@
 #include "network/NetworkNodeBase.h"
 #include "components/events/TimingEvents.h"
-#include "utils/NetworkLogger.h"
+#include "utils/Log.h"
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 #include <chrono>
@@ -30,11 +30,11 @@ void NetworkNodeBase::StartIoThread()
 		}
 		catch (const std::exception& e)
 		{
-			NetworkLogger::WriteError(_name + " thread exception: " + e.what());
+			Log::Error(_name + " thread exception: " + e.what());
 		}
 		catch (...)
 		{
-			NetworkLogger::WriteError(_name + " thread error: unknown exception");
+			Log::Error(_name + " thread error: unknown exception");
 		}
 	});
 }

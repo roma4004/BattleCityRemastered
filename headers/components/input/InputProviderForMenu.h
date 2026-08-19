@@ -5,10 +5,10 @@
 #include <vector>
 
 enum class GameMode : char8_t;
+class GameConfig;
 class EventSystem;
 struct MenuReleasedEvent;
 struct PauseReleasedEvent;
-struct GameModeChangedToEvent;
 struct GameResetEvent;
 struct PreTickUpdateEvent;
 struct ShowMenuEvent;
@@ -34,12 +34,11 @@ class InputProviderForMenu final
 	// Toggled at runtime by EnableMenuInput()/DisableMenuInput(), independent of _subs's fixed
 	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
 	std::vector<EventSubscription> _menuNavSubs{};
-	GameMode _gameMode{};
+	GameConfig& _gameConfig;
 	MenuKeys _keys{};
 
 	void OnMenuReleased(const MenuReleasedEvent&);
 	void OnPauseReleased(const PauseReleasedEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnGameReset(const GameResetEvent&);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnShowMenu(const ShowMenuEvent& event);
@@ -51,7 +50,7 @@ class InputProviderForMenu final
 	void OnMenuNavFire(const FireEvent& event);
 
 public:
-	explicit InputProviderForMenu(const std::shared_ptr<EventSystem>& events);
+	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
 
 	~InputProviderForMenu() = default;
 

@@ -1,5 +1,6 @@
 #include "components/ObstacleSpawner.h"
-#include "Point.h"
+#include "utils/Log.h"
+#include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -16,7 +17,6 @@
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "utils/UuidUtils.h"
-#include <iostream>
 #include <memory>
 
 class BaseObj;
@@ -40,7 +40,7 @@ void ObstacleSpawner::Subscribe()
 void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : UnsubscribeAsClient();
+	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
 }
 
 void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) const { LoadMap(); }
@@ -114,12 +114,8 @@ void ObstacleSpawner::LoadMap() const
 		!loaded)
 	{
 		const MapError& error = loaded.error();
-		std::cerr << "cannot load map " << error.path;
-		if (error.line != 0u)
-		{
-			std::cerr << " (line " << error.line << ')';
-		}
-		std::cerr << ": " << error.reason << '\n';
+		const std::string where = error.line != 0u ? " (line " + std::to_string(error.line) + ')' : std::string{};
+		Log::Error("cannot load map " + error.path.string() + where + ": " + error.reason);
 
 		return;
 	}

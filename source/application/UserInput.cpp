@@ -10,11 +10,11 @@
 #include <SDL_events.h>
 #include <SDL_gamecontroller.h>
 #include <algorithm>
-#include <iostream>
+#include "utils/Log.h"
 
-UserInput::UserInput(const UPoint windowSize, const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+UserInput::UserInput(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
 	: _selectedGameMode{GameMode::Demo}
-	, _windowSize{windowSize}
+	, _windowSize{gameConfig.windowSize}
 	, _events{events}
 	, _gameConfig{gameConfig}
 {
@@ -79,7 +79,7 @@ void UserInput::WindowsMoveEvents(const SDL_Event& event)
 void UserInput::SwapControllers(const TabReleasedEvent&)
 {
 	_areControllersSwapped = !_areControllersSwapped;
-	std::cout << "Controllers Swap State: " << _areControllersSwapped << "\n";// left while visual label is absent
+	Log::Info("controllers swap state: " + std::to_string(_areControllersSwapped));// left while visual label is absent
 }
 
 std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) const
@@ -322,14 +322,14 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 		}
 		case SDL_CONTROLLERDEVICEADDED:
 		{
-			std::cout << "NumJoysticks " << SDL_NumJoysticks() << " \n";
+			Log::Info("joysticks: " + std::to_string(SDL_NumJoysticks()));
 			ConnectController({SDL_GameControllerOpen(event.cdevice.which), SDL_GameControllerClose});
 			break;
 		}
 		case SDL_CONTROLLERDEVICEREMOVED:
 		{
 			const SDL_JoystickID instanceId = event.cdevice.which;
-			std::cout << "Controller removed! (instance " << instanceId << ")\n";
+			Log::Info("controller removed (instance " + std::to_string(instanceId) + ')');
 			DisconnectController(instanceId);
 			break;
 		}
@@ -416,7 +416,7 @@ void UserInput::DisconnectController(const SDL_JoystickID instanceId)
 void UserInput::InitControllers()
 {
 	const int numConnectedJoysticks = SDL_NumJoysticks();
-	// std::cout << numConnectedJoysticks << " gamepad/s connected\n";
+	Log::Detail(std::to_string(numConnectedJoysticks) + " gamepad(s) connected");
 
 	if (numConnectedJoysticks > 0)
 	{
@@ -424,7 +424,7 @@ void UserInput::InitControllers()
 			GameControllerOne != nullptr)
 		{
 			ConnectController({GameControllerOne, SDL_GameControllerClose});
-			std::cout << "Opened controller one: " << SDL_GameControllerName(GameControllerOne) << "\n";
+			Log::Info(std::string{"opened controller one: "} + SDL_GameControllerName(GameControllerOne));
 		}
 	}
 
@@ -434,7 +434,7 @@ void UserInput::InitControllers()
 			GameControllerTwo != nullptr)
 		{
 			ConnectController({GameControllerTwo, SDL_GameControllerClose});
-			std::cout << "Opened controller two: " << SDL_GameControllerName(GameControllerTwo) << "\n";
+			Log::Info(std::string{"opened controller two: "} + SDL_GameControllerName(GameControllerTwo));
 		}
 	}
 }

@@ -43,7 +43,7 @@ protected:
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
 
-	// _subs: the Subscribe()/Unsubscribe() toggle group (SubscribeAsHost/SubscribeAsClient plus
+	// _subs: the Subscribe()/Unsubscribe() toggle group (SubscribeAsAuthority/SubscribeAsClient plus
 	// whatever derived classes' own Subscribe() overrides push in) - shared with derived classes
 	// since Tank/Bullet add their own listeners into this same inherited vector rather than
 	// keeping a separate one, so one Unsubscribe() clears everything for the whole hierarchy.
@@ -64,7 +64,7 @@ protected:
 	void TickUpdate(double deltaTime) override = 0;
 
 private:
-	virtual void SubscribeAsHost();
+	virtual void SubscribeAsAuthority();
 	virtual void SubscribeAsClient();
 	void OnClientInHealth(const ClientInHealthEvent& event);
 };

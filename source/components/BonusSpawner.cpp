@@ -1,5 +1,5 @@
 #include "components/BonusSpawner.h"
-#include "Point.h"
+#include "geometry/Point.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -42,21 +42,21 @@ void BonusSpawner::Subscribe()
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
 
-	_gameMode == GameMode::PlayAsClient ? SubscribeAsClient() : SubscribeAsHost();
+	IsAuthority(_gameMode) ? SubscribeAsAuthority() : SubscribeAsClient();
 }
 
 void BonusSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
 
-	if (_gameMode == GameMode::PlayAsClient)
+	if (IsClient(_gameMode))
 	{
-		UnsubscribeAsHost();
+		UnsubscribeAsAuthority();
 		SubscribeAsClient();
 	}
 	else
 	{
-		SubscribeAsHost();
+		SubscribeAsAuthority();
 		UnsubscribeAsClient();
 	}
 }
@@ -74,9 +74,9 @@ void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
 			static_cast<int>(windowSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
 }
 
-void BonusSpawner::SubscribeAsHost()
+void BonusSpawner::SubscribeAsAuthority()
 {
-	_hostSub = _events->AddListener(this, &BonusSpawner::Update);
+	_authoritySub = _events->AddListener(this, &BonusSpawner::Update);
 }
 
 void BonusSpawner::SubscribeAsClient()
@@ -91,7 +91,7 @@ void BonusSpawner::OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event)
 	SpawnBonus(rect, event.type, event.uuid);
 }
 
-void BonusSpawner::UnsubscribeAsHost() { _hostSub = EventSubscription{}; }
+void BonusSpawner::UnsubscribeAsAuthority() { _authoritySub = EventSubscription{}; }
 
 void BonusSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
