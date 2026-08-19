@@ -5,6 +5,7 @@
 #include "enums/GameMode.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 class GameConfig;

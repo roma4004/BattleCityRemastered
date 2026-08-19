@@ -4,6 +4,7 @@
 #include "interfaces/IShootable.h"
 #include <functional>
 #include <memory>
+#include <string>
 
 enum class Direction : char8_t;
 struct BulletCalibre;

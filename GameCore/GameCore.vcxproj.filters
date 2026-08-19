@@ -22,9 +22,6 @@
     <Filter Include="headers\components\managers">
       <UniqueIdentifier>{8cff987a-38bf-2f96-eafb-cc4660b23c90}</UniqueIdentifier>
     </Filter>
-    <Filter Include="headers\geometry">
-      <UniqueIdentifier>{a7f3c1e2-4b5d-4e6f-8a90-1c2d3e4f5a6b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="headers\entities">
       <UniqueIdentifier>{87950965-3ae6-cdc7-ed3d-700abb5e5b0f}</UniqueIdentifier>
     </Filter>
@@ -39,6 +36,9 @@
     </Filter>
     <Filter Include="headers\enums">
       <UniqueIdentifier>{d5a24b93-9ddb-8363-8ca9-4e28cf920b89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\geometry">
+      <UniqueIdentifier>{21e52dc5-96f5-c636-b6e9-115c68c94bab}</UniqueIdentifier>
     </Filter>
     <Filter Include="headers\interfaces">
       <UniqueIdentifier>{cc75c02b-f431-3866-1b8d-5654a68dc3be}</UniqueIdentifier>
@@ -279,13 +279,13 @@
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\Serializer.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\Server.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\network\ServerHandler.cpp">
-      <Filter>source\network</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\network\Serializer.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
     <ClCompile Include="..\source\utils\ColliderUtils.cpp">
@@ -311,10 +311,10 @@
     <ClInclude Include="..\headers\application\GameConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\application\ProjectConfig.h">
+    <ClInclude Include="..\headers\application\LaunchOptions.h">
       <Filter>headers\application</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\application\LaunchOptions.h">
+    <ClInclude Include="..\headers\application\ProjectConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h">
@@ -325,9 +325,6 @@
     </ClInclude>
     <ClInclude Include="..\headers\behavior\ShootingBeh.h">
       <Filter>headers\behavior</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\geometry\Circle.h">
-      <Filter>headers\geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\AnimatedObjects.h">
       <Filter>headers\components</Filter>
@@ -494,9 +491,6 @@
     <ClInclude Include="..\headers\entities\BulletCalibre.h">
       <Filter>headers\entities</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\geometry\ObjRectangle.h">
-      <Filter>headers\geometry</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h">
       <Filter>headers\entities\obstacles</Filter>
     </ClInclude>
@@ -599,6 +593,15 @@
     <ClInclude Include="..\headers\enums\TextureOffset.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\geometry\Circle.h">
+      <Filter>headers\geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\geometry\ObjRectangle.h">
+      <Filter>headers\geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\geometry\Point.h">
+      <Filter>headers\geometry</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\interfaces\IDrawable.h">
       <Filter>headers\interfaces</Filter>
     </ClInclude>
@@ -674,7 +677,13 @@
     <ClInclude Include="..\headers\network\commands\KeyStateChange.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\ObjRectangleSerialization.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\ObstacleSpawn.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\PointSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\PositionChange.h">
@@ -695,12 +704,6 @@
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\network\commands\ObjRectangleSerialization.h">
-      <Filter>headers\network\commands</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\network\commands\PointSerialization.h">
-      <Filter>headers\network\commands</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -713,17 +716,14 @@
     <ClInclude Include="..\headers\network\NetworkNodeBase.h">
       <Filter>headers\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\Serializer.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\Server.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\ServerHandler.h">
       <Filter>headers\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\network\Serializer.h">
-      <Filter>headers\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\geometry\Point.h">
-      <Filter>headers\geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ColliderUtils.h">
       <Filter>headers\utils</Filter>
