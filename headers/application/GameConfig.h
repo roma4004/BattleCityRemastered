@@ -1,11 +1,22 @@
 ﻿#pragma once
 #include "Point.h"
+#include <expected>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <boost/property_tree/ptree.hpp>
 
 struct LaunchOptions;
 struct WorldGeometry;
+
+//NOTE: shaped like MapError. line 0 means the file as a whole, and that is what decides
+//whether it gets rewritten - see the constructor.
+struct ConfigError final
+{
+	std::string path{};
+	std::string reason{};
+	std::size_t line{};
+};
 
 class GameConfig
 {
@@ -13,7 +24,7 @@ public:
 	explicit GameConfig(std::string filePath, bool skipIni = false);
 	~GameConfig();
 
-	void LoadIni(const std::string& filePath);
+	[[nodiscard]] std::expected<void, ConfigError> LoadIni(const std::string& filePath);
 	void DefaultInitIni();
 	void SaveIni(const std::string& filePath) const;
 	void Apply(const LaunchOptions& launchOptions);
@@ -67,6 +78,12 @@ public:
 		}
 	}
 
+	//NOTE: only a file that exists and does not parse lands here; a missing one is written, not reported
+	[[nodiscard]] const std::optional<ConfigError>& LoadError() const
+	{
+		return _loadError;
+	}
+
 	[[nodiscard]] const boost::property_tree::ptree& GetTree() const
 	{
 		return _pTreeIni;
@@ -80,4 +97,5 @@ public:
 private:
 	boost::property_tree::ptree _pTreeIni;
 	std::string _filePath;
+	std::optional<ConfigError> _loadError{};
 };

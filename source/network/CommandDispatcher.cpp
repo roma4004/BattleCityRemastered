@@ -17,7 +17,7 @@ void CommandDispatcher::RegisterAll(std::initializer_list<std::pair<const Comman
 	_handlers.insert(handlers);
 }
 
-void CommandDispatcher::Dispatch(const std::string& archiveData)
+std::expected<void, DispatchError> CommandDispatcher::Dispatch(const std::string& archiveData)
 {
 	commands::CommandBatch batch;
 	try
@@ -35,7 +35,8 @@ void CommandDispatcher::Dispatch(const std::string& archiveData)
 
 		NetworkLogger::WriteError(_ownerName + " deserialization: " + e.what() + ", raw size "
 								  + std::to_string(archiveData.length()) + ", raw data: " + rawData);
-		return;
+
+		return std::unexpected(DispatchError{.reason = e.what(), .frameSize = archiveData.length()});
 	}
 
 	for (const auto& command: batch.GetCommands())
@@ -50,5 +51,7 @@ void CommandDispatcher::Dispatch(const std::string& archiveData)
 									  + std::to_string(static_cast<int>(commands::GetCommandType(command))));
 		}
 	}
+
+	return {};
 }
 }//namespace network

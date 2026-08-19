@@ -90,9 +90,11 @@ void Session::Start()
 	_channel->SetHandlers(
 			[weakSelf](const std::string& frame)
 			{
-				if (const auto self = weakSelf.lock())
+				//NOTE: same reading as on the client, see HandleProtocolError. With a reason, not a
+				//bare close: a plain drop sends the client reconnecting into the same mismatch.
+				if (const auto self = weakSelf.lock(); self && !self->_dispatcher.Dispatch(frame))
 				{
-					self->_dispatcher.Dispatch(frame);
+					self->Shutdown(DisconnectReason::ProtocolError, nullptr);
 				}
 			},
 			//NOTE: closing is what makes the session collectable - Server::CleanupDeadSessions

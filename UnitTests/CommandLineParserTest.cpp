@@ -3,15 +3,39 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+
 namespace
 {
 //NOTE: argv[0] is the exe name, the parser starts at [1]
-LaunchOptions Parse(const std::initializer_list<const char*> args)
+std::expected<LaunchOptions, ArgError> ParseRaw(const std::initializer_list<const char*> args)
 {
 	std::vector<const char*> argv{"BattleCity_remastered.exe"};
 	argv.insert(argv.end(), args);
 
 	return CommandLineParser::Parse(static_cast<int>(argv.size()), argv.data());
+}
+
+//NOTE: a rejection here is a bug in the test's own arguments, not a case under test
+LaunchOptions Parse(const std::initializer_list<const char*> args)
+{
+	const auto options = ParseRaw(args);
+	EXPECT_TRUE(options.has_value()) << (options ? "" : options.error().reason);
+
+	return options.value_or(LaunchOptions{});
+}
+
+std::optional<ArgError> ParseError(const std::initializer_list<const char*> args)
+{
+	const auto options = ParseRaw(args);
+	if (options)
+	{
+		return std::nullopt;
+	}
+
+	return options.error();
 }
 }//namespace
 
@@ -76,20 +100,27 @@ TEST(CommandLineParserTest, EachWindowOptionIsIndependent)
 }
 
 //NOTE: from_chars must consume the whole field - a partial parse would silently accept "800x600" as 800
-TEST(CommandLineParserTest, MalformedPointIsIgnored)
+TEST(CommandLineParserTest, MalformedPointIsRejected)
 {
-	EXPECT_FALSE(Parse({"size=800x600"}).windowSize.has_value());
-	EXPECT_FALSE(Parse({"size=800,60a"}).windowSize.has_value());
-	EXPECT_FALSE(Parse({"size=800,"}).windowSize.has_value());
-	EXPECT_FALSE(Parse({"pos=,20"}).windowPos.has_value());
-	EXPECT_FALSE(Parse({"pos=-10,20"}).windowPos.has_value());
+	//NOTE: an empty left side means it was accepted - one compare covers both rejection and naming
+	for (const char* arg: {"size=800x600", "size=800,60a", "size=800,", "pos=,20", "pos=-10,20"})
+	{
+		EXPECT_EQ(ParseError({arg}).value_or(ArgError{}).arg, arg);
+	}
 }
 
 //NOTE: zero parses fine but makes an unusable window, so it is rejected separately from malformed input
 TEST(CommandLineParserTest, ZeroWindowSizeIsRejected)
 {
-	EXPECT_FALSE(Parse({"size=0,600"}).windowSize.has_value());
-	EXPECT_FALSE(Parse({"size=800,0"}).windowSize.has_value());
+	for (const char* arg: {"size=0,600", "size=800,0"})
+	{
+		EXPECT_EQ(ParseError({arg}).value_or(ArgError{}).arg, arg);
+	}
+}
+
+TEST(CommandLineParserTest, ArgumentsAfterABadOneAreNotParsed)
+{
+	EXPECT_EQ(ParseError({"host", "size=800x600", "skipintro"}).value_or(ArgError{}).arg, "size=800x600");
 }
 
 //NOTE: values reach the config, and an explicit pos raises the flag that stops monitor centering in SDL_Config
@@ -138,4 +169,68 @@ TEST(CommandLineParserTest, HostOffsetUsesTheSizeFromTheCommandLine)
 	gameConfig.Apply(Parse({"host", "size=1024,768"}));
 
 	EXPECT_EQ(gameConfig.windowsPosOffset.x, static_cast<size_t>(0) - 1024u / 2u);
+}
+
+namespace
+{
+//NOTE: the file's fate is the behaviour under test, so unlike MapLoader these cases need a real one
+class TempIni final
+{
+	std::filesystem::path _path;
+
+public:
+	explicit TempIni(const std::string_view name, const std::string_view contents = {})
+		: _path(std::filesystem::temp_directory_path() / name)
+	{
+		std::filesystem::remove(_path);
+		if (!contents.empty())
+		{
+			std::ofstream{_path} << contents;
+		}
+	}
+
+	TempIni(const TempIni&) = delete;
+	TempIni& operator=(const TempIni&) = delete;
+
+	~TempIni() { std::filesystem::remove(_path); }
+
+	[[nodiscard]] std::string Path() const { return _path.string(); }
+	[[nodiscard]] bool Exists() const { return std::filesystem::exists(_path); }
+
+	[[nodiscard]] std::string Read() const
+	{
+		const std::ifstream file{_path};
+		std::ostringstream contents;
+		contents << file.rdbuf();
+
+		return contents.str();
+	}
+};
+}//namespace
+
+TEST(GameConfigTest, MissingFileIsWrittenAndNotReported)
+{
+	const TempIni ini{"battlecity_missing.ini"};
+
+	{
+		const GameConfig gameConfig{ini.Path()};
+		EXPECT_FALSE(gameConfig.LoadError().has_value());
+	}
+
+	EXPECT_TRUE(ini.Exists());
+}
+
+//NOTE: the file used to be replaced by defaults, erasing the very line that needed fixing
+TEST(GameConfigTest, UnparseableFileIsReportedAndLeftUntouched)
+{
+	constexpr std::string_view broken{"[Window]\nwidth=800\n=nokey\n"};//NOTE: boost: "key expected", line 3
+	const TempIni ini{"battlecity_broken.ini", broken};
+
+	{
+		const GameConfig gameConfig{ini.Path()};
+		EXPECT_EQ(gameConfig.LoadError().value_or(ConfigError{}).line, 3u);
+		EXPECT_EQ(gameConfig.windowSize, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults, not the file's 800
+	}
+
+	EXPECT_EQ(ini.Read(), broken);
 }

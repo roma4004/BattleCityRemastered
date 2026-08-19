@@ -159,6 +159,25 @@ void Client::HandleDisconnect()
 	ScheduleReconnect();
 }
 
+//NOTE: TCP hands bytes over intact or not at all, so an unreadable frame is a protocol
+//disagreement, not line noise - the next one fails the same way and a reconnect reaches the
+//same host. Hence: end the link, and tell the game side why.
+void Client::HandleProtocolError()
+{
+	if (_isShuttingDown)
+	{
+		return;
+	}
+
+	_isConnected = false;
+	_commandQueue.Enqueue([this]
+	{
+		_events->EmitEvent(ClientInDisconnectEvent{.reason = DisconnectReason::ProtocolError});
+	});
+
+	Shutdown();
+}
+
 Client::~Client()
 {
 	Shutdown();
@@ -251,9 +270,9 @@ void Client::StartReading()
 	_channel->SetHandlers(
 			[weakSelf](const std::string& frame)
 			{
-				if (const auto self = weakSelf.lock())
+				if (const auto self = weakSelf.lock(); self && !self->_dispatcher.Dispatch(frame))
 				{
-					self->_dispatcher.Dispatch(frame);
+					self->HandleProtocolError();
 				}
 			},
 			[weakSelf]

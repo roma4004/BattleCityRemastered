@@ -83,6 +83,8 @@ private:
 	void SendCommand(const CommandBatch& command);
 	//NOTE: idempotent - a read error and a write error can both report the same drop
 	void HandleDisconnect();
+	//NOTE: unlike HandleDisconnect, deliberately does not reconnect - see the definition
+	void HandleProtocolError();
 	void ScheduleReconnect();
 
 	//NOTE: channel socket and timer share it, so their handlers are serialised

@@ -16,10 +16,15 @@
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
 #include "network/ClientHandler.h"
+#include "network/CommandDispatcher.h"
+#include "network/commands/CommandBatch.h"
+#include "network/commands/Disconnect.h"
 #include "network/ServerHandler.h"
 #include "gtest/gtest.h"
 #include "utils/Uuid.h"
 #include <array>
+#include <ser20/archives/portable_binary.hpp>
+#include <sstream>
 #include <chrono>
 #include <future>
 #include <memory>
@@ -996,8 +1001,9 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
 		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
 	}
 
-	//NOTE: longer than the whole reconnect budget (MaxReconnectAttempts * ReconnectDelayMs ~ 5s)
-	EXPECT_FALSE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{6000}))
+	//NOTE: one retry period is enough - the timer has been running since the drop, so the next
+	//attempt lands here. The ~5s budget says when the client stops trying, not when it starts.
+	EXPECT_FALSE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{1500}))
 			<< "client reconnected after the host said it was leaving on purpose";
 }
 
@@ -1035,3 +1041,58 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 
 //TODO: other bonus effect replication test after write this replication
 // TEST_F(NetworkTest, bonusKind...EventReplication) {
+
+namespace
+{
+//NOTE: the wire format Client/Session produce - a hand-rolled buffer would test a shape
+//that cannot occur
+std::string Serialize(const network::commands::CommandBatch& batch)
+{
+	std::ostringstream archiveStream;
+	{
+		ser20::PortableBinaryOutputArchive oa(archiveStream);
+		oa(batch);
+	}
+
+	return archiveStream.str();
+}
+}//namespace
+
+TEST(CommandDispatcherTest, UnreadableFrameIsReportedNotSwallowed)
+{
+	network::CommandDispatcher dispatcher{"test"};
+
+	const std::string frame{"not an archive at all"};
+	const auto dispatched = dispatcher.Dispatch(frame);
+
+	ASSERT_FALSE(dispatched.has_value());
+	EXPECT_EQ(dispatched.error().frameSize, frame.size());
+	EXPECT_FALSE(dispatched.error().reason.empty());
+}
+
+TEST(CommandDispatcherTest, RegisteredHandlerRunsOnAGoodFrame)
+{
+	network::CommandDispatcher dispatcher{"test"};
+
+	std::optional<DisconnectReason> seen{};
+	dispatcher.RegisterAll({{CommandType::DISCONNECT,
+							 [&seen](const network::commands::AnyCommand& command)
+							 { seen = std::get<network::commands::Disconnect>(command).GetReason(); }}});
+
+	network::commands::CommandBatch batch;
+	batch.AddCommand(network::commands::Disconnect{DisconnectReason::GameOver});
+
+	EXPECT_TRUE(dispatcher.Dispatch(Serialize(batch)).has_value());
+	ASSERT_TRUE(seen.has_value());
+	EXPECT_EQ(*seen, DisconnectReason::GameOver);
+}
+
+TEST(CommandDispatcherTest, CommandWithNoHandlerIsNotAFailure)
+{
+	network::CommandDispatcher dispatcher{"test"};
+
+	network::commands::CommandBatch batch;
+	batch.AddCommand(network::commands::Disconnect{DisconnectReason::GameOver});
+
+	EXPECT_TRUE(dispatcher.Dispatch(Serialize(batch)).has_value());
+}

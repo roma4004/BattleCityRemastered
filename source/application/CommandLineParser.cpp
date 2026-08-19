@@ -1,6 +1,5 @@
 #include "application/CommandLineParser.h"
 #include <charconv>
-#include <iostream>
 #include <string_view>
 
 namespace
@@ -34,7 +33,7 @@ std::optional<UPoint> ParsePoint(const std::string_view value)
 }//namespace
 
 //NOTE: ends_with - "host" and "-host" both work
-LaunchOptions CommandLineParser::Parse(const int argc, const char* const* argv)
+std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, const char* const* argv)
 {
 	LaunchOptions launchOptions{};
 
@@ -63,7 +62,7 @@ LaunchOptions CommandLineParser::Parse(const int argc, const char* const* argv)
 				launchOptions.windowPos = ParsePoint(value);
 				if (!launchOptions.windowPos)
 				{
-					std::cerr << "ignoring '" << arg << "', expected pos=X,Y" << '\n';
+					return std::unexpected(ArgError{.arg = std::string{arg}, .reason = "expected pos=X,Y"});
 				}
 			}
 			else if (key.ends_with("size"))
@@ -76,7 +75,8 @@ LaunchOptions CommandLineParser::Parse(const int argc, const char* const* argv)
 
 				if (!launchOptions.windowSize)
 				{
-					std::cerr << "ignoring '" << arg << "', expected size=WIDTH,HEIGHT with both above zero" << '\n';
+					return std::unexpected(ArgError{.arg = std::string{arg},
+													.reason = "expected size=WIDTH,HEIGHT with both above zero"});
 				}
 			}
 		}

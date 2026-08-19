@@ -13,9 +13,22 @@ GameConfig::GameConfig(std::string filePath, const bool skipIni)
 	{
 		DefaultInitIni();
 	}
-	else
+	else if (const auto loaded = LoadIni(_filePath); !loaded)
 	{
-		LoadIni(_filePath);
+		//NOTE: nothing to clear - read_ini swaps its local tree in only on success
+		DefaultInitIni();
+
+		//NOTE: no file yet is just a first run - write the defaults. A file that opened and failed
+		//to parse is the user's: overwriting it destroys the line they need to find, so it is left
+		//alone here and by the destructor.
+		if (loaded.error().line == 0u)
+		{
+			SaveIni(_filePath);
+		}
+		else
+		{
+			_loadError = loaded.error();
+		}
 	}
 
 	windowSize = UPoint{.x = Get<unsigned>("Window.width", 800u),
@@ -27,26 +40,28 @@ GameConfig::GameConfig(std::string filePath, const bool skipIni)
 
 GameConfig::~GameConfig()
 {
-	if (!skipIniLoad)
+	//NOTE: _loadError means the file is there and unparseable - saving would overwrite it with
+	//the defaults, which the constructor already refused to do
+	if (!skipIniLoad && !_loadError)
 	{
 		SaveIni(_filePath);
 	}
 }
 
-void GameConfig::LoadIni(const std::string& filePath)
+std::expected<void, ConfigError> GameConfig::LoadIni(const std::string& filePath)
 {
 	try
 	{
 		boost::property_tree::ini_parser::read_ini(filePath, _pTreeIni);
-		return;
 	}
 	catch (const boost::property_tree::ini_parser_error& err)
 	{
-		std::cout << err.what() << ", will be used default settings" << '\n';
+		//NOTE: boost reports line 0 for a file it could not open and a 1-based line for bad
+		//contents - the two need opposite handling upstream
+		return std::unexpected(ConfigError{.path = filePath, .reason = err.message(), .line = err.line()});
 	}
 
-	DefaultInitIni();
-	SaveIni(filePath);
+	return {};
 }
 
 void GameConfig::DefaultInitIni()
