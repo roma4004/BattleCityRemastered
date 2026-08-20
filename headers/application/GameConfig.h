@@ -27,6 +27,8 @@ public:
 	[[nodiscard]] bool IsClient() const { return ::IsClient(gameMode); }
 	[[nodiscard]] bool IsHost() const { return ::IsHost(gameMode); }
 	[[nodiscard]] bool HasSecondPlayer() const { return ::HasSecondPlayer(gameMode); }
+	[[nodiscard]] bool ShouldPersistWindowPos() const { return !hasExplicitWindowPos && !IsHost() && !IsClient(); }
+	[[nodiscard]] bool ShouldPersistWindowSize() const { return !hasExplicitWindowSize && !IsHost() && !IsClient(); }
 
 	UPoint windowSize{};
 	UPoint windowPos{};
@@ -45,4 +47,5 @@ public:
 	int bonusSize{static_cast<int>(gridOffset * 3)};
 	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
 	bool hasExplicitWindowPos{false};//NOTE: explicit pos wins over monitor centering
+	bool hasExplicitWindowSize{false};
 };

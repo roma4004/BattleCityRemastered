@@ -20,6 +20,7 @@ void GameConfig::Apply(const LaunchOptions& launchOptions)
 	if (launchOptions.windowSize)
 	{
 		windowSize = *launchOptions.windowSize;
+		hasExplicitWindowSize = true;
 	}
 
 	if (launchOptions.windowPos)

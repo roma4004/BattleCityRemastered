@@ -10,17 +10,16 @@ ProjectConfig::ProjectConfig(std::filesystem::path filePath, const bool skipIni)
 	if (_skipIniLoad)
 	{
 		DefaultInitIni();
+		_isFreshIni = true;
 		return;
 	}
 
 	if (const auto loaded = LoadIni(_filePath); !loaded)
 	{
-		//NOTE: nothing to clear - read_ini builds into a local tree and swaps it in only on success
 		DefaultInitIni();
 
-		//NOTE: no file yet is just a first run - write the defaults. A file that opened and failed
-		//to parse is the user's: overwriting it destroys the line they need to find, so it is left
-		//alone here and by the destructor.
+		_isFreshIni = true;
+
 		if (loaded.error().line == 0u)
 		{
 			SaveIni(_filePath);
@@ -73,6 +72,7 @@ void ProjectConfig::DefaultInitIni()
 		Set("Window.posY", 100u);
 		Set("Window.vsync", false);
 		Set("Window.MonitorNumber", 1u);
+		Set("Window.centerOnStart", false);
 
 		Set("Sound.volume", 100u);
 		Set("Sound.onOff", true);
@@ -113,7 +113,6 @@ void ProjectConfig::DefaultInitIni()
 	}
 }
 
-//TODO: add feature save window last position
 void ProjectConfig::SaveIni(const std::filesystem::path& filePath) const
 {
 	try

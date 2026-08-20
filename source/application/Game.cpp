@@ -149,11 +149,6 @@ void Game::ApplyGameMode(const GameMode gameMode)
 
 	SetCurrentGameMode(gameMode);
 
-	if (IsLocalGame(gameMode))
-	{
-		_events->EmitEvent(LoadMapEvent{});//TODO: move to obstacle spawner which should spawn when unpause
-	}
-
 	if (IsClient(gameMode))
 	{
 		_events->EmitEvent(ClientOutReadyToPlayEvent{});

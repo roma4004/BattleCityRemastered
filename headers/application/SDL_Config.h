@@ -19,8 +19,9 @@ struct SDL_Config final
 	SDL_Config(GameConfig& config, const ProjectConfig& projectConfig);
 	~SDL_Config();
 
-	//NOTE: the environment is this object's own fields - success carries nothing, failure says what refused
 	[[nodiscard]] std::expected<void, InitError> Init();
+
+	void SaveWindowState(ProjectConfig& outProjectConfig) const;
 
 	GameConfig& gameConfig;
 	const ProjectConfig& projectConfig;

@@ -4,6 +4,6 @@ game_exe=${1:-$(dirname "$0")/../build/cmake/Debug-MinGW/BattleCity_remastered}
 # assets are copied next to the exe, so the cwd must be its folder
 cd "$(dirname "$game_exe")" || exit 1
 exe=./$(basename "$game_exe")
-"$exe" host &
-"$exe" client &
+"$exe" host size=800,600 &
+"$exe" client size=800,600 &
 wait

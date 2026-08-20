@@ -20,7 +20,7 @@ int main(const int argc, char* argv[])
 		return 1;
 	}
 
-	const ProjectConfig projectConfig{"config.ini"};
+	ProjectConfig projectConfig{"config.ini"};
 	//NOTE: not fatal - defaults play fine. Said out loud because the file is kept as it is, so
 	//otherwise the settings would just look ignored.
 	if (const auto& configError = projectConfig.LoadError())
@@ -42,6 +42,10 @@ int main(const int argc, char* argv[])
 
 	Game game{gameConfig, projectConfig, sdlEnv, launchOptions->gameMode};
 	game.Run();
+
+	//NOTE: before sdlEnv drops the window and while projectConfig is still alive - its destructor
+	//is what writes the ini, and it outlives both
+	sdlEnv.SaveWindowState(projectConfig);
 
 	return game.Result();
 }

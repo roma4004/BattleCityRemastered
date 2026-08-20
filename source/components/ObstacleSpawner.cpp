@@ -40,6 +40,12 @@ void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
 	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
+
+	//NOTE: network game should wait until players connect, if local just load the map
+	if (IsLocalGame(_gameMode))
+	{
+		LoadMap();
+	}
 }
 
 void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) const { LoadMap(); }

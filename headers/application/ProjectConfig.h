@@ -32,6 +32,8 @@ public:
 
 	[[nodiscard]] bool IsVsyncOn() const { return Get<bool>("Window.vsync", false); }
 	[[nodiscard]] int MonitorNumber() const { return Get<int>("Window.MonitorNumber", 1); }
+	[[nodiscard]] bool IsCenterOnStart() const { return Get<bool>("Window.centerOnStart", false); }
+	[[nodiscard]] bool IsFreshIni() const { return _isFreshIni; }
 
 	template<typename T>
 	[[nodiscard]] T Get(const std::string& key, const T& defaultValue) const
@@ -68,4 +70,5 @@ private:
 	std::filesystem::path _filePath;
 	std::optional<ConfigError> _loadError{};
 	bool _skipIniLoad{false};
+	bool _isFreshIni{false};
 };

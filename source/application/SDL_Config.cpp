@@ -7,16 +7,25 @@
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
+#include <algorithm>
 #include <array>
 #include <memory>
 
 namespace
 {
 //NOTE: positional - RenderManager draws these vectors by index, so the order is part of the contract
-constexpr std::array kPs5Keys{"Images.PS5_Create", "Images.PS5_Cross", "Images.PS5_D-Pad",
-							  "Images.PS5_Home", "Images.PS5_Options", "Images.PS5_Triangle"};
-constexpr std::array kXBoxKeys{"Images.XBox_D-Pad", "Images.XBox_Home", "Images.XBox_Menu",
-							   "Images.XBox_View", "Images.XBox_A", "Images.XBox_Y"};
+constexpr std::array kPs5Keys{"Images.PS5_Create",
+							  "Images.PS5_Cross",
+							  "Images.PS5_D-Pad",
+							  "Images.PS5_Home",
+							  "Images.PS5_Options",
+							  "Images.PS5_Triangle"};
+constexpr std::array kXBoxKeys{"Images.XBox_D-Pad",
+							   "Images.XBox_Home",
+							   "Images.XBox_Menu",
+							   "Images.XBox_View",
+							   "Images.XBox_A",
+							   "Images.XBox_Y"};
 }
 
 SDL_Config::SDL_Config(GameConfig& config, const ProjectConfig& project)
@@ -38,19 +47,19 @@ std::expected<void, InitError> SDL_Config::Init()
 	//NOTE: every group fills this object's fields; and_then stops at the first one that refuses, so
 	//no later group ever runs on a half-built environment
 	return InitVideo()
-			.and_then([this] { return InitFonts(); })
-			.and_then([this] { return InitTextures(); })
-			.transform([this]
-			{
-				//NOTE: the game runs without sound, so this one failure is reported and dropped. The
-				//decision to ignore it belongs here, at the call site - not inside InitAudio, which
-				//has no business deciding how much its own failure matters.
-				if (const auto audio = InitAudio();
-					!audio)
-				{
-					Log::Error(audio.error().stage + ": " + audio.error().detail);
-				}
-			});
+		  .and_then([this] { return InitFonts(); })
+		  .and_then([this] { return InitTextures(); })
+		  .transform([this]
+		   {
+			   //NOTE: the game runs without sound, so this one failure is reported and dropped. The
+			   //decision to ignore it belongs here, at the call site - not inside InitAudio, which
+			   //has no business deciding how much its own failure matters.
+			   if (const auto audio = InitAudio();
+				   !audio)
+			   {
+				   Log::Error(audio.error().stage + ": " + audio.error().detail);
+			   }
+		   });
 }
 
 std::expected<void, InitError> SDL_Config::InitVideo()
@@ -109,10 +118,13 @@ std::expected<void, InitError> SDL_Config::InitTextures()
 	}
 
 	return LoadTexturePair("Images.Logo", logoSurface, logoTexture)
-			.and_then([this] { return LoadTexturePair("Images.MenuSelectorP1", selectorIconSurface, selectorIconTexture); })
-			.and_then([this] { return LoadPadHints(kPs5Keys, surfacePS5, ps5Textures); })
-			.and_then([this] { return LoadPadHints(kXBoxKeys, surfaceXBox, xboxTextures); })
-			.and_then([this] { return LoadAtlas(); });
+		  .and_then([this]
+		   {
+			   return LoadTexturePair("Images.MenuSelectorP1", selectorIconSurface, selectorIconTexture);
+		   })
+		  .and_then([this] { return LoadPadHints(kPs5Keys, surfacePS5, ps5Textures); })
+		  .and_then([this] { return LoadPadHints(kXBoxKeys, surfaceXBox, xboxTextures); })
+		  .and_then([this] { return LoadAtlas(); });
 }
 
 std::expected<void, InitError> SDL_Config::InitAudio()
@@ -245,6 +257,59 @@ std::expected<void, InitError> SDL_Config::LoadAtlas()
 	return {};
 }
 
+void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
+{
+	SDL_Window* sdlWindowRaw = sdlWindow.get();
+	if (sdlWindowRaw == nullptr)
+	{
+		return;
+	}
+
+	constexpr Uint32 unsavableFlags = SDL_WINDOW_MINIMIZED | SDL_WINDOW_MAXIMIZED;
+	if ((SDL_GetWindowFlags(sdlWindowRaw) & unsavableFlags) != 0u)
+	{
+		return;
+	}
+
+	if (gameConfig.ShouldPersistWindowPos())
+	{
+		int posX{};
+		int posY{};
+		SDL_GetWindowPosition(sdlWindowRaw, &posX, &posY);
+
+		int width{};
+		int height{};
+		SDL_GetWindowSize(sdlWindowRaw, &width, &height);
+
+		SDL_Rect bounds{};
+		if (SDL_GetDisplayUsableBounds(SDL_GetWindowDisplayIndex(sdlWindowRaw), &bounds) != 0)
+		{
+			bounds = SDL_Rect{.x = 0, .y = 0, .w = width, .h = height};
+		}
+
+		int topBorder{};
+		SDL_GetWindowBordersSize(sdlWindowRaw, &topBorder, nullptr, nullptr, nullptr);
+
+		const int minX = std::max(0, bounds.x);
+		const int minY = std::max(0, bounds.y + topBorder);
+		const int maxX = std::max(minX, bounds.x + bounds.w - width);
+		const int maxY = std::max(minY, bounds.y + bounds.h - height);
+
+		outProjectConfig.Set("Window.posX", static_cast<unsigned>(std::clamp(posX, minX, maxX)));
+		outProjectConfig.Set("Window.posY", static_cast<unsigned>(std::clamp(posY, minY, maxY)));
+	}
+
+	if (gameConfig.ShouldPersistWindowSize())
+	{
+		int width{};
+		int height{};
+		SDL_GetWindowSize(sdlWindowRaw, &width, &height);
+
+		outProjectConfig.Set("Window.width", static_cast<unsigned>(std::max(0, width)));
+		outProjectConfig.Set("Window.height", static_cast<unsigned>(std::max(0, height)));
+	}
+}
+
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
 	constexpr auto title = "Battle City remastered";
@@ -274,7 +339,13 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 	SDL_GetWindowBordersSize(sdlWindowRaw, &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
 	//NOTE: centering would override an explicit pos
-	if (monitorIndex != -1 && !gameConfig.hasExplicitWindowPos)
+	const bool centerOnMonitor =
+			!gameConfig.hasExplicitWindowPos
+			&& (projectConfig.IsFreshIni()
+				|| projectConfig.IsCenterOnStart()
+				|| gameConfig.IsHost()
+				|| gameConfig.IsClient());
+	if (monitorIndex != -1 && centerOnMonitor)
 	{
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};

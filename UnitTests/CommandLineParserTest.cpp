@@ -243,3 +243,80 @@ TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 
 	EXPECT_EQ(ini.Read(), broken);
 }
+
+//NOTE: the size half of the flag pair - what keeps a one-off size= out of the ini on the way out
+TEST(CommandLineParserTest, ApplyMarksAnExplicitSizeOnItsOwn)
+{
+	const ProjectConfig projectConfig{"unused.ini", true};
+	GameConfig gameConfig{projectConfig};
+	gameConfig.Apply(Parse({"size=1024,768"}));
+
+	EXPECT_TRUE(gameConfig.hasExplicitWindowSize);
+	EXPECT_FALSE(gameConfig.hasExplicitWindowPos);
+}
+
+//NOTE: pos and size are decided apart - passing one must not stop the other from being remembered
+TEST(CommandLineParserTest, OnlyTheOverriddenHalfIsKeptOutOfTheIni)
+{
+	const ProjectConfig projectConfig{"unused.ini", true};
+
+	GameConfig plain{projectConfig};
+	plain.Apply(Parse({}));
+	EXPECT_TRUE(plain.ShouldPersistWindowPos());
+	EXPECT_TRUE(plain.ShouldPersistWindowSize());
+
+	GameConfig posOnly{projectConfig};
+	posOnly.Apply(Parse({"pos=10,20"}));
+	EXPECT_FALSE(posOnly.ShouldPersistWindowPos());
+	EXPECT_TRUE(posOnly.ShouldPersistWindowSize());
+
+	GameConfig sizeOnly{projectConfig};
+	sizeOnly.Apply(Parse({"size=1024,768"}));
+	EXPECT_TRUE(sizeOnly.ShouldPersistWindowPos());
+	EXPECT_FALSE(sizeOnly.ShouldPersistWindowSize());
+}
+
+//NOTE: both processes share one config.ini and both windows sit at an offset - whichever exits last
+//would leave the other's launch position behind
+TEST(CommandLineParserTest, NetworkModesNeverPersistTheWindowState)
+{
+	const ProjectConfig projectConfig{"unused.ini", true};
+
+	for (const auto* const mode: {"host", "client"})
+	{
+		GameConfig gameConfig{projectConfig};
+		gameConfig.Apply(Parse({mode}));
+
+		EXPECT_FALSE(gameConfig.ShouldPersistWindowPos()) << mode;
+		EXPECT_FALSE(gameConfig.ShouldPersistWindowSize()) << mode;
+	}
+}
+
+//NOTE: drives the centering branch in SDL_Config::InitRender - a run with nothing saved to restore
+TEST(ProjectConfigTest, MissingAndUnparseableFilesBothCountAsFresh)
+{
+	const TempIni missing{"battlecity_fresh_missing.ini"};
+	EXPECT_TRUE(ProjectConfig{missing.Path()}.IsFreshIni());
+
+	const TempIni broken{"battlecity_fresh_broken.ini", "[Window]\n=nokey\n"};
+	EXPECT_TRUE(ProjectConfig{broken.Path()}.IsFreshIni());
+}
+
+TEST(ProjectConfigTest, AReadableFileIsNotFreshAndCenteringIsOptIn)
+{
+	const TempIni ini{"battlecity_saved.ini", "[Window]\nposX=340\nposY=180\n"};
+
+	const ProjectConfig projectConfig{ini.Path()};
+	EXPECT_FALSE(projectConfig.IsFreshIni());
+	EXPECT_FALSE(projectConfig.IsCenterOnStart());
+
+	const GameConfig gameConfig{projectConfig};
+	EXPECT_EQ(gameConfig.windowPos, (UPoint{.x = 340u, .y = 180u}));
+}
+
+TEST(ProjectConfigTest, CenterOnStartIsReadBackFromTheFile)
+{
+	const TempIni ini{"battlecity_centered.ini", "[Window]\ncenterOnStart=true\n"};
+
+	EXPECT_TRUE(ProjectConfig{ini.Path()}.IsCenterOnStart());
+}
