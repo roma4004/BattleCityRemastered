@@ -10,14 +10,14 @@ class PlayerTest;
 class IShootable;
 class BulletPool;
 class GameConfig;
-struct ClientInPosEvent;
+struct PosChangedEvent;
 struct BonusTimerReApplyOnSpawnEvent;
 struct PostDrawEvent;
 struct ScaleFactorChangedToEvent;
-struct ClientInShotEvent;
-struct ClientInBonusHelmetPickupEvent;
-struct ClientInBonusStarPickupEvent;
-struct ClientInBonusCaliberPickupEvent;
+struct TankShotEvent;
+struct BonusHelmetAppliedEvent;
+struct BonusStarAppliedEvent;
+struct BonusCaliberAppliedEvent;
 struct BonusTimerStatusChangeEvent;
 struct BonusHelmetStatusChangeEvent;
 struct BonusGrenadePickupEvent;
@@ -38,10 +38,10 @@ class Tank : public Pawn
 	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);
 	void OnPostDraw(const PostDrawEvent&) const;
 	void OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event);
-	void OnClientInShot(const ClientInShotEvent& event);
-	void OnClientInBonusHelmetPickup(const ClientInBonusHelmetPickupEvent& event);
-	void OnClientInBonusStarPickup(const ClientInBonusStarPickupEvent&);
-	void OnClientInBonusCaliberPickup(const ClientInBonusCaliberPickupEvent&);
+	void OnTankShot(const TankShotEvent& event);
+	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
+	void OnBonusStarApplied(const BonusStarAppliedEvent&);
+	void OnBonusCaliberApplied(const BonusCaliberAppliedEvent&);
 	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
 	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
@@ -65,7 +65,7 @@ protected:
 	void Shot(Uuid withUuid = {});
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
-	void OnClientChangePos(const ClientInPosEvent& event);
+	void OnPosChanged(const PosChangedEvent& event);
 	void ApplyScaleToCalibre(float newScale);
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
@@ -80,7 +80,7 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

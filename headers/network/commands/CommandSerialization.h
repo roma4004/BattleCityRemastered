@@ -1,10 +1,9 @@
 #pragma once
 
-#include "BonusDeSpawn.h"
 #include "BonusSpawn.h"
 #include "BonusStatus.h"
+#include "Despawn.h"
 #include "Disconnect.h"
-#include "Dispose.h"
 #include "FortressChange.h"
 #include "GameStateChange.h"
 #include "HealthChange.h"
@@ -16,7 +15,6 @@
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
-#include "ObjRectangleSerialization.h"
 #include "PointSerialization.h"
 #include "CommandBatch.h"
 #include "UuidSerialization.h"
@@ -29,13 +27,6 @@ namespace ser20
 {
 //NOTE: every command in one place, so a command header stays plain data and ser20 reaches only
 //this file and the Serializer.
-
-template<class Archive>
-void serialize(Archive& ar, network::commands::BonusDeSpawn& cmd, const unsigned int /*version*/)
-{
-	ar & cmd.type;
-	ar & cmd.uuid;
-}
 
 template<class Archive>
 void serialize(Archive& ar, network::commands::BonusSpawn& cmd, const unsigned int /*version*/)
@@ -63,11 +54,12 @@ void serialize(Archive& ar, network::commands::Disconnect& cmd, const unsigned i
 }
 
 template<class Archive>
-void serialize(Archive& ar, network::commands::Dispose& cmd, const unsigned int /*version*/)
+void serialize(Archive& ar, network::commands::Despawn& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.type;
 	ar & cmd.who;
 	ar & cmd.uuid;
+	ar & cmd.reason;
 }
 
 template<class Archive>
@@ -107,7 +99,7 @@ template<class Archive>
 void serialize(Archive& ar, network::commands::ObstacleSpawn& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.type;
-	ar & cmd.rect;
+	ar & cmd.pos;
 	ar & cmd.obstacleType;
 	ar & cmd.uuid;
 }
@@ -128,7 +120,7 @@ void serialize(Archive& ar, network::commands::RespawnTank& cmd, const unsigned 
 	ar & cmd.type;
 	ar & cmd.tankType;
 	ar & cmd.uuid;
-	ar & cmd.rect;
+	ar & cmd.pos;
 }
 
 template<class Archive>
@@ -143,6 +135,7 @@ void serialize(Archive& ar, network::commands::StatisticsChange& cmd, const unsi
 {
 	ar & cmd.type;
 	ar & cmd.statisticsType;
+	ar & cmd.who;
 	ar & cmd.author;
 	ar & cmd.fraction;
 }

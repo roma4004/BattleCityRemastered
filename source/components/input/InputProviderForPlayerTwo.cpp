@@ -25,7 +25,7 @@ void InputProviderForPlayerTwo::Enable()
 	Subscribe();
 }
 
-void InputProviderForPlayerTwo::Disable() const
+void InputProviderForPlayerTwo::Disable()
 {
 	_subs.clear();
 }

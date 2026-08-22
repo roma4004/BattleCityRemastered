@@ -1,7 +1,6 @@
 #include "entities/bonuses/BonusShovel.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
 

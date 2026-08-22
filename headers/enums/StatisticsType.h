@@ -3,14 +3,11 @@
 enum class StatisticsType : char8_t
 {
 	BulletHit,
-	EnemyHit,
-	PlayerOneHit,
-	PlayerTwoHit,
-	EnemyDied,
-	PlayerOneDied,
-	PlayerTwoDied,
+	TankHit,
+	TankDied,
 	BrickWallDied,
 	SteelWallDied,
 	BonusPickup,
 	BonusDestroyed,
+	BonusExpired,
 };

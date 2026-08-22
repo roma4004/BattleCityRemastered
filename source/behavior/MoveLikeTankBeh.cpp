@@ -63,25 +63,14 @@ bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir) con
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const double deltaTime) const
 {
-	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime, _direction);
-
-	auto collisions = *_allObjects | std::views::filter([this, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
-	{
-		return _uuid != object->GetUuid()
-			   && ColliderUtils::IsCollide(tankNextPosRect, object->GetRect())
-			   && !object->GetIsPassable();
-	});
-
-	return std::vector<std::shared_ptr<BaseObj>>{collisions.begin(), collisions.end()};
-
-	//C++ 23: TODO:
-	// return *_allObjects | std::views::filter([this, &tankNextPosRect](const auto& obj)
-	// {
-	// 	return obj->GetUuid() != _uuid
-	// 		&& ColliderUtils::IsCollide(tankNextPosRect, obj->GetRect())
-	// 		&& !obj->GetIsPassable();
-	// })
-	// | std::ranges::to<std::vector>();
+	return *_allObjects
+		   | std::views::filter([uuid = _uuid, tankNextPosRect = GetNextPosRect(deltaTime, _direction)](const auto& obj)
+		   {
+			   return obj->GetUuid() != uuid
+					  && ColliderUtils::IsCollide(tankNextPosRect, obj->GetRect())
+					  && !obj->GetIsPassable();
+		   })
+		   | std::ranges::to<std::vector>();
 }
 
 // inline float Distance(const FPoint a, const FPoint b)
@@ -363,7 +352,8 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < static_cast<float>(_gameConfig.windowSize.y))
+		const float windowSizeY = static_cast<float>(_gameConfig.windowSize.y);
+		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < windowSizeY)
 		{
 			_rect.y += std::floor(speed);
 		}

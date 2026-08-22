@@ -14,7 +14,7 @@ class GameConfig;
 struct GameModeChangedToEvent;
 struct LoadMapEvent;
 struct SpawnObstacleEvent;
-struct ClientInObstacleSpawnEvent;
+struct ObstacleSpawnedEvent;
 
 class ObstacleSpawner final
 {
@@ -38,7 +38,7 @@ class ObstacleSpawner final
 	void OnLoadMap(const LoadMapEvent&) const;
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
 	void SubscribeAsClient();
-	void OnClientInObstacleSpawn(const ClientInObstacleSpawnEvent& event);
+	void OnObstacleSpawned(const ObstacleSpawnedEvent& event);
 
 	void UnsubscribeAsClient();
 

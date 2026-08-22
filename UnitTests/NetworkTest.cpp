@@ -3,14 +3,15 @@
 #include "components/events/SpawnEvents.h"
 #include "components/events/BonusPickupEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "components/events/TimingEvents.h"
 #include "geometry/ObjRectangle.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
+#include "enums/DespawnReason.h"
 #include "enums/DisconnectReason.h"
 #include "enums/FortressState.h"
 #include "enums/ObstacleType.h"
@@ -41,19 +42,33 @@ protected:
 	void SetUp() override {}
 
 	void TearDown() override {}
+
+	//NOTE: one bus per node - on a shared bus a listener fires off the local emit before anything
+	//crosses the wire, and the test passes with no networking at all
+	std::shared_ptr<EventSystem> _hostEvents{std::make_shared<EventSystem>()};
+	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};
+	double _deltaTimeOneFrame{1.f / 60.f};
+
+	//NOTE: stands in for MainLoop - received commands sit in a queue until NetCommandUpdate drains it
+	void Pump() const
+	{
+		_hostEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_clientEvents->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_hostEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+		_clientEvents->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
 };
 
 TEST_F(NetworkTest, PosEventReplication)
 {
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -65,15 +80,14 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	auto posSub = events->AddListener(Key(_uuid), [&promise](const ClientInPosEvent& event)
+	auto posSub = _clientEvents->AddListener(Key(_uuid), [&promise](const PosChangedEvent& event)
 	{
 		promise.set_value({event.pos, event.dir});
 	});
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(
-			ServerOutPosEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(
+			PosChangedEvent{.who = name, .pos = posOrigin, .dir = directionOrigin, .uuid = _uuid});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -81,8 +95,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -102,15 +115,14 @@ TEST_F(NetworkTest, PosEventReplication)
 TEST_F(NetworkTest, ShotEventReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -121,14 +133,13 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto future = promise.get_future();
 
 	const auto name{std::string("TestTank")};
-	auto shotSub = events->AddListener(Key(name), [&promise](const ClientInShotEvent& event)
+	auto shotSub = _clientEvents->AddListener(Key(name), [&promise](const TankShotEvent& event)
 	{
 		promise.set_value({event.dir, event.bulletUuid});
 	});
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(TankShotEvent{.who = name, .dir = direction, .bulletUuid = _uuid});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -136,8 +147,7 @@ TEST_F(NetworkTest, ShotEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -156,15 +166,14 @@ TEST_F(NetworkTest, ShotEventReplication)
 
 TEST_F(NetworkTest, HealthEventReplication)
 {
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -176,12 +185,11 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 	const auto name{std::string("TestTank")};
 
-	auto healthSub = events->AddListener(Key(_uuid),
-			[&promise](const ClientInHealthEvent& event) { promise.set_value(event.health); });
+	auto healthSub = _clientEvents->AddListener(Key(_uuid),
+			[&promise](const HealthChangedEvent& event) { promise.set_value(event.health); });
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutHealthEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(HealthChangedEvent{.who = name, .health = healthOrigin, .uuid = _uuid});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -189,8 +197,7 @@ TEST_F(NetworkTest, HealthEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -205,18 +212,17 @@ TEST_F(NetworkTest, HealthEventReplication)
 
 }
 
-TEST_F(NetworkTest, DisposeEventReplication)
+TEST_F(NetworkTest, DespawnEventReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -224,12 +230,11 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	std::promise<Uuid> promise{};
 	auto future = promise.get_future();
 
-	auto disposeSub = events->AddListener(Key(_uuid),
-			[&promise, uuid = _uuid](const ClientInDisposeEvent&) { promise.set_value(uuid); });
+	auto despawnSub = _clientEvents->AddListener(
+			Key(_uuid), [&promise, uuid = _uuid](const DespawnedEvent&) { promise.set_value(uuid); });
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutDisposeEvent{.uuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(DespawnedEvent{.who = "Bullet", .uuid = _uuid, .reason = DespawnReason::Destroyed});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -237,8 +242,7 @@ TEST_F(NetworkTest, DisposeEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -256,15 +260,14 @@ TEST_F(NetworkTest, DisposeEventReplication)
 //TODO: cover all statistics items like this
 TEST_F(NetworkTest, StatisticsEventReplication)
 {
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -272,14 +275,13 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	std::promise<std::pair<std::string, std::string>> promise{};
 	auto future = promise.get_future();
 
-	auto statsSub = events->AddListener([&promise](const ClientInBulletHitEvent& event)
+	auto statsSub = _clientEvents->AddListener([&promise](const StatisticsBulletHitEvent& event)
 	{
 		promise.set_value({event.author, event.fraction});
 	});
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutBulletHitEvent{.author = "author", .fraction = "fraction"});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = "author", .fraction = "fraction"});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -287,8 +289,7 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -304,6 +305,46 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 
 }
 
+TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
+{
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
+
+	constexpr std::chrono::milliseconds connectTimeout{5000};
+	const auto connectStart = std::chrono::steady_clock::now();
+	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
+	{
+		Pump();
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+	ASSERT_TRUE(client->IsConnected());
+
+	std::promise<void> promise{};
+	auto future = promise.get_future();
+
+	auto pauseSub = _hostEvents->AddListener([&promise](const PauseReleasedEvent&) { promise.set_value(); });
+
+	_clientEvents->EmitEvent(PauseRequestedEvent{.isPaused = true});
+	_clientEvents->EmitEvent(NetworkEndFrameEvent{});
+
+	constexpr std::chrono::milliseconds totalTimeout{5000};
+	constexpr std::chrono::milliseconds checkInterval{1};
+	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+	auto status = std::future_status::timeout;
+	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
+	{
+		Pump();
+
+		if (status = future.wait_for(checkInterval);
+			status == std::future_status::ready)
+		{
+			break;
+		}
+	}
+
+	ASSERT_EQ(status, std::future_status::ready);
+}
+
 TEST_F(NetworkTest, FortressChangeEventReplication)
 {
 
@@ -315,15 +356,14 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	Uuid uuid2ToBrick{UuidUtils::GetUuidFromString("51234567-89ab-cdef-0123-456789abcdef")};
 	Uuid uuid2ToSteel{UuidUtils::GetUuidFromString("61234567-89ab-cdef-0123-456789abcdef")};
 
-	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -343,32 +383,32 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 	std::promise<void> promiseToSteel2{};
 	auto futureToSteel2 = promiseToSteel2.get_future();
 
-	// NOTE: keyed by each event's own uuid, and each uuid listens for one transition type only -
-	// delivery alone proves both the uuid routing and the state, so the payload carries nothing.
-	auto diedSub1 = events->AddListener(Key(uuid1Died),
-			[&promiseDied1](const ClientInFortressDiedEvent&) { promiseDied1.set_value(); });
-	auto toBrickSub1 = events->AddListener(Key(uuid1ToBrick),
-			[&promiseToBrick1](const ClientInFortressToBrickEvent&) { promiseToBrick1.set_value(); });
-	auto toSteelSub1 = events->AddListener(Key(uuid1ToSteel),
-			[&promiseToSteel1](const ClientInFortressToSteelEvent&) { promiseToSteel1.set_value(); });
+	const auto expect = [](std::promise<void>& promise, const FortressState wanted)
+	{
+		return [&promise, wanted](const FortressChangedEvent& event)
+		{
+			EXPECT_EQ(wanted, event.state);
+			promise.set_value();
+		};
+	};
 
-	auto diedSub2 = events->AddListener(Key(uuid2Died),
-			[&promiseDied2](const ClientInFortressDiedEvent&) { promiseDied2.set_value(); });
-	auto toBrickSub2 = events->AddListener(Key(uuid2ToBrick),
-			[&promiseToBrick2](const ClientInFortressToBrickEvent&) { promiseToBrick2.set_value(); });
-	auto toSteelSub2 = events->AddListener(Key(uuid2ToSteel),
-			[&promiseToSteel2](const ClientInFortressToSteelEvent&) { promiseToSteel2.set_value(); });
+	auto diedSub1 = _clientEvents->AddListener(Key(uuid1Died), expect(promiseDied1, FortressState::Died));
+	auto toBrickSub1 = _clientEvents->AddListener(Key(uuid1ToBrick), expect(promiseToBrick1, FortressState::ToBrick));
+	auto toSteelSub1 = _clientEvents->AddListener(Key(uuid1ToSteel), expect(promiseToSteel1, FortressState::ToSteel));
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = uuid1Died});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = uuid1ToBrick});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = uuid1ToSteel});
+	auto diedSub2 = _clientEvents->AddListener(Key(uuid2Died), expect(promiseDied2, FortressState::Died));
+	auto toBrickSub2 = _clientEvents->AddListener(Key(uuid2ToBrick), expect(promiseToBrick2, FortressState::ToBrick));
+	auto toSteelSub2 = _clientEvents->AddListener(Key(uuid2ToSteel), expect(promiseToSteel2, FortressState::ToSteel));
 
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = uuid2Died});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = uuid2ToBrick});
-	events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = uuid2ToSteel});
+	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::Died, .uuid = uuid1Died});
+	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToBrick, .uuid = uuid1ToBrick});
+	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToSteel, .uuid = uuid1ToSteel});
 
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::Died, .uuid = uuid2Died});
+	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToBrick, .uuid = uuid2ToBrick});
+	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToSteel, .uuid = uuid2ToSteel});
+
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -379,8 +419,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToDied1 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (statusToDied1 = futureDied1.wait_for(checkInterval);
 					statusToDied1 == std::future_status::ready)
@@ -395,8 +434,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToBrick1 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (statusToBrick1 = futureToBrick1.wait_for(checkInterval);
 					statusToBrick1 == std::future_status::ready)
@@ -411,8 +449,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToSteel1 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (statusToSteel1 = futureToSteel1.wait_for(checkInterval);
 					statusToSteel1 == std::future_status::ready)
@@ -429,8 +466,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToDied2 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (statusToDied2 = futureDied2.wait_for(checkInterval);
 					statusToDied2 == std::future_status::ready)
@@ -445,8 +481,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToBrick2 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (statusToBrick2 = futureToBrick2.wait_for(checkInterval);
 					statusToBrick2 == std::future_status::ready)
@@ -461,8 +496,7 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 			auto statusToSteel2 = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (statusToSteel2 = futureToSteel2.wait_for(checkInterval);
 					statusToSteel2 == std::future_status::ready)
@@ -479,15 +513,14 @@ TEST_F(NetworkTest, FortressChangeEventReplication)
 TEST_F(NetworkTest, BonusSpawnEventReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -495,16 +528,15 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	std::promise<std::tuple<FPoint, BonusType, Uuid>> promise{};
 	auto future = promise.get_future();
 
-	auto bonusSpawnSub = events->AddListener([&promise](const ClientInBonusSpawnEvent& event)
+	auto bonusSpawnSub = _clientEvents->AddListener([&promise](const BonusSpawnedEvent& event)
 	{
 		promise.set_value({event.pos, event.type, event.uuid});
 	});
 
-	// events->EmitEvent(ServerStartFrameEvent{});
 	constexpr FPoint pos{.x = 42.f, .y = 42.f};
 	constexpr auto type{BonusType::Timer};
-	events->EmitEvent(ServerOutBonusSpawnEvent{.pos = pos, .type = type, .uuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -512,8 +544,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -530,31 +561,30 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 
 }
 
-TEST_F(NetworkTest, BonusDeSpawnEventReplication)
+TEST_F(NetworkTest, DespawnReasonReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
 
-	std::promise<Uuid> promise;
+	std::promise<DespawnReason> promise;
 	auto future = promise.get_future();
 
-	auto bonusDeSpawnSub = events->AddListener(
-			[&promise](const ClientInBonusDeSpawnEvent& event) { promise.set_value(event.uuid); });
+	auto despawnSub = _clientEvents->AddListener(
+			Key(_uuid), [&promise](const DespawnedEvent& event) { promise.set_value(event.reason); });
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutBonusDeSpawnEvent{.uuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(
+			DespawnedEvent{.who = "BonusHelmet", .uuid = _uuid, .reason = DespawnReason::PickedUp});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -562,8 +592,7 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -573,22 +602,20 @@ TEST_F(NetworkTest, BonusDeSpawnEventReplication)
 	}
 
 	ASSERT_EQ(status, std::future_status::ready);
-	const auto uuidReplicated = future.get();
-	EXPECT_EQ(_uuid, uuidReplicated);
+	EXPECT_EQ(DespawnReason::PickedUp, future.get());
 
 }
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -599,13 +626,12 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	std::promise<bool> promise;
 	auto future = promise.get_future();
 
-	auto bonusStatusSub = events->AddListener(Key(nameOrigin),
-			[&promise](const ClientInBonusHelmetPickupEvent& event) { promise.set_value(event.isEnable); });
+	auto bonusStatusSub = _clientEvents->AddListener(Key(nameOrigin),
+			[&promise](const BonusHelmetAppliedEvent& event) { promise.set_value(event.isActive); });
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(
-			ServerOutBonusHelmetPickupEvent{.name = nameOrigin, .isActive = isActiveOrigin});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(
+			BonusHelmetAppliedEvent{.name = nameOrigin, .isActive = isActiveOrigin});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -613,8 +639,7 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -631,15 +656,14 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 
 TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 {
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -649,12 +673,11 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	std::promise<void> promise;
 	const auto future = promise.get_future();
 
-	auto bonusCaliberSub = events->AddListener(Key(nameOrigin),
-			[&promise](const ClientInBonusCaliberPickupEvent&) { promise.set_value(); });
+	auto bonusCaliberSub = _clientEvents->AddListener(Key(nameOrigin),
+			[&promise](const BonusCaliberAppliedEvent&) { promise.set_value(); });
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutBonusCaliberPickupEvent{.author = nameOrigin});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(BonusCaliberAppliedEvent{.name = nameOrigin});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -662,8 +685,7 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -679,33 +701,31 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
 
 	constexpr auto obstacleType = ObstacleType::Brick;
-	constexpr ObjRectangle rectOrigin{.x = 42.0f, .y = 43.0f, .w = 44.0f, .h = 45.0f};
+	constexpr FPoint posOrigin{.x = 42.0f, .y = 43.0f};
 
-	std::promise<std::tuple<ObjRectangle, ObstacleType, Uuid>> promise{};
+	std::promise<std::tuple<FPoint, ObstacleType, Uuid>> promise{};
 	auto future = promise.get_future();
 
-	auto obstacleSpawnSub = events->AddListener([&promise](const ClientInObstacleSpawnEvent& event)
+	auto obstacleSpawnSub = _clientEvents->AddListener([&promise](const ObstacleSpawnedEvent& event)
 	{
-		promise.set_value({event.rect, event.type, event.uuid});
+		promise.set_value({event.pos, event.type, event.uuid});
 	});
 
-	// events->EmitEvent(ServerStartFrameEvent{});
-	events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = rectOrigin, .type = obstacleType, .uuid = _uuid});
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(ObstacleSpawnedEvent{.pos = posOrigin, .type = obstacleType, .uuid = _uuid});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -713,8 +733,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	auto status = std::future_status::timeout;
 	while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-		events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+		Pump();
 
 		if (status = future.wait_for(checkInterval);
 			status == std::future_status::ready)
@@ -724,11 +743,9 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	}
 
 	ASSERT_EQ(status, std::future_status::ready);
-	auto [rect, type, uuid] = future.get();
-	EXPECT_EQ(rectOrigin.x, rect.x);
-	EXPECT_EQ(rectOrigin.y, rect.y);
-	EXPECT_EQ(rectOrigin.w, rect.w);
-	EXPECT_EQ(rectOrigin.h, rect.h);
+	auto [pos, type, uuid] = future.get();
+	EXPECT_EQ(posOrigin.x, pos.x);
+	EXPECT_EQ(posOrigin.y, pos.y);
 	EXPECT_EQ(obstacleType, type);
 	EXPECT_EQ(_uuid, uuid);
 
@@ -737,15 +754,14 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -762,28 +778,28 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 		bricksRect.emplace_back(value, value + 1, value + 2, value + 3);
 	}
 
-	std::vector<std::promise<std::tuple<ObjRectangle, ObstacleType, Uuid>>> promises(itemsInMassiveTest);
+	std::vector<std::promise<std::tuple<FPoint, ObstacleType, Uuid>>> promises(itemsInMassiveTest);
 
 	std::mutex mtx;
 	std::atomic<size_t> count{0u};
-	auto massiveObstacleSub = events->AddListener(
-			[&promises, &count, &mtx](const ClientInObstacleSpawnEvent& event)
+	auto massiveObstacleSub = _clientEvents->AddListener(
+			[&promises, &count, &mtx](const ObstacleSpawnedEvent& event)
 			{
 				std::scoped_lock lock(mtx);
 
 				const auto current = count.fetch_add(1u);
 				if (current < promises.size())
 				{
-					promises[current].set_value({event.rect, event.type, event.uuid});
+					promises[current].set_value({event.pos, event.type, event.uuid});
 				}
 			});
 
-	// events->EmitEvent(ServerStartFrameEvent{});
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = bricksRect[i], .type = obstacleType, .uuid = _uuid});
+		_hostEvents->EmitEvent(ObstacleSpawnedEvent{
+				.pos = FPoint{.x = bricksRect[i].x, .y = bricksRect[i].y}, .type = obstacleType, .uuid = _uuid});
 	}
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -796,8 +812,7 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			auto status = std::future_status::timeout;
 			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 			{
-				events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-				events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+				Pump();
 
 				if (status = future.wait_for(checkInterval);
 					status == std::future_status::ready)
@@ -807,12 +822,10 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 			}
 
 			ASSERT_EQ(status, std::future_status::ready);
-			auto [rect, type, uuid] = future.get();
+			auto [pos, type, uuid] = future.get();
 			auto [x, y, w, h] = bricksRect[i];
-			EXPECT_FLOAT_EQ(x, rect.x);
-			EXPECT_FLOAT_EQ(y, rect.y);
-			EXPECT_FLOAT_EQ(w, rect.w);
-			EXPECT_FLOAT_EQ(h, rect.h);
+			EXPECT_FLOAT_EQ(x, pos.x);
+			EXPECT_FLOAT_EQ(y, pos.y);
 			EXPECT_EQ(obstacleType, type);
 			EXPECT_EQ(_uuid, uuid);
 		}
@@ -822,15 +835,14 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 TEST_F(NetworkTest, RespawnTankEventReplication)
 {
 
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
 	constexpr std::chrono::milliseconds connectTimeout{5000};
 	const auto connectStart = std::chrono::steady_clock::now();
 	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
 	{
-		events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+		Pump();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 	ASSERT_TRUE(client->IsConnected());
@@ -838,10 +850,10 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 	std::vector<std::promise<std::tuple<TankType, Uuid, FPoint>>> promises(6u);
 
 	size_t count = 0u;
-	auto respawnTankSub = events->AddListener(
-			[&promises, &count](const ClientInRespawnTankEvent& event)
+	auto respawnTankSub = _clientEvents->AddListener(
+			[&promises, &count](const TankRespawnedEvent& event)
 			{
-				promises[count++].set_value({event.type, event.uuid, FPoint{.x = event.rect.x, .y = event.rect.y}});
+				promises[count++].set_value({event.type, event.uuid, event.pos});
 			});
 
 	constexpr std::array tankTypes{
@@ -855,12 +867,12 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 	constexpr ObjRectangle rectOrigin{.x = 12.f, .y = 34.f, .w = 16.f, .h = 16.f};
 
-	// events->EmitEvent(ServerStartFrameEvent{});
 	for (const auto tankType: tankTypes)
 	{
-		events->EmitEvent(ServerOutRespawnTankEvent{.type = tankType, .uuid = _uuid, .rect = rectOrigin});
+		_hostEvents->EmitEvent(TankRespawnedEvent{
+				.type = tankType, .uuid = _uuid, .pos = FPoint{.x = rectOrigin.x, .y = rectOrigin.y}});
 	}
-	events->EmitEvent(NetworkEndFrameEvent{});
+	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
 
 	constexpr std::chrono::milliseconds totalTimeout{5000};
 	constexpr std::chrono::milliseconds checkInterval{1};
@@ -871,8 +883,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 		auto status = std::future_status::timeout;
 		while (std::chrono::steady_clock::now() - startTime < totalTimeout)
 		{
-			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
-			events->EmitEvent(PreTickUpdateEvent{.deltaTime = 1.0});
+			Pump();
 
 			if (status = future.wait_for(checkInterval);
 				status == std::future_status::ready)
@@ -890,21 +901,20 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 
 }
 
-//NOTE: exercises the link itself, not a command travelling over it
+//NOTE: exercises the link itself, not a command traveling over it
 TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 {
-	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
 	const uint16_t port = server->GetBoundPort();
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, _clientEvents);
 
 	//NOTE: the network runs on its own threads; this just drives the game-side events MainLoop would
-	const auto pumpUntil = [&events](auto&& predicate, const std::chrono::milliseconds timeout)
+	const auto pumpUntil = [this](auto&& predicate, const std::chrono::milliseconds timeout)
 	{
 		const auto start = std::chrono::steady_clock::now();
 		while (!predicate() && std::chrono::steady_clock::now() - start < timeout)
 		{
-			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			Pump();
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		return predicate();
@@ -928,7 +938,7 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 		{
 			try
 			{
-				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, events);
+				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, _hostEvents);
 			}
 			catch (const std::exception&)
 			{
@@ -947,20 +957,19 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 			<< "client did not reconnect after the host came back";
 }
 
-//NOTE: like the reconnect test above - about the link, not about a command riding it
+//NOTE: like the reconnection test above - about the link, not about a command riding it
 TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
 {
-	auto events = std::make_shared<EventSystem>();
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
+	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
 	const uint16_t port = server->GetBoundPort();
-	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, events);
+	const auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", port, _clientEvents);
 
-	const auto pumpUntil = [&events](auto&& predicate, const std::chrono::milliseconds timeout)
+	const auto pumpUntil = [this](auto&& predicate, const std::chrono::milliseconds timeout)
 	{
 		const auto start = std::chrono::steady_clock::now();
 		while (!predicate() && std::chrono::steady_clock::now() - start < timeout)
 		{
-			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			Pump();
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		return predicate();
@@ -969,7 +978,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
 	ASSERT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{5000}));
 
 	std::optional<DisconnectReason> received{};
-	auto disconnectSub = events->AddListener([&received](const ClientInDisconnectEvent& event)
+	auto disconnectSub = _clientEvents->AddListener([&received](const ClientInDisconnectEvent& event)
 	{
 		received = event.reason;
 	});
@@ -987,7 +996,7 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
 		{
 			try
 			{
-				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, events);
+				server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", port, _hostEvents);
 			}
 			catch (const std::exception&)
 			{
@@ -1010,16 +1019,15 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
 
 TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 {
-	auto events = std::make_shared<EventSystem>();
-	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, events);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), events);
+	const auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
+	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
 
-	const auto pumpUntil = [&events](auto&& predicate, const std::chrono::milliseconds timeout)
+	const auto pumpUntil = [this](auto&& predicate, const std::chrono::milliseconds timeout)
 	{
 		const auto start = std::chrono::steady_clock::now();
 		while (!predicate() && std::chrono::steady_clock::now() - start < timeout)
 		{
-			events->EmitEvent(NetCommandUpdateEvent{.deltaTime = 1.0});
+			Pump();
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		return predicate();
@@ -1028,7 +1036,7 @@ TEST_F(NetworkTest, ClientQuitTellsHostWhy)
 	ASSERT_TRUE(pumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{5000}));
 
 	std::optional<DisconnectReason> received{};
-	auto disconnectSub = events->AddListener([&received](const ServerInDisconnectEvent& event)
+	auto disconnectSub = _hostEvents->AddListener([&received](const ServerInDisconnectEvent& event)
 	{
 		received = event.reason;
 	});

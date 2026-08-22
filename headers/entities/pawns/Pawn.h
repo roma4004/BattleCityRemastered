@@ -13,7 +13,8 @@ struct ObjRectangle;
 class IMoveBeh;
 class EventSystem;
 class GameConfig;
-struct ClientInHealthEvent;
+struct HealthChangedEvent;
+struct DespawnedEvent;
 struct TickUpdateEvent;
 
 class Pawn : public BaseObj, public ITickUpdatable
@@ -24,7 +25,7 @@ public:
 	~Pawn() override;
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);
@@ -43,22 +44,15 @@ protected:
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
 
-	// _subs: the Subscribe()/Unsubscribe() toggle group (SubscribeAsAuthority/SubscribeAsClient plus
-	// whatever derived classes' own Subscribe() overrides push in) - shared with derived classes
-	// since Tank/Bullet add their own listeners into this same inherited vector rather than
-	// keeping a separate one, so one Unsubscribe() clears everything for the whole hierarchy.
-	// _tickUpdateSub: toggled independently by SubscribeTickUpdate()/UnsubscribeTickUpdate() (e.g.
-	// to pause ticking during a bonus-timer effect) without disturbing the rest of _subs.
-	// Both mutable: Unsubscribe()/UnsubscribeTickUpdate() are const but must be able to clear them.
-	mutable std::vector<EventSubscription> _subs{};
-	mutable EventSubscription _tickUpdateSub{};
+	std::vector<EventSubscription> _subs{};
+	EventSubscription _tickUpdateSub{};
 
 	virtual void Subscribe();
-	void Unsubscribe() const;
-
+	void Unsubscribe();
 	void SubscribeTickUpdate();
-	void UnsubscribeTickUpdate() const;
+	void UnsubscribeTickUpdate();
 	void OnTickUpdate(const TickUpdateEvent& event);
+	virtual void OnDespawned(const DespawnedEvent& event);
 
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(double deltaTime) override = 0;
@@ -66,5 +60,5 @@ protected:
 private:
 	virtual void SubscribeAsAuthority();
 	virtual void SubscribeAsClient();
-	void OnClientInHealth(const ClientInHealthEvent& event);
+	void OnHealthChanged(const HealthChangedEvent& event);
 };

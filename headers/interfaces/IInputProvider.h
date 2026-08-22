@@ -13,5 +13,5 @@ public:
 	[[nodiscard]] PlayerKeys GetKeysStats() const { return _playerKeys; }
 
 	virtual void Enable() = 0;
-	virtual void Disable() const = 0;
+	virtual void Disable() = 0;
 };

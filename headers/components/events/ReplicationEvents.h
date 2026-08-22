@@ -5,7 +5,7 @@
 #include "utils/Uuid.h"
 #include <string>
 
-struct ServerOutPosEvent
+struct PosChangedEvent
 {
 	std::string who;
 	FPoint pos;
@@ -13,56 +13,23 @@ struct ServerOutPosEvent
 	Uuid uuid;
 };
 
-struct ServerOutShotEvent
+struct TankShotEvent
 {
 	std::string who;
 	Direction dir;
 	Uuid bulletUuid;
 };
 
-struct ServerOutHealthEvent
+struct HealthChangedEvent
 {
 	std::string who;
 	int health;
 	Uuid uuid;
 };
 
-// Host -> client: "materialize the tank with this uuid now".
-struct ServerOutTankSpawnCompleteEvent
+struct TankSpawnCompletedEvent
 {
 	Uuid uuid;
 };
 
-struct ServerOutBonusHelmetPickupEvent
-{
-	std::string name;
-	bool isActive;
-};
 
-struct ClientInPosEvent
-{
-	FPoint pos;
-	Direction dir;
-};
-
-struct ClientInShotEvent
-{
-	Direction dir;
-	Uuid bulletUuid;
-};
-
-// Broadcast: no Tank exists yet to key against. TankSpawner looks up uuid in its pending-spawn stash.
-struct ClientInTankSpawnCompleteEvent
-{
-	Uuid uuid;
-};
-
-struct ClientInBonusHelmetPickupEvent
-{
-	bool isEnable;
-};
-
-struct ClientInHealthEvent
-{
-	int health;
-};

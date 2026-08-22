@@ -81,10 +81,10 @@ void BonusSpawner::SubscribeAsAuthority()
 
 void BonusSpawner::SubscribeAsClient()
 {
-	_clientSub = _events->AddListener(this, &BonusSpawner::OnClientInBonusSpawn);
+	_clientSub = _events->AddListener(this, &BonusSpawner::OnBonusSpawned);
 }
 
-void BonusSpawner::OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event)
+void BonusSpawner::OnBonusSpawned(const BonusSpawnedEvent& event)
 {
 	const auto size = static_cast<float>(_gameConfig.bonusSize);
 	const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};

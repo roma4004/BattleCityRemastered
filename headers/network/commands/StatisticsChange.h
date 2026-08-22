@@ -11,6 +11,8 @@ struct StatisticsChange final
 {
 	CommandType type{CommandType::STATISTICS_CHANGE};
 	StatisticsType statisticsType{};
+	//NOTE: only the tank facts carry it - which counter they land in is the receiver's call, not the wire's
+	std::string who{};
 	std::string author{};
 	std::string fraction{};
 };

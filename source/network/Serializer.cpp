@@ -13,8 +13,8 @@ namespace
 constexpr std::size_t kCommandTypeCount{static_cast<std::size_t>(CommandType::DISCONNECT) + 1u};
 
 constexpr std::array<const char*, kCommandTypeCount> kCommandNames{
-		"CommandBatch", "PositionChange", "TankShot", "HealthChange", "Dispose", "StatisticsChange",
-		"KeyStateChange", "GameStateChange", "FortressChange", "BonusSpawn", "BonusDeSpawn", "BonusStatus",
+		"CommandBatch", "PositionChange", "TankShot", "HealthChange", "Despawn", "StatisticsChange",
+		"KeyStateChange", "GameStateChange", "FortressChange", "BonusSpawn", "BonusStatus",
 		"RespawnTank", "ObstacleSpawn", "TankSpawnComplete", "SignalEvent", "Disconnect"};
 
 std::string Describe(const commands::CommandBatch& batch)

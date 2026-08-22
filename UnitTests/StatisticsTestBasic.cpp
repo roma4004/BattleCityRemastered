@@ -7,6 +7,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
+#include "entities/bonuses/BonusHelmet.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
@@ -16,6 +17,7 @@
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
 #include <memory>
+#include <thread>
 
 class StatisticsTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
@@ -880,4 +882,50 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
 	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBonusPickupByPlayerTwo(), 0u);
+}
+
+TEST_F(StatisticsTest, BonusExpiredCountedWithNoAuthor)
+{
+	using namespace std::chrono_literals;
+
+	const ObjRectangle rectBonus{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	auto bonus = std::make_shared<BonusHelmet>(rectBonus, _events, 1ms, _uuid, _gameMode, 1000ms);
+	_allObjects.emplace_back(bonus);
+
+	EXPECT_EQ(_statistics->GetBonusExpired(), 0u);
+
+	std::this_thread::sleep_for(2ms);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_statistics->GetBonusExpired(), 1u);
+	EXPECT_FALSE(bonus->GetIsAlive());
+
+	//NOTE: the timer is one-shot - a second tick must not keep counting the same bonus
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_EQ(_statistics->GetBonusExpired(), 1u);
+}
+
+TEST_F(StatisticsTest, BonusShotIsCountedAndPickupIsNot)
+{
+	using namespace std::chrono_literals;
+
+	const ObjRectangle rectBonus{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	auto shot = std::make_shared<BonusHelmet>(rectBonus, _events, 1000ms, _uuid, _gameMode, 1000ms);
+	_allObjects.emplace_back(shot);
+
+	shot->TakeDamage(1u, "Player1", "PlayerTeam");
+
+	EXPECT_FALSE(shot->GetIsAlive());
+	EXPECT_EQ(_statistics->GetBonusDestroyedByPlayerOne(), 1u);
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
+
+	auto taken = std::make_shared<BonusHelmet>(rectBonus, _events, 1000ms, _uuid, _gameMode, 1000ms);
+	_allObjects.emplace_back(taken);
+
+	taken->PickUpBonus("Player1", "PlayerTeam");
+
+	EXPECT_FALSE(taken->GetIsAlive());
+	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 1u);
+	EXPECT_EQ(_statistics->GetBonusDestroyedByPlayerOne(), 1u);
 }

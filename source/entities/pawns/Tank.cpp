@@ -39,7 +39,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 
 	if (IsClient(_gameMode))
 	{
-		_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnClientChangePos));
+		_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnPosChanged));
 	}
 
 	_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnBonusTimerReApplyOnSpawn));
@@ -93,28 +93,27 @@ void Tank::OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event) { Appl
 
 void Tank::SubscribeAsClient()
 {
-	//TODO: reduce number of "ClientIn" overloading if we can use just direct local event
-	//TODO: refactor ClientIn "Shot" to just "Shot" and move bot timers to handle outside bot tank,
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInShot));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInBonusHelmetPickup));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInBonusStarPickup));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnClientInBonusCaliberPickup));
+	//TODO: move bot timers to handle outside bot tank
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnTankShot));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusHelmetApplied));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusStarApplied));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusCaliberApplied));
 }
 
-void Tank::OnClientInShot(const ClientInShotEvent& event)
+void Tank::OnTankShot(const TankShotEvent& event)
 {
 	SetDirection(event.dir);
 	Shot(event.bulletUuid);
 }
 
-void Tank::OnClientInBonusHelmetPickup(const ClientInBonusHelmetPickupEvent& event)
+void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event)
 {
-	OnBonusHelmet(_name, event.isEnable);
+	OnBonusHelmet(_name, event.isActive);
 }
 
-void Tank::OnClientInBonusStarPickup(const ClientInBonusStarPickupEvent&) { OnBonusStar(_name); }
+void Tank::OnBonusStarApplied(const BonusStarAppliedEvent&) { OnBonusStar(_name); }
 
-void Tank::OnClientInBonusCaliberPickup(const ClientInBonusCaliberPickupEvent&) { OnBonusCaliber(_name); }
+void Tank::OnBonusCaliberApplied(const BonusCaliberAppliedEvent&) { OnBonusCaliber(_name); }
 
 void Tank::SubscribeBonus()
 {
@@ -134,11 +133,11 @@ void Tank::OnBonusStarPickup(const BonusStarPickupEvent& event) { OnBonusStar(ev
 
 void Tank::OnBonusCaliberPickup(const BonusCaliberPickupEvent& event) { OnBonusCaliber(event.author); }
 
-void Tank::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Tank::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
 	if (!_effects.isHelmetActive)
 	{
-		Pawn::TakeDamage(damage, damageAuthor, damageFraction);
+		Pawn::TakeDamage(damage, author, fraction);
 	}
 }
 
@@ -150,7 +149,7 @@ void Tank::Shot(const Uuid withUuid)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
+		_events->EmitEvent(TankShotEvent{.who = _name, .dir = GetDirection(), .bulletUuid = bulletUuid});
 	}
 
 	_shootTimer.Reset();
@@ -201,7 +200,7 @@ void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutBonusHelmetPickupEvent{.name = _name, .isActive = isActive});
+			_events->EmitEvent(BonusHelmetAppliedEvent{.name = _name, .isActive = isActive});
 		}
 	}
 }
@@ -238,7 +237,7 @@ void Tank::OnBonusStar(const std::string& author)
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutBonusStarPickupEvent{.author = author});
+			_events->EmitEvent(BonusStarAppliedEvent{.name = author});
 		}
 	}
 }
@@ -264,7 +263,7 @@ void Tank::OnBonusCaliber(const std::string& author)
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutBonusCaliberPickupEvent{.author = author});
+			_events->EmitEvent(BonusCaliberAppliedEvent{.name = author});
 		}
 	}
 }
@@ -288,7 +287,7 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 	}
 }
 
-void Tank::OnClientChangePos(const ClientInPosEvent& event)
+void Tank::OnPosChanged(const PosChangedEvent& event)
 {
 	SetDirection(event.dir);
 	SetPos(event.pos);

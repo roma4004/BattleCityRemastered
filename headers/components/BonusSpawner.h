@@ -17,7 +17,7 @@ struct GameResetEvent;
 struct GameModeChangedToEvent;
 struct WorldGeometryChangedEvent;
 struct TickUpdateEvent;
-struct ClientInBonusSpawnEvent;
+struct BonusSpawnedEvent;
 
 class BonusSpawner final
 {
@@ -46,7 +46,7 @@ class BonusSpawner final
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
 	void SubscribeAsAuthority();
 	void SubscribeAsClient();
-	void OnClientInBonusSpawn(const ClientInBonusSpawnEvent& event);
+	void OnBonusSpawned(const BonusSpawnedEvent& event);
 
 	void UnsubscribeAsAuthority();
 	void UnsubscribeAsClient();

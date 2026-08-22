@@ -1,7 +1,7 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
@@ -25,7 +25,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = _rect, .type = _obstacleType, .uuid = uuid});
+		_events->EmitEvent(ObstacleSpawnedEvent{.pos = GetPos(), .type = _obstacleType, .uuid = uuid});
 	}
 }
 
@@ -41,10 +41,10 @@ void Obstacle::Subscribe()
 
 void Obstacle::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnClientInHealth));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnHealthChanged));
 }
 
-void Obstacle::OnClientInHealth(const ClientInHealthEvent& event) { SetHealth(event.health); }
+void Obstacle::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(event.health); }
 
 void Obstacle::Draw() const
 {
@@ -59,14 +59,14 @@ void Obstacle::SendDamageStatistics(const std::string& author, const std::string
 	}
 }
 
-void Obstacle::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
-	BaseObj::TakeDamage(damage, damageAuthor, damageFraction);
+	BaseObj::TakeDamage(damage, author, fraction);
 
-	SendDamageStatistics(damageAuthor, damageFraction);
+	SendDamageStatistics(author, fraction);
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }

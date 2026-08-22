@@ -60,11 +60,11 @@ void RespawnManager::OnRespawnTanks(const RespawnTanksEvent& event) { RespawnTan
 
 void RespawnManager::SubscribeAsClient()
 {
-	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnClientInBonusTankPickup));
-	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnClientRespawn));
+	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankApplied));
+	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnTankRespawned));
 }
 
-void RespawnManager::OnClientInBonusTankPickup(const ClientInBonusTankPickupEvent& event) { OnBonusTank(event.name); }
+void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.name); }
 
 void RespawnManager::UnsubscribeAsClient() { _clientSubs.clear(); }
 
@@ -169,11 +169,11 @@ void RespawnManager::OnBonusTank(const std::string& author)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutBonusTankPickupEvent{.author = author});
+		_events->EmitEvent(BonusTankAppliedEvent{.name = author});
 	}
 }
 
-void RespawnManager::OnClientRespawn(const ClientInRespawnTankEvent& event)
+void RespawnManager::OnTankRespawned(const TankRespawnedEvent& event)
 {
 	const TankType type = event.type;
 	switch (type)

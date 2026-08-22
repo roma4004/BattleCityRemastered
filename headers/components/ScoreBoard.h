@@ -52,6 +52,7 @@ class ScoreBoard final
 								 unsigned short player2, unsigned short enemy) const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short player1,
 								 unsigned short player2) const;
+	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short total) const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, const std::string& text2,
 								 const std::string& text3) const;
 

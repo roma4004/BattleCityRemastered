@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry/ObjRectangle.h"
+#include "geometry/Point.h"
 #include "enums/CommandType.h"
 #include "enums/TankType.h"
 #include "utils/Uuid.h"
@@ -13,6 +13,6 @@ struct RespawnTank final
 	CommandType type{CommandType::RESPAWN_TANK};
 	TankType tankType{};
 	Uuid uuid{};
-	ObjRectangle rect{};
+	FPoint pos{};
 };
 }//namespace network::commands

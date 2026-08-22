@@ -15,8 +15,8 @@ struct TankDiedEvent;
 struct BonusTankPickupEvent;
 struct PlayersBaseFinishedEvent;
 struct RespawnTanksEvent;
-struct ClientInBonusTankPickupEvent;
-struct ClientInRespawnTankEvent;
+struct BonusTankAppliedEvent;
+struct TankRespawnedEvent;
 
 class RespawnManager final
 {
@@ -45,8 +45,8 @@ class RespawnManager final
 	unsigned short _playersDeathCount{};
 
 	void OnBonusTank(const std::string& author);
-	void OnClientInBonusTankPickup(const ClientInBonusTankPickupEvent& event);
-	void OnClientRespawn(const ClientInRespawnTankEvent& event);
+	void OnBonusTankApplied(const BonusTankAppliedEvent& event);
+	void OnTankRespawned(const TankRespawnedEvent& event);
 
 	void Subscribe();
 	void OnGameReset(const GameResetEvent&);

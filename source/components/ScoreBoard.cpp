@@ -159,6 +159,9 @@ void ScoreBoard::RenderStatistics() const
 							_statistics->GetBonusDestroyedByPlayerOne(),
 							_statistics->GetBonusDestroyedByPlayerTwo(),
 							_statistics->GetBonusDestroyedByEnemyTeam());
+
+	RenderTextWithAlignment({.x = pos.x - 130, .y = pos.y + 380}, color, "BONUS EXPIRED",
+							_statistics->GetBonusExpired());
 }
 
 void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
@@ -183,6 +186,17 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 			<< std::setw(22) << text
 			<< std::setw(4) << player1
 			<< std::setw(4) << player2;
+
+	_events->EmitEvent(RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
+}
+
+void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int color, const std::string& text,
+										 const unsigned short total) const
+{
+	std::ostringstream textStream;
+	textStream << std::left
+			<< std::setw(22) << text
+			<< std::setw(4) << total;
 
 	_events->EmitEvent(RenderTextEvent{.pos = pos, .color = color, .text = textStream.str()});
 }

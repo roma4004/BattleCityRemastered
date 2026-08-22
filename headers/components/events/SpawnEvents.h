@@ -17,32 +17,11 @@ struct AddToSpawnQueueEvent
 	std::shared_ptr<BaseObj> obj;
 };
 
-struct ClientInRespawnTankEvent
-{
-	TankType type;
-	Uuid uuid;
-	ObjRectangle rect;
-};
-
 struct RespawnTankEvent
 {
 	TankType type;
 	Uuid uuid;
 	bool skipDelay;
-};
-
-struct ClientInBonusSpawnEvent
-{
-	FPoint pos;
-	BonusType type;
-	Uuid uuid;
-};
-
-struct ClientInObstacleSpawnEvent
-{
-	ObjRectangle rect;
-	ObstacleType type;
-	Uuid uuid;
 };
 
 struct RespawnCountChangedToEvent
@@ -51,11 +30,25 @@ struct RespawnCountChangedToEvent
 	unsigned short respawnCount;
 };
 
-struct ServerOutRespawnTankEvent
+struct TankRespawnedEvent
 {
 	TankType type;
 	Uuid uuid;
-	ObjRectangle rect;
+	FPoint pos;
+};
+
+struct BonusSpawnedEvent
+{
+	FPoint pos;
+	BonusType type;
+	Uuid uuid;
+};
+
+struct ObstacleSpawnedEvent
+{
+	FPoint pos;
+	ObstacleType type;
+	Uuid uuid;
 };
 
 struct SpawnDelayStartEvent

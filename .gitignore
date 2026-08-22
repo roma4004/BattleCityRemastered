@@ -80,6 +80,11 @@ network_log.txt
 # Build output: both systems write here (MSBuild via Directory.Build.props, CMake via CMakePresets)
 build/
 
+# MSBuild intermediates: unlike CMake, it writes $(Platform)/$(Configuration) next to each .vcxproj
+# and at the solution root (.tlog, .recipe, .res, copied LICENSE files)
+x64/
+Win32/
+
 # IDE and package-manager leftovers
 BattleCi.*/
 packages/

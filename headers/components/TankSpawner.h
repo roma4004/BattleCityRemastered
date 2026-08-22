@@ -22,8 +22,8 @@ struct GameResetEvent;
 struct GameModeChangedToEvent;
 struct RespawnTankEvent;
 struct TankSpawnDelayFinishedEvent;
-struct ClientInRespawnTankEvent;
-struct ClientInTankSpawnCompleteEvent;
+struct TankRespawnedEvent;
+struct TankSpawnCompletedEvent;
 
 class TankSpawner final
 {
@@ -60,8 +60,8 @@ class TankSpawner final
 	void OnRespawnTank(const RespawnTankEvent& event);
 	void OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event);
 	void SubscribeAsClient();
-	void OnClientInRespawnTank(const ClientInRespawnTankEvent& event);
-	void OnClientInTankSpawnComplete(const ClientInTankSpawnCompleteEvent& event);
+	void OnTankRespawned(const TankRespawnedEvent& event);
+	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
 
 	void UnsubscribeAsClient();
 	void Reset(const GameResetEvent&);

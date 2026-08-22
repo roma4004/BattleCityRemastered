@@ -55,13 +55,14 @@ void Bullet::OnDraw(const DrawEvent&) const { Draw(); }
 
 void Bullet::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnClientInDispose));
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnClientChangePos));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnDespawned));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnPosChanged));
 }
 
-void Bullet::OnClientInDispose(const ClientInDisposeEvent&)
+void Bullet::OnDespawned(const DespawnedEvent& event)
 {
-	SetIsAlive(false);
+	Pawn::OnDespawned(event);
+
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
 }
 
@@ -82,7 +83,7 @@ void Bullet::Enable()
 	Subscribe();
 }
 
-void Bullet::Disable() const
+void Bullet::Disable()
 {
 	Log::Detail("bullet disabled " + _nameWithUuid);
 
@@ -137,7 +138,7 @@ void Bullet::TickUpdate(const double deltaTime)
 
 		if (isMove && IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(PosChangedEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
 		}
 	}
 }
@@ -153,9 +154,9 @@ void Bullet::SendDamageStatistics(const std::string& author, const std::string& 
 	_events->EmitEvent(StatisticsBulletHitEvent{.author = author, .fraction = fraction});
 }
 
-void Bullet::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Bullet::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
-	Pawn::TakeDamage(damage, damageAuthor, damageFraction);
+	Pawn::TakeDamage(damage, author, fraction);
 }
 
 unsigned int Bullet::GetTier() const { return _calibre.tier; }
@@ -199,7 +200,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
 }
 
-void Bullet::OnClientChangePos(const ClientInPosEvent& event)
+void Bullet::OnPosChanged(const PosChangedEvent& event)
 {
 	SetDirection(event.dir);
 	SetPos(event.pos);

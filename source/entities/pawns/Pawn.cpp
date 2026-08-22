@@ -1,6 +1,7 @@
 #include "entities/pawns/Pawn.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "components/events/TimingEvents.h"
 #include "entities/pawns/PawnProperty.h"
@@ -37,10 +38,13 @@ void Pawn::SubscribeAsAuthority() { SubscribeTickUpdate(); }
 
 void Pawn::SubscribeAsClient()
 {
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnClientInHealth));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnHealthChanged));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnDespawned));
 }
 
-void Pawn::OnClientInHealth(const ClientInHealthEvent& event) { SetHealth(event.health); }
+void Pawn::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
+
+void Pawn::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(event.health); }
 
 void Pawn::SubscribeTickUpdate()
 {
@@ -53,23 +57,23 @@ void Pawn::SubscribeTickUpdate()
 
 void Pawn::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
 
-void Pawn::UnsubscribeTickUpdate() const { _tickUpdateSub = EventSubscription{}; }
+void Pawn::UnsubscribeTickUpdate() { _tickUpdateSub = EventSubscription{}; }
 
-void Pawn::Unsubscribe() const
+void Pawn::Unsubscribe()
 {
 	_subs.clear();
 	_tickUpdateSub = EventSubscription{};
 }
 
-void Pawn::TakeDamage(const unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction)
+void Pawn::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
-	BaseObj::TakeDamage(damage, damageAuthor, damageFraction);
+	BaseObj::TakeDamage(damage, author, fraction);
 
-	SendDamageStatistics(damageAuthor, damageFraction);
+	SendDamageStatistics(author, fraction);
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutHealthEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
 	}
 }
 

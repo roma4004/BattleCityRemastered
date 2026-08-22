@@ -1,7 +1,8 @@
 #include "entities/obstacles/FortressWall.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
-#include "components/events/ObstacleAndBonusEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "entities/pawns/Pawn.h"
@@ -31,7 +32,7 @@ FortressWall::FortressWall(const ObjRectangle rect, const std::shared_ptr<EventS
 	//disable replication for fortress _obstacle
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutObstacleSpawnEvent{.rect = _rect, .type = ObstacleType::Fortress, .uuid = _uuid});
+		_events->EmitEvent(ObstacleSpawnedEvent{.pos = GetPos(), .type = ObstacleType::Fortress, .uuid = _uuid});
 	}
 }
 
@@ -47,18 +48,24 @@ void FortressWall::Subscribe()
 
 void FortressWall::SubscribeAsClient()
 {
-	//NOTE: Client.cpp emits these, split off the ServerOutFortressChangeEvent the host side (below,
-	//PlayAsHost branches) uses for its own local trigger - see ObstacleAndBonusEvents.h for why.
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressDied));
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressToBrick));
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnClientInFortressToSteel));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &FortressWall::OnFortressChanged));
 }
 
-void FortressWall::OnClientInFortressDied(const ClientInFortressDiedEvent&) { OnEnemyPickupShovel(); }
-
-void FortressWall::OnClientInFortressToBrick(const ClientInFortressToBrickEvent&) { OnShovelCooldownEnd(); }
-
-void FortressWall::OnClientInFortressToSteel(const ClientInFortressToSteelEvent&) { OnPlayerPickupShovel(); }
+void FortressWall::OnFortressChanged(const FortressChangedEvent& event)
+{
+	switch (event.state)
+	{
+		case FortressState::Died:
+			OnEnemyPickupShovel();
+			break;
+		case FortressState::ToBrick:
+			OnShovelCooldownEnd();
+			break;
+		case FortressState::ToSteel:
+			OnPlayerPickupShovel();
+			break;
+	}
+}
 
 void FortressWall::SendDamageStatistics(const std::string& author, const std::string& fraction)
 {
@@ -79,11 +86,11 @@ void FortressWall::OnEnemyPickupShovel()
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = _uuid});
+		_events->EmitEvent(FortressChangedEvent{.state = FortressState::Died, .uuid = _uuid});
 	}
 }
 
-// NOTE: call when player team bonus pick up
+// NOTE: call when player team pickup bonus
 void FortressWall::OnPlayerPickupShovel()
 {
 	const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [this](const std::shared_ptr<BaseObj>& object)
@@ -102,7 +109,7 @@ void FortressWall::OnPlayerPickupShovel()
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToSteel, .uuid = _uuid});
+			_events->EmitEvent(FortressChangedEvent{.state = FortressState::ToSteel, .uuid = _uuid});
 		}
 	}
 }
@@ -118,7 +125,7 @@ void FortressWall::OnShovelCooldownEnd()
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::ToBrick, .uuid = _uuid});
+			_events->EmitEvent(FortressChangedEvent{.state = FortressState::ToBrick, .uuid = _uuid});
 		}
 	}
 }
@@ -133,14 +140,13 @@ void FortressWall::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 	event.isActive ? OnPlayerPickupShovel() : OnShovelCooldownEnd();
 }
 
-void FortressWall::TakeDamage(const unsigned int damage, const std::string& damageAuthor,
-							  const std::string& damageFraction)
+void FortressWall::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
-	const int health = std::visit([damage, &damageAuthor, &damageFraction](auto&& obstacle) -> int
+	const int health = std::visit([damage, &author, &fraction](auto&& obstacle) -> int
 	{
 		if (obstacle)
 		{
-			obstacle->TakeDamage(damage, damageAuthor, damageFraction);
+			obstacle->TakeDamage(damage, author, fraction);
 			return obstacle->GetHealth();
 		}
 
@@ -153,7 +159,7 @@ void FortressWall::TakeDamage(const unsigned int damage, const std::string& dama
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutFortressChangeEvent{.state = FortressState::Died, .uuid = _uuid});
+			_events->EmitEvent(FortressChangedEvent{.state = FortressState::Died, .uuid = _uuid});
 		}
 	}
 }

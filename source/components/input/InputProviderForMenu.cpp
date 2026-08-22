@@ -41,6 +41,7 @@ void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 	}
 }
 
+//TODO: change direction without move (one turn before move)
 void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 {
 	//NOTE: Demo runs behind an always-open menu, PlayAsHost stays paused until the client is ready
@@ -129,13 +130,9 @@ void InputProviderForMenu::SetPause(bool value)
 	_keys.pause = value;
 	_events->EmitEvent(PauseStatusEvent{.isPaused = _keys.pause});
 
-	if (_gameConfig.IsHost())
+	if (!_gameConfig.IsHost())
 	{
-		_events->EmitEvent(ServerOutPauseStatusEvent{.isPaused = _keys.pause});
-	}
-	else
-	{
-		_events->EmitEvent(ClientOutPauseStatusEvent{.isPaused = _keys.pause});
+		_events->EmitEvent(PauseRequestedEvent{.isPaused = _keys.pause});
 	}
 }
 

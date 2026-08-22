@@ -120,8 +120,7 @@ void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
 bool BaseObj::GetIsAlive() const { return _isAlive; }
 
-void BaseObj::TakeDamage(const unsigned int damage, const std::string& /*damageAuthor*/,
-						 const std::string& /*damageFraction*/)
+void BaseObj::TakeDamage(const unsigned int damage, const std::string& /*author*/, const std::string& /*fraction*/)
 {
 	_health -= static_cast<int>(damage);
 	_isAlive = _health > 0;

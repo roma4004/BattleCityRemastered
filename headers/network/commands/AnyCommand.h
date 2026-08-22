@@ -1,10 +1,9 @@
 #pragma once
 
-#include "BonusDeSpawn.h"
 #include "BonusSpawn.h"
 #include "BonusStatus.h"
+#include "Despawn.h"
 #include "Disconnect.h"
-#include "Dispose.h"
 #include "FortressChange.h"
 #include "GameStateChange.h"
 #include "HealthChange.h"
@@ -23,7 +22,7 @@ namespace network::commands
 {
 //NOTE: ser20 puts the alternative index on the wire - append only, inserting renumbers everything after
 using AnyCommand = std::variant<
-	BonusDeSpawn, BonusSpawn, BonusStatus, Dispose, FortressChange, GameStateChange, HealthChange,
+	BonusSpawn, BonusStatus, Despawn, FortressChange, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
 	TankSpawnComplete, Disconnect>;
 

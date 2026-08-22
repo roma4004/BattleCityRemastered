@@ -12,8 +12,6 @@ void InputProviderForPlayerTwoNet::Subscribe()
 	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnMoveDown));
 	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnMoveRight));
 	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwoNet::OnFire));
-
-	_subs.push_back(_events->AddListener(this, &InputProviderForPlayerTwoNet::OnPauseReleased));
 }
 
 void InputProviderForPlayerTwoNet::OnMoveUp(const ServerInMoveUpEvent& event) { _playerKeys.up = event.isPressed; }
@@ -35,17 +33,12 @@ void InputProviderForPlayerTwoNet::OnMoveRight(const ServerInMoveRightEvent& eve
 
 void InputProviderForPlayerTwoNet::OnFire(const ServerInFireEvent& event) { _playerKeys.shot = event.isPressed; }
 
-void InputProviderForPlayerTwoNet::OnPauseReleased(const ServerInPauseReleasedEvent&) const
-{
-	_events->EmitEvent(PauseReleasedEvent{});
-}
-
 void InputProviderForPlayerTwoNet::Enable()
 {
 	Subscribe();
 }
 
-void InputProviderForPlayerTwoNet::Disable() const
+void InputProviderForPlayerTwoNet::Disable()
 {
 	_subs.clear();
 }

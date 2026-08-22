@@ -64,18 +64,18 @@ void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& ev
 
 void TankSpawner::SubscribeAsClient()
 {
-	_clientRespawnSub = _events->AddListener(this, &TankSpawner::OnClientInRespawnTank);
-
-	// Sole materialize trigger on the client - DelayedSpawnManager's timer doesn't tick here.
-	_clientMaterializeSub = _events->AddListener(this, &TankSpawner::OnClientInTankSpawnComplete);
+	_clientRespawnSub = _events->AddListener(this, &TankSpawner::OnTankRespawned);
+	_clientMaterializeSub = _events->AddListener(this, &TankSpawner::OnTankSpawnCompleted);
 }
 
-void TankSpawner::OnClientInRespawnTank(const ClientInRespawnTankEvent& event)
+void TankSpawner::OnTankRespawned(const TankRespawnedEvent& event)
 {
-	OnClientRespawn(event.type, event.uuid, event.rect);
+	const float tankSize{_gameConfig.tankSize};
+	OnClientRespawn(event.type, event.uuid,
+					ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = tankSize, .h = tankSize});
 }
 
-void TankSpawner::OnClientInTankSpawnComplete(const ClientInTankSpawnCompleteEvent& event)
+void TankSpawner::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
 }
@@ -194,7 +194,7 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const 
 										   skipDelay);
 	if (isSuccessSpawn && IsHost(_gameMode))
 	{
-		_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
+		_events->EmitEvent(TankRespawnedEvent{.type = type, .uuid = uuid, .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
 	}
 }
 
@@ -261,7 +261,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid, const 
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutRespawnTankEvent{.type = type, .uuid = uuid, .rect = spawnRect});
+			_events->EmitEvent(TankRespawnedEvent{.type = type, .uuid = uuid, .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
 		}
 	}
 	else if (UsesCoopBots(_gameMode))
@@ -409,7 +409,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutTankSpawnCompleteEvent{.uuid = params.uuid});
+			_events->EmitEvent(TankSpawnCompletedEvent{.uuid = params.uuid});
 		}
 	}
 }

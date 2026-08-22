@@ -13,8 +13,8 @@ class BulletPool;
 class ShootingBeh;
 class GameConfig;
 struct DrawEvent;
-struct ClientInDisposeEvent;
-struct ClientInPosEvent;
+struct DespawnedEvent;
+struct PosChangedEvent;
 
 class Bullet final : public Pawn, public IDrawable
 {
@@ -26,13 +26,13 @@ class Bullet final : public Pawn, public IDrawable
 
 	void SubscribeAsClient() override;
 	void Enable();
-	void Disable() const;
+	void Disable();
 	void Reset(BulletResetProperty resetProperty);
 	void OnDraw(const DrawEvent&) const;
-	void OnClientInDispose(const ClientInDisposeEvent&);
 
 protected:
 	void Subscribe() override;
+	void OnDespawned(const DespawnedEvent& event) override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
 
@@ -56,10 +56,10 @@ public:
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
-	void OnClientChangePos(const ClientInPosEvent& event);
+	void OnPosChanged(const PosChangedEvent& event);
 };

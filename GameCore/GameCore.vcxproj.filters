@@ -353,9 +353,6 @@
     <ClInclude Include="..\headers\components\events\ObjectLifecycleEvents.h">
       <Filter>headers\components\events</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\components\events\ObstacleAndBonusEvents.h">
-      <Filter>headers\components\events</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\components\events\RenderUIEvents.h">
       <Filter>headers\components\events</Filter>
     </ClInclude>
@@ -557,6 +554,9 @@
     <ClInclude Include="..\headers\enums\CommandType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\DespawnReason.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\Direction.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -644,9 +644,6 @@
     <ClInclude Include="..\headers\network\commands\AnyCommand.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\network\commands\BonusDeSpawn.h">
-      <Filter>headers\network\commands</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -659,10 +656,10 @@
     <ClInclude Include="..\headers\network\commands\CommandSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\network\commands\Disconnect.h">
+    <ClInclude Include="..\headers\network\commands\Despawn.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\network\commands\Dispose.h">
+    <ClInclude Include="..\headers\network\commands\Disconnect.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\FortressChange.h">
@@ -675,9 +672,6 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\KeyStateChange.h">
-      <Filter>headers\network\commands</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\network\commands\ObjRectangleSerialization.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\ObstacleSpawn.h">

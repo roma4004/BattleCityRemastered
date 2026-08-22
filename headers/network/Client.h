@@ -26,7 +26,7 @@ struct MoveDownEvent;
 struct MoveRightEvent;
 struct FireEvent;
 struct ClientOutReadyToPlayEvent;
-struct ClientOutPauseStatusEvent;
+struct PauseRequestedEvent;
 
 namespace network::commands
 {
@@ -62,19 +62,18 @@ private:
 	void OnMoveRight(const MoveRightEvent& event);
 	void OnFire(const FireEvent& event);
 	void OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&);
-	void OnClientOutPauseStatus(const ClientOutPauseStatusEvent& event);
+	void OnPauseRequested(const PauseRequestedEvent& event);
 
 	void SendKeyState(InputSignal action, bool state);
 	void OnPositionChange(const AnyCommand& command);
 	void OnTankShot(const AnyCommand& command);
 	void OnHealthChange(const AnyCommand& command);
-	void OnDispose(const AnyCommand& command);
+	void OnDespawn(const AnyCommand& command);
 	void OnStatisticsChange(const AnyCommand& command);
 	void OnKeyStateChange(const AnyCommand& command);
 	void OnGameStateChange(const AnyCommand& command);
 	void OnFortressChange(const AnyCommand& command);
 	void OnBonusSpawn(const AnyCommand& command);
-	void OnBonusDeSpawn(const AnyCommand& command);
 	void OnRespawnTank(const AnyCommand& command);
 	void OnObstacleSpawn(const AnyCommand& command);
 	void OnTankSpawnComplete(const AnyCommand& command);

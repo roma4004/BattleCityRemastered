@@ -3,7 +3,7 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/managers/AnimationManager.h"
 #include "utils/ColliderUtils.h"
-#include <cassert>
+#include "utils/Log.h"
 
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 	: _animationManager{std::make_unique<AnimationManager>(events)}
@@ -131,7 +131,7 @@ ObjRectangle TextureManager::GetBonusTextureRect(const std::string& name) const
 		return _offset.bonusCaliber;
 	}
 
-	assert(false && "TextureManager::GetBonusTextureRect: unrecognized bonus name suffix");
+	Log::Error("TextureManager::GetBonusTextureRect: unrecognized bonus name '" + name + "'");
 	return ObjRectangle{};
 }
 
@@ -152,7 +152,7 @@ ObjRectangle TextureManager::GetTextTextureRect(const std::string& name) const
 		return _offset.gameWonText;
 	}
 
-	assert(false && "TextureManager::GetTextTextureRect: unrecognized text name prefix");
+	Log::Error("TextureManager::GetTextTextureRect: unrecognized text name '" + name + "'");
 	return ObjRectangle{};
 }
 

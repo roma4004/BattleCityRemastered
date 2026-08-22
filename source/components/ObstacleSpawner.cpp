@@ -54,12 +54,13 @@ void ObstacleSpawner::OnSpawnObstacle(const SpawnObstacleEvent& event) { SpawnOb
 
 void ObstacleSpawner::SubscribeAsClient()
 {
-	_clientSub = _events->AddListener(this, &ObstacleSpawner::OnClientInObstacleSpawn);
+	_clientSub = _events->AddListener(this, &ObstacleSpawner::OnObstacleSpawned);
 }
 
-void ObstacleSpawner::OnClientInObstacleSpawn(const ClientInObstacleSpawnEvent& event)
+void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 {
-	SpawnObstacle(event.rect, event.type, event.uuid);
+	const float cell{_gameConfig.gridOffset};
+	SpawnObstacle(ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = cell, .h = cell}, event.type, event.uuid);
 }
 
 void ObstacleSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }

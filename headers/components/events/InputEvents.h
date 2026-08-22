@@ -17,17 +17,7 @@ struct PauseStatusEvent
 	bool isPaused;
 };
 
-struct ServerOutPauseStatusEvent
-{
-	bool isPaused;
-};
-
-struct ClientOutPauseStatusEvent
-{
-	bool isPaused;
-};
-
-struct ServerInPauseReleasedEvent
+struct PauseRequestedEvent
 {
 	bool isPaused;
 };

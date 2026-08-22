@@ -15,8 +15,7 @@ struct FireEvent;
 class InputProviderForPlayerOne final : public IInputProvider
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
-	// mutable: Disable() is const (IInputProvider interface) but must be able to unsubscribe.
-	mutable std::vector<EventSubscription> _subs{};
+	std::vector<EventSubscription> _subs{};
 
 	void OnMoveUp(const MoveUpEvent& event);
 	void OnMoveLeft(const MoveLeftEvent& event);
@@ -32,5 +31,5 @@ public:
 	void Subscribe();
 
 	void Enable() override;
-	void Disable() const override;
+	void Disable() override;
 };

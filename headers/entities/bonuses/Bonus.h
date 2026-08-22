@@ -11,11 +11,12 @@
 
 enum class GameMode : char8_t;
 enum class BonusType : char8_t;
+enum class DespawnReason : char8_t;
 struct BaseObjProperty;
 class EventSystem;
 struct DrawEvent;
 struct TickUpdateEvent;
-struct ClientInBonusDeSpawnEvent;
+struct DespawnedEvent;
 
 class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IPickupableBonus
 {
@@ -23,6 +24,7 @@ class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IP
 	Timer _lifeTimeTimer{};
 	GameMode _gameMode{};
 	BonusType _bonusType{};
+	DespawnReason _despawnReason{};
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -32,7 +34,7 @@ protected:
 	void Draw() const override;
 	void OnDraw(const DrawEvent&) const;
 	void OnTickUpdate(const TickUpdateEvent& event);
-	void OnClientInBonusDeSpawn(const ClientInBonusDeSpawnEvent& event);
+	void OnDespawned(const DespawnedEvent& event);
 
 	virtual void EmitPickupEvent(const std::string& author, const std::string& fraction) = 0;
 
@@ -47,6 +49,9 @@ public:
 	void Subscribe();
 	void SubscribeAsAuthority();
 	void SubscribeAsClient();
+
+	//BaseObj overrides
+	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void PickUpBonus(const std::string& author, const std::string& fraction) override;

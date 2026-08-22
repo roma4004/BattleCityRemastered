@@ -345,7 +345,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+			_events->EmitEvent(PosChangedEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 		}
 	}
 
@@ -360,7 +360,7 @@ void Bot::TickUpdate(const double deltaTime)
 
 			if (IsHost(_gameMode))
 			{
-				_events->EmitEvent(ServerOutPosEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
+				_events->EmitEvent(PosChangedEvent{.who = _name, .pos = pos, .dir = _dir, .uuid = _uuid});
 			}
 		}
 	}

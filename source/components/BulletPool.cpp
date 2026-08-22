@@ -68,7 +68,7 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 	}
 
 	std::scoped_lock lock(_bulletsMutex);
-	if (const auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
+	if (auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
 	{
 		Log::Detail("bullet returned to a pool of " + std::to_string(_bullets.size()) + ", author "
 					+ bulletCast->GetAuthor() + " uuid " + UuidUtils::GetStringUuid(bulletCast->GetUuid()));
@@ -79,7 +79,8 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 			ReturnBullet(b);
 		}));
 
-		_events->EmitEvent(ServerOutDisposeEvent{.uuid = bulletCast->GetUuid()});
+		_events->EmitEvent(DespawnedEvent{
+				.who = bulletCast->GetName(), .uuid = bulletCast->GetUuid(), .reason = DespawnReason::Destroyed});
 	}
 }
 

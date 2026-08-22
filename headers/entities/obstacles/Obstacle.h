@@ -10,13 +10,13 @@
 enum class ObstacleType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
-struct ClientInHealthEvent;
+struct HealthChangedEvent;
 
 class Obstacle : public BaseObj, public IDrawable
 {
 	virtual void Subscribe();
 	virtual void SubscribeAsClient();
-	void OnClientInHealth(const ClientInHealthEvent& event);
+	void OnHealthChanged(const HealthChangedEvent& event);
 
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -41,5 +41,5 @@ public:
 
 	//BaseObj overrides
 	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void TakeDamage(unsigned int damage, const std::string& damageAuthor, const std::string& damageFraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 };

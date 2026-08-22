@@ -1,16 +1,13 @@
 #pragma once
 
 #include "components/EventSystem.h"
-#include "components/events/ObstacleAndBonusEvents.h"
 #include "components/events/StatisticsEvents.h"
-#include "enums/GameMode.h"
 #include <memory>
 #include <string>
 #include <vector>
 
 class EventSystem;
 struct GameResetEvent;
-struct GameModeChangedToEvent;
 
 struct StatisticsData final
 {
@@ -51,65 +48,34 @@ struct StatisticsData final
 	unsigned short bonusDestroyedByEnemyTeam{};
 	unsigned short bonusDestroyedByPlayerOne{};
 	unsigned short bonusDestroyedByPlayerTwo{};
+
+	unsigned short bonusExpired{};
 };
 
 class GameStatistics final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
-	// subscribe-once-at-construction lifetime - clearing one of these vectors auto-unsubscribes
-	// just that group.
-	std::vector<EventSubscription> _authoritySubs{};
-	std::vector<EventSubscription> _clientSubs{};
 	StatisticsData _data{};
-	GameMode _gameMode{};
-
-	//NOTE: the host republishes the fact it just counted; anywhere else this is a no-op
-	template<typename EventT>
-	void EmitReplicated(const EventT& event) const
-	{
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(event);
-		}
-	}
 
 	void Subscribe();
-	void SubscribeAsAuthority();
-	void SubscribeAsClient();
 	void OnGameReset(const GameResetEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
-
-	void UnsubscribeAsAuthority();
-	void UnsubscribeAsClient();
 
 	void OnBulletHit(const StatisticsBulletHitEvent& event);
-	void OnClientInBulletHit(const ClientInBulletHitEvent& event);
-	void OnEnemyHit(const std::string& author, const std::string& fraction);
-	void OnClientInEnemyHit(const ClientInEnemyHitEvent& event);
-	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
-	void OnClientInPlayerOneHit(const ClientInPlayerOneHitEvent& event);
-	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnClientInPlayerTwoHit(const ClientInPlayerTwoHitEvent& event);
 	void OnTankHit(const StatisticsTankHitEvent& event);
-	void OnEnemyDied(const std::string& author, const std::string& fraction);
-	void OnClientInEnemyDied(const ClientInEnemyDiedEvent& event);
-	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
-	void OnClientInPlayerOneDied(const ClientInPlayerOneDiedEvent& event);
-	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
-	void OnClientInPlayerTwoDied(const ClientInPlayerTwoDiedEvent& event);
 	void OnTankDied(const StatisticsTankDiedEvent& event);
-	void OnBrickWallDied(const StatisticsAttributionEvent& event);
-	void OnAuthorityBrickWallDied(const BrickWallDiedEvent& event);
-	void OnClientInBrickWallDied(const ClientInBrickWallDiedEvent& event);
-	void OnSteelWallDied(const StatisticsAttributionEvent& event);
-	void OnAuthoritySteelWallDied(const SteelWallDiedEvent& event);
-	void OnClientInSteelWallDied(const ClientInSteelWallDiedEvent& event);
+	void OnBrickWallDied(const BrickWallDiedEvent& event);
+	void OnSteelWallDied(const SteelWallDiedEvent& event);
 	void OnBonusPickup(const StatisticsBonusPickupEvent& event);
-	void OnClientInBonusPickup(const ClientInBonusPickupEvent& event);
 	void OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event);
-	void OnClientInBonusDestroyed(const ClientInBonusDestroyedEvent& event);
+	void OnBonusExpired(const StatisticsBonusExpiredEvent&);
+
+	void OnEnemyHit(const std::string& author, const std::string& fraction);
+	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
+	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
+	void OnEnemyDied(const std::string& author, const std::string& fraction);
+	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
+	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);
@@ -155,4 +121,6 @@ public:
 	[[nodiscard]] unsigned short GetBonusDestroyedByEnemyTeam() const { return _data.bonusDestroyedByEnemyTeam; }
 	[[nodiscard]] unsigned short GetBonusDestroyedByPlayerOne() const { return _data.bonusDestroyedByPlayerOne; }
 	[[nodiscard]] unsigned short GetBonusDestroyedByPlayerTwo() const { return _data.bonusDestroyedByPlayerTwo; }
+
+	[[nodiscard]] unsigned short GetBonusExpired() const { return _data.bonusExpired; }
 };
