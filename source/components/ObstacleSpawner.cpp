@@ -59,8 +59,8 @@ void ObstacleSpawner::SubscribeAsClient()
 
 void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 {
-	const float cell{_gameConfig.gridOffset};
-	SpawnObstacle(ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = cell, .h = cell}, event.type, event.uuid);
+	const float side{_gameConfig.gridOffset * ObstacleCellSpan(event.type)};
+	SpawnObstacle(ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = side, .h = side}, event.type, event.uuid);
 }
 
 void ObstacleSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }

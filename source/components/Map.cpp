@@ -5,13 +5,6 @@
 #include "geometry/ObjRectangle.h"
 #include "enums/ObstacleType.h"
 
-namespace
-{
-//NOTE: the eagle is drawn as one 4x4-cell piece from a single cell, the way the fortress ring
-//around it is laid out in the file
-constexpr float kEagleCellSpan{4.f};
-}
-
 Map::Map(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
@@ -35,7 +28,7 @@ void Map::CreateObstacles(const float cellSize) const
 				continue;
 			}
 
-			const float span = type == ObstacleType::Eagle ? kEagleCellSpan : 1.f;
+			const float span = ObstacleCellSpan(type);
 			const ObjRectangle rect{.x = static_cast<float>(col) * cellSize,
 									.y = static_cast<float>(row) * cellSize,
 									.w = cellSize * span,

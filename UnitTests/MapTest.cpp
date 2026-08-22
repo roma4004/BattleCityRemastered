@@ -1,4 +1,13 @@
 #include "components/MapLoader.h"
+#include "application/GameConfig.h"
+#include "application/ProjectConfig.h"
+#include "components/EventSystem.h"
+#include "components/ObstacleSpawner.h"
+#include "components/events/GameModeEvents.h"
+#include "components/events/SpawnEvents.h"
+#include "enums/GameMode.h"
+#include "entities/BaseObj.h"
+#include "utils/UuidUtils.h"
 #include "components/WorldGeometry.h"
 #include <gtest/gtest.h>
 #include <filesystem>
@@ -139,4 +148,29 @@ TEST(WorldGeometryTest, EmptyMapProducesNothingToFit)
 	const WorldGeometry geometry = WorldGeometry::FitMap(UPoint{.x = 800u, .y = 600u}, 0u, 0u);
 
 	EXPECT_FLOAT_EQ(geometry.cellSize, 0.f);
+}
+
+//NOTE: the host sizes an eagle from the map, the client from a spawn event carrying only a position -
+//they used to disagree, the client giving it a single cell
+TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
+{
+	auto events = std::make_shared<EventSystem>();
+	std::vector<std::shared_ptr<BaseObj>> allObjects;
+	auto spawnQueueSub = TestUtils::WireSpawnQueue(events, &allObjects);
+
+	ProjectConfig projectConfig{"", true};
+	GameConfig gameConfig{projectConfig};
+	const ObstacleSpawner spawner{events, &allObjects, gameConfig};
+
+	events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::PlayAsClient});
+
+	const float cell{gameConfig.gridOffset};
+	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.f, .y = 0.f}, .type = ObstacleType::Eagle,
+										   .uuid = UuidUtils::GetRandomUuid()});
+	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.f, .y = 0.f}, .type = ObstacleType::Brick,
+										   .uuid = UuidUtils::GetRandomUuid()});
+
+	ASSERT_EQ(allObjects.size(), 2u);
+	EXPECT_FLOAT_EQ(allObjects[0]->GetWidth(), cell * ObstacleCellSpan(ObstacleType::Eagle));
+	EXPECT_FLOAT_EQ(allObjects[1]->GetWidth(), cell);
 }

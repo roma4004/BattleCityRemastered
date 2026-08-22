@@ -21,3 +21,11 @@ enum class ObstacleType : char8_t
 {
 	return type > ObstacleType::None && type < ObstacleType::lastId;
 }
+
+//NOTE: the eagle occupies one map cell but covers 4x4 of them, the way the fortress ring around it is
+//laid out in the file. Both sides size it themselves - the map on the host, the spawn event on the
+//client - so the rule lives here rather than in either of them.
+[[nodiscard]] constexpr float ObstacleCellSpan(const ObstacleType type)
+{
+	return type == ObstacleType::Eagle ? 4.f : 1.f;
+}
