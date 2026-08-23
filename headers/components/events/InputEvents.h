@@ -12,6 +12,11 @@ struct PauseReleasedEvent {};
 
 struct TabReleasedEvent {};
 
+struct SetPauseEvent
+{
+	bool isPaused;
+};
+
 struct PauseStatusEvent
 {
 	bool isPaused;

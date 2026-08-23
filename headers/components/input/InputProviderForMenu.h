@@ -9,6 +9,7 @@ class GameConfig;
 class EventSystem;
 struct MenuReleasedEvent;
 struct PauseReleasedEvent;
+struct SetPauseEvent;
 struct GameResetEvent;
 struct PreTickUpdateEvent;
 struct ShowMenuEvent;
@@ -39,6 +40,7 @@ class InputProviderForMenu final
 
 	void OnMenuReleased(const MenuReleasedEvent&);
 	void OnPauseReleased(const PauseReleasedEvent&);
+	void OnSetPause(const SetPauseEvent& event);
 	void OnGameReset(const GameResetEvent&);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnShowMenu(const ShowMenuEvent& event);

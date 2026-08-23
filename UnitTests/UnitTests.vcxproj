@@ -52,6 +52,7 @@
     <ClCompile Include="EnemyBotTest.cpp" />
     <ClCompile Include="GameStateManagerTest.cpp" />
     <ClCompile Include="NetworkTest.cpp" />
+    <ClCompile Include="PauseSyncTest.cpp" />
     <ClCompile Include="PlayerTest.cpp" />
     <ClCompile Include="RespawnManagerTest.cpp" />
     <ClCompile Include="StatisticsTestAdvanced.cpp" />

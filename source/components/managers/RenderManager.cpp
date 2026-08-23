@@ -5,13 +5,17 @@
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/Direction.h"
+#include "enums/GameMode.h"
 #include "enums/TextureOffset.h"
 #include <ranges>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
+#include <SDL_video.h>
+#include <string>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig)
 	: _events{events}
@@ -21,7 +25,6 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameCon
 {
 	GenerateFpsTextures();
 
-	//TODO: SDL_SetWindowTitle(gameConfig.sdlWindow.get(), "current GameMode");
 	Subscribe();
 
 	InitMenu(gameConfig);
@@ -64,6 +67,8 @@ void RenderManager::ClearFpsTextureCache()
 void RenderManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &RenderManager::ClearFrame));
+	_subs.push_back(_events->AddListener(this, &RenderManager::PresentFrame));
+	_subs.push_back(_events->AddListener(this, &RenderManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderText));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuBackground));
@@ -411,6 +416,29 @@ void RenderManager::ClearFrame(const PreTickUpdateEvent&) const
 	SDL_RenderClear(_sdlConfig.renderer.get());
 }
 
+void RenderManager::PresentFrame(const PresentFrameEvent&) const
+{
+	SDL_RenderPresent(_sdlConfig.renderer.get());
+}
+
+void RenderManager::OnGameModeChangedTo(const GameModeChangedToEvent& event) const { UpdateWindowTitle(event.mode); }
+
+void RenderManager::UpdateWindowTitle(const GameMode gameMode) const
+{
+	std::string title{SDL_Config::kWindowTitle};
+
+	if (IsHost(gameMode))
+	{
+		title += " - host";
+	}
+	else if (IsClient(gameMode))
+	{
+		title += " - client";
+	}
+
+	SDL_SetWindowTitle(_sdlConfig.sdlWindow.get(), title.c_str());
+}
+
 std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(const Direction dir)
 {
 	switch (dir)
@@ -492,9 +520,6 @@ void RenderManager::RenderFPS(const RenderFPSEvent& event)
 			SDL_RenderCopy(_sdlConfig.renderer.get(), it->second.get(), nullptr, &_fpsRectangle);
 		}
 	}
-
-	//TODO:extract to separated subscription
-	SDL_RenderPresent(_sdlConfig.renderer.get());
 }
 
 void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const

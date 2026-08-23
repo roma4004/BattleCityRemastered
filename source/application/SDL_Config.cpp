@@ -312,14 +312,13 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
-	constexpr auto title = "Battle City remastered";
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
 	const SDL_Rect rect{.x = static_cast<int>(gameConfig.windowPos.x),
 						.y = static_cast<int>(gameConfig.windowPos.y),
 						.w = static_cast<int>(gameConfig.windowSize.x),
 						.h = static_cast<int>(gameConfig.windowSize.y)};
 
-	return {SDL_CreateWindow(title, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
+	return {SDL_CreateWindow(kWindowTitle, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
 }
 
 std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const

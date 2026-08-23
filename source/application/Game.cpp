@@ -110,7 +110,7 @@ void Game::OnPostTickUpdate(const PostTickUpdateEvent&)
 		_isBattlefieldResetPending = false;
 		ResetBattlefield();
 		//NOTE: after the reset, never before - GameResetEvent clears the pause flag itself
-		_events->EmitEvent(PauseStatusEvent{.isPaused = true});
+		_events->EmitEvent(SetPauseEvent{.isPaused = true});
 	}
 
 	if (_isReturnToMenuPending)
@@ -257,6 +257,8 @@ void Game::Run()
 			{
 				_events->EmitEvent(NetworkEndFrameEvent{});
 			}
+
+			_events->EmitEvent(PresentFrameEvent{});
 
 			_events->EmitEvent(CalculateActualFpsEvent{});
 		}

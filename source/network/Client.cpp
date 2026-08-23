@@ -358,7 +358,7 @@ void Client::OnKeyStateChange(const AnyCommand& command)
 	{
 		if (cmd.action == InputSignal::PauseStatus)
 		{
-			_events->EmitEvent(PauseStatusEvent{.isPaused = cmd.isPressed});
+			_events->EmitEvent(SetPauseEvent{.isPaused = cmd.isPressed});
 			return;
 		}
 

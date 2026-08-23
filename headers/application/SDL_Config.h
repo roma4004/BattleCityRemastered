@@ -16,6 +16,8 @@ class ProjectConfig;
 
 struct SDL_Config final
 {
+	static constexpr const char* kWindowTitle{"Battle City remastered"};
+
 	SDL_Config(GameConfig& config, const ProjectConfig& projectConfig);
 	~SDL_Config();
 

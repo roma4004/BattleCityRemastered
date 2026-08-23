@@ -18,6 +18,7 @@ void InputProviderForMenu::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuReleased));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPauseReleased));
+	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnSetPause));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameReset));
 
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPreTickUpdate));
@@ -28,6 +29,7 @@ void InputProviderForMenu::Subscribe()
 
 void InputProviderForMenu::OnMenuReleased(const MenuReleasedEvent&) { ToggleMenuInputSubscription(); }
 void InputProviderForMenu::OnPauseReleased(const PauseReleasedEvent&) { TogglePause(); }
+void InputProviderForMenu::OnSetPause(const SetPauseEvent& event) { SetPause(event.isPaused); }
 void InputProviderForMenu::OnGameReset(const GameResetEvent&) { Reset(); }
 void InputProviderForMenu::OnPreTickUpdate(const PreTickUpdateEvent&) { MenuUpdate(); }
 
@@ -115,7 +117,15 @@ void InputProviderForMenu::ToggleDown()
 	_events->EmitEvent(NextGameModeEvent{});
 }
 
-void InputProviderForMenu::TogglePause() { SetPause(!GetPause()); }
+void InputProviderForMenu::TogglePause()
+{
+	SetPause(!GetPause());
+
+	if (!_gameConfig.IsHost())
+	{
+		_events->EmitEvent(PauseRequestedEvent{.isPaused = _keys.pause});
+	}
+}
 // void InputProviderForMenu::SwitchPause(const bool switchTo) { SetPause(switchTo); }
 
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
@@ -129,11 +139,6 @@ void InputProviderForMenu::SetPause(bool value)
 
 	_keys.pause = value;
 	_events->EmitEvent(PauseStatusEvent{.isPaused = _keys.pause});
-
-	if (!_gameConfig.IsHost())
-	{
-		_events->EmitEvent(PauseRequestedEvent{.isPaused = _keys.pause});
-	}
 }
 
 void InputProviderForMenu::Reset() { SetPause(false); }

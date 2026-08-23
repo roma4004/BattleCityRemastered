@@ -15,6 +15,8 @@ struct SDL_Config;
 class EventSystem;
 class GameConfig;
 struct PreTickUpdateEvent;
+struct PresentFrameEvent;
+struct GameModeChangedToEvent;
 struct RenderTextEvent;
 struct RenderMenuBackgroundEvent;
 struct RenderMenuLogoEvent;
@@ -95,6 +97,9 @@ class RenderManager
 	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
 
 	void ClearFrame(const PreTickUpdateEvent&) const;
+	void PresentFrame(const PresentFrameEvent&) const;
+	void OnGameModeChangedTo(const GameModeChangedToEvent& event) const;
+	void UpdateWindowTitle(GameMode gameMode) const;
 	void ClearColorTextureCache();
 	void ClearFpsTextureCache();
 

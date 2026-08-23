@@ -57,6 +57,9 @@
     <ClCompile Include="NetworkTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="PauseSyncTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="PlayerTest.cpp">
       <Filter></Filter>
     </ClCompile>

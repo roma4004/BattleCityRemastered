@@ -124,6 +124,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
         UnitTests/NetworkTest.cpp
+        UnitTests/PauseSyncTest.cpp
         UnitTests/PlayerTest.cpp
         UnitTests/RespawnManagerTest.cpp
         UnitTests/StatisticsTestAdvanced.cpp

@@ -45,7 +45,6 @@ void GameStateManager::Draw(const PreDrawUserInterfaceEvent&) const
 
 void GameStateManager::Reset(const GameResetEvent&)
 {
-	_isPause = false;
 	_isGameOver = false;
 	_isGameWon = false;
 }
