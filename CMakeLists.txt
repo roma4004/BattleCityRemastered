@@ -129,6 +129,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/StatisticsTestAdvanced.cpp
         UnitTests/StatisticsTestBasic.cpp
         UnitTests/TankSpawnerTest.cpp
+        UnitTests/TimeUtilsTest.cpp
         UnitTests/TestUtils.cpp
 )
 

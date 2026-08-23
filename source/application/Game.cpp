@@ -22,6 +22,7 @@
 #include "enums/GameMode.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
+#include "utils/TimeUtils.h"
 #include <cmath>
 #include <memory>
 //#include <fstream>
@@ -228,6 +229,7 @@ void Game::Run()
 			_events->EmitEvent(FrameStartEvent{});
 			_events->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTime});
 			_events->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTime});
+			TimeUtils::SetPaused(_userInput->IsPause());
 
 			if (!_userInput->IsPause())
 			{
@@ -236,8 +238,6 @@ void Game::Run()
 					constexpr bool skipDelay{false};
 					_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 
-					//TODO: adjust timers on pause\unpause because it can be skipped like timer bonus or:
-					//TODO: avoid ticking timers on pause (pause for active timers, like reload, bonuses, bonus effects)
 					_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTime});
 				}
 			}

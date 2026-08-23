@@ -20,7 +20,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 							  .name = std::move(name),
 							  .fraction = "Neutral"},
 			  s_collision}
-	, _lifeTimeTimer{lifeTime, std::chrono::system_clock::now()}
+	, _lifeTimeTimer{lifeTime}
 	, _gameMode{gameMode}
 	, _bonusType{bonusType}
 	, _events{events}

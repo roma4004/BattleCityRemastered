@@ -72,6 +72,9 @@
     <ClCompile Include="TankSpawnerTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="TimeUtilsTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="TestUtils.cpp">
       <Filter></Filter>
     </ClCompile>

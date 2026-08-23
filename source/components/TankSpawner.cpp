@@ -90,7 +90,7 @@ void TankSpawner::Reset(const GameResetEvent&)
 {
 	_enemySpawnTimer.cooldown = milliseconds{5000};
 	_enemySpawnTimer.isActive = false;
-	_enemySpawnTimer.activateTime = std::chrono::system_clock::now() - _enemySpawnTimer.cooldown;
+	_enemySpawnTimer.activateTime = TimeUtils::Now() - _enemySpawnTimer.cooldown;
 	_delayedSpawns.clear();
 }
 

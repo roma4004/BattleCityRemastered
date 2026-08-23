@@ -31,7 +31,7 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSpawnPosX{0, static_cast<int>(gameConfig.windowSize.x - gameConfig.sideBarWidth) - gameConfig.bonusSize}
 	, _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1}
 	, _gameConfig{gameConfig}
-	, _spawnTimer{std::chrono::seconds{60}, std::chrono::system_clock::now()}
+	, _spawnTimer{std::chrono::seconds{60}}
 {
 	Subscribe();
 }

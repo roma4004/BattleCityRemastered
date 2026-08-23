@@ -97,9 +97,7 @@ void BonusEffectManager::StartTimer(Timer& timer, const std::string& event, cons
 {
 	if (timer.isActive == false)
 	{
-		timer.cooldown = effectDuration;
-		timer.activateTime = std::chrono::system_clock::now();
-		timer.isActive = true;
+		timer.Reset(effectDuration);
 		OnBonusStatusChange(event, id, timer.isActive);
 	}
 	else

@@ -27,7 +27,6 @@ class RespawnManager final
 	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
 	std::vector<EventSubscription> _clientSubs{};
 
-	// TODO: use std::atomic when multithreading is used
 	std::vector<unsigned short> _respawnCount{20u, 3u, 3u};
 
 	struct SpawnSlot

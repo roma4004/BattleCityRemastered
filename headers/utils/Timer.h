@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/TimeUtils.h"
 #include <chrono>
 
 struct Timer
@@ -7,12 +8,12 @@ struct Timer
 	using milliseconds = std::chrono::milliseconds;
 
 	milliseconds cooldown{0};
-	std::chrono::system_clock::time_point activateTime{};
+	TimeUtils::time_point activateTime{};
 	bool isActive{false};
 
 	Timer();
 
-	Timer(milliseconds newCooldown, std::chrono::system_clock::time_point startTime);
+	explicit Timer(milliseconds newCooldown);
 
 	~Timer();
 

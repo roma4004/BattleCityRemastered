@@ -73,6 +73,6 @@ void DelayedSpawnManager::SpawnDelayStart(const Uuid& uuid, const milliseconds d
 	}
 	else
 	{
-		_spawnDelays.emplace_back(uuid, Timer{delay, std::chrono::system_clock::now()});
+		_spawnDelays.emplace_back(uuid, Timer{delay});
 	}
 }
