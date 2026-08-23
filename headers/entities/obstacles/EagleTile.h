@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "IFortress.h"
 #include "Obstacle.h"
 #include <memory>
 
@@ -7,9 +8,9 @@ struct ObjRectangle;
 class EventSystem;
 struct DrawEvent;
 
-class EagleTile final : public Obstacle
+class EagleTile final : public Obstacle, public IFortress
 {
-	void Subscribe() override;
+	void Subscribe();
 	void OnDraw(const DrawEvent&) const;
 
 protected:

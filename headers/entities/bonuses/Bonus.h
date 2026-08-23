@@ -41,9 +41,11 @@ protected:
 public:
 	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
+protected:
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
 		  std::string name, Uuid uuid, GameMode gameMode, BonusType bonusType);
 
+public:
 	~Bonus() override;
 
 	void Subscribe();

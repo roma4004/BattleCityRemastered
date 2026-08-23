@@ -79,3 +79,19 @@ struct BonusTimerReApplyOnSpawnEvent
 {
 	bool isEnabled;
 };
+
+//NOTE: emitted by every fortress wall the spawner builds - the first one claims the spot, later ones
+//just tell FortressManager what stands in it now. The manager keeps the rect after the wall is gone.
+struct FortressSpotRegisteredEvent
+{
+	ObjRectangle rect;
+	std::weak_ptr<BaseObj> wall;
+};
+
+//NOTE: material is Brick or Steel - the spawner knows no other kind of wall, the fortress framing is
+//the caller's
+struct SpawnFortressWallEvent
+{
+	ObjRectangle rect;
+	ObstacleType material;
+};

@@ -6,7 +6,7 @@
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "entities/obstacles/BrickWall.h"
-#include "entities/obstacles/FortressWall.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Bullet.h"
@@ -445,7 +445,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 	// spawn FortressWall
 	constexpr ObjRectangle rect{.x = 0.f, .y = 6.f, .w = 36, .h = 36};
-	auto fortressWall = std::make_shared<FortressWall>(rect, _events, &_allObjects, _uuid, _gameMode);
+	auto fortressWall = std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameMode);
 	_allObjects.emplace_back(fortressWall);
 
 	fortressWall->SetHealth(1);
@@ -453,7 +453,7 @@ TEST_F(BulletTest, BulletDamagefortressWall)
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_EQ(fortressWall->GetHealth(), -1);
+	EXPECT_FALSE(fortressWall->GetIsAlive());
 }
 
 // Check that a bullet deal damage to self when hit something

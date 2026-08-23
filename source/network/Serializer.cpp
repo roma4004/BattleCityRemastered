@@ -14,7 +14,7 @@ constexpr std::size_t kCommandTypeCount{static_cast<std::size_t>(CommandType::DI
 
 constexpr std::array<const char*, kCommandTypeCount> kCommandNames{
 		"CommandBatch", "PositionChange", "TankShot", "HealthChange", "Despawn", "StatisticsChange",
-		"KeyStateChange", "GameStateChange", "FortressChange", "BonusSpawn", "BonusStatus",
+		"KeyStateChange", "GameStateChange", "BonusSpawn", "BonusStatus",
 		"RespawnTank", "ObstacleSpawn", "TankSpawnComplete", "SignalEvent", "Disconnect"};
 
 std::string Describe(const commands::CommandBatch& batch)

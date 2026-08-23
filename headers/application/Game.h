@@ -27,7 +27,6 @@ struct SDL_Config;
 struct AddToSpawnQueueEvent;
 struct PostTickUpdateEvent;
 struct DeltaTimeEvent;
-struct GameModeSelectedWithMouseEvent;
 struct PreviousGameModeEvent;
 struct NextGameModeEvent;
 struct ApplyGameModeEvent;
@@ -35,6 +34,7 @@ struct ServerInClientReadyToStartGameEvent;
 struct ServerInDisconnectEvent;
 struct ClientInDisconnectEvent;
 struct GameModeChangedToEvent;
+struct SelectedGameModeChangedToEvent;
 struct WorldGeometryChangedEvent;
 
 class Game final
@@ -67,7 +67,7 @@ private:
 	void OnAddToSpawnQueue(const AddToSpawnQueueEvent& event);
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
 	void OnDeltaTime(const DeltaTimeEvent& event);
-	void OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event);
+	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 
 	void DisposeDeadObject();
 	void FlushSpawnQueue();

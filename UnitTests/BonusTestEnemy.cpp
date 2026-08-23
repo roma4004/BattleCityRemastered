@@ -9,12 +9,15 @@
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
-#include "entities/obstacles/FortressWall.h"
+#include "components/ObstacleSpawner.h"
+#include "components/managers/FortressManager.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/ObstacleType.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -27,6 +30,10 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::unique_ptr<FortressManager> _fortressManager{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
+	std::shared_ptr<BaseObj> _fortressWall{nullptr};
+	EventSubscription _fortressWallSub{};
 	ProjectConfig _projectConfig{"", true};
 	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -48,6 +55,9 @@ protected:
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
+		_fortressManager = std::make_unique<FortressManager>(_events, &_allObjects);
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, &_allObjects, _gameConfig);
+		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
 	}
@@ -68,21 +78,17 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 
-	// spawn FortressWall
-	auto fortressWall = std::make_shared<FortressWall>(
-			ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize}, _events, &_allObjects,
-			_uuid, _gameMode);
-	_allObjects.emplace_back(fortressWall);
+	// register a fortress wall
+	const ObjRectangle fortressRect{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
-	EXPECT_TRUE(fortressWall->IsBrickWall());
-	EXPECT_NE(fortressWall->GetHealth(), 0);
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_TRUE(fortressWall->IsBrickWall());
-	EXPECT_EQ(fortressWall->GetHealth(), -1);
+	EXPECT_FALSE(_fortressWall->GetIsAlive());
 }
 
 // NOTE: player pickup bonusShovel, then fortressWalls become steelWalls (BonusShovel_Pickup),
@@ -107,39 +113,27 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	bool isPressed{true};
 	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
-	// spawn FortressWall
+	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize * 3.f + 1.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
-	auto fortressWall = std::make_shared<FortressWall>(fortressRect, _events, &_allObjects, _uuid, _gameMode);
-	_allObjects.emplace_back(fortressWall);
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
-	if (fortressWall)
-	{
-		// spawn bonuses
-		const ObjRectangle enemyBonusRect = {.x = 0.f, .y = _tankSize + 3.f, .w = _tankSize, .h = _tankSize};
+	// spawn bonuses
+	const ObjRectangle enemyBonusRect = {.x = 0.f, .y = _tankSize + 3.f, .w = _tankSize, .h = _tankSize};
 
-		_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);
-		const ObjRectangle playerBonusRect = {.x = _tankSize * 2.f,
-											  .y = _tankSize * 2.f + _tankSize + 1.f,
-											  .w = _tankSize,
-											  .h = _tankSize};
-		_bonusSpawner->SpawnBonus(playerBonusRect, BonusType::Shovel);
+	_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);
+	const ObjRectangle playerBonusRect = {.x = _tankSize * 2.f,
+										  .y = _tankSize * 2.f + _tankSize + 1.f,
+										  .w = _tankSize,
+										  .h = _tankSize};
+	_bonusSpawner->SpawnBonus(playerBonusRect, BonusType::Shovel);
 
-		EXPECT_TRUE(fortressWall->IsBrickWall());
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-		_allObjects.pop_back();//NOTE: to avoid second pickup by player same bonus
+	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
 
-		EXPECT_TRUE(fortressWall->IsSteelWall());
-		EXPECT_NE(fortressWall->GetHealth(), 0);
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
-
-		EXPECT_TRUE(fortressWall->IsBrickWall());
-		EXPECT_EQ(fortressWall->GetHealth(), -1);
-
-		return;
-	}
-
-	EXPECT_TRUE(false);
+	EXPECT_FALSE(_fortressWall->GetIsAlive());
 }

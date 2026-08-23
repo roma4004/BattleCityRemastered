@@ -31,7 +31,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseDynamicDebugging>true</UseDynamicDebugging>
+    <UseDynamicDebugging>false</UseDynamicDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -39,7 +39,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseDynamicDebugging>true</UseDynamicDebugging>
+    <UseDynamicDebugging>false</UseDynamicDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -54,7 +54,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseDynamicDebugging>true</UseDynamicDebugging>
+    <UseDynamicDebugging>false</UseDynamicDebugging>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -74,8 +74,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)/headers;$(ProjectDir)/ThirdParty/ser20/include;$(ProjectDir)/ThirdParty/boost/align/include;$(ProjectDir)/ThirdParty/boost/any/include;$(ProjectDir)/ThirdParty/boost/asio/include;$(ProjectDir)/ThirdParty/boost/assert/include;$(ProjectDir)/ThirdParty/boost/bind/include;$(ProjectDir)/ThirdParty/boost/config/include;$(ProjectDir)/ThirdParty/boost/container_hash/include;$(ProjectDir)/ThirdParty/boost/winapi/include;$(ProjectDir)/ThirdParty/boost/preprocessor/include;$(ProjectDir)/ThirdParty/boost/predef/include;$(ProjectDir)/ThirdParty/boost/mp11/include;$(ProjectDir)/ThirdParty/boost/tuple/include;$(ProjectDir)/ThirdParty/boost/utility/include;$(ProjectDir)/ThirdParty/boost/core/include;$(ProjectDir)/ThirdParty/boost/integer/include;$(ProjectDir)/ThirdParty/boost/iterator/include;$(ProjectDir)/ThirdParty/boost/mpl/include;$(ProjectDir)/ThirdParty/boost/multi_index/include;$(ProjectDir)/ThirdParty/boost/optional/include;$(ProjectDir)/ThirdParty/boost/pool/include;$(ProjectDir)/ThirdParty/boost/property_tree/include;$(ProjectDir)/ThirdParty/boost/range/include;$(ProjectDir)/ThirdParty/boost/system/include;$(ProjectDir)/ThirdParty/boost/throw_exception/include;$(ProjectDir)/ThirdParty/boost/type_index/include;$(ProjectDir)/ThirdParty/boost/type_traits/include;$(ProjectDir)/ThirdParty/boost/uuid/include;$(ProjectDir)/ThirdParty/SDL2/include;$(ProjectDir)/ThirdParty/SDL2_ttf;$(ProjectDir)/ThirdParty/SDL2_image/include;$(ProjectDir)/ThirdParty/SDL2_mixer/include;</IncludePath>
+  </PropertyGroup>
+  <!-- LTCG code generation runs the compiler backend again at link time; with incremental linking on
+       it fights itself over the .ipdb and the build dies with LNK1257. -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <!-- Debugger cwd = exe folder (assets sit next to the exe, paths are relative), same as the CMake
        build. A local .vcxproj.user overrides this. -->
@@ -90,6 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,6 +112,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,6 +134,32 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <PreBuildEvent>
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(ProjectDir)scripts\fetch-submodules.ps1" -Root "$(ProjectDir)."</Command>
+    </PreBuildEvent>
+    <Link>
       <AdditionalDependencies>setupapi.lib;winmm.lib;imm32.lib;version.lib;cfgmgr32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <!-- Copies the same asset set as CMake's GAME_ASSETS (CMakeLists.txt), next to the .exe. -->
@@ -155,29 +188,6 @@ copy /Y "$(ProjectDir)Resources\Images\Xbox_Buttons\Y.png" "$(OutDir)Resources\I
 copy /Y "$(ProjectDir)Resources\Maps\level1.map" "$(OutDir)Resources\Maps\level1.map"
 copy /Y "$(ProjectDir)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sounds\levelStarted.wav"</Command>
     </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp23</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup>
-    <PreBuildEvent>
-      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(ProjectDir)scripts\fetch-submodules.ps1" -Root "$(ProjectDir)."</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <!-- Only the exe's own entry point; every other game source lives in GameCore.vcxproj (see its ClCompile group). -->
   <ItemGroup>
@@ -216,8 +226,8 @@ copy /Y "$(ProjectDir)Resources\Sounds\levelStarted.wav" "$(OutDir)Resources\Sou
   <!-- SDL2/ttf/image/mixer references moved to GameCore.vcxproj (that's where the SDL-dependent .cpp now live);
        SDLmain stays here since only the real exe needs the WinMain->main entry-point hijack. -->
   <ItemGroup>
-    <ProjectReference Include="ThirdParty\SDL2\VisualC\SDLmain\SDLmain.vcxproj">
-      <Project>{da956fd3-e142-46f2-9dd5-c78bebb56b7a}</Project>
+    <ProjectReference Include="SDL2Wrappers\SDLmain\SDLmain.vcxproj">
+      <Project>{7b4e1c2a-9d63-4f58-a1b7-5c0e2d9a6f31}</Project>
     </ProjectReference>
     <ProjectReference Include="GamePlatform\GamePlatform.vcxproj">
       <Project>{3f2b7d14-6c48-4a9e-b512-8e0d5a37c4f2}</Project>

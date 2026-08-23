@@ -1,7 +1,7 @@
 #include "entities/obstacles/Obstacle.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
-#include "components/events/SpawnEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
 #include "entities/BaseObjProperty.h"
 #include "enums/Direction.h"
@@ -21,30 +21,27 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 	, _gameMode{gameMode}
 	, _obstacleType(obstacleType)
 {
-	Obstacle::Subscribe();
-
-	if (IsHost(_gameMode))
+	//NOTE: safe in a constructor only because nothing here is virtual - a leaf adds its own
+	//subscriptions from its own constructor, once it is complete
+	if (IsClient(_gameMode))
 	{
-		_events->EmitEvent(ObstacleSpawnedEvent{.pos = GetPos(), .type = _obstacleType, .uuid = uuid});
+		SubscribeAsClient();
 	}
 }
 
 Obstacle::~Obstacle() = default;
 
-void Obstacle::Subscribe()
-{
-	if (IsClient(_gameMode))
-	{
-		Obstacle::SubscribeAsClient();
-	}
-}
-
 void Obstacle::SubscribeAsClient()
 {
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnHealthChanged));
+	//NOTE: how a wall the shovel swept away reaches the client - it never took damage, so no health
+	//change is coming for it
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Obstacle::OnDespawned));
 }
 
 void Obstacle::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(event.health); }
+
+void Obstacle::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
 
 void Obstacle::Draw() const
 {

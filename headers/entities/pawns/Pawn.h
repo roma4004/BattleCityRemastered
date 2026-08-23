@@ -19,9 +19,10 @@ struct TickUpdateEvent;
 
 class Pawn : public BaseObj, public ITickUpdatable
 {
-public:
+protected:
 	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, CollisionTags collision);
 
+public:
 	~Pawn() override;
 
 	//BaseObj overrides

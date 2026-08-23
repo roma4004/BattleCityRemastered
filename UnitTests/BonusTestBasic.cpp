@@ -11,13 +11,16 @@
 #include "components/managers/RespawnManager.h"
 #include "components/managers/BonusEffectManager.h"
 #include "entities/bonuses/Bonus.h"
-#include "entities/obstacles/FortressWall.h"
+#include "components/ObstacleSpawner.h"
+#include "components/managers/FortressManager.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/Enemy.h"
 #include "entities/pawns/Player.h"
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/ObstacleType.h"
 #include "gtest/gtest.h"
 #include <memory>
 
@@ -30,6 +33,10 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::unique_ptr<FortressManager> _fortressManager{nullptr};
+	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
+	std::shared_ptr<BaseObj> _fortressWall{nullptr};
+	EventSubscription _fortressWallSub{};
 	ProjectConfig _projectConfig{"", true};
 	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -53,6 +60,9 @@ protected:
 		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
+		_fortressManager = std::make_unique<FortressManager>(_events, &_allObjects);
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, &_allObjects, _gameConfig);
+		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
 
@@ -426,15 +436,14 @@ TEST_F(BonusTest, ShovelPickUpByPlayerThenFortressWallTurnIntoSteelWall)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
-	const auto fortressWall =
-			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-										   _events, &_allObjects, _uuid, _gameMode);
+	const ObjRectangle fortressRect{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
-	EXPECT_TRUE(fortressWall->IsBrickWall());
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_TRUE(fortressWall->IsSteelWall());
+	EXPECT_NE(dynamic_cast<FortressSteelWall*>(_fortressWall.get()), nullptr);
 }
 
 //TODO: add new tests, that count bricks and check that player can pickup bonus and rebuild fortress and skip if space spawn not available
@@ -453,13 +462,12 @@ TEST_F(BonusTest, ShovelNotPickUpByFortressWallTheSame)
 
 	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
-	const auto fortressWall =
-			std::make_shared<FortressWall>(ObjRectangle{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize},
-										   _events, &_allObjects, _uuid, _gameMode);
+	const ObjRectangle fortressRect{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize};
+	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
-	EXPECT_TRUE(fortressWall->IsBrickWall());
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
-	EXPECT_TRUE(fortressWall->IsBrickWall());
+	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 }

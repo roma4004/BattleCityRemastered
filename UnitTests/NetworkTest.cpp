@@ -13,7 +13,6 @@
 #include "enums/Direction.h"
 #include "enums/DespawnReason.h"
 #include "enums/DisconnectReason.h"
-#include "enums/FortressState.h"
 #include "enums/ObstacleType.h"
 #include "enums/TankType.h"
 #include "network/ClientHandler.h"
@@ -28,6 +27,7 @@
 #include <sstream>
 #include <chrono>
 #include <future>
+#include <tuple>
 #include <memory>
 #include <optional>
 #include <thread>
@@ -343,171 +343,6 @@ TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
 	}
 
 	ASSERT_EQ(status, std::future_status::ready);
-}
-
-TEST_F(NetworkTest, FortressChangeEventReplication)
-{
-
-	Uuid uuid1Died{UuidUtils::GetUuidFromString("11234567-89ab-cdef-0123-456789abcdef")};
-	Uuid uuid1ToBrick{UuidUtils::GetUuidFromString("21234567-89ab-cdef-0123-456789abcdef")};
-	Uuid uuid1ToSteel{UuidUtils::GetUuidFromString("31234567-89ab-cdef-0123-456789abcdef")};
-
-	Uuid uuid2Died{UuidUtils::GetUuidFromString("41234567-89ab-cdef-0123-456789abcdef")};
-	Uuid uuid2ToBrick{UuidUtils::GetUuidFromString("51234567-89ab-cdef-0123-456789abcdef")};
-	Uuid uuid2ToSteel{UuidUtils::GetUuidFromString("61234567-89ab-cdef-0123-456789abcdef")};
-
-	auto server = std::make_unique<network::commands::ServerHandler>("127.0.0.1", 0, _hostEvents);
-	auto client = std::make_unique<network::commands::ClientHandler>("127.0.0.1", server->GetBoundPort(), _clientEvents);
-
-	constexpr std::chrono::milliseconds connectTimeout{5000};
-	const auto connectStart = std::chrono::steady_clock::now();
-	while (!client->IsConnected() && std::chrono::steady_clock::now() - connectStart < connectTimeout)
-	{
-		Pump();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-	ASSERT_TRUE(client->IsConnected());
-
-	std::promise<void> promiseDied1{};
-	auto futureDied1 = promiseDied1.get_future();
-	std::promise<void> promiseDied2{};
-	auto futureDied2 = promiseDied2.get_future();
-
-	std::promise<void> promiseToBrick1{};
-	auto futureToBrick1 = promiseToBrick1.get_future();
-	std::promise<void> promiseToBrick2{};
-	auto futureToBrick2 = promiseToBrick2.get_future();
-
-	std::promise<void> promiseToSteel1{};
-	auto futureToSteel1 = promiseToSteel1.get_future();
-	std::promise<void> promiseToSteel2{};
-	auto futureToSteel2 = promiseToSteel2.get_future();
-
-	const auto expect = [](std::promise<void>& promise, const FortressState wanted)
-	{
-		return [&promise, wanted](const FortressChangedEvent& event)
-		{
-			EXPECT_EQ(wanted, event.state);
-			promise.set_value();
-		};
-	};
-
-	auto diedSub1 = _clientEvents->AddListener(Key(uuid1Died), expect(promiseDied1, FortressState::Died));
-	auto toBrickSub1 = _clientEvents->AddListener(Key(uuid1ToBrick), expect(promiseToBrick1, FortressState::ToBrick));
-	auto toSteelSub1 = _clientEvents->AddListener(Key(uuid1ToSteel), expect(promiseToSteel1, FortressState::ToSteel));
-
-	auto diedSub2 = _clientEvents->AddListener(Key(uuid2Died), expect(promiseDied2, FortressState::Died));
-	auto toBrickSub2 = _clientEvents->AddListener(Key(uuid2ToBrick), expect(promiseToBrick2, FortressState::ToBrick));
-	auto toSteelSub2 = _clientEvents->AddListener(Key(uuid2ToSteel), expect(promiseToSteel2, FortressState::ToSteel));
-
-	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::Died, .uuid = uuid1Died});
-	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToBrick, .uuid = uuid1ToBrick});
-	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToSteel, .uuid = uuid1ToSteel});
-
-	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::Died, .uuid = uuid2Died});
-	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToBrick, .uuid = uuid2ToBrick});
-	_hostEvents->EmitEvent(FortressChangedEvent{.state = FortressState::ToSteel, .uuid = uuid2ToSteel});
-
-	_hostEvents->EmitEvent(NetworkEndFrameEvent{});
-
-	constexpr std::chrono::milliseconds totalTimeout{5000};
-	constexpr std::chrono::milliseconds checkInterval{1};
-	const std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
-
-	{//test first fortressWall
-		{//died1 test
-			auto statusToDied1 = std::future_status::timeout;
-			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-			{
-				Pump();
-
-				if (statusToDied1 = futureDied1.wait_for(checkInterval);
-					statusToDied1 == std::future_status::ready)
-				{
-					break;
-				}
-			}
-
-			ASSERT_EQ(statusToDied1, std::future_status::ready);
-		}
-		{//brick1 test
-			auto statusToBrick1 = std::future_status::timeout;
-			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-			{
-				Pump();
-
-				if (statusToBrick1 = futureToBrick1.wait_for(checkInterval);
-					statusToBrick1 == std::future_status::ready)
-				{
-					break;
-				}
-			}
-
-			ASSERT_EQ(statusToBrick1, std::future_status::ready);
-		}
-		{//steel1 test
-			auto statusToSteel1 = std::future_status::timeout;
-			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-			{
-				Pump();
-
-				if (statusToSteel1 = futureToSteel1.wait_for(checkInterval);
-					statusToSteel1 == std::future_status::ready)
-				{
-					break;
-				}
-			}
-
-			ASSERT_EQ(statusToSteel1, std::future_status::ready);
-		}
-	}
-	{//test second fortressWall
-		{//died2 test
-			auto statusToDied2 = std::future_status::timeout;
-			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-			{
-				Pump();
-
-				if (statusToDied2 = futureDied2.wait_for(checkInterval);
-					statusToDied2 == std::future_status::ready)
-				{
-					break;
-				}
-			}
-
-			ASSERT_EQ(statusToDied2, std::future_status::ready);
-		}
-		{//brick2 test
-			auto statusToBrick2 = std::future_status::timeout;
-			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-			{
-				Pump();
-
-				if (statusToBrick2 = futureToBrick2.wait_for(checkInterval);
-					statusToBrick2 == std::future_status::ready)
-				{
-					break;
-				}
-			}
-
-			ASSERT_EQ(statusToBrick2, std::future_status::ready);
-		}
-		{//steel2 test
-			auto statusToSteel2 = std::future_status::timeout;
-			while (std::chrono::steady_clock::now() - startTime < totalTimeout)
-			{
-				Pump();
-
-				if (statusToSteel2 = futureToSteel2.wait_for(checkInterval);
-					statusToSteel2 == std::future_status::ready)
-				{
-					break;
-				}
-			}
-
-			ASSERT_EQ(statusToSteel2, std::future_status::ready);
-		}
-	}
 }
 
 TEST_F(NetworkTest, BonusSpawnEventReplication)

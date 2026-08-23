@@ -68,6 +68,7 @@ set(GAME_CORE_SOURCES
         source/components/managers/DelayedSpawnManager.cpp
         source/components/managers/FramePerSecondManager.cpp
         source/components/managers/GameStateManager.cpp
+        source/components/managers/FortressManager.cpp
         source/components/managers/RespawnManager.cpp
         source/components/managers/SpawnManager.cpp
         source/components/managers/TextureManager.cpp
@@ -84,7 +85,6 @@ set(GAME_CORE_SOURCES
         source/entities/obstacles/BrickWall.cpp
         source/entities/obstacles/BushTile.cpp
         source/entities/obstacles/EagleTile.cpp
-        source/entities/obstacles/FortressWall.cpp
         source/entities/obstacles/IceTile.cpp
         source/entities/obstacles/Obstacle.cpp
         source/entities/obstacles/SteelWall.cpp

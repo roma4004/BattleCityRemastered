@@ -155,7 +155,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 					&& _selectedGameMode != gameMode)
 				{
 					_selectedGameMode = gameMode;
-					_events->EmitEvent(GameModeSelectedWithMouseEvent{.mode = _selectedGameMode});
+					_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
 					break;
 				}
 			}

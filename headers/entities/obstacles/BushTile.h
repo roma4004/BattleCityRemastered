@@ -9,7 +9,7 @@ struct PostDrawEvent;
 
 class BushTile final : public Obstacle
 {
-	void Subscribe() override;
+	void Subscribe();
 	void OnPostDraw(const PostDrawEvent&) const;
 
 protected:

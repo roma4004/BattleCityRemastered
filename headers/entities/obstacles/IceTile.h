@@ -9,7 +9,7 @@ struct PreDrawEvent;
 
 class IceTile final : public Obstacle
 {
-	void Subscribe() override;
+	void Subscribe();
 	void OnPreDraw(const PreDrawEvent&) const;
 
 protected:

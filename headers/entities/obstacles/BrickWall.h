@@ -6,13 +6,10 @@
 struct ObjRectangle;
 struct DrawEvent;
 class EventSystem;
-class FortressWall;
 
-class BrickWall final : public Obstacle
+class BrickWall : public Obstacle
 {
-	friend FortressWall;
-
-	void Subscribe() override;
+	void Subscribe();
 	void OnDraw(const DrawEvent&) const;
 
 protected:

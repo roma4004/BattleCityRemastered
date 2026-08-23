@@ -8,7 +8,7 @@
 #include "components/events/SpawnEvents.h"
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/EagleTile.h"
-#include "entities/obstacles/FortressWall.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
@@ -34,6 +34,7 @@ void ObstacleSpawner::Subscribe()
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnLoadMap));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnObstacle));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnFortressWall));
 }
 
 void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
@@ -51,6 +52,11 @@ void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 void ObstacleSpawner::OnLoadMap(const LoadMapEvent&) const { LoadMap(); }
 
 void ObstacleSpawner::OnSpawnObstacle(const SpawnObstacleEvent& event) { SpawnObstacle(event.rect, event.type); }
+
+void ObstacleSpawner::OnSpawnFortressWall(const SpawnFortressWallEvent& event)
+{
+	SpawnFortressWall(event.rect, event.material);
+}
 
 void ObstacleSpawner::SubscribeAsClient()
 {
@@ -86,8 +92,8 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 			obstacle = std::make_shared<WaterTile>(rect, _events, uuid, _gameMode);
 			break;
 		case ObstacleType::Fortress:
-			obstacle = std::make_shared<FortressWall>(rect, _events, _allObjects, uuid, _gameMode);
-			break;
+			SpawnFortressWall(rect, ObstacleType::Brick);
+			return;
 		case ObstacleType::Eagle:
 			obstacle = std::make_shared<EagleTile>(rect, _events, uuid, _gameMode);
 			break;
@@ -104,6 +110,38 @@ void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType 
 	if (obstacle)
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = obstacle});
+	}
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(ObstacleSpawnedEvent{.pos = FPoint{.x = rect.x, .y = rect.y}, .type = type, .uuid = uuid});
+	}
+}
+
+void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleType material)
+{
+	const Uuid uuid = UuidUtils::GetRandomUuid();
+
+	std::shared_ptr<BaseObj> wall{nullptr};
+	if (material == ObstacleType::Steel)
+	{
+		wall = std::make_shared<FortressSteelWall>(rect, _events, uuid, _gameMode);
+	}
+	else
+	{
+		wall = std::make_shared<FortressBrickWall>(rect, _events, uuid, _gameMode);
+	}
+
+	//NOTE: reported from here, not from the map branch - a wall no one told FortressManager about would
+	//never be rebuilt by the shovel, and a rebuilt one has to replace what the spot points at
+	_events->EmitEvent(FortressSpotRegisteredEvent{.rect = rect, .wall = wall});
+
+	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::move(wall)});
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(ObstacleSpawnedEvent{
+				.pos = FPoint{.x = rect.x, .y = rect.y}, .type = material, .uuid = uuid});
 	}
 }
 

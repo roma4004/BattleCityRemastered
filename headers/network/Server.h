@@ -41,7 +41,6 @@ struct StatisticsBonusPickupEvent;
 struct StatisticsBonusDestroyedEvent;
 struct StatisticsBonusExpiredEvent;
 struct BonusSpawnedEvent;
-struct FortressChangedEvent;
 struct BonusHelmetAppliedEvent;
 struct BonusStarAppliedEvent;
 struct BonusCaliberAppliedEvent;
@@ -139,7 +138,6 @@ private:
 	void OnBonusExpired(const StatisticsBonusExpiredEvent&);
 
 	void OnBonusSpawn(const BonusSpawnedEvent& event);
-	void OnFortressChange(const FortressChangedEvent& event);
 	void OnBonusHelmetPickup(const BonusHelmetAppliedEvent& event);
 	void OnBonusStarPickup(const BonusStarAppliedEvent& event);
 	void OnBonusCaliberPickup(const BonusCaliberAppliedEvent& event);

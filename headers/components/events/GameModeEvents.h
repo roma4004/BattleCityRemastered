@@ -11,8 +11,3 @@ struct SelectedGameModeChangedToEvent
 {
 	GameMode mode;
 };
-
-struct GameModeSelectedWithMouseEvent
-{
-	GameMode mode;
-};

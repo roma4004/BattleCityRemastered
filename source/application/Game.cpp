@@ -66,7 +66,7 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::OnAddToSpawnQueue));
 	_subs.push_back(_events->AddListener(this, &Game::OnPostTickUpdate));
 	_subs.push_back(_events->AddListener(this, &Game::OnDeltaTime));
-	_subs.push_back(_events->AddListener(this, &Game::OnGameModeSelectedWithMouse));
+	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Game::OnWorldGeometryChanged));
 }
 
@@ -122,11 +122,7 @@ void Game::OnPostTickUpdate(const PostTickUpdateEvent&)
 
 void Game::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTime; }
 
-void Game::OnGameModeSelectedWithMouse(const GameModeSelectedWithMouseEvent& event)
-{//TODO: merge with SelectedGameModeChangedToEvent
-	_selectedGameMode = event.mode;
-	_events->EmitEvent(SelectedGameModeChangedToEvent{.mode = _selectedGameMode});
-}
+void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
 
 void Game::ResetBattlefield()
 {

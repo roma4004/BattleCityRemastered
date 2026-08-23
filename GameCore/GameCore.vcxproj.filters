@@ -150,6 +150,9 @@
     <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\managers\FortressManager.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\components\managers\FramePerSecondManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
@@ -226,9 +229,6 @@
       <Filter>source\entities\obstacles</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\obstacles\EagleTile.cpp">
-      <Filter>source\entities\obstacles</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\obstacles\FortressWall.cpp">
       <Filter>source\entities\obstacles</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\obstacles\IceTile.cpp">
@@ -407,6 +407,9 @@
     <ClInclude Include="..\headers\components\managers\DelayedSpawnManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\components\managers\FortressManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\components\managers\FramePerSecondManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
@@ -497,10 +500,13 @@
     <ClInclude Include="..\headers\entities\obstacles\EagleTile.h">
       <Filter>headers\entities\obstacles</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\entities\obstacles\FortressWall.h">
+    <ClInclude Include="..\headers\entities\obstacles\FortressWalls.h">
       <Filter>headers\entities\obstacles</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\obstacles\IceTile.h">
+      <Filter>headers\entities\obstacles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\entities\obstacles\IFortress.h">
       <Filter>headers\entities\obstacles</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\obstacles\Obstacle.h">
@@ -561,9 +567,6 @@
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\DisconnectReason.h">
-      <Filter>headers\enums</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\enums\FortressState.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\enums\GameMode.h">
@@ -660,9 +663,6 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\Disconnect.h">
-      <Filter>headers\network\commands</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\network\commands\FortressChange.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\GameStateChange.h">

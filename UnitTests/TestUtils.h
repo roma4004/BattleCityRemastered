@@ -1,9 +1,11 @@
 #pragma once
 #include "geometry/Point.h"
+#include <algorithm>
 #include <cmath>
 #include <ostream>
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "components/events/SpawnEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
@@ -14,11 +16,23 @@ class TestUtils
 {
 public:
 	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
-														   std::vector<std::shared_ptr<BaseObj>>* allObjects)
+														  std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	{
 		return events->AddListener([allObjects](const AddToSpawnQueueEvent& event)
 		{
 			allObjects->emplace_back(event.obj);
+		});
+	}
+
+	[[nodiscard]] static EventSubscription TrackFortressWall(const std::shared_ptr<EventSystem>& events,
+															 std::shared_ptr<BaseObj>* out)
+	{
+		return events->AddListener([out](const AddToSpawnQueueEvent& event)
+		{
+			if (dynamic_cast<IFortress*>(event.obj.get()) != nullptr)
+			{
+				*out = event.obj;
+			}
 		});
 	}
 

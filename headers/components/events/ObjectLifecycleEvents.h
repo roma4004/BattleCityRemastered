@@ -2,10 +2,7 @@
 
 #include "enums/DespawnReason.h"
 #include "utils/Uuid.h"
-#include <cstdint>
 #include <string>
-
-enum class FortressState : std::uint8_t;
 
 struct TankSpawnEvent
 {
@@ -24,8 +21,3 @@ struct DespawnedEvent
 	DespawnReason reason{DespawnReason::None};
 };
 
-struct FortressChangedEvent
-{
-	FortressState state;
-	Uuid uuid;
-};

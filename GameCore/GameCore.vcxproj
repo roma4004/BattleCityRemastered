@@ -71,7 +71,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)/ThirdParty/ser20/include;$(SolutionDir)/ThirdParty/boost/align/include;$(SolutionDir)/ThirdParty/boost/any/include;$(SolutionDir)/ThirdParty/boost/asio/include;$(SolutionDir)/ThirdParty/boost/assert/include;$(SolutionDir)/ThirdParty/boost/bind/include;$(SolutionDir)/ThirdParty/boost/config/include;$(SolutionDir)/ThirdParty/boost/container_hash/include;$(SolutionDir)/ThirdParty/boost/winapi/include;$(SolutionDir)/ThirdParty/boost/preprocessor/include;$(SolutionDir)/ThirdParty/boost/predef/include;$(SolutionDir)/ThirdParty/boost/mp11/include;$(SolutionDir)/ThirdParty/boost/tuple/include;$(SolutionDir)/ThirdParty/boost/utility/include;$(SolutionDir)/ThirdParty/boost/core/include;$(SolutionDir)/ThirdParty/boost/integer/include;$(SolutionDir)/ThirdParty/boost/iterator/include;$(SolutionDir)/ThirdParty/boost/mpl/include;$(SolutionDir)/ThirdParty/boost/multi_index/include;$(SolutionDir)/ThirdParty/boost/optional/include;$(SolutionDir)/ThirdParty/boost/pool/include;$(SolutionDir)/ThirdParty/boost/property_tree/include;$(SolutionDir)/ThirdParty/boost/range/include;$(SolutionDir)/ThirdParty/boost/system/include;$(SolutionDir)/ThirdParty/boost/throw_exception/include;$(SolutionDir)/ThirdParty/boost/type_index/include;$(SolutionDir)/ThirdParty/boost/type_traits/include;$(SolutionDir)/ThirdParty/boost/uuid/include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -82,6 +82,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,6 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -167,7 +169,7 @@
     <ClCompile Include="..\source\entities\obstacles\BrickWall.cpp" />
     <ClCompile Include="..\source\entities\obstacles\BushTile.cpp" />
     <ClCompile Include="..\source\entities\obstacles\EagleTile.cpp" />
-    <ClCompile Include="..\source\entities\obstacles\FortressWall.cpp" />
+    <ClCompile Include="..\source\components\managers\FortressManager.cpp" />
     <ClCompile Include="..\source\entities\obstacles\IceTile.cpp" />
     <ClCompile Include="..\source\entities\obstacles\Obstacle.cpp" />
     <ClCompile Include="..\source\entities\obstacles\SteelWall.cpp" />
@@ -261,7 +263,9 @@
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h" />
     <ClInclude Include="..\headers\entities\obstacles\BushTile.h" />
     <ClInclude Include="..\headers\entities\obstacles\EagleTile.h" />
-    <ClInclude Include="..\headers\entities\obstacles\FortressWall.h" />
+    <ClInclude Include="..\headers\components\managers\FortressManager.h" />
+    <ClInclude Include="..\headers\entities\obstacles\FortressWalls.h" />
+    <ClInclude Include="..\headers\entities\obstacles\IFortress.h" />
     <ClInclude Include="..\headers\entities\obstacles\IceTile.h" />
     <ClInclude Include="..\headers\entities\obstacles\Obstacle.h" />
     <ClInclude Include="..\headers\entities\obstacles\SteelWall.h" />
@@ -285,7 +289,6 @@
     <ClInclude Include="..\headers\enums\InputSignal.h" />
     <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
-    <ClInclude Include="..\headers\enums\FortressState.h" />
     <ClInclude Include="..\headers\enums\GameMode.h" />
     <ClInclude Include="..\headers\enums\GameState.h" />
     <ClInclude Include="..\headers\enums\ObstacleType.h" />
@@ -315,7 +318,6 @@
     <ClInclude Include="..\headers\network\commands\CommandSerialization.h" />
     <ClInclude Include="..\headers\network\commands\Disconnect.h" />
     <ClInclude Include="..\headers\network\commands\Despawn.h" />
-    <ClInclude Include="..\headers\network\commands\FortressChange.h" />
     <ClInclude Include="..\headers\network\commands\GameStateChange.h" />
     <ClInclude Include="..\headers\network\commands\HealthChange.h" />
     <ClInclude Include="..\headers\network\commands\KeyStateChange.h" />

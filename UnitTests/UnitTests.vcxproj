@@ -35,7 +35,7 @@
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)ThirdParty\googletest\googletest\include;$(SolutionDir)ThirdParty\googletest\googletest;$(SolutionDir)ThirdParty\ser20\include;$(SolutionDir)ThirdParty\boost\align\include;$(SolutionDir)ThirdParty\boost\any\include;$(SolutionDir)ThirdParty\boost\asio\include;$(SolutionDir)ThirdParty\boost\assert\include;$(SolutionDir)ThirdParty\boost\bind\include;$(SolutionDir)ThirdParty\boost\config\include;$(SolutionDir)ThirdParty\boost\container_hash\include;$(SolutionDir)ThirdParty\boost\winapi\include;$(SolutionDir)ThirdParty\boost\preprocessor\include;$(SolutionDir)ThirdParty\boost\predef\include;$(SolutionDir)ThirdParty\boost\mp11\include;$(SolutionDir)ThirdParty\boost\tuple\include;$(SolutionDir)ThirdParty\boost\utility\include;$(SolutionDir)ThirdParty\boost\context\include;$(SolutionDir)ThirdParty\boost\core\include;$(SolutionDir)ThirdParty\boost\date_time\include;$(SolutionDir)ThirdParty\boost\integer\include;$(SolutionDir)ThirdParty\boost\iterator\include;$(SolutionDir)ThirdParty\boost\mpl\include;$(SolutionDir)ThirdParty\boost\multi_index\include;$(SolutionDir)ThirdParty\boost\optional\include;$(SolutionDir)ThirdParty\boost\pool\include;$(SolutionDir)ThirdParty\boost\property_tree\include;$(SolutionDir)ThirdParty\boost\range\include;$(SolutionDir)ThirdParty\boost\system\include;$(SolutionDir)ThirdParty\boost\throw_exception\include;$(SolutionDir)ThirdParty\boost\type_index\include;$(SolutionDir)ThirdParty\boost\type_traits\include;$(SolutionDir)ThirdParty\boost\uuid\include;</IncludePath>
   </PropertyGroup>
   <!-- Shared game logic now lives in ..\GameCore.vcxproj (ProjectReference below); only test-only sources remain here. -->
@@ -85,7 +85,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -119,7 +119,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpp23</LanguageStandard>

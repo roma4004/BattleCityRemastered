@@ -12,7 +12,7 @@
 #include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/BushTile.h"
 #include "entities/obstacles/EagleTile.h"
-#include "entities/obstacles/FortressWall.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/IceTile.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
@@ -294,7 +294,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 
 	// Spawn FortressWall
 	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
-	_allObjects.emplace_back(std::make_shared<FortressWall>(rect, _events, &_allObjects, _uuid, _gameMode));
+	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
 

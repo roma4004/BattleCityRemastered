@@ -22,16 +22,16 @@ protected:
 	std::string _fraction{};
 	ObjRectangle _rect{};
 
-public:
 	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 
 	BaseObj(const BaseObj& other);
 	BaseObj(BaseObj&& other) noexcept;
 
-	~BaseObj() override;
-
 	BaseObj& operator=(const BaseObj& other);
 	BaseObj& operator=(BaseObj&& other) noexcept;
+
+public:
+	~BaseObj() override;
 
 	[[nodiscard]] FPoint GetPos() const;
 	void SetPos(const FPoint& pos);

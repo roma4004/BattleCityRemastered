@@ -4,7 +4,6 @@
 #include "BonusStatus.h"
 #include "Despawn.h"
 #include "Disconnect.h"
-#include "FortressChange.h"
 #include "GameStateChange.h"
 #include "HealthChange.h"
 #include "KeyStateChange.h"
@@ -60,14 +59,6 @@ void serialize(Archive& ar, network::commands::Despawn& cmd, const unsigned int 
 	ar & cmd.who;
 	ar & cmd.uuid;
 	ar & cmd.reason;
-}
-
-template<class Archive>
-void serialize(Archive& ar, network::commands::FortressChange& cmd, const unsigned int /*version*/)
-{
-	ar & cmd.type;
-	ar & cmd.state;
-	ar & cmd.uuid;
 }
 
 template<class Archive>

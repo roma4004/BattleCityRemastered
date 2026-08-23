@@ -71,7 +71,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)/ThirdParty/ser20/include;$(SolutionDir)/ThirdParty/boost/align/include;$(SolutionDir)/ThirdParty/boost/any/include;$(SolutionDir)/ThirdParty/boost/asio/include;$(SolutionDir)/ThirdParty/boost/assert/include;$(SolutionDir)/ThirdParty/boost/bind/include;$(SolutionDir)/ThirdParty/boost/config/include;$(SolutionDir)/ThirdParty/boost/container_hash/include;$(SolutionDir)/ThirdParty/boost/winapi/include;$(SolutionDir)/ThirdParty/boost/preprocessor/include;$(SolutionDir)/ThirdParty/boost/predef/include;$(SolutionDir)/ThirdParty/boost/mp11/include;$(SolutionDir)/ThirdParty/boost/tuple/include;$(SolutionDir)/ThirdParty/boost/utility/include;$(SolutionDir)/ThirdParty/boost/core/include;$(SolutionDir)/ThirdParty/boost/integer/include;$(SolutionDir)/ThirdParty/boost/iterator/include;$(SolutionDir)/ThirdParty/boost/mpl/include;$(SolutionDir)/ThirdParty/boost/multi_index/include;$(SolutionDir)/ThirdParty/boost/optional/include;$(SolutionDir)/ThirdParty/boost/pool/include;$(SolutionDir)/ThirdParty/boost/property_tree/include;$(SolutionDir)/ThirdParty/boost/range/include;$(SolutionDir)/ThirdParty/boost/system/include;$(SolutionDir)/ThirdParty/boost/throw_exception/include;$(SolutionDir)/ThirdParty/boost/type_index/include;$(SolutionDir)/ThirdParty/boost/type_traits/include;$(SolutionDir)/ThirdParty/boost/uuid/include;$(SolutionDir)/ThirdParty/SDL2/include;$(SolutionDir)/ThirdParty/SDL2_ttf;$(SolutionDir)/ThirdParty/SDL2_image/include;$(SolutionDir)/ThirdParty/SDL2_mixer/include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -82,6 +82,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,6 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

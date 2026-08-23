@@ -8,7 +8,6 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "enums/CommandType.h"
-#include "enums/FortressState.h"
 #include "enums/StatisticsType.h"
 #include "network/commands/CommandBatch.h"
 #include "network/Serializer.h"
@@ -44,7 +43,6 @@ void Client::RegisterCommandHandlers()
 			{CommandType::STATISTICS_CHANGE, [this](const AnyCommand& cmd) { OnStatisticsChange(cmd); }},
 			{CommandType::KEY_STATE_CHANGE, [this](const AnyCommand& cmd) { OnKeyStateChange(cmd); }},
 			{CommandType::GAME_STATE_CHANGE, [this](const AnyCommand& cmd) { OnGameStateChange(cmd); }},
-			{CommandType::FORTRESS_CHANGE, [this](const AnyCommand& cmd) { OnFortressChange(cmd); }},
 			{CommandType::BONUS_SPAWN, [this](const AnyCommand& cmd) { OnBonusSpawn(cmd); }},
 			{CommandType::RESPAWN_TANK, [this](const AnyCommand& cmd) { OnRespawnTank(cmd); }},
 			{CommandType::OBSTACLE_SPAWN, [this](const AnyCommand& cmd) { OnObstacleSpawn(cmd); }},
@@ -385,25 +383,6 @@ void Client::OnGameStateChange(const AnyCommand& command)
 		{
 			Log::Info("Client::OnGameStateChange: unrecognized game state \"" + cmd.gameState + "\"");
 		}
-	});
-}
-
-void Client::OnFortressChange(const AnyCommand& command)
-{
-	_commandQueue.Enqueue([this, cmd = std::get<FortressChange>(command)]()
-	{
-		//NOTE: validated switches to variants
-		switch (cmd.state)
-		{
-			case FortressState::Died:
-			case FortressState::ToBrick:
-			case FortressState::ToSteel:
-				_events->EmitEvent(Key(cmd.uuid), FortressChangedEvent{.state = cmd.state, .uuid = cmd.uuid});
-				return;
-		}
-
-		Log::Error("Client::OnFortressChange: unknown state "
-								  + std::to_string(static_cast<int>(cmd.state)));
 	});
 }
 

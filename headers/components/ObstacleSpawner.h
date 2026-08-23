@@ -14,6 +14,7 @@ class GameConfig;
 struct GameModeChangedToEvent;
 struct LoadMapEvent;
 struct SpawnObstacleEvent;
+struct SpawnFortressWallEvent;
 struct ObstacleSpawnedEvent;
 
 class ObstacleSpawner final
@@ -37,6 +38,7 @@ class ObstacleSpawner final
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnLoadMap(const LoadMapEvent&) const;
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
+	void OnSpawnFortressWall(const SpawnFortressWallEvent& event);
 	void SubscribeAsClient();
 	void OnObstacleSpawned(const ObstacleSpawnedEvent& event);
 
@@ -44,6 +46,7 @@ class ObstacleSpawner final
 
 	void LoadMap() const;
 	void SpawnObstacle(ObjRectangle rect, ObstacleType type, Uuid uuid = {});
+	void SpawnFortressWall(ObjRectangle rect, ObstacleType material);
 	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:

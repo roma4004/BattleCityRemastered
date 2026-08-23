@@ -4,13 +4,10 @@
 #include <memory>
 
 struct DrawEvent;
-class FortressWall;
 
-class SteelWall final : public Obstacle
+class SteelWall : public Obstacle
 {
-	friend FortressWall;
-
-	void Subscribe() override;
+	void Subscribe();
 	void OnDraw(const DrawEvent&) const;
 
 protected:

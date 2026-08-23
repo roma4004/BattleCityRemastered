@@ -72,7 +72,6 @@ private:
 	void OnStatisticsChange(const AnyCommand& command);
 	void OnKeyStateChange(const AnyCommand& command);
 	void OnGameStateChange(const AnyCommand& command);
-	void OnFortressChange(const AnyCommand& command);
 	void OnBonusSpawn(const AnyCommand& command);
 	void OnRespawnTank(const AnyCommand& command);
 	void OnObstacleSpawn(const AnyCommand& command);

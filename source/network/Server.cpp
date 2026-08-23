@@ -164,7 +164,6 @@ Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t po
 	Subscribe();
 }
 
-//TODO: check the flow after network game choose local mode to clean all then to choose network again successful
 void Server::StartSendThread()
 {
 	_isRunning.store(true);
@@ -453,7 +452,6 @@ void Server::OnBonusExpired(const StatisticsBonusExpiredEvent&)
 void Server::SubscribeBonus()
 {
 	_subs.push_back(_events->AddListener(this, &Server::OnBonusSpawn));
-	_subs.push_back(_events->AddListener(this, &Server::OnFortressChange));
 	_subs.push_back(_events->AddListener(this, &Server::OnBonusHelmetPickup));
 	_subs.push_back(_events->AddListener(this, &Server::OnBonusStarPickup));
 	_subs.push_back(_events->AddListener(this, &Server::OnBonusCaliberPickup));
@@ -464,12 +462,6 @@ void Server::OnBonusSpawn(const BonusSpawnedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
 	_batch.commands.emplace_back(BonusSpawn{.pos = event.pos, .bonusType = event.type, .uuid = event.uuid});
-}
-
-void Server::OnFortressChange(const FortressChangedEvent& event)
-{
-	std::scoped_lock lock(_batchWriteMutex);
-	_batch.commands.emplace_back(FortressChange{.state = event.state, .uuid = event.uuid});
 }
 
 void Server::OnBonusHelmetPickup(const BonusHelmetAppliedEvent& event)
@@ -513,13 +505,11 @@ void Server::DoAccept()
 		{
 			try
 			{
-				//TODO: add feature to restart game with existing session
 				auto session = std::make_shared<Session>(std::move(socket), _events);
 				{
 					std::scoped_lock lock(_sessionsMutex);
 					_sessions.emplace_back(session);
 				}
-				// _events->EmitEvent("NewClientConnected");
 				session->Start();//NOTE: outside the lock - it posts reads and can reach the event bus
 			}
 			catch (const std::exception& e)

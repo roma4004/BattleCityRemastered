@@ -11,7 +11,7 @@
 #include "components/managers/RespawnManager.h"
 #include "components/managers/GameStateManager.h"
 #include "entities/obstacles/BrickWall.h"
-#include "entities/obstacles/FortressWall.h"
+#include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Player.h"
@@ -622,9 +622,8 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
-	auto fortressWall = std::make_shared<FortressWall>(
-			ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events,
-			&_allObjects, _uuid, _gameMode);
+	auto fortressWall = std::make_shared<FortressBrickWall>(
+			ObjRectangle{.x = 0.f, .y = _tankSize + 1, .w = _gridSize, .h = _gridSize}, _events, _uuid, _gameMode);
 	_allObjects.emplace_back(fortressWall);
 
 	//moveDown player should failure, because below we have a fortressWall obstacle
