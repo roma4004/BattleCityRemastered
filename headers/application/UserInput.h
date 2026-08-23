@@ -31,8 +31,8 @@ class UserInput final
 	MouseButtons _mouseButtons{};
 	bool _isShutdown{false};
 	bool _isPause{false};
-	bool _isPauseBeforeDragNDrop{false};
-	bool _isWindowMoving{false};
+	bool _isPausedByWindowDrag{false};
+	bool _isWindowDragging{false};
 	bool _isMenuDisplayed{false};
 	GameMode _selectedGameMode{};
 	bool _areControllersSwapped{false};
@@ -41,8 +41,8 @@ class UserInput final
 	UPoint _windowSize{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	std::chrono::system_clock::time_point _lastMoveEventTime{};
-	milliseconds _moveEndDelay{150};
+	std::chrono::steady_clock::time_point _lastDragEventTime{};
+	milliseconds _dragEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 	GameConfig& _gameConfig;
 	SDL_Rect _menuPos{};
@@ -56,8 +56,8 @@ class UserInput final
 	void KeyboardEvents(const SDL_Event& event) const;
 	void GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void GamepadEvents(const SDL_Event& event);
-	void OnWindowMoveStop();
-	void WindowsMoveEvents(const SDL_Event& event);
+	void OnWindowDragStop();
+	void WindowDragEvents(const SDL_Event& event);
 	void OnWindowResized(UPoint newSize);
 
 	void Subscribe();

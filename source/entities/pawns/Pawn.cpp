@@ -69,8 +69,6 @@ void Pawn::TakeDamage(const unsigned int damage, const std::string& author, cons
 {
 	BaseObj::TakeDamage(damage, author, fraction);
 
-	SendDamageStatistics(author, fraction);
-
 	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});

@@ -91,14 +91,12 @@ void Bonus::TickUpdate(double /*deltaTime*/)
 
 void Bonus::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
-	BaseObj::TakeDamage(damage, author, fraction);
-
 	_despawnReason = DespawnReason::Destroyed;
 
-	SendDamageStatistics(author, fraction);
+	BaseObj::TakeDamage(damage, author, fraction);
 }
 
-void Bonus::SendDamageStatistics(const std::string& author, const std::string& fraction)
+void Bonus::EmitDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = author, .fraction = fraction});
 }

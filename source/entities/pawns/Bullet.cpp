@@ -149,14 +149,9 @@ float Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
 std::string Bullet::GetAuthor() const { return _author; }
 
-void Bullet::SendDamageStatistics(const std::string& author, const std::string& fraction)
+void Bullet::EmitDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(StatisticsBulletHitEvent{.author = author, .fraction = fraction});
-}
-
-void Bullet::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
-{
-	Pawn::TakeDamage(damage, author, fraction);
 }
 
 unsigned int Bullet::GetTier() const { return _calibre.tier; }

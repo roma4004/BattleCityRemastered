@@ -27,7 +27,7 @@ protected:
 
 	void Draw() const override;
 
-	virtual void EmitDeathStatistics(const std::string& author, const std::string& fraction) = 0;
+	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override = 0;
 
 	Obstacle(ObjRectangle rect, int health, std::string name, const std::shared_ptr<EventSystem>& events, Uuid uuid,
 			 GameMode gameMode, ObstacleType obstacleType, CollisionTags collision);
@@ -36,6 +36,5 @@ public:
 	~Obstacle() override;
 
 	//BaseObj overrides
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 };

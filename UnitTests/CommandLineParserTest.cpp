@@ -61,7 +61,7 @@ TEST(CommandLineParserTest, GameModeAcceptsBareAndDashedForms)
 	EXPECT_EQ(Parse({"--client"}).gameMode, GameMode::PlayAsClient);
 }
 
-//NOTE: guards the loop over argv - the pre-WI-49 parser looked at argv[1] only and would drop the second flag
+//NOTE: guards the loop over argv - an earlier parser looked at argv[1] only and would drop the second flag
 TEST(CommandLineParserTest, SkipIntroCombinesWithGameMode)
 {
 	const auto options = Parse({"client", "skipintro"});

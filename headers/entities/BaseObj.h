@@ -4,13 +4,12 @@
 #include "entities/Tags.h"
 #include "interfaces/IHaveFraction.h"
 #include "interfaces/IObstacle.h"
-#include "interfaces/ISendableDamageStatistics.h"
 #include "utils/Uuid.h"
 
 struct FPoint;
 struct BaseObjProperty;
 
-class BaseObj : public ISendableDamageStatistics, public IHaveFraction, public IObstacle
+class BaseObj : public IHaveFraction, public IObstacle
 {
 	int _health{0};
 	CollisionTags _collision;
@@ -21,6 +20,9 @@ protected:
 	std::string _nameWithUuid{};
 	std::string _fraction{};
 	ObjRectangle _rect{};
+
+	virtual void EmitDamageStatistics(const std::string& author, const std::string& fraction);
+	virtual void EmitDeathStatistics(const std::string& author, const std::string& fraction);
 
 	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 

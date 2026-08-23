@@ -626,9 +626,6 @@
     <ClInclude Include="..\headers\interfaces\IPickupableBonus.h">
       <Filter>headers\interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\interfaces\ISendableDamageStatistics.h">
-      <Filter>headers\interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\headers\interfaces\IShootable.h">
       <Filter>headers\interfaces</Filter>
     </ClInclude>

@@ -57,23 +57,28 @@ void UserInput::OnMenuPosChanged(const MenuPosChangedEvent& event)
 	InitMouseHoverTiles(event.pos);
 }
 
-void UserInput::WindowsMoveEvents(const SDL_Event& event)
+void UserInput::WindowDragEvents(const SDL_Event& event)
 {
-	if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_MOVED)
+	const bool isWindowDrag = event.type == SDL_WINDOWEVENT
+							  && (event.window.event == SDL_WINDOWEVENT_MOVED
+								  || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED);
+	if (!isWindowDrag)
 	{
-		if (!_isWindowMoving)
-		{
-			_isWindowMoving = true;
-
-			if (!_isPause)
-			{
-				_isPauseBeforeDragNDrop = true;
-				_events->EmitEvent(SetPauseEvent{.isPaused = _isPauseBeforeDragNDrop});
-			}
-		}
-
-		_lastMoveEventTime = std::chrono::system_clock::now();
+		return;
 	}
+
+	if (!_isWindowDragging)
+	{
+		_isWindowDragging = true;
+
+		if (!_isPause)
+		{
+			_isPausedByWindowDrag = true;
+			_events->EmitEvent(SetPauseEvent{.isPaused = _isPausedByWindowDrag});
+		}
+	}
+
+	_lastDragEventTime = std::chrono::steady_clock::now();
 }
 
 void UserInput::SwapControllers(const TabReleasedEvent&)
@@ -107,18 +112,18 @@ std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) con
 	return _areControllersSwapped ? "P1" : "P2";
 }
 
-void UserInput::OnWindowMoveStop()
+void UserInput::OnWindowDragStop()
 {
-	if (_isWindowMoving)
+	if (_isWindowDragging)
 	{
-		if (std::chrono::system_clock::now() - _lastMoveEventTime > _moveEndDelay)
+		if (std::chrono::steady_clock::now() - _lastDragEventTime > _dragEndDelay)
 		{
-			_isWindowMoving = false;
+			_isWindowDragging = false;
 
-			if (_isPauseBeforeDragNDrop)
+			if (_isPausedByWindowDrag)
 			{
-				_isPauseBeforeDragNDrop = false;
-				_events->EmitEvent(SetPauseEvent{.isPaused = _isPauseBeforeDragNDrop});
+				_isPausedByWindowDrag = false;
+				_events->EmitEvent(SetPauseEvent{.isPaused = _isPausedByWindowDrag});
 			}
 		}
 	}
@@ -371,13 +376,13 @@ void UserInput::Update()
 			OnWindowResized(UPoint{.x = static_cast<unsigned>(event.window.data1),
 								   .y = static_cast<unsigned>(event.window.data2)});
 		}
-		WindowsMoveEvents(event);
+		WindowDragEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);
 		GamepadEvents(event);
 	}
 
-	OnWindowMoveStop();
+	OnWindowDragStop();
 }
 
 bool UserInput::IsShutdown() const { return _isShutdown; }

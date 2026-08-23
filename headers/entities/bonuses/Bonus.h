@@ -45,6 +45,8 @@ protected:
 	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
 		  std::string name, Uuid uuid, GameMode gameMode, BonusType bonusType);
 
+	void EmitDamageStatistics(const std::string& author, const std::string& fraction) override;
+
 public:
 	~Bonus() override;
 
@@ -55,6 +57,5 @@ public:
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void PickUpBonus(const std::string& author, const std::string& fraction) override;
 };

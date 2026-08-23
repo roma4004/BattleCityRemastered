@@ -48,19 +48,9 @@ void Obstacle::Draw() const
 	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
 }
 
-void Obstacle::SendDamageStatistics(const std::string& author, const std::string& fraction)
-{
-	if (GetHealth() < 1)
-	{
-		EmitDeathStatistics(author, fraction);
-	}
-}
-
 void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
 	BaseObj::TakeDamage(damage, author, fraction);
-
-	SendDamageStatistics(author, fraction);
 
 	if (IsHost(_gameMode))
 	{

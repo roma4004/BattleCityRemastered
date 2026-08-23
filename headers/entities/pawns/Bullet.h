@@ -32,6 +32,7 @@ class Bullet final : public Pawn, public IDrawable
 
 protected:
 	void Subscribe() override;
+	void EmitDamageStatistics(const std::string& author, const std::string& fraction) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;
@@ -52,11 +53,6 @@ public:
 
 	[[nodiscard]] Uuid GetUuid() const override;
 	[[nodiscard]] const std::string& GetUuidStr() const;
-
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
-
-	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

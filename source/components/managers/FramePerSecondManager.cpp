@@ -55,11 +55,19 @@ void FramePerSecondManager::CountFpsAndDeltaTime(const CalculateActualFpsEvent&)
 		}
 	}
 
-	_deltaTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
+	const double measuredFrameTime =
+			std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - _startFrameTime).count();
+
+	//NOTE: this long means the loop stalled - window drag, resize, a breakpoint - not slow hardware.
+	//Movement is speed * deltaTime, so the measured value would teleport everything in one step; give
+	//it one ordinary frame instead. Threshold is tankSize / tankSpeed (36/142) - one tank length.
+	constexpr double kHitchThreshold{0.25};
+	_deltaTime = measuredFrameTime > kHitchThreshold ? _targetFrameDuration.count() : measuredFrameTime;
 	_events->EmitEvent(DeltaTimeEvent{.deltaTime = _deltaTime});
 
 	_frameCounter++;
-	_fpsAccumulatedTime += _deltaTime;
+	//NOTE: the real duration - the fps window has to stay one real second
+	_fpsAccumulatedTime += measuredFrameTime;
 
 	if (_fpsAccumulatedTime >= 1.0)
 	{

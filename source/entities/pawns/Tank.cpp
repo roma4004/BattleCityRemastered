@@ -268,15 +268,16 @@ void Tank::OnBonusCaliber(const std::string& author)
 	}
 }
 
-void Tank::SendDamageStatistics(const std::string& author, const std::string& fraction)
+void Tank::EmitDamageStatistics(const std::string& author, const std::string& fraction)
 {
 	_events->EmitEvent(StatisticsTankHitEvent{.who = _name, .author = author, .fraction = fraction});
+}
 
-	if (GetHealth() < 1)
-	{
-		//TODO: move to event from statistic when last tank died
-		_events->EmitEvent(StatisticsTankDiedEvent{.who = _name, .author = author, .fraction = fraction});
-	}
+//TODO: two "a tank died" signals - this one, and TankDiedEvent from ~Tank that RespawnManager
+//listens to. A tank cleared without damage fires only the second one.
+void Tank::EmitDeathStatistics(const std::string& author, const std::string& fraction)
+{
+	_events->EmitEvent(StatisticsTankDiedEvent{.who = _name, .author = author, .fraction = fraction});
 }
 
 void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const

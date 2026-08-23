@@ -120,10 +120,25 @@ void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
 bool BaseObj::GetIsAlive() const { return _isAlive; }
 
-void BaseObj::TakeDamage(const unsigned int damage, const std::string& /*author*/, const std::string& /*fraction*/)
+void BaseObj::EmitDamageStatistics(const std::string&, const std::string&) {}
+
+void BaseObj::EmitDeathStatistics(const std::string&, const std::string&) {}
+
+void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
 {
+	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject on PostTickUpdate, so without this
+	//a second hit in the same frame reports a second death
+	const bool wasAlive = _isAlive;
+
 	_health -= static_cast<int>(damage);
 	_isAlive = _health > 0;
+
+	EmitDamageStatistics(author, fraction);
+
+	if (wasAlive && !_isAlive)
+	{
+		EmitDeathStatistics(author, fraction);
+	}
 }
 
 bool BaseObj::GetIsPassable() const { return _collision.passable; }

@@ -303,7 +303,6 @@
     <ClInclude Include="..\headers\interfaces\INetworkNode.h" />
     <ClInclude Include="..\headers\interfaces\IObstacle.h" />
     <ClInclude Include="..\headers\interfaces\IPickupableBonus.h" />
-    <ClInclude Include="..\headers\interfaces\ISendableDamageStatistics.h" />
     <ClInclude Include="..\headers\interfaces\IShootable.h" />
     <ClInclude Include="..\headers\interfaces\ITickUpdatable.h" />
     <ClInclude Include="..\headers\network\Client.h" />

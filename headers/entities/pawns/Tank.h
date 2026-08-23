@@ -57,6 +57,9 @@ protected:
 	BulletCalibre _calibre{};
 	Timer _shootTimer{};
 
+	void EmitDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+
 	void Subscribe() override;
 
 	// bonuses
@@ -77,7 +80,6 @@ public:
 
 	~Tank() override;
 
-	void SendDamageStatistics(const std::string& author, const std::string& fraction) override;
 
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
