@@ -210,11 +210,7 @@ void RespawnManager::OnEnemyDied(const bool isAvailable)
 	++_enemiesDeathCount;
 	if (isAvailable == false && _enemiesSpawnCount == _enemiesDeathCount)
 	{
-		_events->EmitEvent(PlayersTeamIsWonEvent{});
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(ServerOutPlayersTeamIsWonEvent{});
-		}
+		_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 	}
 }
 
@@ -223,11 +219,7 @@ void RespawnManager::OnPlayerDied(const bool isAvailable)
 	++_playersDeathCount;
 	if (isAvailable == false && _playersSpawnCount == _playersDeathCount)
 	{
-		_events->EmitEvent(EnemiesTeamIsWonEvent{});
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(ServerOutEnemiesTeamIsWonEvent{});
-		}
+		_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
 	}
 }
 

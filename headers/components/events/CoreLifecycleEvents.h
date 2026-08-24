@@ -69,13 +69,10 @@ struct ApplyGameModeEvent {};
 
 struct PlayersBaseFinishedEvent {};
 
-struct PlayersTeamIsWonEvent {};
-
-struct EnemiesTeamIsWonEvent {};
-
-struct ServerOutPlayersTeamIsWonEvent {};
-
-struct ServerOutEnemiesTeamIsWonEvent {};
+struct GameFinishedEvent
+{
+	GameState state{};
+};
 
 struct RespawnTanksEvent
 {

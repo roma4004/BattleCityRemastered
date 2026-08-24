@@ -349,18 +349,7 @@ void Client::OnGameStateChange(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<GameStateChange>(command)]()
 	{
-		if (cmd.gameState == "PlayersTeamIsWon")
-		{
-			this->_events->EmitEvent(PlayersTeamIsWonEvent{});
-		}
-		else if (cmd.gameState == "EnemiesTeamIsWon")
-		{
-			this->_events->EmitEvent(EnemiesTeamIsWonEvent{});
-		}
-		else
-		{
-			Log::Info("Client::OnGameStateChange: unrecognized game state \"" + cmd.gameState + "\"");
-		}
+		this->_events->EmitEvent(GameFinishedEvent{.state = cmd.state});
 	});
 }
 

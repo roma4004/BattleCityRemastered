@@ -32,7 +32,8 @@ function Update-Submodules($paths, [switch]$Recurse)
 {
     if (-not $paths) { return }
 
-    $flags = @('--init', '--jobs', '16') #NOTE: mostly tiny repos, cloning them one by one is network-latency bound
+    #NOTE: --depth 1 here, not `shallow = true` in .gitmodules - see cmake/FetchSubmodules.cmake
+    $flags = @('--init', '--jobs', '16', '--depth', '1') #NOTE: mostly tiny repos, cloning them one by one is network-latency bound
     if ($Recurse) { $flags += '--recursive' } # git has no --no-recursive, so the flag is added, never negated
 
     Write-Host "Submodule(s) $($paths -join ', ') are not initialized, fetching them now..."

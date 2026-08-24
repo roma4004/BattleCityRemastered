@@ -139,7 +139,7 @@ TEST_F(GameStateTest, WinAndLossSurviveUntilTheFieldIsCleared)
 {
 	ApplyGameMode(GameMode::OnePlayer);
 
-	_events->EmitEvent(PlayersTeamIsWonEvent{});
+	_events->EmitEvent(GameFinishedEvent{.state = GameState::Won});
 	EXPECT_EQ(GameState::Won, State());
 	_events->EmitEvent(PauseStatusEvent{.isPaused = true});
 	EXPECT_EQ(GameState::Won, State()) << "a pause key press erased the result";
@@ -147,7 +147,7 @@ TEST_F(GameStateTest, WinAndLossSurviveUntilTheFieldIsCleared)
 	_events->EmitEvent(GameResetEvent{});
 	EXPECT_EQ(GameState::Playing, State());
 
-	_events->EmitEvent(EnemiesTeamIsWonEvent{});
+	_events->EmitEvent(GameFinishedEvent{.state = GameState::Over});
 	EXPECT_EQ(GameState::Over, State());
 }
 

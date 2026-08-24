@@ -26,7 +26,9 @@ function(fetch_submodules recurse)
         return()
     endif ()
 
-    set(update_flags --init --jobs 16) #NOTE: mostly tiny repos, cloning them one by one is network-latency bound
+    #NOTE: --depth 1 here, not `shallow = true` in .gitmodules - that one is a recommendation git
+    # drops back to a full clone whenever the pin is not the branch tip, which is our five biggest.
+    set(update_flags --init --jobs 16 --depth 1) #NOTE: mostly tiny repos, cloning them one by one is network-latency bound
     if (recurse)
         list(APPEND update_flags --recursive) # git has no --no-recursive, so the flag is added, never negated
     endif ()

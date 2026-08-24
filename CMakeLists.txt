@@ -102,6 +102,7 @@ set(GAME_CORE_SOURCES
         source/network/FrameChannel.cpp
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
+        source/network/ReplicationPublisher.cpp
         source/network/Server.cpp
         source/network/Session.cpp
         source/network/ServerHandler.cpp

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "enums/CommandType.h"
-#include <string>
+#include "enums/GameState.h"
 
 namespace network::commands
 {
@@ -9,6 +9,6 @@ namespace network::commands
 struct GameStateChange final
 {
 	CommandType type{CommandType::GAME_STATE_CHANGE};
-	std::string gameState{};
+	GameState state{};
 };
 }//namespace network::commands

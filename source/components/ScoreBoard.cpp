@@ -39,8 +39,7 @@ void ScoreBoard::Subscribe()
 	//NOTE: avoid showing score and menu at the same time
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnMenuShowed));
 	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPauseStatus));
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnPlayersTeamIsWon));
-	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnEnemiesTeamIsWon));
+	_subs.push_back(_events->AddListener(this, &ScoreBoard::OnGameFinished));
 }
 
 void ScoreBoard::OnGameReset(const GameResetEvent&) { DisplayScore(false); }
@@ -77,8 +76,7 @@ void ScoreBoard::OnPauseStatus(const PauseStatusEvent& /*event*/)
 	/*DisplayScore(isPause);*/
 }
 
-void ScoreBoard::OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&) { DisplayScore(true); }
-void ScoreBoard::OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&) { DisplayScore(true); }
+void ScoreBoard::OnGameFinished(const GameFinishedEvent&) { DisplayScore(true); }
 
 //TODO: optimize draw call with cache non changed text part
 void ScoreBoard::Draw() const

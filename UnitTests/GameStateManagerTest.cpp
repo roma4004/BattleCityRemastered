@@ -116,9 +116,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		}
 	});
 
-	auto gameWonSub = _events->AddListener([&isGameWon](const PlayersTeamIsWonEvent&)
+	auto gameWonSub = _events->AddListener([&isGameWon](const GameFinishedEvent& event)
 	{
-		isGameWon = true;
+		isGameWon = event.state == GameState::Won;
 	});
 
 	unsigned short respawnEnemyActual{20u};
@@ -220,9 +220,9 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		}
 	});
 
-	auto gameWonSub = _events->AddListener([&isGameWon](const PlayersTeamIsWonEvent&)
+	auto gameWonSub = _events->AddListener([&isGameWon](const GameFinishedEvent& event)
 	{
-		isGameWon = true;
+		isGameWon = event.state == GameState::Won;
 	});
 
 	unsigned short respawnEnemyActual{20u};
@@ -310,7 +310,8 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
 	bool isGameLose{false};
-	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&) { isGameLose = true; });
+	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
+	{ isGameLose = event.state == GameState::Over; });
 
 	unsigned short respawnActual{3u};
 	auto respawnCountSub = _events->AddListener([&respawnActual](const RespawnCountChangedToEvent& event)
@@ -338,9 +339,9 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 {
 	bool isGameLose{false};
-	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&)
+	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
-		isGameLose = true;
+		isGameLose = event.state == GameState::Over;
 	});
 
 	unsigned short respawnActual{3u};
@@ -381,9 +382,9 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	constexpr bool isPressed{true};
 	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
 
-	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&)
+	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
-		isGameLose = true;
+		isGameLose = event.state == GameState::Over;
 	});
 
 	unsigned short respawnActual{3u};
@@ -425,7 +426,8 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 {
 	bool isGameLose{false};
-	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&) { isGameLose = true; });
+	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
+	{ isGameLose = event.state == GameState::Over; });
 
 	unsigned short respawnEnemyActual{20u};
 	unsigned short respawnPlayerOneActual{3u};

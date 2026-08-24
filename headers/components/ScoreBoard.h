@@ -15,8 +15,7 @@ struct RespawnCountChangedToEvent;
 struct DrawUserInterfaceEvent;
 struct MenuShowedEvent;
 struct PauseStatusEvent;
-struct PlayersTeamIsWonEvent;
-struct EnemiesTeamIsWonEvent;
+struct GameFinishedEvent;
 
 class ScoreBoard final
 {
@@ -44,8 +43,7 @@ class ScoreBoard final
 	void OnDrawUserInterface(const DrawUserInterfaceEvent&);
 	void OnMenuShowed(const MenuShowedEvent& event);
 	void OnPauseStatus(const PauseStatusEvent&);
-	void OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&);
-	void OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&);
+	void OnGameFinished(const GameFinishedEvent&);
 
 	void RenderStatistics() const;
 	void RenderTextWithAlignment(Point pos, unsigned int color, const std::string& text, unsigned short player1,

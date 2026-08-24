@@ -65,7 +65,7 @@ template<class Archive>
 void serialize(Archive& ar, network::commands::GameStateChange& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.type;
-	ar & cmd.gameState;
+	ar & cmd.state;
 }
 
 template<class Archive>

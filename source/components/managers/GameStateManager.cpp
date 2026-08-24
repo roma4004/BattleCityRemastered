@@ -17,8 +17,7 @@ void GameStateManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPlayersTeamIsWon));
-	_subs.push_back(_events->AddListener(this, &GameStateManager::OnEnemiesTeamIsWon));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameFinished));
 
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnClientReady));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnConnectedToHost));
@@ -66,9 +65,7 @@ void GameStateManager::OnPauseStatus(const PauseStatusEvent& event)
 	}
 }
 
-void GameStateManager::OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&) { SetState(GameState::Won); }
-
-void GameStateManager::OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&) { SetState(GameState::Over); }
+void GameStateManager::OnGameFinished(const GameFinishedEvent& event) { SetState(event.state); }
 
 void GameStateManager::PeerArrived()
 {

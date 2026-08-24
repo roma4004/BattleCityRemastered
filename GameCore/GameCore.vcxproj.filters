@@ -282,6 +282,9 @@
     <ClCompile Include="..\source\network\PeerLink.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\ReplicationPublisher.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\network\Serializer.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
@@ -714,6 +717,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\PeerLink.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\ReplicationPublisher.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\Serializer.h">

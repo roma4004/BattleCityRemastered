@@ -10,8 +10,7 @@ struct PauseStatusEvent;
 struct PreDrawUserInterfaceEvent;
 struct GameResetEvent;
 struct GameModeAppliedEvent;
-struct PlayersTeamIsWonEvent;
-struct EnemiesTeamIsWonEvent;
+struct GameFinishedEvent;
 struct ServerInClientReadyToStartGameEvent;
 struct ClientConnectedToHostEvent;
 struct ServerInDisconnectEvent;
@@ -35,8 +34,7 @@ class GameStateManager
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
 	void OnPauseStatus(const PauseStatusEvent& event);
-	void OnPlayersTeamIsWon(const PlayersTeamIsWonEvent&);
-	void OnEnemiesTeamIsWon(const EnemiesTeamIsWonEvent&);
+	void OnGameFinished(const GameFinishedEvent& event);
 	void OnClientReady(const ServerInClientReadyToStartGameEvent&);
 	void OnConnectedToHost(const ClientConnectedToHostEvent&);
 	void OnClientLeft(const ServerInDisconnectEvent&);
