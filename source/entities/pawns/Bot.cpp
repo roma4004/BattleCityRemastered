@@ -13,7 +13,7 @@
 #include "utils/RandUtils.h"
 #include <optional>
 
-Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
+Bot::Bot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Tank{std::move(pawnProperty), bulletPool, gameConfig}
 	, _distTurnRate(1000 /*ms*/, 5000 /*ms*/)
 {

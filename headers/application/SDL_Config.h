@@ -18,14 +18,14 @@ struct SDL_Config final
 {
 	static constexpr const char* kWindowTitle{"Battle City remastered"};
 
-	SDL_Config(GameConfig& config, const ProjectConfig& projectConfig);
+	SDL_Config(const GameConfig& config, const ProjectConfig& projectConfig);
 	~SDL_Config();
 
 	[[nodiscard]] std::expected<void, InitError> Init();
 
 	void SaveWindowState(ProjectConfig& outProjectConfig) const;
 
-	GameConfig& gameConfig;
+	const GameConfig& gameConfig;
 	const ProjectConfig& projectConfig;
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};

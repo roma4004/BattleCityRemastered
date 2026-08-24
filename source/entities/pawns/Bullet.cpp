@@ -17,7 +17,7 @@
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
 // 
-Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
+Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
 			   const bool enableByDefault)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _author{std::move(author)}

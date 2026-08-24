@@ -10,7 +10,7 @@
 #include "interfaces/IMoveBeh.h"
 
 Player::Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-			   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig)
+			   std::unique_ptr<IInputProvider> inputProvider, const GameConfig& gameConfig)
 	: Tank{std::move(pawnProperty), bulletPool, gameConfig}
 	, _inputProvider{std::move(inputProvider)}
 {

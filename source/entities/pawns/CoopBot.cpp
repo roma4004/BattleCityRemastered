@@ -2,7 +2,7 @@
 #include "entities/obstacles/IFortress.h"
 #include "entities/pawns/PawnProperty.h"
 
-CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
+CoopBot::CoopBot(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Bot{std::move(pawnProperty), bulletPool, gameConfig}
 {
 	m_shouldShootToObstacleStrategy = [this](const std::shared_ptr<BaseObj>& obj)

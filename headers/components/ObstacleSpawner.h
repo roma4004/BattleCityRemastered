@@ -24,7 +24,7 @@ class ObstacleSpawner final
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 	GameMode _gameMode{};
 
@@ -42,7 +42,7 @@ class ObstacleSpawner final
 
 public:
 	ObstacleSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-					GameConfig& gameConfig);
+					const GameConfig& gameConfig);
 
 	~ObstacleSpawner() = default;
 };

@@ -27,7 +27,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	float _driftMultiplicator{1.5f};
 	std::string& _name;
 	std::string& _fraction;
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
@@ -46,7 +46,7 @@ protected:
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
 					std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-					BonusEffectProperty& effects, GameConfig& gameConfig);
+					BonusEffectProperty& effects, const GameConfig& gameConfig);
 
 	~MoveLikeTankBeh() override = default;
 

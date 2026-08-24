@@ -12,7 +12,7 @@
 #include <algorithm>
 #include "utils/Log.h"
 
-UserInput::UserInput(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _selectedGameMode{GameMode::Demo}
 	, _windowSize{gameConfig.windowSize}
 	, _events{events}

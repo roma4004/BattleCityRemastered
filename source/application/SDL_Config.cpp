@@ -28,7 +28,7 @@ constexpr std::array kXBoxKeys{"Images.XBox_D-Pad",
 							   "Images.XBox_Y"};
 }
 
-SDL_Config::SDL_Config(GameConfig& config, const ProjectConfig& project)
+SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project)
 	: gameConfig{config}
 	, projectConfig{project} {}
 

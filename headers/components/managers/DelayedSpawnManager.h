@@ -24,7 +24,7 @@ class DelayedSpawnManager
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<SpawnDelay> _spawnDelays{};
 	std::vector<EventSubscription> _subs{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 
 	void OnGameReset(const GameResetEvent&);
 	void OnSpawnDelayStart(const SpawnDelayStartEvent& event);
@@ -32,7 +32,7 @@ class DelayedSpawnManager
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
 
 public:
-	DelayedSpawnManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	DelayedSpawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~DelayedSpawnManager() = default;
 

@@ -20,7 +20,7 @@ struct TickUpdateEvent;
 class Pawn : public BaseObj, public ITickUpdatable
 {
 protected:
-	Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, CollisionTags collision);
+	Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, CollisionTags collision);
 
 public:
 	~Pawn() override;
@@ -43,7 +43,7 @@ protected:
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 	Direction _dir{};
 	GameMode _gameMode{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 
 	std::vector<EventSubscription> _subs{};
 	EventSubscription _tickUpdateSub{};

@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <sstream>
 
-ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 25}
 	, _events{events}
 	, _statistics{std::make_unique<GameStatistics>(events)}

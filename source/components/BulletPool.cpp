@@ -9,7 +9,7 @@
 #include "entities/pawns/PawnProperty.h"
 
 BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-					   GameConfig& gameConfig)
+					   const GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
 	, _gameConfig{gameConfig}

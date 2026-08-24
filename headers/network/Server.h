@@ -1,16 +1,14 @@
 #pragma once
 
 #include "enums/DisconnectReason.h"
-#include "enums/InputSignal.h"
-#include "PeerLink.h"
+#include "Session.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <atomic>
-#include <functional>
-#include <unordered_map>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -47,34 +45,6 @@ struct BonusTankAppliedEvent;
 namespace network::commands
 {
 using boost::asio::ip::tcp;
-
-class Session final : public PeerLink, public std::enable_shared_from_this<Session>
-{
-public:
-	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events);
-
-	~Session();
-
-	void Start();
-	//NOTE: shared, not copied - the same frame goes to every session and stays alive while it is written
-	void DoWrite(std::shared_ptr<const std::string> message);
-	void Shutdown();
-
-	//NOTE: onClosed fires once the goodbye is written, or turned out undeliverable
-	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
-
-private:
-	using InputEmitter = std::function<void(EventSystem&, const std::string&, bool)>;
-
-	void RegisterCommandHandlers();
-	void OnSignalEvent(const AnyCommand& command);
-	void OnKeyStateChange(const AnyCommand& command);
-	void OnDisconnect(const AnyCommand& command);
-
-	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
-
-	bool _isPeerGone{false};
-};
 
 class Server final
 {

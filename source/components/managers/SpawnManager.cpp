@@ -10,7 +10,7 @@
 #include "components/managers/RespawnManager.h"
 
 SpawnManager::SpawnManager(const std::shared_ptr<EventSystem>& events,
-						   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig)
+						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
 	, _gameConfig{gameConfig}

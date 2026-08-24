@@ -7,7 +7,7 @@
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
 
-InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
 	, _gameConfig{gameConfig}
 {

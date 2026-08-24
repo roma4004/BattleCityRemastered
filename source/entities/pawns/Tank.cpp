@@ -20,7 +20,7 @@
 #include "utils/ColliderUtils.h"
 #include <ranges>
 
-Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
+Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _name, _fraction,

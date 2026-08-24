@@ -19,7 +19,7 @@ class RightSideBar
 	unsigned short _playerOneRespawnCount{};
 	unsigned short _playerTwoRespawnCount{};
 	unsigned short _stageNumber{1u};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -30,7 +30,7 @@ class RightSideBar
 	void OnRespawnCountChangedTo(const RespawnCountChangedToEvent& event);
 
 public:
-	RightSideBar(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~RightSideBar() = default;
 };

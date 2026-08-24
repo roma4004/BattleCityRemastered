@@ -11,7 +11,7 @@
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
 								 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-								 BonusEffectProperty& effects, GameConfig& gameConfig)
+								 BonusEffectProperty& effects, const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}

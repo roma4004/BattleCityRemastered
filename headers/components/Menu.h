@@ -43,7 +43,7 @@ class Menu final
 	void DisplayMenu(bool isDisplayed);
 
 public:
-	Menu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~Menu() = default;
 

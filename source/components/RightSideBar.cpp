@@ -5,7 +5,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 
-RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+RightSideBar::RightSideBar(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _gameConfig{gameConfig}
 	, _events{events}
 {

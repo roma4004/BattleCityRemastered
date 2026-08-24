@@ -17,7 +17,7 @@
 #include <SDL_video.h>
 #include <string>
 
-RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig)
+RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig)
 	: _events{events}
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}

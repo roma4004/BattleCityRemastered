@@ -43,7 +43,7 @@ class RenderManager
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 	SDL_Config& _sdlConfig;
 
 	struct MenuParams
@@ -117,7 +117,7 @@ class RenderManager
 	[[nodiscard]] static SDL_Rect CalcFpsPos(const UPoint& newSize);
 
 public:
-	RenderManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig, SDL_Config& sdlConfig);
+	RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig);
 
 	~RenderManager();
 };

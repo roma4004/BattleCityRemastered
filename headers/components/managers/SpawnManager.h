@@ -20,7 +20,7 @@ class SpawnManager
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 
 	std::shared_ptr<DelayedSpawnManager> _delayedSpawnManager{nullptr};
@@ -36,7 +36,7 @@ class SpawnManager
 
 public:
 	SpawnManager(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				 GameConfig& gameConfig);
+				 const GameConfig& gameConfig);
 
 	~SpawnManager();
 };

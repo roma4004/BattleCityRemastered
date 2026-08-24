@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <memory>
 
-TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+TankSpawner::TankSpawner(const GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 						 const std::shared_ptr<EventSystem>& events)
 	: _allObjects{allObjects}
 	, _events{events}

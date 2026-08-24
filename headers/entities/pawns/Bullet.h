@@ -40,7 +40,7 @@ protected:
 public:
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{}};
 
-	Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre = {},
+	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre = {},
 		   std::string author = "", bool enableByDefault = false);
 
 	~Bullet() override;

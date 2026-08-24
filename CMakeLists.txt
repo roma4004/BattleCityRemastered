@@ -103,6 +103,7 @@ set(GAME_CORE_SOURCES
         source/network/NetworkNodeBase.cpp
         source/network/PeerLink.cpp
         source/network/Server.cpp
+        source/network/Session.cpp
         source/network/ServerHandler.cpp
         source/network/Serializer.cpp
         source/utils/ColliderUtils.cpp

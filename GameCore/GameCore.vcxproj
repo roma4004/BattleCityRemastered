@@ -188,6 +188,7 @@
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
     <ClCompile Include="..\source\network\PeerLink.cpp" />
     <ClCompile Include="..\source\network\Server.cpp" />
+    <ClCompile Include="..\source\network\Session.cpp" />
     <ClCompile Include="..\source\network\ServerHandler.cpp" />
     <ClCompile Include="..\source\network\Serializer.cpp" />
     <ClCompile Include="..\source\utils\ColliderUtils.cpp" />
@@ -333,6 +334,7 @@
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="..\headers\network\MessageFraming.h" />
     <ClInclude Include="..\headers\network\Server.h" />
+    <ClInclude Include="..\headers\network\Session.h" />
     <ClInclude Include="..\headers\network\ServerHandler.h" />
     <ClInclude Include="..\headers\network\Serializer.h" />
     <ClInclude Include="..\headers\geometry\Point.h" />

@@ -28,7 +28,7 @@ class BonusSpawner final
 	std::uniform_int_distribution<> _distSpawnPosY{};
 	std::uniform_int_distribution<> _distSpawnPosX{};
 	std::uniform_int_distribution<> _distSpawnType{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 
 	Timer _spawnTimer;
 	GameMode _gameMode{};
@@ -44,7 +44,7 @@ class BonusSpawner final
 
 public:
 	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-				 GameConfig& gameConfig);
+				 const GameConfig& gameConfig);
 
 	~BonusSpawner() = default;
 

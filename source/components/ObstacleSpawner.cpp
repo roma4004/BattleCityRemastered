@@ -21,7 +21,7 @@
 class BaseObj;
 
 ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
-								 std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig)
+								 std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig)
 	: _allObjects{allObjects}
 	, _events{events}
 	, _gameConfig{gameConfig}

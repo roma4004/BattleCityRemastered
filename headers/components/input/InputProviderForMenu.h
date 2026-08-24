@@ -35,7 +35,7 @@ class InputProviderForMenu final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	std::vector<EventSubscription> _menuNavSubs{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 	MenuKeys _keys{};
 	GameState _gameState{};
 
@@ -54,7 +54,7 @@ class InputProviderForMenu final
 	void OnMenuNavFire(const FireEvent& event);
 
 public:
-	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~InputProviderForMenu() = default;
 

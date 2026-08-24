@@ -46,7 +46,7 @@ class TankSpawner final
 	std::vector<EventSubscription> _subs{};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 	std::vector<DelayedTankSpawn> _delayedSpawns{};
 
 	void Subscribe();
@@ -81,7 +81,7 @@ class TankSpawner final
 	void OnClientRespawn(TankType type, Uuid uuid, ObjRectangle rect);
 
 public:
-	TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	TankSpawner(const GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 				const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner() = default;

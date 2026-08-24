@@ -6,7 +6,7 @@
 #include "components/events/TimingEvents.h"
 #include "utils/Timer.h"
 
-DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+DelayedSpawnManager::DelayedSpawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
 	, _gameConfig{gameConfig}
 {

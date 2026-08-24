@@ -49,12 +49,12 @@ public:
 			ObjRectangle rect, int health, Uuid uuid, std::string name, std::string fraction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 			float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
-			GameConfig& gameConfig);
+			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
 			ObjRectangle rect, int health, Uuid uuid, std::string name, std::string fraction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-			const BulletCalibre& calibre, Direction dir, GameMode gameMode, GameConfig& gameConfig, std::string author)
+			const BulletCalibre& calibre, Direction dir, GameMode gameMode, const GameConfig& gameConfig, std::string author)
 	{
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
@@ -84,7 +84,7 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 										 std::shared_ptr<EventSystem> events,
 										 unsigned short tier, float tankSpeed, Direction dir, GameMode gameMode,
 										 std::shared_ptr<BulletPool> bulletPool,
-										 GameConfig& gameConfig)
+										 const GameConfig& gameConfig)
 {
 	BaseObjProperty baseObjProperty{
 			.rect = rect,
@@ -109,7 +109,7 @@ template<>
 		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, std::string fraction,
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
-		GameConfig& gameConfig);
+		const GameConfig& gameConfig);
 
 //NOTE: an epsilon comparison is not transitive, so it is no equivalence relation and has no
 //business being spelled == on the type. Production never compares FPoints; the tests do.

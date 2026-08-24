@@ -8,7 +8,7 @@
 #include <memory>
 #include <ranges>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, GameConfig& gameConfig,
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const GameConfig& gameConfig,
 									 const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
 	, _rect{rect}

@@ -291,6 +291,9 @@
     <ClCompile Include="..\source\network\ServerHandler.cpp">
       <Filter>source\network</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\network\Session.cpp">
+      <Filter>source\network</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\utils\ColliderUtils.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
@@ -720,6 +723,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\ServerHandler.h">
+      <Filter>headers\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\Session.h">
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ColliderUtils.h">

@@ -35,7 +35,7 @@ class ScoreBoard final
 	unsigned short _enemyRespawnCount{20u};
 	unsigned short _playerOneRepawnCount{3u};
 	unsigned short _playerTwoRespawnCount{3u};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 
 	void Subscribe();
 
@@ -59,7 +59,7 @@ class ScoreBoard final
 	void DisplayScore(bool isDisplayed);
 
 public:
-	ScoreBoard(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig);
+	ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	//NOTE: defaulted out-of-line in the .cpp (not here) - this header only forward-declares
 	//GameStatistics, held below by unique_ptr, so an in-header default would need it complete here.

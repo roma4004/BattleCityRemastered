@@ -22,14 +22,14 @@ class BulletPool final
 	std::vector<EventSubscription> _subs{};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
 	std::queue<std::shared_ptr<BaseObj>> _bullets{};
-	GameConfig& _gameConfig;
+	const GameConfig& _gameConfig;
 	bool _isClearing{};
 
 	void OnGameReset(const GameResetEvent&);
 
 public:
 	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-			   GameConfig& gameConfig);
+			   const GameConfig& gameConfig);
 
 	~BulletPool() = default;
 

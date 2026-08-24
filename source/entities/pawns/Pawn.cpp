@@ -9,7 +9,7 @@
 #include "interfaces/IMoveBeh.h" //NOTE: required for std::unique_ptr<IMoveBeh> Pawn::_moveBeh
 #include "utils/UuidUtils.h"
 // 
-Pawn::Pawn(PawnProperty pawnProperty, GameConfig& gameConfig, const CollisionTags collision)
+Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const CollisionTags collision)
 	: BaseObj{std::move(pawnProperty.baseObjProperty), collision}
 	, _speed{pawnProperty.speed}
 	, _tier{pawnProperty.tier}

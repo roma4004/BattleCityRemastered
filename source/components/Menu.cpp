@@ -7,7 +7,7 @@
 #include "components/events/RenderUIEvents.h"
 #include "enums/GameMode.h"
 
-Menu::Menu(const std::shared_ptr<EventSystem>& events, GameConfig& gameConfig)
+Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 0}
 	, _windowHeight{static_cast<int>(gameConfig.windowSize.y)}
 	, _yOffsetStart{static_cast<int>(gameConfig.windowSize.y)}

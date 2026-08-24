@@ -16,7 +16,7 @@ protected:
 
 public:
 	Player(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool,
-		   std::unique_ptr<IInputProvider> inputProvider, GameConfig& gameConfig);
+		   std::unique_ptr<IInputProvider> inputProvider, const GameConfig& gameConfig);
 
 	~Player() override;
 };
