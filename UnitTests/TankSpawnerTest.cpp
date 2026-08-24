@@ -32,6 +32,7 @@ protected:
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
 	}
 
@@ -44,6 +45,7 @@ TEST_F(TankSpawnerTest, DemoGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::Demo, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
@@ -52,6 +54,7 @@ TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(_allObjects.size(), 5u);
 }
@@ -60,6 +63,7 @@ TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
@@ -68,6 +72,7 @@ TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
@@ -76,6 +81,7 @@ TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
 }
@@ -84,6 +90,7 @@ TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 {
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
 }

@@ -57,6 +57,7 @@ protected:
 		_stateManager = std::make_shared<GameStateManager>(_events);
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns

@@ -46,8 +46,7 @@ void RespawnManager::Subscribe()
 		_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankRespawned));
 	}
 
-	SetPlayerNeedRespawn();
-	SetEnemyNeedRespawn();
+	ResetSpawn();
 }
 
 void RespawnManager::OnGameReset(const GameResetEvent&) { ResetSpawn(); }
@@ -85,9 +84,13 @@ void RespawnManager::ResetRespawnStat()
 	_playersDeathCount = 0u;
 }
 
+//NOTE: a reset means a fresh match, so every seat is owed a tank again - ResetRespawnStat clears the
+//availability flags and nothing else ever sets them back
 void RespawnManager::ResetSpawn()
 {
 	ResetRespawnStat();
+	SetPlayerNeedRespawn();
+	SetEnemyNeedRespawn();
 }
 
 void RespawnManager::SetPlayerNeedRespawn()

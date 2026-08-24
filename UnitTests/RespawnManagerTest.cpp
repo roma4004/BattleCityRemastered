@@ -33,6 +33,7 @@ protected:
 		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
+		_events->EmitEvent(GameResetEvent{});
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
 	}
 
@@ -55,6 +56,7 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
@@ -76,6 +78,7 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
@@ -97,6 +100,7 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 
 	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	_allObjects.pop_back();
 
@@ -117,6 +121,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 	});
 
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -141,6 +146,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 	});
 
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -165,6 +171,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 	});
 
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -189,6 +196,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 	});
 
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -216,6 +224,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 	});
 
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -243,6 +252,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 	});
 
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
 		constexpr bool skipDelay{true};
