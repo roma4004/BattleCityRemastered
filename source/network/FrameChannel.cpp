@@ -24,17 +24,20 @@ void FrameChannel::Close()
 	_onFrame = nullptr;
 	_onError = nullptr;
 	CloseSocket();
-	FinishDraining();//NOTE: a Close mid-drain still owes the waiter its callback, or teardown hangs
+	FinishDraining();
+}
+
+void FrameChannel::CloseForReconnect()
+{
+	_writeInProgress = false;
+	CloseSocket();
 }
 
 void FrameChannel::CloseAfterFlush(DrainHandler onClosed)
 {
-	//NOTE: posted, not run here - Send() posts too, so the goodbye is still on its way to the queue;
-	//inline would find it empty and close before writing it
 	auto self(shared_from_this());
 	boost::asio::post(_socket.get_executor(), [this, self, onClosed = std::move(onClosed)]() mutable
 	{
-		//NOTE: dropped, or the owner would read our own shutdown as a dropped link
 		_onFrame = nullptr;
 		_onError = nullptr;
 		_onDrained = std::move(onClosed);
@@ -57,13 +60,11 @@ void FrameChannel::FinishDraining()
 		return;
 	}
 
-	//NOTE: moved out before the call - the handler may destroy the owner that keeps us alive
 	const DrainHandler onDrained = std::move(_onDrained);
 	_onDrained = nullptr;
 	onDrained();
 }
 
-//NOTE: cancel before shutdown/close - an abrupt close reads as a reset (WSAECONNRESET) on the peer
 void FrameChannel::CloseSocket()
 {
 	if (!_socket.is_open())
@@ -172,7 +173,7 @@ void FrameChannel::Send(std::shared_ptr<const std::string> frame)
 	auto self(shared_from_this());
 	boost::asio::post(_socket.get_executor(), [this, self, frame = std::move(frame)]() mutable
 	{
-		if (_writeQueue.size() >= MaxPendingFrames)
+		if (_writeQueue.size() >= kMaxPendingFrames)
 		{
 			_writeQueue.pop_front();
 			Log::Info(_ownerName + ": pending queue full, dropped oldest frame");
@@ -198,8 +199,7 @@ void FrameChannel::TryStartWrite()
 
 void FrameChannel::WriteNextFrame()
 {
-	const auto frame = _writeQueue.front();//NOTE: shared - the queue stays free while the write is in flight
-
+	const auto frame = _writeQueue.front();
 	auto self(shared_from_this());
 	boost::asio::async_write(_socket, boost::asio::buffer(*frame),
 							 [this, self, frame](const boost::system::error_code& ec, std::size_t)
@@ -212,10 +212,8 @@ void FrameChannel::WriteNextFrame()
 										Log::Error(_ownerName + " write: " + ec.message());
 									 }
 
-									 //NOTE: undelivered frame stays at the head, re-sent whole next time
 									 _writeInProgress = false;
 
-									 //NOTE: undeliverable goodbye - waiting on a dead link would stall
 									 if (_onDrained)
 									 {
 										 CloseSocket();

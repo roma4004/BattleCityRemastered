@@ -33,6 +33,8 @@ struct ApplyGameModeEvent;
 struct ServerInClientReadyToStartGameEvent;
 struct ServerInDisconnectEvent;
 struct ClientInDisconnectEvent;
+struct ClientReconnectAbandonedEvent;
+struct GameStateChangedToEvent;
 struct GameModeChangedToEvent;
 struct SelectedGameModeChangedToEvent;
 struct WorldGeometryChangedEvent;
@@ -56,6 +58,7 @@ private:
 	void Subscribe();
 
 	void ResetBattlefield();
+	void EnterLobby();
 	void ApplyGameMode(GameMode gameMode);
 	void PrevGameMode(const PreviousGameModeEvent&);
 	void NextGameMode(const NextGameModeEvent&);
@@ -71,9 +74,7 @@ private:
 
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent& event);
 
-	void OnClientReady(const ServerInClientReadyToStartGameEvent&);
-	void OnClientLeft(const ServerInDisconnectEvent& event);
-	void OnHostLeft(const ClientInDisconnectEvent& event);
+	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);
@@ -97,8 +98,6 @@ private:
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 
 	std::vector<EventSubscription> _subs{};
-	EventSubscription _clientReadySub{};
-	std::vector<EventSubscription> _peerLeftSubs{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
 	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
 
@@ -107,7 +106,6 @@ private:
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
-	bool _isClientReadyHandled{false};
-	bool _isReturnToMenuPending{false};
-	bool _isBattlefieldResetPending{false};
+	//NOTE: deferred to PostTickUpdate - the peer goes away mid-frame, and the field may be mid-iteration
+	bool _isEnterLobbyPending{false};
 };

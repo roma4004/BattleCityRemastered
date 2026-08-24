@@ -51,6 +51,7 @@
     <ClCompile Include="CoopBotTest.cpp" />
     <ClCompile Include="EnemyBotTest.cpp" />
     <ClCompile Include="GameStateManagerTest.cpp" />
+    <ClCompile Include="GameStateTest.cpp" />
     <ClCompile Include="NetworkTest.cpp" />
     <ClCompile Include="PauseSyncTest.cpp" />
     <ClCompile Include="PlayerTest.cpp" />

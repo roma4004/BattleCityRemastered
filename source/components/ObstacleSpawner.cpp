@@ -25,25 +25,27 @@ ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
 	: _allObjects{allObjects}
 	, _events{events}
 	, _gameConfig{gameConfig}
+	, _gameMode{gameConfig.gameMode}
 {
 	Subscribe();
 }
 
 void ObstacleSpawner::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnGameModeChangedTo));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnGameStateChangedTo));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnLoadMap));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnObstacle));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnFortressWall));
+
+	if (IsClient(_gameMode))
+	{
+		_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnObstacleSpawned));
+	}
 }
 
-void ObstacleSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
+void ObstacleSpawner::OnGameStateChangedTo(const GameStateChangedToEvent& event) const
 {
-	_gameMode = event.mode;
-	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
-
-	//NOTE: network game should wait until players connect, if local just load the map
-	if (IsLocalGame(_gameMode))
+	if (event.state == GameState::Playing && !IsClient(_gameMode))
 	{
 		LoadMap();
 	}
@@ -58,18 +60,11 @@ void ObstacleSpawner::OnSpawnFortressWall(const SpawnFortressWallEvent& event)
 	SpawnFortressWall(event.rect, event.material);
 }
 
-void ObstacleSpawner::SubscribeAsClient()
-{
-	_clientSub = _events->AddListener(this, &ObstacleSpawner::OnObstacleSpawned);
-}
-
 void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 {
 	const float side{_gameConfig.gridOffset * ObstacleCellSpan(event.type)};
 	SpawnObstacle(ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = side, .h = side}, event.type, event.uuid);
 }
-
-void ObstacleSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
 void ObstacleSpawner::SpawnObstacle(const ObjRectangle rect, const ObstacleType type, Uuid uuid)
 {

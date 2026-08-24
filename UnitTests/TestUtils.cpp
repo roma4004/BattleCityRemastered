@@ -1,9 +1,21 @@
 #include "TestUtils.h"
+#include "components/TankSpawner.h"
+#include "components/managers/RespawnManager.h"
 #include "components/input/InputProviderForPlayerOne.h"
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
+
+void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
+							   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig,
+							   const GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
+							   std::shared_ptr<TankSpawner>& tankSpawner)
+{
+	gameConfig.gameMode = gameMode;
+	respawnManager = std::make_shared<RespawnManager>(events, gameMode);
+	tankSpawner = std::make_shared<TankSpawner>(gameConfig, allObjects, events);
+}
 
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(

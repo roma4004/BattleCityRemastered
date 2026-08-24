@@ -19,7 +19,7 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 							  .uuid = uuid,
 							  .name = std::move(name),
 							  .fraction = "Neutral"},
-			  s_collision}
+			  kCollision}
 	, _lifeTimeTimer{lifeTime}
 	, _gameMode{gameMode}
 	, _bonusType{bonusType}

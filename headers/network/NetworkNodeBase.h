@@ -51,6 +51,6 @@ private:
 	std::thread _thread{};
 	std::vector<EventSubscription> _subs{};
 
-	static constexpr int ShutdownTimeoutMs{500};
+	static constexpr int kShutdownTimeoutMs{500};
 };
 }//namespace network::commands

@@ -7,6 +7,11 @@ struct GameModeChangedToEvent
 	GameMode mode;
 };
 
+struct GameModeAppliedEvent
+{
+	GameMode mode;
+};
+
 struct SelectedGameModeChangedToEvent
 {
 	GameMode mode;

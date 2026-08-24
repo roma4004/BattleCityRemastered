@@ -33,6 +33,7 @@ TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<Bas
 	: _allObjects{allObjects}
 	, _events{events}
 	, _bulletPool{std::make_shared<BulletPool>(events, allObjects, gameConfig)}
+	, _gameMode{gameConfig.gameMode}
 	, _gameConfig{gameConfig}
 {
 	Subscribe();
@@ -41,18 +42,14 @@ TankSpawner::TankSpawner(GameConfig& gameConfig, std::vector<std::shared_ptr<Bas
 void TankSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
-
-	//TODO: reuse existing tanks when game mode changed
-	_subs.push_back(_events->AddListener(this, &TankSpawner::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnDelayFinished));
-}
 
-void TankSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
-{
-	_gameMode = event.mode;
-
-	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
+	if (IsClient(_gameMode))
+	{
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankRespawned));
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnCompleted));
+	}
 }
 
 void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(event.type, event.uuid, event.skipDelay); }
@@ -60,12 +57,6 @@ void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(eve
 void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
-}
-
-void TankSpawner::SubscribeAsClient()
-{
-	_clientRespawnSub = _events->AddListener(this, &TankSpawner::OnTankRespawned);
-	_clientMaterializeSub = _events->AddListener(this, &TankSpawner::OnTankSpawnCompleted);
 }
 
 void TankSpawner::OnTankRespawned(const TankRespawnedEvent& event)
@@ -78,12 +69,6 @@ void TankSpawner::OnTankRespawned(const TankRespawnedEvent& event)
 void TankSpawner::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
-}
-
-void TankSpawner::UnsubscribeAsClient()
-{
-	_clientRespawnSub = EventSubscription{};
-	_clientMaterializeSub = EventSubscription{};
 }
 
 void TankSpawner::Reset(const GameResetEvent&)

@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "enums/DisconnectReason.h"
+#include "enums/GameState.h"
 
 struct ServerInClientReadyToStartGameEvent {};
 
@@ -14,6 +15,19 @@ struct ServerInDisconnectEvent
 struct ClientInDisconnectEvent
 {
 	DisconnectReason reason;
+};
+
+struct ClientReconnectAbandonedEvent {};
+
+//NOTE: the host replays the world right behind this, so stale objects have to go
+struct ClientConnectedToHostEvent {};
+
+//NOTE: separate from ServerInDisconnectEvent, which stays what it says it is - an announced leave
+struct ServerClientLostEvent {};
+
+struct GameStateChangedToEvent
+{
+	GameState state;
 };
 
 //NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL2 on this

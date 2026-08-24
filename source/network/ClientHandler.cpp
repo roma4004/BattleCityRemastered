@@ -1,5 +1,6 @@
 #include "network/ClientHandler.h"
 #include "network/Client.h"
+#include <boost/asio/post.hpp>
 
 namespace network::commands
 {
@@ -32,4 +33,9 @@ void ClientHandler::ProcessNetworkCommands()
 }
 
 bool ClientHandler::IsConnected() const { return _client && _client->IsConnected(); }
+
+void ClientHandler::Abort()
+{
+	boost::asio::post(IoContext(), [client = _client] { client->Shutdown(); });
+}
 }//namespace network::commands

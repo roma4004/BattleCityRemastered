@@ -32,6 +32,7 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 	, _distSpawnType{static_cast<int>(BonusType::None) + 1, static_cast<int>(BonusType::lastId) - 1}
 	, _gameConfig{gameConfig}
 	, _spawnTimer{std::chrono::seconds{60}}
+	, _gameMode{gameConfig.gameMode}
 {
 	Subscribe();
 }
@@ -39,25 +40,15 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 void BonusSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
-	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
 
-	IsAuthority(_gameMode) ? SubscribeAsAuthority() : SubscribeAsClient();
-}
-
-void BonusSpawner::OnGameModeChangedTo(const GameModeChangedToEvent& event)
-{
-	_gameMode = event.mode;
-
-	if (IsClient(_gameMode))
+	if (IsAuthority(_gameMode))
 	{
-		UnsubscribeAsAuthority();
-		SubscribeAsClient();
+		_subs.push_back(_events->AddListener(this, &BonusSpawner::Update));
 	}
 	else
 	{
-		SubscribeAsAuthority();
-		UnsubscribeAsClient();
+		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnBonusSpawned));
 	}
 }
 
@@ -74,26 +65,12 @@ void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
 			static_cast<int>(windowSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
 }
 
-void BonusSpawner::SubscribeAsAuthority()
-{
-	_authoritySub = _events->AddListener(this, &BonusSpawner::Update);
-}
-
-void BonusSpawner::SubscribeAsClient()
-{
-	_clientSub = _events->AddListener(this, &BonusSpawner::OnBonusSpawned);
-}
-
 void BonusSpawner::OnBonusSpawned(const BonusSpawnedEvent& event)
 {
 	const auto size = static_cast<float>(_gameConfig.bonusSize);
 	const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
 	SpawnBonus(rect, event.type, event.uuid);
 }
-
-void BonusSpawner::UnsubscribeAsAuthority() { _authoritySub = EventSubscription{}; }
-
-void BonusSpawner::UnsubscribeAsClient() { _clientSub = EventSubscription{}; }
 
 void BonusSpawner::Update(const TickUpdateEvent&)
 {

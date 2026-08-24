@@ -160,9 +160,8 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 
 	ProjectConfig projectConfig{"", true};
 	GameConfig gameConfig{projectConfig};
+	gameConfig.gameMode = GameMode::PlayAsClient;
 	const ObstacleSpawner spawner{events, &allObjects, gameConfig};
-
-	events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::PlayAsClient});
 
 	const float cell{gameConfig.gridOffset};
 	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.f, .y = 0.f}, .type = ObstacleType::Eagle,

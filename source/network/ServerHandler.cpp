@@ -1,5 +1,6 @@
 #include "network/ServerHandler.h"
 #include "network/Server.h"
+#include <boost/asio/post.hpp>
 
 namespace network::commands
 {
@@ -26,5 +27,8 @@ void ServerHandler::ProcessNetworkCommands() { _server->ProcessNetworkCommands()
 
 uint16_t ServerHandler::GetBoundPort() const { return _server->GetBoundPort(); }
 
-void ServerHandler::Abort() { _server->Shutdown(); }
+void ServerHandler::Abort()
+{
+	boost::asio::post(IoContext(), [server = _server.get()] { server->Shutdown(); });
+}
 }//namespace network::commands

@@ -9,7 +9,6 @@ enum class TankType : char8_t;
 enum class GameMode : char8_t;
 class EventSystem;
 struct GameResetEvent;
-struct GameModeChangedToEvent;
 struct TankSpawnEvent;
 struct TankDiedEvent;
 struct BonusTankPickupEvent;
@@ -23,9 +22,6 @@ class RespawnManager final
 	using milliseconds = std::chrono::milliseconds;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
-	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
-	std::vector<EventSubscription> _clientSubs{};
 
 	std::vector<unsigned short> _respawnCount{20u, 3u, 3u};
 
@@ -49,20 +45,15 @@ class RespawnManager final
 
 	void Subscribe();
 	void OnGameReset(const GameResetEvent&);
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnBonusTankPickup(const BonusTankPickupEvent& event);
 	void OnPlayersBaseFinished(const PlayersBaseFinishedEvent&);
 	void OnRespawnTanks(const RespawnTanksEvent& event);
-	void SubscribeAsClient();
-
-	void UnsubscribeAsClient();
 
 	void SetEnemyNeedRespawn();
 	void SetPlayerNeedRespawn();
 
 	void ResetRespawnStat();
 	void ResetSpawn();
-	void OnGameModeChange();
 
 	[[nodiscard]] static std::string RespawnCountEnumToString(RespawnGroup type);
 	void ChangeRespawnCount(int delta, RespawnGroup type);
@@ -78,7 +69,7 @@ class RespawnManager final
 public:
 	std::vector<SpawnSlot> _slots{};
 
-	explicit RespawnManager(const std::shared_ptr<EventSystem>& events);
+	RespawnManager(const std::shared_ptr<EventSystem>& events, GameMode gameMode);
 
 	~RespawnManager() = default;
 };

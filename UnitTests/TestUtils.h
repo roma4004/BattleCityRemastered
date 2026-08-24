@@ -12,9 +12,17 @@
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
 
+class RespawnManager;
+class TankSpawner;
+
 class TestUtils
 {
 public:
+	static void ApplyGameMode(const std::shared_ptr<EventSystem>& events,
+							   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig,
+							   GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
+							   std::shared_ptr<TankSpawner>& tankSpawner);
+
 	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
 														  std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	{

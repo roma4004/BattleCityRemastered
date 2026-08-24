@@ -186,6 +186,7 @@
     <ClCompile Include="..\source\network\CommandDispatcher.cpp" />
     <ClCompile Include="..\source\network\FrameChannel.cpp" />
     <ClCompile Include="..\source\network\NetworkNodeBase.cpp" />
+    <ClCompile Include="..\source\network\PeerLink.cpp" />
     <ClCompile Include="..\source\network\Server.cpp" />
     <ClCompile Include="..\source\network\ServerHandler.cpp" />
     <ClCompile Include="..\source\network\Serializer.cpp" />
@@ -310,6 +311,7 @@
     <ClInclude Include="..\headers\network\CommandDispatcher.h" />
     <ClInclude Include="..\headers\network\FrameChannel.h" />
     <ClInclude Include="..\headers\network\NetworkNodeBase.h" />
+    <ClInclude Include="..\headers\network\PeerLink.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h" />
     <ClInclude Include="..\headers\network\commands\BonusStatus.h" />

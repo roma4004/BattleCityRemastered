@@ -1,10 +1,8 @@
 #pragma once
 
-#include "CommandDispatcher.h"
 #include "enums/DisconnectReason.h"
 #include "enums/InputSignal.h"
-#include "FrameChannel.h"
-#include "NetworkCommandQueue.h"
+#include "PeerLink.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <atomic>
@@ -50,16 +48,12 @@ namespace network::commands
 {
 using boost::asio::ip::tcp;
 
-class Session final : public std::enable_shared_from_this<Session>
+class Session final : public PeerLink, public std::enable_shared_from_this<Session>
 {
 public:
 	Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events);
 
 	~Session();
-
-	[[nodiscard]] bool IsSocketOpen() const { return _channel->IsOpen(); }
-	[[nodiscard]] bool HasPendingCommands() const { return _commandQueue.Size() > 0u; }
-	void ProcessCommandQueue() { _commandQueue.ProcessAll(); }
 
 	void Start();
 	//NOTE: shared, not copied - the same frame goes to every session and stays alive while it is written
@@ -79,10 +73,7 @@ private:
 
 	static const std::unordered_map<InputSignal, InputEmitter> kInputEmitters;
 
-	std::shared_ptr<network::FrameChannel> _channel;
-	std::shared_ptr<EventSystem> _events{nullptr};
-	network::NetworkCommandQueue _commandQueue;
-	network::CommandDispatcher _dispatcher;
+	bool _isPeerGone{false};
 };
 
 class Server final

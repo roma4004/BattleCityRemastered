@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "enums/GameState.h"
 #include <memory>
 #include <vector>
 
@@ -11,6 +12,7 @@ struct MenuReleasedEvent;
 struct PauseReleasedEvent;
 struct SetPauseEvent;
 struct GameResetEvent;
+struct GameStateChangedToEvent;
 struct PreTickUpdateEvent;
 struct ShowMenuEvent;
 struct MenuShowedEvent;
@@ -32,16 +34,16 @@ class InputProviderForMenu final
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime by EnableMenuInput()/DisableMenuInput(), independent of _subs's fixed
-	// subscribe-once-at-construction lifetime - clearing this vector auto-unsubscribes just this group.
 	std::vector<EventSubscription> _menuNavSubs{};
 	GameConfig& _gameConfig;
 	MenuKeys _keys{};
+	GameState _gameState{};
 
 	void OnMenuReleased(const MenuReleasedEvent&);
 	void OnPauseReleased(const PauseReleasedEvent&);
 	void OnSetPause(const SetPauseEvent& event);
 	void OnGameReset(const GameResetEvent&);
+	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnShowMenu(const ShowMenuEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);
@@ -64,7 +66,6 @@ public:
 	void Reset();
 	void MenuUpdate();
 	void TogglePause();
-	// void SwitchPause(bool switchTo);
 	bool GetPause() const;
 	void SetPause(bool value);
 

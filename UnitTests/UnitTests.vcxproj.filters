@@ -51,6 +51,9 @@
     <ClCompile Include="GameStateManagerTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="GameStateTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="MapTest.cpp">
       <Filter></Filter>
     </ClCompile>

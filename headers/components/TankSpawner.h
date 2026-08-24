@@ -19,7 +19,6 @@ class EventSystem;
 class IInputProvider;
 class GameConfig;
 struct GameResetEvent;
-struct GameModeChangedToEvent;
 struct RespawnTankEvent;
 struct TankSpawnDelayFinishedEvent;
 struct TankRespawnedEvent;
@@ -45,25 +44,17 @@ class TankSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
-	// subscribe-once-at-construction lifetime - assigning a new EventSubscription here
-	// auto-unsubscribes whatever was previously held.
-	EventSubscription _clientRespawnSub{};
-	EventSubscription _clientMaterializeSub{};
 	Timer _enemySpawnTimer{};
 	GameMode _gameMode{};
 	GameConfig& _gameConfig;
 	std::vector<DelayedTankSpawn> _delayedSpawns{};
 
 	void Subscribe();
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
 	void OnRespawnTank(const RespawnTankEvent& event);
 	void OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event);
-	void SubscribeAsClient();
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
 
-	void UnsubscribeAsClient();
 	void Reset(const GameResetEvent&);
 
 	void OnSpawnDelayFinished(Uuid uuid);

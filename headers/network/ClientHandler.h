@@ -21,6 +21,8 @@ public:
 
 	[[nodiscard]] bool IsConnected() const;
 
+	void Abort();
+
 private:
 	//NOTE: Client stays incomplete here - it is what drags asio in, and only the .cpp needs it
 	std::shared_ptr<Client> _client{nullptr};

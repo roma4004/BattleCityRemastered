@@ -1,10 +1,8 @@
 #pragma once
 
-#include "CommandDispatcher.h"
-#include "FrameChannel.h"
 #include "enums/DisconnectReason.h"
 #include "enums/InputSignal.h"
-#include "NetworkCommandQueue.h"
+#include "PeerLink.h"
 #include "commands/CommandBatch.h"
 #include "components/EventSystem.h"
 #include <atomic>
@@ -32,7 +30,7 @@ namespace network::commands
 {
 using boost::asio::ip::tcp;
 
-class Client final : public std::enable_shared_from_this<Client>
+class Client final : public PeerLink, public std::enable_shared_from_this<Client>
 {
 public:
 	Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
@@ -40,7 +38,6 @@ public:
 
 	~Client();
 
-	void ProcessCommandQueue() { _commandQueue.ProcessAll(); }
 	[[nodiscard]] bool IsConnected() const { return _isConnected; }
 
 	void Shutdown();
@@ -78,24 +75,15 @@ private:
 	void OnTankSpawnComplete(const AnyCommand& command);
 	void OnBonusStatus(const AnyCommand& command);
 	void OnDisconnect(const AnyCommand& command);
-	void SendCommand(const CommandBatch& command);
-	//NOTE: idempotent - a read error and a write error can both report the same drop
 	void HandleDisconnect();
-	//NOTE: unlike HandleDisconnect, deliberately does not reconnect - see the definition
 	void HandleProtocolError();
 	void ScheduleReconnect();
 
-	//NOTE: channel socket and timer share it, so their handlers are serialised
-	boost::asio::strand<boost::asio::io_context::executor_type> _strand;
-	std::shared_ptr<network::FrameChannel> _channel;
 	boost::asio::steady_timer _reconnectTimer;
 	tcp::endpoint _endpoint;
-	std::shared_ptr<EventSystem> _events{};
 	std::vector<EventSubscription> _subs{};
-	network::NetworkCommandQueue _commandQueue;
 	std::mutex _batchWriteMutex;
 	CommandBatch _batch{};
-	network::CommandDispatcher _dispatcher;
 	std::atomic<bool> _isConnected{};
 	bool _reconnectPending{false};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect
@@ -103,7 +91,9 @@ private:
 	//NOTE: same, from the other end - the EOF after a goodbye is expected, so no reconnect
 	std::atomic<bool> _isHostGone{false};
 	unsigned char _reconnectAttempts{0u};
-	static constexpr unsigned char MaxReconnectAttempts{10u};
-	static constexpr unsigned short ReconnectDelayMs{500u};
+	//NOTE: one drop can be reported twice, by the read and by the write - give up once
+	bool _reconnectAbandoned{false};
+	static constexpr unsigned char kMaxReconnectAttempts{10u};
+	static constexpr unsigned short kReconnectDelayMs{500u};
 };
 }//namespace network::commands

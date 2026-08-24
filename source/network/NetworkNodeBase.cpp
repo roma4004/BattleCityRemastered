@@ -61,7 +61,7 @@ void NetworkNodeBase::StopIoThread(const std::function<void(std::function<void()
 			});
 		});
 
-		shutdownFuture.wait_for(std::chrono::milliseconds(ShutdownTimeoutMs));
+		shutdownFuture.wait_for(std::chrono::milliseconds(kShutdownTimeoutMs));
 	}
 
 	if (!_ioContext->stopped())

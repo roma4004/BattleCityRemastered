@@ -19,7 +19,7 @@ protected:
 	//pure virtual hook.
 	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
 
-	static constexpr CollisionTags s_collision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
+	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 public:
 	EagleTile(ObjRectangle rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode);

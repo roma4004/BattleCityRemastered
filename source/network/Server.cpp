@@ -18,9 +18,7 @@
 namespace network::commands
 {
 Session::Session(tcp::socket sock, const std::shared_ptr<EventSystem>& events)
-	: _channel(std::make_shared<network::FrameChannel>(std::move(sock), "Session"))
-	, _events(events)
-	, _dispatcher{"Session"}
+	: PeerLink(std::move(sock), "Session", events)
 {
 	RegisterCommandHandlers();
 }
@@ -43,30 +41,15 @@ void Session::Shutdown() { _channel->Close(); }
 
 void Session::Shutdown(const DisconnectReason reason, std::function<void()> onClosed)
 {
-	if (!_channel->IsOpen())
-	{
-		if (onClosed)
-		{
-			onClosed();
-		}
-		return;
-	}
-
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = reason});
-
-	//NOTE: straight to the channel - Server's batch is flushed by the send thread once a frame,
-	//and shutdown is exactly when that stops happening
-	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(network::Serialize(farewell))));
-	_channel->CloseAfterFlush(std::move(onClosed));
+	CloseWithFarewell(_channel->IsOpen(), reason, std::move(onClosed));
 }
 
 void Session::OnDisconnect(const AnyCommand& command)
 {
+	_isPeerGone = true;
+
 	_commandQueue.Enqueue([this, cmd = std::get<Disconnect>(command)]()
 	{
-		//NOTE: on the game thread, not the network one - closing makes the session collectable, and
-		//collecting it before this queue is drained would take the event with it
 		_channel->Close();
 		_events->EmitEvent(ServerInDisconnectEvent{.reason = cmd.reason});
 	});
@@ -80,20 +63,28 @@ void Session::Start()
 	_channel->SetHandlers(
 			[weakSelf](const std::string& frame)
 			{
-				//NOTE: same reading as on the client, see HandleProtocolError. With a reason, not a
-				//bare close: a plain drop sends the client reconnecting into the same mismatch.
-				if (const auto self = weakSelf.lock(); self && !self->_dispatcher.Dispatch(frame))
+				if (const auto self = weakSelf.lock(); self && !self->DispatchFrame(frame))
 				{
 					self->Shutdown(DisconnectReason::ProtocolError, nullptr);
 				}
 			},
-			//NOTE: closing is what makes the session collectable - Server::CleanupDeadSessions
-			//goes by IsSocketOpen()
 			[weakSelf]
 			{
-				if (const auto self = weakSelf.lock())
+				const auto self = weakSelf.lock();
+				if (!self)
 				{
-					self->_channel->Close();
+					return;
+				}
+
+				self->_channel->Close();
+
+				if (!self->_isPeerGone)
+				{
+					self->_isPeerGone = true;
+					self->_commandQueue.Enqueue([self]
+					{
+						self->_events->EmitEvent(ServerClientLostEvent{});
+					});
 				}
 			});
 
@@ -227,7 +218,6 @@ void Server::StopSendThread()
 
 Server::~Server()
 {
-	// error_log.close();
 	StopSendThread();
 	Shutdown();
 }

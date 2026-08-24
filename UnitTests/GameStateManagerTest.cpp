@@ -50,12 +50,13 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
+		_gameConfig.gameMode = _gameMode;
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_stateManager = std::make_shared<GameStateManager>(_events);
-		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
+								 _tankSpawner);
 		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
@@ -142,7 +143,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 			});
 
 	EXPECT_FALSE(isGameWon);
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 5u; ++i)
 	{
 		_allObjects.clear();
@@ -265,7 +265,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_EQ(respawnEnemyActual, 21u);
 
 	constexpr bool skipDelay{true};
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 4u; ++i)
 	{
 		_allObjects.clear();
@@ -285,7 +284,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	std::cout << "spawn extra life tank" << '\n';
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});//spawn 4 enemies
 	EXPECT_EQ(_allObjects.size(), 4u);
-	_allObjects.pop_back();//remove one enemy tank	
+	_allObjects.pop_back();//remove one enemy tank
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});//spawn use extra life
 	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.clear();// remove all 4 enemy tank
@@ -310,7 +309,6 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 // Player team lose with broken base
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 {
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	bool isGameLose{false};
 	auto gameLoseSub = _events->AddListener([&isGameLose](const EnemiesTeamIsWonEvent&) { isGameLose = true; });
 
@@ -357,7 +355,6 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	EXPECT_FALSE(isGameLose);
 
 	EXPECT_EQ(respawnActual, 3u);
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
 		constexpr bool skipDelay{true};
@@ -407,7 +404,6 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 
 	EXPECT_EQ(respawnActual, 4u);
 	constexpr bool skipDelay{true};
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
 		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
@@ -456,7 +452,6 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerOneActual, 3u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
 	constexpr bool skipDelay{true};
-	_events->EmitEvent(GameModeChangedToEvent{.mode = GameMode::OnePlayer});
 	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
 	EXPECT_EQ(respawnEnemyActual, 16u);
 	EXPECT_EQ(respawnPlayerOneActual, 2u);

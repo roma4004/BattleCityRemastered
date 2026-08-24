@@ -51,8 +51,8 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
-		_respawnManager = std::make_shared<RespawnManager>(_events);
-		_tankSpawner = std::make_shared<TankSpawner>(_gameConfig, &_allObjects, _events);
+		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
+								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
 		_fortressManager = std::make_unique<FortressManager>(_events, &_allObjects);

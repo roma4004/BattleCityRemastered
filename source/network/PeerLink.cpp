@@ -1,0 +1,40 @@
+#include "network/PeerLink.h"
+#include "network/Serializer.h"
+#include "network/commands/Disconnect.h"
+#include <utility>
+
+namespace network::commands
+{
+PeerLink::PeerLink(tcp::socket socket, std::string ownerName, std::shared_ptr<EventSystem> events)
+	: _channel{std::make_shared<network::FrameChannel>(std::move(socket), ownerName)}
+	, _events{std::move(events)}
+	, _dispatcher{std::move(ownerName)}
+{
+}
+
+void PeerLink::SendBatch(const CommandBatch& batch)
+{
+	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(network::Serialize(batch))));
+}
+
+void PeerLink::CloseWithFarewell(const bool hasLink, const DisconnectReason reason, std::function<void()> onClosed)
+{
+	if (!hasLink)
+	{
+		_channel->Close();
+		if (onClosed)
+		{
+			onClosed();
+		}
+
+		return;
+	}
+
+	CommandBatch farewell;
+	farewell.commands.emplace_back(Disconnect{.reason = reason});
+	//NOTE: straight out, not into the per-frame batch - what flushes that stops running at shutdown
+	SendBatch(farewell);
+
+	_channel->CloseAfterFlush(std::move(onClosed));
+}
+}//namespace network::commands

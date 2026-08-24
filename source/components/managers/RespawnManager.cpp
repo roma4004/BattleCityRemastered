@@ -13,8 +13,9 @@
 #include <memory>
 #include <ranges>
 
-RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events)
+RespawnManager::RespawnManager(const std::shared_ptr<EventSystem>& events, const GameMode gameMode)
 	: _events{events}
+	, _gameMode{gameMode}
 {
 	_slots = {
 			{.uuid = UuidUtils::GetRandomUuid(), .type = TankType::ENEMY1, .group = RespawnGroup::ENEMY_ALL},
@@ -33,24 +34,23 @@ void RespawnManager::Subscribe()
 	//TODO: reuse existing tanks when game mode changed
 	//TODO: need work phase, clearState (all spawns disabled), battleState (spawn as normal)
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &RespawnManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankSpawn));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankDied));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankPickup));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnPlayersBaseFinished));
 	_subs.push_back(_events->AddListener(this, &RespawnManager::OnRespawnTanks));
+
+	if (IsClient(_gameMode))
+	{
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankApplied));
+		_subs.push_back(_events->AddListener(this, &RespawnManager::OnTankRespawned));
+	}
+
+	SetPlayerNeedRespawn();
+	SetEnemyNeedRespawn();
 }
 
 void RespawnManager::OnGameReset(const GameResetEvent&) { ResetSpawn(); }
-
-void RespawnManager::OnGameModeChangedTo(const GameModeChangedToEvent& event)
-{
-	_gameMode = event.mode;
-
-	IsClient(_gameMode) ? SubscribeAsClient() : UnsubscribeAsClient();
-
-	OnGameModeChange();
-}
 
 void RespawnManager::OnBonusTankPickup(const BonusTankPickupEvent& event) { OnBonusTank(event.author); }
 
@@ -58,15 +58,7 @@ void RespawnManager::OnPlayersBaseFinished(const PlayersBaseFinishedEvent&) { Tr
 
 void RespawnManager::OnRespawnTanks(const RespawnTanksEvent& event) { RespawnTanks(event.skipDelay); }
 
-void RespawnManager::SubscribeAsClient()
-{
-	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnBonusTankApplied));
-	_clientSubs.push_back(_events->AddListener(this, &RespawnManager::OnTankRespawned));
-}
-
 void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.name); }
-
-void RespawnManager::UnsubscribeAsClient() { _clientSubs.clear(); }
 
 void RespawnManager::SetEnemyNeedRespawn()
 {
@@ -96,13 +88,6 @@ void RespawnManager::ResetRespawnStat()
 void RespawnManager::ResetSpawn()
 {
 	ResetRespawnStat();
-}
-
-void RespawnManager::OnGameModeChange()
-{
-	SetPlayerNeedRespawn();
-
-	SetEnemyNeedRespawn();
 }
 
 void RespawnManager::SetPlayerNeedRespawn()

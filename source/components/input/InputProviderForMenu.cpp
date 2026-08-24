@@ -20,6 +20,7 @@ void InputProviderForMenu::Subscribe()
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPauseReleased));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnSetPause));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameStateChangedTo));
 
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnShowMenu));
@@ -31,6 +32,7 @@ void InputProviderForMenu::OnMenuReleased(const MenuReleasedEvent&) { ToggleMenu
 void InputProviderForMenu::OnPauseReleased(const PauseReleasedEvent&) { TogglePause(); }
 void InputProviderForMenu::OnSetPause(const SetPauseEvent& event) { SetPause(event.isPaused); }
 void InputProviderForMenu::OnGameReset(const GameResetEvent&) { Reset(); }
+void InputProviderForMenu::OnGameStateChangedTo(const GameStateChangedToEvent& event) { _gameState = event.state; }
 void InputProviderForMenu::OnPreTickUpdate(const PreTickUpdateEvent&) { MenuUpdate(); }
 
 void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
@@ -46,11 +48,8 @@ void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 //TODO: change direction without move (one turn before move)
 void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 {
-	//NOTE: Demo runs behind an always-open menu, PlayAsHost stays paused until the client is ready
-	//(both set up in Game) - there the pause flag belongs to them, not to menu visibility
-	//TODO: the PlayAsHost half stands in for a Lobby phase the state machine does not have yet
-	if (_gameConfig.gameMode == GameMode::Demo
-		|| _gameConfig.gameMode == GameMode::PlayAsHost)
+	//NOTE: neither owns the pause here - Demo runs behind an open menu, a lobby is not running at all
+	if (_gameConfig.gameMode == GameMode::Demo || _gameState == GameState::Lobby)
 	{
 		return;
 	}
@@ -86,10 +85,6 @@ void InputProviderForMenu::DisableMenuInput() { _menuNavSubs.clear(); }
 void InputProviderForMenu::ToggleMenuInputSubscription()
 {
 	_keys.menuShow = !_keys.menuShow;
-	// if (_gameMode != GameMode::PlayAsHost && _gameMode != GameMode::PlayAsClient)
-	// {
-	// SwitchPause(_keys.menuShow);
-	// }
 
 	if (_keys.menuShow)
 	{
@@ -126,8 +121,6 @@ void InputProviderForMenu::TogglePause()
 		_events->EmitEvent(PauseRequestedEvent{.isPaused = _keys.pause});
 	}
 }
-// void InputProviderForMenu::SwitchPause(const bool switchTo) { SetPause(switchTo); }
-
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
 
 void InputProviderForMenu::SetPause(bool value)

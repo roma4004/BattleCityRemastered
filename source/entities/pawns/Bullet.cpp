@@ -19,7 +19,7 @@
 // 
 Bullet::Bullet(PawnProperty pawnProperty, GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
 			   const bool enableByDefault)
-	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
+	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {

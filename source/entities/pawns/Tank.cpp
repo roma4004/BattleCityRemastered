@@ -21,7 +21,7 @@
 #include <ranges>
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, GameConfig& gameConfig)
-	: Pawn{std::move(pawnProperty), gameConfig, s_collision}
+	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
 	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _name, _fraction,
 												 _allObjects, _effects, gameConfig);

@@ -11,7 +11,7 @@ struct ObjRectangle;
 class BaseObj;
 class EventSystem;
 class GameConfig;
-struct GameModeChangedToEvent;
+struct GameStateChangedToEvent;
 struct LoadMapEvent;
 struct SpawnObstacleEvent;
 struct SpawnFortressWallEvent;
@@ -26,23 +26,14 @@ class ObstacleSpawner final
 	std::shared_ptr<EventSystem> _events{nullptr};
 	GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
-	// Toggled at runtime on every GameModeChangedToEvent, independent of _subs's fixed
-	// subscribe-once-at-construction lifetime.
-	EventSubscription _clientSub{};
 	GameMode _gameMode{};
-	// std::uniform_int_distribution<> _distSpawnPosY;
-	// std::uniform_int_distribution<> _distSpawnPosX;
-	// std::uniform_int_distribution<> _distSpawnType;
 
 	void Subscribe();
-	void OnGameModeChangedTo(const GameModeChangedToEvent& event);
+	void OnGameStateChangedTo(const GameStateChangedToEvent& event) const;
 	void OnLoadMap(const LoadMapEvent&) const;
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
 	void OnSpawnFortressWall(const SpawnFortressWallEvent& event);
-	void SubscribeAsClient();
 	void OnObstacleSpawned(const ObstacleSpawnedEvent& event);
-
-	void UnsubscribeAsClient();
 
 	void LoadMap() const;
 	void SpawnObstacle(ObjRectangle rect, ObstacleType type, Uuid uuid = {});

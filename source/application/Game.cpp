@@ -69,6 +69,7 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::OnDeltaTime));
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &Game::OnWorldGeometryChanged));
+	_subs.push_back(_events->AddListener(this, &Game::OnGameStateChangedTo));
 }
 
 //NOTE: whoever already stands on the field keeps its place in cells, not in pixels - so every rect
@@ -105,19 +106,10 @@ void Game::OnPostTickUpdate(const PostTickUpdateEvent&)
 	FlushSpawnQueue();
 	DisposeDeadObject();
 
-	if (_isBattlefieldResetPending)
+	if (_isEnterLobbyPending)
 	{
-		_isBattlefieldResetPending = false;
-		ResetBattlefield();
-		//NOTE: after the reset, never before - GameResetEvent clears the pause flag itself
-		_events->EmitEvent(SetPauseEvent{.isPaused = true});
-	}
-
-	if (_isReturnToMenuPending)
-	{
-		_isReturnToMenuPending = false;
-		ApplyGameMode(GameMode::Demo);
-		_events->EmitEvent(ShowMenuEvent{.show = true});
+		_isEnterLobbyPending = false;
+		EnterLobby();
 	}
 }
 
@@ -141,8 +133,7 @@ void Game::ApplyGameMode(const GameMode gameMode)
 	_gameConfig.gameMode = gameMode;
 
 	ResetBattlefield();
-	_isClientReadyHandled = false;
-	_isBattlefieldResetPending = false;
+	_isEnterLobbyPending = false;
 
 	SetCurrentGameMode(gameMode);
 
@@ -194,30 +185,29 @@ void Game::FlushSpawnQueue()
 
 //TODO: recheck rule of 3/5 for all classes
 
-void Game::OnClientReady(const ServerInClientReadyToStartGameEvent&)
+void Game::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
-	if (_isClientReadyHandled)
+	if (event.state == GameState::Lobby)
 	{
+		_isEnterLobbyPending = true;
 		return;
 	}
 
-	_isClientReadyHandled = true;
-
-	_events->EmitEvent(LoadMapEvent{});
-	_events->EmitEvent(PauseReleasedEvent{});
+	if (event.state == GameState::Playing)
+	{
+		//NOTE: immediate - the host's replay rides the same queue drain, a later reset would wipe it
+		ResetBattlefield();
+		_events->EmitEvent(ShowMenuEvent{.show = false});
+		_events->EmitEvent(SetPauseEvent{.isPaused = false});
+	}
 }
 
-void Game::OnClientLeft(const ServerInDisconnectEvent&)
+//NOTE: the mode is kept - demoting to Demo tears the link down, and nobody could reconnect
+void Game::EnterLobby()
 {
-	//NOTE: back to the pre-game wait - the next client's ready reloads the map, which would stack
-	//onto the running one if the field were kept
-	_isClientReadyHandled = false;
-	_isBattlefieldResetPending = true;
-}
-
-void Game::OnHostLeft(const ClientInDisconnectEvent&)
-{
-	_isReturnToMenuPending = true;
+	ResetBattlefield();
+	_events->EmitEvent(SetPauseEvent{.isPaused = true});
+	_events->EmitEvent(ShowMenuEvent{.show = true});
 }
 
 void Game::Run()
@@ -282,13 +272,12 @@ void Game::SetCurrentGameMode(const GameMode selectedGameMode)
 	_gameMode = selectedGameMode;
 
 	_events->EmitEvent(GameModeChangedToEvent{.mode = _gameMode});
+	_events->EmitEvent(GameModeAppliedEvent{.mode = _gameMode});
 }
 
 void Game::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 {
 	_gameMode = event.mode;
-
-	_peerLeftSubs.clear();
 
 	//NOTE: the old node goes first - assigning over it would build the new one (same port, new
 	//connect) while the outgoing one still holds both
@@ -296,19 +285,10 @@ void Game::OnGameModeChangedTo(const GameModeChangedToEvent& event)
 
 	if (IsHost(_gameMode))
 	{
-		_events->EmitEvent(PauseReleasedEvent{});//NOTE: pause on start for awaiting a client ready
-		_clientReadySub = _events->AddListener(this, &Game::OnClientReady);
-		_peerLeftSubs.push_back(_events->AddListener(this, &Game::OnClientLeft));
 		_networkNode = std::make_unique<network::commands::ServerHandler>(_events);
 	}
 	else if (IsClient(_gameMode))
 	{
-		_clientReadySub = EventSubscription{};
-		_peerLeftSubs.push_back(_events->AddListener(this, &Game::OnHostLeft));
 		_networkNode = std::make_unique<network::commands::ClientHandler>(_events);
-	}
-	else
-	{
-		_clientReadySub = EventSubscription{};
 	}
 }

@@ -101,6 +101,7 @@ set(GAME_CORE_SOURCES
         source/network/CommandDispatcher.cpp
         source/network/FrameChannel.cpp
         source/network/NetworkNodeBase.cpp
+        source/network/PeerLink.cpp
         source/network/Server.cpp
         source/network/ServerHandler.cpp
         source/network/Serializer.cpp
@@ -123,6 +124,7 @@ set(UNIT_TESTS_SOURCES
         UnitTests/CoopBotTest.cpp
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
+        UnitTests/GameStateTest.cpp
         UnitTests/NetworkTest.cpp
         UnitTests/PauseSyncTest.cpp
         UnitTests/PlayerTest.cpp

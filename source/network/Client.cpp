@@ -20,12 +20,9 @@ namespace network::commands
 {
 Client::Client(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
-	: _strand(boost::asio::make_strand(ioContext))
-	, _channel(std::make_shared<network::FrameChannel>(tcp::socket(_strand), "Client"))
-	, _reconnectTimer(_strand)
+	: PeerLink(tcp::socket(boost::asio::make_strand(ioContext)), "Client", events)
+	, _reconnectTimer(_channel->Socket().get_executor())
 	, _endpoint{tcp::endpoint(boost::asio::ip::make_address(host), port)}
-	, _events{events}
-	, _dispatcher{"Client"}
 {
 	Subscribe();
 	RegisterCommandHandlers();
@@ -55,12 +52,7 @@ void Client::RegisterCommandHandlers()
 void Client::TryConnect()
 {
 	auto& socket = _channel->Socket();
-	if (socket.is_open())
-	{
-		boost::system::error_code ec;
-		std::ignore = socket.close(ec);// NOTE: error captured via ec, return value intentionally discarded
-	}
-
+	_channel->CloseForReconnect();
 	socket.open(_endpoint.protocol());
 	socket.async_connect(_endpoint, [this](const boost::system::error_code& ec)
 	{
@@ -68,7 +60,9 @@ void Client::TryConnect()
 		{
 			Log::Info("client connected");
 			_reconnectAttempts = 0;
+			_reconnectAbandoned = false;
 			_isConnected = true;
+			_commandQueue.Enqueue([this] { _events->EmitEvent(ClientConnectedToHostEvent{}); });
 			this->StartReading();
 			_channel->SetWriteEnabled(true);
 			{
@@ -80,16 +74,9 @@ void Client::TryConnect()
 		{
 			++_reconnectAttempts;
 			Log::Error("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
-										  + std::to_string(MaxReconnectAttempts) + "): " + ec.message());
+										  + std::to_string(kMaxReconnectAttempts) + "): " + ec.message());
 
-			if (_reconnectAttempts < MaxReconnectAttempts)
-			{
-				ScheduleReconnect();
-			}
-			else
-			{
-				Log::Error("Client gave up after " + std::to_string(MaxReconnectAttempts) + " attempts");
-			}
+			ScheduleReconnect();
 		}
 	});
 }
@@ -101,12 +88,23 @@ void Client::ScheduleReconnect()
 		return;
 	}
 
+	if (_isHostGone || _reconnectAttempts >= kMaxReconnectAttempts)
+	{
+		if (!_reconnectAbandoned)
+		{
+			_reconnectAbandoned = true;
+			Log::Error("Client gave up on the host");
+			_commandQueue.Enqueue([this] { _events->EmitEvent(ClientReconnectAbandonedEvent{}); });
+		}
+		return;
+	}
+
 	_reconnectPending = true;
 
 	//NOTE: weak for the same reason as in StartReading - the timer is our own member, so a shared
 	//capture would keep this Client alive through its own pending handler
 	const std::weak_ptr<Client> weakSelf = weak_from_this();
-	_reconnectTimer.expires_after(std::chrono::milliseconds(ReconnectDelayMs));
+	_reconnectTimer.expires_after(std::chrono::milliseconds(kReconnectDelayMs));
 	_reconnectTimer.async_wait([weakSelf](const boost::system::error_code& timerEc)
 	{
 		const auto self = weakSelf.lock();
@@ -130,26 +128,19 @@ void Client::HandleDisconnect()
 		return;
 	}
 
-	//NOTE: the expected tail of an announced leave - reconnecting would hammer a closing port
-	if (_isHostGone)
-	{
-		_isConnected = false;
-		_channel->SetWriteEnabled(false);
-		_channel->Close();
-		return;
-	}
-
 	_isConnected = false;
 	_channel->SetWriteEnabled(false);
-	_channel->ResetWriteState();
 
-	if (_channel->IsOpen())
+	if (_isHostGone)
 	{
-		boost::system::error_code ec;
-		std::ignore = _channel->Socket().close(ec);
+		_channel->Close();
+	}
+	else
+	{
+		_channel->CloseForReconnect();
+		_reconnectAttempts = 0;//NOTE: a drop starts a fresh budget, it is not a failed connect attempt
 	}
 
-	_reconnectAttempts = 0;//NOTE: a drop starts a fresh budget, it is not a failed connect attempt
 	ScheduleReconnect();
 }
 
@@ -190,23 +181,10 @@ void Client::Shutdown(const DisconnectReason reason, std::function<void()> onClo
 	_isShuttingDown = true;
 	std::ignore = _reconnectTimer.cancel();
 
-	//NOTE: nobody to tell - there is no link, so this degrades to the plain shutdown above
-	if (!_isConnected)
-	{
-		_channel->Close();
-		if (onClosed)
-		{
-			onClosed();
-		}
-		return;
-	}
-
-	CommandBatch farewell;
-	farewell.commands.emplace_back(Disconnect{.reason = reason});
-	SendCommand(farewell);
-
+	const bool hasLink = _isConnected;
 	_isConnected = false;
-	_channel->CloseAfterFlush(std::move(onClosed));
+
+	CloseWithFarewell(hasLink, reason, std::move(onClosed));
 }
 
 void Client::Subscribe()
@@ -234,7 +212,7 @@ void Client::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 
 	if (!batch.commands.empty())
 	{
-		SendCommand(batch);
+		SendBatch(batch);
 	}
 }
 
@@ -264,7 +242,7 @@ void Client::StartReading()
 	_channel->SetHandlers(
 			[weakSelf](const std::string& frame)
 			{
-				if (const auto self = weakSelf.lock(); self && !self->_dispatcher.Dispatch(frame))
+				if (const auto self = weakSelf.lock(); self && !self->DispatchFrame(frame))
 				{
 					self->HandleProtocolError();
 				}
@@ -459,8 +437,4 @@ void Client::OnDisconnect(const AnyCommand& command)
 	});
 }
 
-void Client::SendCommand(const CommandBatch& command)
-{
-	_channel->Send(std::make_shared<const std::string>(network::FrameMessage(network::Serialize(command))));
-}
 }//namespace network::commands

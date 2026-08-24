@@ -6,12 +6,6 @@
 
 namespace network
 {
-/**
- * @brief Thread-safe queue for network commands
- *
- * Commands from network thread are enqueued and processed
- * in game thread during PreUpdate to avoid race conditions
- */
 class NetworkCommandQueue final
 {
 	std::queue<std::function<void()>> _commands;
@@ -50,13 +44,6 @@ public:
 	{
 		std::scoped_lock lock(_mutex);
 		return _commands.size();
-	}
-
-	void Clear()
-	{
-		std::scoped_lock lock(_mutex);
-		std::queue<std::function<void()>> empty;
-		std::swap(_commands, empty);
 	}
 };
 }//namespace network
