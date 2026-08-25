@@ -40,6 +40,12 @@ endforeach()
 
 # --- ser20 (replaces Boost.Serialization, C++20 fork of cereal) ---
 add_subdirectory(ThirdParty/ser20 SYSTEM)
+# ser20 keeps one process-wide static map of class versions and takes a lock around it - but that
+# lock compiles to nothing unless this is set, and ser20 only offers its own THREAD_SAFE option
+# under if(UNIX). We serialize from the main thread and from the io_context thread at once, so
+# without this the map is corrupted by concurrent inserts. Must stay on for every consumer: the
+# macro changes the layout of StaticObject::LockGuard.
+target_compile_definitions(ser20 PUBLIC SER20_THREAD_SAFE=1)
 
 # --- googletest (shared submodule with .sln/UnitTests.vcxproj) ---
 set(BUILD_GMOCK   OFF CACHE BOOL "Build gmock"   FORCE)

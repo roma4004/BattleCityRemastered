@@ -125,15 +125,21 @@ void InvokeGuarded(const char* const context, ListenerT& listener, const CallArg
 	}
 }
 
-// Shared by both dispatch paths. Advance before invoking: a self-unsubscribing callback erases its
-// own node mid-loop, and std::list node addresses are what make that safe.
+// Shared by both dispatch paths. A callback may unsubscribe anyone - itself, or a listener further
+// down this very list. Neither frees a node here: mid-dispatch RemoveListener only clears `alive`
+// (see Event::RemoveListener), so the lookahead below can never be left pointing at released memory.
 template<typename ListenerListT, typename... CallArgs>
 void EmitToList(const char* const context, ListenerListT& listeners, const CallArgs&... args)
 {
 	for (auto it = listeners.begin(); it != listeners.end();)
 	{
 		const auto next = std::next(it);
-		InvokeGuarded(context, *it, args...);
+
+		if (it->alive)
+		{
+			InvokeGuarded(context, *it, args...);
+		}
+
 		it = next;
 	}
 }
@@ -162,10 +168,14 @@ struct Listener
 	}
 
 	CallbackT callback;
+	// Cleared instead of erased when the unsubscribe lands mid-dispatch; swept once the walk ends.
+	bool alive{true};
 #ifndef NDEBUG
 	std::source_location origin;
 #endif
 };
+
+constexpr auto IsAlive = [](const auto& listener) { return listener.alive; };
 
 #ifndef NDEBUG
 // Defined in EventSystem.cpp, same reason as ReportListenerException above.
@@ -298,12 +308,29 @@ public:
 	template<typename... FwdArgs>
 	void Emit(FwdArgs&&... args)
 	{
+		++_emitDepth;
 		detail::EmitToList("event callback", _listeners, args...);
+		--_emitDepth;
+
+		CompactIfIdle();
 	}
 
-	void RemoveListener(ListenerHandle handle) { _listeners.erase(handle); }
+	// Erasing while a dispatch walks this list would strand its lookahead iterator, so a listener
+	// leaving mid-dispatch is only marked. Handles stay valid either way - list nodes do not move.
+	void RemoveListener(const ListenerHandle handle)
+	{
+		if (_emitDepth > 0)
+		{
+			handle->alive = false;
+			_hasDead = true;
 
-	bool HasListeners() const override { return !_listeners.empty(); }
+			return;
+		}
+
+		_listeners.erase(handle);
+	}
+
+	bool HasListeners() const override { return std::ranges::any_of(_listeners, detail::IsAlive); }
 
 #ifndef NDEBUG
 	void ReportLeftoverListeners(const char* const kind, const char* const eventTypeName) const override
@@ -316,7 +343,21 @@ public:
 #endif
 
 private:
+	// Only the outermost Emit may sweep: a nested one is still walking what this would free.
+	void CompactIfIdle()
+	{
+		if (_emitDepth > 0 || !_hasDead)
+		{
+			return;
+		}
+
+		std::erase_if(_listeners, std::not_fn(detail::IsAlive));
+		_hasDead = false;
+	}
+
 	ListenerList _listeners;
+	int _emitDepth{};
+	bool _hasDead{};
 };
 
 // Parallel to BaseEvent/Event<Args...> - backs the keyed (per-instance) dispatch overloads.
@@ -353,14 +394,31 @@ public:
 	{
 		if (const auto it = _listeners.find(key); it != _listeners.end())
 		{
-			detail::EmitToList("keyed event callback", it->second, args...);
+			//NOTE: the list is bound by reference before the walk - a listener added under a new key
+			//mid-dispatch can rehash the map, which invalidates its iterators but not its elements
+			ListenerList& listeners = it->second;
+
+			++_emitDepth;
+			detail::EmitToList("keyed event callback", listeners, args...);
+			--_emitDepth;
 		}
+
+		CompactIfIdle();
 	}
 
+	// Deferred mid-dispatch, exactly as in Event::RemoveListener - the reason is the same loop.
 	void RemoveListener(const KeyT& key, ListenerHandle handle)
 	{
 		if (const auto it = _listeners.find(key); it != _listeners.end())
 		{
+			if (_emitDepth > 0)
+			{
+				handle->alive = false;
+				_hasDead = true;
+
+				return;
+			}
+
 			it->second.erase(handle);
 		}
 	}
@@ -368,8 +426,10 @@ public:
 	// Projection, not `| views::values` - see the include block on why.
 	bool HasListeners() const override
 	{
-		return std::ranges::any_of(_listeners, std::not_fn(&ListenerList::empty),
-								   &ListenerMap::value_type::second);
+		return std::ranges::any_of(_listeners, [](const ListenerList& listeners)
+		{
+			return std::ranges::any_of(listeners, detail::IsAlive);
+		}, &ListenerMap::value_type::second);
 	}
 
 #ifndef NDEBUG
@@ -386,7 +446,26 @@ public:
 #endif
 
 private:
+	// One counter for the whole map: a dispatch on any key must hold off every sweep, since the
+	// callback it runs is free to unsubscribe under a different key.
+	void CompactIfIdle()
+	{
+		if (_emitDepth > 0 || !_hasDead)
+		{
+			return;
+		}
+
+		for (auto& entry: _listeners)
+		{
+			std::erase_if(entry.second, std::not_fn(detail::IsAlive));
+		}
+
+		_hasDead = false;
+	}
+
 	ListenerMap _listeners;
+	int _emitDepth{};
+	bool _hasDead{};
 };
 
 // enable_shared_from_this so AddListener can hand the EventSubscription it returns a
