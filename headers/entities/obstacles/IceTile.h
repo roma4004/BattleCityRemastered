@@ -3,6 +3,7 @@
 #include "Obstacle.h"
 #include <memory>
 
+enum class Faction : char8_t;
 struct ObjRectangle;
 class EventSystem;
 struct PreDrawEvent;
@@ -13,7 +14,7 @@ class IceTile final : public Obstacle
 	void OnPreDraw(const PreDrawEvent&) const;
 
 protected:
-	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+	void EmitDeathStatistics(const std::string& author, Faction faction) override;
 
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Indestructible{}, tags::Penetrable{}};
 

@@ -64,7 +64,7 @@ class RespawnManager final
 	void OnEnemyDied(bool isAvailable);
 	void OnPlayerDied(bool isAvailable);
 	void OnTankDied(const TankDiedEvent& event);
-	void RespawnTanks(bool skipDelay);
+	void RespawnTanks();
 
 public:
 	std::vector<SpawnSlot> _slots{};

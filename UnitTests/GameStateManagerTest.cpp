@@ -11,7 +11,6 @@
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
-#include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
 #include "components/managers/GameStateManager.h"
 #include "entities/obstacles/EagleTile.h"
@@ -22,6 +21,7 @@
 #include "enums/GameMode.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
+#include "enums/Faction.h"
 #include <iostream>
 #include <memory>
 
@@ -34,7 +34,7 @@ protected:
 	std::shared_ptr<GameStateManager> _stateManager{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
-	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
+	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	ProjectConfig _projectConfig{"", true};
 	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -58,7 +58,7 @@ protected:
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
-		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
+		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns
 
@@ -150,8 +150,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		EXPECT_EQ(_allObjects.size(), 0u);
 
 		EXPECT_EQ(respawnEnemyActual, 20u - i * 4u);
-		constexpr bool skipDelay{true};
-		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+			_events->EmitEvent(RespawnTanksEvent{});
 		std::cout << "End of respawn round" << (i + 1u) << '\n';
 	}
 
@@ -251,7 +250,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	const ObjRectangle rectEnemy{.x = _tankSize * 3.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
-					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, &_allObjects, _events, 1u, _tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(enemyBot);
 
@@ -265,14 +264,13 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	EXPECT_EQ(respawnEnemyActual, 21u);
 
-	constexpr bool skipDelay{true};
 	for (unsigned short i = 0u; i < 4u; ++i)
 	{
 		_allObjects.clear();
 		EXPECT_EQ(_allObjects.size(), 0u);
 
 		EXPECT_EQ(respawnEnemyActual, 21u - i * 4u);
-		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+		_events->EmitEvent(RespawnTanksEvent{});
 		std::cout << "End of respawn round" << (i + 1u) << " with remain enemy respawn" << respawnEnemyActual << '\n';
 	}
 
@@ -283,10 +281,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	EXPECT_FALSE(isGameWon);//Check that we still not win
 
 	std::cout << "spawn extra life tank" << '\n';
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});//spawn 4 enemies
+	_events->EmitEvent(RespawnTanksEvent{});//spawn 4 enemies
 	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.pop_back();//remove one enemy tank
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});//spawn use extra life
+	_events->EmitEvent(RespawnTanksEvent{});//spawn use extra life
 	EXPECT_EQ(_allObjects.size(), 4u);
 	_allObjects.clear();// remove all 4 enemy tank
 
@@ -321,8 +319,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 	});
 
 	EXPECT_EQ(respawnActual, 3u);
-	constexpr bool skipDelay{true};
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
 	EXPECT_EQ(respawnActual, 2u);
 
@@ -359,8 +356,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	EXPECT_EQ(respawnActual, 3u);
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
-		constexpr bool skipDelay{true};
-		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+			_events->EmitEvent(RespawnTanksEvent{});
 		_allObjects.pop_back();
 	}
 
@@ -375,7 +371,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
-					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
@@ -405,17 +401,16 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(respawnActual, 4u);
-	constexpr bool skipDelay{true};
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
-		_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+		_events->EmitEvent(RespawnTanksEvent{});
 		_allObjects.pop_back();
 	}
 	EXPECT_EQ(respawnActual, 1u);
 
 	EXPECT_FALSE(isGameLose);//Check that we still don't lose because of having extra life
 
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	_allObjects.pop_back();
 
 	EXPECT_EQ(respawnActual, 0u);
@@ -454,8 +449,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnEnemyActual, 20u);
 	EXPECT_EQ(respawnPlayerOneActual, 3u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);
-	constexpr bool skipDelay{true};
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(respawnEnemyActual, 16u);
 	EXPECT_EQ(respawnPlayerOneActual, 2u);
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);//game mode one player so second should not respawn
@@ -489,7 +483,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 
 	EXPECT_FALSE(isGameLose);
 
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 
 	_allObjects.pop_back();//remove player again (last extra life)
 

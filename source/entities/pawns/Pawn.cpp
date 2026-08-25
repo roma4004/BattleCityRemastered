@@ -65,9 +65,9 @@ void Pawn::Unsubscribe()
 	_tickUpdateSub = EventSubscription{};
 }
 
-void Pawn::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
+void Pawn::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
-	BaseObj::TakeDamage(damage, author, fraction);
+	BaseObj::TakeDamage(damage, author, faction);
 
 	if (IsHost(_gameMode))
 	{

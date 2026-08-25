@@ -74,10 +74,7 @@ struct GameFinishedEvent
 	GameState state{};
 };
 
-struct RespawnTanksEvent
-{
-	bool skipDelay;
-};
+struct RespawnTanksEvent {};
 
 struct ScaleFactorChangedToEvent
 {

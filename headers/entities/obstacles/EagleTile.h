@@ -4,6 +4,7 @@
 #include "Obstacle.h"
 #include <memory>
 
+enum class Faction : char8_t;
 struct ObjRectangle;
 class EventSystem;
 struct DrawEvent;
@@ -17,7 +18,7 @@ protected:
 	//NOTE: Eagle's death is handled separately via PlayersBaseFinishedEvent (see the destructor),
 	//not the BrickWall/SteelWall-style death-statistics struct - no-op body to satisfy the base's
 	//pure virtual hook.
-	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+	void EmitDeathStatistics(const std::string& author, Faction faction) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 

@@ -13,13 +13,15 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 							   std::shared_ptr<TankSpawner>& tankSpawner)
 {
 	gameConfig.gameMode = gameMode;
+	//NOTE: the enemy throttle is wall-clock time, and a test has none to spare
+	gameConfig.enemySpawnCooldown = std::chrono::milliseconds{0};
 	respawnManager = std::make_shared<RespawnManager>(events, gameMode);
 	tankSpawner = std::make_shared<TankSpawner>(gameConfig, allObjects, events);
 }
 
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, std::string fraction,
+		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig)
@@ -29,7 +31,7 @@ template<>
 			.health = tankHealth,
 			.uuid = uuid,
 			.name = name,
-			.fraction = fraction};
+			.faction = faction};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = allObjects,

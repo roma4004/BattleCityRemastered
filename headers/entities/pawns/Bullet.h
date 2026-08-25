@@ -6,6 +6,7 @@
 #include "utils/Uuid.h"
 #include <string>
 
+enum class Faction : char8_t;
 struct BulletResetProperty;
 struct UPoint;
 class EventSystem;
@@ -32,7 +33,7 @@ class Bullet final : public Pawn, public IDrawable
 
 protected:
 	void Subscribe() override;
-	void EmitDamageStatistics(const std::string& author, const std::string& fraction) override;
+	void EmitDamageStatistics(const std::string& author, Faction faction) override;
 	void OnDespawned(const DespawnedEvent& event) override;
 	void Draw() const override;
 	void TickUpdate(double deltaTime) override;

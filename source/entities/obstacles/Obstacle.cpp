@@ -7,6 +7,7 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
+#include "enums/Faction.h"
 
 Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 				   const std::shared_ptr<EventSystem>& events, const Uuid uuid, const GameMode gameMode,
@@ -15,7 +16,7 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 							  .health = health,
 							  .uuid = uuid,
 							  .name = std::move(name),
-							  .fraction = "Neutral"},
+							  .faction = Faction::Neutral},
 			  collision}
 	, _events(events)
 	, _gameMode{gameMode}
@@ -48,9 +49,9 @@ void Obstacle::Draw() const
 	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
 }
 
-void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
+void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
-	BaseObj::TakeDamage(damage, author, fraction);
+	BaseObj::TakeDamage(damage, author, faction);
 
 	if (IsHost(_gameMode))
 	{

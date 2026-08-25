@@ -3,6 +3,7 @@
 #include "Obstacle.h"
 #include <memory>
 
+enum class Faction : char8_t;
 struct DrawEvent;
 
 class SteelWall : public Obstacle
@@ -11,7 +12,7 @@ class SteelWall : public Obstacle
 	void OnDraw(const DrawEvent&) const;
 
 protected:
-	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+	void EmitDeathStatistics(const std::string& author, Faction faction) override;
 
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Indestructible{}, tags::Impenetrable{}};
 

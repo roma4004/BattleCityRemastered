@@ -10,6 +10,7 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "interfaces/IPickupableBonus.h"
+#include "enums/Faction.h"
 #include "utils/RandUtils.h"
 #include <optional>
 
@@ -26,10 +27,10 @@ Bot::~Bot() = default;
 
 bool Bot::IsOpponent(const std::shared_ptr<BaseObj>& obstacle) const
 {
-	return obstacle->GetFraction() != _fraction && obstacle->GetFraction() != "Neutral";
+	return obstacle->GetFaction() != _faction && obstacle->GetFaction() != Faction::Neutral;
 }
 
-bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const { return obstacle->GetFraction() == _fraction; }
+bool Bot::IsAlly(const std::shared_ptr<BaseObj>& obstacle) const { return obstacle->GetFaction() == _faction; }
 
 bool Bot::IsBonus(const std::shared_ptr<BaseObj>& obstacle)
 {

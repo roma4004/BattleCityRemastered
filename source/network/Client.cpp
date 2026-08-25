@@ -12,7 +12,7 @@
 #include "network/commands/CommandBatch.h"
 #include "network/Serializer.h"
 #include "utils/Log.h"
-#include <cassert>
+#include "enums/Faction.h"
 #include <string>
 #include <tuple>
 
@@ -300,28 +300,32 @@ void Client::OnStatisticsChange(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<StatisticsChange>(command)]()
 	{
+		//NOTE: the wire carries a raw byte - a string only ever failed to match, an enum has to be
+		//checked before anything switches or compares on it
+		const Faction faction = IsValidFaction(cmd.faction) ? cmd.faction : Faction::Neutral;
+
 		switch (cmd.statisticsType)
 		{
 			case StatisticsType::BulletHit:
-				_events->EmitEvent(StatisticsBulletHitEvent{.author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(StatisticsBulletHitEvent{.author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::TankHit:
-				_events->EmitEvent(StatisticsTankHitEvent{.who = cmd.who, .author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(StatisticsTankHitEvent{.who = cmd.who, .author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::TankDied:
-				_events->EmitEvent(StatisticsTankDiedEvent{.who = cmd.who, .author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(StatisticsTankDiedEvent{.who = cmd.who, .author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::BrickWallDied:
-				_events->EmitEvent(BrickWallDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(BrickWallDiedEvent{.author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::SteelWallDied:
-				_events->EmitEvent(SteelWallDiedEvent{.author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(SteelWallDiedEvent{.author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::BonusPickup:
-				_events->EmitEvent(StatisticsBonusPickupEvent{.author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(StatisticsBonusPickupEvent{.author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::BonusDestroyed:
-				_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = cmd.author, .fraction = cmd.fraction});
+				_events->EmitEvent(StatisticsBonusDestroyedEvent{.author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::BonusExpired:
 				_events->EmitEvent(StatisticsBonusExpiredEvent{});
@@ -357,7 +361,18 @@ void Client::OnBonusSpawn(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<BonusSpawn>(command)]()
 	{
-		_events->EmitEvent(BonusSpawnedEvent{.pos = cmd.pos, .type = cmd.bonusType, .uuid = cmd.uuid});
+		//NOTE: the type indexes the bonus catalogue further down, so a wire byte outside the enum
+		//would read past its end - checked here, where the untrusted value enters
+		if (!IsSpawnableBonus(cmd.bonusType))
+		{
+			Log::Error("Client::OnBonusSpawn: bonus type "
+					   + std::to_string(static_cast<int>(cmd.bonusType)) + " is not spawnable");
+
+			return;
+		}
+
+		_events->EmitEvent(
+				BonusSpawnedEvent{.pos = cmd.pos, .type = cmd.bonusType, .uuid = cmd.uuid, .isSuper = cmd.isSuper});
 	});
 }
 
@@ -389,26 +404,35 @@ void Client::OnBonusStatus(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<BonusStatus>(command)]()
 	{
+		//NOTE: only the bonuses whose effect outlives the pickup are replicated - the rest are applied
+		//once on the host and never reported, so they are as wrong here as a byte outside the enum
 		switch (cmd.bonusType)
 		{
 			case BonusType::Helmet:
 				_events->EmitEvent(Key(cmd.name), BonusHelmetAppliedEvent{.name = cmd.name, .isActive = cmd.isEnable});
-				break;
+				return;
 			case BonusType::Star:
 				_events->EmitEvent(Key(cmd.name), BonusStarAppliedEvent{.name = cmd.name});
-				break;
+				return;
 			case BonusType::Caliber:
 				_events->EmitEvent(Key(cmd.name), BonusCaliberAppliedEvent{.name = cmd.name});
-				break;
+				return;
+			case BonusType::Ship:
+				_events->EmitEvent(Key(cmd.name), BonusShipAppliedEvent{.name = cmd.name});
+				return;
 			case BonusType::Tank:
 				_events->EmitEvent(BonusTankAppliedEvent{.name = cmd.name});
-				break;
-			default:
-				//NOTE: Server only ever constructs BonusStatus with Helmet/Star/Caliber/Tank
-				//(see Server.cpp), so reaching here means a new BonusType wasn't wired up above
-				assert(false && "Client::OnBonusStatus: unhandled BonusType");
+				return;
+			case BonusType::None:
+			case BonusType::Timer:
+			case BonusType::Grenade:
+			case BonusType::Shovel:
+			case BonusType::lastId:
 				break;
 		}
+
+		Log::Error("Client::OnBonusStatus: bonus type " + std::to_string(static_cast<int>(cmd.bonusType))
+				   + " is not replicated");
 	});
 }
 

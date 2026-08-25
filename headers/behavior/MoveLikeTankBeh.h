@@ -8,6 +8,8 @@
 #include <optional>
 #include <string>
 
+enum class Faction : char8_t;
+
 struct BonusEffectProperty;
 class BaseObj;
 class Tank;
@@ -26,11 +28,12 @@ class MoveLikeTankBeh final : public IMoveBeh
 	float _rightVelocity{};
 	float _driftMultiplicator{1.5f};
 	std::string& _name;
-	std::string& _fraction;
+	Faction& _faction;
 	const GameConfig& _gameConfig;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
+	[[nodiscard]] bool IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir) const override;
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetTouchedObjects(double deltaTime) const;
 	[[nodiscard]] ObjRectangle GetNextPosRect(double deltaTime, Direction dir) const;
@@ -45,7 +48,7 @@ protected:
 
 public:
 	MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
-					std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+					Faction& faction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 					BonusEffectProperty& effects, const GameConfig& gameConfig);
 
 	~MoveLikeTankBeh() override = default;

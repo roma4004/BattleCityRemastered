@@ -473,8 +473,20 @@ void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 	auto [angle, flip] = GetRotateAndAngleAndFlip(event.dir);
 	const SDL_Rect srcRect = RectToSdlRect(event.textureRect);
 	const SDL_Rect dstRect = RectToSdlRect(event.destRect);
-	SDL_RenderCopyEx(
-			_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect, angle, nullptr, flip);
+	SDL_Texture* atlas = _sdlConfig.atlasTexture.get();
+
+	if (event.color != 0u)
+	{
+		const auto [r, g, b, a] = IntToColor(event.color);
+		SDL_SetTextureColorMod(atlas, r, g, b);
+		SDL_RenderCopyEx(_sdlConfig.renderer.get(), atlas, &srcRect, &dstRect, angle, nullptr, flip);
+		//NOTE: one atlas serves every draw - the tint has to be off again before the next one
+		SDL_SetTextureColorMod(atlas, 255u, 255u, 255u);
+
+		return;
+	}
+
+	SDL_RenderCopyEx(_sdlConfig.renderer.get(), atlas, &srcRect, &dstRect, angle, nullptr, flip);
 }
 
 void RenderManager::GenerateFpsTextures()

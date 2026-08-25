@@ -5,6 +5,7 @@
 #include "utils/Uuid.h"
 #include <string>
 
+enum class Faction : char8_t;
 enum class Direction : char8_t;
 
 struct BulletResetProperty
@@ -13,7 +14,7 @@ struct BulletResetProperty
 	Direction dir{};
 	int health{};
 	std::string author{};
-	std::string fraction{};
+	Faction faction{};
 	Uuid uuid{};
 	BulletCalibre calibre{};
 };

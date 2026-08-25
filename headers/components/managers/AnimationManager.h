@@ -4,6 +4,7 @@
 #include "components/AnimatedObjects.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "enums/AnimationType.h"
+#include "utils/Uuid.h"
 #include <memory>
 #include <vector>
 
@@ -13,13 +14,13 @@ struct FPoint;
 struct GameResetEvent;
 struct PostTickUpdateEvent;
 struct DrawEvent;
+struct AnimationCreateBonusSpawnEvent;
 struct AnimationCreateTankMoveEvent;
 struct AnimationCreateTankExplosionEvent;
 struct AnimationCreateBulletExplosionEvent;
 struct AnimationCreateWaterEvent;
 struct AnimationTankUpdateEvent;
 struct AnimationBonusHelmetChangeEvent;
-class Tank;
 
 class AnimationManager
 {
@@ -35,6 +36,7 @@ private:
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
 	void OnDraw(const DrawEvent&) const;
 	void OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event);
+	void OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event);
 	void OnCreateTankMove(const AnimationCreateTankMoveEvent& event);
 	void OnCreateTankExplosion(const AnimationCreateTankExplosionEvent& event);
 	void OnCreateBulletExplosion(const AnimationCreateBulletExplosionEvent& event);
@@ -46,10 +48,10 @@ private:
 	void DrawObject(const AnimatedObject& object) const;
 
 	void Create(const std::string& name, ObjRectangle rect, AnimationType type, int size, int scale,
-				int speed, bool isInfinite = {});
-	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name);
+				int speed, int passes, Uuid owner);
+	void CreateAnimation(AnimationType type, ObjRectangle rect, const std::string& name, Uuid owner = {});
 
-	static void UpdateFrame(AnimatedObject& object);
+	static bool UpdateFrame(AnimatedObject& object);
 	void OnHelmetEffect(const std::string& name, bool isEnable);
 	void UpdateHelmetEffect(const std::string& name, const FPoint& pos);
 
@@ -64,7 +66,7 @@ private:
 		int size{};
 		int scale{};
 		int speed{};
-		bool isInfinite{};
+		int passes{1};
 	};
 
 	struct KeyValue

@@ -15,7 +15,7 @@
 #include <memory>
 // #include <boost/uuid/uuid_io.hpp>
 
-ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, std::string& fraction,
+ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
 						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<BulletPool>& bulletPool,
 						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _uuid{uuid}
@@ -23,7 +23,7 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::st
 	, _direction{dir}
 	, _gameConfig{gameConfig}
 	, _name{name}
-	, _fraction{fraction}
+	, _faction{faction}
 	, _calibre{calibre}
 	, _allObjects{allObjects}
 	, _bulletPool{bulletPool}
@@ -121,8 +121,7 @@ Uuid ShootingBeh::Shot(const Uuid uuid)
 				.dir = _direction,
 				.health = 1,
 				.author = _name,
-				.fraction = _fraction,
-				//TODO: replace fraction with enum
+				.faction = _faction,
 				.uuid = uuid,
 				.calibre = _calibre,
 		};

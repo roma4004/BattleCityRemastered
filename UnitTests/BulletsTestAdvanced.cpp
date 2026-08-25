@@ -9,6 +9,7 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
+#include "enums/Faction.h"
 #include <memory>
 
 class BulletTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -37,7 +38,7 @@ protected:
 		const ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, "Bullet1", "PlayerTeam", &_allObjects,
+						rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
 						_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 		_allObjects.emplace_back(bullet);
 	}

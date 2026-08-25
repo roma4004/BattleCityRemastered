@@ -10,18 +10,24 @@
 #include <memory>
 #include <string>
 
+enum class Faction : char8_t;
 class BaseObj;
+class Bonus;
 
 struct AddToSpawnQueueEvent
 {
 	std::shared_ptr<BaseObj> obj;
 };
 
+struct BonusCreatedEvent
+{
+	std::weak_ptr<Bonus> bonus;
+};
+
 struct RespawnTankEvent
 {
 	TankType type;
 	Uuid uuid;
-	bool skipDelay;
 };
 
 struct RespawnCountChangedToEvent
@@ -42,6 +48,7 @@ struct BonusSpawnedEvent
 	FPoint pos;
 	BonusType type;
 	Uuid uuid;
+	bool isSuper{};
 };
 
 struct ObstacleSpawnedEvent
@@ -51,13 +58,7 @@ struct ObstacleSpawnedEvent
 	Uuid uuid;
 };
 
-struct SpawnDelayStartEvent
-{
-	Uuid uuid;
-	std::chrono::milliseconds delay;
-};
-
-struct TankSpawnDelayFinishedEvent
+struct SpawnAnimationFinishedEvent
 {
 	Uuid uuid;
 };
@@ -72,7 +73,7 @@ struct BonusReApplyEvent
 {
 	Uuid uuid;
 	std::string name;
-	std::string fraction;
+	Faction faction{};
 };
 
 struct BonusTimerReApplyOnSpawnEvent

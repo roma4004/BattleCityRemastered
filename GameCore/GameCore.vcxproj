@@ -141,8 +141,7 @@
     <ClCompile Include="..\source\components\input\InputProviderForPlayerTwoNet.cpp" />
     <ClCompile Include="..\source\components\LineOfSight.cpp" />
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp" />
-    <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp" />
-    <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp" />
+    <ClCompile Include="..\source\components\managers\BonusManager.cpp" />
     <ClCompile Include="..\source\components\managers\FramePerSecondManager.cpp" />
     <ClCompile Include="..\source\components\managers\GameStateManager.cpp" />
     <ClCompile Include="..\source\components\managers\RespawnManager.cpp" />
@@ -159,13 +158,6 @@
     <ClCompile Include="..\source\components\TankSpawner.cpp" />
     <ClCompile Include="..\source\entities\BaseObj.cpp" />
     <ClCompile Include="..\source\entities\bonuses\Bonus.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusCaliber.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusGrenade.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusHelmet.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusShovel.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusStar.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusTank.cpp" />
-    <ClCompile Include="..\source\entities\bonuses\BonusTimer.cpp" />
     <ClCompile Include="..\source\entities\obstacles\BrickWall.cpp" />
     <ClCompile Include="..\source\entities\obstacles\BushTile.cpp" />
     <ClCompile Include="..\source\entities\obstacles\EagleTile.cpp" />
@@ -232,8 +224,7 @@
     <ClInclude Include="..\headers\components\input\PlayerKeys.h" />
     <ClInclude Include="..\headers\components\LineOfSight.h" />
     <ClInclude Include="..\headers\components\managers\AnimationManager.h" />
-    <ClInclude Include="..\headers\components\managers\BonusEffectManager.h" />
-    <ClInclude Include="..\headers\components\managers\DelayedSpawnManager.h" />
+    <ClInclude Include="..\headers\components\managers\BonusManager.h" />
     <ClInclude Include="..\headers\components\managers\FramePerSecondManager.h" />
     <ClInclude Include="..\headers\components\managers\GameStateManager.h" />
     <ClInclude Include="..\headers\components\managers\RespawnManager.h" />
@@ -254,13 +245,6 @@
     <ClInclude Include="..\headers\entities\BaseObjProperty.h" />
     <ClInclude Include="..\headers\entities\BonusEffectProperty.h" />
     <ClInclude Include="..\headers\entities\bonuses\Bonus.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusCaliber.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusGrenade.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusHelmet.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusShovel.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusStar.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusTank.h" />
-    <ClInclude Include="..\headers\entities\bonuses\BonusTimer.h" />
     <ClInclude Include="..\headers\entities\BulletCalibre.h" />
     <ClInclude Include="..\headers\geometry\ObjRectangle.h" />
     <ClInclude Include="..\headers\entities\obstacles\BrickWall.h" />
@@ -292,6 +276,7 @@
     <ClInclude Include="..\headers\enums\InputSignal.h" />
     <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
+    <ClInclude Include="..\headers\enums\Faction.h" />
     <ClInclude Include="..\headers\enums\GameMode.h" />
     <ClInclude Include="..\headers\enums\GameState.h" />
     <ClInclude Include="..\headers\enums\ObstacleType.h" />
@@ -300,7 +285,6 @@
     <ClInclude Include="..\headers\enums\TankType.h" />
     <ClInclude Include="..\headers\enums\TextureOffset.h" />
     <ClInclude Include="..\headers\interfaces\IDrawable.h" />
-    <ClInclude Include="..\headers\interfaces\IHaveFraction.h" />
     <ClInclude Include="..\headers\interfaces\IInputProvider.h" />
     <ClInclude Include="..\headers\interfaces\IMoveBeh.h" />
     <ClInclude Include="..\headers\interfaces\INetworkNode.h" />
@@ -347,6 +331,7 @@
     <ClInclude Include="..\headers\utils\Timer.h" />
     <ClInclude Include="..\headers\utils\TimeUtils.h" />
     <ClInclude Include="..\headers\utils\Uuid.h" />
+    <ClInclude Include="..\headers\utils\Fraction.h" />
     <ClInclude Include="..\headers\utils\UuidUtils.h" />
   </ItemGroup>
   <ItemDefinitionGroup>

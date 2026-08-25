@@ -8,7 +8,7 @@
 #include "components/events/TimingEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
-#include "components/managers/BonusEffectManager.h"
+#include "components/managers/BonusManager.h"
 #include "components/ObstacleSpawner.h"
 #include "components/managers/FortressManager.h"
 #include "entities/obstacles/FortressWalls.h"
@@ -19,6 +19,7 @@
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "gtest/gtest.h"
+#include "enums/Faction.h"
 #include <memory>
 
 class BonusTestEnemy : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -27,9 +28,10 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::unique_ptr<BonusSpawner> _bonusSpawner{nullptr};
+	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
-	std::shared_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::shared_ptr<BonusManager> _bonusManager{nullptr};
 	std::unique_ptr<FortressManager> _fortressManager{nullptr};
 	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BaseObj> _fortressWall{nullptr};
@@ -54,7 +56,8 @@ protected:
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
-		_bonusEffectManager = std::make_unique<BonusEffectManager>(_events);
+		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
+		_bonusManager = std::make_unique<BonusManager>(_events, _gameConfig);
 		_fortressManager = std::make_unique<FortressManager>(_events, &_allObjects);
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, &_allObjects, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
@@ -75,7 +78,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
-					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, &_allObjects, _events, 1u, _tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 
 	// register a fortress wall
@@ -99,7 +102,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const ObjRectangle rectEnemy{.x = 0, .y = 0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
-					rectEnemy, _tankHealth, _uuid, "Enemy1", "EnemyTeam", &_allObjects, _events, 1u, _tankSpeed,
+					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, &_allObjects, _events, 1u, _tankSpeed,
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 
 	// spawn Player
@@ -107,7 +110,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	const ObjRectangle rectPlayer{.x = _tankSize * 2.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
-					rectPlayer, _tankHealth, _uuid, "Player1", "PlayerTeam", &_allObjects, _events, 1u, _tankSpeed,
+					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};

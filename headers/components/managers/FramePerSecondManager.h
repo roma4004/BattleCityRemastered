@@ -11,6 +11,8 @@ struct PostDrawUserInterfaceEvent;
 
 class FramePerSecondManager
 {
+	static constexpr unsigned int kTargetFps{60u};
+
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 
@@ -18,7 +20,7 @@ class FramePerSecondManager
 	std::chrono::high_resolution_clock::time_point _startFrameTime{};
 	double _deltaTime{};
 	double _fpsAccumulatedTime{};
-	unsigned int _targetFps{60u};
+
 	unsigned int _frameCounter{};
 	unsigned int _lastDisplayedFps{};
 	const ProjectConfig& _projectConfig;

@@ -9,7 +9,7 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty, const CollisionTags collision)
 	, _collision{collision}
 	, _uuid{baseObjProperty.uuid}
 	, _name{std::move(baseObjProperty.name)}
-	, _fraction{std::move(baseObjProperty.fraction)}
+	, _faction{baseObjProperty.faction}
 	, _rect{baseObjProperty.rect}
 {
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
@@ -25,7 +25,7 @@ BaseObj::BaseObj(BaseObj&& other) noexcept
 	, _uuid(other._uuid)
 	, _name(other._name)
 	, _nameWithUuid(other._nameWithUuid)
-	, _fraction(other._fraction)
+	, _faction(other._faction)
 	, _rect(other._rect) {}
 
 BaseObj::~BaseObj() = default;
@@ -40,7 +40,7 @@ BaseObj& BaseObj::operator=(const BaseObj& other)
 		_uuid = other._uuid;
 		_name = other._name;
 		_nameWithUuid = other._nameWithUuid;
-		_fraction = other._fraction;
+		_faction = other._faction;
 		_rect = other._rect;
 	}
 
@@ -57,7 +57,7 @@ BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
 		_uuid = other._uuid;
 		_name = other._name;
 		_nameWithUuid = other._nameWithUuid;
-		_fraction = other._fraction;
+		_faction = other._faction;
 		_rect = other._rect;
 	}
 
@@ -74,7 +74,7 @@ Uuid BaseObj::GetUuid() const { return _uuid; }
 
 void BaseObj::SetId(const Uuid uuid) { _uuid = uuid; }
 
-std::string BaseObj::GetFraction() const { return _fraction; }
+Faction BaseObj::GetFaction() const { return _faction; }
 
 FPoint BaseObj::GetPos() const { return FPoint{.x = _rect.x, .y = _rect.y}; }
 
@@ -120,11 +120,11 @@ void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
 bool BaseObj::GetIsAlive() const { return _isAlive; }
 
-void BaseObj::EmitDamageStatistics(const std::string&, const std::string&) {}
+void BaseObj::EmitDamageStatistics(const std::string&, Faction) {}
 
-void BaseObj::EmitDeathStatistics(const std::string&, const std::string&) {}
+void BaseObj::EmitDeathStatistics(const std::string&, Faction) {}
 
-void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
+void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
 	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject on PostTickUpdate, so without this
 	//a second hit in the same frame reports a second death
@@ -133,11 +133,11 @@ void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, c
 	_health -= static_cast<int>(damage);
 	_isAlive = _health > 0;
 
-	EmitDamageStatistics(author, fraction);
+	EmitDamageStatistics(author, faction);
 
 	if (wasAlive && !_isAlive)
 	{
-		EmitDeathStatistics(author, fraction);
+		EmitDeathStatistics(author, faction);
 	}
 }
 

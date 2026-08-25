@@ -10,6 +10,7 @@
 #include "enums/DespawnReason.h"
 #include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
+#include "enums/Faction.h"
 #include <algorithm>
 
 namespace
@@ -115,7 +116,7 @@ void FortressManager::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 {
 	for (const Spot& spot: _spots)
 	{
-		if (event.fraction == "EnemyTeam")
+		if (event.faction == Faction::EnemyTeam)
 		{
 			ClearSpot(spot);
 

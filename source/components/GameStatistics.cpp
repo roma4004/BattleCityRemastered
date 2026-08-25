@@ -1,6 +1,7 @@
 #include "components/GameStatistics.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "enums/Faction.h"
 
 GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
 	: _events{events}
@@ -29,11 +30,11 @@ void GameStatistics::OnGameReset(const GameResetEvent&) { Reset(); }
 
 void GameStatistics::OnBulletHit(const StatisticsBulletHitEvent& event)
 {
-	if (event.fraction.starts_with("Enemy"))
+	if (event.faction == Faction::EnemyTeam)
 	{
 		++_data.bulletHitByEnemy;
 	}
-	else if (event.fraction.starts_with("Player"))
+	else if (event.faction == Faction::PlayerTeam)
 	{
 		if (event.author.ends_with("1"))
 		{
@@ -46,13 +47,13 @@ void GameStatistics::OnBulletHit(const StatisticsBulletHitEvent& event)
 	}
 }
 
-void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnEnemyHit(const std::string& author, Faction faction)
 {
-	if (fraction.starts_with("Enemy"))
+	if (faction == Faction::EnemyTeam)
 	{
 		++_data.enemyHitByFriendlyFire;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (faction == Faction::PlayerTeam)
 	{
 		if (author.ends_with("1"))
 		{
@@ -65,13 +66,13 @@ void GameStatistics::OnEnemyHit(const std::string& author, const std::string& fr
 	}
 }
 
-void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerOneHit(const std::string& author, Faction faction)
 {
-	if (fraction.starts_with("Enemy"))
+	if (faction == Faction::EnemyTeam)
 	{
 		++_data.playerOneHitByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (faction == Faction::PlayerTeam)
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
@@ -80,13 +81,13 @@ void GameStatistics::OnPlayerOneHit(const std::string& author, const std::string
 	}
 }
 
-void GameStatistics::OnPlayerTwoHit(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerTwoHit(const std::string& author, Faction faction)
 {
-	if (fraction.starts_with("Enemy"))
+	if (faction == Faction::EnemyTeam)
 	{
 		++_data.playerTwoHitByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (faction == Faction::PlayerTeam)
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
@@ -99,25 +100,25 @@ void GameStatistics::OnTankHit(const StatisticsTankHitEvent& event)
 {
 	if (event.who.starts_with("Enemy"))
 	{
-		OnEnemyHit(event.author, event.fraction);
+		OnEnemyHit(event.author, event.faction);
 	}
 	else if (event.who.ends_with("1"))
 	{
-		OnPlayerOneHit(event.author, event.fraction);
+		OnPlayerOneHit(event.author, event.faction);
 	}
 	else if (event.who.ends_with("2"))
 	{
-		OnPlayerTwoHit(event.author, event.fraction);
+		OnPlayerTwoHit(event.author, event.faction);
 	}
 }
 
-void GameStatistics::OnEnemyDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnEnemyDied(const std::string& author, Faction faction)
 {
-	if (fraction.starts_with("Enemy"))
+	if (faction == Faction::EnemyTeam)
 	{
 		++_data.enemyDiedByFriendlyFire;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (faction == Faction::PlayerTeam)
 	{
 		if (author.ends_with("1"))
 		{
@@ -130,13 +131,13 @@ void GameStatistics::OnEnemyDied(const std::string& author, const std::string& f
 	}
 }
 
-void GameStatistics::OnPlayerOneDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerOneDied(const std::string& author, Faction faction)
 {
-	if (fraction.starts_with("Enemy"))
+	if (faction == Faction::EnemyTeam)
 	{
 		++_data.playerDiedByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (faction == Faction::PlayerTeam)
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
@@ -145,13 +146,13 @@ void GameStatistics::OnPlayerOneDied(const std::string& author, const std::strin
 	}
 }
 
-void GameStatistics::OnPlayerTwoDied(const std::string& author, const std::string& fraction)
+void GameStatistics::OnPlayerTwoDied(const std::string& author, Faction faction)
 {
-	if (fraction.starts_with("Enemy"))
+	if (faction == Faction::EnemyTeam)
 	{
 		++_data.playerDiedByEnemyTeam;
 	}
-	else if (fraction.starts_with("Player"))
+	else if (faction == Faction::PlayerTeam)
 	{
 		if (author.ends_with("1") || author.ends_with("2"))
 		{
@@ -164,25 +165,25 @@ void GameStatistics::OnTankDied(const StatisticsTankDiedEvent& event)
 {
 	if (event.who.starts_with("Enemy"))
 	{
-		OnEnemyDied(event.author, event.fraction);
+		OnEnemyDied(event.author, event.faction);
 	}
 	else if (event.who.ends_with("1"))
 	{
-		OnPlayerOneDied(event.author, event.fraction);
+		OnPlayerOneDied(event.author, event.faction);
 	}
 	else if (event.who.ends_with("2"))
 	{
-		OnPlayerTwoDied(event.author, event.fraction);
+		OnPlayerTwoDied(event.author, event.faction);
 	}
 }
 
 void GameStatistics::OnBrickWallDied(const BrickWallDiedEvent& event)
 {
-	if (event.fraction.starts_with("Enemy"))
+	if (event.faction == Faction::EnemyTeam)
 	{
 		++_data.brickWallDiedByEnemyTeam;
 	}
-	else if (event.fraction.starts_with("Player"))
+	else if (event.faction == Faction::PlayerTeam)
 	{
 		if (event.author.ends_with("1"))
 		{
@@ -197,11 +198,11 @@ void GameStatistics::OnBrickWallDied(const BrickWallDiedEvent& event)
 
 void GameStatistics::OnSteelWallDied(const SteelWallDiedEvent& event)
 {
-	if (event.fraction.starts_with("Enemy"))
+	if (event.faction == Faction::EnemyTeam)
 	{
 		++_data.steelWallDiedByEnemyTeam;
 	}
-	else if (event.fraction.starts_with("Player"))
+	else if (event.faction == Faction::PlayerTeam)
 	{
 		if (event.author.ends_with("1"))
 		{
@@ -216,11 +217,11 @@ void GameStatistics::OnSteelWallDied(const SteelWallDiedEvent& event)
 
 void GameStatistics::OnBonusPickup(const StatisticsBonusPickupEvent& event)
 {
-	if (event.fraction.starts_with("Enemy"))
+	if (event.faction == Faction::EnemyTeam)
 	{
 		++_data.bonusPickupByEnemyTeam;
 	}
-	else if (event.fraction.starts_with("Player"))
+	else if (event.faction == Faction::PlayerTeam)
 	{
 		if (event.author.ends_with("1"))
 		{
@@ -235,11 +236,11 @@ void GameStatistics::OnBonusPickup(const StatisticsBonusPickupEvent& event)
 
 void GameStatistics::OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event)
 {
-	if (event.fraction.starts_with("Enemy"))
+	if (event.faction == Faction::EnemyTeam)
 	{
 		++_data.bonusDestroyedByEnemyTeam;
 	}
-	else if (event.fraction.starts_with("Player"))
+	else if (event.faction == Faction::PlayerTeam)
 	{
 		if (event.author.ends_with("1"))
 		{

@@ -144,10 +144,7 @@
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\components\managers\BonusEffectManager.cpp">
-      <Filter>source\components\managers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\components\managers\DelayedSpawnManager.cpp">
+    <ClCompile Include="..\source\components\managers\BonusManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\managers\FortressManager.cpp">
@@ -199,27 +196,6 @@
       <Filter>source\entities</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\bonuses\Bonus.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusCaliber.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusGrenade.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusHelmet.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusShovel.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusStar.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusTank.cpp">
-      <Filter>source\entities\bonuses</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\entities\bonuses\BonusTimer.cpp">
       <Filter>source\entities\bonuses</Filter>
     </ClCompile>
     <ClCompile Include="..\source\entities\obstacles\BrickWall.cpp">
@@ -410,10 +386,7 @@
     <ClInclude Include="..\headers\components\managers\AnimationManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\components\managers\BonusEffectManager.h">
-      <Filter>headers\components\managers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\components\managers\DelayedSpawnManager.h">
+    <ClInclude Include="..\headers\components\managers\BonusManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\FortressManager.h">
@@ -474,27 +447,6 @@
       <Filter>headers\entities</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\bonuses\Bonus.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusCaliber.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusGrenade.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusHelmet.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusShovel.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusStar.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusTank.h">
-      <Filter>headers\entities\bonuses</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\entities\bonuses\BonusTimer.h">
       <Filter>headers\entities\bonuses</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\entities\BulletCalibre.h">
@@ -578,6 +530,9 @@
     <ClInclude Include="..\headers\enums\DisconnectReason.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\Faction.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\GameMode.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -615,9 +570,6 @@
       <Filter>headers\geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\interfaces\IDrawable.h">
-      <Filter>headers\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\interfaces\IHaveFraction.h">
       <Filter>headers\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\interfaces\IInputProvider.h">
@@ -735,6 +687,9 @@
       <Filter>headers\network</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\ColliderUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\Fraction.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\Log.h">

@@ -14,5 +14,6 @@ struct BonusSpawn final
 	FPoint pos{};
 	BonusType bonusType{};
 	Uuid uuid{};
+	bool isSuper{};
 };
 }//namespace network::commands

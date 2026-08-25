@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+enum class Faction : char8_t;
+
 class EventSystem;
 struct GameResetEvent;
 
@@ -70,12 +72,12 @@ class GameStatistics final
 	void OnBonusDestroyed(const StatisticsBonusDestroyedEvent& event);
 	void OnBonusExpired(const StatisticsBonusExpiredEvent&);
 
-	void OnEnemyHit(const std::string& author, const std::string& fraction);
-	void OnPlayerOneHit(const std::string& author, const std::string& fraction);
-	void OnPlayerTwoHit(const std::string& author, const std::string& fraction);
-	void OnEnemyDied(const std::string& author, const std::string& fraction);
-	void OnPlayerOneDied(const std::string& author, const std::string& fraction);
-	void OnPlayerTwoDied(const std::string& author, const std::string& fraction);
+	void OnEnemyHit(const std::string& author, Faction faction);
+	void OnPlayerOneHit(const std::string& author, Faction faction);
+	void OnPlayerTwoHit(const std::string& author, Faction faction);
+	void OnEnemyDied(const std::string& author, Faction faction);
+	void OnPlayerOneDied(const std::string& author, Faction faction);
+	void OnPlayerTwoDied(const std::string& author, Faction faction);
 
 public:
 	explicit GameStatistics(const std::shared_ptr<EventSystem>& events);

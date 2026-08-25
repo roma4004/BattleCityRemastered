@@ -6,6 +6,7 @@
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "entities/obstacles/FortressWalls.h"
+#include "components/events/AnimationRenderEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
@@ -32,6 +33,24 @@ public:
 		});
 	}
 
+	//NOTE: stands in for AnimationManager - a spawn burst takes a couple of seconds of frames, and a
+	//test has none to spare, so it is over where it starts
+	[[nodiscard]] static std::vector<EventSubscription> WireInstantSpawnAnimations(
+			const std::shared_ptr<EventSystem>& events)
+	{
+		std::vector<EventSubscription> subs{};
+		subs.push_back(events->AddListener([events](const AnimationCreateTankSpawnEvent& event)
+		{
+			events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = event.uuid});
+		}));
+		subs.push_back(events->AddListener([events](const AnimationCreateBonusSpawnEvent& event)
+		{
+			events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = event.uuid});
+		}));
+
+		return subs;
+	}
+
 	[[nodiscard]] static EventSubscription TrackFortressWall(const std::shared_ptr<EventSystem>& events,
 															 std::shared_ptr<BaseObj>* out)
 	{
@@ -46,13 +65,13 @@ public:
 
 	template<class T>
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
-			ObjRectangle rect, int health, Uuid uuid, std::string name, std::string fraction,
+			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 			float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
-			ObjRectangle rect, int health, Uuid uuid, std::string name, std::string fraction,
+			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
 			const BulletCalibre& calibre, Direction dir, GameMode gameMode, const GameConfig& gameConfig, std::string author)
 	{
@@ -61,7 +80,7 @@ public:
 				.health = health,
 				.uuid = uuid,
 				.name = std::move(name),
-				.fraction = std::move(fraction)};
+				.faction = faction};
 		PawnProperty pawnProperty{
 				.baseObjProperty = std::move(baseObjProperty),
 				.allObjects = allObjects,
@@ -80,7 +99,7 @@ public:
 
 template<class T>
 std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uuid, std::string name,
-										 std::string fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+										 Faction faction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 										 std::shared_ptr<EventSystem> events,
 										 unsigned short tier, float tankSpeed, Direction dir, GameMode gameMode,
 										 std::shared_ptr<BulletPool> bulletPool,
@@ -91,7 +110,7 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 			.health = health,
 			.uuid = uuid,
 			.name = name,
-			.fraction = fraction};
+			.faction = faction};
 	PawnProperty pawnProperty{
 			.baseObjProperty = std::move(baseObjProperty),
 			.allObjects = allObjects,
@@ -106,7 +125,7 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
-		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, std::string fraction,
+		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
 		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig);

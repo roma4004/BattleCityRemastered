@@ -18,12 +18,13 @@
 #include "enums/GameMode.h"
 #include "interfaces/IPickupableBonus.h"
 #include "utils/ColliderUtils.h"
+#include "enums/Faction.h"
 #include <ranges>
 
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _name, _fraction,
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _name, _faction,
 												 _allObjects, _effects, gameConfig);
 	_calibre = BulletCalibre{.speed = 300.f,
 							 .damage = 15,
@@ -32,7 +33,7 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 							 .size{.x = 9.f, .y = 9.f}};
 	ApplyScaleToCalibre(gameConfig.scaleFactor);
 
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _fraction, _allObjects, bulletPool,
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _faction, _allObjects, bulletPool,
 												 _calibre, _events, _gameConfig);
 
 	Tank::Subscribe();
@@ -98,6 +99,7 @@ void Tank::SubscribeAsClient()
 	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusHelmetApplied));
 	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusStarApplied));
 	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusCaliberApplied));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusShipApplied));
 }
 
 void Tank::OnTankShot(const TankShotEvent& event)
@@ -106,38 +108,39 @@ void Tank::OnTankShot(const TankShotEvent& event)
 	Shot(event.bulletUuid);
 }
 
-void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event)
-{
-	OnBonusHelmet(_name, event.isActive);
-}
+void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event) { OnBonusHelmet(event.isActive); }
 
-void Tank::OnBonusStarApplied(const BonusStarAppliedEvent&) { OnBonusStar(_name); }
+void Tank::OnBonusStarApplied(const BonusStarAppliedEvent&) { OnBonusStar(); }
 
-void Tank::OnBonusCaliberApplied(const BonusCaliberAppliedEvent&) { OnBonusCaliber(_name); }
+void Tank::OnBonusCaliberApplied(const BonusCaliberAppliedEvent&) { OnBonusCaliber(); }
+
+void Tank::OnBonusShipApplied(const BonusShipAppliedEvent&) { OnBonusShip(); }
 
 void Tank::SubscribeBonus()
 {
-	_subs.push_back(_events->AddListener(this, &Tank::OnBonusTimer));
-	_subs.push_back(_events->AddListener(this, &Tank::OnBonusHelmetStatusChange));
-	_subs.push_back(_events->AddListener(this, &Tank::OnBonusGrenade));
-	_subs.push_back(_events->AddListener(this, &Tank::OnBonusStarPickup));
-	_subs.push_back(_events->AddListener(this, &Tank::OnBonusCaliberPickup));
+	//NOTE: these land on a whole team, so the bus picks by faction instead of every tank comparing
+	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusTimer));
+	_subs.push_back(_events->AddListener(Key(_faction), this, &Tank::OnBonusGrenade));
+	//NOTE: these land on one tank by name, so the bus does the picking instead of every tank comparing
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusHelmetStatusChange));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusStarPickup));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusCaliberPickup));
+	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusShipPickup));
 }
 
-void Tank::OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event)
-{
-	OnBonusHelmet(event.name, event.isActive);
-}
+void Tank::OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event) { OnBonusHelmet(event.isActive); }
 
-void Tank::OnBonusStarPickup(const BonusStarPickupEvent& event) { OnBonusStar(event.author); }
+void Tank::OnBonusStarPickup(const BonusStarPickupEvent&) { OnBonusStar(); }
 
-void Tank::OnBonusCaliberPickup(const BonusCaliberPickupEvent& event) { OnBonusCaliber(event.author); }
+void Tank::OnBonusCaliberPickup(const BonusCaliberPickupEvent&) { OnBonusCaliber(); }
 
-void Tank::TakeDamage(const unsigned int damage, const std::string& author, const std::string& fraction)
+void Tank::OnBonusShipPickup(const BonusShipPickupEvent&) { OnBonusShip(); }
+
+void Tank::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
 	if (!_effects.isHelmetActive)
 	{
-		Pawn::TakeDamage(damage, author, fraction);
+		Pawn::TakeDamage(damage, author, faction);
 	}
 }
 
@@ -177,114 +180,115 @@ void Tank::SetBulletDamageRadius(const float bulletDamageRadius) { _calibre.dama
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
-	if (event.fraction == _fraction)
+	if (event.isActive)
 	{
-		if (event.isActive)
-		{
-			UnsubscribeTickUpdate();
-		}
-		else
-		{
-			SubscribeTickUpdate();
-		}
+		UnsubscribeTickUpdate();
+	}
+	else
+	{
+		SubscribeTickUpdate();
 	}
 }
 
-void Tank::OnBonusHelmet(const std::string& name, const bool isActive)
+void Tank::OnBonusHelmet(const bool isActive)
 {
-	if (_name == name)
+	_effects.isHelmetActive = isActive;
+
+	_events->EmitEvent(AnimationBonusHelmetChangeEvent{.name = _name, .isEnable = isActive});
+
+	if (IsHost(_gameMode))
 	{
-		_effects.isHelmetActive = isActive;
-
-		_events->EmitEvent(AnimationBonusHelmetChangeEvent{.name = _name, .isEnable = isActive});
-
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(BonusHelmetAppliedEvent{.name = _name, .isActive = isActive});
-		}
+		_events->EmitEvent(BonusHelmetAppliedEvent{.name = _name, .isActive = isActive});
 	}
 }
 
-void Tank::OnBonusGrenade(const BonusGrenadePickupEvent& event)
+void Tank::OnBonusGrenade(const BonusGrenadePickupEvent&)
 {
-	if (event.fraction != _fraction)
+	if (const int health = GetHealth(); health > 0)
 	{
-		if (const int health = GetHealth(); health > 0)
-		{
-			TakeDamage(static_cast<unsigned int>(health), "Grenade", event.fraction);
-		}
+		//NOTE: a grenade credits no one, as in the original - a neutral faction scores nowhere
+		TakeDamage(static_cast<unsigned int>(health), "Grenade", Faction::Neutral);
 	}
 }
 
-void Tank::OnBonusStar(const std::string& author)
+void Tank::OnBonusStar()
 {
-	if (author == _name)
+	SetHealth(GetHealth() + 50);
+	if (_tier > 3)
 	{
-		SetHealth(GetHealth() + 50);
-		if (_tier > 3)
-		{
-			return;
-		}
+		return;
+	}
 
-		++_tier;
+	++_tier;
 
-		_speed *= 1.10f;
-		_calibre.speed *= 1.10f;
-		_calibre.damage += 15;
-		_calibre.damageRadius *= 1.25f;
-		_calibre.tier = _tier;
-		_shootTimer.cooldown -= milliseconds{150};
+	_speed *= 1.10f;
+	_calibre.speed *= 1.10f;
+	_calibre.damage += 15;
+	_calibre.damageRadius *= 1.25f;
+	_calibre.tier = _tier;
+	_shootTimer.cooldown -= milliseconds{150};
 
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(BonusStarAppliedEvent{.name = author});
-		}
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(BonusStarAppliedEvent{.name = _name});
 	}
 }
 
-void Tank::OnBonusCaliber(const std::string& author)
+void Tank::OnBonusCaliber()
 {
-	if (author == _name)
+	SetHealth(GetHealth() + 50);
+	if (_tier > 3)
 	{
-		SetHealth(GetHealth() + 50);
-		if (_tier > 3)
-		{
-			return;
-		}
+		return;
+	}
 
-		_tier += 3;
+	_tier += 3;
 
-		_speed *= 1.30f;
-		_calibre.speed *= 1.30f;
-		_calibre.damage += 45;
-		_calibre.damageRadius *= 1.75f;
-		_calibre.tier = _tier;
-		_shootTimer.cooldown -= milliseconds{450};
+	_speed *= 1.30f;
+	_calibre.speed *= 1.30f;
+	_calibre.damage += 45;
+	_calibre.damageRadius *= 1.75f;
+	_calibre.tier = _tier;
+	_shootTimer.cooldown -= milliseconds{450};
 
-		if (IsHost(_gameMode))
-		{
-			_events->EmitEvent(BonusCaliberAppliedEvent{.name = author});
-		}
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(BonusCaliberAppliedEvent{.name = _name});
 	}
 }
 
-void Tank::EmitDamageStatistics(const std::string& author, const std::string& fraction)
+void Tank::OnBonusShip()
 {
-	_events->EmitEvent(StatisticsTankHitEvent{.who = _name, .author = author, .fraction = fraction});
+	if (_effects.isShipActive)
+	{
+		return;
+	}
+
+	_effects.isShipActive = true;
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(BonusShipAppliedEvent{.name = _name});
+	}
+}
+
+void Tank::EmitDamageStatistics(const std::string& author, Faction faction)
+{
+	_events->EmitEvent(StatisticsTankHitEvent{.who = _name, .author = author, .faction = faction});
 }
 
 //TODO: two "a tank died" signals - this one, and TankDiedEvent from ~Tank that RespawnManager
 //listens to. A tank cleared without damage fires only the second one.
-void Tank::EmitDeathStatistics(const std::string& author, const std::string& fraction)
+void Tank::EmitDeathStatistics(const std::string& author, Faction faction)
 {
-	_events->EmitEvent(StatisticsTankDiedEvent{.who = _name, .author = author, .fraction = fraction});
+	_events->EmitEvent(StatisticsTankDiedEvent{.who = _name, .author = author, .faction = faction});
 }
 
 void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 {
 	if (auto* bonus = dynamic_cast<IPickupableBonus*>(object.get()))
 	{
-		bonus->PickUpBonus(_name, _fraction);
+		bonus->PickUpBonus(_name, _faction);
 	}
 }
 

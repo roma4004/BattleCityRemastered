@@ -8,6 +8,7 @@
 #include <random>
 #include <vector>
 
+enum class Faction : char8_t;
 struct PawnProperty;
 enum class TankType : char8_t;
 enum class GameMode : char8_t;
@@ -20,7 +21,7 @@ class IInputProvider;
 class GameConfig;
 struct GameResetEvent;
 struct RespawnTankEvent;
-struct TankSpawnDelayFinishedEvent;
+struct SpawnAnimationFinishedEvent;
 struct TankRespawnedEvent;
 struct TankSpawnCompletedEvent;
 
@@ -35,7 +36,7 @@ class TankSpawner final
 		ObjRectangle rect;
 		int health;
 		std::string name;
-		std::string fraction;
+		Faction faction{};
 		float speed;
 	};
 
@@ -51,7 +52,7 @@ class TankSpawner final
 
 	void Subscribe();
 	void OnRespawnTank(const RespawnTankEvent& event);
-	void OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event);
+	void OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event);
 	void OnTankRespawned(const TankRespawnedEvent& event);
 	void OnTankSpawnCompleted(const TankSpawnCompletedEvent& event);
 
@@ -61,22 +62,19 @@ class TankSpawner final
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
-	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, float speed, int health,
-								  bool skipDelay = false);
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, Uuid uuid, TankType type, bool skipDelay = false);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, Uuid uuid, TankType type, bool skipDelay = false);
+	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, float speed, int health);
+	void SpawnPlayer(ObjRectangle rect, float speed, int health, Uuid uuid, TankType type);
+	void SpawnCoopBot(ObjRectangle rect, float speed, int health, Uuid uuid, TankType type);
 
-	void DelayedSpawnStart(ObjRectangle rect, int health, const std::string& name, std::string fraction, float speed,
-						   Uuid uuid, TankType type, bool skipDelay = false);
+	void DelayedSpawnStart(ObjRectangle rect, int health, const std::string& name, Faction faction, float speed,
+						   Uuid uuid, TankType type);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type) const;
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);
 
-	void RespawnEnemyTanks(TankType type, Uuid uuid, bool skipDelay = false,
-						   std::optional<ObjRectangle> rect = std::nullopt);
+	void RespawnEnemyTanks(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 	[[nodiscard]] ObjRectangle GetPlayerRandomPosX(bool isFirst) const;
-	void RespawnPlayerTeam(TankType type, Uuid uuid, bool skipDelay = false,
-						   std::optional<ObjRectangle> rect = std::nullopt);
-	void RespawnTank(TankType type, Uuid uuid, bool skipDelay, std::optional<ObjRectangle> rect = std::nullopt);
+	void RespawnPlayerTeam(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
+	void RespawnTank(TankType type, Uuid uuid, std::optional<ObjRectangle> rect = std::nullopt);
 
 	void OnClientRespawn(TankType type, Uuid uuid, ObjRectangle rect);
 

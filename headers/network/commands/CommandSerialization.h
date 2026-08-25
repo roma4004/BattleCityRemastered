@@ -34,6 +34,7 @@ void serialize(Archive& ar, network::commands::BonusSpawn& cmd, const unsigned i
 	ar & cmd.pos;
 	ar & cmd.bonusType;
 	ar & cmd.uuid;
+	ar & cmd.isSuper;
 }
 
 template<class Archive>
@@ -128,7 +129,7 @@ void serialize(Archive& ar, network::commands::StatisticsChange& cmd, const unsi
 	ar & cmd.statisticsType;
 	ar & cmd.who;
 	ar & cmd.author;
-	ar & cmd.fraction;
+	ar & cmd.faction;
 }
 
 template<class Archive>

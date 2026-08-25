@@ -36,7 +36,7 @@ struct TextureOffset
 	ObjRectangle bonusGrenade{.x = 320, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusTank{.x = 336, .y = 112, .w = 16, .h = 16};
 	ObjRectangle bonusCaliber{.x = 352, .y = 112, .w = 16, .h = 16};
-	ObjRectangle bonusShip{.x = 352, .y = 80, .w = 16, .h = 16};//TODO implement new bonus (make logic\code)
+	ObjRectangle bonusShip{.x = 352, .y = 96, .w = 16, .h = 16};
 
 	// Text
 	ObjRectangle pauseText{.x = 288, .y = 175, .w = 40, .h = 8};

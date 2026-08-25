@@ -22,4 +22,4 @@ void EagleTile::Subscribe()
 
 void EagleTile::OnDraw(const DrawEvent&) const { Draw(); }
 
-void EagleTile::EmitDeathStatistics(const std::string&, const std::string&) {}
+void EagleTile::EmitDeathStatistics(const std::string&, Faction) {}

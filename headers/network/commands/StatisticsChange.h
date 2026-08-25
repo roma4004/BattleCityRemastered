@@ -4,6 +4,8 @@
 #include "enums/StatisticsType.h"
 #include <string>
 
+enum class Faction : char8_t;
+
 namespace network::commands
 {
 //NOTE: wire DTO - serialization lives in CommandSerialization.h
@@ -14,6 +16,6 @@ struct StatisticsChange final
 	//NOTE: only the tank facts carry it - which counter they land in is the receiver's call, not the wire's
 	std::string who{};
 	std::string author{};
-	std::string fraction{};
+	Faction faction{};
 };
 }//namespace network::commands

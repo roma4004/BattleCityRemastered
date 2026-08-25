@@ -10,6 +10,7 @@
 #include "enums/TankType.h"
 #include "utils/UuidUtils.h"
 #include "utils/Uuid.h"
+#include "enums/Faction.h"
 #include <memory>
 #include <ranges>
 
@@ -55,7 +56,7 @@ void RespawnManager::OnBonusTankPickup(const BonusTankPickupEvent& event) { OnBo
 
 void RespawnManager::OnPlayersBaseFinished(const PlayersBaseFinishedEvent&) { TriggerLastPlayersLife(); }
 
-void RespawnManager::OnRespawnTanks(const RespawnTanksEvent& event) { RespawnTanks(event.skipDelay); }
+void RespawnManager::OnRespawnTanks(const RespawnTanksEvent&) { RespawnTanks(); }
 
 void RespawnManager::OnBonusTankApplied(const BonusTankAppliedEvent& event) { OnBonusTank(event.name); }
 
@@ -244,10 +245,10 @@ void RespawnManager::OnTankDied(const TankDiedEvent& event)
 	}
 }
 
-void RespawnManager::RespawnTanks(const bool skipDelay)
+void RespawnManager::RespawnTanks()
 {
 	for (const auto& slot: _slots | std::ranges::views::filter([](const auto& s) { return s.isAvailable; }))
 	{
-		_events->EmitEvent(RespawnTankEvent{.type = slot.type, .uuid = slot.uuid, .skipDelay = skipDelay});
+		_events->EmitEvent(RespawnTankEvent{.type = slot.type, .uuid = slot.uuid});
 	}
 }

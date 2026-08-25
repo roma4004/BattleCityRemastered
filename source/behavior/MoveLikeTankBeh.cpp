@@ -1,6 +1,7 @@
 #include "behavior/MoveLikeTankBeh.h"
 #include "geometry/Point.h"
 #include "application/GameConfig.h"
+#include "entities/obstacles/WaterTile.h"
 #include "entities/pawns/Tank.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
@@ -10,7 +11,7 @@
 #include <ranges>
 
 MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
-								 std::string& fraction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+								 Faction& faction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 								 BonusEffectProperty& effects, const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
@@ -18,7 +19,7 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& spee
 	, _speed{speed}
 	, _effects{effects}
 	, _name{name}
-	, _fraction{fraction}
+	, _faction{faction}
 	, _gameConfig{gameConfig}
 	, _allObjects{allObjects} {}
 
@@ -49,27 +50,43 @@ ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direc
 	return ObjRectangle{};
 }
 
+bool MoveLikeTankBeh::IsBlocking(const std::shared_ptr<BaseObj>& object, const ObjRectangle& nextPosRect) const
+{
+	if (_uuid == object->GetUuid() || object->GetIsPassable())
+	{
+		return false;
+	}
+
+	//NOTE: the ship bonus carries the tank over the water for the rest of its life
+	if (_effects.isShipActive && dynamic_cast<const WaterTile*>(object.get()) != nullptr)
+	{
+		return false;
+	}
+
+	return ColliderUtils::IsCollide(nextPosRect, object->GetRect());
+}
+
 bool MoveLikeTankBeh::IsCanMove(const double deltaTime, const Direction dir) const
 {
 	const ObjRectangle tankNextPosRect = GetNextPosRect(deltaTime, dir);
 
-	return std::ranges::none_of(*_allObjects, [uuid = _uuid, tankNextPosRect](const std::shared_ptr<BaseObj>& object)
+	auto blocking = [this, &tankNextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		return uuid != object->GetUuid()
-			   && ColliderUtils::IsCollide(tankNextPosRect, object->GetRect())
-			   && !object->GetIsPassable();
-	});
+		return IsBlocking(object, tankNextPosRect);
+	};
+
+	return std::ranges::none_of(*_allObjects, blocking);
 }
 
 std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const double deltaTime) const
 {
+	auto blocking = [this, tankNextPosRect = GetNextPosRect(deltaTime, _direction)](const auto& obj)
+	{
+		return IsBlocking(obj, tankNextPosRect);
+	};
+
 	return *_allObjects
-		   | std::views::filter([uuid = _uuid, tankNextPosRect = GetNextPosRect(deltaTime, _direction)](const auto& obj)
-		   {
-			   return obj->GetUuid() != uuid
-					  && ColliderUtils::IsCollide(tankNextPosRect, obj->GetRect())
-					  && !obj->GetIsPassable();
-		   })
+		   | std::views::filter(blocking)
 		   | std::ranges::to<std::vector>();
 }
 

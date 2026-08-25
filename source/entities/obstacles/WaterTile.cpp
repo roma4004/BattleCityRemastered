@@ -12,4 +12,4 @@ WaterTile::WaterTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 
 WaterTile::~WaterTile() = default;
 
-void WaterTile::EmitDeathStatistics(const std::string&, const std::string&) {}
+void WaterTile::EmitDeathStatistics(const std::string&, Faction) {}

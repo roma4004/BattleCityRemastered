@@ -5,57 +5,51 @@
 #include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
-#include "interfaces/ITickUpdatable.h"
-#include "utils/Timer.h"
 #include <vector>
 
+enum class Faction : char8_t;
 enum class GameMode : char8_t;
 enum class BonusType : char8_t;
 enum class DespawnReason : char8_t;
 struct BaseObjProperty;
 class EventSystem;
 struct DrawEvent;
-struct TickUpdateEvent;
 struct DespawnedEvent;
 
-class Bonus : public BaseObj, public IDrawable, public ITickUpdatable, public IPickupableBonus
+class Bonus final : public BaseObj, public IDrawable, public IPickupableBonus
 {
-	using milliseconds = std::chrono::milliseconds;
-	Timer _lifeTimeTimer{};
-	GameMode _gameMode{};
-	BonusType _bonusType{};
-	DespawnReason _despawnReason{};
-
-protected:
-	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<EventSubscription> _subs{};
-
-	void TickUpdate(double deltaTime) override;
-	void Draw() const override;
-	void OnDraw(const DrawEvent&) const;
-	void OnTickUpdate(const TickUpdateEvent& event);
-	void OnDespawned(const DespawnedEvent& event);
-
-	virtual void EmitPickupEvent(const std::string& author, const std::string& fraction) = 0;
-
 public:
 	static constexpr CollisionTags kCollision{tags::Impassable{}, tags::Destructible{}, tags::Impenetrable{}};
 
-protected:
-	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, milliseconds lifeTime,
-		  std::string name, Uuid uuid, GameMode gameMode, BonusType bonusType);
+private:
+	GameMode _gameMode{};
+	BonusType _bonusType{};
+	DespawnReason _despawnReason{};
+	bool _isSuper{};
 
-	void EmitDamageStatistics(const std::string& author, const std::string& fraction) override;
+	std::shared_ptr<EventSystem> _events{nullptr};
+	std::vector<EventSubscription> _subs{};
+
+	void Draw() const override;
+	void OnDraw(const DrawEvent&) const;
+	void OnDespawned(const DespawnedEvent& event);
+
+	void EmitDamageStatistics(const std::string& author, Faction faction) override;
 
 public:
+	Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& events, Uuid uuid, GameMode gameMode,
+		  BonusType bonusType, bool isSuper);
+
 	~Bonus() override;
 
 	void Subscribe();
-	void SubscribeAsAuthority();
 	void SubscribeAsClient();
+	void Expire();
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
 
-	void PickUpBonus(const std::string& author, const std::string& fraction) override;
+	void PickUpBonus(const std::string& author, Faction faction) override;
+
+	[[nodiscard]] bool GetIsSuper() const;
 };

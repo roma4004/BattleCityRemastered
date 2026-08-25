@@ -203,11 +203,11 @@ TEST_F(NetworkTest, StatisticsEventReplication)
 	auto statsSub = _clientEvents->AddListener(
 			[&received](const StatisticsBulletHitEvent& event) { received = event; });
 
-	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = "author", .fraction = "fraction"});
+	_hostEvents->EmitEvent(StatisticsBulletHitEvent{.author = "author", .faction = Faction::EnemyTeam});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ("author", received->author);
-	EXPECT_EQ("fraction", received->fraction);
+	EXPECT_EQ(Faction::EnemyTeam, received->faction);
 }
 
 TEST_F(NetworkTest, PauseRequestFromClientPausesHost)
@@ -238,12 +238,13 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	auto bonusSpawnSub = _clientEvents->AddListener(
 			[&received](const BonusSpawnedEvent& event) { received = event; });
 
-	_hostEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid});
+	_hostEvents->EmitEvent(BonusSpawnedEvent{.pos = pos, .type = type, .uuid = _uuid, .isSuper = true});
 
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
 	EXPECT_EQ(pos, received->pos);
 	EXPECT_EQ(type, received->type);
 	EXPECT_EQ(_uuid, received->uuid);
+	EXPECT_TRUE(received->isSuper);
 }
 
 TEST_F(NetworkTest, BonusStatusEventReplication)
@@ -279,6 +280,24 @@ TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
 			[&received](const BonusCaliberAppliedEvent&) { received = true; });
 
 	_hostEvents->EmitEvent(BonusCaliberAppliedEvent{.name = nameOrigin});
+
+	EXPECT_TRUE(PumpUntil([&received] { return received; }));
+}
+
+//NOTE: no payload of its own - under test is that its alternative reaches the right name
+TEST_F(NetworkTest, BonusShipStatusEventReplication)
+{
+	const auto server = MakeHost();
+	const auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	const auto nameOrigin{std::string("Player1")};
+
+	bool received{false};
+	auto bonusShipSub = _clientEvents->AddListener(Key(nameOrigin),
+			[&received](const BonusShipAppliedEvent&) { received = true; });
+
+	_hostEvents->EmitEvent(BonusShipAppliedEvent{.name = nameOrigin});
 
 	EXPECT_TRUE(PumpUntil([&received] { return received; }));
 }

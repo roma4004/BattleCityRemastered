@@ -8,7 +8,6 @@ struct UPoint;
 struct GameModeChangedToEvent;
 class BaseObj;
 class EventSystem;
-class DelayedSpawnManager;
 class FortressManager;
 class BonusSpawner;
 class ObstacleSpawner;
@@ -23,7 +22,6 @@ class SpawnManager
 	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 
-	std::shared_ptr<DelayedSpawnManager> _delayedSpawnManager{nullptr};
 	std::unique_ptr<FortressManager> _fortressManager{nullptr};
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};

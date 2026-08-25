@@ -109,7 +109,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	}
 
 	_author = std::move(resetProperty.author);
-	_fraction = std::move(resetProperty.fraction);
+	_faction = std::move(resetProperty.faction);
 	_calibre = resetProperty.calibre;
 
 	if (resetProperty.uuid != UuidUtils::GetNilUuid())
@@ -149,9 +149,9 @@ float Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
 std::string Bullet::GetAuthor() const { return _author; }
 
-void Bullet::EmitDamageStatistics(const std::string& author, const std::string& fraction)
+void Bullet::EmitDamageStatistics(const std::string& author, Faction faction)
 {
-	_events->EmitEvent(StatisticsBulletHitEvent{.author = author, .fraction = fraction});
+	_events->EmitEvent(StatisticsBulletHitEvent{.author = author, .faction = faction});
 }
 
 unsigned int Bullet::GetTier() const { return _calibre.tier; }
@@ -176,12 +176,12 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 
 		if (target->GetIsDestructible() || _calibre.tier > 2u)
 		{
-			target->TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
+			target->TakeDamage(_calibre.damage, GetAuthor(), GetFaction());
 			if (const auto* otherBullet = dynamic_cast<Bullet*>(baseObj))
 			{
 				isBulletHitBullet = true;
 				//NOTE: in case another bullet hits this bullet, we take damage from another bullet and send statistics
-				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor(), otherBullet->GetFraction());
+				TakeDamage(otherBullet->GetDamage(), otherBullet->GetAuthor(), otherBullet->GetFaction());
 			}
 		}
 	}
@@ -189,7 +189,7 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	if (isBulletHitBullet == false)
 	{
 		//NOTE: call BaseObj::TakeDamage to skip statistic unnecessary record
-		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFraction());
+		BaseObj::TakeDamage(_calibre.damage, GetAuthor(), GetFaction());
 	}
 
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});

@@ -5,8 +5,9 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/TankSpawner.h"
-#include "components/managers/DelayedSpawnManager.h"
 #include "components/managers/RespawnManager.h"
 #include "enums/GameMode.h"
 #include "gtest/gtest.h"
@@ -18,7 +19,7 @@ protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
-	std::shared_ptr<DelayedSpawnManager> _spawnDelayManager{nullptr};
+	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
 	ProjectConfig _projectConfig{"", true};
 	GameConfig _gameConfig{_projectConfig};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
@@ -33,7 +34,7 @@ protected:
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
-		_spawnDelayManager = std::make_shared<DelayedSpawnManager>(_events, _gameConfig);
+		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 	}
 
 	void TearDown() override
@@ -43,54 +44,64 @@ protected:
 
 TEST_F(TankSpawnerTest, DemoGameModeStart)
 {
-	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::Demo, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
 TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 {
-	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 5u);
 }
 
 TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 {
-	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
 TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 {
-	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
 }
 
 TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 {
-	constexpr bool skipDelay{true};
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
 }
 
+//Check that a client puts no tank on the field on its own - it waits for the host to say the spawn is done
 TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 {
-	constexpr bool skipDelay{true};
+	std::vector<Uuid> spawning{};
+	auto spawnSub = _events->AddListener([&spawning](const TankSpawnEvent& event)
+	{
+		spawning.emplace_back(event.uuid);
+	});
+
 	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
-	_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
-	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
+	_events->EmitEvent(RespawnTanksEvent{});
+
+	EXPECT_EQ(spawning.size(), 6u);
+	EXPECT_TRUE(_allObjects.empty());
+
+	for (const Uuid& uuid: spawning)
+	{
+		_events->EmitEvent(TankSpawnCompletedEvent{.uuid = uuid});
+	}
+
+	EXPECT_EQ(_allObjects.size(), 6u);
 }

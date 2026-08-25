@@ -6,4 +6,5 @@ struct BonusEffectProperty
 	bool isHelmetActive{false};
 	bool isTouchTheBushes{false};
 	bool isTouchTheIce{false};
+	bool isShipActive{false};
 };

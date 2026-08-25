@@ -64,8 +64,7 @@ set(GAME_CORE_SOURCES
         source/components/input/InputProviderForPlayerTwo.cpp
         source/components/input/InputProviderForPlayerTwoNet.cpp
         source/components/managers/AnimationManager.cpp
-        source/components/managers/BonusEffectManager.cpp
-        source/components/managers/DelayedSpawnManager.cpp
+        source/components/managers/BonusManager.cpp
         source/components/managers/FramePerSecondManager.cpp
         source/components/managers/GameStateManager.cpp
         source/components/managers/FortressManager.cpp
@@ -75,13 +74,6 @@ set(GAME_CORE_SOURCES
         source/components/managers/WorldScaleManager.cpp
         source/entities/BaseObj.cpp
         source/entities/bonuses/Bonus.cpp
-        source/entities/bonuses/BonusCaliber.cpp
-        source/entities/bonuses/BonusGrenade.cpp
-        source/entities/bonuses/BonusHelmet.cpp
-        source/entities/bonuses/BonusShovel.cpp
-        source/entities/bonuses/BonusStar.cpp
-        source/entities/bonuses/BonusTank.cpp
-        source/entities/bonuses/BonusTimer.cpp
         source/entities/obstacles/BrickWall.cpp
         source/entities/obstacles/BushTile.cpp
         source/entities/obstacles/EagleTile.cpp

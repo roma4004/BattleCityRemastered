@@ -57,19 +57,19 @@ void ReplicationPublisher::Subscribe()
 void ReplicationPublisher::SubscribeStatistics()
 {
 	Bind<StatisticsBulletHitEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::BulletHit, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::BulletHit, .author = e.author, .faction = e.faction}; });
 	Bind<StatisticsTankHitEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::TankHit, .who = e.who, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::TankHit, .who = e.who, .author = e.author, .faction = e.faction}; });
 	Bind<StatisticsTankDiedEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::TankDied, .who = e.who, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::TankDied, .who = e.who, .author = e.author, .faction = e.faction}; });
 	Bind<BrickWallDiedEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::BrickWallDied, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::BrickWallDied, .author = e.author, .faction = e.faction}; });
 	Bind<SteelWallDiedEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::SteelWallDied, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::SteelWallDied, .author = e.author, .faction = e.faction}; });
 	Bind<StatisticsBonusPickupEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::BonusPickup, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::BonusPickup, .author = e.author, .faction = e.faction}; });
 	Bind<StatisticsBonusDestroyedEvent>([](const auto& e)
-	{ return StatisticsChange{.statisticsType = StatisticsType::BonusDestroyed, .author = e.author, .fraction = e.fraction}; });
+	{ return StatisticsChange{.statisticsType = StatisticsType::BonusDestroyed, .author = e.author, .faction = e.faction}; });
 	Bind<StatisticsBonusExpiredEvent>([](const auto&)
 	{ return StatisticsChange{.statisticsType = StatisticsType::BonusExpired}; });
 }
@@ -77,12 +77,13 @@ void ReplicationPublisher::SubscribeStatistics()
 void ReplicationPublisher::SubscribeBonus()
 {
 	Bind<BonusSpawnedEvent>([](const auto& e)
-	{ return BonusSpawn{.pos = e.pos, .bonusType = e.type, .uuid = e.uuid}; });
+	{ return BonusSpawn{.pos = e.pos, .bonusType = e.type, .uuid = e.uuid, .isSuper = e.isSuper}; });
 	Bind<BonusHelmetAppliedEvent>([](const auto& e)
 	{ return BonusStatus{.name = e.name, .bonusType = BonusType::Helmet, .isEnable = e.isActive}; });
 	Bind<BonusStarAppliedEvent>([](const auto& e) { return BonusStatus{.name = e.name, .bonusType = BonusType::Star}; });
 	Bind<BonusCaliberAppliedEvent>([](const auto& e)
 	{ return BonusStatus{.name = e.name, .bonusType = BonusType::Caliber}; });
+	Bind<BonusShipAppliedEvent>([](const auto& e) { return BonusStatus{.name = e.name, .bonusType = BonusType::Ship}; });
 	Bind<BonusTankAppliedEvent>([](const auto& e) { return BonusStatus{.name = e.name, .bonusType = BonusType::Tank}; });
 }
 }//namespace network::commands

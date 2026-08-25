@@ -12,7 +12,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
-#include "components/managers/BonusEffectManager.h"
+#include "components/managers/BonusManager.h"
 #include "components/managers/FramePerSecondManager.h"
 #include "components/managers/GameStateManager.h"
 #include "components/managers/RenderManager.h"
@@ -40,7 +40,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, SDL_Confi
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
-	, _bonusEffectManager{std::make_unique<BonusEffectManager>(_events)}
+	, _bonusManager{std::make_unique<BonusManager>(_events, gameConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
@@ -225,8 +225,7 @@ void Game::Run()
 			{
 				if (IsAuthority(_gameMode))
 				{
-					constexpr bool skipDelay{false};
-					_events->EmitEvent(RespawnTanksEvent{.skipDelay = skipDelay});
+					_events->EmitEvent(RespawnTanksEvent{});
 
 					_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTime});
 				}

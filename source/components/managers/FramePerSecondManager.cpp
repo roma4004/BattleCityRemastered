@@ -12,7 +12,7 @@ FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>&
 	: _events{events}
 	, _projectConfig{projectConfig}
 {
-	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(_targetFps)};
+	_targetFrameDuration = std::chrono::duration<double>{1.0 / static_cast<double>(kTargetFps)};
 
 	Subscribe();
 }

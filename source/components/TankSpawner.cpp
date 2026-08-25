@@ -20,6 +20,7 @@
 #include "enums/GameMode.h"
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
+#include "enums/Faction.h"
 #include "utils/Log.h"
 #include "utils/RandUtils.h"
 #include "utils/TimeUtils.h"
@@ -43,7 +44,11 @@ void TankSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &TankSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &TankSpawner::OnRespawnTank));
-	_subs.push_back(_events->AddListener(this, &TankSpawner::OnTankSpawnDelayFinished));
+	//NOTE: a tank is the host's call - the client ignores its own burst and waits for TankSpawnComplete
+	if (IsAuthority(_gameMode))
+	{
+		_subs.push_back(_events->AddListener(this, &TankSpawner::OnSpawnAnimationFinished));
+	}
 
 	if (IsClient(_gameMode))
 	{
@@ -52,9 +57,9 @@ void TankSpawner::Subscribe()
 	}
 }
 
-void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(event.type, event.uuid, event.skipDelay); }
+void TankSpawner::OnRespawnTank(const RespawnTankEvent& event) { RespawnTank(event.type, event.uuid); }
 
-void TankSpawner::OnTankSpawnDelayFinished(const TankSpawnDelayFinishedEvent& event)
+void TankSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event)
 {
 	OnSpawnDelayFinished(event.uuid);
 }
@@ -73,7 +78,7 @@ void TankSpawner::OnTankSpawnCompleted(const TankSpawnCompletedEvent& event)
 
 void TankSpawner::Reset(const GameResetEvent&)
 {
-	_enemySpawnTimer.cooldown = milliseconds{5000};
+	_enemySpawnTimer.cooldown = _gameConfig.enemySpawnCooldown;
 	_enemySpawnTimer.isActive = false;
 	_enemySpawnTimer.activateTime = TimeUtils::Now() - _enemySpawnTimer.cooldown;
 	_delayedSpawns.clear();
@@ -131,7 +136,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 }
 
 bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const float speed,
-							 const int health, const bool skipDelay)
+							 const int health)
 {
 	if (ColliderUtils::AreEqualAbsolute(rect.y, -1.f))
 	{
@@ -139,44 +144,43 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const Tan
 	}
 
 	const std::string name{"Enemy" + std::to_string(static_cast<int>(type) + 1)};
-	std::string fraction{"EnemyTeam"};
+	Faction faction{Faction::EnemyTeam};
 
-	Log::Info("spawn " + name + " (" + fraction + ") uuid " + UuidUtils::GetStringUuid(uuid));
+	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
 
 	return true;
 }
 
 void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const int health, const Uuid uuid,
-							  const TankType type, const bool skipDelay)
+							  const TankType type)
 {
 	const bool isFirst = type == TankType::PLAYER1;
 	const std::string name{isFirst ? "Player1" : "Player2"};
-	std::string fraction{"PlayerTeam"};
+	Faction faction{Faction::PlayerTeam};
 
-	Log::Info("spawn " + name + " (" + fraction + ") uuid " + UuidUtils::GetStringUuid(uuid));
+	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
 }
 
 void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const int health, const Uuid uuid,
-							   const TankType type, const bool skipDelay)
+							   const TankType type)
 {
 	const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
-	std::string fraction{"PlayerTeam"};
+	Faction faction{Faction::PlayerTeam};
 
-	Log::Info("spawn " + name + " (" + fraction + ") uuid " + UuidUtils::GetStringUuid(uuid));
+	Log::Info("spawn " + name + " (" + std::string{ToString(faction)} + ") uuid " + UuidUtils::GetStringUuid(uuid));
 
-	DelayedSpawnStart(rect, health, name, std::move(fraction), speed, uuid, type, skipDelay);
+	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
 }
 
-void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid, const bool skipDelay,
+void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
 									const std::optional<ObjRectangle> rect)
 {
 	const ObjRectangle spawnRect = rect.has_value() ? *rect : GetEnemyRandomPosX(type);
-	const bool isSuccessSpawn = SpawnEnemy(spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth,
-										   skipDelay);
+	const bool isSuccessSpawn = SpawnEnemy(spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth);
 	if (isSuccessSpawn && IsHost(_gameMode))
 	{
 		_events->EmitEvent(TankRespawnedEvent{.type = type, .uuid = uuid, .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
@@ -228,7 +232,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 	return rect;
 }
 
-void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid, const bool skipDelay,
+void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 									const std::optional<ObjRectangle> rect)
 {
 	const bool isFirst = type == TankType::PLAYER1;
@@ -243,7 +247,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid, const 
 		|| IsNetworkGame(_gameMode)
 		|| (_gameMode == GameMode::CoopWithBot && isFirst))
 	{
-		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type, skipDelay);
+		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type);
 		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(TankRespawnedEvent{.type = type, .uuid = uuid, .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
@@ -252,12 +256,11 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid, const 
 	else if (UsesCoopBots(_gameMode))
 	{
 		SpawnCoopBot(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid,
-					 isFirst ? TankType::COOP1 : TankType::COOP2, skipDelay);
+					 isFirst ? TankType::COOP1 : TankType::COOP2);
 	}
 }
 
-void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const bool skipDelay,
-							  const std::optional<ObjRectangle> rect)
+void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const std::optional<ObjRectangle> rect)
 {
 	switch (type)
 	{
@@ -266,15 +269,15 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const bool s
 		case TankType::ENEMY3:
 		case TankType::ENEMY4:
 		{
-			const bool isNetworkMirrored = rect.has_value();// server already decided when to spawn this tank
-			if (skipDelay || isNetworkMirrored)
+			if (const bool isNetworkMirrored = rect.has_value();// server already decided when to spawn this tank
+				isNetworkMirrored)
 			{
-				RespawnEnemyTanks(type, uuid, skipDelay, rect);
+				RespawnEnemyTanks(type, uuid, rect);
 			}
 			else if (TimeUtils::IsCooldownFinish(_enemySpawnTimer.activateTime, _enemySpawnTimer.cooldown))
 			{
 				_enemySpawnTimer.Reset();
-				RespawnEnemyTanks(type, uuid, skipDelay, rect);
+				RespawnEnemyTanks(type, uuid, rect);
 			}
 			break;
 		}
@@ -282,7 +285,7 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const bool s
 		case TankType::PLAYER2:
 		case TankType::COOP1:
 		case TankType::COOP2:
-			RespawnPlayerTeam(type, uuid, skipDelay, rect);
+			RespawnPlayerTeam(type, uuid, rect);
 			break;
 	}
 }
@@ -290,8 +293,7 @@ void TankSpawner::RespawnTank(const TankType type, const Uuid uuid, const bool s
 //TODO: maybe we don't need spawn on client at all and just move the textures and animation?
 void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const ObjRectangle rect)
 {
-	constexpr bool skipDelay{false};
-	RespawnTank(type, uuid, skipDelay, rect);
+	RespawnTank(type, uuid, rect);
 }
 
 namespace
@@ -334,28 +336,20 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const std::string& name,
-									std::string fraction, const float speed, const Uuid uuid, const TankType type,
-									const bool skipDelay)
+									const Faction faction, const float speed, const Uuid uuid, const TankType type)
 {
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
 											  .type = type,
 											  .rect = rect,
 											  .health = health,
 											  .name = name,
-											  .fraction = std::move(fraction),
+											  .faction = faction,
 											  .speed = speed});
 
 	_events->EmitEvent(TankSpawnEvent{.uuid = uuid});
 
-	// On a real client (skipDelay false) skip this: DelayedSpawnManager's timer never ticks there,
-	// so a >0ms entry would just sit in _spawnDelays forever, never disposed.
-	if (skipDelay || IsAuthority(_gameMode))
-	{
-		const milliseconds delay{skipDelay ? 0 : 1000};
-		_events->EmitEvent(SpawnDelayStartEvent{.uuid = uuid, .delay = delay});
-	}
-
-	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .name = name});
+	//NOTE: the burst is also the countdown - the tank lands when its last frame is done
+	_events->EmitEvent(AnimationCreateTankSpawnEvent{.rect = rect, .name = name, .uuid = uuid});
 }
 
 void TankSpawner::OnSpawnDelayFinished(const Uuid uuid)
@@ -376,7 +370,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 									.health = params.health,
 									.uuid = params.uuid,
 									.name = params.name,
-									.fraction = params.fraction};
+									.faction = params.faction};
 
 	PawnProperty pawnProperty{.baseObjProperty = std::move(baseObjProperty),
 							  .allObjects = _allObjects,
@@ -390,7 +384,7 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .name = params.name});
-		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .fraction = params.fraction});
+		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .faction = params.faction});
 
 		if (IsHost(_gameMode))
 		{

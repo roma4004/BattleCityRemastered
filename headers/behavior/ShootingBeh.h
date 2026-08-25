@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+enum class Faction : char8_t;
 enum class Direction : char8_t;
 struct BulletCalibre;
 struct FPoint;
@@ -22,7 +23,7 @@ class ShootingBeh final : public IShootable
 	Direction& _direction;
 	const GameConfig& _gameConfig;
 	std::string& _name;
-	std::string& _fraction;
+	Faction& _faction;
 	BulletCalibre& _calibre;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -36,7 +37,7 @@ class ShootingBeh final : public IShootable
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
-	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, std::string& fraction,
+	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
 				std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<BulletPool>& bulletPool,
 				BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 

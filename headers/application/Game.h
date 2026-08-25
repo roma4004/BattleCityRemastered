@@ -17,7 +17,7 @@ class SpawnManager;
 class WorldScaleManager;
 class RenderManager;
 class EventSystem;
-class BonusEffectManager;
+class BonusManager;
 class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
@@ -93,7 +93,7 @@ private:
 	std::unique_ptr<WorldScaleManager> _worldScaleManager{nullptr};
 	std::unique_ptr<SpawnManager> _spawnManager{nullptr};
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
-	std::unique_ptr<BonusEffectManager> _bonusEffectManager{nullptr};
+	std::unique_ptr<BonusManager> _bonusManager{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 

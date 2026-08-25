@@ -18,7 +18,7 @@ void SteelWall::Subscribe()
 
 void SteelWall::OnDraw(const DrawEvent&) const { Draw(); }
 
-void SteelWall::EmitDeathStatistics(const std::string& author, const std::string& fraction)
+void SteelWall::EmitDeathStatistics(const std::string& author, Faction faction)
 {
-	_events->EmitEvent(SteelWallDiedEvent{.author = author, .fraction = fraction});
+	_events->EmitEvent(SteelWallDiedEvent{.author = author, .faction = faction});
 }

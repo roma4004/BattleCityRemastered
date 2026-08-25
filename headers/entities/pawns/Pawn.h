@@ -6,6 +6,7 @@
 #include "interfaces/ITickUpdatable.h"
 #include <vector>
 
+enum class Faction : char8_t;
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct PawnProperty;
@@ -26,7 +27,7 @@ public:
 	~Pawn() override;
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
 
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);

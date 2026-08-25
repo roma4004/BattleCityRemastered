@@ -10,6 +10,7 @@ enum class AnimationType : char8_t
 	Bullet_Explosion,
 	Water_Flow,
 	Helmet_Effect,
+	Bonus_Spawn,
 	//Eagle_Death,
 	Count,
 };

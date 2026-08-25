@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "geometry/Point.h"
 #include "enums/GameMode.h"
+#include <chrono>
 
 struct LaunchOptions;
 struct WorldGeometry;
@@ -36,6 +37,8 @@ public:
 	UPoint windowsPosOffset{};
 	size_t sideBarWidth{175u};
 	int tankHealth{100};
+	std::chrono::milliseconds enemySpawnCooldown{5000};
+	std::chrono::milliseconds bonusLifeTimeCooldown{15000};
 	float scaleFactor{1.f};
 	//NOTE: gridSize is a count - how many cells fit vertically; gridOffset is one cell in pixels
 	float gridSize{50.f};

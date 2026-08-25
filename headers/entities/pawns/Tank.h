@@ -5,6 +5,7 @@
 #include "entities/BulletCalibre.h"
 #include "utils/Timer.h"
 
+enum class Faction : char8_t;
 struct UPoint;
 class PlayerTest;
 class IShootable;
@@ -18,11 +19,13 @@ struct TankShotEvent;
 struct BonusHelmetAppliedEvent;
 struct BonusStarAppliedEvent;
 struct BonusCaliberAppliedEvent;
+struct BonusShipAppliedEvent;
 struct BonusTimerStatusChangeEvent;
 struct BonusHelmetStatusChangeEvent;
 struct BonusGrenadePickupEvent;
 struct BonusStarPickupEvent;
 struct BonusCaliberPickupEvent;
+struct BonusShipPickupEvent;
 
 class Tank : public Pawn
 {
@@ -42,23 +45,26 @@ class Tank : public Pawn
 	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
 	void OnBonusStarApplied(const BonusStarAppliedEvent&);
 	void OnBonusCaliberApplied(const BonusCaliberAppliedEvent&);
+	void OnBonusShipApplied(const BonusShipAppliedEvent&);
 	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
 	void OnBonusCaliberPickup(const BonusCaliberPickupEvent& event);
+	void OnBonusShipPickup(const BonusShipPickupEvent& event);
 
 	void OnBonusTimer(const BonusTimerStatusChangeEvent& event);
-	void OnBonusHelmet(const std::string& name, bool isActive);
+	void OnBonusHelmet(bool isActive);
 
 	void OnBonusGrenade(const BonusGrenadePickupEvent& event);
-	void OnBonusStar(const std::string& author);
-	void OnBonusCaliber(const std::string& author);
+	void OnBonusStar();
+	void OnBonusCaliber();
+	void OnBonusShip();
 
 protected:
 	BulletCalibre _calibre{};
 	Timer _shootTimer{};
 
-	void EmitDamageStatistics(const std::string& author, const std::string& fraction) override;
-	void EmitDeathStatistics(const std::string& author, const std::string& fraction) override;
+	void EmitDamageStatistics(const std::string& author, Faction faction) override;
+	void EmitDeathStatistics(const std::string& author, Faction faction) override;
 
 	void Subscribe() override;
 
@@ -82,7 +88,7 @@ public:
 
 
 	//BaseObj overrides
-	void TakeDamage(unsigned int damage, const std::string& author, const std::string& fraction) override;
+	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
 
 	[[nodiscard]] unsigned int GetTier() const;
 

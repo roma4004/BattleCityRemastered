@@ -1,71 +1,53 @@
 #pragma once
 
-#include <chrono>
 #include <string>
+
+enum class Faction : char8_t;
+
+//NOTE: a pickup is keyed by the side its effect lands on - the tank that picked it up, or a faction
+//when the whole team is hit. The key already says who, so there is nothing left to put inside
+struct BonusStarPickupEvent {};
+struct BonusCaliberPickupEvent {};
+struct BonusShipPickupEvent {};
+struct BonusGrenadePickupEvent {};
 
 struct BonusHelmetPickupEvent
 {
 	std::string author;
-	std::chrono::milliseconds effectDuration;
-};
-
-struct BonusTeamEffectPickupEvent
-{
-	std::string fraction;
-	std::chrono::milliseconds effectDuration;
-};
-
-struct BonusShovelPickupEvent
-{
-	std::string fraction;
-	std::chrono::milliseconds effectDuration;
-};
-
-struct BonusTimerPickupEvent
-{
-	std::string fraction;
-	std::chrono::milliseconds effectDuration;
-};
-
-struct BonusStarPickupEvent
-{
-	std::string author;
-	std::string fraction;
-};
-
-struct BonusCaliberPickupEvent
-{
-	std::string author;
-	std::string fraction;
-};
-
-struct BonusGrenadePickupEvent
-{
-	std::string author;
-	std::string fraction;
 };
 
 struct BonusTankPickupEvent
 {
 	std::string author;
-	std::string fraction;
 };
 
+//NOTE: BonusManager owns both teams' effects at once, so the faction is payload here too
+struct BonusShovelPickupEvent
+{
+	Faction faction{};
+};
+
+//NOTE: whom to freeze, not who picked it up - the bonus itself decides that it hits the other side
+struct BonusTimerPickupEvent
+{
+	Faction target{};
+};
+
+//NOTE: keyed by the faction it is on
 struct BonusTimerStatusChangeEvent
 {
-	std::string fraction;
 	bool isActive;
 };
 
+//NOTE: keyed by the tank it is on
 struct BonusHelmetStatusChangeEvent
 {
-	std::string name;
 	bool isActive;
 };
 
 struct BonusShovelStatusChangeEvent
 {
-	std::string fraction;
+	Faction faction{};
 	bool isActive;
 };
 
@@ -81,6 +63,11 @@ struct BonusStarAppliedEvent
 };
 
 struct BonusCaliberAppliedEvent
+{
+	std::string name;
+};
+
+struct BonusShipAppliedEvent
 {
 	std::string name;
 };

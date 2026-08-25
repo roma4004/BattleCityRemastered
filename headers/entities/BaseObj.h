@@ -2,14 +2,15 @@
 
 #include "geometry/ObjRectangle.h"
 #include "entities/Tags.h"
-#include "interfaces/IHaveFraction.h"
+#include "enums/Faction.h"
 #include "interfaces/IObstacle.h"
 #include "utils/Uuid.h"
+#include <string>
 
 struct FPoint;
 struct BaseObjProperty;
 
-class BaseObj : public IHaveFraction, public IObstacle
+class BaseObj : public IObstacle
 {
 	int _health{0};
 	CollisionTags _collision;
@@ -18,11 +19,11 @@ protected:
 	Uuid _uuid{};
 	std::string _name{};
 	std::string _nameWithUuid{};
-	std::string _fraction{};
+	Faction _faction{};
 	ObjRectangle _rect{};
 
-	virtual void EmitDamageStatistics(const std::string& author, const std::string& fraction);
-	virtual void EmitDeathStatistics(const std::string& author, const std::string& fraction);
+	virtual void EmitDamageStatistics(const std::string& author, Faction faction);
+	virtual void EmitDeathStatistics(const std::string& author, Faction faction);
 
 	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 
@@ -61,7 +62,7 @@ public:
 	[[nodiscard]] bool GetIsAlive() const override;
 	void SetIsAlive(bool isAlive) override;
 
-	virtual void TakeDamage(unsigned int damage, const std::string& /*author*/, const std::string& /*fraction*/);
+	virtual void TakeDamage(unsigned int damage, const std::string& /*author*/, Faction /*faction*/);
 
 	[[nodiscard]] bool GetIsPassable() const override;
 
@@ -75,5 +76,5 @@ public:
 	[[nodiscard]] virtual std::string GetName() const;
 	[[nodiscard]] virtual Uuid GetUuid() const;
 	virtual void SetId(Uuid uuid);
-	[[nodiscard]] std::string GetFraction() const override;
+	[[nodiscard]] Faction GetFaction() const;
 };

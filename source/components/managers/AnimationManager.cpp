@@ -3,6 +3,7 @@
 #include "components/AnimatedObjects.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "geometry/ObjRectangle.h"
 #include "enums/AnimationType.h"
@@ -30,6 +31,7 @@ void AnimationManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnDraw));
 
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankSpawn));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBonusSpawn));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankExplosion));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateBulletExplosion));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnCreateTankMove));
@@ -43,8 +45,19 @@ void AnimationManager::OnGameReset(const GameResetEvent&) { Reset(); }
 
 void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
-	std::ranges::for_each(_autoAnimatedWaterObjects, UpdateFrame);
-	std::ranges::for_each(_autoAnimatedObjects, UpdateFrame);
+	//NOTE: water never ends, so it has nothing to report
+	std::ranges::for_each(_autoAnimatedWaterObjects, [](AnimatedObject& object) { UpdateFrame(object); });
+
+	for (AnimatedObject& object: _autoAnimatedObjects)
+	{
+		//NOTE: an owner is what a spawn animation has and an explosion does not - it is the uuid waiting
+		//for this burst to end, and UpdateFrame says true once, on the tick it does
+		if (const bool isFinished = UpdateFrame(object);
+			isFinished && object.owner != Uuid{})
+		{
+			_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = object.owner});
+		}
+	}
 }
 
 void AnimationManager::OnDraw(const DrawEvent&) const
@@ -59,7 +72,12 @@ void AnimationManager::OnDraw(const DrawEvent&) const
 
 void AnimationManager::OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event)
 {
-	CreateAnimation(AnimationType::Tank_Spawn, event.rect, event.name);
+	CreateAnimation(AnimationType::Tank_Spawn, event.rect, event.name, event.uuid);
+}
+
+void AnimationManager::OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event)
+{
+	CreateAnimation(AnimationType::Bonus_Spawn, event.rect, "", event.uuid);
 }
 
 void AnimationManager::OnCreateTankMove(const AnimationCreateTankMoveEvent& event)
@@ -124,11 +142,12 @@ void AnimationManager::DrawObject(const AnimatedObject& object) const
 							   .dir = object.dir,
 							   .frame = object.currentFrameIndex,
 							   .scale = object.scale,
+							   .type = object.type,
 							   .name = object.name});
 }
 
 void AnimationManager::Create(const std::string& name, const ObjRectangle rect, const AnimationType type,
-							  const int size, const int scale, const int speed, const bool isInfinite)
+							  const int size, const int scale, const int speed, const int passes, const Uuid owner)
 {
 	//NOTE: chose animation container for water if not then tanks, if not then other objects
 	auto& target =
@@ -144,12 +163,14 @@ void AnimationManager::Create(const std::string& name, const ObjRectangle rect, 
 		reusable->dir = {};
 		reusable->currentFrameIndex = 0;
 		reusable->ticksSinceLastFrame = 0;
+		reusable->passesDone = 0;
+		reusable->owner = owner;
 		reusable->name = name;
 		reusable->markToDispose = false;
 	}
 	else
 	{
-		target.emplace_back(name, rect, type, size, scale, speed, isInfinite);
+		target.emplace_back(name, rect, type, size, scale, speed, passes, owner);
 	}
 }
 
@@ -157,17 +178,19 @@ constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const An
 {
 	static constexpr std::array s_presets{
 			KeyValue{.type = AnimationType::Tank_Spawn,
-					 .preset = {.name = "TankSpawn", .size = 3, .scale = 16, .speed = 20, .isInfinite = false}},
+					 .preset = {.name = "TankSpawn", .size = 3, .scale = 16, .speed = 20}},
 			KeyValue{.type = AnimationType::Tank_Move,
-					 .preset = {.name = "", .size = 2, .scale = 16, .speed = 2, .isInfinite = true}},
+					 .preset = {.name = "", .size = 2, .scale = 16, .speed = 2, .passes = kEndlessAnimation}},
 			KeyValue{.type = AnimationType::Tank_Explosion,
-					 .preset = {.name = "TankExplosion", .size = 2, .scale = 32, .speed = 30, .isInfinite = false}},
+					 .preset = {.name = "TankExplosion", .size = 2, .scale = 32, .speed = 30}},
 			KeyValue{.type = AnimationType::Bullet_Explosion,
-					 .preset = {.name = "BulletExplosion", .size = 3, .scale = 16, .speed = 20, .isInfinite = false}},
+					 .preset = {.name = "BulletExplosion", .size = 3, .scale = 16, .speed = 20}},
 			KeyValue{.type = AnimationType::Water_Flow,
-					 .preset = {.name = "Water", .size = 16, .scale = 1, .speed = 20, .isInfinite = true}},
+					 .preset = {.name = "Water", .size = 16, .scale = 1, .speed = 20, .passes = kEndlessAnimation}},
 			KeyValue{.type = AnimationType::Helmet_Effect,
-					 .preset = {.name = "", .size = 2, .scale = 16, .speed = 20, .isInfinite = true}},
+					 .preset = {.name = "", .size = 2, .scale = 16, .speed = 20, .passes = kEndlessAnimation}},
+			KeyValue{.type = AnimationType::Bonus_Spawn,
+					 .preset = {.name = "BonusSpawn", .size = 3, .scale = 16, .speed = 20, .passes = 2}},
 	};
 
 	static_assert(s_presets.size() == static_cast<std::size_t>(AnimationType::Count),
@@ -182,14 +205,15 @@ constexpr AnimationManager::AnimationPreset AnimationManager::GetPreset(const An
 	return s_presets[static_cast<std::size_t>(type)].preset;
 }
 
-void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name)
+void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectangle rect, const std::string& name,
+									   const Uuid owner)
 {
 	if (type == AnimationType::Tank_Explosion)
 	{
 		DisableTankAnimation(name);//NOTE: for tank we need to disable previous animation
 	}
 
-	const auto& [presetName, size, scale, speed, isInfinite] = GetPreset(type);
+	const auto& [presetName, size, scale, speed, passes] = GetPreset(type);
 	std::string animName{};
 	if (type == AnimationType::Helmet_Effect)
 	{
@@ -204,31 +228,35 @@ void AnimationManager::CreateAnimation(const AnimationType type, const ObjRectan
 		animName = presetName;
 	}
 
-	Create(animName, rect, type, size, scale, speed, isInfinite);
+	Create(animName, rect, type, size, scale, speed, passes, owner);
 }
 
-void AnimationManager::UpdateFrame(AnimatedObject& object)
+bool AnimationManager::UpdateFrame(AnimatedObject& object)
 {
 	if (object.markToDispose || object.speed <= 0)
 	{
-		return;
+		return false;
 	}
 
 	if (++object.ticksSinceLastFrame % object.speed != 0)
 	{
-		return;
+		return false;
 	}
 
 	object.ticksSinceLastFrame = 0;
 	if (++object.currentFrameIndex >= object.size)
 	{
-		if (object.isInfinite == false)
+		object.currentFrameIndex = 0;
+
+		if (object.passes != kEndlessAnimation && ++object.passesDone >= object.passes)
 		{
 			object.markToDispose = true;
-		}
 
-		object.currentFrameIndex = 0;
+			return true;
+		}
 	}
+
+	return false;
 }
 
 void AnimationManager::OnHelmetEffect(const std::string& name, const bool isEnable)

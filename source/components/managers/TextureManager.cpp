@@ -5,6 +5,15 @@
 #include "utils/ColliderUtils.h"
 #include "utils/Log.h"
 
+namespace
+{
+constexpr float kAtlasCellSize{16.f};
+constexpr int kBonusSpawnFrames{3};
+//NOTE: the bonus icon is a 15x14 box inside its 16x16 cell, framed by a single atlas pixel
+constexpr float kBonusBoxWidth{15.f};
+constexpr float kBonusBoxHeight{14.f};
+}//namespace
+
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
 	: _animationManager{std::make_unique<AnimationManager>(events)}
 	, _events{events}
@@ -130,6 +139,10 @@ ObjRectangle TextureManager::GetBonusTextureRect(const std::string& name) const
 	{
 		return _offset.bonusCaliber;
 	}
+	else if (name.ends_with("Ship"))
+	{
+		return _offset.bonusShip;
+	}
 
 	Log::Error("TextureManager::GetBonusTextureRect: unrecognized bonus name '" + name + "'");
 	return ObjRectangle{};
@@ -156,47 +169,47 @@ ObjRectangle TextureManager::GetTextTextureRect(const std::string& name) const
 	return ObjRectangle{};
 }
 
-ObjRectangle TextureManager::GetAnimTextureRect(const std::string& name, const ObjRectangle rect,
-												ObjRectangle& destRect) const
+TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const std::string& name,
+														  const ObjRectangle rect, ObjRectangle& destRect) const
 {
-	ObjRectangle textureRect{};
-	if (name.ends_with("1") || name.ends_with("2") || name.ends_with("3") || name.ends_with("4"))
+	switch (type)
 	{
-		textureRect = GetTankTextureRect(name);
-	}
-	else if (name == "Water")
-	{
-		textureRect = _offset.water;
-	}
-	// else if (name == "Bullet")
-	// {
-	// 	textureRect = _offset.bullet);
-	// }
-	else if (name == "BulletExplosion")
-	{
-		destRect = rect.GetScaledBy(3.f);
-		textureRect = _offset.bulletExplosion;
-	}
-	else if (name == "TankExplosion")
-	{
-		destRect = rect.GetScaledBy(1.3f);
-		textureRect = _offset.tankExplosion;
-	}
-	else if (name == "TankSpawn")
-	{
-		textureRect = _offset.tankSpawn;
-	}
-	else if (name.ends_with("HelmetEffect"))
-	{
-		textureRect = _offset.helmetEffect;
+		case AnimationType::Tank_Move:
+			return AtlasFrames{.first = GetTankTextureRect(name)};
+		case AnimationType::Water_Flow:
+			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
+			return AtlasFrames{.first = _offset.water, .step = -1};
+		case AnimationType::Bullet_Explosion:
+			destRect = rect.GetScaledBy(3.f);
+			return AtlasFrames{.first = _offset.bulletExplosion};
+		case AnimationType::Tank_Explosion:
+			destRect = rect.GetScaledBy(1.3f);
+			return AtlasFrames{.first = _offset.tankExplosion};
+		case AnimationType::Tank_Spawn:
+			return AtlasFrames{.first = _offset.tankSpawn};
+		case AnimationType::Bonus_Spawn:
+		{
+			//NOTE: the tank spawn burst entered from its last frame and walked backwards, so the bonus
+			//shrinks into place instead of blooming out of it
+			ObjRectangle lastFrame = _offset.tankSpawn;
+			lastFrame.x += (kBonusSpawnFrames - 1) * kAtlasCellSize;
+
+			return AtlasFrames{.first = lastFrame, .step = -1};
+		}
+		case AnimationType::Helmet_Effect:
+			return AtlasFrames{.first = _offset.helmetEffect};
+		case AnimationType::Count:
+			break;
 	}
 
-	return textureRect;
+	Log::Error("TextureManager::GetAnimFrames: unrecognized animation type");
+
+	return AtlasFrames{};
 }
 
 void TextureManager::Draw(const DrawObjEvent& event) const
 {
-	const auto& [rect, dir, name] = event;
+	const auto& [rect, dir, name, rimColor] = event;
 	const ObjRectangle destRect = rect;
 	const ObjRectangle textureRect = GetTextureRect(name);
 	if (constexpr ObjRectangle defaultSdlRect{};
@@ -210,15 +223,48 @@ void TextureManager::Draw(const DrawObjEvent& event) const
 	}
 
 	_events->EmitEvent(RenderTextureEvent{.textureRect = textureRect, .destRect = destRect, .dir = dir});
+
+	if (rimColor != 0u)
+	{
+		DrawRim(textureRect, destRect, dir, rimColor);
+	}
+}
+
+//NOTE: the frame is one atlas pixel of the sprite's own outline, so it is redrawn from the atlas rather
+//than stroked over - that way it lands exactly on the pixels it recolors, at any scale
+void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir,
+							 const unsigned int color) const
+{
+	constexpr float thickness{1.f};
+	const float scaleX = destRect.w / kAtlasCellSize;
+	const float scaleY = destRect.h / kAtlasCellSize;
+
+	const auto emitSlice = [this, &textureRect, &destRect, scaleX, scaleY, dir, color]
+			(const float x, const float y, const float w, const float h)
+	{
+		_events->EmitEvent(
+				RenderTextureEvent{
+						.textureRect = {.x = textureRect.x + x, .y = textureRect.y + y, .w = w, .h = h},
+						.destRect = {.x = destRect.x + x * scaleX,
+									 .y = destRect.y + y * scaleY,
+									 .w = w * scaleX,
+									 .h = h * scaleY},
+						.dir = dir,
+						.color = color});
+	};
+
+	emitSlice(0.f, 0.f, kBonusBoxWidth, thickness);
+	emitSlice(0.f, kBonusBoxHeight - thickness, kBonusBoxWidth, thickness);
+	emitSlice(0.f, 0.f, thickness, kBonusBoxHeight);
+	emitSlice(kBonusBoxWidth - thickness, 0.f, thickness, kBonusBoxHeight);
 }
 
 void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 {
-	const auto& [rect, dir, frame, scale, name] = event;
+	const auto& [rect, dir, frame, scale, type, name] = event;
 	ObjRectangle destRect = rect;
-	ObjRectangle textureRect = GetAnimTextureRect(name, rect, destRect);
-	const int direction = name == "Water" ? -1 : 1;//NOTE: water's frames are played back-to-front frames flow
-	textureRect.x += static_cast<float>(frame * scale * direction);
+	auto [textureRect, step] = GetAnimFrames(type, name, rect, destRect);
+	textureRect.x += static_cast<float>(frame * scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)
