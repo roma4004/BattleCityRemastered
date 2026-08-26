@@ -8,7 +8,7 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h" //NOTE: required for std::unique_ptr<IMoveBeh> Pawn::_moveBeh
 #include "utils/UuidUtils.h"
-// 
+
 Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const CollisionTags collision)
 	: BaseObj{std::move(pawnProperty.baseObjProperty), collision}
 	, _speed{pawnProperty.speed}
@@ -68,6 +68,21 @@ void Pawn::Unsubscribe()
 void Pawn::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
 	BaseObj::TakeDamage(damage, author, faction);
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+	}
+}
+
+void Pawn::Heal(const int amount)
+{
+	if (!IsAuthority(_gameMode))
+	{
+		return;
+	}
+
+	SetHealth(GetHealth() + amount);
 
 	if (IsHost(_gameMode))
 	{

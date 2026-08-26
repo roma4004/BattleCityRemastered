@@ -14,7 +14,6 @@ class GameConfig;
 struct PosChangedEvent;
 struct BonusTimerReApplyOnSpawnEvent;
 struct PostDrawEvent;
-struct ScaleFactorChangedToEvent;
 struct TankShotEvent;
 struct BonusHelmetAppliedEvent;
 struct BonusStarAppliedEvent;
@@ -40,7 +39,6 @@ class Tank : public Pawn
 	void SubscribeBonus();
 	void OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event);
 	void OnPostDraw(const PostDrawEvent&) const;
-	void OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event);
 	void OnTankShot(const TankShotEvent& event);
 	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
 	void OnBonusStarApplied(const BonusStarAppliedEvent&);
@@ -55,6 +53,21 @@ class Tank : public Pawn
 	void OnBonusHelmet(bool isActive);
 
 	void OnBonusGrenade(const BonusGrenadePickupEvent& event);
+
+	//NOTE: star and caliber are the same upgrade with different numbers
+	struct TierUpgrade
+	{
+		unsigned short tiers{};
+		float speedFactor{};
+		unsigned int damage{};
+		float radiusFactor{};
+		std::chrono::milliseconds cooldownCut{};
+	};
+
+	static constexpr unsigned short kMaxTier{3u};
+	static constexpr int kUpgradeHeal{50};
+
+	[[nodiscard]] bool Upgrade(const TierUpgrade& upgrade);
 	void OnBonusStar();
 	void OnBonusCaliber();
 	void OnBonusShip();
@@ -75,7 +88,6 @@ protected:
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnPosChanged(const PosChangedEvent& event);
-	void ApplyScaleToCalibre(float newScale);
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
 

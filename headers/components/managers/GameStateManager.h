@@ -30,6 +30,8 @@ class GameStateManager
 
 	void Subscribe();
 	void SetState(GameState state);
+	void AnnouncePhase();
+	void Resume();
 	[[nodiscard]] GameState IdleStateForMode() const;
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);

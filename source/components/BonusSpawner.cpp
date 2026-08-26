@@ -5,6 +5,7 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "entities/bonuses/Bonus.h"
@@ -28,14 +29,14 @@ BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
 						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
-	, _distSpawnPosY{0, static_cast<int>(gameConfig.windowSize.y) - gameConfig.bonusSize}
-	, _distSpawnPosX{0, static_cast<int>(gameConfig.windowSize.x - gameConfig.sideBarWidth) - gameConfig.bonusSize}
 	, _distSpawnType{kFirstSpawnableBonusId, kLastSpawnableBonusId}
 	, _distSuperRoll{1, kSuperBonusOdds}
 	, _gameConfig{gameConfig}
 	, _spawnTimer{std::chrono::seconds{60}}
 	, _gameMode{gameConfig.gameMode}
 {
+	ResetSpawnRanges();
+
 	Subscribe();
 }
 
@@ -43,9 +44,6 @@ void BonusSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
-
-	//NOTE: unlike a tank, a bonus runs its burst on both sides - the client is handed the pick up front
-	//so it plays the whole animation, not just its tail
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnAnimationFinished));
 
 	if (IsAuthority(_gameMode))
@@ -66,21 +64,22 @@ void BonusSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& e
 		return;
 	}
 
-	Materialize(*it);
+	if (!it->isCancelled)
+	{
+		Materialize(*it);
+	}
+
 	_pendingSpawns.erase(it);
 }
 
-//NOTE: on the geometry, not on the window - bonusSize and sideBarWidth are only settled once the
-//new cell size has been worked out, and this event is emitted after that
-void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
+void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&) { ResetSpawnRanges(); }
+
+void BonusSpawner::ResetSpawnRanges()
 {
-	const UPoint& windowSize = _gameConfig.windowSize;
-	_distSpawnPosY = std::uniform_int_distribution<>{
-			0,
-			static_cast<int>(windowSize.y) - _gameConfig.bonusSize};
-	_distSpawnPosX = std::uniform_int_distribution<>{
-			0,
-			static_cast<int>(windowSize.x - _gameConfig.sideBarWidth) - _gameConfig.bonusSize};
+	const UPoint& battlefieldSize = _gameConfig.battlefieldSize;
+
+	_distSpawnPosX = std::uniform_int_distribution<>{0, static_cast<int>(battlefieldSize.x) - _gameConfig.bonusSize};
+	_distSpawnPosY = std::uniform_int_distribution<>{0, static_cast<int>(battlefieldSize.y) - _gameConfig.bonusSize};
 }
 
 void BonusSpawner::OnBonusSpawned(const BonusSpawnedEvent& event)
@@ -120,8 +119,6 @@ Uuid BonusSpawner::AnnounceSpawn(const ObjRectangle rect, const BonusType type, 
 
 	if (IsHost(_gameMode))
 	{
-		//NOTE: announced when the spot is picked, not when the bonus lands - the client needs the whole
-		//animation, not just its tail
 		_events->EmitEvent(BonusSpawnedEvent{.pos = FPoint{.x = rect.x, .y = rect.y},
 											 .type = type,
 											 .uuid = uuid,
@@ -135,16 +132,31 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 {
 	uuid = AnnounceSpawn(rect, type, uuid, isSuper);
 
-	//NOTE: queued before the burst starts - the bonus lands when its last frame is done
-	_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isSuper = isSuper});
+	PendingSpawn& pending =
+			_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isSuper = isSuper});
+
+	//NOTE: the burst starts a round trip after the host's, so the bonus can be gone before it ends -
+	//without this the burst still materialised one that nothing would ever remove
+	if (!IsAuthority(_gameMode))
+	{
+		//NOTE: found again by uuid rather than captured by reference - the vector reallocates
+		pending.despawn = _events->AddListener(Key(uuid), [this, uuid](const DespawnedEvent&)
+		{
+			if (const auto it = std::ranges::find(_pendingSpawns, uuid, &PendingSpawn::uuid);
+				it != _pendingSpawns.end())
+			{
+				it->isCancelled = true;
+			}
+		});
+	}
+
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid});
 }
 
 void BonusSpawner::Materialize(const PendingSpawn& pending) const
 {
-	const auto& [rect, type, uuid, isSuper] = pending;
-
-	auto bonus = std::make_shared<Bonus>(rect, _events, uuid, _gameMode, type, isSuper);
+	auto bonus = std::make_shared<Bonus>(pending.rect, _events, pending.uuid, _gameMode, pending.type,
+										 pending.isSuper);
 	_events->EmitEvent(BonusCreatedEvent{.bonus = bonus});
 	_events->EmitEvent(AddToSpawnQueueEvent{.obj = std::shared_ptr<BaseObj>{std::move(bonus)}});
 }

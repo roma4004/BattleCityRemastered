@@ -92,13 +92,13 @@ bool MoveLikeBulletBeh::Move(const Direction dir, const double deltaTime,
 		return MoveLeft(deltaTime, outCollisions);
 	}
 
-	if (dir == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_gameConfig.windowSize.y))
+	if (dir == Direction::DOWN && _rect.Bottom() + speed <= static_cast<float>(_gameConfig.battlefieldSize.y))
 	{
 		return MoveDown(deltaTime, outCollisions);
 	}
 
 	if (dir == Direction::RIGHT
-		&& _rect.Right() + speed <= static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth))
+		&& _rect.Right() + speed <= static_cast<float>(_gameConfig.battlefieldSize.x))
 	{
 		return MoveRight(deltaTime, outCollisions);
 	}

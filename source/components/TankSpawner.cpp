@@ -93,7 +93,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 		return rect;
 	}
 
-	const float battleFieldSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) - tankSize};
+	const float battleFieldSizeX{static_cast<float>(_gameConfig.battlefieldSize.x) - tankSize};
 
 	const float quartFieldSizeX = battleFieldSizeX / 4.f;
 	const std::vector<std::pair<float, float>> spawnRanges{{0.f, quartFieldSizeX},
@@ -190,20 +190,20 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
 //TODO: write unit test for bot change direction if faced obstacle
 ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 {
-	const float windowSizeX{static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth)};
-	const float windowSizeY{static_cast<float>(_gameConfig.windowSize.y)};
+	const float battleFieldSizeX{static_cast<float>(_gameConfig.battlefieldSize.x)};
+	const float battleFieldSizeY{static_cast<float>(_gameConfig.battlefieldSize.y)};
 	// const float gridOffset{_gameConfig.gridOffset};
 	const float tankSize{_gameConfig.tankSize};
 
-	const std::pair spawnRangePlayer1{0.f, windowSizeX / 2.f - tankSize * 3.25f};
-	const std::pair spawnRangePlayer2{windowSizeX / 2.f + tankSize * 2.25f, windowSizeX - tankSize};
+	const std::pair spawnRangePlayer1{0.f, battleFieldSizeX / 2.f - tankSize * 3.25f};
+	const std::pair spawnRangePlayer2{battleFieldSizeX / 2.f + tankSize * 2.25f, battleFieldSizeX - tankSize};
 	auto [minX, maxX]{isFirst ? spawnRangePlayer1 : spawnRangePlayer2};
 
 	const std::uniform_real_distribution distRandId{minX, maxX};
 	const float randomX = RandUtils::GetRandNumber(distRandId);
 
 	ObjRectangle rect{.x = -1.f, .y = -1.f, .w = tankSize, .h = tankSize};
-	ObjRectangle spawnPos{.x = randomX, .y = windowSizeY - tankSize, .w = tankSize, .h = tankSize};
+	ObjRectangle spawnPos{.x = randomX, .y = battleFieldSizeY - tankSize, .w = tankSize, .h = tankSize};
 	auto isCollidePredicate = [&spawnPos](const auto& object)
 	{
 		return ColliderUtils::IsCollide(spawnPos, object->GetRect());

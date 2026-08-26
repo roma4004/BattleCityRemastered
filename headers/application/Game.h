@@ -35,9 +35,9 @@ struct ServerInDisconnectEvent;
 struct ClientInDisconnectEvent;
 struct ClientReconnectAbandonedEvent;
 struct GameStateChangedToEvent;
+struct MatchStartedEvent;
 struct GameModeChangedToEvent;
 struct SelectedGameModeChangedToEvent;
-struct WorldGeometryChangedEvent;
 
 class Game final
 {
@@ -72,9 +72,9 @@ private:
 	void DisposeDeadObject();
 	void FlushSpawnQueue();
 
-	void OnWorldGeometryChanged(const WorldGeometryChangedEvent& event);
 
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
+	void OnMatchStarted(const MatchStartedEvent&);
 
 	[[nodiscard]] GameMode GetCurrentGameMode() const;
 	void SetCurrentGameMode(GameMode selectedGameMode);

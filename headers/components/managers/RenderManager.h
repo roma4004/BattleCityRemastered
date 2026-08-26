@@ -36,7 +36,7 @@ struct RenderEnemyIconsEvent;
 struct RenderPlayerOneIconEvent;
 struct RenderPlayerTwoIconEvent;
 struct RenderStageNumberEvent;
-struct WindowSizeChangedToEvent;
+struct WorldGeometryChangedEvent;
 
 class RenderManager
 {
@@ -65,9 +65,19 @@ class RenderManager
 	// pregenerated fps texture
 	std::unordered_map<size_t, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _fpsTextures;
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
+	//NOTE: one slot per base size - only the current scale is ever drawn at, so nothing else is kept
+	struct ScaledFont
+	{
+		int pixelSize{};
+		std::shared_ptr<TTF_Font> font{};
+	};
+
+	mutable ScaledFont _smallFont{};
+	mutable ScaledFont _mediumFont{};
 
 	void Subscribe();
-	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event);
+	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
+	void ApplyLogicalSize();
 
 	void DrawPauseText(const RenderPauseTextEvent&) const;
 	void DrawGameOverText(const RenderGameOverTextEvent&) const;
@@ -93,6 +103,10 @@ class RenderManager
 	void DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const;
 	void DrawPS5Hint(const RenderMenuPS5HintEvent& event) const;
 	void OnRenderText(const RenderTextEvent& event) const;
+	//NOTE: SDL stretching is right for pixel art and wrong for glyphs, so text alone is rasterized at
+	//its final pixel size
+	[[nodiscard]] TTF_Font* FontForCurrentScale(int basePointSize, float scale) const;
+	[[nodiscard]] float CurrentRenderScale() const;
 	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
 

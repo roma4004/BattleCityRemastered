@@ -10,6 +10,7 @@
 #include <vector>
 
 union SDL_Event;
+struct SDL_Config;
 class EventSystem;
 class GameConfig;
 struct PauseStatusEvent;
@@ -45,6 +46,7 @@ class UserInput final
 	milliseconds _dragEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
 	const GameConfig& _gameConfig;
+	SDL_Config& _sdlConfig;
 	SDL_Rect _menuPos{};
 	SDL_Rect _allTilesRect;
 	SDL_Rect _allTilesRectDefault;
@@ -52,6 +54,7 @@ class UserInput final
 	std::vector<SubTile> _menuTiles;
 
 	void MouseEvents(const SDL_Event& event);
+	[[nodiscard]] SDL_Point ToLogical(int windowX, int windowY) const;
 	void KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
 	void KeyboardEvents(const SDL_Event& event) const;
 	void GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const;
@@ -76,7 +79,7 @@ class UserInput final
 	void InitMouseHoverTiles(Point menuPos);
 
 public:
-	UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
+	UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig);
 	~UserInput();
 
 	void Update();

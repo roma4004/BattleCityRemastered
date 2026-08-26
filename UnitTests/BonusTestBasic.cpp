@@ -66,7 +66,7 @@ protected:
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_bonusManager = std::make_unique<BonusManager>(_events, _gameConfig);
 		_fortressManager = std::make_unique<FortressManager>(_events, &_allObjects);
-		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, &_allObjects, _gameConfig);
+		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
 		_tankSize = _gridSize * 3.f;// for better turns

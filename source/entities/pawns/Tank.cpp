@@ -31,8 +31,6 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 							 .damageRadius = 18.f,
 							 .tier = _tier,
 							 .size{.x = 9.f, .y = 9.f}};
-	ApplyScaleToCalibre(gameConfig.scaleFactor);
-
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _faction, _allObjects, bulletPool,
 												 _calibre, _events, _gameConfig);
 
@@ -70,7 +68,6 @@ void Tank::Subscribe()
 	Pawn::Subscribe();
 
 	_subs.push_back(_events->AddListener(this, &Tank::OnPostDraw));
-	_subs.push_back(_events->AddListener(this, &Tank::OnScaleFactorChangedTo));
 
 	if (IsClient(_gameMode))
 	{
@@ -89,8 +86,6 @@ void Tank::OnPostDraw(const PostDrawEvent&) const
 
 	_events->EmitEvent(RenderHealthBarEvent{.rect = GetRect(), .health = GetHealth()});
 }
-
-void Tank::OnScaleFactorChangedTo(const ScaleFactorChangedToEvent& event) { ApplyScaleToCalibre(event.scale); }
 
 void Tank::SubscribeAsClient()
 {
@@ -211,24 +206,36 @@ void Tank::OnBonusGrenade(const BonusGrenadePickupEvent&)
 	}
 }
 
-void Tank::OnBonusStar()
+bool Tank::Upgrade(const TierUpgrade& upgrade)
 {
-	SetHealth(GetHealth() + 50);
-	if (_tier > 3)
+	Heal(kUpgradeHeal);
+
+	if (_tier > kMaxTier)
 	{
-		return;
+		return false;
 	}
 
-	++_tier;
+	_tier += upgrade.tiers;
 
-	_speed *= 1.10f;
-	_calibre.speed *= 1.10f;
-	_calibre.damage += 15;
-	_calibre.damageRadius *= 1.25f;
+	_speed *= upgrade.speedFactor;
+	_calibre.speed *= upgrade.speedFactor;
+	_calibre.damage += upgrade.damage;
+	_calibre.damageRadius *= upgrade.radiusFactor;
 	_calibre.tier = _tier;
-	_shootTimer.cooldown -= milliseconds{150};
+	_shootTimer.cooldown -= upgrade.cooldownCut;
 
-	if (IsHost(_gameMode))
+	return true;
+}
+
+void Tank::OnBonusStar()
+{
+	constexpr TierUpgrade star{.tiers = 1u,
+							   .speedFactor = 1.10f,
+							   .damage = 15,
+							   .radiusFactor = 1.25f,
+							   .cooldownCut = milliseconds{150}};
+
+	if (Upgrade(star) && IsHost(_gameMode))
 	{
 		_events->EmitEvent(BonusStarAppliedEvent{.name = _name});
 	}
@@ -236,22 +243,13 @@ void Tank::OnBonusStar()
 
 void Tank::OnBonusCaliber()
 {
-	SetHealth(GetHealth() + 50);
-	if (_tier > 3)
-	{
-		return;
-	}
+	constexpr TierUpgrade caliber{.tiers = 3u,
+								  .speedFactor = 1.30f,
+								  .damage = 45,
+								  .radiusFactor = 1.75f,
+								  .cooldownCut = milliseconds{450}};
 
-	_tier += 3;
-
-	_speed *= 1.30f;
-	_calibre.speed *= 1.30f;
-	_calibre.damage += 45;
-	_calibre.damageRadius *= 1.75f;
-	_calibre.tier = _tier;
-	_shootTimer.cooldown -= milliseconds{450};
-
-	if (IsHost(_gameMode))
+	if (Upgrade(caliber) && IsHost(_gameMode))
 	{
 		_events->EmitEvent(BonusCaliberAppliedEvent{.name = _name});
 	}
@@ -323,17 +321,4 @@ bool Tank::IsTouchIce() const
 	});
 
 	return !bushCollisionsFilter.empty();
-}
-
-void Tank::ApplyScaleToCalibre(const float newScale)
-{
-	if (ColliderUtils::AreEqualAbsolute(newScale, 1))
-	{
-		return;
-	}
-
-	this->_calibre.speed *= newScale;
-	this->_calibre.damageRadius *= newScale;
-	this->_calibre.size.x *= newScale;
-	this->_calibre.size.y *= newScale;
 }

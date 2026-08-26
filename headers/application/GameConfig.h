@@ -1,10 +1,9 @@
 ﻿#pragma once
-#include "geometry/Point.h"
+#include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
 #include <chrono>
 
 struct LaunchOptions;
-struct WorldGeometry;
 class ProjectConfig;
 
 //NOTE: the live world - every field here changes while the game runs. Startup input (ini, asset
@@ -15,8 +14,6 @@ public:
 	explicit GameConfig(const ProjectConfig& projectConfig);
 
 	void Apply(const LaunchOptions& launchOptions);
-	//NOTE: the one place where a cell size turns into every other size - keep derivations out of the spawners
-	void ApplyGeometry(const WorldGeometry& geometry, std::size_t mapRows);
 	void ApplyWindowOffsetAsHost();
 	void ApplyWindowOffsetAsClient();
 
@@ -30,24 +27,20 @@ public:
 	[[nodiscard]] bool HasSecondPlayer() const { return ::HasSecondPlayer(gameMode); }
 	[[nodiscard]] bool ShouldPersistWindowPos() const { return !hasExplicitWindowPos && !IsHost() && !IsClient(); }
 	[[nodiscard]] bool ShouldPersistWindowSize() const { return !hasExplicitWindowSize && !IsHost() && !IsClient(); }
+	[[nodiscard]] UPoint LogicalSize() const;
 
 	UPoint windowSize{};
 	UPoint windowPos{};
-	UPoint windowSizeDefault{.x = 800u, .y = 600u};
 	UPoint windowsPosOffset{};
-	size_t sideBarWidth{175u};
+	UPoint battlefieldSize{WorldGeometry::kClassicBattlefieldSize};
+	size_t sideBarWidth{WorldGeometry::kSideBarWidth};
 	int tankHealth{100};
 	std::chrono::milliseconds enemySpawnCooldown{5000};
 	std::chrono::milliseconds bonusLifeTimeCooldown{15000};
-	float scaleFactor{1.f};
-	//NOTE: gridSize is a count - how many cells fit vertically; gridOffset is one cell in pixels
-	float gridSize{50.f};
-	float gridSizeDefault{50.f};
-	float gridOffset{600 / gridSize};
-	float tankSize{gridOffset * 3};
-	float tankSpeed{142};
-	float tankSpeedDefault{142};
-	int bonusSize{static_cast<int>(gridOffset * 3)};
+	float gridOffset{WorldGeometry::kCellSize};
+	float tankSize{gridOffset * 3.f};
+	float tankSpeed{142.f};
+	int bonusSize{static_cast<int>(tankSize)};
 	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
 	bool hasExplicitWindowPos{false};//NOTE: explicit pos wins over monitor centering
 	bool hasExplicitWindowSize{false};

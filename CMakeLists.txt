@@ -119,6 +119,9 @@ set(UNIT_TESTS_SOURCES
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
         UnitTests/GameStateTest.cpp
+        UnitTests/ClientMirrorTest.cpp
+        UnitTests/TankHealTest.cpp
+        UnitTests/MenuInputTest.cpp
         UnitTests/NetworkTest.cpp
         UnitTests/PauseSyncTest.cpp
         UnitTests/PlayerTest.cpp

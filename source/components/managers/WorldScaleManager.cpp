@@ -19,33 +19,12 @@ void WorldScaleManager::Subscribe()
 
 void WorldScaleManager::OnMapLoaded(const MapLoadedEvent& event)
 {
-	_cols = event.cols;
-	_rows = event.rows;
+	_gameConfig.battlefieldSize = WorldGeometry::ForMap(event.cols, event.rows);
 
-	Refit();
+	_events->EmitEvent(WorldGeometryChangedEvent{});
 }
 
 void WorldScaleManager::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
 {
 	_gameConfig.windowSize = event.newSize;
-
-	Refit();
-}
-
-void WorldScaleManager::Refit()
-{
-	//NOTE: no map yet means nothing to fit to - a resize before the first level is just a new window size
-	if (_cols == 0u || _rows == 0u)
-	{
-		return;
-	}
-
-	const float previousCellSize = _gameConfig.gridOffset;
-	const WorldGeometry geometry = WorldGeometry::FitMap(_gameConfig.windowSize, _cols, _rows);
-
-	_gameConfig.ApplyGeometry(geometry, _rows);
-
-	_events->EmitEvent(ScaleFactorChangedToEvent{.scale = _gameConfig.scaleFactor});
-	_events->EmitEvent(WorldGeometryChangedEvent{.cellSize = geometry.cellSize,
-												 .previousCellSize = previousCellSize});
 }

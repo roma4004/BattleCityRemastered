@@ -35,6 +35,22 @@ void GameStateManager::SetState(const GameState state)
 	}
 
 	_state = state;
+	AnnouncePhase();
+}
+
+void GameStateManager::AnnouncePhase()
+{
+	if (_state == GameState::Playing)
+	{
+		_events->EmitEvent(MatchStartedEvent{});
+	}
+
+	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
+}
+
+void GameStateManager::Resume()
+{
+	_state = GameState::Playing;
 	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
 }
 
@@ -50,7 +66,7 @@ void GameStateManager::OnGameModeApplied(const GameModeAppliedEvent& event)
 
 	//NOTE: announced even when the phase keeps its name - spawners act on entering one, not on a diff
 	_state = IdleStateForMode();
-	_events->EmitEvent(GameStateChangedToEvent{.state = _state});
+	AnnouncePhase();
 }
 
 void GameStateManager::OnPauseStatus(const PauseStatusEvent& event)
@@ -61,7 +77,7 @@ void GameStateManager::OnPauseStatus(const PauseStatusEvent& event)
 	}
 	else if (!event.isPaused && _state == GameState::Paused)
 	{
-		SetState(GameState::Playing);
+		Resume();
 	}
 }
 

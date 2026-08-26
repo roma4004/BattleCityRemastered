@@ -17,6 +17,10 @@ class ProjectConfig;
 struct SDL_Config final
 {
 	static constexpr const char* kWindowTitle{"Battle City remastered"};
+	static constexpr int kFontSizePtSmall{14};
+	static constexpr int kFontSizePtMedium{24};
+
+	[[nodiscard]] std::shared_ptr<TTF_Font> OpenFont(int pointSize) const;
 
 	SDL_Config(const GameConfig& config, const ProjectConfig& projectConfig);
 	~SDL_Config();
@@ -30,6 +34,7 @@ struct SDL_Config final
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
+	std::filesystem::path fontPath{};
 	std::shared_ptr<TTF_Font> fontSmall{nullptr};
 	std::shared_ptr<TTF_Font> fontMedium{nullptr};
 	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelIntroMusic{nullptr, nullptr};//TODO: soundManager

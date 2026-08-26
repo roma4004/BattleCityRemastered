@@ -98,7 +98,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const d
 float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 									   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	const auto [maxX, maxY] = _gameConfig.windowSize;
+	const auto [maxX, maxY] = _gameConfig.battlefieldSize;
 	auto minDist = static_cast<float>(maxX * maxY);
 	// float nearestDist = 0.f;
 	for (const auto& object: objects)
@@ -242,7 +242,7 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
 	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.Bottom() + speed < static_cast<float>(_gameConfig.windowSize.y))
+		_rect.Bottom() + speed < static_cast<float>(_gameConfig.battlefieldSize.y))
 	{
 		constexpr float maxMoveStep = 8.0f;
 		speed = std::min(speed, maxMoveStep);
@@ -284,7 +284,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 
 bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const float maxX = static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth);
+	const float maxX = static_cast<float>(_gameConfig.battlefieldSize.x);
 	if (float speed = _speed * static_cast<float>(deltaTime);
 		_rect.Right() + speed < maxX)
 	{
@@ -369,8 +369,8 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		const float windowSizeY = static_cast<float>(_gameConfig.windowSize.y);
-		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < windowSizeY)
+		const float maxY = static_cast<float>(_gameConfig.battlefieldSize.y);
+		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < maxY)
 		{
 			_rect.y += std::floor(speed);
 		}
@@ -380,7 +380,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 	}
 
 
-	const float maxX = static_cast<float>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth);
+	const float maxX = static_cast<float>(_gameConfig.battlefieldSize.x);
 	if (_rightVelocity > speed)
 	{
 		if (_rightVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay

@@ -93,21 +93,26 @@ std::expected<void, InitError> SDL_Config::InitFonts()
 		return std::unexpected(InitError{.stage = "TTF_Init Error", .detail = TTF_GetError()});
 	}
 
-	const std::string fontPath = projectConfig.ResourcePath("Fonts.BattleCity").string();
+	fontPath = projectConfig.ResourcePath("Fonts.BattleCity");
 
-	if (fontSmall = {TTF_OpenFont(fontPath.c_str(), 14), TTF_CloseFont};
+	if (fontSmall = OpenFont(kFontSizePtSmall);
 		fontSmall == nullptr)
 	{
 		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = TTF_GetError()});
 	}
 
-	if (fontMedium = {TTF_OpenFont(fontPath.c_str(), 24), TTF_CloseFont};
+	if (fontMedium = OpenFont(kFontSizePtMedium);
 		fontMedium == nullptr)
 	{
 		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = TTF_GetError()});
 	}
 
 	return {};
+}
+
+std::shared_ptr<TTF_Font> SDL_Config::OpenFont(const int pointSize) const
+{
+	return {TTF_OpenFont(fontPath.string().c_str(), pointSize), TTF_CloseFont};
 }
 
 std::expected<void, InitError> SDL_Config::InitTextures()

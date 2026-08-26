@@ -20,4 +20,3 @@ struct DespawnedEvent
 	Uuid uuid;
 	DespawnReason reason{DespawnReason::None};
 };
-

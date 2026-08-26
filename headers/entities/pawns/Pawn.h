@@ -29,6 +29,8 @@ public:
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
 
+	void Heal(int amount);
+
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);
 

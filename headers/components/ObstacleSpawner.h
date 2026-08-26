@@ -11,7 +11,7 @@ struct ObjRectangle;
 class BaseObj;
 class EventSystem;
 class GameConfig;
-struct GameStateChangedToEvent;
+struct MatchStartedEvent;
 struct LoadMapEvent;
 struct SpawnObstacleEvent;
 struct SpawnFortressWallEvent;
@@ -22,14 +22,13 @@ class ObstacleSpawner final
 	//TODO: to the level select, once there is more than one map
 	static constexpr auto kMapPath{"Resources/Maps/level1.map"};
 
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 	GameMode _gameMode{};
 
 	void Subscribe();
-	void OnGameStateChangedTo(const GameStateChangedToEvent& event) const;
+	void OnMatchStarted(const MatchStartedEvent&) const;
 	void OnLoadMap(const LoadMapEvent&) const;
 	void OnSpawnObstacle(const SpawnObstacleEvent& event);
 	void OnSpawnFortressWall(const SpawnFortressWallEvent& event);
@@ -41,8 +40,7 @@ class ObstacleSpawner final
 	// void SpawnRandomObstacle(ObjRectangle rect);
 
 public:
-	ObstacleSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-					const GameConfig& gameConfig);
+	ObstacleSpawner(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~ObstacleSpawner() = default;
 };

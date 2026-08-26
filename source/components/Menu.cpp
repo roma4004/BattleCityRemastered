@@ -9,8 +9,8 @@
 
 Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 0}
-	, _windowHeight{static_cast<int>(gameConfig.windowSize.y)}
-	, _yOffsetStart{static_cast<int>(gameConfig.windowSize.y)}
+	, _windowHeight{static_cast<int>(gameConfig.LogicalSize().y)}
+	, _yOffsetStart{static_cast<int>(gameConfig.LogicalSize().y)}
 	, _events{events}
 	, _input{std::make_unique<InputProviderForMenu>(events, gameConfig)}
 	, _selectedGameMode{GameMode::OnePlayer}

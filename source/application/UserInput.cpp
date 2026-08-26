@@ -1,5 +1,6 @@
 #include "application/UserInput.h"
 #include "application/GameConfig.h"
+#include "application/SDL_Config.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
@@ -12,11 +13,13 @@
 #include <algorithm>
 #include "utils/Log.h"
 
-UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
+UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
+					 SDL_Config& sdlConfig)
 	: _selectedGameMode{GameMode::Demo}
 	, _windowSize{gameConfig.windowSize}
 	, _events{events}
 	, _gameConfig{gameConfig}
+	, _sdlConfig{sdlConfig}
 {
 	Subscribe();
 
@@ -129,27 +132,41 @@ void UserInput::OnWindowDragStop()
 	}
 }
 
+SDL_Point UserInput::ToLogical(const int windowX, const int windowY) const
+{
+	float logicalX{};
+	float logicalY{};
+	SDL_RenderWindowToLogical(_sdlConfig.renderer.get(), windowX, windowY, &logicalX, &logicalY);
+
+	return SDL_Point{.x = static_cast<int>(logicalX), .y = static_cast<int>(logicalY)};
+}
+
 void UserInput::MouseEvents(const SDL_Event& event)
 {
-	if (event.button.button == SDL_BUTTON_LEFT)
+	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
-		if (event.type == SDL_MOUSEBUTTONDOWN)
-		{
-			_mouseButtons.MouseLeftButton = true;
-		}
+		_mouseButtons.MouseLeftButton = true;
 
-		if (event.type == SDL_MOUSEBUTTONUP)
+		const SDL_Point mouse = ToLogical(event.button.x, event.button.y);
+		if (_isMenuDisplayed && SDL_PointInRect(&mouse, &_allTilesRect))
 		{
-			_mouseButtons.MouseLeftButton = false;
 			_events->EmitEvent(EnterEvent{.isPressed = true});
 		}
 
 		return;
 	}
 
+	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
+	{
+		_mouseButtons.MouseLeftButton = false;
+		_events->EmitEvent(EnterEvent{.isPressed = false});
+
+		return;
+	}
+
 	if (event.type == SDL_MOUSEMOTION)
 	{
-		const SDL_Point mouse{.x = event.motion.x, .y = event.motion.y};
+		const SDL_Point mouse = ToLogical(event.motion.x, event.motion.y);
 
 		if (_isMenuDisplayed
 			&& SDL_PointInRect(&mouse, &_allTilesRect))

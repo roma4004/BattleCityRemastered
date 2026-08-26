@@ -30,9 +30,8 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
 
 	const float sightSizeUp{std::max(0.f, tankRect.y - 1.f)};
 	const float sightSizeLeft{std::max(0.f, tankRect.x - 1.f)};
-	const float sightSizeDown{static_cast<float>(gameConfig.windowSize.y) - bulletSpawnPosDown.y};
-	const float sightSizeRight{static_cast<float>(gameConfig.windowSize.x)
-							   - static_cast<float>(gameConfig.sideBarWidth) - bulletSpawnPosRight.x};
+	const float sightSizeDown{static_cast<float>(gameConfig.battlefieldSize.y) - bulletSpawnPosDown.y};
+	const float sightSizeRight{static_cast<float>(gameConfig.battlefieldSize.x) - bulletSpawnPosRight.x};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
 			{.x = bulletSpawnPosUp.x, .y = 0.f, .w = bulletSize.x, .h = sightSizeUp},
@@ -50,9 +49,8 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, std::vector<std::shared_pt
 {
 	const float sightSizeUp{std::max(0.f, tankRect.y - 1.f)};
 	const float sightSizeLeft{std::max(0.f, tankRect.x - 1.f)};
-	const float sightSizeDown{static_cast<float>(gameConfig.windowSize.y) - tankRect.y - tankRect.h - 1};
-	const float sightSizeRight{static_cast<float>(gameConfig.windowSize.x)
-							   - static_cast<float>(gameConfig.sideBarWidth) - tankRect.x - tankRect.w - 1};
+	const float sightSizeDown{static_cast<float>(gameConfig.battlefieldSize.y) - tankRect.y - tankRect.h - 1};
+	const float sightSizeRight{static_cast<float>(gameConfig.battlefieldSize.x) - tankRect.x - tankRect.w - 1};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
 			{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = sightSizeUp},

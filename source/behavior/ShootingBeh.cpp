@@ -39,7 +39,7 @@ ShootingBeh::~ShootingBeh() = default;
 float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	float minDist = static_cast<float>(_gameConfig.windowSize.x * _gameConfig.windowSize.y);
+	float minDist = static_cast<float>(_gameConfig.battlefieldSize.x * _gameConfig.battlefieldSize.y);
 	// float nearestDist = 0.f;
 	for (const auto& object: objects)
 	{
@@ -89,12 +89,12 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 		bulletRect.x = tankPos.x - bulletWidth - 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_gameConfig.windowSize.y))
+	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_gameConfig.battlefieldSize.y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY + 1;
 	}
-	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_gameConfig.windowSize.x))
+	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_gameConfig.battlefieldSize.x))
 	{
 		bulletRect.x = tankRightX + 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;

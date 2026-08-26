@@ -20,10 +20,8 @@
 
 class BaseObj;
 
-ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
-								 std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig)
-	: _allObjects{allObjects}
-	, _events{events}
+ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
+	: _events{events}
 	, _gameConfig{gameConfig}
 	, _gameMode{gameConfig.gameMode}
 {
@@ -32,7 +30,7 @@ ObstacleSpawner::ObstacleSpawner(const std::shared_ptr<EventSystem>& events,
 
 void ObstacleSpawner::Subscribe()
 {
-	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnGameStateChangedTo));
+	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnMatchStarted));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnLoadMap));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnObstacle));
 	_subs.push_back(_events->AddListener(this, &ObstacleSpawner::OnSpawnFortressWall));
@@ -43,9 +41,9 @@ void ObstacleSpawner::Subscribe()
 	}
 }
 
-void ObstacleSpawner::OnGameStateChangedTo(const GameStateChangedToEvent& event) const
+void ObstacleSpawner::OnMatchStarted(const MatchStartedEvent&) const
 {
-	if (event.state == GameState::Playing && !IsClient(_gameMode))
+	if (!IsClient(_gameMode))
 	{
 		LoadMap();
 	}

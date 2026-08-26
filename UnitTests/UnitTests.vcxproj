@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -52,6 +52,9 @@
     <ClCompile Include="EnemyBotTest.cpp" />
     <ClCompile Include="GameStateManagerTest.cpp" />
     <ClCompile Include="GameStateTest.cpp" />
+    <ClCompile Include="ClientMirrorTest.cpp" />
+    <ClCompile Include="TankHealTest.cpp" />
+    <ClCompile Include="MenuInputTest.cpp" />
     <ClCompile Include="NetworkTest.cpp" />
     <ClCompile Include="PauseSyncTest.cpp" />
     <ClCompile Include="PlayerTest.cpp" />

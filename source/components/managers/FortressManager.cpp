@@ -36,7 +36,6 @@ void FortressManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &FortressManager::OnSpotRegistered));
 	_subs.push_back(_events->AddListener(this, &FortressManager::OnBonusShovel));
 	_subs.push_back(_events->AddListener(this, &FortressManager::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &FortressManager::OnWorldGeometryChanged));
 }
 
 void FortressManager::OnGameReset(const GameResetEvent&) { _spots.clear(); }
@@ -56,25 +55,6 @@ void FortressManager::OnSpotRegistered(const FortressSpotRegisteredEvent& event)
 	}
 
 	_spots.push_back(Spot{.rect = event.rect, .wall = event.wall});
-}
-
-void FortressManager::OnWorldGeometryChanged(const WorldGeometryChangedEvent& event)
-{
-	constexpr float kNoticeableCellChange{0.001f};
-	if (event.previousCellSize <= 0.f
-		|| ColliderUtils::AreEqualAbsolute(event.cellSize, event.previousCellSize, kNoticeableCellChange))
-	{
-		return;
-	}
-
-	const float ratio = event.cellSize / event.previousCellSize;
-	for (Spot& spot: _spots)
-	{
-		spot.rect.x *= ratio;
-		spot.rect.y *= ratio;
-		spot.rect.w *= ratio;
-		spot.rect.h *= ratio;
-	}
 }
 
 bool FortressManager::IsSpotFree(const ObjRectangle& rect) const

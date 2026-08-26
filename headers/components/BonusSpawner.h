@@ -18,6 +18,7 @@ struct WorldGeometryChangedEvent;
 struct SpawnAnimationFinishedEvent;
 struct TickUpdateEvent;
 struct BonusSpawnedEvent;
+struct DespawnedEvent;
 
 class BonusSpawner final
 {
@@ -29,6 +30,8 @@ class BonusSpawner final
 		BonusType type{};
 		Uuid uuid{};
 		bool isSuper{};
+		bool isCancelled{};
+		EventSubscription despawn{};
 	};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -62,6 +65,7 @@ class BonusSpawner final
 	};
 
 	[[nodiscard]] RolledBonus RollBonus();
+	void ResetSpawnRanges();
 	void Materialize(const PendingSpawn& pending) const;
 	[[nodiscard]] Uuid AnnounceSpawn(ObjRectangle rect, BonusType type, Uuid uuid, bool isSuper) const;
 

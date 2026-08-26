@@ -30,6 +30,8 @@ struct GameStateChangedToEvent
 	GameState state;
 };
 
+struct MatchStartedEvent {};
+
 //NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL2 on this
 //MinGW/Windows toolchain) declares a WinAPI function literally named `ResetEvent` (synchapi.h),
 //which collides with a same-named struct in the global namespace (C++ tag names and function names
@@ -76,12 +78,6 @@ struct GameFinishedEvent
 
 struct RespawnTanksEvent {};
 
-struct ScaleFactorChangedToEvent
-{
-	float scale;
-};
-
-
 struct WindowSizeChangedToEvent
 {
 	UPoint newSize;
@@ -94,10 +90,4 @@ struct MapLoadedEvent
 	std::size_t rows;
 };
 
-//NOTE: carries both sizes because whoever already stands on the field has to be rescaled by their
-//ratio - the new size alone does not say by how much
-struct WorldGeometryChangedEvent
-{
-	float cellSize;
-	float previousCellSize;
-};
+struct WorldGeometryChangedEvent {};

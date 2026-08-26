@@ -35,7 +35,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, SDL_Confi
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
 	, _stateManager{std::make_unique<GameStateManager>(_events)}
-	, _userInput{std::make_unique<UserInput>(_events, gameConfig)}
+	, _userInput{std::make_unique<UserInput>(_events, gameConfig, sdlConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}
@@ -68,33 +68,8 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::OnPostTickUpdate));
 	_subs.push_back(_events->AddListener(this, &Game::OnDeltaTime));
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &Game::OnWorldGeometryChanged));
 	_subs.push_back(_events->AddListener(this, &Game::OnGameStateChangedTo));
-}
-
-//NOTE: whoever already stands on the field keeps its place in cells, not in pixels - so every rect
-//is scaled by how much the cell itself changed. Obstacles spawned after this already use the new one.
-void Game::OnWorldGeometryChanged(const WorldGeometryChangedEvent& event)
-{
-	constexpr float kNoticeableCellChange{0.001f};
-	if (event.previousCellSize <= 0.f
-		|| std::abs(event.cellSize - event.previousCellSize) < kNoticeableCellChange)
-	{
-		return;
-	}
-
-	const float ratio = event.cellSize / event.previousCellSize;
-	for (const std::shared_ptr<BaseObj>& obj: _allObjects)
-	{
-		if (!obj)
-		{
-			continue;
-		}
-
-		obj->SetPos(FPoint{.x = obj->GetX() * ratio, .y = obj->GetY() * ratio});
-		obj->SetWidth(obj->GetWidth() * ratio);
-		obj->SetHeight(obj->GetHeight() * ratio);
-	}
+	_subs.push_back(_events->AddListener(this, &Game::OnMatchStarted));
 }
 
 void Game::OnApplyGameMode(const ApplyGameModeEvent&) { ApplyGameMode(_selectedGameMode); }
@@ -190,16 +165,15 @@ void Game::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 	if (event.state == GameState::Lobby)
 	{
 		_isEnterLobbyPending = true;
-		return;
 	}
+}
 
-	if (event.state == GameState::Playing)
-	{
-		//NOTE: immediate - the host's replay rides the same queue drain, a later reset would wipe it
-		ResetBattlefield();
-		_events->EmitEvent(ShowMenuEvent{.show = false});
-		_events->EmitEvent(SetPauseEvent{.isPaused = false});
-	}
+void Game::OnMatchStarted(const MatchStartedEvent&)
+{
+	ResetBattlefield();
+
+	_events->EmitEvent(ShowMenuEvent{.show = false});
+	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 }
 
 //NOTE: the mode is kept - demoting to Demo tears the link down, and nobody could reconnect

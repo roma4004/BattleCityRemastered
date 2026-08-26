@@ -11,6 +11,7 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/TextureOffset.h"
+#include <cmath>
 #include <ranges>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
@@ -21,13 +22,14 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const G
 	: _events{events}
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}
-	, _fpsRectangle{CalcFpsPos(gameConfig.windowSize)}
+	, _fpsRectangle{CalcFpsPos(gameConfig.LogicalSize())}
 {
 	GenerateFpsTextures();
 
 	Subscribe();
 
 	InitMenu(gameConfig);
+	ApplyLogicalSize();
 }
 
 RenderManager::~RenderManager()
@@ -94,7 +96,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPlayerTwoIcons));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawStageNumber));
 
-	_subs.push_back(_events->AddListener(this, &RenderManager::OnWindowSizeChangedTo));
+	_subs.push_back(_events->AddListener(this, &RenderManager::OnWorldGeometryChanged));
 }
 
 void RenderManager::OnRenderText(const RenderTextEvent& event) const
@@ -102,13 +104,20 @@ void RenderManager::OnRenderText(const RenderTextEvent& event) const
 	TextToRender(event.pos, IntToColor(event.color), event.text);
 }
 
-void RenderManager::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
+void RenderManager::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
 {
-	//NOTE: windowSize itself is WorldScaleManager's to set - it subscribes first, so by now it has
-	_fpsRectangle = CalcFpsPos(event.newSize);
+	_fpsRectangle = CalcFpsPos(_gameConfig.LogicalSize());
 
-	SDL_RenderSetLogicalSize(_sdlConfig.renderer.get(), static_cast<int>(event.newSize.x),
-							 static_cast<int>(event.newSize.y));
+	InitMenu(_gameConfig);
+	ApplyLogicalSize();
+}
+
+void RenderManager::ApplyLogicalSize()
+{
+	const UPoint logicalSize = _gameConfig.LogicalSize();
+
+	SDL_RenderSetLogicalSize(_sdlConfig.renderer.get(), static_cast<int>(logicalSize.x),
+							 static_cast<int>(logicalSize.y));
 }
 
 void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
@@ -147,7 +156,7 @@ void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
 void RenderManager::DrawRightSideBar(const RenderRightSideBarEvent&) const
 {
 	SDL_Rect backgroundRect{RectToSdlRect(TextureOffset{}.rightSideBar)};
-	backgroundRect.x = static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth);
+	backgroundRect.x = static_cast<int>(_gameConfig.battlefieldSize.x);
 	constexpr unsigned int color{0xFF808080u};
 	constexpr Uint8 a{(color >> 24u) & 0xFFu};
 	constexpr Uint8 r{(color >> 16u) & 0xFFu};
@@ -161,7 +170,7 @@ void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent
 {
 	constexpr TextureOffset offset{};
 	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect dstRect{.x = posX, .y = 60, .w = 71, .h = 277};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIconBackground.x),
 							   .y = static_cast<int>(offset.enemyIconBackground.y),
@@ -184,7 +193,7 @@ void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 		constexpr int columns{2};
 		constexpr int iconBackgroundPadding{55};
 		constexpr int iconPadding{iconBackgroundPadding + 5};
-		const Point startPos{.x = static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + iconPadding,
+		const Point startPos{.x = static_cast<int>(_gameConfig.battlefieldSize.x) + iconPadding,
 							 .y = 65};
 		constexpr Point imageSize{.x = 30, .y = 25};
 		constexpr Point padding{.x = 1, .y = 2};
@@ -209,7 +218,7 @@ void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) co
 							   .h = static_cast<int>(offset.playerOneIcon.h)};
 
 	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect rect{.x = posX, .y = 350, .w = 71, .h = 70};
 	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
 
@@ -228,7 +237,7 @@ void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) co
 							   .h = static_cast<int>(offset.playerTwoIcon.h)};
 
 	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect rect{.x = posX, .y = 420, .w = 71, .h = 70};
 	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
 
@@ -247,7 +256,7 @@ void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 							   .h = static_cast<int>(offset.stageNumberFlag.h)};
 
 	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.windowSize.x - _gameConfig.sideBarWidth) + padding};
+	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect rect{.x = posX, .y = 490, .w = 71, .h = 95};
 	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
 
@@ -343,6 +352,37 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const
 	TextToRender(pos, color, std::to_string(value), isMediumFontSize);
 }
 
+float RenderManager::CurrentRenderScale() const
+{
+	float scaleX{1.f};
+	float scaleY{1.f};
+	SDL_RenderGetScale(_sdlConfig.renderer.get(), &scaleX, &scaleY);
+	const float scale = std::min(scaleX, scaleY);
+
+	return scale > 0.f ? scale : 1.f;
+}
+
+TTF_Font* RenderManager::FontForCurrentScale(const int basePointSize, const float scale) const
+{
+	const bool isMedium = basePointSize == SDL_Config::kFontSizePtMedium;
+	TTF_Font* const baseFont = isMedium ? _sdlConfig.fontMedium.get() : _sdlConfig.fontSmall.get();
+
+	const int pixelSize = static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
+	if (pixelSize == basePointSize)
+	{
+		return baseFont;
+	}
+
+	ScaledFont& slot = isMedium ? _mediumFont : _smallFont;
+
+	if (slot.pixelSize != pixelSize)
+	{
+		slot = ScaledFont{.pixelSize = pixelSize, .font = _sdlConfig.OpenFont(pixelSize)};
+	}
+
+	return slot.font ? slot.font.get() : baseFont;
+}
+
 void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text,
 								 const bool isMediumFontSize) const
 {
@@ -351,9 +391,12 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 		return;
 	}
 
+	const float scale = CurrentRenderScale();
+	const int basePointSize = isMediumFontSize ? SDL_Config::kFontSizePtMedium : SDL_Config::kFontSizePtSmall;
+
 	//TODO: optimize draw call with cache non changed text part
 	// save text surface in render field (lazy init)
-	const auto currentFont = isMediumFontSize ? _sdlConfig.fontMedium.get() : _sdlConfig.fontSmall.get();
+	const auto currentFont = FontForCurrentScale(basePointSize, scale);
 	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
 			TTF_RenderText_Solid(currentFont, text.c_str(), color), SDL_FreeSurface);
 	if (!surface)
@@ -370,7 +413,10 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 		return;
 	}
 
-	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = surface->w, .h = surface->h};
+	const SDL_Rect textRect{.x = pos.x,
+							.y = pos.y,
+							.w = static_cast<int>(static_cast<float>(surface->w) / scale),
+							.h = static_cast<int>(static_cast<float>(surface->h) / scale)};
 	SDL_RenderCopy(_sdlConfig.renderer.get(), texture.get(), nullptr, &textRect);
 }
 
@@ -573,7 +619,7 @@ void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
 
 void RenderManager::InitMenu(const GameConfig& gameConfig)
 {
-	_menuParams.Init(gameConfig.windowSize, gameConfig.sideBarWidth);
+	_menuParams.Init(gameConfig.LogicalSize(), gameConfig.sideBarWidth);
 
 	constexpr unsigned int grayColor = 0x808080u;
 	CreateColorTexture(grayColor);

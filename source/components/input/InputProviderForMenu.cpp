@@ -152,6 +152,5 @@ void InputProviderForMenu::MenuUpdate()
 	if (menuKeysStats.reset)
 	{
 		_events->EmitEvent(ApplyGameModeEvent{});
-		_events->EmitEvent(ShowMenuEvent{.show = false});
 	}
 }

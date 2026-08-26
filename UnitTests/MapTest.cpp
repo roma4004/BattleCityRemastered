@@ -113,41 +113,46 @@ TEST(MapLoaderTest, ShippedLevelOneParses)
 	EXPECT_EQ(map->rows, 50u);
 }
 
-TEST(WorldGeometryTest, ClassicMapKeepsTheClassicCellAndSideBar)
+TEST(WorldGeometryTest, ClassicMapKeepsTheClassicField)
 {
-	//NOTE: 52x50 in an 800x600 window is what the game shipped with - the refactor must not move it
-	const WorldGeometry geometry = WorldGeometry::FitMap(UPoint{.x = 800u, .y = 600u}, 52u, 50u);
+	const UPoint battlefieldSize = WorldGeometry::ForMap(52u, 50u);
 
-	EXPECT_FLOAT_EQ(geometry.cellSize, 12.f);
-	EXPECT_EQ(geometry.battlefieldSize.x, 624u);
-	EXPECT_EQ(geometry.battlefieldSize.y, 600u);
-	EXPECT_EQ(geometry.sideBarWidth, 176u);
+	EXPECT_EQ(battlefieldSize.x, 624u);
+	EXPECT_EQ(battlefieldSize.y, 600u);
 }
 
-TEST(WorldGeometryTest, WideMapSqueezesTheSideBarFirst)
+TEST(WorldGeometryTest, WideMapWidensTheWorldInsteadOfShrinkingTheCell)
 {
-	const WorldGeometry geometry = WorldGeometry::FitMap(UPoint{.x = 800u, .y = 600u}, 80u, 50u);
+	const UPoint battlefieldSize = WorldGeometry::ForMap(80u, 50u);
 
-	//NOTE: the bar gave up everything it could, and only then did the cell shrink below 12
-	EXPECT_EQ(geometry.sideBarWidth, WorldGeometry::kMinSideBarWidth);
-	EXPECT_FLOAT_EQ(geometry.cellSize, 8.5f);
+	EXPECT_EQ(battlefieldSize.x, 960u);
+	EXPECT_EQ(battlefieldSize.y, 600u);
 }
 
-TEST(WorldGeometryTest, TallMapLeavesTheBottomEmptyRatherThanStretching)
+TEST(WorldGeometryTest, TallMapMakesTheWorldTaller)
 {
-	const WorldGeometry geometry = WorldGeometry::FitMap(UPoint{.x = 800u, .y = 600u}, 52u, 100u);
+	const UPoint battlefieldSize = WorldGeometry::ForMap(52u, 100u);
 
-	//NOTE: the cell stays square, so half the height of the window is simply not used
-	EXPECT_FLOAT_EQ(geometry.cellSize, 6.f);
-	EXPECT_EQ(geometry.battlefieldSize.y, 600u);
-	EXPECT_EQ(geometry.battlefieldSize.x, 312u);
+	EXPECT_EQ(battlefieldSize.x, 624u);
+	EXPECT_EQ(battlefieldSize.y, 1200u);
 }
 
-TEST(WorldGeometryTest, EmptyMapProducesNothingToFit)
+TEST(WorldGeometryTest, EmptyMapProducesNoWorld)
 {
-	const WorldGeometry geometry = WorldGeometry::FitMap(UPoint{.x = 800u, .y = 600u}, 0u, 0u);
+	const UPoint battlefieldSize = WorldGeometry::ForMap(0u, 0u);
 
-	EXPECT_FLOAT_EQ(geometry.cellSize, 0.f);
+	EXPECT_EQ(battlefieldSize.x, 0u);
+	EXPECT_EQ(battlefieldSize.y, 0u);
+}
+
+TEST(WorldGeometryTest, LogicalSizeIsTheFieldPlusTheBar)
+{
+	ProjectConfig projectConfig{"", true};
+	GameConfig gameConfig{projectConfig};
+	gameConfig.battlefieldSize = WorldGeometry::ForMap(52u, 50u);
+
+	EXPECT_EQ(gameConfig.LogicalSize().x, 624u + WorldGeometry::kSideBarWidth);
+	EXPECT_EQ(gameConfig.LogicalSize().y, 600u);
 }
 
 //NOTE: the host sizes an eagle from the map, the client from a spawn event carrying only a position -
@@ -161,7 +166,7 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 	ProjectConfig projectConfig{"", true};
 	GameConfig gameConfig{projectConfig};
 	gameConfig.gameMode = GameMode::PlayAsClient;
-	const ObstacleSpawner spawner{events, &allObjects, gameConfig};
+	const ObstacleSpawner spawner{events, gameConfig};
 
 	const float cell{gameConfig.gridOffset};
 	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.f, .y = 0.f}, .type = ObstacleType::Eagle,

@@ -19,7 +19,7 @@ ScoreBoard::ScoreBoard(const std::shared_ptr<EventSystem>& events, const GameCon
 {
 	Subscribe();
 
-	_windowHeight = static_cast<int>(gameConfig.windowSize.y);
+	_windowHeight = static_cast<int>(gameConfig.LogicalSize().y);
 }
 
 ScoreBoard::~ScoreBoard() = default;
