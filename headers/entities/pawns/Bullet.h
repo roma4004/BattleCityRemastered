@@ -23,6 +23,7 @@ class Bullet final : public Pawn, public IDrawable
 	friend ShootingBeh;
 
 	std::string _author{};
+	Uuid _authorUuid{};
 	BulletCalibre _calibre{};
 
 	void SubscribeAsClient() override;

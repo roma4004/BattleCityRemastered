@@ -8,9 +8,11 @@
 #include <memory>
 #include <ranges>
 
-MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const GameConfig& gameConfig,
-									 const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects)
+MoveLikeBulletBeh::MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const Uuid& authorUuid,
+									 const GameConfig& gameConfig, const BulletCalibre& calibre,
+									 std::vector<std::shared_ptr<BaseObj>>* allObjects)
 	: _uuid{uuid}
+	, _authorUuid{authorUuid}
 	, _rect{rect}
 	, _direction{dir}
 	, _gameConfig{gameConfig}
@@ -66,13 +68,20 @@ FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime) const
 	return FPoint{.x = x + speed, .y = y};
 }
 
+bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const
+{
+	const Uuid objectUuid = object.GetUuid();
+
+	return objectUuid == _uuid || (_authorUuid != Uuid{} && objectUuid == _authorUuid);
+}
+
 bool MoveLikeBulletBeh::IsCanMove(const double deltaTime, const Direction /*dir*/) const
 {
 	const ObjRectangle nextPosRect = GetNextPos(deltaTime);
 
-	return std::ranges::none_of(*_allObjects, [uuid = _uuid, nextPosRect](const std::shared_ptr<BaseObj>& object)
+	return std::ranges::none_of(*_allObjects, [this, nextPosRect](const std::shared_ptr<BaseObj>& object)
 	{
-		return uuid != object->GetUuid()
+		return !IsSelfOrAuthor(*object)
 			   && ColliderUtils::IsCollide(nextPosRect, object->GetRect())
 			   && !object->GetIsPenetrable();
 	});

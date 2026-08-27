@@ -16,5 +16,6 @@ struct BulletResetProperty
 	std::string author{};
 	Faction faction{};
 	Uuid uuid{};
+	Uuid authorUuid{};
 	BulletCalibre calibre{};
 };

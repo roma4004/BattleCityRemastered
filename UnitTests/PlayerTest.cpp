@@ -13,12 +13,14 @@
 #include "entities/obstacles/FortressWalls.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/obstacles/WaterTile.h"
+#include "entities/pawns/Bullet.h"
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
+#include <algorithm>
 #include <memory>
 
 class PlayerTest : public testing::Test// NOLINT(clang-diagnostic-padded)
@@ -635,4 +637,66 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(startPos, player->GetPos());
+}
+
+// Check that a bullet fired in the direction of travel is not blown up by its own tank
+TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
+					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const int startHealth = player->GetHealth();
+	const auto aliveBullets = [this]
+	{
+		return std::ranges::count_if(_allObjects, [](const std::shared_ptr<BaseObj>& obj)
+		{
+			return dynamic_cast<Bullet*>(obj.get()) != nullptr && obj->GetIsAlive();
+		});
+	};
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent(Key(PlayerSlot::P1), MoveLeftEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	ASSERT_EQ(aliveBullets(), 1) << "no bullet was spawned";
+
+	for (int frame = 0; frame < 5; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	}
+
+	EXPECT_EQ(aliveBullets(), 1) << "bullet died on its own tank";
+	EXPECT_EQ(player->GetHealth(), startHealth) << "tank damaged by its own bullet";
+}
+
+// Check that the blast of your own bullet still reaches you when firing point-blank at a wall
+TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
+{
+	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
+	std::shared_ptr<Player> player =
+			TestUtils::CreateTank<Player>(
+					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
+					Direction::LEFT, _gameMode, _bulletPool, _gameConfig);
+	_allObjects.emplace_back(player);
+
+	const ObjRectangle rectWall{.x = rectPlayer.x - _gridSize - 12.f, .y = rectPlayer.y, .w = _gridSize, .h = _tankSize};
+	_allObjects.emplace_back(std::make_shared<SteelWall>(rectWall, _events, _uuid, _gameMode));
+
+	const int startHealth = player->GetHealth();
+
+	constexpr bool isPressed{true};
+	_events->EmitEvent(Key(PlayerSlot::P1), FireEvent{.isPressed = isPressed});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
+
+	EXPECT_LT(player->GetHealth(), startHealth) << "own blast did not reach the shooter";
 }

@@ -123,6 +123,7 @@ Uuid ShootingBeh::Shot(const Uuid uuid)
 				.author = _name,
 				.faction = _faction,
 				.uuid = uuid,
+				.authorUuid = _uuid,
 				.calibre = _calibre,
 		};
 

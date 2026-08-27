@@ -24,7 +24,7 @@ Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const Bu
 	, _calibre{calibre}
 {
 	// NOTE: needed only for tests, TODO in test use tank shoot for bulletPool use instead of creating bullet
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, _calibre, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, _calibre, _allObjects);
 
 	if (enableByDefault)
 	{
@@ -104,11 +104,12 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	}
 	else
 	{
-		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _gameConfig, resetProperty.calibre,
+		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, resetProperty.calibre,
 													   _allObjects);
 	}
 
 	_author = std::move(resetProperty.author);
+	_authorUuid = resetProperty.authorUuid;
 	_faction = std::move(resetProperty.faction);
 	_calibre = resetProperty.calibre;
 

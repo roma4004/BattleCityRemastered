@@ -16,6 +16,7 @@ class GameConfig;
 class MoveLikeBulletBeh final : public IMoveBeh
 {
 	Uuid& _uuid;
+	const Uuid& _authorUuid;
 	ObjRectangle& _rect;
 	Direction& _direction;
 	const GameConfig& _gameConfig;
@@ -23,6 +24,7 @@ class MoveLikeBulletBeh final : public IMoveBeh
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
+	[[nodiscard]] bool IsSelfOrAuthor(const BaseObj& object) const;
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetCircleCollisionObjects(FPoint blowCenter) const;
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir) const override;
 	[[nodiscard]] ObjRectangle GetNextPos(double deltaTime) const;
@@ -35,8 +37,9 @@ protected:
 	[[nodiscard]] bool MoveRight(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;
 
 public:
-	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const GameConfig& gameConfig,
-					  const BulletCalibre& calibre, std::vector<std::shared_ptr<BaseObj>>* allObjects);
+	MoveLikeBulletBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, const Uuid& authorUuid,
+					  const GameConfig& gameConfig, const BulletCalibre& calibre,
+					  std::vector<std::shared_ptr<BaseObj>>* allObjects);
 
 	~MoveLikeBulletBeh() override = default;
 
