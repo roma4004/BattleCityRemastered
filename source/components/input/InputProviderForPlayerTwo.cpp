@@ -1,17 +1,18 @@
 #include "components/input/InputProviderForPlayerTwo.h"
 #include "components/EventSystem.h"
 #include "components/events/InputEvents.h"
+#include "enums/PlayerSlot.h"
 
 InputProviderForPlayerTwo::InputProviderForPlayerTwo(const std::shared_ptr<EventSystem>& events)
 	: _events{events} {}
 
 void InputProviderForPlayerTwo::Subscribe()
 {
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveUp));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveLeft));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveDown));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnMoveRight));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForPlayerTwo::OnFire));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForPlayerTwo::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForPlayerTwo::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForPlayerTwo::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForPlayerTwo::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForPlayerTwo::OnFire));
 }
 
 void InputProviderForPlayerTwo::OnMoveUp(const MoveUpEvent& event) { _playerKeys.up = event.isPressed; }

@@ -99,23 +99,35 @@ void Session::OnSignalEvent(const AnyCommand& command)
 //NOTE: dispatch table instead of a switch, same shape as the command handlers above
 const std::unordered_map<InputSignal, Session::InputEmitter> Session::kInputEmitters{
 		{InputSignal::MoveUp,
-		 [](EventSystem& events, const std::string& tag, const bool pressed)
-		 { events.EmitEvent(Key(tag), ServerInMoveUpEvent{.isPressed = pressed}); }},
+		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
+		 {
+			 events.EmitEvent(Key(slot), ServerInMoveUpEvent{.isPressed = pressed});
+		 }},
 		{InputSignal::MoveDown,
-		 [](EventSystem& events, const std::string& tag, const bool pressed)
-		 { events.EmitEvent(Key(tag), ServerInMoveDownEvent{.isPressed = pressed}); }},
+		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
+		 {
+			 events.EmitEvent(Key(slot), ServerInMoveDownEvent{.isPressed = pressed});
+		 }},
 		{InputSignal::MoveLeft,
-		 [](EventSystem& events, const std::string& tag, const bool pressed)
-		 { events.EmitEvent(Key(tag), ServerInMoveLeftEvent{.isPressed = pressed}); }},
+		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
+		 {
+			 events.EmitEvent(Key(slot), ServerInMoveLeftEvent{.isPressed = pressed});
+		 }},
 		{InputSignal::MoveRight,
-		 [](EventSystem& events, const std::string& tag, const bool pressed)
-		 { events.EmitEvent(Key(tag), ServerInMoveRightEvent{.isPressed = pressed}); }},
+		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
+		 {
+			 events.EmitEvent(Key(slot), ServerInMoveRightEvent{.isPressed = pressed});
+		 }},
 		{InputSignal::Fire,
-		 [](EventSystem& events, const std::string& tag, const bool pressed)
-		 { events.EmitEvent(Key(tag), ServerInFireEvent{.isPressed = pressed}); }},
+		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
+		 {
+			 events.EmitEvent(Key(slot), ServerInFireEvent{.isPressed = pressed});
+		 }},
 		{InputSignal::PauseReleased,
-		 [](EventSystem& events, const std::string&, const bool)
-		 { events.EmitEvent(PauseReleasedEvent{}); }},
+		 [](EventSystem& events, PlayerSlot, const bool)
+		 {
+			 events.EmitEvent(PauseReleasedEvent{});
+		 }},
 };
 
 void Session::OnKeyStateChange(const AnyCommand& command)
@@ -126,12 +138,13 @@ void Session::OnKeyStateChange(const AnyCommand& command)
 		if (it == kInputEmitters.end())
 		{
 			Log::Error("Session::OnKeyStateChange: unhandled input signal "
-									  + std::to_string(static_cast<int>(cmd.action)));
+					   + std::to_string(static_cast<int>(cmd.action)));
 			return;
 		}
 
-		//NOTE: the local bus is still keyed by the "P1"/"P2" string, only the wire is typed
-		it->second(*_events, cmd.tag == PlayerTag::P1 ? "P1" : "P2", cmd.isPressed);
+		const auto& emit = it->second;
+		const auto& playerSlot = cmd.tag == PlayerTag::P1 ? PlayerSlot::P1 : PlayerSlot::P2;
+		emit(*_events, playerSlot, cmd.isPressed);
 	});
 }
 

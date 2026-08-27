@@ -18,6 +18,7 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
+#include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
 #include <memory>
@@ -114,7 +115,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P1), MoveDownEvent{.isPressed = isPressed});
 
 	// register a fortress wall
 	const ObjRectangle fortressRect{.x = _tankSize * 3.f + 1.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};

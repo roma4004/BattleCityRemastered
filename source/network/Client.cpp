@@ -8,6 +8,7 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "enums/CommandType.h"
+#include "enums/PlayerSlot.h"
 #include "enums/StatisticsType.h"
 #include "network/commands/CommandBatch.h"
 #include "network/Serializer.h"
@@ -191,12 +192,12 @@ void Client::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
 
-	//NOTE: local dispatch is keyed by the "P2" string; on the wire the tag is PlayerTag::P2
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveUp));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveLeft));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveDown));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnMoveRight));
-	_subs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &Client::OnFire));
+	//NOTE: local dispatch is keyed by PlayerSlot::P2; on the wire the tag is PlayerTag::P2
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnFire));
 
 	_subs.push_back(_events->AddListener(this, &Client::OnClientOutReadyToPlay));
 	_subs.push_back(_events->AddListener(this, &Client::OnPauseRequested));

@@ -545,6 +545,9 @@
     <ClInclude Include="..\headers\enums\ObstacleType.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\PlayerSlot.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\PlayerTag.h">
       <Filter>headers\enums</Filter>
     </ClInclude>

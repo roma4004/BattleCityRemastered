@@ -4,6 +4,7 @@
 #include "../components/input/MouseButton.h"
 #include "components/EventSystem.h"
 #include "components/input/InputProviderForMenu.h"
+#include "enums/PlayerSlot.h"
 #include <SDL_gamecontroller.h>
 #include <SDL_rect.h>
 #include <chrono>
@@ -73,7 +74,7 @@ class UserInput final
 	void InitControllers();
 	void ConnectController(const std::shared_ptr<SDL_GameController>& newController);
 	void DisconnectController(SDL_JoystickID instanceId);
-	[[nodiscard]] std::string ControllerTagDefiner(SDL_JoystickID instanceId) const;
+	[[nodiscard]] PlayerSlot ControllerSlotDefiner(SDL_JoystickID instanceId) const;
 	[[nodiscard]] static bool IsSameController(const std::shared_ptr<SDL_GameController>& controller,
 											   SDL_JoystickID instanceId);
 	void InitMouseHoverTiles(Point menuPos);

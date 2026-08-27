@@ -90,7 +90,7 @@ void UserInput::SwapControllers(const TabReleasedEvent&)
 	Log::Info("controllers swap state: " + std::to_string(_areControllersSwapped));// left while visual label is absent
 }
 
-std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) const
+PlayerSlot UserInput::ControllerSlotDefiner(const SDL_JoystickID instanceId) const
 {
 	bool isFirst{true};
 	if (SDL_NumJoysticks() > 1)
@@ -109,10 +109,10 @@ std::string UserInput::ControllerTagDefiner(const SDL_JoystickID instanceId) con
 
 	if (isFirst)
 	{
-		return _areControllersSwapped ? "P2" : "P1";
+		return _areControllersSwapped ? PlayerSlot::P2 : PlayerSlot::P1;
 	}
 
-	return _areControllersSwapped ? "P1" : "P2";
+	return _areControllersSwapped ? PlayerSlot::P1 : PlayerSlot::P2;
 }
 
 void UserInput::OnWindowDragStop()
@@ -187,40 +187,40 @@ void UserInput::MouseEvents(const SDL_Event& event)
 
 void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
-	const std::string keyboardLeftSideTag(_areControllersSwapped ? "P2" : "P1");
-	const std::string keyboardRightSideTag(_areControllersSwapped ? "P1" : "P2");
+	const PlayerSlot keyboardLeftSideSlot{_areControllersSwapped ? PlayerSlot::P2 : PlayerSlot::P1};
+	const PlayerSlot keyboardRightSideSlot{_areControllersSwapped ? PlayerSlot::P1 : PlayerSlot::P2};
 
 	switch (event.key.keysym.sym)
 	{
 		case SDLK_w:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_UP:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardRightSideSlot), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_a:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_LEFT:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardRightSideSlot), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_s:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_DOWN:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardRightSideSlot), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_d:
-			_events->EmitEvent(Key(keyboardLeftSideTag), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RIGHT:
-			_events->EmitEvent(Key(keyboardRightSideTag), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardRightSideSlot), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_SPACE:
-			_events->EmitEvent(Key(keyboardLeftSideTag), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardLeftSideSlot), FireEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RCTRL:
-			_events->EmitEvent(Key(keyboardRightSideTag), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(keyboardRightSideSlot), FireEvent{.isPressed = isPressed});
 			break;
 		case SDLK_m:
 			if (isPressed == false)
@@ -268,28 +268,28 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 {
 	if (SDL_NumJoysticks() > 0)
 	{
-		const std::string controllerTag{ControllerTagDefiner(event.cdevice.which)};
+		const PlayerSlot controllerSlot{ControllerSlotDefiner(event.cdevice.which)};
 
 		switch (event.cbutton.button)
 		{
 			case SDL_CONTROLLER_BUTTON_A:
-				_events->EmitEvent(Key(controllerTag), FireEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(controllerSlot), FireEvent{.isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_B:
 				//NOTE: no listener consumes this yet
-				_events->EmitEvent(GamepadButtonEvent{.controllerTag = controllerTag,
+				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::B,
 													  .isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_X:
 				//NOTE: no listener consumes this yet
-				_events->EmitEvent(GamepadButtonEvent{.controllerTag = controllerTag,
+				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::X,
 													  .isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_Y:
 				//NOTE: no listener consumes this yet
-				_events->EmitEvent(GamepadButtonEvent{.controllerTag = controllerTag,
+				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::Y,
 													  .isPressed = isPressed});
 				if (isPressed == false)
@@ -298,16 +298,16 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 				}
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_UP:
-				_events->EmitEvent(Key(controllerTag), MoveUpEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(controllerSlot), MoveUpEvent{.isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-				_events->EmitEvent(Key(controllerTag), MoveDownEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(controllerSlot), MoveDownEvent{.isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-				_events->EmitEvent(Key(controllerTag), MoveLeftEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(controllerSlot), MoveLeftEvent{.isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-				_events->EmitEvent(Key(controllerTag), MoveRightEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(controllerSlot), MoveRightEvent{.isPressed = isPressed});
 				break;
 			case SDL_CONTROLLER_BUTTON_START:
 				if (isPressed == false)

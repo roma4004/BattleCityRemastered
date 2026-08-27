@@ -3,6 +3,7 @@
 #include "PeerLink.h"
 #include "enums/DisconnectReason.h"
 #include "enums/InputSignal.h"
+#include "enums/PlayerSlot.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -31,7 +32,7 @@ public:
 	void Shutdown(DisconnectReason reason, std::function<void()> onClosed);
 
 private:
-	using InputEmitter = std::function<void(EventSystem&, const std::string&, bool)>;
+	using InputEmitter = std::function<void(EventSystem&, PlayerSlot, bool)>;
 
 	void RegisterCommandHandlers();
 	void OnSignalEvent(const AnyCommand& command);

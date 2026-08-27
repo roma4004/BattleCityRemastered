@@ -19,6 +19,7 @@
 #include "enums/BonusType.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/PlayerSlot.h"
 #include "utils/UuidUtils.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
@@ -377,7 +378,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 
 	bool isGameLose{false};
 	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P1), MoveDownEvent{.isPressed = isPressed});
 
 	auto gameLoseSub = _events->AddListener([&isGameLose](const GameFinishedEvent& event)
 	{
@@ -473,7 +474,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	}
 
 	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P1), MoveUpEvent{.isPressed = isPressed});
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTimeOneFrame});
 
 	EXPECT_EQ(respawnPlayerOneActual, 1u);

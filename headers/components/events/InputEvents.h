@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "enums/PlayerSlot.h"
 
 // The zero-arg ones need a unique empty tag struct for the same reason as CoreLifecycleEvents.h.
 // The bare-bool ones need a unique single-field struct so two unrelated bool events don't collide
@@ -100,7 +100,7 @@ enum class GamepadButton : char8_t
 
 struct GamepadButtonEvent
 {
-	std::string controllerTag;
+	PlayerSlot controllerSlot;
 	GamepadButton button;
 	bool isPressed;
 };

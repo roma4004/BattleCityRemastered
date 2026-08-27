@@ -274,6 +274,7 @@
     <ClInclude Include="..\headers\enums\DespawnReason.h" />
     <ClInclude Include="..\headers\enums\DisconnectReason.h" />
     <ClInclude Include="..\headers\enums\InputSignal.h" />
+    <ClInclude Include="..\headers\enums\PlayerSlot.h" />
     <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
     <ClInclude Include="..\headers\enums\Faction.h" />

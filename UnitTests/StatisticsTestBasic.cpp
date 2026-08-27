@@ -16,6 +16,7 @@
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/PlayerSlot.h"
 #include "gtest/gtest.h"
 #include "enums/Faction.h"
 #include <memory>
@@ -799,7 +800,7 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerOneCount)
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P1"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P1), MoveDownEvent{.isPressed = isPressed});
 
 	EXPECT_EQ(_statistics->GetBonusPickupByEnemyTeam(), 0u);
 	EXPECT_EQ(_statistics->GetBonusPickupByPlayerOne(), 0u);
@@ -823,7 +824,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerOneNotCount)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P1"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P1), MoveUpEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnRandomBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
@@ -849,7 +850,7 @@ TEST_F(StatisticsTest, BonusPickUpByPlayerTwoCount)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player2);
 	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P2"}), MoveDownEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P2), MoveDownEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 
@@ -875,7 +876,7 @@ TEST_F(StatisticsTest, BonusNotPickUpByPlayerTwoNotCount)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player2);
 	constexpr bool isPressed{true};
-	_events->EmitEvent(Key(std::string{"P2"}), MoveUpEvent{.isPressed = isPressed});
+	_events->EmitEvent(Key(PlayerSlot::P2), MoveUpEvent{.isPressed = isPressed});
 
 	_bonusSpawner->SpawnRandomBonus({.x = _tankSize + 1.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize});
 

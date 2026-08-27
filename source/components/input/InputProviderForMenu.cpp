@@ -6,6 +6,7 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
+#include "enums/PlayerSlot.h"
 
 InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
@@ -66,13 +67,15 @@ void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 // Subscribe() registered into _subs for the lifetime of this object.
 void InputProviderForMenu::EnableMenuInput()
 {
-	_menuNavSubs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForMenu::OnMenuNavUp));
-	_menuNavSubs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForMenu::OnMenuNavDown));
-	_menuNavSubs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForMenu::OnMenuNavUp));
-	_menuNavSubs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForMenu::OnMenuNavDown));
 	_menuNavSubs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuNavEnter));
-	_menuNavSubs.push_back(_events->AddListener(Key(std::string{"P1"}), this, &InputProviderForMenu::OnMenuNavFire));
-	_menuNavSubs.push_back(_events->AddListener(Key(std::string{"P2"}), this, &InputProviderForMenu::OnMenuNavFire));
+
+	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P1), this, &InputProviderForMenu::OnMenuNavUp));
+	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P1), this, &InputProviderForMenu::OnMenuNavDown));
+	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P1), this, &InputProviderForMenu::OnMenuNavFire));
+
+	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForMenu::OnMenuNavUp));
+	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForMenu::OnMenuNavDown));
+	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForMenu::OnMenuNavFire));
 }
 
 void InputProviderForMenu::OnMenuNavUp(const MoveUpEvent& event) { _keys.up = event.isPressed; }
@@ -121,6 +124,7 @@ void InputProviderForMenu::TogglePause()
 		_events->EmitEvent(PauseRequestedEvent{.isPaused = _keys.pause});
 	}
 }
+
 [[nodiscard]] bool InputProviderForMenu::GetPause() const { return _keys.pause; }
 
 void InputProviderForMenu::SetPause(bool value)
