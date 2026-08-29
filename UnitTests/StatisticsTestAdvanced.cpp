@@ -1,6 +1,5 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
 #include "components/GameStatistics.h"
@@ -16,10 +15,9 @@ class StatisticsTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-pa
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<GameStatistics> _statistics{nullptr};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
 	float _tankSize{};
 	unsigned short _bulletHealth{1u};
@@ -31,7 +29,7 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		const float gridSize = _gameConfig.gridOffset;
 		_tankSize = gridSize * 3.f;// for better turns
 
 		CreateBullet({.x = 0.f, .y = 5.f}, Direction::DOWN, 1u, "Bullet1", Faction::PlayerTeam, "Player1");

@@ -1,6 +1,5 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -39,10 +38,9 @@ protected:
 	std::unique_ptr<ObstacleSpawner> _obstacleSpawner{nullptr};
 	std::shared_ptr<BaseObj> _fortressWall{nullptr};
 	EventSubscription _fortressWallSub{};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	float _tankSize{};
 	float _gridSize{};
@@ -66,7 +64,7 @@ protected:
 		_fortressManager = std::make_unique<FortressManager>(_events, &_allObjects);
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
-		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		_gridSize = _gameConfig.gridOffset;
 		_tankSize = _gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(4);

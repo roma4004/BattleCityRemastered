@@ -13,6 +13,7 @@
 
 class GameConfig;
 class ProjectConfig;
+class WindowConfig;
 
 struct SDL_Config final
 {
@@ -22,7 +23,7 @@ struct SDL_Config final
 
 	[[nodiscard]] std::shared_ptr<TTF_Font> OpenFont(int pointSize) const;
 
-	SDL_Config(const GameConfig& config, const ProjectConfig& projectConfig);
+	SDL_Config(const GameConfig& config, const ProjectConfig& projectConfig, const WindowConfig& windowConfig);
 	~SDL_Config();
 
 	[[nodiscard]] std::expected<void, InitError> Init();
@@ -37,6 +38,7 @@ struct SDL_Config final
 
 	const GameConfig& gameConfig;
 	const ProjectConfig& projectConfig;
+	const WindowConfig& windowConfig;
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
@@ -79,6 +81,11 @@ private:
 	[[nodiscard]] std::expected<void, InitError> RebuildTexture(const std::shared_ptr<SDL_Surface>& surface,
 																std::shared_ptr<SDL_Texture>& outTexture,
 																std::string_view name) const;
+
+	//NOTE: an explicit --window-pos/-size is a one-off, and a host/client window is placed by offset -
+	//neither belongs in the ini
+	[[nodiscard]] bool ShouldPersistWindowPos() const;
+	[[nodiscard]] bool ShouldPersistWindowSize() const;
 
 	[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow() const;
 	[[nodiscard]] std::shared_ptr<SDL_Renderer> InitRender() const;

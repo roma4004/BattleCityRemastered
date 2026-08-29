@@ -1,11 +1,9 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
 #include "enums/GameMode.h"
@@ -19,8 +17,7 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	EventSubscription _spawnQueueSub{};
 

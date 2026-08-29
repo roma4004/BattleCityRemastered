@@ -1,6 +1,5 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -33,10 +32,9 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};// Uuid keeps boost::uuids::uuid's 8-byte alignment
 	float _tankSize{};
 	float _tankSpeed{142};
@@ -55,7 +53,7 @@ protected:
 		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
-		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		_gridSize = _gameConfig.gridOffset;
 		_tankSize = _gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(4u);
@@ -69,7 +67,7 @@ protected:
 // Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenUp)
 {
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = 0.f, .y = windowHeight - _tankSize, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -92,7 +90,7 @@ TEST_F(PlayerTest, TankMoveInSideScreenUp)
 // Check that tank can move inside the screen
 TEST_F(PlayerTest, TankMoveInSideScreenLeft)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
 	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize, .y = 0.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -197,8 +195,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenLeft)
 // Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
@@ -221,8 +219,8 @@ TEST_F(PlayerTest, TankMoveOutSideScreenDown)
 // Check that tank cannot move out of screen
 TEST_F(PlayerTest, TankMoveOutSideScreenRight)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
@@ -252,8 +250,8 @@ TEST_F(PlayerTest, TankSetPos)
 					Direction::UP, _gameMode, _bulletPool, _gameConfig);
 	_allObjects.emplace_back(player);
 
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	player->SetPos({.x = windowWidth, .y = windowHeight});
 
 	EXPECT_EQ(player->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
@@ -280,8 +278,8 @@ TEST_F(PlayerTest, TankSetDirection)
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -301,8 +299,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotUp)
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -322,8 +320,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotLeft)
 // Check that tank don't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -343,8 +341,8 @@ TEST_F(PlayerTest, TankDontMoveWhenShotDown)
 // Check that tank doesn't move when shooting
 TEST_F(PlayerTest, TankDontMoveWhenShotRight)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -405,8 +403,8 @@ TEST_F(PlayerTest, TankShotInSideScreenRight)
 // Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenUp)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
@@ -431,8 +429,8 @@ TEST_F(PlayerTest, TankShotInSideScreenUp)
 // Check that tank can shoot inside the screen
 TEST_F(PlayerTest, TankShotInSideScreenLeft)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth - _tankSize,
 								  .y = windowHeight - _tankSize,
 								  .w = _tankSize,
@@ -486,8 +484,8 @@ TEST_F(PlayerTest, TankShotOutSideScreen)
 		EXPECT_EQ(size, _allObjects.size());
 	}
 
-	player->SetPos({.x = static_cast<float>(_gameConfig.windowSize.x) - _tankSize,
-					.y = static_cast<float>(_gameConfig.windowSize.y) - _tankSize});
+	player->SetPos({.x = static_cast<float>(_gameConfig.battlefieldSize.x) - _tankSize,
+					.y = static_cast<float>(_gameConfig.battlefieldSize.y) - _tankSize});
 	{
 		//fail the shot down test, try to create an outside screen bullet
 		const size_t size = _allObjects.size();
@@ -642,8 +640,8 @@ TEST_F(PlayerTest, TankCantPassThroughfortressWall)
 // Check that a bullet fired in the direction of travel is not blown up by its own tank
 TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
@@ -679,8 +677,8 @@ TEST_F(PlayerTest, ShotWhileMovingDoesNotBlowUpOnOwnTank)
 // Check that the blast of your own bullet still reaches you when firing point-blank at a wall
 TEST_F(PlayerTest, PointBlankShotDamagesTheShooter)
 {
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	const ObjRectangle rectPlayer{.x = windowWidth / 2.f, .y = windowHeight / 2.f, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(

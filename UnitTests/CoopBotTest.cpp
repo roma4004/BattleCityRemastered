@@ -1,6 +1,5 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
@@ -34,10 +33,9 @@ protected:
 	std::shared_ptr<TankSpawner> _tankSpawner{nullptr};
 	std::shared_ptr<RespawnManager> _respawnManager{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
 	float _tankSize{};
 	float _tankSpeed{142};
@@ -56,7 +54,7 @@ protected:
 								 _tankSpawner);
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
-		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		_gridSize = _gameConfig.gridOffset;
 		_tankSize = _gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(4u);

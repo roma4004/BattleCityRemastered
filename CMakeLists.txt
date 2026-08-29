@@ -41,6 +41,7 @@ set(GAME_PLATFORM_SOURCES
 set(GAME_CORE_SOURCES
         source/application/CommandLineParser.cpp
         source/application/GameConfig.cpp
+        source/application/WindowConfig.cpp
         source/application/ProjectConfig.cpp
         source/behavior/MoveLikeBulletBeh.cpp
         source/behavior/MoveLikeTankBeh.cpp
@@ -108,6 +109,8 @@ set(GAME_CORE_SOURCES
 )
 
 set(UNIT_TESTS_SOURCES
+        UnitTests/AnimationPauseTest.cpp
+        UnitTests/AnimationTriggersTest.cpp
         UnitTests/BonusTestBasic.cpp
         UnitTests/BonusTestDestroy.cpp
         UnitTests/BonusTestEnemy.cpp

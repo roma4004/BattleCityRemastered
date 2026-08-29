@@ -14,7 +14,6 @@ WorldScaleManager::WorldScaleManager(const std::shared_ptr<EventSystem>& events,
 void WorldScaleManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &WorldScaleManager::OnMapLoaded));
-	_subs.push_back(_events->AddListener(this, &WorldScaleManager::OnWindowSizeChangedTo));
 }
 
 void WorldScaleManager::OnMapLoaded(const MapLoadedEvent& event)
@@ -22,9 +21,4 @@ void WorldScaleManager::OnMapLoaded(const MapLoadedEvent& event)
 	_gameConfig.battlefieldSize = WorldGeometry::ForMap(event.cols, event.rows);
 
 	_events->EmitEvent(WorldGeometryChangedEvent{});
-}
-
-void WorldScaleManager::OnWindowSizeChangedTo(const WindowSizeChangedToEvent& event)
-{
-	_gameConfig.windowSize = event.newSize;
 }

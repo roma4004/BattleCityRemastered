@@ -1,6 +1,5 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/BonusPickupEvents.h"
@@ -20,8 +19,7 @@ class TankHealTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	std::vector<HealthChangedEvent> _reportedHealth;
 	EventSubscription _spawnQueueSub{};

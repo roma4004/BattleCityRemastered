@@ -1,9 +1,7 @@
 #include "components/MapLoader.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/ObstacleSpawner.h"
-#include "components/events/GameModeEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "enums/GameMode.h"
 #include "entities/BaseObj.h"
@@ -147,8 +145,7 @@ TEST(WorldGeometryTest, EmptyMapProducesNoWorld)
 
 TEST(WorldGeometryTest, LogicalSizeIsTheFieldPlusTheBar)
 {
-	ProjectConfig projectConfig{"", true};
-	GameConfig gameConfig{projectConfig};
+	GameConfig gameConfig{};
 	gameConfig.battlefieldSize = WorldGeometry::ForMap(52u, 50u);
 
 	EXPECT_EQ(gameConfig.LogicalSize().x, 624u + WorldGeometry::kSideBarWidth);
@@ -163,8 +160,7 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 	std::vector<std::shared_ptr<BaseObj>> allObjects;
 	auto spawnQueueSub = TestUtils::WireSpawnQueue(events, &allObjects);
 
-	ProjectConfig projectConfig{"", true};
-	GameConfig gameConfig{projectConfig};
+	GameConfig gameConfig{};
 	gameConfig.gameMode = GameMode::PlayAsClient;
 	const ObstacleSpawner spawner{events, gameConfig};
 

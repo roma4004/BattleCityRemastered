@@ -1,5 +1,6 @@
 #include "behavior/MoveLikeBulletBeh.h"
 #include "geometry/Circle.h"
+#include "geometry/ObjRectangle.h"
 #include "application/GameConfig.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
@@ -44,28 +45,91 @@ ObjRectangle MoveLikeBulletBeh::GetNextPos(const double deltaTime) const
 	// }
 }
 
-// Where the bullet would have been this frame had nothing blocked it - the blast is centred there
-FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime) const
+float MoveLikeBulletBeh::GetGapTo(const ObjRectangle& target) const
 {
-	const float speed = _calibre.speed * static_cast<float>(deltaTime);
-	const auto [x, y] = _rect.Center();
 	if (_direction == Direction::UP)
 	{
-		return FPoint{.x = x, .y = y - speed};
+		return _rect.y - target.Bottom();
 	}
 
 	if (_direction == Direction::LEFT)
 	{
-		return FPoint{.x = x - speed, .y = y};
+		return _rect.x - target.Right();
 	}
 
 	if (_direction == Direction::DOWN)
 	{
-		return FPoint{.x = x, .y = y + speed};
+		return target.y - _rect.Bottom();
 	}
 
 	//_direction == Direction::RIGHT
-	return FPoint{.x = x + speed, .y = y};
+	return target.x - _rect.Right();
+}
+
+float MoveLikeBulletBeh::GetGapToBattlefieldEdge() const
+{
+	if (_direction == Direction::UP)
+	{
+		return _rect.y;
+	}
+
+	if (_direction == Direction::LEFT)
+	{
+		return _rect.x;
+	}
+
+	if (_direction == Direction::DOWN)
+	{
+		return static_cast<float>(_gameConfig.battlefieldSize.y) - _rect.Bottom();
+	}
+
+	//_direction == Direction::RIGHT
+	return static_cast<float>(_gameConfig.battlefieldSize.x) - _rect.Right();
+}
+
+float MoveLikeBulletBeh::GetTravelledDistance(const double deltaTime) const
+{
+	const float step = _calibre.speed * static_cast<float>(deltaTime);
+	const ObjRectangle nextPosRect = GetNextPos(deltaTime);
+
+	float travelled = std::min(step, GetGapToBattlefieldEdge());
+
+	for (const std::shared_ptr<BaseObj>& object: *_allObjects)
+	{
+		if (IsSelfOrAuthor(*object) || object->GetIsPenetrable()
+			|| !ColliderUtils::IsCollide(nextPosRect, object->GetRect()))
+		{
+			continue;
+		}
+
+		travelled = std::min(travelled, GetGapTo(object->GetRect()));
+	}
+
+	return std::max(0.f, travelled);
+}
+
+// Where the bullet stopped, not where the frame step would have taken it - the blast is centred there
+FPoint MoveLikeBulletBeh::GetBlowCenter(const double deltaTime) const
+{
+	const float travelled = GetTravelledDistance(deltaTime);
+	const auto [x, y] = _rect.Center();
+	if (_direction == Direction::UP)
+	{
+		return FPoint{.x = x, .y = y - travelled};
+	}
+
+	if (_direction == Direction::LEFT)
+	{
+		return FPoint{.x = x - travelled, .y = y};
+	}
+
+	if (_direction == Direction::DOWN)
+	{
+		return FPoint{.x = x, .y = y + travelled};
+	}
+
+	//_direction == Direction::RIGHT
+	return FPoint{.x = x + travelled, .y = y};
 }
 
 bool MoveLikeBulletBeh::IsSelfOrAuthor(const BaseObj& object) const

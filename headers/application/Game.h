@@ -22,6 +22,7 @@ class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
 class GameConfig;
+class WindowConfig;
 class ProjectConfig;
 struct SDL_Config;
 struct AddToSpawnQueueEvent;
@@ -42,7 +43,8 @@ struct SelectedGameModeChangedToEvent;
 class Game final
 {
 public:
-	Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, SDL_Config& sdlConfig, GameMode gameMode);
+	Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
+		 SDL_Config& sdlConfig, GameMode gameMode);
 	~Game();
 
 	Game(const Game&) = delete;

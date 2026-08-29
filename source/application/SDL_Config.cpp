@@ -2,6 +2,7 @@
 #include "application/ProjectConfig.h"
 #include "utils/Log.h"
 #include "application/GameConfig.h"
+#include "application/WindowConfig.h"
 #include "application/UserInput.h"
 #include <SDL.h>
 #include <SDL_image.h>
@@ -28,9 +29,20 @@ constexpr std::array kXBoxKeys{"Images.XBox_D-Pad",
 							   "Images.XBox_Y"};
 }
 
-SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project)
+SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project, const WindowConfig& window)
 	: gameConfig{config}
-	, projectConfig{project} {}
+	, projectConfig{project}
+	, windowConfig{window} {}
+
+bool SDL_Config::ShouldPersistWindowPos() const
+{
+	return !windowConfig.hasExplicitPos && !gameConfig.IsHost() && !gameConfig.IsClient();
+}
+
+bool SDL_Config::ShouldPersistWindowSize() const
+{
+	return !windowConfig.hasExplicitSize && !gameConfig.IsHost() && !gameConfig.IsClient();
+}
 
 SDL_Config::~SDL_Config()
 {
@@ -327,7 +339,7 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		return;
 	}
 
-	if (gameConfig.ShouldPersistWindowPos())
+	if (ShouldPersistWindowPos())
 	{
 		int posX{};
 		int posY{};
@@ -355,7 +367,7 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		outProjectConfig.Set("Window.posY", static_cast<unsigned>(std::clamp(posY, minY, maxY)));
 	}
 
-	if (gameConfig.ShouldPersistWindowSize())
+	if (ShouldPersistWindowSize())
 	{
 		int width{};
 		int height{};
@@ -369,10 +381,10 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
-	const SDL_Rect rect{.x = static_cast<int>(gameConfig.windowPos.x),
-						.y = static_cast<int>(gameConfig.windowPos.y),
-						.w = static_cast<int>(gameConfig.windowSize.x),
-						.h = static_cast<int>(gameConfig.windowSize.y)};
+	const SDL_Rect rect{.x = static_cast<int>(windowConfig.pos.x),
+						.y = static_cast<int>(windowConfig.pos.y),
+						.w = static_cast<int>(windowConfig.size.x),
+						.h = static_cast<int>(windowConfig.size.y)};
 
 	return {SDL_CreateWindow(kWindowTitle, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
 }
@@ -392,7 +404,7 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 
 	//NOTE: centering would override an explicit pos
 	const bool centerOnMonitor =
-			!gameConfig.hasExplicitWindowPos
+			!windowConfig.hasExplicitPos
 			&& (projectConfig.IsFreshIni()
 				|| projectConfig.IsCenterOnStart()
 				|| gameConfig.IsHost()
@@ -401,11 +413,11 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 	{
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};
-		const Point windowHalfSize{.x = static_cast<int>(gameConfig.windowSize.x) / 2,
-								   .y = static_cast<int>(gameConfig.windowSize.y) / 2};
+		const Point windowHalfSize{.x = static_cast<int>(windowConfig.size.x) / 2,
+								   .y = static_cast<int>(windowConfig.size.y) / 2};
 		SDL_SetWindowPosition(sdlWindowRaw,
-							  screenCenter.x - windowHalfSize.x + static_cast<int>(gameConfig.windowsPosOffset.x),
-							  screenCenter.y - windowHalfSize.y + static_cast<int>(gameConfig.windowsPosOffset.y)
+							  screenCenter.x - windowHalfSize.x + static_cast<int>(windowConfig.posOffset.x),
+							  screenCenter.y - windowHalfSize.y + static_cast<int>(windowConfig.posOffset.y)
 							  - bordersSize.y);
 	}
 

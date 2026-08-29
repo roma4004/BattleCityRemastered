@@ -1,6 +1,5 @@
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BonusSpawner.h"
 #include "components/managers/BonusManager.h"
 #include "components/BulletPool.h"
@@ -31,10 +30,9 @@ protected:
 	std::shared_ptr<BonusSpawner> _bonusSpawner{nullptr};
 	std::shared_ptr<BonusManager> _bonusManager{nullptr};
 	std::vector<EventSubscription> _instantSpawnAnimationSubs{};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	float _tankSize{};
 	float _tankSpeed{142.f};
@@ -53,7 +51,7 @@ protected:
 		_bonusManager = std::make_shared<BonusManager>(_events, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		const float gridSize = _gameConfig.gridOffset;
 		_tankSize = gridSize * 3.f;// for better turns
 
 		_allObjects.reserve(5);

@@ -2,6 +2,7 @@
 #include "utils/Log.h"
 #include "application/GameConfig.h"
 #include "application/UserInput.h"
+#include "application/WindowConfig.h"
 #include "components/EventSystem.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
@@ -30,12 +31,13 @@
 class BaseObj;
 
 // std::ofstream error_log_server("error_log_Server.txt");
-Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, SDL_Config& sdlConfig, const GameMode gameMode)
+Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
+		   SDL_Config& sdlConfig, const GameMode gameMode)
 	: _events{std::make_shared<EventSystem>()}
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
 	, _stateManager{std::make_unique<GameStateManager>(_events)}
-	, _userInput{std::make_unique<UserInput>(_events, gameConfig, sdlConfig)}
+	, _userInput{std::make_unique<UserInput>(_events, gameConfig, windowConfig, sdlConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}

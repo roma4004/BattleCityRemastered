@@ -1,5 +1,4 @@
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
@@ -15,8 +14,7 @@ class PauseSyncTest : public testing::Test
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<InputProviderForMenu> _menuInput{nullptr};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	EventSubscription _statusSub{};
 	bool _isPaused{false};
 

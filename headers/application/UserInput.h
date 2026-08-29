@@ -14,6 +14,7 @@ union SDL_Event;
 struct SDL_Config;
 class EventSystem;
 class GameConfig;
+class WindowConfig;
 struct PauseStatusEvent;
 struct TabReleasedEvent;
 struct PreTickUpdateEvent;
@@ -80,7 +81,8 @@ class UserInput final
 	void InitMouseHoverTiles(Point menuPos);
 
 public:
-	UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig);
+	UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
+			  const WindowConfig& windowConfig, SDL_Config& sdlConfig);
 	~UserInput();
 
 	void Update();

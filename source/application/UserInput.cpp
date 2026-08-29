@@ -1,5 +1,6 @@
 #include "application/UserInput.h"
 #include "application/GameConfig.h"
+#include "application/WindowConfig.h"
 #include "application/SDL_Config.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -14,9 +15,9 @@
 #include "utils/Log.h"
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
-					 SDL_Config& sdlConfig)
+					 const WindowConfig& windowConfig, SDL_Config& sdlConfig)
 	: _selectedGameMode{GameMode::Demo}
-	, _windowSize{gameConfig.windowSize}
+	, _windowSize{windowConfig.size}
 	, _events{events}
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}

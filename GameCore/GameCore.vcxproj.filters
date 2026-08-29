@@ -99,6 +99,9 @@
     <ClCompile Include="..\source\application\ProjectConfig.cpp">
       <Filter>source\application</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\application\WindowConfig.cpp">
+      <Filter>source\application</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\behavior\MoveLikeBulletBeh.cpp">
       <Filter>source\behavior</Filter>
     </ClCompile>
@@ -300,6 +303,9 @@
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\application\ProjectConfig.h">
+      <Filter>headers\application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\application\WindowConfig.h">
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\behavior\MoveLikeBulletBeh.h">

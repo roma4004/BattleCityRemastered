@@ -1,8 +1,6 @@
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
-#include "components/events/GameModeEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
@@ -15,8 +13,7 @@ class MenuInputTest : public testing::Test
 {
 protected:
 	std::shared_ptr<EventSystem> _events{std::make_shared<EventSystem>()};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::unique_ptr<InputProviderForMenu> _menuInput{nullptr};
 
 	int _applyCount{};

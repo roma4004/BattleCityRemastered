@@ -40,6 +40,8 @@
   </PropertyGroup>
   <!-- Shared game logic now lives in ..\GameCore.vcxproj (ProjectReference below); only test-only sources remain here. -->
   <ItemGroup>
+    <ClCompile Include="AnimationPauseTest.cpp" />
+    <ClCompile Include="AnimationTriggersTest.cpp" />
     <ClCompile Include="BonusTestBasic.cpp" />
     <ClCompile Include="BonusTestDestroy.cpp" />
     <ClCompile Include="BonusTestEnemy.cpp" />

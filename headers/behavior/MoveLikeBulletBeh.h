@@ -29,6 +29,10 @@ class MoveLikeBulletBeh final : public IMoveBeh
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir) const override;
 	[[nodiscard]] ObjRectangle GetNextPos(double deltaTime) const;
 	[[nodiscard]] FPoint GetBlowCenter(double deltaTime) const;
+	//NOTE: how far the bullet actually got before touching - the frame step is the ceiling, not the answer
+	[[nodiscard]] float GetTravelledDistance(double deltaTime) const;
+	[[nodiscard]] float GetGapTo(const ObjRectangle& target) const;
+	[[nodiscard]] float GetGapToBattlefieldEdge() const;
 
 protected:
 	[[nodiscard]] bool MoveUp(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;

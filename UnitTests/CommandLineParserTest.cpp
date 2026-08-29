@@ -1,5 +1,6 @@
 #include "application/CommandLineParser.h"
 #include "application/GameConfig.h"
+#include "application/WindowConfig.h"
 #include "application/ProjectConfig.h"
 
 #include <gtest/gtest.h>
@@ -94,12 +95,12 @@ TEST(CommandLineParserTest, EachWindowOptionIsIndependent)
 	EXPECT_FALSE(posOnly.windowSize.has_value());
 
 	const ProjectConfig projectConfig{"unused.ini", true};
-	GameConfig gameConfig{projectConfig};
-	const UPoint iniSize = gameConfig.windowSize;
-	gameConfig.Apply(posOnly);
+	WindowConfig windowConfig{projectConfig};
+	const UPoint iniSize = windowConfig.size;
+	windowConfig.Apply(posOnly);
 
-	EXPECT_EQ(gameConfig.windowPos, (UPoint{.x = 10u, .y = 20u}));
-	EXPECT_EQ(gameConfig.windowSize, iniSize);
+	EXPECT_EQ(windowConfig.pos, (UPoint{.x = 10u, .y = 20u}));
+	EXPECT_EQ(windowConfig.size, iniSize);
 }
 
 //NOTE: from_chars must consume the whole field - a partial parse would silently accept "800x600" as 800
@@ -130,27 +131,29 @@ TEST(CommandLineParserTest, ArgumentsAfterABadOneAreNotParsed)
 TEST(CommandLineParserTest, ApplyOverridesConfigAndPinsPosition)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
-	GameConfig gameConfig{projectConfig};
-	gameConfig.Apply(Parse({"pos=10,20", "size=1024,768"}));
+	WindowConfig windowConfig{projectConfig};
+	windowConfig.Apply(Parse({"pos=10,20", "size=1024,768"}));
 
-	EXPECT_EQ(gameConfig.windowPos, (UPoint{.x = 10u, .y = 20u}));
-	EXPECT_EQ(gameConfig.windowSize, (UPoint{.x = 1024u, .y = 768u}));
-	EXPECT_TRUE(gameConfig.hasExplicitWindowPos);
+	EXPECT_EQ(windowConfig.pos, (UPoint{.x = 10u, .y = 20u}));
+	EXPECT_EQ(windowConfig.size, (UPoint{.x = 1024u, .y = 768u}));
+	EXPECT_TRUE(windowConfig.hasExplicitPos);
 }
 
 //NOTE: the other half of Apply - an empty optional must leave the ini values in place, not overwrite them with defaults
 TEST(CommandLineParserTest, ApplyLeavesConfigAloneWithoutArguments)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
-	GameConfig gameConfig{projectConfig};
-	const UPoint iniPos = gameConfig.windowPos;
-	const UPoint iniSize = gameConfig.windowSize;
+	WindowConfig windowConfig{projectConfig};
+	const UPoint iniPos = windowConfig.pos;
+	const UPoint iniSize = windowConfig.size;
 
+	GameConfig gameConfig{};
+	windowConfig.Apply(Parse({}));
 	gameConfig.Apply(Parse({}));
 
-	EXPECT_EQ(gameConfig.windowPos, iniPos);
-	EXPECT_EQ(gameConfig.windowSize, iniSize);
-	EXPECT_FALSE(gameConfig.hasExplicitWindowPos);
+	EXPECT_EQ(windowConfig.pos, iniPos);
+	EXPECT_EQ(windowConfig.size, iniSize);
+	EXPECT_FALSE(windowConfig.hasExplicitPos);
 	EXPECT_FALSE(gameConfig.skipIntroMusic);
 }
 
@@ -159,8 +162,8 @@ TEST(CommandLineParserTest, ApplyLeavesConfigAloneWithoutArguments)
 TEST(CommandLineParserTest, ApplyDoesNotWriteBackToTheIni)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
-	GameConfig gameConfig{projectConfig};
-	gameConfig.Apply(Parse({"pos=10,20", "size=1024,768"}));
+	WindowConfig windowConfig{projectConfig};
+	windowConfig.Apply(Parse({"pos=10,20", "size=1024,768"}));
 
 	EXPECT_EQ(projectConfig.Get<unsigned>("Window.width", 0u), 800u);
 	EXPECT_EQ(projectConfig.Get<unsigned>("Window.height", 0u), 600u);
@@ -172,10 +175,10 @@ TEST(CommandLineParserTest, ApplyDoesNotWriteBackToTheIni)
 TEST(CommandLineParserTest, HostOffsetUsesTheSizeFromTheCommandLine)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
-	GameConfig gameConfig{projectConfig};
-	gameConfig.Apply(Parse({"host", "size=1024,768"}));
+	WindowConfig windowConfig{projectConfig};
+	windowConfig.Apply(Parse({"host", "size=1024,768"}));
 
-	EXPECT_EQ(gameConfig.windowsPosOffset.x, static_cast<size_t>(0) - 1024u / 2u);
+	EXPECT_EQ(windowConfig.posOffset.x, static_cast<size_t>(0) - 1024u / 2u);
 }
 
 namespace
@@ -237,8 +240,8 @@ TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 		const ProjectConfig projectConfig{ini.Path()};
 		EXPECT_EQ(projectConfig.LoadError().value_or(ConfigError{}).line, 3u);
 
-		const GameConfig gameConfig{projectConfig};
-		EXPECT_EQ(gameConfig.windowSize, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults, not the file's 800
+		const WindowConfig windowConfig{projectConfig};
+		EXPECT_EQ(windowConfig.size, (UPoint{.x = 800u, .y = 600u}));//NOTE: defaults, not the file's 800
 	}
 
 	EXPECT_EQ(ini.Read(), broken);
@@ -248,11 +251,11 @@ TEST(ProjectConfigTest, UnparseableFileIsReportedAndLeftUntouched)
 TEST(CommandLineParserTest, ApplyMarksAnExplicitSizeOnItsOwn)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
-	GameConfig gameConfig{projectConfig};
-	gameConfig.Apply(Parse({"size=1024,768"}));
+	WindowConfig windowConfig{projectConfig};
+	windowConfig.Apply(Parse({"size=1024,768"}));
 
-	EXPECT_TRUE(gameConfig.hasExplicitWindowSize);
-	EXPECT_FALSE(gameConfig.hasExplicitWindowPos);
+	EXPECT_TRUE(windowConfig.hasExplicitSize);
+	EXPECT_FALSE(windowConfig.hasExplicitPos);
 }
 
 //NOTE: pos and size are decided apart - passing one must not stop the other from being remembered
@@ -260,20 +263,20 @@ TEST(CommandLineParserTest, OnlyTheOverriddenHalfIsKeptOutOfTheIni)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
 
-	GameConfig plain{projectConfig};
+	WindowConfig plain{projectConfig};
 	plain.Apply(Parse({}));
-	EXPECT_TRUE(plain.ShouldPersistWindowPos());
-	EXPECT_TRUE(plain.ShouldPersistWindowSize());
+	EXPECT_FALSE(plain.hasExplicitPos);
+	EXPECT_FALSE(plain.hasExplicitSize);
 
-	GameConfig posOnly{projectConfig};
+	WindowConfig posOnly{projectConfig};
 	posOnly.Apply(Parse({"pos=10,20"}));
-	EXPECT_FALSE(posOnly.ShouldPersistWindowPos());
-	EXPECT_TRUE(posOnly.ShouldPersistWindowSize());
+	EXPECT_TRUE(posOnly.hasExplicitPos);
+	EXPECT_FALSE(posOnly.hasExplicitSize);
 
-	GameConfig sizeOnly{projectConfig};
+	WindowConfig sizeOnly{projectConfig};
 	sizeOnly.Apply(Parse({"size=1024,768"}));
-	EXPECT_TRUE(sizeOnly.ShouldPersistWindowPos());
-	EXPECT_FALSE(sizeOnly.ShouldPersistWindowSize());
+	EXPECT_FALSE(sizeOnly.hasExplicitPos);
+	EXPECT_TRUE(sizeOnly.hasExplicitSize);
 }
 
 //NOTE: both processes share one config.ini and both windows sit at an offset - whichever exits last
@@ -282,13 +285,14 @@ TEST(CommandLineParserTest, NetworkModesNeverPersistTheWindowState)
 {
 	const ProjectConfig projectConfig{"unused.ini", true};
 
+	//NOTE: the predicate moved to SDL_Config - what a config can answer is the half below: both windows
+	//are placed by an offset, and an offset window position is what must not reach the ini
 	for (const auto* const mode: {"host", "client"})
 	{
-		GameConfig gameConfig{projectConfig};
-		gameConfig.Apply(Parse({mode}));
+		WindowConfig windowConfig{projectConfig};
+		windowConfig.Apply(Parse({mode}));
 
-		EXPECT_FALSE(gameConfig.ShouldPersistWindowPos()) << mode;
-		EXPECT_FALSE(gameConfig.ShouldPersistWindowSize()) << mode;
+		EXPECT_NE(windowConfig.posOffset.x, 0u) << mode;
 	}
 }
 
@@ -310,8 +314,8 @@ TEST(ProjectConfigTest, AReadableFileIsNotFreshAndCenteringIsOptIn)
 	EXPECT_FALSE(projectConfig.IsFreshIni());
 	EXPECT_FALSE(projectConfig.IsCenterOnStart());
 
-	const GameConfig gameConfig{projectConfig};
-	EXPECT_EQ(gameConfig.windowPos, (UPoint{.x = 340u, .y = 180u}));
+	const WindowConfig windowConfig{projectConfig};
+	EXPECT_EQ(windowConfig.pos, (UPoint{.x = 340u, .y = 180u}));
 }
 
 TEST(ProjectConfigTest, CenterOnStartIsReadBackFromTheFile)

@@ -44,7 +44,7 @@ protected:
 	//crosses the wire, and the test passes with no networking at all
 	std::shared_ptr<EventSystem> _hostEvents{std::make_shared<EventSystem>()};
 	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 
 	//NOTE: stands in for MainLoop, in its order - nothing is received or sent without it
 	void Pump() const

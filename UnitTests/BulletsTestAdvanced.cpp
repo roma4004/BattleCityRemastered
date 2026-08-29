@@ -4,6 +4,7 @@
 #include "application/ProjectConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
+#include "entities/obstacles/BrickWall.h"
 #include "entities/obstacles/SteelWall.h"
 #include "entities/pawns/Bullet.h"
 #include "enums/Direction.h"
@@ -17,9 +18,9 @@ class BulletTestAdvanced : public testing::Test// NOLINT(clang-diagnostic-padded
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
 	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 3u, .size{.x = 6.f, .y = 5.f}};
 	Uuid _uuid{};
 	float _gridSize{1};
@@ -31,7 +32,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
-		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		_gridSize = _gameConfig.gridOffset;
 
 		_allObjects.reserve(4);
 
@@ -69,4 +70,48 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	}
 
 	EXPECT_FALSE(true);
+}
+
+// The blast is centred where the bullet stopped, so a shot digs the same depth at any frame rate:
+// the wall behind the one that was hit stays out of reach at 30 and at 144 frames per second alike
+TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
+{
+	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 20.f, .w = _gridSize, .h = 4.f},
+												_events, _uuid, _gameMode);
+	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 34.f, .w = _gridSize, .h = 4.f},
+											   _events, _uuid, _gameMode);
+	_allObjects.emplace_back(nearWall);
+	_allObjects.emplace_back(farWall);
+
+	const int nearWallHealth = nearWall->GetHealth();
+	const int farWallHealth = farWall->GetHealth();
+
+	for (int frame = 0; frame < 20 && nearWall->GetHealth() == nearWallHealth; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 30.0});
+	}
+
+	EXPECT_GT(nearWallHealth, nearWall->GetHealth());
+	EXPECT_EQ(farWallHealth, farWall->GetHealth());
+}
+
+TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
+{
+	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 20.f, .w = _gridSize, .h = 4.f},
+												_events, _uuid, _gameMode);
+	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 34.f, .w = _gridSize, .h = 4.f},
+											   _events, _uuid, _gameMode);
+	_allObjects.emplace_back(nearWall);
+	_allObjects.emplace_back(farWall);
+
+	const int nearWallHealth = nearWall->GetHealth();
+	const int farWallHealth = farWall->GetHealth();
+
+	for (int frame = 0; frame < 40 && nearWall->GetHealth() == nearWallHealth; ++frame)
+	{
+		_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 144.0});
+	}
+
+	EXPECT_GT(nearWallHealth, nearWall->GetHealth());
+	EXPECT_EQ(farWallHealth, farWall->GetHealth());
 }

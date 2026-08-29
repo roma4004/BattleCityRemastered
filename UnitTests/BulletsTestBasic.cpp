@@ -1,7 +1,6 @@
 #include "geometry/Point.h"
 #include "TestUtils.h"
 #include "application/GameConfig.h"
-#include "application/ProjectConfig.h"
 #include "components/BulletPool.h"
 #include "components/EventSystem.h"
 #include "components/events/TimingEvents.h"
@@ -21,10 +20,9 @@ class BulletTest : public testing::Test// NOLINT(clang-diagnostic-padded)
 {
 protected:
 	std::shared_ptr<EventSystem> _events{nullptr};
-	ProjectConfig _projectConfig{"", true};
-	GameConfig _gameConfig{_projectConfig};
+	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
-	double _deltaTimeOneFrame{1.f / 60.f};
+	double _deltaTimeOneFrame{1.0 / 60.0};
 	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
 	Uuid _uuid{};
 	float _gridSize{1};
@@ -36,7 +34,7 @@ protected:
 	{
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
-		_gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+		_gridSize = _gameConfig.gridOffset;
 
 		_allObjects.reserve(4);
 	}
@@ -57,8 +55,8 @@ TEST_F(BulletTest, BulletSetPos)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 	bullet->SetPos({.x = windowWidth, .y = windowHeight});
 
 	EXPECT_EQ(bullet->GetPos(), (FPoint{.x = windowWidth, .y = windowHeight}));
@@ -113,8 +111,8 @@ TEST_F(BulletTest, BulletMoveInsideScreen)
 		EXPECT_EQ(bulletStartPos.y, bulletEndPos.y);
 	}
 
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 
 	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 	{
@@ -148,8 +146,8 @@ TEST_F(BulletTest, BulletMoveOutSideScreen)
 					_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 	_allObjects.emplace_back(bullet);
 
-	const auto windowWidth = static_cast<float>(_gameConfig.windowSize.x);
-	const auto windowHeight = static_cast<float>(_gameConfig.windowSize.y);
+	const auto windowWidth = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const auto windowHeight = static_cast<float>(_gameConfig.battlefieldSize.y);
 
 	bullet->SetPos({.x = windowWidth - _calibre.size.x, .y = windowHeight - _calibre.size.y});
 	{
@@ -336,7 +334,7 @@ TEST_F(BulletTest, BulletDamageTank)
 	_allObjects.emplace_back(bullet);
 
 	// spawn Enemy
-	const float gridSize = static_cast<float>(_gameConfig.windowSize.y) / 50.f;
+	const float gridSize = _gameConfig.gridOffset;
 	const float tankSize = gridSize * 3;// for better turns
 	constexpr unsigned short tankHealth = 1u;
 	constexpr float tankSpeed{142};

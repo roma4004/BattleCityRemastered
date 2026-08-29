@@ -3,6 +3,7 @@
 #include "application/GameConfig.h"
 #include "application/ProjectConfig.h"
 #include "application/SDL_Config.h"
+#include "application/WindowConfig.h"
 #include "utils/Log.h"
 
 //TODO: how to improve event system, duplicated code, std::string_view, NRVO, remove std::function, cleanup
@@ -29,10 +30,13 @@ int main(const int argc, char* argv[])
 				   + configError->reason + ", running on defaults and leaving the file untouched");
 	}
 
-	GameConfig gameConfig{projectConfig};
+	GameConfig gameConfig{};
 	gameConfig.Apply(*launchOptions);
 
-	SDL_Config sdlEnv{gameConfig, projectConfig};
+	WindowConfig windowConfig{projectConfig};
+	windowConfig.Apply(*launchOptions);
+
+	SDL_Config sdlEnv{gameConfig, projectConfig, windowConfig};
 	if (const auto init = sdlEnv.Init(); !init)
 	{
 		Log::Error(init.error().stage + ": " + init.error().detail);
@@ -40,7 +44,7 @@ int main(const int argc, char* argv[])
 		return 1;
 	}
 
-	Game game{gameConfig, projectConfig, sdlEnv, launchOptions->gameMode};
+	Game game{gameConfig, projectConfig, windowConfig, sdlEnv, launchOptions->gameMode};
 	game.Run();
 
 	//NOTE: before sdlEnv drops the window and while projectConfig is still alive - its destructor
