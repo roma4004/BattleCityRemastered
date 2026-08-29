@@ -89,7 +89,7 @@ std::string Log::TimeStamp()
 
 	std::ostringstream stream;
 	stream << '[' << std::put_time(&timeInfo, "%H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << ms.count()
-		   << ']';
+			<< ']';
 
 	return stream.str();
 }

@@ -97,9 +97,9 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 
 	const double quartFieldSizeX = battleFieldSizeX / 4.0;
 	const std::vector<std::pair<double, double>> spawnRanges{{0.0, quartFieldSizeX},
-														   {quartFieldSizeX, quartFieldSizeX * 2.0},
-														   {quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
-														   {quartFieldSizeX * 3.0, battleFieldSizeX}};
+															 {quartFieldSizeX, quartFieldSizeX * 2.0},
+															 {quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
+															 {quartFieldSizeX * 3.0, battleFieldSizeX}};
 
 
 	const auto randomRange = static_cast<std::size_t>(type);
@@ -183,7 +183,9 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
 	const bool isSuccessSpawn = SpawnEnemy(spawnRect, uuid, type, _gameConfig.tankSpeed, _gameConfig.tankHealth);
 	if (isSuccessSpawn && IsHost(_gameMode))
 	{
-		_events->EmitEvent(TankRespawnedEvent{.type = type, .uuid = uuid, .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
+		_events->EmitEvent(TankRespawnedEvent{.type = type,
+											  .uuid = uuid,
+											  .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
 	}
 }
 
@@ -250,7 +252,9 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type);
 		if (IsHost(_gameMode))
 		{
-			_events->EmitEvent(TankRespawnedEvent{.type = type, .uuid = uuid, .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
+			_events->EmitEvent(TankRespawnedEvent{.type = type,
+												  .uuid = uuid,
+												  .pos = FPoint{.x = spawnRect.x, .y = spawnRect.y}});
 		}
 	}
 	else if (UsesCoopBots(_gameMode))

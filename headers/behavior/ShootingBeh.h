@@ -30,7 +30,7 @@ class ShootingBeh final : public IShootable
 	std::shared_ptr<EventSystem> _events{nullptr};
 
 	[[nodiscard]] double FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-										const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+										 const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 

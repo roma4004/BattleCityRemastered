@@ -21,4 +21,3 @@ struct UPoint final
 
 	[[nodiscard]] bool operator==(const UPoint& rhs) const noexcept = default;
 };
-

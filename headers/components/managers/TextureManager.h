@@ -36,7 +36,7 @@ class TextureManager final
 	};
 
 	[[nodiscard]] AtlasFrames GetAnimFrames(AnimationType type, const std::string& name, ObjRectangle rect,
-												  ObjRectangle& destRect) const;
+											ObjRectangle& destRect) const;
 	[[nodiscard]] ObjRectangle GetTextureRect(const std::string& name) const;
 	[[nodiscard]] ObjRectangle GetTankTextureRect(const std::string& name) const;
 	[[nodiscard]] ObjRectangle GetBonusTextureRect(const std::string& name) const;

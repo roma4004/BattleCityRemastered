@@ -31,5 +31,3 @@ struct TankSpawnCompletedEvent
 {
 	Uuid uuid;
 };
-
-

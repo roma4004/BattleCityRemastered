@@ -240,7 +240,7 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 	const double scaleY = destRect.h / kAtlasCellSize;
 
 	const auto emitSlice = [this, &textureRect, &destRect, scaleX, scaleY, dir, color]
-			(const double x, const double y, const double w, const double h)
+	(const double x, const double y, const double w, const double h)
 	{
 		_events->EmitEvent(
 				RenderTextureEvent{

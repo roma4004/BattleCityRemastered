@@ -17,7 +17,8 @@
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
 						 const std::shared_ptr<BulletPool>& bulletPool,
-						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
+						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events,
+						 const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
@@ -36,7 +37,7 @@ ShootingBeh::~ShootingBeh() = default;
 // }
 
 double ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-								   const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+									const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	double minDist = static_cast<double>(_gameConfig.battlefieldSize.x * _gameConfig.battlefieldSize.y);
 	// float nearestDist = 0.f;

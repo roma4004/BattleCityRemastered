@@ -73,7 +73,8 @@ std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, s
 		else if (line.size() != map.cols)
 		{
 			return std::unexpected(MapError{.path = std::move(path),
-											.reason = "row is " + std::to_string(line.size()) + " cells wide, but the map is "
+											.reason = "row is " + std::to_string(line.size()) +
+													  " cells wide, but the map is "
 													  + std::to_string(map.cols),
 											.line = lineNumber});
 		}
@@ -83,7 +84,8 @@ std::expected<MapData, MapError> MapLoader::Parse(const std::string_view text, s
 			if (!IsKnownSymbol(symbol))
 			{
 				return std::unexpected(MapError{.path = std::move(path),
-												.reason = std::string{"unknown symbol '"} + symbol + "' - see the legend",
+												.reason = std::string{"unknown symbol '"} + symbol +
+														  "' - see the legend",
 												.line = lineNumber});
 			}
 

@@ -80,7 +80,9 @@ void BulletPool::ReturnBullet(BaseObj* bullet)
 		}));
 
 		_events->EmitEvent(DespawnedEvent{
-				.who = bulletCast->GetName(), .uuid = bulletCast->GetUuid(), .reason = DespawnReason::Destroyed});
+				.who = bulletCast->GetName(),
+				.uuid = bulletCast->GetUuid(),
+				.reason = DespawnReason::Destroyed});
 	}
 }
 

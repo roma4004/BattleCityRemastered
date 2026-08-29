@@ -16,8 +16,9 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
-// 
-Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre, std::string author,
+//
+Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre,
+			   std::string author,
 			   const bool enableByDefault)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _author{std::move(author)}
@@ -104,8 +105,8 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	}
 	else
 	{
-		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, resetProperty.calibre,
-													   _allObjects);
+		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig,
+													   resetProperty.calibre, _allObjects);
 	}
 
 	_author = std::move(resetProperty.author);

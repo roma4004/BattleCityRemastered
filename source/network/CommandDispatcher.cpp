@@ -8,9 +8,7 @@
 namespace network
 {
 CommandDispatcher::CommandDispatcher(std::string ownerName)
-	: _ownerName(std::move(ownerName))
-{
-}
+	: _ownerName(std::move(ownerName)) {}
 
 void CommandDispatcher::RegisterAll(std::initializer_list<std::pair<const CommandType, Handler>> handlers)
 {
@@ -24,11 +22,11 @@ std::expected<void, DispatchError> CommandDispatcher::Dispatch(const std::string
 	{
 		constexpr std::size_t maxLoggedBytes{200};
 		const std::string rawData = archiveData.length() < maxLoggedBytes
-											? archiveData
-											: archiveData.substr(0, maxLoggedBytes) + "...";
+										? archiveData
+										: archiveData.substr(0, maxLoggedBytes) + "...";
 
 		Log::Error(_ownerName + " deserialization: " + batch.error().reason + ", raw size "
-								  + std::to_string(archiveData.length()) + ", raw data: " + rawData);
+				   + std::to_string(archiveData.length()) + ", raw data: " + rawData);
 
 		return std::unexpected(DispatchError{.reason = batch.error().reason, .frameSize = archiveData.length()});
 	}
@@ -42,7 +40,7 @@ std::expected<void, DispatchError> CommandDispatcher::Dispatch(const std::string
 		else
 		{
 			Log::Error(_ownerName + " unhandled command type "
-									  + std::to_string(static_cast<int>(commands::GetCommandType(command))));
+					   + std::to_string(static_cast<int>(commands::GetCommandType(command))));
 		}
 	}
 

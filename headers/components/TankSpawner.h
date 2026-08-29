@@ -28,6 +28,7 @@ struct TankSpawnCompletedEvent;
 class TankSpawner final
 {
 	using milliseconds = std::chrono::milliseconds;
+
 	// Stashed while the spawn animation plays; Tank is constructed once the delay finishes.
 	struct DelayedTankSpawn
 	{

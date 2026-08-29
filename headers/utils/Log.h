@@ -12,9 +12,11 @@ class Log final
 public:
 	enum class Level : std::uint8_t
 	{
-		Quiet,//NOTE: errors only
+		Quiet,
+		//NOTE: errors only
 		Normal,
-		Detailed,//NOTE: per-frame chatter - network traffic and the like
+		Detailed,
+		//NOTE: per-frame chatter - network traffic and the like
 	};
 
 	//NOTE: console half goes to stderr, file line is tagged ERROR. Never suppressed by the level.

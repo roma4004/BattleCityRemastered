@@ -12,8 +12,9 @@ void ReportListenerException(const char* const context, const char* const what,
 	std::string message = what ? "Exception in " : "Unknown exception in ";
 	message += context;
 	message += " registered at ";
-	message += origin.line() > 0u ? std::string{origin.file_name()} + ':' + std::to_string(origin.line())
-								  : std::string{"unknown location"};
+	message += origin.line() > 0u
+				   ? std::string{origin.file_name()} + ':' + std::to_string(origin.line())
+				   : std::string{"unknown location"};
 	if (what)
 	{
 		message += std::string{": "} + what;

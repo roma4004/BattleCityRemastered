@@ -8,9 +8,7 @@ namespace network::commands
 PeerLink::PeerLink(tcp::socket socket, std::string ownerName, std::shared_ptr<EventSystem> events)
 	: _channel{std::make_shared<network::FrameChannel>(std::move(socket), ownerName)}
 	, _events{std::move(events)}
-	, _dispatcher{std::move(ownerName)}
-{
-}
+	, _dispatcher{std::move(ownerName)} {}
 
 void PeerLink::SendBatch(const CommandBatch& batch)
 {

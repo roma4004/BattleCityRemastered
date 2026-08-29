@@ -39,7 +39,7 @@ class MoveLikeTankBeh final : public IMoveBeh
 	[[nodiscard]] ObjRectangle GetNextPosRect(double deltaTime, Direction dir) const;
 	[[nodiscard]] static double TakeWholePixels(double& remainder, double step);
 	[[nodiscard]] double FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-										const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+										 const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 protected:
 	[[nodiscard]] bool MoveUp(double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions) override;

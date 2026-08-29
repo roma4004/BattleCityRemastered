@@ -7,8 +7,11 @@ enum class Faction : char8_t;
 //NOTE: a pickup is keyed by the side its effect lands on - the tank that picked it up, or a faction
 //when the whole team is hit. The key already says who, so there is nothing left to put inside
 struct BonusStarPickupEvent {};
+
 struct BonusCaliberPickupEvent {};
+
 struct BonusShipPickupEvent {};
+
 struct BonusGrenadePickupEvent {};
 
 struct BonusHelmetPickupEvent

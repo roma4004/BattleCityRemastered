@@ -75,7 +75,7 @@ void Client::TryConnect()
 		{
 			++_reconnectAttempts;
 			Log::Error("Client connect failed (attempt " + std::to_string(_reconnectAttempts) + "/"
-										  + std::to_string(kMaxReconnectAttempts) + "): " + ec.message());
+					   + std::to_string(kMaxReconnectAttempts) + "): " + ec.message());
 
 			ScheduleReconnect();
 		}
@@ -232,7 +232,9 @@ void Client::OnClientOutReadyToPlay(const ClientOutReadyToPlayEvent&)
 void Client::OnPauseRequested(const PauseRequestedEvent& event)
 {
 	std::scoped_lock lock(_batchWriteMutex);
-	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::None, .action = InputSignal::PauseReleased, .isPressed = event.isPaused});
+	_batch.commands.emplace_back(KeyStateChange{.tag = PlayerTag::None,
+												.action = InputSignal::PauseReleased,
+												.isPressed = event.isPaused});
 }
 
 void Client::StartReading()
@@ -269,7 +271,8 @@ void Client::OnPositionChange(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<PositionChange>(command)]()
 	{
-		_events->EmitEvent(Key(cmd.uuid), PosChangedEvent{.who = cmd.who, .pos = cmd.pos, .dir = cmd.dir, .uuid = cmd.uuid});
+		_events->EmitEvent(Key(cmd.uuid),
+						   PosChangedEvent{.who = cmd.who, .pos = cmd.pos, .dir = cmd.dir, .uuid = cmd.uuid});
 	});
 }
 
@@ -346,7 +349,7 @@ void Client::OnKeyStateChange(const AnyCommand& command)
 		}
 
 		Log::Info("Client::OnKeyStateChange: unexpected signal "
-								+ std::to_string(static_cast<int>(cmd.action)));
+				  + std::to_string(static_cast<int>(cmd.action)));
 	});
 }
 

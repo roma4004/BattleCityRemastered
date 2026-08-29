@@ -153,8 +153,7 @@ struct Listener
 #ifndef NDEBUG
 		, origin{where}
 #endif
-	{
-	}
+	{}
 
 	// Both diagnostics go through this, so the #ifdef lives here and nowhere else.
 	[[nodiscard]] const std::source_location& Origin() const noexcept
@@ -253,7 +252,7 @@ struct callable_signature_args
 													 const std::source_location& origin)
 	{
 		return eventSystem->template AddKeyedListenerImpl<KeyT, EventType>(key, std::forward<CallableT>(callback),
-																		  origin);
+																		   origin);
 	}
 };
 
@@ -312,7 +311,7 @@ public:
 		detail::EmitToList("event callback", _listeners, args...);
 		--_emitDepth;
 
-		CompactIfIdle();
+		FinishDeferredRemovals();
 	}
 
 	// Erasing while a dispatch walks this list would strand its lookahead iterator, so a listener
@@ -346,7 +345,7 @@ public:
 
 private:
 	// Only the outermost Emit may sweep: a nested one is still walking what this would free.
-	void CompactIfIdle()
+	void FinishDeferredRemovals()
 	{
 		if (_emitDepth > 0 || !_hasDead)
 		{
@@ -405,7 +404,7 @@ public:
 			--_emitDepth;
 		}
 
-		CompactIfIdle();
+		FinishDeferredRemovals();
 	}
 
 	// Deferred mid-dispatch, exactly as in Event::RemoveListener - the reason is the same loop.
@@ -450,7 +449,7 @@ public:
 private:
 	// One counter for the whole map: a dispatch on any key must hold off every sweep, since the
 	// callback it runs is free to unsubscribe under a different key.
-	void CompactIfIdle()
+	void FinishDeferredRemovals()
 	{
 		if (_emitDepth > 0 || !_hasDead)
 		{

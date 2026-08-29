@@ -134,7 +134,9 @@ void ObstacleSpawner::SpawnFortressWall(const ObjRectangle rect, const ObstacleT
 	if (IsHost(_gameMode))
 	{
 		_events->EmitEvent(ObstacleSpawnedEvent{
-				.pos = FPoint{.x = rect.x, .y = rect.y}, .type = material, .uuid = uuid});
+				.pos = FPoint{.x = rect.x, .y = rect.y},
+				.type = material,
+				.uuid = uuid});
 	}
 }
 

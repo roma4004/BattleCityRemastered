@@ -12,9 +12,7 @@ namespace network::commands
 NetworkNodeBase::NetworkNodeBase(std::shared_ptr<EventSystem> events, std::string name)
 	: _events(std::move(events))
 	, _name(std::move(name))
-	, _ioContext{std::make_unique<boost::asio::io_context>()}
-{
-}
+	, _ioContext{std::make_unique<boost::asio::io_context>()} {}
 
 NetworkNodeBase::~NetworkNodeBase() = default;
 

@@ -9,9 +9,7 @@ namespace network
 {
 FrameChannel::FrameChannel(tcp::socket socket, std::string ownerName)
 	: _socket(std::move(socket))
-	, _ownerName(std::move(ownerName))
-{
-}
+	, _ownerName(std::move(ownerName)) {}
 
 void FrameChannel::SetHandlers(FrameHandler onFrame, ErrorHandler onError)
 {
@@ -120,8 +118,8 @@ void FrameChannel::ReadHeader()
 								if (payloadLength == 0u || payloadLength > kMaxFramePayloadSize)
 								{
 									Log::Info(_ownerName + ": bogus frame length "
-															+ std::to_string(payloadLength)
-															+ ", dropping connection");
+											  + std::to_string(payloadLength)
+											  + ", dropping connection");
 									ReportError();
 									return;
 								}
@@ -209,7 +207,7 @@ void FrameChannel::WriteNextFrame()
 									 if (ec != boost::asio::error::eof
 										 && ec != boost::asio::error::operation_aborted)
 									 {
-										Log::Error(_ownerName + " write: " + ec.message());
+										 Log::Error(_ownerName + " write: " + ec.message());
 									 }
 
 									 _writeInProgress = false;

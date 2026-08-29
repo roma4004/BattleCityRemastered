@@ -159,9 +159,9 @@ void Server::OnNetworkEndFrame(const NetworkEndFrameEvent&)
 
 void Server::DoAccept()
 {
-	//NOTE: own strand per socket - serialises that session's handlers against each other
-	_acceptor.async_accept(boost::asio::make_strand(_acceptor.get_executor()),
-						   [this](const boost::system::error_code& ec, tcp::socket socket)
+	const auto executor = boost::asio::make_strand(_acceptor.get_executor());
+	//NOTE: own strand per socket - serializes that session's handlers against each other
+	_acceptor.async_accept(executor, [this](const boost::system::error_code& ec, tcp::socket socket)
 	{
 		if (ec)
 		{

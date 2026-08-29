@@ -46,7 +46,8 @@ void BonusManager::OnTickUpdate(const TickUpdateEvent&)
 
 void BonusManager::OnBonusCreated(const BonusCreatedEvent& event)
 {
-	_spawnedBonuses.emplace_back(SpawnedBonus{.bonus = event.bonus, .lifeTime = Timer{_gameConfig.bonusLifeTimeCooldown}});
+	_spawnedBonuses.emplace_back(SpawnedBonus{.bonus = event.bonus,
+											  .lifeTime = Timer{_gameConfig.bonusLifeTimeCooldown}});
 }
 
 //NOTE: one clock for every bonus on the field, instead of a tick subscription inside each of them
@@ -138,7 +139,8 @@ void BonusManager::EmitEffectStatus(const BonusType type, const EffectTarget& ta
 			_events->EmitEvent(Key(std::get<std::string>(target)), BonusHelmetStatusChangeEvent{.isActive = isActive});
 			break;
 		case BonusType::Shovel:
-			_events->EmitEvent(BonusShovelStatusChangeEvent{.faction = std::get<Faction>(target), .isActive = isActive});
+			_events->EmitEvent(
+					BonusShovelStatusChangeEvent{.faction = std::get<Faction>(target), .isActive = isActive});
 			break;
 		default:
 			break;//NOTE: every other bonus lands in one step, it has nothing left running

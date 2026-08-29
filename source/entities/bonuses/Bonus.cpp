@@ -32,44 +32,52 @@ struct BonusRecipe
 };
 
 constexpr std::array s_recipes{
-		BonusRecipe{.type = BonusType::Timer, .name = "BonusTimer",
+		BonusRecipe{.type = BonusType::Timer,
+					.name = "BonusTimer",
 					.emit = [](EventSystem& events, const std::string&, Faction faction)
 					{
 						//NOTE: a timer freezes the other side, same as a grenade wipes it
 						events.EmitEvent(BonusTimerPickupEvent{.target = EnemiesOf(faction)});
 					}},
-		BonusRecipe{.type = BonusType::Helmet, .name = "BonusHelmet",
+		BonusRecipe{.type = BonusType::Helmet,
+					.name = "BonusHelmet",
 					.emit = [](EventSystem& events, const std::string& author, Faction)
 					{
 						events.EmitEvent(BonusHelmetPickupEvent{.author = author});
 					}},
-		BonusRecipe{.type = BonusType::Grenade, .name = "BonusGrenade",
+		BonusRecipe{.type = BonusType::Grenade,
+					.name = "BonusGrenade",
 					.emit = [](EventSystem& events, const std::string&, Faction faction)
 					{
 						//NOTE: the one bonus whose effect lands on the other side
 						events.EmitEvent(Key(EnemiesOf(faction)), BonusGrenadePickupEvent{});
 					}},
-		BonusRecipe{.type = BonusType::Tank, .name = "BonusTank",
+		BonusRecipe{.type = BonusType::Tank,
+					.name = "BonusTank",
 					.emit = [](EventSystem& events, const std::string& author, Faction)
 					{
 						events.EmitEvent(BonusTankPickupEvent{.author = author});
 					}},
-		BonusRecipe{.type = BonusType::Star, .name = "BonusStar",
+		BonusRecipe{.type = BonusType::Star,
+					.name = "BonusStar",
 					.emit = [](EventSystem& events, const std::string& author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusStarPickupEvent{});
 					}},
-		BonusRecipe{.type = BonusType::Shovel, .name = "BonusShovel",
+		BonusRecipe{.type = BonusType::Shovel,
+					.name = "BonusShovel",
 					.emit = [](EventSystem& events, const std::string&, Faction faction)
 					{
 						events.EmitEvent(BonusShovelPickupEvent{.faction = faction});
 					}},
-		BonusRecipe{.type = BonusType::Caliber, .name = "BonusCaliber",
+		BonusRecipe{.type = BonusType::Caliber,
+					.name = "BonusCaliber",
 					.emit = [](EventSystem& events, const std::string& author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusCaliberPickupEvent{});
 					}},
-		BonusRecipe{.type = BonusType::Ship, .name = "BonusShip",
+		BonusRecipe{.type = BonusType::Ship,
+					.name = "BonusShip",
 					.emit = [](EventSystem& events, const std::string& author, Faction)
 					{
 						events.EmitEvent(Key(author), BonusShipPickupEvent{});

@@ -2,14 +2,14 @@
 
 namespace
 {
-	struct GameClock
-	{
-		TimeUtils::clock::duration pausedTotal{0};
-		TimeUtils::time_point pauseStartedAt{};
-		bool isPaused{false};
-	};
+struct GameClock
+{
+	TimeUtils::clock::duration pausedTotal{0};
+	TimeUtils::time_point pauseStartedAt{};
+	bool isPaused{false};
+};
 
-	GameClock gameClock{};
+GameClock gameClock{};
 }
 
 TimeUtils::time_point TimeUtils::Now()

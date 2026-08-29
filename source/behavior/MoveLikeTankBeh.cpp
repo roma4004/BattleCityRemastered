@@ -105,7 +105,7 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const d
 // }
 
 double MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-									   const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+										const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto [maxX, maxY] = _gameConfig.battlefieldSize;
 	auto minDist = static_cast<double>(maxX * maxY);
