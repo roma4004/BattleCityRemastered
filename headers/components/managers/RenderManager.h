@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "components/managers/TextTextureCache.h"
 #include <SDL_render.h>
 #include <memory>
 #include <string>
@@ -10,7 +11,6 @@
 enum class Direction : char8_t;
 enum class GameMode : char8_t;
 struct ObjRectangle;
-struct TTF_Font;
 struct SDL_Config;
 class EventSystem;
 class GameConfig;
@@ -37,6 +37,8 @@ struct RenderPlayerOneIconEvent;
 struct RenderPlayerTwoIconEvent;
 struct RenderStageNumberEvent;
 struct WorldGeometryChangedEvent;
+struct RenderTargetsResetEvent;
+struct RenderDeviceResetEvent;
 
 class RenderManager
 {
@@ -61,22 +63,20 @@ class RenderManager
 
 	MenuParams _menuParams{};
 
-	SDL_Rect _fpsRectangle{};
-	// pregenerated fps texture
-	std::unordered_map<size_t, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _fpsTextures;
+	SDL_Rect _fpsBox{};
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
-	//NOTE: one slot per base size - only the current scale is ever drawn at, so nothing else is kept
-	struct ScaledFont
-	{
-		int pixelSize{};
-		std::shared_ptr<TTF_Font> font{};
-	};
 
-	mutable ScaledFont _smallFont{};
-	mutable ScaledFont _mediumFont{};
+	static constexpr unsigned int kGrayColor{0x808080u};
+	static constexpr int kEnemyIconColumnPadding{55};
+	static constexpr int kEnemyIconBackgroundWidth{71};
+	static constexpr int kEnemyIconBackgroundTop{60};
+
+	mutable TextTextureCache _textCache;
 
 	void Subscribe();
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
+	void OnRenderTargetsReset(const RenderTargetsResetEvent&);
+	void OnRenderDeviceReset(const RenderDeviceResetEvent&);
 	void ApplyLogicalSize();
 
 	void DrawPauseText(const RenderPauseTextEvent&) const;
@@ -103,35 +103,36 @@ class RenderManager
 	void DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const;
 	void DrawPS5Hint(const RenderMenuPS5HintEvent& event) const;
 	void OnRenderText(const RenderTextEvent& event) const;
-	//NOTE: SDL stretching is right for pixel art and wrong for glyphs, so text alone is rasterized at
-	//its final pixel size
-	[[nodiscard]] TTF_Font* FontForCurrentScale(int basePointSize, float scale) const;
 	[[nodiscard]] float CurrentRenderScale() const;
+	[[nodiscard]] static int BasePointSize(bool isMediumFontSize);
 	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
 	void TextToRender(Point pos, SDL_Color color, const std::string& text, bool isMediumFontSize = false) const;
+	void TextToRenderSized(Point pos, SDL_Color color, const std::string& text, int basePointSize) const;
+	//NOTE: keeps the proportions and the given size - a line wider than the box is not shrunk, it runs over
+	void TextToRenderCentered(const SDL_Rect& box, SDL_Color color, const std::string& text,
+							  int basePointSize) const;
+	//NOTE: unused so far - stretches the line to the box instead of keeping its own proportions
+	void TextToRenderInBox(const SDL_Rect& box, SDL_Color color, const std::string& text,
+						   bool isMediumFontSize = false) const;
 
 	void ClearFrame(const PreTickUpdateEvent&) const;
 	void PresentFrame(const PresentFrameEvent&) const;
 	void OnGameModeChangedTo(const GameModeChangedToEvent& event) const;
 	void UpdateWindowTitle(GameMode gameMode) const;
-	void ClearColorTextureCache();
-	void ClearFpsTextureCache();
 
 	void CreateColorTexture(unsigned int color);
 	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
 	void DrawColorTexture(const RenderColorTextureEvent& event);
 	void DrawTexture(const RenderTextureEvent& event) const;
 
-	void GenerateFpsTextures();
-	void RenderFPS(const RenderFPSEvent& event);
+	void RenderFPS(const RenderFPSEvent& event) const;
 
 	void DrawHealthBar(const RenderHealthBarEvent& event) const;
 	void InitMenu(const GameConfig& gameConfig);
 
-	[[nodiscard]] static SDL_Rect CalcFpsPos(const UPoint& newSize);
+	//NOTE: the band above the enemy icon background - the counter is centred in it
+	[[nodiscard]] static SDL_Rect CalcFpsBox(const UPoint& battlefieldSize);
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig);
-
-	~RenderManager();
 };

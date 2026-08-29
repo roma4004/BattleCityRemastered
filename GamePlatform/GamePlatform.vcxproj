@@ -127,6 +127,7 @@
     <ClCompile Include="..\source\application\SDL_Config.cpp" />
     <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\components\managers\RenderManager.cpp" />
+    <ClCompile Include="..\source\components\managers\TextTextureCache.cpp" />
   </ItemGroup>
   <!-- Headers matching the .cpp files above; header+impl live in the same project. -->
   <ItemGroup>
@@ -135,6 +136,7 @@
     <ClInclude Include="..\headers\application\SDL_Config.h" />
     <ClInclude Include="..\headers\application\UserInput.h" />
     <ClInclude Include="..\headers\components\managers\RenderManager.h" />
+    <ClInclude Include="..\headers\components\managers\TextTextureCache.h" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>

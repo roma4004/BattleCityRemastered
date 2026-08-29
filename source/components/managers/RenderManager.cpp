@@ -11,10 +11,9 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/TextureOffset.h"
-#include <cmath>
-#include <ranges>
+#include "utils/Log.h"
+#include <algorithm>
 #include <SDL_render.h>
-#include <SDL_ttf.h>
 #include <SDL_video.h>
 #include <string>
 
@@ -22,48 +21,13 @@ RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const G
 	: _events{events}
 	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}
-	, _fpsRectangle{CalcFpsPos(gameConfig.LogicalSize())}
+	, _fpsBox{CalcFpsBox(gameConfig.battlefieldSize)}
+	, _textCache{sdlConfig}
 {
-	GenerateFpsTextures();
-
 	Subscribe();
 
 	InitMenu(gameConfig);
 	ApplyLogicalSize();
-}
-
-RenderManager::~RenderManager()
-{
-	ClearFpsTextureCache();
-	ClearColorTextureCache();
-}
-
-void RenderManager::ClearColorTextureCache()
-{
-	for (auto& texture: _colorTextureCache | std::views::values)
-	{
-		if (texture != nullptr)
-		{
-			SDL_DestroyTexture(texture.get());
-			texture = nullptr;
-		}
-	}
-
-	_colorTextureCache.clear();
-}
-
-void RenderManager::ClearFpsTextureCache()
-{
-	for (auto& texture: _fpsTextures | std::views::values)
-	{
-		if (texture != nullptr)
-		{
-			SDL_DestroyTexture(texture.get());
-			texture = nullptr;
-		}
-	}
-
-	_fpsTextures.clear();
 }
 
 void RenderManager::Subscribe()
@@ -97,6 +61,33 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawStageNumber));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnWorldGeometryChanged));
+
+	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderTargetsReset));
+	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderDeviceReset));
+}
+
+//NOTE: the 1x1 colour texture is the only render target here
+void RenderManager::OnRenderTargetsReset(const RenderTargetsResetEvent&)
+{
+	CreateColorTexture(kGrayColor);
+}
+
+void RenderManager::OnRenderDeviceReset(const RenderDeviceResetEvent&)
+{
+	//NOTE: text comes back from the font, images from their surfaces
+	_textCache.Clear();
+	_colorTextureCache.clear();
+
+	CreateColorTexture(kGrayColor);
+
+	if (const auto recreated = _sdlConfig.RecreateTexturesFromSurfaces();
+		!recreated)
+	{
+		Log::Error(recreated.error().stage + ": " + recreated.error().detail);
+	}
+
+	//NOTE: a replaced renderer has no logical size; idempotent on one that survived
+	ApplyLogicalSize();
 }
 
 void RenderManager::OnRenderText(const RenderTextEvent& event) const
@@ -106,7 +97,7 @@ void RenderManager::OnRenderText(const RenderTextEvent& event) const
 
 void RenderManager::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
 {
-	_fpsRectangle = CalcFpsPos(_gameConfig.LogicalSize());
+	_fpsBox = CalcFpsBox(_gameConfig.battlefieldSize);
 
 	InitMenu(_gameConfig);
 	ApplyLogicalSize();
@@ -169,9 +160,8 @@ void RenderManager::DrawRightSideBar(const RenderRightSideBarEvent&) const
 void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent&) const
 {
 	constexpr TextureOffset offset{};
-	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
-	const SDL_Rect dstRect{.x = posX, .y = 60, .w = 71, .h = 277};
+	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + kEnemyIconColumnPadding};
+	const SDL_Rect dstRect{.x = posX, .y = kEnemyIconBackgroundTop, .w = kEnemyIconBackgroundWidth, .h = 277};
 	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIconBackground.x),
 							   .y = static_cast<int>(offset.enemyIconBackground.y),
 							   .w = static_cast<int>(offset.enemyIconBackground.w),
@@ -352,6 +342,11 @@ void RenderManager::TextToRender(const Point& pos, const SDL_Color& color, const
 	TextToRender(pos, color, std::to_string(value), isMediumFontSize);
 }
 
+int RenderManager::BasePointSize(const bool isMediumFontSize)
+{
+	return isMediumFontSize ? SDL_Config::kFontSizePtMedium : SDL_Config::kFontSizePtSmall;
+}
+
 float RenderManager::CurrentRenderScale() const
 {
 	float scaleX{1.f};
@@ -362,62 +357,53 @@ float RenderManager::CurrentRenderScale() const
 	return scale > 0.f ? scale : 1.f;
 }
 
-TTF_Font* RenderManager::FontForCurrentScale(const int basePointSize, const float scale) const
-{
-	const bool isMedium = basePointSize == SDL_Config::kFontSizePtMedium;
-	TTF_Font* const baseFont = isMedium ? _sdlConfig.fontMedium.get() : _sdlConfig.fontSmall.get();
-
-	const int pixelSize = static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
-	if (pixelSize == basePointSize)
-	{
-		return baseFont;
-	}
-
-	ScaledFont& slot = isMedium ? _mediumFont : _smallFont;
-
-	if (slot.pixelSize != pixelSize)
-	{
-		slot = ScaledFont{.pixelSize = pixelSize, .font = _sdlConfig.OpenFont(pixelSize)};
-	}
-
-	return slot.font ? slot.font.get() : baseFont;
-}
-
 void RenderManager::TextToRender(const Point pos, const SDL_Color color, const std::string& text,
 								 const bool isMediumFontSize) const
 {
-	if (!_sdlConfig.fontMedium || !_sdlConfig.fontSmall || !_sdlConfig.renderer)
+	TextToRenderSized(pos, color, text, BasePointSize(isMediumFontSize));
+}
+
+void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, const std::string& text,
+									  const int basePointSize) const
+{
+	const TextTextureCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize, CurrentRenderScale());
+	if (cached == nullptr)
 	{
 		return;
 	}
 
-	const float scale = CurrentRenderScale();
-	const int basePointSize = isMediumFontSize ? SDL_Config::kFontSizePtMedium : SDL_Config::kFontSizePtSmall;
+	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = cached->width, .h = cached->height};
+	SDL_RenderCopy(_sdlConfig.renderer.get(), cached->texture.get(), nullptr, &textRect);
+}
 
-	//TODO: optimize draw call with cache non changed text part
-	// save text surface in render field (lazy init)
-	const auto currentFont = FontForCurrentScale(basePointSize, scale);
-	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(currentFont, text.c_str(), color), SDL_FreeSurface);
-	if (!surface)
+void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color color, const std::string& text,
+										 const int basePointSize) const
+{
+	const TextTextureCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize,
+																	CurrentRenderScale());
+	if (cached == nullptr)
 	{
 		return;
 	}
 
-	//TODO: optimize draw call with cache non changed text part
-	// save text texture in render field (lazy init)
-	const std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)> texture(
-			SDL_CreateTextureFromSurface(_sdlConfig.renderer.get(), surface.get()), SDL_DestroyTexture);
-	if (!texture)
+	const SDL_Rect textRect{.x = box.x + (box.w - cached->width) / 2,
+							.y = box.y + (box.h - cached->height) / 2,
+							.w = cached->width,
+							.h = cached->height};
+	SDL_RenderCopy(_sdlConfig.renderer.get(), cached->texture.get(), nullptr, &textRect);
+}
+
+void RenderManager::TextToRenderInBox(const SDL_Rect& box, const SDL_Color color, const std::string& text,
+									  const bool isMediumFontSize) const
+{
+	const TextTextureCache::CachedText* cached =
+			_textCache.Acquire(text, color, BasePointSize(isMediumFontSize), CurrentRenderScale());
+	if (cached == nullptr)
 	{
 		return;
 	}
 
-	const SDL_Rect textRect{.x = pos.x,
-							.y = pos.y,
-							.w = static_cast<int>(static_cast<float>(surface->w) / scale),
-							.h = static_cast<int>(static_cast<float>(surface->h) / scale)};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), texture.get(), nullptr, &textRect);
+	SDL_RenderCopy(_sdlConfig.renderer.get(), cached->texture.get(), nullptr, &box);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
@@ -506,8 +492,7 @@ void RenderManager::DrawColorTexture(const RenderColorTextureEvent& event)
 {
 	const ObjRectangle rect = event.rect;
 	const SDL_Rect dstRect = RectToSdlRect(rect);
-	constexpr unsigned int grayColor = 0x808080u;
-	if (const auto it = _colorTextureCache.find(grayColor); it != _colorTextureCache.end())
+	if (const auto it = _colorTextureCache.find(kGrayColor); it != _colorTextureCache.end())
 	{
 		SDL_RenderCopy(_sdlConfig.renderer.get(), it->second.get(), nullptr, &dstRect);
 	}
@@ -535,49 +520,18 @@ void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 	SDL_RenderCopyEx(_sdlConfig.renderer.get(), atlas, &srcRect, &dstRect, angle, nullptr, flip);
 }
 
-void RenderManager::GenerateFpsTextures()
-{
-	_fpsTextures.clear();
-
-	for (unsigned int i = 0u; i <= 1000u; ++i)
-	{
-		std::string text = std::to_string(i);
-		constexpr SDL_Color textColor = {.r = 140u, .g = 0u, .b = 255u, .a = 255u};
-
-		std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> surface{
-				TTF_RenderText_Solid(_sdlConfig.fontMedium.get(), text.c_str(), textColor),
-				SDL_FreeSurface};
-		if (!surface)
-		{
-			SDL_Log("Failed to create surface for FPS %u: %s", i, SDL_GetError());
-			continue;
-		}
-
-		std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> texture{
-				SDL_CreateTextureFromSurface(_sdlConfig.renderer.get(), surface.get()),
-				SDL_DestroyTexture};
-		if (!texture)
-		{
-			SDL_Log("Failed to create texture for FPS %u: %s", i, SDL_GetError());
-			continue;
-		}
-
-		_fpsTextures.emplace(i, std::move(texture));
-	}
-}
-
-
-void RenderManager::RenderFPS(const RenderFPSEvent& event)
+void RenderManager::RenderFPS(const RenderFPSEvent& event) const
 {
 	const unsigned int fps = event.fps;
-	if (fps)
+	if (fps == 0u)
 	{
-		// Copy the texture with FPS to the renderer
-		if (const auto it = _fpsTextures.find(fps); it != _fpsTextures.end())
-		{
-			SDL_RenderCopy(_sdlConfig.renderer.get(), it->second.get(), nullptr, &_fpsRectangle);
-		}
+		return;
 	}
+
+	constexpr SDL_Color textColor{.r = 140u, .g = 0u, .b = 255u, .a = 255u};
+	//NOTE: three digits at the medium size are 72 px against a 71 px column - the pixel over the edge
+	//buys reusing the one font opened at startup
+	TextToRenderCentered(_fpsBox, textColor, std::to_string(fps), SDL_Config::kFontSizePtMedium);
 }
 
 void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
@@ -621,15 +575,13 @@ void RenderManager::InitMenu(const GameConfig& gameConfig)
 {
 	_menuParams.Init(gameConfig.LogicalSize(), gameConfig.sideBarWidth);
 
-	constexpr unsigned int grayColor = 0x808080u;
-	CreateColorTexture(grayColor);
+	CreateColorTexture(kGrayColor);
 }
 
-SDL_Rect RenderManager::CalcFpsPos(const UPoint& newSize)
+SDL_Rect RenderManager::CalcFpsBox(const UPoint& battlefieldSize)
 {
-	constexpr int rightPadding = 105;
-	constexpr int topPadding = 15;
-	constexpr int fpsSize = 40;
-	const int posX = static_cast<int>(newSize.x) - rightPadding;
-	return SDL_Rect{.x = posX, .y = topPadding, .w = fpsSize, .h = fpsSize};
+	return SDL_Rect{.x = static_cast<int>(battlefieldSize.x) + kEnemyIconColumnPadding,
+					.y = 0,
+					.w = kEnemyIconBackgroundWidth,
+					.h = kEnemyIconBackgroundTop};
 }

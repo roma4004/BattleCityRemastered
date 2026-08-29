@@ -35,7 +35,6 @@ SDL_Config::SDL_Config(const GameConfig& config, const ProjectConfig& project)
 SDL_Config::~SDL_Config()
 {
 	Mix_CloseAudio();
-	fontSmall.reset();
 	fontMedium.reset();
 	TTF_Quit();
 	IMG_Quit();
@@ -83,6 +82,18 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 
 	SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
 
+	return SetVSync(projectConfig.IsVsyncOn());
+}
+
+//TODO: runtime switch - update Window.vsync in ProjectConfig too, FramePerSecondManager reads it
+//every frame; the renderer and its textures survive the call
+std::expected<void, InitError> SDL_Config::SetVSync(const bool isOn)
+{
+	if (SDL_RenderSetVSync(renderer.get(), isOn ? 1 : 0) != 0)
+	{
+		return std::unexpected(InitError{.stage = "SDL_RenderSetVSync Error", .detail = SDL_GetError()});
+	}
+
 	return {};
 }
 
@@ -94,12 +105,6 @@ std::expected<void, InitError> SDL_Config::InitFonts()
 	}
 
 	fontPath = projectConfig.ResourcePath("Fonts.BattleCity");
-
-	if (fontSmall = OpenFont(kFontSizePtSmall);
-		fontSmall == nullptr)
-	{
-		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = TTF_GetError()});
-	}
 
 	if (fontMedium = OpenFont(kFontSizePtMedium);
 		fontMedium == nullptr)
@@ -188,14 +193,13 @@ std::expected<std::shared_ptr<SDL_Texture>, InitError> SDL_Config::CreateTexture
 	return texture;
 }
 
-//TODO: split surface loading and texture creation to recreate all texture if vsync change
 std::expected<void, InitError> SDL_Config::LoadTexturePair(const std::string_view configKey,
 														   std::shared_ptr<SDL_Surface>& outSurface,
 														   std::shared_ptr<SDL_Texture>& outTexture)
 {
 	const std::filesystem::path path = projectConfig.ResourcePath(std::string{configKey});
 
-	//NOTE: the surface is kept, not dropped after the texture - it is what a vsync change would rebuild from
+	//NOTE: the surface is kept - a device reset rebuilds the texture from it
 	return LoadSurface(path).and_then([&](std::shared_ptr<SDL_Surface> surface)
 	{
 		return CreateTexture(surface, path).transform([&](std::shared_ptr<SDL_Texture> texture)
@@ -260,6 +264,53 @@ std::expected<void, InitError> SDL_Config::LoadAtlas()
 	atlasTexture = std::move(*texture);
 
 	return {};
+}
+
+std::expected<void, InitError> SDL_Config::RebuildTexture(const std::shared_ptr<SDL_Surface>& surface,
+														  std::shared_ptr<SDL_Texture>& outTexture,
+														  const std::string_view name) const
+{
+	if (surface == nullptr)
+	{
+		return {};
+	}
+
+	return CreateTexture(surface, name).transform([&outTexture](std::shared_ptr<SDL_Texture> texture)
+	{
+		outTexture = std::move(texture);
+	});
+}
+
+std::expected<void, InitError> SDL_Config::RecreateTexturesFromSurfaces()
+{
+	const auto rebuildPadHints = [this](const std::vector<std::shared_ptr<SDL_Surface>>& surfaces,
+										std::vector<std::shared_ptr<SDL_Texture>>& outTextures,
+										const std::string_view name) -> std::expected<void, InitError>
+	{
+		outTextures.resize(surfaces.size());
+
+		for (size_t i = 0u; i < surfaces.size(); ++i)
+		{
+			if (auto rebuilt = RebuildTexture(surfaces[i], outTextures[i], name);
+				!rebuilt)
+			{
+				return rebuilt;
+			}
+		}
+
+		return {};
+	};
+
+	return RebuildTexture(logoSurface, logoTexture, "Images.Logo")
+		  .and_then([this] { return RebuildTexture(selectorIconSurface, selectorIconTexture, "Images.MenuSelectorP1"); })
+		  .and_then([&rebuildPadHints, this] { return rebuildPadHints(surfacePS5, ps5Textures, "Images.PS5"); })
+		  .and_then([&rebuildPadHints, this] { return rebuildPadHints(surfaceXBox, xboxTextures, "Images.XBox"); })
+		  .and_then([this]
+		   {
+			   //NOTE: the color key rides in the surface, the blend mode does not - set it again
+			   return RebuildTexture(atlasSurface, atlasTexture, "Images.SpriteSheet")
+					   .transform([this] { SDL_SetTextureBlendMode(atlasTexture.get(), SDL_BLENDMODE_BLEND); });
+		   });
 }
 
 void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
@@ -328,11 +379,8 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow
 
 std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 {
-	Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
-	if (projectConfig.IsVsyncOn())
-	{
-		renderFlags |= SDL_RENDERER_PRESENTVSYNC;//TODO: recreate render if vsync change
-	}
+	//NOTE: vsync is not a creation flag - InitVideo applies it through SetVSync
+	constexpr Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
 
 	const int monitorIndex = projectConfig.MonitorNumber() - 1;
 	SDL_Rect bounds;

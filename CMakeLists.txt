@@ -34,6 +34,7 @@ set(GAME_PLATFORM_SOURCES
         source/application/SDL_Config.cpp
         source/application/UserInput.cpp
         source/components/managers/RenderManager.cpp
+        source/components/managers/TextTextureCache.cpp
 )
 
 # game_core sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above

@@ -393,6 +393,19 @@ void UserInput::Update()
 			OnWindowResized(UPoint{.x = static_cast<unsigned>(event.window.data1),
 								   .y = static_cast<unsigned>(event.window.data2)});
 		}
+
+		//NOTE: render targets lost their pixels - whoever drew into one has to draw it again
+		if (event.type == SDL_RENDER_TARGETS_RESET)
+		{
+			_events->EmitEvent(RenderTargetsResetEvent{});
+		}
+
+		//NOTE: the GPU device died and came back - every texture it ever handed out has to be rebuilt
+		if (event.type == SDL_RENDER_DEVICE_RESET)
+		{
+			_events->EmitEvent(RenderDeviceResetEvent{});
+		}
+
 		WindowDragEvents(event);
 		MouseEvents(event);
 		KeyboardEvents(event);

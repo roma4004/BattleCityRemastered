@@ -91,3 +91,9 @@ struct MapLoadedEvent
 };
 
 struct WorldGeometryChangedEvent {};
+
+//NOTE: the handle survives, the pixels do not - SDL reports it, repairs nothing
+struct RenderTargetsResetEvent {};
+
+//NOTE: SDL sends it only on real device loss - whoever replaces the renderer emits it himself
+struct RenderDeviceResetEvent {};

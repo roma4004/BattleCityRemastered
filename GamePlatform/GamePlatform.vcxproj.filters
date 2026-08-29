@@ -39,6 +39,9 @@
     <ClCompile Include="..\source\components\managers\RenderManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\components\managers\TextTextureCache.cpp">
+      <Filter>source\components\managers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\headers\application\Game.h">
@@ -54,6 +57,9 @@
       <Filter>headers\application</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\RenderManager.h">
+      <Filter>headers\components\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\managers\TextTextureCache.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
   </ItemGroup>

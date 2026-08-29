@@ -78,7 +78,6 @@ void ScoreBoard::OnPauseStatus(const PauseStatusEvent& /*event*/)
 
 void ScoreBoard::OnGameFinished(const GameFinishedEvent&) { DisplayScore(true); }
 
-//TODO: optimize draw call with cache non changed text part
 void ScoreBoard::Draw() const
 {
 	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});

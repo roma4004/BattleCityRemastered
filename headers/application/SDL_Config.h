@@ -27,6 +27,12 @@ struct SDL_Config final
 
 	[[nodiscard]] std::expected<void, InitError> Init();
 
+	//NOTE: the only way in - the ini value at startup, a runtime switch later
+	[[nodiscard]] std::expected<void, InitError> SetVSync(bool isOn);
+
+	//NOTE: the kept surfaces are the source of truth once a device reset takes the textures
+	[[nodiscard]] std::expected<void, InitError> RecreateTexturesFromSurfaces();
+
 	void SaveWindowState(ProjectConfig& outProjectConfig) const;
 
 	const GameConfig& gameConfig;
@@ -35,7 +41,7 @@ struct SDL_Config final
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::filesystem::path fontPath{};
-	std::shared_ptr<TTF_Font> fontSmall{nullptr};
+	//NOTE: the only size opened up front - the text cache opens whatever else it needs on first use
 	std::shared_ptr<TTF_Font> fontMedium{nullptr};
 	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelIntroMusic{nullptr, nullptr};//TODO: soundManager
 
@@ -70,6 +76,9 @@ private:
 															  std::vector<std::shared_ptr<SDL_Surface>>& outSurfaces,
 															  std::vector<std::shared_ptr<SDL_Texture>>& outTextures);
 	[[nodiscard]] std::expected<void, InitError> LoadAtlas();
+	[[nodiscard]] std::expected<void, InitError> RebuildTexture(const std::shared_ptr<SDL_Surface>& surface,
+																std::shared_ptr<SDL_Texture>& outTexture,
+																std::string_view name) const;
 
 	[[nodiscard]] std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> InitWindow() const;
 	[[nodiscard]] std::shared_ptr<SDL_Renderer> InitRender() const;
