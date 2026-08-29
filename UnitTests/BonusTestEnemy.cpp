@@ -40,9 +40,9 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	Uuid _uuid{};
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	float _tankSize{};
-	float _gridSize{};
-	float _tankSpeed{142};
+	double _tankSize{};
+	double _gridSize{};
+	double _tankSpeed{142};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
@@ -61,7 +61,7 @@ protected:
 		_obstacleSpawner = std::make_unique<ObstacleSpawner>(_events, _gameConfig);
 		_fortressWallSub = TestUtils::TrackFortressWall(_events, &_fortressWall);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.f;// for better turns
+		_tankSize = _gridSize * 3.0;// for better turns
 	}
 
 	void TearDown() override
@@ -81,10 +81,10 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressBricWallkHide)
 					Direction::DOWN, _gameMode, _bulletPool, _gameConfig);
 
 	// register a fortress wall
-	const ObjRectangle fortressRect{.x = _tankSize + 1.f, .y = 0, .w = _gridSize, .h = _gridSize};
+	const ObjRectangle fortressRect{.x = _tankSize + 1.0, .y = 0, .w = _gridSize, .h = _gridSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Shovel);
 
 	EXPECT_NE(dynamic_cast<FortressBrickWall*>(_fortressWall.get()), nullptr);
 
@@ -106,7 +106,7 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 
 	// spawn Player
 	_allObjects.reserve(4);
-	const ObjRectangle rectPlayer{.x = _tankSize * 2.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectPlayer{.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
 					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -116,15 +116,15 @@ TEST_F(BonusTestEnemy, ShovelPickUpByEnemyThenFortressSteelWallHide)
 	_events->EmitEvent(Key(PlayerSlot::P1), MoveDownEvent{.isPressed = isPressed});
 
 	// register a fortress wall
-	const ObjRectangle fortressRect{.x = _tankSize * 3.f + 1.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle fortressRect{.x = _tankSize * 3.0 + 1.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	_events->EmitEvent(SpawnObstacleEvent{.rect = fortressRect, .type = ObstacleType::Fortress});
 
 	// spawn bonuses
-	const ObjRectangle enemyBonusRect = {.x = 0.f, .y = _tankSize + 3.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle enemyBonusRect = {.x = 0.0, .y = _tankSize + 3.0, .w = _tankSize, .h = _tankSize};
 
 	_bonusSpawner->SpawnBonus(enemyBonusRect, BonusType::Shovel);
-	const ObjRectangle playerBonusRect = {.x = _tankSize * 2.f,
-										  .y = _tankSize * 2.f + _tankSize + 1.f,
+	const ObjRectangle playerBonusRect = {.x = _tankSize * 2.0,
+										  .y = _tankSize * 2.0 + _tankSize + 1.0,
 										  .w = _tankSize,
 										  .h = _tankSize};
 	_bonusSpawner->SpawnBonus(playerBonusRect, BonusType::Shovel);

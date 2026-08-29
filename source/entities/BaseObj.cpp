@@ -15,54 +15,8 @@ BaseObj::BaseObj(BaseObjProperty baseObjProperty, const CollisionTags collision)
 	_nameWithUuid = _name + UuidUtils::GetStringUuid(_uuid);
 }
 
-//Copy ctor
-BaseObj::BaseObj(const BaseObj& other) = default;
-
-//Move ctor
-BaseObj::BaseObj(BaseObj&& other) noexcept
-	: _health(std::exchange(other._health, 0))
-	, _collision(other._collision)
-	, _uuid(other._uuid)
-	, _name(other._name)
-	, _nameWithUuid(other._nameWithUuid)
-	, _faction(other._faction)
-	, _rect(other._rect) {}
-
 BaseObj::~BaseObj() = default;
 
-//Copy assignment
-BaseObj& BaseObj::operator=(const BaseObj& other)
-{
-	if (this != &other)
-	{
-		_health = other._health;
-		_collision = other._collision;
-		_uuid = other._uuid;
-		_name = other._name;
-		_nameWithUuid = other._nameWithUuid;
-		_faction = other._faction;
-		_rect = other._rect;
-	}
-
-	return *this;
-}
-
-//Move assignment
-BaseObj& BaseObj::operator=(BaseObj&& other) noexcept
-{
-	if (this != &other)
-	{
-		_health = std::exchange(other._health, 0);
-		_collision = other._collision;
-		_uuid = other._uuid;
-		_name = other._name;
-		_nameWithUuid = other._nameWithUuid;
-		_faction = other._faction;
-		_rect = other._rect;
-	}
-
-	return *this;
-}
 
 ObjRectangle BaseObj::GetRect() const { return _rect; }
 
@@ -84,37 +38,35 @@ void BaseObj::SetPos(const FPoint& pos)
 	_rect.y = pos.y;
 }
 
-float BaseObj::GetRightSide() const { return _rect.Right(); }
+double BaseObj::GetRightSide() const { return _rect.Right(); }
 
-float BaseObj::GetBottomSide() const { return _rect.Bottom(); }
+double BaseObj::GetBottomSide() const { return _rect.Bottom(); }
 
-float BaseObj::GetX() const { return _rect.x; }
+double BaseObj::GetX() const { return _rect.x; }
 
 void BaseObj::SetX(const FPoint& pos) { _rect.x = pos.x; }
 
-float BaseObj::GetY() const { return _rect.y; }
+double BaseObj::GetY() const { return _rect.y; }
 
 void BaseObj::SetY(const FPoint& pos) { _rect.y = pos.y; }
 
-float BaseObj::GetWidth() const { return _rect.w; }
+double BaseObj::GetWidth() const { return _rect.w; }
 
-void BaseObj::SetWidth(const float width) { _rect.w = width; }
+void BaseObj::SetWidth(const double width) { _rect.w = width; }
 
-float BaseObj::GetHeight() const { return _rect.h; }
+double BaseObj::GetHeight() const { return _rect.h; }
 
-void BaseObj::SetHeight(const float height) { _rect.h = height; }
+void BaseObj::SetHeight(const double height) { _rect.h = height; }
 
-void BaseObj::MoveX(const float i) { _rect.x += i; }
+void BaseObj::MoveX(const double i) { _rect.x += i; }
 
-void BaseObj::MoveY(const float i) { _rect.y += i; }
+void BaseObj::MoveY(const double i) { _rect.y += i; }
 
 int BaseObj::GetHealth() const { return _health; }
 
-void BaseObj::SetHealth(const int health)
-{
-	_health = health;
-	_isAlive = _health > 0;
-}
+//NOTE: health alone never buries anyone - the client learns of a death from DespawnedEvent, and the
+//host decides it in TakeDamage
+void BaseObj::SetHealth(const int health) { _health = health; }
 
 void BaseObj::SetIsAlive(const bool isAlive) { _isAlive = isAlive; }
 
@@ -126,16 +78,19 @@ void BaseObj::EmitDeathStatistics(const std::string&, Faction) {}
 
 void BaseObj::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
-	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject on PostTickUpdate, so without this
-	//a second hit in the same frame reports a second death
-	const bool wasAlive = _isAlive;
+	//NOTE: a corpse lingers in _allObjects until DisposeDeadObject on PostTickUpdate - it is still in
+	//the blast radius of the next shot, and hitting it again would report a second death
+	if (!_isAlive)
+	{
+		return;
+	}
 
 	_health -= static_cast<int>(damage);
 	_isAlive = _health > 0;
 
 	EmitDamageStatistics(author, faction);
 
-	if (wasAlive && !_isAlive)
+	if (!_isAlive)
 	{
 		EmitDeathStatistics(author, faction);
 	}

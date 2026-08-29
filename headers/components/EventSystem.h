@@ -330,7 +330,9 @@ public:
 		_listeners.erase(handle);
 	}
 
-	bool HasListeners() const override { return std::ranges::any_of(_listeners, detail::IsAlive); }
+	//NOTE: a dead node exists only inside a dispatch, and the bus cannot be destroyed in the middle of
+	//its own - so at rest a non-empty list means live listeners
+	bool HasListeners() const override { return !_listeners.empty(); }
 
 #ifndef NDEBUG
 	void ReportLeftoverListeners(const char* const kind, const char* const eventTypeName) const override
@@ -420,17 +422,17 @@ public:
 			}
 
 			it->second.erase(handle);
+
+			//NOTE: keys are per-instance (a tank's uuid, a player slot) - a key whose last listener left
+			//would otherwise sit in the map for the rest of the match
+			if (it->second.empty())
+			{
+				_listeners.erase(it);
+			}
 		}
 	}
 
-	// Projection, not `| views::values` - see the include block on why.
-	bool HasListeners() const override
-	{
-		return std::ranges::any_of(_listeners, [](const ListenerList& listeners)
-		{
-			return std::ranges::any_of(listeners, detail::IsAlive);
-		}, &ListenerMap::value_type::second);
-	}
+	bool HasListeners() const override { return !_listeners.empty(); }
 
 #ifndef NDEBUG
 	void ReportLeftoverListeners(const char* const kind, const char* const eventTypeName) const override
@@ -459,6 +461,8 @@ private:
 		{
 			std::erase_if(entry.second, std::not_fn(detail::IsAlive));
 		}
+
+		std::erase_if(_listeners, [](const auto& entry) { return entry.second.empty(); });
 
 		_hasDead = false;
 	}

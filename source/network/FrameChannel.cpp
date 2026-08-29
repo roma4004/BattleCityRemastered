@@ -36,11 +36,11 @@ void FrameChannel::CloseForReconnect()
 void FrameChannel::CloseAfterFlush(DrainHandler onClosed)
 {
 	auto self(shared_from_this());
-	boost::asio::post(_socket.get_executor(), [this, self, onClosed = std::move(onClosed)]() mutable
+	boost::asio::post(_socket.get_executor(), [this, self, handler = std::move(onClosed)]() mutable
 	{
 		_onFrame = nullptr;
 		_onError = nullptr;
-		_onDrained = std::move(onClosed);
+		_onDrained = std::move(handler);
 
 		if (IsDrained() || !_writeEnabled || !_socket.is_open())
 		{
@@ -171,7 +171,7 @@ void FrameChannel::SetWriteEnabled(const bool enabled)
 void FrameChannel::Send(std::shared_ptr<const std::string> frame)
 {
 	auto self(shared_from_this());
-	boost::asio::post(_socket.get_executor(), [this, self, frame = std::move(frame)]() mutable
+	boost::asio::post(_socket.get_executor(), [this, self, payload = std::move(frame)]() mutable
 	{
 		if (_writeQueue.size() >= kMaxPendingFrames)
 		{
@@ -179,7 +179,7 @@ void FrameChannel::Send(std::shared_ptr<const std::string> frame)
 			Log::Info(_ownerName + ": pending queue full, dropped oldest frame");
 		}
 
-		_writeQueue.push_back(std::move(frame));
+		_writeQueue.push_back(std::move(payload));
 
 		TryStartWrite();
 	});

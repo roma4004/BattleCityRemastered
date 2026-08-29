@@ -37,7 +37,7 @@ class TankSpawner final
 		int health;
 		std::string name;
 		Faction faction{};
-		float speed;
+		double speed;
 	};
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -62,11 +62,11 @@ class TankSpawner final
 	void DelayedSpawnWith(const DelayedTankSpawn& params);
 
 	[[nodiscard]] ObjRectangle GetEnemyRandomPosX(TankType type) const;
-	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, float speed, int health);
-	void SpawnPlayer(ObjRectangle rect, float speed, int health, Uuid uuid, TankType type);
-	void SpawnCoopBot(ObjRectangle rect, float speed, int health, Uuid uuid, TankType type);
+	[[nodiscard]] bool SpawnEnemy(ObjRectangle rect, Uuid uuid, TankType type, double speed, int health);
+	void SpawnPlayer(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
+	void SpawnCoopBot(ObjRectangle rect, double speed, int health, Uuid uuid, TankType type);
 
-	void DelayedSpawnStart(ObjRectangle rect, int health, const std::string& name, Faction faction, float speed,
+	void DelayedSpawnStart(ObjRectangle rect, int health, const std::string& name, Faction faction, double speed,
 						   Uuid uuid, TankType type);
 	[[nodiscard]] std::unique_ptr<IInputProvider> GetInputProvider(TankType type) const;
 	[[nodiscard]] std::shared_ptr<Tank> CreateTank(TankType type, PawnProperty pawnProperty);

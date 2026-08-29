@@ -23,7 +23,7 @@ template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
 		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
-		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+		double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig)
 {
 	BaseObjProperty baseObjProperty{

@@ -15,7 +15,7 @@ std::expected<void, MapError> Map::LoadFromFile(const std::filesystem::path& pat
 	return MapLoader::LoadFromFile(path).transform([this](MapData data) { _data = std::move(data); });
 }
 
-void Map::CreateObstacles(const float cellSize) const
+void Map::CreateObstacles(const double cellSize) const
 {
 	for (std::size_t row = 0u; row < _data.rows; ++row)
 	{
@@ -28,9 +28,9 @@ void Map::CreateObstacles(const float cellSize) const
 				continue;
 			}
 
-			const float span = ObstacleCellSpan(type);
-			const ObjRectangle rect{.x = static_cast<float>(col) * cellSize,
-									.y = static_cast<float>(row) * cellSize,
+			const double span = ObstacleCellSpan(type);
+			const ObjRectangle rect{.x = static_cast<double>(col) * cellSize,
+									.y = static_cast<double>(row) * cellSize,
 									.w = cellSize * span,
 									.h = cellSize * span};
 

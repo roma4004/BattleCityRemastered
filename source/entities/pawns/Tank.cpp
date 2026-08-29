@@ -24,15 +24,14 @@
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _name, _faction,
-												 _allObjects, _effects, gameConfig);
-	_calibre = BulletCalibre{.speed = 300.f,
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _allObjects, _effects, gameConfig);
+	_calibre = BulletCalibre{.speed = 300.0,
 							 .damage = 15,
-							 .damageRadius = 18.f,
+							 .damageRadius = 18.0,
 							 .tier = _tier,
-							 .size{.x = 9.f, .y = 9.f}};
-	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _faction, _allObjects, bulletPool,
-												 _calibre, _events, _gameConfig);
+							 .size{.x = 9.0, .y = 9.0}};
+	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _faction, bulletPool, _calibre, _events,
+												 _gameConfig);
 
 	Tank::Subscribe();
 
@@ -56,12 +55,7 @@ void Tank::OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event
 	}
 }
 
-Tank::~Tank()
-{
-	_events->EmitEvent(TankDiedEvent{.uuid = _uuid});
-
-	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .name = _name});
-}
+Tank::~Tank() = default;
 
 void Tank::Subscribe()
 {
@@ -153,25 +147,25 @@ void Tank::Shot(const Uuid withUuid)
 	_shootTimer.Reset();
 }
 
-float Tank::GetBulletWidth() const { return _calibre.size.x; }
+double Tank::GetBulletWidth() const { return _calibre.size.x; }
 
-void Tank::SetBulletWidth(const float bulletWidth) { _calibre.size.x = bulletWidth; }
+void Tank::SetBulletWidth(const double bulletWidth) { _calibre.size.x = bulletWidth; }
 
-float Tank::GetBulletHeight() const { return _calibre.size.y; }
+double Tank::GetBulletHeight() const { return _calibre.size.y; }
 
-void Tank::SetBulletHeight(const float bulletHeight) { _calibre.size.y = bulletHeight; }
+void Tank::SetBulletHeight(const double bulletHeight) { _calibre.size.y = bulletHeight; }
 
-float Tank::GetBulletSpeed() const { return _calibre.speed; }
+double Tank::GetBulletSpeed() const { return _calibre.speed; }
 
-void Tank::SetBulletSpeed(const float bulletSpeed) { _calibre.speed = bulletSpeed; }
+void Tank::SetBulletSpeed(const double bulletSpeed) { _calibre.speed = bulletSpeed; }
 
 unsigned int Tank::GetBulletDamage() const { return _calibre.damage; }
 
 void Tank::SetBulletDamage(const unsigned int bulletDamage) { _calibre.damage = bulletDamage; }
 
-float Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
+double Tank::GetBulletDamageRadius() const { return _calibre.damageRadius; }
 
-void Tank::SetBulletDamageRadius(const float bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
+void Tank::SetBulletDamageRadius(const double bulletDamageRadius) { _calibre.damageRadius = bulletDamageRadius; }
 
 void Tank::OnBonusTimer(const BonusTimerStatusChangeEvent& event)
 {
@@ -230,9 +224,9 @@ bool Tank::Upgrade(const TierUpgrade& upgrade)
 void Tank::OnBonusStar()
 {
 	constexpr TierUpgrade star{.tiers = 1u,
-							   .speedFactor = 1.10f,
+							   .speedFactor = 1.10,
 							   .damage = 15,
-							   .radiusFactor = 1.25f,
+							   .radiusFactor = 1.25,
 							   .cooldownCut = milliseconds{150}};
 
 	if (Upgrade(star) && IsHost(_gameMode))
@@ -244,9 +238,9 @@ void Tank::OnBonusStar()
 void Tank::OnBonusCaliber()
 {
 	constexpr TierUpgrade caliber{.tiers = 3u,
-								  .speedFactor = 1.30f,
+								  .speedFactor = 1.30,
 								  .damage = 45,
-								  .radiusFactor = 1.75f,
+								  .radiusFactor = 1.75,
 								  .cooldownCut = milliseconds{450}};
 
 	if (Upgrade(caliber) && IsHost(_gameMode))
@@ -277,9 +271,27 @@ void Tank::EmitDamageStatistics(const std::string& author, Faction faction)
 
 //TODO: two "a tank died" signals - this one, and TankDiedEvent from ~Tank that RespawnManager
 //listens to. A tank cleared without damage fires only the second one.
+//NOTE: the one place a tank dies - the destructor only frees memory, and a field wiped on reset must
+//not look like a team being killed
 void Tank::EmitDeathStatistics(const std::string& author, Faction faction)
 {
 	_events->EmitEvent(StatisticsTankDiedEvent{.who = _name, .author = author, .faction = faction});
+	_events->EmitEvent(TankDiedEvent{.uuid = _uuid});
+	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .name = _name});
+
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = DespawnReason::Destroyed});
+	}
+}
+
+//NOTE: the client never runs the damage itself - its tanks die on the host's word
+void Tank::OnDespawned(const DespawnedEvent& event)
+{
+	Pawn::OnDespawned(event);
+
+	_events->EmitEvent(TankDiedEvent{.uuid = _uuid});
+	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .name = _name});
 }
 
 void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const

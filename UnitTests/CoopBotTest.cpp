@@ -37,9 +37,9 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
-	float _tankSize{};
-	float _tankSpeed{142};
-	float _gridSize{};
+	double _tankSize{};
+	double _tankSpeed{142};
+	double _gridSize{};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
@@ -55,7 +55,7 @@ protected:
 		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.f;// for better turns
+		_tankSize = _gridSize * 3.0;// for better turns
 
 		_allObjects.reserve(4u);
 	}
@@ -69,7 +69,7 @@ protected:
 TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 {
 	// Spawn coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -77,7 +77,7 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn a bonus diagonally, out of the bot's direct line of sight
-	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize});
+	_bonusSpawner->SpawnRandomBonus({.x = _tankSize * 2.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize});
 
 	const Direction startDirCoop = coopBot->GetDirection();
 
@@ -92,7 +92,7 @@ TEST_F(CoopBotTest, CoopNoChangeDirIfBonusOutsideLineOfSight)
 TEST_F(CoopBotTest, CoopShootToEnemy)
 {
 	// Spawn coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -100,7 +100,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Enemy in line of sight
-	const ObjRectangle rectEnemy{.x = 0.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectEnemy{.x = 0.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
 					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -121,7 +121,7 @@ TEST_F(CoopBotTest, CoopShootToEnemy)
 TEST_F(CoopBotTest, CoopNoShootToCoop)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -129,7 +129,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn another coopBot in line of sight first one
-	const ObjRectangle coopBotRect2 = {.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect2 = {.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot2 =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect2, _tankHealth, _uuid, "CoopBot2", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -147,7 +147,7 @@ TEST_F(CoopBotTest, CoopNoShootToCoop)
 TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -155,7 +155,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Player in line of sight Coop
-	const ObjRectangle rectPlayer{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectPlayer{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
 					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -173,7 +173,7 @@ TEST_F(CoopBotTest, CoopNoShootToPlayer1)
 TEST_F(CoopBotTest, CoopShootToBrick)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -181,7 +181,7 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn BrickWall
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -195,7 +195,7 @@ TEST_F(CoopBotTest, CoopShootToBrick)
 TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -203,7 +203,7 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn BrickWall
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize + 18.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize + 18.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BrickWall>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -217,7 +217,7 @@ TEST_F(CoopBotTest, CoopTooCloseToShootTheBrick)
 TEST_F(CoopBotTest, CoopShootToSteel)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 3u, _tankSpeed,
@@ -225,7 +225,7 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn SteelWall
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -239,7 +239,7 @@ TEST_F(CoopBotTest, CoopShootToSteel)
 TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -247,7 +247,7 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn SteelWall
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<SteelWall>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -261,7 +261,7 @@ TEST_F(CoopBotTest, CoopNoShootToSteelIfTierTooLow)
 TEST_F(CoopBotTest, CoopNoShootToEagle)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -269,7 +269,7 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Eagle
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<EagleTile>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -283,7 +283,7 @@ TEST_F(CoopBotTest, CoopNoShootToEagle)
 TEST_F(CoopBotTest, CoopNoShootToFortress)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -291,7 +291,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn FortressWall
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<FortressBrickWall>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -305,7 +305,7 @@ TEST_F(CoopBotTest, CoopNoShootToFortress)
 TEST_F(CoopBotTest, CoopNoShootToWater)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -313,7 +313,7 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Water
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<WaterTile>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -327,7 +327,7 @@ TEST_F(CoopBotTest, CoopNoShootToWater)
 TEST_F(CoopBotTest, CoopNoShootToBush)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -335,7 +335,7 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Bush
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<BushTile>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();
@@ -349,7 +349,7 @@ TEST_F(CoopBotTest, CoopNoShootToBush)
 TEST_F(CoopBotTest, CoopNoShootToIce)
 {
 	// Spawn Coop
-	const ObjRectangle coopBotRect{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle coopBotRect{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<CoopBot> coopBot =
 			TestUtils::CreateTank<CoopBot>(
 					coopBotRect, _tankHealth, _uuid, "CoopBot1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -357,7 +357,7 @@ TEST_F(CoopBotTest, CoopNoShootToIce)
 	_allObjects.emplace_back(coopBot);
 
 	// Spawn Ice
-	const ObjRectangle rect{.x = 0.f, .y = _tankSize * 2.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rect{.x = 0.0, .y = _tankSize * 2.0, .w = _tankSize, .h = _tankSize};
 	_allObjects.emplace_back(std::make_shared<IceTile>(rect, _events, _uuid, _gameMode));
 
 	const size_t sizeBefore = _allObjects.size();

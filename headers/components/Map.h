@@ -23,5 +23,5 @@ public:
 	[[nodiscard]] std::size_t GetCols() const { return _data.cols; }
 	[[nodiscard]] std::size_t GetRows() const { return _data.rows; }
 
-	void CreateObstacles(float cellSize) const;
+	void CreateObstacles(double cellSize) const;
 };

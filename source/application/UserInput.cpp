@@ -14,12 +14,11 @@
 #include <algorithm>
 #include "utils/Log.h"
 
-UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
-					 const WindowConfig& windowConfig, SDL_Config& sdlConfig)
+UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
+					 const SDL_Config& sdlConfig)
 	: _selectedGameMode{GameMode::Demo}
 	, _windowSize{windowConfig.size}
 	, _events{events}
-	, _gameConfig{gameConfig}
 	, _sdlConfig{sdlConfig}
 {
 	Subscribe();

@@ -47,8 +47,7 @@ class UserInput final
 	std::chrono::steady_clock::time_point _lastDragEventTime{};
 	milliseconds _dragEndDelay{150};
 	std::vector<std::shared_ptr<SDL_GameController>> _slotsForController{};
-	const GameConfig& _gameConfig;
-	SDL_Config& _sdlConfig;
+	const SDL_Config& _sdlConfig;
 	SDL_Rect _menuPos{};
 	SDL_Rect _allTilesRect;
 	SDL_Rect _allTilesRectDefault;
@@ -81,8 +80,8 @@ class UserInput final
 	void InitMouseHoverTiles(Point menuPos);
 
 public:
-	UserInput(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig,
-			  const WindowConfig& windowConfig, SDL_Config& sdlConfig);
+	UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
+			  const SDL_Config& sdlConfig);
 	~UserInput();
 
 	void Update();

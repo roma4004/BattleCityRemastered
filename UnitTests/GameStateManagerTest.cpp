@@ -38,9 +38,9 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
-	float _tankSize{};
-	float _tankSpeed{142};
-	float _gridSize{};
+	double _tankSize{};
+	double _tankSpeed{142};
+	double _gridSize{};
 	unsigned short _tankHealth{100u};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
@@ -58,7 +58,7 @@ protected:
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
 		_gridSize = _gameConfig.gridOffset;
-		_tankSize = _gridSize * 3.f;// for better turns
+		_tankSize = _gridSize * 3.0;// for better turns
 
 		_allObjects.reserve(4u);
 	}
@@ -144,6 +144,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 	EXPECT_FALSE(isGameWon);
 	for (unsigned short i = 0u; i < 5u; ++i)
 	{
+		for (const auto& object: _allObjects)
+		{
+			_events->EmitEvent(TankDiedEvent{.uuid = object->GetUuid()});
+		}
 		_allObjects.clear();
 		EXPECT_EQ(_allObjects.size(), 0u);
 
@@ -152,6 +156,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWon)
 		std::cout << "End of respawn round" << (i + 1u) << '\n';
 	}
 
+	for (const auto& object: _allObjects)
+	{
+		_events->EmitEvent(TankDiedEvent{.uuid = object->GetUuid()});
+	}
 	_allObjects.clear();
 
 	for (const auto& [spawnCount, uuid]: howManySpawnCounters)
@@ -245,7 +253,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 			});
 
 	// Spawn Enemy
-	const ObjRectangle rectEnemy{.x = _tankSize * 3.f, .y = _tankSize * 3.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectEnemy{.x = _tankSize * 3.0, .y = _tankSize * 3.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Enemy> enemyBot =
 			TestUtils::CreateTank<Enemy>(
 					rectEnemy, _tankHealth, _uuid, "Enemy1", Faction::EnemyTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -254,7 +262,7 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	// Spawn bonus extra life
 	_bonusSpawner->SpawnBonus(
-			{.x = _tankSize * 3.f, .y = _tankSize * 3.f + _tankSize + 1.f, .w = _tankSize, .h = _tankSize},
+			{.x = _tankSize * 3.0, .y = _tankSize * 3.0 + _tankSize + 1.0, .w = _tankSize, .h = _tankSize},
 			BonusType::Tank);
 
 	//let enemy pick up
@@ -264,6 +272,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 
 	for (unsigned short i = 0u; i < 4u; ++i)
 	{
+		for (const auto& object: _allObjects)
+		{
+			_events->EmitEvent(TankDiedEvent{.uuid = object->GetUuid()});
+		}
 		_allObjects.clear();
 		EXPECT_EQ(_allObjects.size(), 0u);
 
@@ -272,6 +284,10 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 		std::cout << "End of respawn round" << (i + 1u) << " with remain enemy respawn" << respawnEnemyActual << '\n';
 	}
 
+	for (const auto& object: _allObjects)
+	{
+		_events->EmitEvent(TankDiedEvent{.uuid = object->GetUuid()});
+	}
 	_allObjects.clear();
 	EXPECT_EQ(_allObjects.size(), 0u);
 	EXPECT_EQ(respawnEnemyActual, 5u);
@@ -281,10 +297,15 @@ TEST_F(GameStateManagerTest, PlayerTeamWonWithEnemyExtraLife)
 	std::cout << "spawn extra life tank" << '\n';
 	_events->EmitEvent(RespawnTanksEvent{});//spawn 4 enemies
 	EXPECT_EQ(_allObjects.size(), 4u);
-	_allObjects.pop_back();//remove one enemy tank
+	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
+	_allObjects.pop_back();//one enemy tank died
 	_events->EmitEvent(RespawnTanksEvent{});//spawn use extra life
 	EXPECT_EQ(_allObjects.size(), 4u);
-	_allObjects.clear();// remove all 4 enemy tank
+	for (const auto& object: _allObjects)
+	{
+		_events->EmitEvent(TankDiedEvent{.uuid = object->GetUuid()});
+	}
+	_allObjects.clear();
 
 	for (const auto& [spawnCount, uuid]: howManySpawnCounters)
 	{
@@ -323,9 +344,11 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBase)
 
 	EXPECT_FALSE(isGameLose);
 
-	_allObjects.pop_back();// remove eagle
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+	_allObjects.pop_back();// the base fell
 	EXPECT_EQ(respawnActual, 0u);
-	_allObjects.pop_back();// remove player
+	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
+	_allObjects.pop_back();// the player died
 
 	EXPECT_TRUE(isGameLose);
 
@@ -355,6 +378,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
 			_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 	}
 
@@ -366,7 +390,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithThreeDeath)
 // Player team lose with four deaths with extra life
 TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 {
-	const ObjRectangle rectPlayer{.x = 0.f, .y = 0.f, .w = _tankSize, .h = _tankSize};
+	const ObjRectangle rectPlayer{.x = 0.0, .y = 0.0, .w = _tankSize, .h = _tankSize};
 	std::shared_ptr<Player> player =
 			TestUtils::CreateTank<Player>(
 					rectPlayer, _tankHealth, _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, _tankSpeed,
@@ -392,7 +416,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	});
 
 	// Spawn bonus extra life
-	_bonusSpawner->SpawnBonus({.x = 0.f, .y = _tankSize + 1.f, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
+	_bonusSpawner->SpawnBonus({.x = 0.0, .y = _tankSize + 1.0, .w = _tankSize, .h = _tankSize}, BonusType::Tank);
 
 	EXPECT_EQ(respawnActual, 3u);
 
@@ -402,6 +426,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	for (unsigned short i = 0u; i < 3u; ++i)
 	{
 		_events->EmitEvent(RespawnTanksEvent{});
+		_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 		_allObjects.pop_back();
 	}
 	EXPECT_EQ(respawnActual, 1u);
@@ -409,6 +434,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithExtraLifeDeath)
 	EXPECT_FALSE(isGameLose);//Check that we still don't lose because of having extra life
 
 	_events->EmitEvent(RespawnTanksEvent{});
+	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
 	_allObjects.pop_back();
 
 	EXPECT_EQ(respawnActual, 0u);
@@ -453,7 +479,8 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 	EXPECT_EQ(respawnPlayerTwoActual, 3u);//game mode one player so second should not respawn
 
 	_allObjects.emplace_back(std::make_shared<EagleTile>(ObjRectangle{}, _events, _uuid, GameMode::OnePlayer));
-	_allObjects.pop_back();// remove eagle
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+	_allObjects.pop_back();// the base fell
 	EXPECT_EQ(respawnPlayerOneActual, 0u);
 	EXPECT_EQ(respawnPlayerTwoActual, 0u);
 
@@ -462,7 +489,7 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 		auto [x, y] = player->GetPos();//to relative spawn above player
 
 		// Spawn bonus extra life near player
-		_bonusSpawner->SpawnBonus({.x = x, .y = y - _tankSize + 1.f, .w = _tankSize, .h = _tankSize},
+		_bonusSpawner->SpawnBonus({.x = x, .y = y - _tankSize + 1.0, .w = _tankSize, .h = _tankSize},
 								  BonusType::Tank);
 	}
 	else
@@ -476,14 +503,16 @@ TEST_F(GameStateManagerTest, PlayerTeamLoseWithBrokenBaseAndExtraLife)
 
 	EXPECT_EQ(respawnPlayerOneActual, 1u);
 
-	_allObjects.pop_back();//remove bonus
-	_allObjects.pop_back();//remove player
+	_allObjects.pop_back();//the bonus is gone, nobody died
+	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
+	_allObjects.pop_back();//the player died
 
 	EXPECT_FALSE(isGameLose);
 
 	_events->EmitEvent(RespawnTanksEvent{});
 
-	_allObjects.pop_back();//remove player again (last extra life)
+	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
+	_allObjects.pop_back();//the player died again (last extra life)
 
 	EXPECT_TRUE(isGameLose);
 

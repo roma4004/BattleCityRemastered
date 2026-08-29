@@ -30,8 +30,8 @@ protected:
 	std::vector<HealthChangedEvent> _reportedHealth;
 	EventSubscription _spawnQueueSub{};
 	EventSubscription _healthSub{};
-	ObjRectangle _tankRect{.x = 100.f, .y = 100.f, .w = 36.f, .h = 36.f};
-	FPoint _bonusPos{.x = 200.f, .y = 200.f};
+	ObjRectangle _tankRect{.x = 100.0, .y = 100.0, .w = 36.0, .h = 36.0};
+	FPoint _bonusPos{.x = 200.0, .y = 200.0};
 	int _tankHealth{100};
 	int _bonusHeal{50};
 

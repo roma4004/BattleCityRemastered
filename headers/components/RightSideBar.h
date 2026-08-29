@@ -13,8 +13,6 @@ struct RespawnCountChangedToEvent;
 class RightSideBar
 {
 	Point _pos{};
-	bool _isRightSideBarEnabled{false};
-	bool _isEnemyIconEnabled{false};
 	unsigned short _enemiesRespawnCount{};
 	unsigned short _playerOneRespawnCount{};
 	unsigned short _playerTwoRespawnCount{};

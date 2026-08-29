@@ -84,7 +84,7 @@ void BonusSpawner::ResetSpawnRanges()
 
 void BonusSpawner::OnBonusSpawned(const BonusSpawnedEvent& event)
 {
-	const auto size = static_cast<float>(_gameConfig.bonusSize);
+	const auto size = static_cast<double>(_gameConfig.bonusSize);
 	const ObjRectangle rect{.x = event.pos.x, .y = event.pos.y, .w = size, .h = size};
 	SpawnBonus(rect, event.type, event.uuid, event.isSuper);
 }
@@ -93,9 +93,9 @@ void BonusSpawner::Update(const TickUpdateEvent&)
 {
 	if (_spawnTimer.IsCooldownFinish())
 	{
-		const auto size = static_cast<float>(_gameConfig.bonusSize);
-		const auto x = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosX));
-		const auto y = static_cast<float>(RandUtils::GetRandNumber(_distSpawnPosY));
+		const auto size = static_cast<double>(_gameConfig.bonusSize);
+		const auto x = static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosX));
+		const auto y = static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosY));
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
 		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
 		{

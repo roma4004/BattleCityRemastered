@@ -146,7 +146,7 @@ void Bullet::TickUpdate(const double deltaTime)
 
 unsigned int Bullet::GetDamage() const { return _calibre.damage; }
 
-float Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
+double Bullet::GetDamageRadius() const { return _calibre.damageRadius; }
 
 std::string Bullet::GetAuthor() const { return _author; }
 

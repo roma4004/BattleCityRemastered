@@ -27,34 +27,34 @@ protected:
 
 	BaseObj(BaseObjProperty baseObjProperty, CollisionTags collision);
 
-	BaseObj(const BaseObj& other);
-	BaseObj(BaseObj&& other) noexcept;
-
-	BaseObj& operator=(const BaseObj& other);
-	BaseObj& operator=(BaseObj&& other) noexcept;
+	//NOTE: an entity is its uuid - copying one would hand two objects the same identity
+	BaseObj(const BaseObj&) = delete;
+	BaseObj(BaseObj&&) = delete;
+	BaseObj& operator=(const BaseObj&) = delete;
+	BaseObj& operator=(BaseObj&&) = delete;
 
 public:
 	~BaseObj() override;
 
 	[[nodiscard]] FPoint GetPos() const;
 	void SetPos(const FPoint& pos);
-	[[nodiscard]] float GetRightSide() const;
+	[[nodiscard]] double GetRightSide() const;
 
-	[[nodiscard]] float GetBottomSide() const;
-	[[nodiscard]] float GetX() const;
+	[[nodiscard]] double GetBottomSide() const;
+	[[nodiscard]] double GetX() const;
 	void SetX(const FPoint& pos);
 
-	[[nodiscard]] float GetY() const;
+	[[nodiscard]] double GetY() const;
 	void SetY(const FPoint& pos);
 
-	[[nodiscard]] float GetWidth() const;
-	void SetWidth(float width);
+	[[nodiscard]] double GetWidth() const;
+	void SetWidth(double width);
 
-	[[nodiscard]] float GetHeight() const;
-	void SetHeight(float height);
+	[[nodiscard]] double GetHeight() const;
+	void SetHeight(double height);
 
-	void MoveX(float i);
-	void MoveY(float i);
+	void MoveX(double i);
+	void MoveY(double i);
 
 	[[nodiscard]] virtual int GetHealth() const;
 	virtual void SetHealth(int health);

@@ -40,7 +40,7 @@ protected:
 	std::optional<AnimationCreateWaterEvent> _water{};
 	std::optional<AnimationBonusHelmetChangeEvent> _helmet{};
 
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 1u, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 1u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
 	unsigned short _health{1};
 
@@ -73,12 +73,12 @@ protected:
 
 TEST_F(AnimationTriggersTest, BulletExplodesWhereItHit)
 {
-	const ObjRectangle bulletRect{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
 										  _events, _calibre, Direction::DOWN, GameMode::OnePlayer, _gameConfig,
 										  "Player1");
 	_allObjects.emplace_back(bullet);
-	_allObjects.emplace_back(std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 8.f, .w = 12.f, .h = 12.f},
+	_allObjects.emplace_back(std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 8.0, .w = 12.0, .h = 12.0},
 														_events, _uuid, GameMode::OnePlayer));
 
 	_events->EmitEvent(TickUpdateEvent{.deltaTime = 1.0 / 60.0});
@@ -91,7 +91,7 @@ TEST_F(AnimationTriggersTest, BulletExplodesWhereItHit)
 //NOTE: the client never runs the collision itself - the burst has to come from the host's despawn
 TEST_F(AnimationTriggersTest, ClientBulletExplodesOnDespawn)
 {
-	const ObjRectangle bulletRect{.x = 20.f, .y = 30.f, .w = _calibre.size.x, .h = _calibre.size.y};
+	const ObjRectangle bulletRect{.x = 20.0, .y = 30.0, .w = _calibre.size.x, .h = _calibre.size.y};
 	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
 										  _events, _calibre, Direction::DOWN, GameMode::PlayAsClient, _gameConfig,
 										  "Player1");
@@ -105,20 +105,33 @@ TEST_F(AnimationTriggersTest, ClientBulletExplodesOnDespawn)
 	EXPECT_EQ(_bulletExplosion->rect.y, bulletRect.y);
 }
 
+//NOTE: the burst comes from the death, not from the destructor - a field wiped on reset must not
+//explode
 TEST_F(AnimationTriggersTest, TankExplodesWhereItDied)
 {
-	const ObjRectangle tankRect{.x = 40.f, .y = 50.f, .w = 12.f, .h = 12.f};
-	{
-		auto tank = TestUtils::CreateTank<Player>(tankRect, _health, _uuid, "Player1", Faction::PlayerTeam,
-												  &_allObjects, _events, 1u, 142.f, Direction::UP,
-												  GameMode::OnePlayer, _bulletPool, _gameConfig);
-		EXPECT_FALSE(_tankExplosion.has_value());
-	}
+	constexpr ObjRectangle tankRect{.x = 40.0, .y = 50.0, .w = 12.0, .h = 12.0};
+	auto tank = TestUtils::CreateTank<Player>(tankRect, _health, _uuid, "Player1", Faction::PlayerTeam,
+											  &_allObjects, _events, 1u, 142.0, Direction::UP,
+											  GameMode::OnePlayer, _bulletPool, _gameConfig);
+
+	tank->TakeDamage(static_cast<unsigned int>(tank->GetHealth()), "Enemy1", Faction::EnemyTeam);
 
 	ASSERT_TRUE(_tankExplosion.has_value());
 	EXPECT_EQ(_tankExplosion->name, "Player1");
 	EXPECT_EQ(_tankExplosion->rect.x, tankRect.x);
 	EXPECT_EQ(_tankExplosion->rect.y, tankRect.y);
+}
+
+TEST_F(AnimationTriggersTest, ALiveTankTakenOffTheFieldExplodesNothing)
+{
+	{
+		auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health,
+												  _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u,
+												  142.0, Direction::UP, GameMode::OnePlayer, _bulletPool,
+												  _gameConfig);
+	}
+
+	EXPECT_FALSE(_tankExplosion.has_value());
 }
 
 TEST_F(AnimationTriggersTest, SpawnedTankAsksForItsSpawnBurst)
@@ -136,7 +149,7 @@ TEST_F(AnimationTriggersTest, SpawnedTankAsksForItsSpawnBurst)
 
 TEST_F(AnimationTriggersTest, WaterTileAsksForItsFlowWhenBuilt)
 {
-	const ObjRectangle waterRect{.x = 24.f, .y = 36.f, .w = 12.f, .h = 12.f};
+	constexpr ObjRectangle waterRect{.x = 24.0, .y = 36.0, .w = 12.0, .h = 12.0};
 	const WaterTile water{waterRect, _events, _uuid, GameMode::OnePlayer};
 
 	ASSERT_TRUE(_water.has_value());
@@ -146,8 +159,8 @@ TEST_F(AnimationTriggersTest, WaterTileAsksForItsFlowWhenBuilt)
 
 TEST_F(AnimationTriggersTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
-	auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.f, .y = 0.f, .w = 12.f, .h = 12.f}, _health, _uuid,
-											  "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, 142.f,
+	auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
+											  "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, 142.0,
 											  Direction::UP, GameMode::OnePlayer, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(std::string{"Player1"}), BonusHelmetStatusChangeEvent{.isActive = true});

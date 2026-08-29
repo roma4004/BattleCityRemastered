@@ -66,7 +66,7 @@ void TankSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& ev
 
 void TankSpawner::OnTankRespawned(const TankRespawnedEvent& event)
 {
-	const float tankSize{_gameConfig.tankSize};
+	const double tankSize{_gameConfig.tankSize};
 	OnClientRespawn(event.type, event.uuid,
 					ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = tankSize, .h = tankSize});
 }
@@ -86,26 +86,26 @@ void TankSpawner::Reset(const GameResetEvent&)
 
 ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 {
-	const float tankSize{_gameConfig.tankSize};
-	ObjRectangle rect{.x = -1.f, .y = -1.f, .w = tankSize, .h = tankSize};
+	const double tankSize{_gameConfig.tankSize};
+	ObjRectangle rect{.x = -1.0, .y = -1.0, .w = tankSize, .h = tankSize};
 	if (type > TankType::ENEMY4)
 	{
 		return rect;
 	}
 
-	const float battleFieldSizeX{static_cast<float>(_gameConfig.battlefieldSize.x) - tankSize};
+	const double battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x) - tankSize};
 
-	const float quartFieldSizeX = battleFieldSizeX / 4.f;
-	const std::vector<std::pair<float, float>> spawnRanges{{0.f, quartFieldSizeX},
-														   {quartFieldSizeX, quartFieldSizeX * 2.f},
-														   {quartFieldSizeX * 2.f, quartFieldSizeX * 3.f},
-														   {quartFieldSizeX * 3.f, battleFieldSizeX}};
+	const double quartFieldSizeX = battleFieldSizeX / 4.0;
+	const std::vector<std::pair<double, double>> spawnRanges{{0.0, quartFieldSizeX},
+														   {quartFieldSizeX, quartFieldSizeX * 2.0},
+														   {quartFieldSizeX * 2.0, quartFieldSizeX * 3.0},
+														   {quartFieldSizeX * 3.0, battleFieldSizeX}};
 
 
 	const auto randomRange = static_cast<std::size_t>(type);
 	auto [minX, maxX] = spawnRanges[randomRange];
-	const std::uniform_real_distribution<float> distRandX{minX, maxX};
-	const float randomX = RandUtils::GetRandNumber(distRandX);
+	const std::uniform_real_distribution<double> distRandX{minX, maxX};
+	const double randomX = RandUtils::GetRandNumber(distRandX);
 
 	ObjRectangle spawnPos{.x = randomX, .y = 0, .w = tankSize, .h = tankSize};
 	auto isCollidePredicate = [&spawnPos](const auto& object)
@@ -119,7 +119,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 	}
 	else
 	{
-		float spawnX = minX;
+		double spawnX = minX;
 		while (spawnX < maxX)
 		{
 			spawnPos.x = spawnX;
@@ -128,17 +128,17 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 				rect = spawnPos;
 				break;
 			}
-			spawnX += tankSize / 2.f;
+			spawnX += tankSize / 2.0;
 		}
 	}
 
 	return rect;
 }
 
-bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const float speed,
+bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const TankType type, const double speed,
 							 const int health)
 {
-	if (ColliderUtils::AreEqualAbsolute(rect.y, -1.f))
+	if (ColliderUtils::AreEqualAbsolute(rect.y, -1.0))
 	{
 		return false;
 	}
@@ -153,7 +153,7 @@ bool TankSpawner::SpawnEnemy(const ObjRectangle rect, const Uuid uuid, const Tan
 	return true;
 }
 
-void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const int health, const Uuid uuid,
+void TankSpawner::SpawnPlayer(const ObjRectangle rect, const double speed, const int health, const Uuid uuid,
 							  const TankType type)
 {
 	const bool isFirst = type == TankType::PLAYER1;
@@ -165,7 +165,7 @@ void TankSpawner::SpawnPlayer(const ObjRectangle rect, const float speed, const 
 	DelayedSpawnStart(rect, health, name, faction, speed, uuid, type);
 }
 
-void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const float speed, const int health, const Uuid uuid,
+void TankSpawner::SpawnCoopBot(const ObjRectangle rect, const double speed, const int health, const Uuid uuid,
 							   const TankType type)
 {
 	const std::string name{(type == TankType::COOP1 ? "CoopBot1" : "CoopBot2")};
@@ -190,19 +190,19 @@ void TankSpawner::RespawnEnemyTanks(const TankType type, const Uuid uuid,
 //TODO: write unit test for bot change direction if faced obstacle
 ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 {
-	const float battleFieldSizeX{static_cast<float>(_gameConfig.battlefieldSize.x)};
-	const float battleFieldSizeY{static_cast<float>(_gameConfig.battlefieldSize.y)};
+	const double battleFieldSizeX{static_cast<double>(_gameConfig.battlefieldSize.x)};
+	const double battleFieldSizeY{static_cast<double>(_gameConfig.battlefieldSize.y)};
 	// const float gridOffset{_gameConfig.gridOffset};
-	const float tankSize{_gameConfig.tankSize};
+	const double tankSize{_gameConfig.tankSize};
 
-	const std::pair spawnRangePlayer1{0.f, battleFieldSizeX / 2.f - tankSize * 3.25f};
-	const std::pair spawnRangePlayer2{battleFieldSizeX / 2.f + tankSize * 2.25f, battleFieldSizeX - tankSize};
+	const std::pair spawnRangePlayer1{0.0, battleFieldSizeX / 2.0 - tankSize * 3.25};
+	const std::pair spawnRangePlayer2{battleFieldSizeX / 2.0 + tankSize * 2.25, battleFieldSizeX - tankSize};
 	auto [minX, maxX]{isFirst ? spawnRangePlayer1 : spawnRangePlayer2};
 
 	const std::uniform_real_distribution distRandId{minX, maxX};
-	const float randomX = RandUtils::GetRandNumber(distRandId);
+	const double randomX = RandUtils::GetRandNumber(distRandId);
 
-	ObjRectangle rect{.x = -1.f, .y = -1.f, .w = tankSize, .h = tankSize};
+	ObjRectangle rect{.x = -1.0, .y = -1.0, .w = tankSize, .h = tankSize};
 	ObjRectangle spawnPos{.x = randomX, .y = battleFieldSizeY - tankSize, .w = tankSize, .h = tankSize};
 	auto isCollidePredicate = [&spawnPos](const auto& object)
 	{
@@ -215,7 +215,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 	}
 	else
 	{
-		float spawnX = minX;
+		double spawnX = minX;
 		while (spawnX < maxX)
 		{
 			spawnPos.x = spawnX;
@@ -225,7 +225,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 				break;
 			}
 
-			spawnX += tankSize / 2.f;
+			spawnX += tankSize / 2.0;
 		}
 	}
 
@@ -237,7 +237,7 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 {
 	const bool isFirst = type == TankType::PLAYER1;
 	const ObjRectangle spawnRect{rect.has_value() ? *rect : GetPlayerRandomPosX(isFirst)};
-	if (ColliderUtils::AreEqualAbsolute(spawnRect.y, -1.f))
+	if (ColliderUtils::AreEqualAbsolute(spawnRect.y, -1.0))
 	{
 		return;
 	}
@@ -336,7 +336,7 @@ std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty 
 }
 
 void TankSpawner::DelayedSpawnStart(const ObjRectangle rect, const int health, const std::string& name,
-									const Faction faction, const float speed, const Uuid uuid, const TankType type)
+									const Faction faction, const double speed, const Uuid uuid, const TankType type)
 {
 	_delayedSpawns.push_back(DelayedTankSpawn{.uuid = uuid,
 											  .type = type,

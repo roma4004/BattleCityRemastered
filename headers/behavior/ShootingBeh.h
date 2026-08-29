@@ -26,20 +26,18 @@ class ShootingBeh final : public IShootable
 	Faction& _faction;
 	BulletCalibre& _calibre;
 
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
-
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 
-	[[nodiscard]] float FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-										const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
+	[[nodiscard]] double FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
+										const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
 	[[nodiscard]] ObjRectangle GetBulletStartRect() const;
 
 public:
 	ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
-				std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<BulletPool>& bulletPool,
-				BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
+				const std::shared_ptr<BulletPool>& bulletPool, BulletCalibre& calibre,
+				const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~ShootingBeh() override;
 

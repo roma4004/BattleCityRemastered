@@ -10,10 +10,7 @@ EagleTile::EagleTile(const ObjRectangle rect, const std::shared_ptr<EventSystem>
 	Subscribe();
 }
 
-EagleTile::~EagleTile()
-{
-	_events->EmitEvent(PlayersBaseFinishedEvent{});
-}
+EagleTile::~EagleTile() = default;
 
 void EagleTile::Subscribe()
 {
@@ -22,4 +19,16 @@ void EagleTile::Subscribe()
 
 void EagleTile::OnDraw(const DrawEvent&) const { Draw(); }
 
-void EagleTile::EmitDeathStatistics(const std::string&, Faction) {}
+//NOTE: the base falls where it is destroyed - a field wiped on reset must not read as a defeat
+void EagleTile::EmitDeathStatistics(const std::string&, Faction)
+{
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+}
+
+//NOTE: the client is told, it does not work it out from health
+void EagleTile::OnDespawned(const DespawnedEvent& event)
+{
+	Obstacle::OnDespawned(event);
+
+	_events->EmitEvent(PlayersBaseFinishedEvent{});
+}

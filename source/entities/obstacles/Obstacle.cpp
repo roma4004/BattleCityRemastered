@@ -51,10 +51,22 @@ void Obstacle::Draw() const
 
 void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
 	BaseObj::TakeDamage(damage, author, faction);
 
-	if (IsHost(_gameMode))
+	if (!IsHost(_gameMode))
 	{
-		_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+		return;
+	}
+
+	_events->EmitEvent(HealthChangedEvent{.who = _name, .health = GetHealth(), .uuid = _uuid});
+
+	if (!GetIsAlive())
+	{
+		_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = DespawnReason::Destroyed});
 	}
 }

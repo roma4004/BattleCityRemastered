@@ -164,10 +164,10 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 	gameConfig.gameMode = GameMode::PlayAsClient;
 	const ObstacleSpawner spawner{events, gameConfig};
 
-	const float cell{gameConfig.gridOffset};
-	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.f, .y = 0.f}, .type = ObstacleType::Eagle,
+	const double cell{gameConfig.gridOffset};
+	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.0, .y = 0.0}, .type = ObstacleType::Eagle,
 										   .uuid = UuidUtils::GetRandomUuid()});
-	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.f, .y = 0.f}, .type = ObstacleType::Brick,
+	events->EmitEvent(ObstacleSpawnedEvent{.pos = {.x = 0.0, .y = 0.0}, .type = ObstacleType::Brick,
 										   .uuid = UuidUtils::GetRandomUuid()});
 
 	ASSERT_EQ(allObjects.size(), 2u);

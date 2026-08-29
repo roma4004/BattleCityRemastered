@@ -67,7 +67,7 @@ public:
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
 			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
 			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
-			float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+			double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
@@ -101,7 +101,7 @@ template<class T>
 std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uuid, std::string name,
 										 Faction faction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
 										 std::shared_ptr<EventSystem> events,
-										 unsigned short tier, float tankSpeed, Direction dir, GameMode gameMode,
+										 unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode,
 										 std::shared_ptr<BulletPool> bulletPool,
 										 const GameConfig& gameConfig)
 {
@@ -127,14 +127,14 @@ template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
 		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
 		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
-		float tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+		double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig);
 
 //NOTE: an epsilon comparison is not transitive, so it is no equivalence relation and has no
 //business being spelled == on the type. Production never compares FPoints; the tests do.
 [[nodiscard]] inline bool operator==(const FPoint& lhs, const FPoint& rhs) noexcept
 {
-	static constexpr float epsilon = 1e-4f;
+	static constexpr double epsilon = 1e-4;
 	return std::abs(lhs.x - rhs.x) < epsilon && std::abs(lhs.y - rhs.y) < epsilon;
 }
 

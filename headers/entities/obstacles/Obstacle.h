@@ -17,10 +17,10 @@ struct DespawnedEvent;
 class Obstacle : public BaseObj, public IDrawable
 {
 	void OnHealthChanged(const HealthChangedEvent& event);
-	void OnDespawned(const DespawnedEvent&);
 	void SubscribeAsClient();
 
 protected:
+	virtual void OnDespawned(const DespawnedEvent& event);
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	GameMode _gameMode{};

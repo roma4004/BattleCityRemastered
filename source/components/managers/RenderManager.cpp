@@ -257,7 +257,7 @@ void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
 {
-	return (color.a << 24u) | (color.r << 16u) | (color.g << 8u) | (color.b << 0u);
+	return ComponentsToColor(color.r, color.g, color.b, color.a);
 }
 
 SDL_Color RenderManager::IntToColor(const unsigned int color)
@@ -270,7 +270,9 @@ SDL_Color RenderManager::IntToColor(const unsigned int color)
 
 unsigned int RenderManager::ComponentsToColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
 {
-	return (a << 24u) | (r << 16u) | (g << 8u) | (b << 0u);
+	//NOTE: Uint8 promotes to int, and shifting 255 by 24 leaves the sign bit - the widening keeps the
+	//whole thing unsigned
+	return (Uint32{a} << 24u) | (Uint32{r} << 16u) | (Uint32{g} << 8u) | Uint32{b};
 }
 
 // blend menu panel and menu texture background
@@ -544,7 +546,7 @@ void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
 		return;
 	}
 
-	const int centerX = static_cast<int>(rect.x + rect.w / 2.f);
+	const int centerX = static_cast<int>(rect.x + rect.w / 2.0);
 	const int barWidthInt = static_cast<int>(healthWidth);
 	const int healthPosX = centerX - (barWidthInt / 2);
 

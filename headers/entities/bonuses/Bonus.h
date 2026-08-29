@@ -24,7 +24,6 @@ public:
 private:
 	GameMode _gameMode{};
 	BonusType _bonusType{};
-	DespawnReason _despawnReason{};
 	bool _isSuper{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -33,6 +32,7 @@ private:
 	void Draw() const override;
 	void OnDraw(const DrawEvent&) const;
 	void OnDespawned(const DespawnedEvent& event);
+	void Despawn(DespawnReason reason);
 
 	void EmitDamageStatistics(const std::string& author, Faction faction) override;
 

@@ -21,9 +21,9 @@ protected:
 	GameConfig _gameConfig{};
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
-	BulletCalibre _calibre{.speed = 300.f, .damage = 1u, .damageRadius = 12.f, .tier = 3u, .size{.x = 6.f, .y = 5.f}};
+	BulletCalibre _calibre{.speed = 300.0, .damage = 1u, .damageRadius = 12.0, .tier = 3u, .size{.x = 6.0, .y = 5.0}};
 	Uuid _uuid{};
-	float _gridSize{1};
+	double _gridSize{1};
 	unsigned short _bulletHealth{1};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
@@ -36,7 +36,7 @@ protected:
 
 		_allObjects.reserve(4);
 
-		const ObjRectangle rectBullet{.x = 0.f, .y = 0.f, .w = _calibre.size.x, .h = _calibre.size.y};
+		const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
 						rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
@@ -54,7 +54,7 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 	if (const Bullet* bullet = dynamic_cast<Bullet*>(_allObjects.back().get()))
 	{
 		// spawn BrickWall
-		ObjRectangle wallRect = {.x = 0.f, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
+		ObjRectangle wallRect = {.x = 0.0, .y = _calibre.size.y + 1, .w = _gridSize, .h = _gridSize};
 		auto steelWall = std::make_shared<SteelWall>(wallRect, _events, _uuid, _gameMode);
 		_allObjects.emplace_back(steelWall);
 
@@ -76,9 +76,9 @@ TEST_F(BulletTestAdvanced, BulletTier2CanDestroySteelWall)
 // the wall behind the one that was hit stays out of reach at 30 and at 144 frames per second alike
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 {
-	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 20.f, .w = _gridSize, .h = 4.f},
+	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
 												_events, _uuid, _gameMode);
-	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 34.f, .w = _gridSize, .h = 4.f},
+	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
 											   _events, _uuid, _gameMode);
 	_allObjects.emplace_back(nearWall);
 	_allObjects.emplace_back(farWall);
@@ -97,9 +97,9 @@ TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtThirtyFps)
 
 TEST_F(BulletTestAdvanced, BlastSparesTheWallBehindAtHundredFortyFourFps)
 {
-	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 20.f, .w = _gridSize, .h = 4.f},
+	auto nearWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 20.0, .w = _gridSize, .h = 4.0},
 												_events, _uuid, _gameMode);
-	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.f, .y = 34.f, .w = _gridSize, .h = 4.f},
+	auto farWall = std::make_shared<BrickWall>(ObjRectangle{.x = 0.0, .y = 34.0, .w = _gridSize, .h = 4.0},
 											   _events, _uuid, _gameMode);
 	_allObjects.emplace_back(nearWall);
 	_allObjects.emplace_back(farWall);

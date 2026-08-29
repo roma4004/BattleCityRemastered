@@ -10,7 +10,6 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/Faction.h"
-#include "utils/Log.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
 #include <array>
@@ -132,19 +131,17 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 	Subscribe();
 }
 
-Bonus::~Bonus()
+Bonus::~Bonus() = default;
+
+//NOTE: the one way off the field - picked up, expired or shot, the announcement is the same
+void Bonus::Despawn(const DespawnReason reason)
 {
-	if (BaseObj::GetIsAlive() || !IsHost(_gameMode))
-	{
-		return;//NOTE: skip in case of shutdown\restart
-	}
+	SetIsAlive(false);
 
-	if (_despawnReason == DespawnReason::None)
+	if (IsHost(_gameMode))
 	{
-		Log::Error("Bonus " + _name + " left the field without naming a reason");
+		_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = reason});
 	}
-
-	_events->EmitEvent(DespawnedEvent{.who = _name, .uuid = _uuid, .reason = _despawnReason});
 }
 
 void Bonus::Subscribe()
@@ -183,17 +180,24 @@ void Bonus::Expire()
 		return;
 	}
 
-	_despawnReason = DespawnReason::Expired;
-	SetIsAlive(false);
-
 	_events->EmitEvent(StatisticsBonusExpiredEvent{});
+
+	Despawn(DespawnReason::Expired);
 }
 
 void Bonus::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
-	_despawnReason = DespawnReason::Destroyed;
+	if (!GetIsAlive())
+	{
+		return;
+	}
 
 	BaseObj::TakeDamage(damage, author, faction);
+
+	if (!GetIsAlive())
+	{
+		Despawn(DespawnReason::Destroyed);
+	}
 }
 
 void Bonus::EmitDamageStatistics(const std::string& author, Faction faction)
@@ -205,8 +209,6 @@ void Bonus::PickUpBonus(const std::string& author, Faction faction)
 {
 	if (GetIsAlive())
 	{
-		_despawnReason = DespawnReason::PickedUp;
-
 		_events->EmitEvent(StatisticsBonusPickupEvent{.author = author, .faction = faction});
 
 		const PickupEmitter emit = GetRecipe(_bonusType).emit;
@@ -219,6 +221,6 @@ void Bonus::PickUpBonus(const std::string& author, Faction faction)
 			emit(*_events, author, faction);
 		}
 
-		SetIsAlive(false);
+		Despawn(DespawnReason::PickedUp);
 	}
 }

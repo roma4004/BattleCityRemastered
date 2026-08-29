@@ -15,8 +15,8 @@ class Bot : public Tank
 	std::uniform_int_distribution<> _distTurnRate{};
 	Timer _randomChangeDirTimer{};
 
-	float _obstacleDistance{};
-	float _bulletOffset{};
+	double _obstacleDistance{};
+	double _bulletOffset{};
 
 protected:
 	std::function<bool(const std::shared_ptr<BaseObj>&)> m_shouldShootToObstacleStrategy;

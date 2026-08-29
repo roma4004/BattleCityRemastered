@@ -34,11 +34,11 @@ public:
 	[[nodiscard]] Direction GetDirection() const;
 	void SetDirection(Direction dir);
 
-	[[nodiscard]] float GetSpeed() const;
-	void SetSpeed(float speed);
+	[[nodiscard]] double GetSpeed() const;
+	void SetSpeed(double speed);
 
 protected:
-	float _speed{};
+	double _speed{};
 	std::string _uuidStr{};
 	unsigned short _tier{1u};
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};

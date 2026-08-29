@@ -27,9 +27,9 @@ public:
 	int tankHealth{100};
 	std::chrono::milliseconds enemySpawnCooldown{5000};
 	std::chrono::milliseconds bonusLifeTimeCooldown{15000};
-	float gridOffset{WorldGeometry::kCellSize};
-	float tankSize{gridOffset * 3.f};
-	float tankSpeed{142.f};
+	double gridOffset{WorldGeometry::kCellSize};
+	double tankSize{gridOffset * 3.0};
+	double tankSpeed{142.0};
 	int bonusSize{static_cast<int>(tankSize)};
 	bool skipIntroMusic{false};//NOTE: launch flag, not persisted - autoplay only, sound stays on
 };

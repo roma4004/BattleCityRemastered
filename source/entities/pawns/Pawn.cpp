@@ -67,6 +67,11 @@ void Pawn::Unsubscribe()
 
 void Pawn::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
 	BaseObj::TakeDamage(damage, author, faction);
 
 	if (IsHost(_gameMode))
@@ -94,6 +99,6 @@ Direction Pawn::GetDirection() const { return _dir; }
 
 void Pawn::SetDirection(const Direction dir) { _dir = dir; }
 
-float Pawn::GetSpeed() const { return _speed; }
+double Pawn::GetSpeed() const { return _speed; }
 
-void Pawn::SetSpeed(const float speed) { _speed = speed; }
+void Pawn::SetSpeed(const double speed) { _speed = speed; }

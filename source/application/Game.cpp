@@ -37,7 +37,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
 	, _stateManager{std::make_unique<GameStateManager>(_events)}
-	, _userInput{std::make_unique<UserInput>(_events, gameConfig, windowConfig, sdlConfig)}
+	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
 	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}

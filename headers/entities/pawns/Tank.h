@@ -58,9 +58,9 @@ class Tank : public Pawn
 	struct TierUpgrade
 	{
 		unsigned short tiers{};
-		float speedFactor{};
+		double speedFactor{};
 		unsigned int damage{};
-		float radiusFactor{};
+		double radiusFactor{};
 		std::chrono::milliseconds cooldownCut{};
 	};
 
@@ -78,6 +78,7 @@ protected:
 
 	void EmitDamageStatistics(const std::string& author, Faction faction) override;
 	void EmitDeathStatistics(const std::string& author, Faction faction) override;
+	void OnDespawned(const DespawnedEvent& event) override;
 
 	void Subscribe() override;
 
@@ -104,18 +105,18 @@ public:
 
 	[[nodiscard]] unsigned int GetTier() const;
 
-	[[nodiscard]] float GetBulletWidth() const;
-	void SetBulletWidth(float bulletWidth);
+	[[nodiscard]] double GetBulletWidth() const;
+	void SetBulletWidth(double bulletWidth);
 
-	[[nodiscard]] float GetBulletHeight() const;
-	void SetBulletHeight(float bulletHeight);
+	[[nodiscard]] double GetBulletHeight() const;
+	void SetBulletHeight(double bulletHeight);
 
-	[[nodiscard]] float GetBulletSpeed() const;
-	void SetBulletSpeed(float bulletSpeed);
+	[[nodiscard]] double GetBulletSpeed() const;
+	void SetBulletSpeed(double bulletSpeed);
 
 	[[nodiscard]] unsigned int GetBulletDamage() const;
 	void SetBulletDamage(unsigned int bulletDamage);
 
-	[[nodiscard]] float GetBulletDamageRadius() const;
-	void SetBulletDamageRadius(float bulletDamageRadius);
+	[[nodiscard]] double GetBulletDamageRadius() const;
+	void SetBulletDamageRadius(double bulletDamageRadius);
 };

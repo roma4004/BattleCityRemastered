@@ -5,5 +5,5 @@
 struct Circle final
 {
 	FPoint center{};
-	float radius{};
+	double radius{};
 };

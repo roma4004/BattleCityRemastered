@@ -118,7 +118,7 @@ TEST_F(NetworkTest, PosEventReplication)
 	const auto client = MakeClient(server->GetBoundPort());
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr FPoint posOrigin{.x = 42.f, .y = 42.f};
+	constexpr FPoint posOrigin{.x = 42.0, .y = 42.0};
 	constexpr auto directionOrigin{Direction::UP};
 
 	std::optional<PosChangedEvent> received{};
@@ -231,7 +231,7 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	const auto client = MakeClient(server->GetBoundPort());
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	constexpr FPoint pos{.x = 42.f, .y = 42.f};
+	constexpr FPoint pos{.x = 42.0, .y = 42.0};
 	constexpr auto type{BonusType::Timer};
 
 	std::optional<BonusSpawnedEvent> received{};
@@ -309,7 +309,7 @@ TEST_F(NetworkTest, ObstacleSpawnEventReplication)
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
 	constexpr auto obstacleType = ObstacleType::Brick;
-	constexpr FPoint posOrigin{.x = 42.0f, .y = 43.0f};
+	constexpr FPoint posOrigin{.x = 42.0, .y = 43.0};
 
 	std::optional<ObstacleSpawnedEvent> received{};
 	auto obstacleSpawnSub = _clientEvents->AddListener(
@@ -337,8 +337,8 @@ TEST_F(NetworkTest, MassiveObstacleSpawnEventReplication)
 	sent.reserve(itemsInMassiveTest);
 	for (size_t i = 0u; i < itemsInMassiveTest; ++i)
 	{
-		const auto value = static_cast<float>(i);
-		sent.emplace_back(FPoint{.x = value, .y = value + 1.f});
+		const auto value = static_cast<double>(i);
+		sent.emplace_back(FPoint{.x = value, .y = value + 1.0});
 	}
 
 	std::vector<ObstacleSpawnedEvent> received{};
@@ -377,7 +377,7 @@ TEST_F(NetworkTest, RespawnTankEventReplication)
 			TankType::ENEMY4
 	};
 
-	constexpr FPoint posOrigin{.x = 12.f, .y = 34.f};
+	constexpr FPoint posOrigin{.x = 12.0, .y = 34.0};
 	constexpr size_t expectedCount{tankTypes.size()};
 
 	std::vector<TankRespawnedEvent> received{};

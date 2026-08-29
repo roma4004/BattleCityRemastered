@@ -10,22 +10,31 @@
 #include <memory>
 #include <ranges>
 
-MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, float& speed, Uuid& uuid, std::string& name,
-								 Faction& faction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
-								 BonusEffectProperty& effects, const GameConfig& gameConfig)
+MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, double& speed, Uuid& uuid,
+								 std::vector<std::shared_ptr<BaseObj>>* allObjects, BonusEffectProperty& effects,
+								 const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
 	, _direction{dir}
 	, _speed{speed}
 	, _effects{effects}
-	, _name{name}
-	, _faction{faction}
 	, _gameConfig{gameConfig}
 	, _allObjects{allObjects} {}
 
+//NOTE: the step is fractional at any real frame rate - flooring it without keeping the remainder
+//makes the tank slower than its speed says, and above 142 fps it stops moving at all
+double MoveLikeTankBeh::TakeWholePixels(double& remainder, const double step)
+{
+	remainder += step;
+	const double wholePixels = std::floor(remainder);
+	remainder -= wholePixels;
+
+	return wholePixels;
+}
+
 ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direction dir) const
 {
-	const float speed = _speed * static_cast<float>(deltaTime);//TODO: speed from float to double, as well as rectangle
+	const double speed = _speed * deltaTime;
 	const auto [x, y, w, h] = _rect;
 	if (dir == Direction::UP)
 	{
@@ -95,18 +104,18 @@ std::vector<std::shared_ptr<BaseObj>> MoveLikeTankBeh::GetTouchedObjects(const d
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-									   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+double MoveLikeTankBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
+									   const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
 	const auto [maxX, maxY] = _gameConfig.battlefieldSize;
-	auto minDist = static_cast<float>(maxX * maxY);
+	auto minDist = static_cast<double>(maxX * maxY);
 	// float nearestDist = 0.f;
 	for (const auto& object: objects)
 	{
 		if (object != nullptr)
 		{
 			// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
-			const float distance = std::abs(sideDiff(object));
+			const double distance = std::abs(sideDiff(object));
 			// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
 			if (distance < minDist)//TODO: need minimal abs distance
 			{
@@ -155,10 +164,10 @@ bool MoveLikeTankBeh::Move(const Direction dir, const double deltaTime,
 
 bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.y - speed >= 0.0f)
+	if (double speed = _speed * deltaTime;
+		_rect.y - speed >= 0.0)
 	{
-		constexpr float maxMoveStep = 8.0f;
+		constexpr double maxMoveStep = 8.0;
 		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime, _direction))
 		{
@@ -171,21 +180,21 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 			}
 			else
 			{
-				_rect.y -= std::floor(speed);
+				_rect.y -= TakeWholePixels(_remainderY, speed);
 			}
 
 			return true;
 		}
 
 		// move less than speed to stand next to an object
-		const auto& getSideDiff = [thisTopSide = _rect.y](const std::shared_ptr<BaseObj>& object) -> float
+		const auto& getSideDiff = [thisTopSide = _rect.y](const std::shared_ptr<BaseObj>& object) -> double
 		{
 			return object->GetBottomSide() - thisTopSide;
 		};
 
-		constexpr float padding = 1.f;
+		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
+		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
 		{
 			_rect.y -= distance;
 
@@ -198,10 +207,10 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 
 bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.x - speed >= 0.f)
+	if (double speed = _speed * deltaTime;
+		_rect.x - speed >= 0.0)
 	{
-		constexpr float maxMoveStep = 8.0f;
+		constexpr double maxMoveStep = 8.0;
 		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime, _direction))
 		{
@@ -214,21 +223,21 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 			}
 			else
 			{
-				_rect.x -= std::floor(speed);
+				_rect.x -= TakeWholePixels(_remainderX, speed);
 			}
 
 			return true;
 		}
 
 		// move less than speed to stand next to an object
-		const auto getSideDiff = [thisLeftSide = _rect.x](const std::shared_ptr<BaseObj>& object) -> float
+		const auto getSideDiff = [thisLeftSide = _rect.x](const std::shared_ptr<BaseObj>& object) -> double
 		{
 			return thisLeftSide - object->GetRightSide();
 		};
 
-		constexpr float padding = 1.f;
+		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
+		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
 		{
 			_rect.x -= distance;
 
@@ -241,10 +250,10 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 
 bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	if (float speed = _speed * static_cast<float>(deltaTime);
-		_rect.Bottom() + speed < static_cast<float>(_gameConfig.battlefieldSize.y))
+	if (double speed = _speed * deltaTime;
+		_rect.Bottom() + speed < static_cast<double>(_gameConfig.battlefieldSize.y))
 	{
-		constexpr float maxMoveStep = 8.0f;
+		constexpr double maxMoveStep = 8.0;
 		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime, _direction))
 		{
@@ -257,21 +266,21 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 			}
 			else
 			{
-				_rect.y += std::floor(speed);
+				_rect.y += TakeWholePixels(_remainderY, speed);
 			}
 
 			return true;
 		}
 
 		// move less than speed to stand next to an object
-		const auto getSideDiff = [thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> float
+		const auto getSideDiff = [thisBottomSide = _rect.Bottom()](const std::shared_ptr<BaseObj>& object) -> double
 		{
 			return object->GetY() - thisBottomSide;
 		};
 
-		constexpr float padding = 1.f;
+		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
+		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
 		{
 			_rect.y += distance;
 
@@ -284,11 +293,11 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 
 bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_ptr<BaseObj>>& outCollisions)
 {
-	const float maxX = static_cast<float>(_gameConfig.battlefieldSize.x);
-	if (float speed = _speed * static_cast<float>(deltaTime);
+	const double maxX = static_cast<double>(_gameConfig.battlefieldSize.x);
+	if (double speed = _speed * deltaTime;
 		_rect.Right() + speed < maxX)
 	{
-		constexpr float maxMoveStep = 8.0f;
+		constexpr double maxMoveStep = 8.0;
 		speed = std::min(speed, maxMoveStep);
 		if (IsCanMove(deltaTime, _direction))
 		{
@@ -301,21 +310,21 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 			}
 			else
 			{
-				_rect.x += std::floor(speed);
+				_rect.x += TakeWholePixels(_remainderX, speed);
 			}
 
 			return true;
 		}
 
 		// move less than speed to stand next to an object
-		auto getSideDiff = [thisRightSide = _rect.Right()](const std::shared_ptr<BaseObj>& object) -> float
+		auto getSideDiff = [thisRightSide = _rect.Right()](const std::shared_ptr<BaseObj>& object) -> double
 		{
 			return object->GetX() - thisRightSide;
 		};
 
-		constexpr float padding = 1.f;
+		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const float distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.f)
+		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
 		{
 			_rect.x += distance;
 
@@ -329,7 +338,7 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 {
 	bool isDrift{false};
-	float speed = _speed * static_cast<float>(deltaTime);
+	double speed = _speed * deltaTime;
 	if (_upVelocity > speed)
 	{
 		if (_upVelocity > _rect.h / _driftMultiplicator)//enabling drift with delay
@@ -337,9 +346,9 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::UP) && _rect.y - speed >= 0.0f)
+		if (IsCanMove(deltaTime, Direction::UP) && _rect.y - speed >= 0.0)
 		{
-			_rect.y -= std::floor(speed);
+			_rect.y -= TakeWholePixels(_remainderY, speed);
 		}
 
 		_upVelocity -= speed;
@@ -353,9 +362,9 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.f)
+		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.0)
 		{
-			_rect.x -= std::floor(speed);
+			_rect.x -= TakeWholePixels(_remainderX, speed);
 		}
 
 		_leftVelocity -= speed;
@@ -369,10 +378,10 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 			speed /= _driftMultiplicator;//slow down if push the gas in drift
 		}
 
-		const float maxY = static_cast<float>(_gameConfig.battlefieldSize.y);
+		const double maxY = static_cast<double>(_gameConfig.battlefieldSize.y);
 		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < maxY)
 		{
-			_rect.y += std::floor(speed);
+			_rect.y += TakeWholePixels(_remainderY, speed);
 		}
 
 		_downVelocity -= speed;
@@ -380,7 +389,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 	}
 
 
-	const float maxX = static_cast<float>(_gameConfig.battlefieldSize.x);
+	const double maxX = static_cast<double>(_gameConfig.battlefieldSize.x);
 	if (_rightVelocity > speed)
 	{
 		if (_rightVelocity > _rect.w / _driftMultiplicator)//enabling drift with delay
@@ -390,7 +399,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::RIGHT) && _rect.Right() + speed < maxX)
 		{
-			_rect.x += std::floor(speed);
+			_rect.x += TakeWholePixels(_remainderX, speed);
 		}
 
 		_rightVelocity -= speed;
@@ -407,10 +416,10 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 void MoveLikeTankBeh::ResetVelocity()
 {
-	_upVelocity = 0.f;
-	_leftVelocity = 0.f;
-	_downVelocity = 0.f;
-	_rightVelocity = 0.f;
+	_upVelocity = 0.0;
+	_leftVelocity = 0.0;
+	_downVelocity = 0.0;
+	_rightVelocity = 0.0;
 }
 
 std::vector<Direction> MoveLikeTankBeh::GetFreePathSides(const double deltaTime,

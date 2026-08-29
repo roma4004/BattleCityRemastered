@@ -25,7 +25,7 @@ protected:
 		_animations = std::make_unique<AnimationManager>(_events);
 		_drawSub = _events->AddListener([this](const DrawAnimationEvent& event) { _frame = event.frame; });
 
-		_events->EmitEvent(AnimationCreateWaterEvent{.rect = ObjRectangle{.x = 0.f, .y = 0.f, .w = 12.f, .h = 12.f}});
+		_events->EmitEvent(AnimationCreateWaterEvent{.rect = ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}});
 	}
 };
 

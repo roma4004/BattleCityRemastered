@@ -11,11 +11,9 @@ struct Timer
 	TimeUtils::time_point activateTime{};
 	bool isActive{false};
 
-	Timer();
+	Timer() = default;
 
 	explicit Timer(milliseconds newCooldown);
-
-	~Timer();
 
 	[[nodiscard]] bool IsCooldownFinish() const;
 

@@ -13,29 +13,29 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
 						 const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
-	const FPoint tankHalf{.x = tankRect.w / 2.f, .y = tankRect.h / 2.f};
+	const FPoint tankHalf{.x = tankRect.w / 2.0, .y = tankRect.h / 2.0};
 
 	const FPoint tankUpCenter{.x = tankRect.x + tankHalf.x, .y = tankRect.y};
 	const FPoint tankLeftCenter{.x = tankRect.x, .y = tankRect.y + tankHalf.y};
 	const FPoint tankDownCenter{.x = tankRect.x + tankHalf.x, .y = tankRect.y + tankRect.h};
 	const FPoint tankRightCenter{.x = tankRect.x + tankRect.w, .y = tankRect.y + tankHalf.y};
 
-	const FPoint bulletHalfSize{.x = bulletSize.x / 2.f, .y = bulletSize.y / 2.f};
+	const FPoint bulletHalfSize{.x = bulletSize.x / 2.0, .y = bulletSize.y / 2.0};
 
-	const FPoint bulletSpawnPosUp{.x = tankUpCenter.x - bulletHalfSize.x, .y = tankUpCenter.y - bulletSize.y - 1.f};
-	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - bulletSize.x - 1.f,
+	const FPoint bulletSpawnPosUp{.x = tankUpCenter.x - bulletHalfSize.x, .y = tankUpCenter.y - bulletSize.y - 1.0};
+	const FPoint bulletSpawnPosLeft{.x = tankLeftCenter.x - bulletSize.x - 1.0,
 									.y = tankLeftCenter.y - bulletHalfSize.y};
-	const FPoint bulletSpawnPosDown{.x = tankDownCenter.x - bulletHalfSize.x, .y = tankDownCenter.y + 1.f};
-	const FPoint bulletSpawnPosRight{.x = tankRightCenter.x + 1.f, .y = tankRightCenter.y - bulletHalfSize.y};
+	const FPoint bulletSpawnPosDown{.x = tankDownCenter.x - bulletHalfSize.x, .y = tankDownCenter.y + 1.0};
+	const FPoint bulletSpawnPosRight{.x = tankRightCenter.x + 1.0, .y = tankRightCenter.y - bulletHalfSize.y};
 
-	const float sightSizeUp{std::max(0.f, tankRect.y - 1.f)};
-	const float sightSizeLeft{std::max(0.f, tankRect.x - 1.f)};
-	const float sightSizeDown{static_cast<float>(gameConfig.battlefieldSize.y) - bulletSpawnPosDown.y};
-	const float sightSizeRight{static_cast<float>(gameConfig.battlefieldSize.x) - bulletSpawnPosRight.x};
+	const double sightSizeUp{std::max(0.0, tankRect.y - 1.0)};
+	const double sightSizeLeft{std::max(0.0, tankRect.x - 1.0)};
+	const double sightSizeDown{static_cast<double>(gameConfig.battlefieldSize.y) - bulletSpawnPosDown.y};
+	const double sightSizeRight{static_cast<double>(gameConfig.battlefieldSize.x) - bulletSpawnPosRight.x};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
-			{.x = bulletSpawnPosUp.x, .y = 0.f, .w = bulletSize.x, .h = sightSizeUp},
-			{.x = 0.f, .y = bulletSpawnPosLeft.y, .w = sightSizeLeft, .h = bulletSize.y},
+			{.x = bulletSpawnPosUp.x, .y = 0.0, .w = bulletSize.x, .h = sightSizeUp},
+			{.x = 0.0, .y = bulletSpawnPosLeft.y, .w = sightSizeLeft, .h = bulletSize.y},
 			{.x = bulletSpawnPosDown.x, .y = bulletSpawnPosDown.y, .w = bulletSize.x, .h = sightSizeDown},
 			{.x = bulletSpawnPosRight.x, .y = bulletSpawnPosRight.y, .w = sightSizeRight, .h = bulletSize.y}};
 
@@ -47,14 +47,14 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, std::vector<std::shared_pt
 						 const GameConfig& gameConfig, const bool isWaterSkip)
 	: _allObjects{allObjects}
 {
-	const float sightSizeUp{std::max(0.f, tankRect.y - 1.f)};
-	const float sightSizeLeft{std::max(0.f, tankRect.x - 1.f)};
-	const float sightSizeDown{static_cast<float>(gameConfig.battlefieldSize.y) - tankRect.y - tankRect.h - 1};
-	const float sightSizeRight{static_cast<float>(gameConfig.battlefieldSize.x) - tankRect.x - tankRect.w - 1};
+	const double sightSizeUp{std::max(0.0, tankRect.y - 1.0)};
+	const double sightSizeLeft{std::max(0.0, tankRect.x - 1.0)};
+	const double sightSizeDown{static_cast<double>(gameConfig.battlefieldSize.y) - tankRect.y - tankRect.h - 1};
+	const double sightSizeRight{static_cast<double>(gameConfig.battlefieldSize.x) - tankRect.x - tankRect.w - 1};
 
 	_lineOfSightBoundaries = std::vector<ObjRectangle>{/*up, left, down, right*/
-			{.x = tankRect.x, .y = 0.f, .w = tankRect.w, .h = sightSizeUp},
-			{.x = 0.f, .y = tankRect.y, .w = sightSizeLeft, .h = tankRect.h},
+			{.x = tankRect.x, .y = 0.0, .w = tankRect.w, .h = sightSizeUp},
+			{.x = 0.0, .y = tankRect.y, .w = sightSizeLeft, .h = tankRect.h},
 			{.x = tankRect.x, .y = tankRect.y + tankRect.h + 1, .w = tankRect.w, .h = sightSizeDown},
 			{.x = tankRect.x + tankRect.w + 1, .y = tankRect.y, .w = sightSizeRight, .h = tankRect.h}};
 

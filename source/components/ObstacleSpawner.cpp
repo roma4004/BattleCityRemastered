@@ -60,7 +60,7 @@ void ObstacleSpawner::OnSpawnFortressWall(const SpawnFortressWallEvent& event)
 
 void ObstacleSpawner::OnObstacleSpawned(const ObstacleSpawnedEvent& event)
 {
-	const float side{_gameConfig.gridOffset * ObstacleCellSpan(event.type)};
+	const double side{_gameConfig.gridOffset * ObstacleCellSpan(event.type)};
 	SpawnObstacle(ObjRectangle{.x = event.pos.x, .y = event.pos.y, .w = side, .h = side}, event.type, event.uuid);
 }
 

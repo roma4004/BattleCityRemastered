@@ -6,9 +6,9 @@
 
 bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) noexcept
 {
-	auto greaterThan = [](const float a, const float b)
+	auto greaterThan = [](const double a, const double b)
 	{
-		constexpr float COLLISION_EPSILON = 0.01f;
+		constexpr double COLLISION_EPSILON = 0.01;
 		return a > b + COLLISION_EPSILON;
 	};
 
@@ -30,14 +30,14 @@ bool ColliderUtils::IsCollide(const ObjRectangle& r1, const ObjRectangle& r2) no
 
 bool ColliderUtils::IsCollide(const Circle& circle, const ObjRectangle& rect) noexcept
 {
-	const float deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
-	const float deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
+	const double deltaX = circle.center.x - std::max(rect.x, std::min(circle.center.x, rect.Right()));
+	const double deltaY = circle.center.y - std::max(rect.y, std::min(circle.center.y, rect.Bottom()));
 
 	return (deltaX * deltaX + deltaY * deltaY) < (circle.radius * circle.radius);
 }
 
 // Check if the absolute difference is within the allowed error margin
-bool ColliderUtils::AreEqualAbsolute(const float a, const float b, const float epsilon) noexcept
+bool ColliderUtils::AreEqualAbsolute(const double a, const double b, const double epsilon) noexcept
 {
 	return std::fabs(a - b) <= epsilon;
 }

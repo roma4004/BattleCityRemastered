@@ -7,11 +7,11 @@
 
 namespace
 {
-constexpr float kAtlasCellSize{16.f};
+constexpr double kAtlasCellSize{16.0};
 constexpr int kBonusSpawnFrames{3};
 //NOTE: the bonus icon is a 15x14 box inside its 16x16 cell, framed by a single atlas pixel
-constexpr float kBonusBoxWidth{15.f};
-constexpr float kBonusBoxHeight{14.f};
+constexpr double kBonusBoxWidth{15.0};
+constexpr double kBonusBoxHeight{14.0};
 }//namespace
 
 TextureManager::TextureManager(const std::shared_ptr<EventSystem>& events)
@@ -180,10 +180,10 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
 			return AtlasFrames{.first = _offset.water, .step = -1};
 		case AnimationType::Bullet_Explosion:
-			destRect = rect.GetScaledBy(3.f);
+			destRect = rect.GetScaledBy(3.0);
 			return AtlasFrames{.first = _offset.bulletExplosion};
 		case AnimationType::Tank_Explosion:
-			destRect = rect.GetScaledBy(1.3f);
+			destRect = rect.GetScaledBy(1.3);
 			return AtlasFrames{.first = _offset.tankExplosion};
 		case AnimationType::Tank_Spawn:
 			return AtlasFrames{.first = _offset.tankSpawn};
@@ -235,12 +235,12 @@ void TextureManager::Draw(const DrawObjEvent& event) const
 void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle& destRect, const Direction dir,
 							 const unsigned int color) const
 {
-	constexpr float thickness{1.f};
-	const float scaleX = destRect.w / kAtlasCellSize;
-	const float scaleY = destRect.h / kAtlasCellSize;
+	constexpr double thickness{1.0};
+	const double scaleX = destRect.w / kAtlasCellSize;
+	const double scaleY = destRect.h / kAtlasCellSize;
 
 	const auto emitSlice = [this, &textureRect, &destRect, scaleX, scaleY, dir, color]
-			(const float x, const float y, const float w, const float h)
+			(const double x, const double y, const double w, const double h)
 	{
 		_events->EmitEvent(
 				RenderTextureEvent{
@@ -253,10 +253,10 @@ void TextureManager::DrawRim(const ObjRectangle& textureRect, const ObjRectangle
 						.color = color});
 	};
 
-	emitSlice(0.f, 0.f, kBonusBoxWidth, thickness);
-	emitSlice(0.f, kBonusBoxHeight - thickness, kBonusBoxWidth, thickness);
-	emitSlice(0.f, 0.f, thickness, kBonusBoxHeight);
-	emitSlice(kBonusBoxWidth - thickness, 0.f, thickness, kBonusBoxHeight);
+	emitSlice(0.0, 0.0, kBonusBoxWidth, thickness);
+	emitSlice(0.0, kBonusBoxHeight - thickness, kBonusBoxWidth, thickness);
+	emitSlice(0.0, 0.0, thickness, kBonusBoxHeight);
+	emitSlice(kBonusBoxWidth - thickness, 0.0, thickness, kBonusBoxHeight);
 }
 
 void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
@@ -264,7 +264,7 @@ void TextureManager::DrawAnimation(const DrawAnimationEvent& event) const
 	const auto& [rect, dir, frame, scale, type, name] = event;
 	ObjRectangle destRect = rect;
 	auto [textureRect, step] = GetAnimFrames(type, name, rect, destRect);
-	textureRect.x += static_cast<float>(frame * scale * step);
+	textureRect.x += static_cast<double>(frame * scale * step);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)

@@ -4,7 +4,7 @@
 
 struct FPoint final
 {
-	float x{}, y{};
+	double x{}, y{};
 };
 
 struct Point final

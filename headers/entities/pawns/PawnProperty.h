@@ -13,7 +13,7 @@ struct PawnProperty
 	std::vector<std::shared_ptr<BaseObj>>* allObjects{nullptr};
 	std::shared_ptr<EventSystem> events{nullptr};
 	unsigned short tier{1u};
-	float speed{};
+	double speed{};
 	Direction dir{};
 	GameMode gameMode{};
 };

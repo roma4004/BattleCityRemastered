@@ -19,7 +19,7 @@ protected:
 	std::vector<std::shared_ptr<BaseObj>> _allObjects;
 	double _deltaTimeOneFrame{1.0 / 60.0};
 	Uuid _uuid{};
-	float _tankSize{};
+	double _tankSize{};
 	unsigned short _bulletHealth{1u};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
@@ -29,10 +29,10 @@ protected:
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
-		const float gridSize = _gameConfig.gridOffset;
-		_tankSize = gridSize * 3.f;// for better turns
+		const double gridSize = _gameConfig.gridOffset;
+		_tankSize = gridSize * 3.0;// for better turns
 
-		CreateBullet({.x = 0.f, .y = 5.f}, Direction::DOWN, 1u, "Bullet1", Faction::PlayerTeam, "Player1");
+		CreateBullet({.x = 0.0, .y = 5.0}, Direction::DOWN, 1u, "Bullet1", Faction::PlayerTeam, "Player1");
 	}
 
 	void TearDown() override
@@ -43,11 +43,11 @@ protected:
 	void CreateBullet(const FPoint pos, const Direction dir, const unsigned short tier, std::string name,
 					  Faction faction, std::string author)
 	{
-		const BulletCalibre calibre{.speed = 300.f,
+		const BulletCalibre calibre{.speed = 300.0,
 									.damage = 1u,
-									.damageRadius = 12.f,
+									.damageRadius = 12.0,
 									.tier = tier,
-									.size{.x = 6.f, .y = 5.f}};
+									.size{.x = 6.0, .y = 5.0}};
 		// spawn Bullet
 		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
@@ -60,7 +60,7 @@ protected:
 
 TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 {
-	CreateBullet({.x = 0.f, .y = 5.f + 1}, Direction::UP, 1u, "Bullet2", Faction::EnemyTeam, "Enemy1");
+	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, "Bullet2", Faction::EnemyTeam, "Enemy1");
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBulletHitByEnemy(), 0u);
@@ -73,7 +73,7 @@ TEST_F(StatisticsTestAdvanced, BulletHitByEnemyBullet)
 
 TEST_F(StatisticsTestAdvanced, BulletHitByPlayerOne)
 {
-	CreateBullet({.x = 0.f, .y = 5.f + 1}, Direction::UP, 1u, "Bullet2", Faction::PlayerTeam, "Player2");
+	CreateBullet({.x = 0.0, .y = 5.0 + 1}, Direction::UP, 1u, "Bullet2", Faction::PlayerTeam, "Player2");
 
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerOne(), 0u);
 	EXPECT_EQ(_statistics->GetBulletHitByPlayerTwo(), 0u);

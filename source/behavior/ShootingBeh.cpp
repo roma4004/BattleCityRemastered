@@ -16,7 +16,7 @@
 // #include <boost/uuid/uuid_io.hpp>
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
-						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const std::shared_ptr<BulletPool>& bulletPool,
+						 const std::shared_ptr<BulletPool>& bulletPool,
 						 BulletCalibre& calibre, const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _uuid{uuid}
 	, _rect{rect}
@@ -25,7 +25,6 @@ ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::st
 	, _name{name}
 	, _faction{faction}
 	, _calibre{calibre}
-	, _allObjects{allObjects}
 	, _bulletPool{bulletPool}
 	, _events{events} {}
 
@@ -36,15 +35,15 @@ ShootingBeh::~ShootingBeh() = default;
 // 	return static_cast<float>(std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2)));
 // }
 
-float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
-								   const std::function<float(const std::shared_ptr<BaseObj>&)>& sideDiff) const
+double ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
+								   const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const
 {
-	float minDist = static_cast<float>(_gameConfig.battlefieldSize.x * _gameConfig.battlefieldSize.y);
+	double minDist = static_cast<double>(_gameConfig.battlefieldSize.x * _gameConfig.battlefieldSize.y);
 	// float nearestDist = 0.f;
 	for (const auto& object: objects)
 	{
 		// auto getSide = [](const std::shared_ptr<BaseObj>& object) -> float { return object->GetX() + object->GetWidth();};
-		const float distance = std::abs(sideDiff(object));
+		const double distance = std::abs(sideDiff(object));
 		// const float distance = abs(this->GetX() - object->GetX() + object->GetWidth());
 		if (distance < minDist)//TODO: need minimal abs distance
 		{
@@ -67,34 +66,34 @@ float ShootingBeh::FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& 
 //Note: {-1.f, -1.f} this is try shooting outside screen
 ObjRectangle ShootingBeh::GetBulletStartRect() const
 {
-	const FPoint tankHalf{.x = _rect.w / 2.f, .y = _rect.h / 2.f};
+	const FPoint tankHalf{.x = _rect.w / 2.0, .y = _rect.h / 2.0};
 	const FPoint tankPos{.x = _rect.x, .y = _rect.y};
-	const float tankRightX{_rect.Right()};
-	const float tankBottomY{_rect.Bottom()};
+	const double tankRightX{_rect.Right()};
+	const double tankBottomY{_rect.Bottom()};
 	const FPoint tankCenter{.x = tankPos.x + tankHalf.x, .y = tankPos.y + tankHalf.y};
 
-	const float bulletWidth{_calibre.size.x};
-	const float bulletHeight{_calibre.size.y};
-	const FPoint bulletHalf{.x = bulletWidth / 2.f, .y = bulletHeight / 2.f};
+	const double bulletWidth{_calibre.size.x};
+	const double bulletHeight{_calibre.size.y};
+	const FPoint bulletHalf{.x = bulletWidth / 2.0, .y = bulletHeight / 2.0};
 	ObjRectangle bulletRect{.x = -1, .y = -1, .w = bulletWidth, .h = bulletHeight};
 
 	if (const Direction dir = _direction;
-		dir == Direction::UP && tankPos.y - bulletHeight >= 0.f)
+		dir == Direction::UP && tankPos.y - bulletHeight >= 0.0)
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankPos.y - bulletHeight - 1;
 	}
-	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.f)
+	else if (dir == Direction::LEFT && tankPos.x - bulletWidth >= 0.0)
 	{
 		bulletRect.x = tankPos.x - bulletWidth - 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
 	}
-	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<float>(_gameConfig.battlefieldSize.y))
+	else if (dir == Direction::DOWN && tankBottomY + bulletHeight <= static_cast<double>(_gameConfig.battlefieldSize.y))
 	{
 		bulletRect.x = tankCenter.x - bulletHalf.x;
 		bulletRect.y = tankBottomY + 1;
 	}
-	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<float>(_gameConfig.battlefieldSize.x))
+	else if (dir == Direction::RIGHT && tankRightX + bulletWidth <= static_cast<double>(_gameConfig.battlefieldSize.x))
 	{
 		bulletRect.x = tankRightX + 1;
 		bulletRect.y = tankCenter.y - bulletHalf.y;
@@ -106,7 +105,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 Uuid ShootingBeh::Shot(const Uuid uuid)
 {
 	const ObjRectangle rect = GetBulletStartRect();
-	if (rect.x < 0.f || rect.y < 0.f)
+	if (rect.x < 0.0 || rect.y < 0.0)
 	{
 		//Try shooting outside screen
 		return {};
