@@ -21,17 +21,6 @@ MoveLikeTankBeh::MoveLikeTankBeh(ObjRectangle& rect, Direction& dir, double& spe
 	, _gameConfig{gameConfig}
 	, _allObjects{allObjects} {}
 
-//NOTE: the step is fractional at any real frame rate - flooring it without keeping the remainder
-//makes the tank slower than its speed says, and above 142 fps it stops moving at all
-double MoveLikeTankBeh::TakeWholePixels(double& remainder, const double step)
-{
-	remainder += step;
-	const double wholePixels = std::floor(remainder);
-	remainder -= wholePixels;
-
-	return wholePixels;
-}
-
 ObjRectangle MoveLikeTankBeh::GetNextPosRect(const double deltaTime, const Direction dir) const
 {
 	const double speed = _speed * deltaTime;
@@ -180,7 +169,7 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 			}
 			else
 			{
-				_rect.y -= TakeWholePixels(_remainderY, speed);
+				_rect.y -= speed;
 			}
 
 			return true;
@@ -194,7 +183,10 @@ bool MoveLikeTankBeh::MoveUp(const double deltaTime, std::vector<std::shared_ptr
 
 		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
+		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
+		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
+		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
+			distance > 0.0)
 		{
 			_rect.y -= distance;
 
@@ -223,7 +215,7 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 			}
 			else
 			{
-				_rect.x -= TakeWholePixels(_remainderX, speed);
+				_rect.x -= speed;
 			}
 
 			return true;
@@ -237,7 +229,10 @@ bool MoveLikeTankBeh::MoveLeft(const double deltaTime, std::vector<std::shared_p
 
 		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
+		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
+		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
+		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
+			distance > 0.0)
 		{
 			_rect.x -= distance;
 
@@ -266,7 +261,7 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 			}
 			else
 			{
-				_rect.y += TakeWholePixels(_remainderY, speed);
+				_rect.y += speed;
 			}
 
 			return true;
@@ -280,7 +275,10 @@ bool MoveLikeTankBeh::MoveDown(const double deltaTime, std::vector<std::shared_p
 
 		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
+		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
+		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
+		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
+			distance > 0.0)
 		{
 			_rect.y += distance;
 
@@ -310,7 +308,7 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 			}
 			else
 			{
-				_rect.x += TakeWholePixels(_remainderX, speed);
+				_rect.x += speed;
 			}
 
 			return true;
@@ -324,7 +322,10 @@ bool MoveLikeTankBeh::MoveRight(const double deltaTime, std::vector<std::shared_
 
 		constexpr double padding = 1.0;
 		outCollisions = GetTouchedObjects(deltaTime);
-		if (const double distance = FindMinDistance(outCollisions, getSideDiff) - padding; distance > 0.0)
+		//NOTE: never further than this frame's step - FindMinDistance seeds on the field area, so an
+		//empty list, or a tank already inside an obstacle, would otherwise teleport it across the map
+		if (const double distance = std::min(FindMinDistance(outCollisions, getSideDiff) - padding, speed);
+			distance > 0.0)
 		{
 			_rect.x += distance;
 
@@ -348,7 +349,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::UP) && _rect.y - speed >= 0.0)
 		{
-			_rect.y -= TakeWholePixels(_remainderY, speed);
+			_rect.y -= speed;
 		}
 
 		_upVelocity -= speed;
@@ -364,7 +365,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::LEFT) && _rect.x - speed >= 0.0)
 		{
-			_rect.x -= TakeWholePixels(_remainderX, speed);
+			_rect.x -= speed;
 		}
 
 		_leftVelocity -= speed;
@@ -381,13 +382,12 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 		const double maxY = static_cast<double>(_gameConfig.battlefieldSize.y);
 		if (IsCanMove(deltaTime, Direction::DOWN) && _rect.Bottom() + speed < maxY)
 		{
-			_rect.y += TakeWholePixels(_remainderY, speed);
+			_rect.y += speed;
 		}
 
 		_downVelocity -= speed;
 		isDrift = true;
 	}
-
 
 	const double maxX = static_cast<double>(_gameConfig.battlefieldSize.x);
 	if (_rightVelocity > speed)
@@ -399,7 +399,7 @@ bool MoveLikeTankBeh::ApplyMoveVelocity(const double deltaTime)
 
 		if (IsCanMove(deltaTime, Direction::RIGHT) && _rect.Right() + speed < maxX)
 		{
-			_rect.x += TakeWholePixels(_remainderX, speed);
+			_rect.x += speed;
 		}
 
 		_rightVelocity -= speed;

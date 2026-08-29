@@ -27,8 +27,6 @@ class MoveLikeTankBeh final : public IMoveBeh
 	double _downVelocity{};
 	double _rightVelocity{};
 	double _driftMultiplicator{1.5};
-	double _remainderX{};
-	double _remainderY{};
 	const GameConfig& _gameConfig;
 
 	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
@@ -37,7 +35,6 @@ class MoveLikeTankBeh final : public IMoveBeh
 	[[nodiscard]] bool IsCanMove(double deltaTime, Direction dir) const override;
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>> GetTouchedObjects(double deltaTime) const;
 	[[nodiscard]] ObjRectangle GetNextPosRect(double deltaTime, Direction dir) const;
-	[[nodiscard]] static double TakeWholePixels(double& remainder, double step);
 	[[nodiscard]] double FindMinDistance(const std::vector<std::shared_ptr<BaseObj>>& objects,
 										 const std::function<double(const std::shared_ptr<BaseObj>&)>& sideDiff) const;
 
