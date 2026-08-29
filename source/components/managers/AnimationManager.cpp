@@ -3,6 +3,7 @@
 #include "components/AnimatedObjects.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/InputEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/TimingEvents.h"
 #include "geometry/ObjRectangle.h"
@@ -27,6 +28,7 @@ void AnimationManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnGameReset));
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnPostTickUpdate));
+	_subs.push_back(_events->AddListener(this, &AnimationManager::OnPauseStatus));
 	//TODO: draw explosion animation after others obstacle and tanks, maybe split explosions and other collections
 	_subs.push_back(_events->AddListener(this, &AnimationManager::OnDraw));
 
@@ -43,8 +45,16 @@ void AnimationManager::Subscribe()
 
 void AnimationManager::OnGameReset(const GameResetEvent&) { Reset(); }
 
+void AnimationManager::OnPauseStatus(const PauseStatusEvent& event) { _isPaused = event.isPaused; }
+
+//NOTE: frames are counted in ticks, not in time, so the paused game clock does not stop them - the flag does
 void AnimationManager::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
+	if (_isPaused)
+	{
+		return;
+	}
+
 	//NOTE: water never ends, so it has nothing to report
 	std::ranges::for_each(_autoAnimatedWaterObjects, [](AnimatedObject& object) { UpdateFrame(object); });
 

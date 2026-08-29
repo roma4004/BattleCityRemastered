@@ -13,6 +13,7 @@ struct ObjRectangle;
 struct FPoint;
 struct GameResetEvent;
 struct PostTickUpdateEvent;
+struct PauseStatusEvent;
 struct DrawEvent;
 struct AnimationCreateBonusSpawnEvent;
 struct AnimationCreateTankMoveEvent;
@@ -34,6 +35,7 @@ private:
 
 	void OnGameReset(const GameResetEvent&);
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
+	void OnPauseStatus(const PauseStatusEvent& event);
 	void OnDraw(const DrawEvent&) const;
 	void OnCreateTankSpawn(const AnimationCreateTankSpawnEvent& event);
 	void OnCreateBonusSpawn(const AnimationCreateBonusSpawnEvent& event);
@@ -79,6 +81,7 @@ private:
 
 
 	std::shared_ptr<EventSystem> _events{nullptr};
+	bool _isPaused{false};
 	std::vector<EventSubscription> _subs{};
 	std::vector<AnimatedObject> _autoAnimatedObjects{};//advanced on TickUpdate() (eg. explosions, spawn, helmet)
 	std::vector<AnimatedObject> _turnBasedTankObjects{};//advanced on movement (eg. tank move event)
