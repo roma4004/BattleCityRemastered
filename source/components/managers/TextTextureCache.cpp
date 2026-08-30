@@ -1,6 +1,6 @@
 #include "components/managers/TextTextureCache.h"
 #include "application/SDL_Config.h"
-#include <SDL_ttf.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <cmath>
 #include <functional>
 
@@ -30,24 +30,22 @@ size_t TextTextureCache::KeyHash::operator()(const Key& key) const noexcept
 TTF_Font* TextTextureCache::FontForScale(const int basePointSize, const float scale)
 {
 	const int pixelSize = static_cast<int>(std::lround(static_cast<float>(basePointSize) * scale));
-	if (pixelSize == SDL_Config::kFontSizePtMedium)
+
+	auto& scaledFont = _fonts[pixelSize];
+	if (!scaledFont)
 	{
-		return _sdlConfig.fontMedium.get();
+		scaledFont = _sdlConfig.OpenFont(pixelSize);
 	}
 
-	auto& font = _fonts[pixelSize];
-	if (!font)
-	{
-		font = _sdlConfig.OpenFont(pixelSize);
-	}
-
-	return font ? font.get() : _sdlConfig.fontMedium.get();
+	//NOTE: the startup font is the last resort only - it is fixed at its own pixel size and ignores the
+	//scale, so a line drawn with it comes out the wrong size
+	return scaledFont ? scaledFont.get() : _sdlConfig.font.get();
 }
 
 const TextTextureCache::CachedText* TextTextureCache::Acquire(const std::string& text, const SDL_Color& color,
 															  const int basePointSize, const float scale)
 {
-	if (!_sdlConfig.fontMedium || !_sdlConfig.renderer)
+	if (!_sdlConfig.font || !_sdlConfig.renderer)
 	{
 		return nullptr;
 	}
@@ -73,7 +71,7 @@ const TextTextureCache::CachedText* TextTextureCache::Acquire(const std::string&
 
 	TTF_Font* const currentFont = FontForScale(basePointSize, scale);
 	const std::unique_ptr<SDL_Surface, void (*)(SDL_Surface*)> surface(
-			TTF_RenderText_Solid(currentFont, text.c_str(), color), SDL_FreeSurface);
+			TTF_RenderText_Solid(currentFont, text.c_str(), 0u, color), SDL_DestroySurface);
 	if (!surface)
 	{
 		return nullptr;

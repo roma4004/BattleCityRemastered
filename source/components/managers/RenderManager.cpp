@@ -13,8 +13,9 @@
 #include "enums/TextureOffset.h"
 #include "utils/Log.h"
 #include <algorithm>
-#include <SDL_render.h>
-#include <SDL_video.h>
+#include <cmath>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>
 #include <string>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig)
@@ -61,6 +62,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawStageNumber));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnWorldGeometryChanged));
+	_subs.push_back(_events->AddListener(this, &RenderManager::OnWindowSizeChangedTo));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderTargetsReset));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderDeviceReset));
@@ -103,12 +105,67 @@ void RenderManager::OnWorldGeometryChanged(const WorldGeometryChangedEvent&)
 	ApplyLogicalSize();
 }
 
+void RenderManager::OnWindowSizeChangedTo(const WindowSizeChangedToEvent&) { SnapWindowToLogicalAspect(); }
+
+void RenderManager::SnapWindowToLogicalAspect() const
+{
+	const UPoint logicalSize = _gameConfig.LogicalSize();
+	if (logicalSize.x == 0u || logicalSize.y == 0u)
+	{
+		return;
+	}
+
+	const double logicalWidth = static_cast<double>(logicalSize.x);
+	const double logicalHeight = static_cast<double>(logicalSize.y);
+
+	SDL_Window* window = _sdlConfig.sdlWindow.get();
+
+	//NOTE: a maximized or fullscreen window is the window manager's to size - reshaping it here only
+	//fights it, so the letterbox stays and ClearFrame paints its bars instead
+	if ((SDL_GetWindowFlags(window) & (SDL_WINDOW_MAXIMIZED | SDL_WINDOW_FULLSCREEN)) != 0u)
+	{
+		return;
+	}
+
+	int windowWidth{};
+	int windowHeight{};
+	SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
+	//NOTE: the mean of the two axes, so it does not matter which edge was dragged - the window keeps
+	//roughly the size the drag asked for and takes the field's shape
+	double scale = (static_cast<double>(windowWidth) / logicalWidth
+					+ static_cast<double>(windowHeight) / logicalHeight) / 2.0;
+
+	//NOTE: the desktop is the ceiling - a window the screen cannot hold is worse than a smaller one
+	if (SDL_Rect usable{};
+		SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(window), &usable))
+	{
+		scale = std::min(scale, std::min(static_cast<double>(usable.w) / logicalWidth,
+										 static_cast<double>(usable.h) / logicalHeight));
+	}
+
+	const int snappedWidth = std::max(1, static_cast<int>(std::lround(logicalWidth * scale)));
+	const int snappedHeight = std::max(1, static_cast<int>(std::lround(logicalHeight * scale)));
+	if (snappedWidth == windowWidth && snappedHeight == windowHeight)
+	{
+		return;
+	}
+
+	SDL_SetWindowSize(window, snappedWidth, snappedHeight);
+}
+
 void RenderManager::ApplyLogicalSize()
 {
 	const UPoint logicalSize = _gameConfig.LogicalSize();
 
-	SDL_RenderSetLogicalSize(_sdlConfig.renderer.get(), static_cast<int>(logicalSize.x),
-							 static_cast<int>(logicalSize.y));
+	//NOTE: letterbox, not stretch - the equal scale on both axes is what the text sizing rests on. The
+	//bars it would add are answered by shaping the window itself, not by distorting the field.
+	SDL_SetRenderLogicalPresentation(_sdlConfig.renderer.get(),
+									 static_cast<int>(logicalSize.x),
+									 static_cast<int>(logicalSize.y),
+									 SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+	SnapWindowToLogicalAspect();
 }
 
 void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
@@ -119,7 +176,7 @@ void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
 							   .y = static_cast<int>(offset.pauseText.y),
 							   .w = static_cast<int>(offset.pauseText.w),
 							   .h = static_cast<int>(offset.pauseText.h)};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawGameOverText(const RenderGameOverTextEvent&) const
@@ -130,7 +187,7 @@ void RenderManager::DrawGameOverText(const RenderGameOverTextEvent&) const
 							   .y = static_cast<int>(offset.gameOverText.y),
 							   .w = static_cast<int>(offset.gameOverText.w),
 							   .h = static_cast<int>(offset.gameOverText.h)};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
@@ -141,7 +198,7 @@ void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
 							   .y = static_cast<int>(offset.gameWonText.y),
 							   .w = static_cast<int>(offset.gameWonText.w),
 							   .h = static_cast<int>(offset.gameWonText.h)};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawRightSideBar(const RenderRightSideBarEvent&) const
@@ -154,7 +211,7 @@ void RenderManager::DrawRightSideBar(const RenderRightSideBarEvent&) const
 	constexpr Uint8 g{(color >> 8u) & 0xFFu};
 	constexpr Uint8 b{(color >> 0u) & 0xFFu};
 	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
-	SDL_RenderFillRect(_sdlConfig.renderer.get(), &backgroundRect);
+	FillRect(backgroundRect);
 }
 
 void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent&) const
@@ -166,7 +223,7 @@ void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent
 							   .y = static_cast<int>(offset.enemyIconBackground.y),
 							   .w = static_cast<int>(offset.enemyIconBackground.w),
 							   .h = static_cast<int>(offset.enemyIconBackground.h)};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &dstRect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
@@ -194,7 +251,7 @@ void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 		const int posY{startPos.y + row * (imageSize.y + padding.y)};
 
 		SDL_Rect destRect = {.x = posX, .y = posY, .w = imageSize.x, .h = imageSize.y};
-		SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &destRect);
+		RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, destRect);
 	}
 }
 
@@ -210,7 +267,7 @@ void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) co
 	constexpr int padding{55};
 	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect rect{.x = posX, .y = 350, .w = 71, .h = 70};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
 	constexpr bool isMediumFontSize{true};
 	constexpr int textPadding{38};
@@ -229,7 +286,7 @@ void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) co
 	constexpr int padding{55};
 	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect rect{.x = posX, .y = 420, .w = 71, .h = 70};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
 	constexpr bool isMediumFontSize{true};
 	constexpr int textPadding{38};
@@ -248,7 +305,7 @@ void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 	constexpr int padding{55};
 	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
 	const SDL_Rect rect{.x = posX, .y = 490, .w = 71, .h = 95};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.atlasTexture.get(), &srcRect, &rect);
+	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
 	constexpr bool isMediumFontSize{true};
 	constexpr int textPadding{38};
@@ -289,31 +346,34 @@ void RenderManager::DrawMenuBackground(const RenderMenuBackgroundEvent& event) c
 	constexpr Uint8 g{(color >> 8u) & 0xFFu};
 	constexpr Uint8 b{(color >> 0u) & 0xFFu};
 	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
-	SDL_RenderFillRect(_sdlConfig.renderer.get(), &backgroundRect);
+	FillRect(backgroundRect);
 }
 
 void RenderManager::DrawMenuLogo(const RenderMenuLogoEvent& event) const
 {
 	const Point pos = event.pos;
 	const SDL_Rect rect{.x = pos.x + 135, .y = pos.y + 42, .w = 300, .h = 75};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.logoTexture.get(), nullptr, &rect);
+	RenderCopy(_sdlConfig.logoTexture.get(), rect);
 }
 
 void RenderManager::DrawSelectorIcon(const RenderMenuSelectorIconEvent& event) const
 {
 	const Point pos = event.pos;
 	const SDL_Rect rect{.x = pos.x, .y = pos.y, .w = 30, .h = 30};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), _sdlConfig.selectorIconTexture.get(), nullptr, &rect);
+	RenderCopy(_sdlConfig.selectorIconTexture.get(), rect);
 }
 
 void RenderManager::RenderCopyWithClipping(SDL_Texture* texture, const SDL_Rect srcRect, const SDL_Rect dstRect) const
 {
-	SDL_RenderCopy(_sdlConfig.renderer.get(), texture, &srcRect, &dstRect);
+	const SDL_FRect src = ToFRect(srcRect);
+	const SDL_FRect dst = ToFRect(dstRect);
+	SDL_RenderTexture(_sdlConfig.renderer.get(), texture, &src, &dst);
 }
 
 void RenderManager::RenderCopy(SDL_Texture* texture, const SDL_Rect dstRect) const
 {
-	SDL_RenderCopy(_sdlConfig.renderer.get(), texture, nullptr, &dstRect);
+	const SDL_FRect dst = ToFRect(dstRect);
+	SDL_RenderTexture(_sdlConfig.renderer.get(), texture, nullptr, &dst);
 }
 
 void RenderManager::DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const
@@ -351,10 +411,21 @@ int RenderManager::BasePointSize(const bool isMediumFontSize)
 
 float RenderManager::CurrentRenderScale() const
 {
-	float scaleX{1.f};
-	float scaleY{1.f};
-	SDL_RenderGetScale(_sdlConfig.renderer.get(), &scaleX, &scaleY);
-	const float scale = std::min(scaleX, scaleY);
+	//NOTE: SDL3 keeps the logical presentation apart from the render scale, so SDL_GetRenderScale no
+	//longer reports it - the letterbox rect is what maps a logical pixel onto the window
+	int logicalWidth{};
+	int logicalHeight{};
+	SDL_RendererLogicalPresentation mode{SDL_LOGICAL_PRESENTATION_DISABLED};
+	SDL_FRect presentation{};
+	if (!SDL_GetRenderLogicalPresentation(_sdlConfig.renderer.get(), &logicalWidth, &logicalHeight, &mode)
+		|| mode == SDL_LOGICAL_PRESENTATION_DISABLED
+		|| logicalWidth <= 0
+		|| !SDL_GetRenderLogicalPresentationRect(_sdlConfig.renderer.get(), &presentation))
+	{
+		return 1.f;
+	}
+
+	const float scale = presentation.w / static_cast<float>(logicalWidth);
 
 	return scale > 0.f ? scale : 1.f;
 }
@@ -375,7 +446,7 @@ void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, co
 	}
 
 	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = cached->width, .h = cached->height};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), cached->texture.get(), nullptr, &textRect);
+	RenderCopy(cached->texture.get(), textRect);
 }
 
 void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color color, const std::string& text,
@@ -392,7 +463,7 @@ void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color co
 							.y = box.y + (box.h - cached->height) / 2,
 							.w = cached->width,
 							.h = cached->height};
-	SDL_RenderCopy(_sdlConfig.renderer.get(), cached->texture.get(), nullptr, &textRect);
+	RenderCopy(cached->texture.get(), textRect);
 }
 
 void RenderManager::TextToRenderInBox(const SDL_Rect& box, const SDL_Color color, const std::string& text,
@@ -405,7 +476,7 @@ void RenderManager::TextToRenderInBox(const SDL_Rect& box, const SDL_Color color
 		return;
 	}
 
-	SDL_RenderCopy(_sdlConfig.renderer.get(), cached->texture.get(), nullptr, &box);
+	RenderCopy(cached->texture.get(), box);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
@@ -414,6 +485,20 @@ inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)
 					.y = static_cast<int>(rect.y),
 					.w = static_cast<int>(rect.w),
 					.h = static_cast<int>(rect.h)};
+}
+
+SDL_FRect RenderManager::ToFRect(const SDL_Rect& rect)
+{
+	return SDL_FRect{.x = static_cast<float>(rect.x),
+					 .y = static_cast<float>(rect.y),
+					 .w = static_cast<float>(rect.w),
+					 .h = static_cast<float>(rect.h)};
+}
+
+void RenderManager::FillRect(const SDL_Rect& rect) const
+{
+	const SDL_FRect target = ToFRect(rect);
+	SDL_RenderFillRect(_sdlConfig.renderer.get(), &target);
 }
 
 void RenderManager::SetRenderDrawColor(const unsigned int color, const Uint8 transparency) const
@@ -444,10 +529,19 @@ void RenderManager::CreateColorTexture(const unsigned int color)
 	_colorTextureCache.insert_or_assign(color, std::move(colorTexture));
 }
 
+//NOTE: the clear ignores the logical presentation and covers the whole window, so the gray goes down
+//first and the field is painted black back over it - what stays gray is exactly the letterbox bars
 void RenderManager::ClearFrame(const PreTickUpdateEvent&) const
 {
-	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), 0u, 0u, 0u, 255u);
+	SetRenderDrawColor(kGrayColor);
 	SDL_RenderClear(_sdlConfig.renderer.get());
+
+	const UPoint logicalSize = _gameConfig.LogicalSize();
+	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), 0u, 0u, 0u, 255u);
+	FillRect(SDL_Rect{.x = 0,
+					  .y = 0,
+					  .w = static_cast<int>(logicalSize.x),
+					  .h = static_cast<int>(logicalSize.y)});
 }
 
 void RenderManager::PresentFrame(const PresentFrameEvent&) const
@@ -473,7 +567,7 @@ void RenderManager::UpdateWindowTitle(const GameMode gameMode) const
 	SDL_SetWindowTitle(_sdlConfig.sdlWindow.get(), title.c_str());
 }
 
-std::pair<double, SDL_RendererFlip> RenderManager::GetRotateAndAngleAndFlip(const Direction dir)
+std::pair<double, SDL_FlipMode> RenderManager::GetRotateAndAngleAndFlip(const Direction dir)
 {
 	switch (dir)
 	{
@@ -496,7 +590,7 @@ void RenderManager::DrawColorTexture(const RenderColorTextureEvent& event)
 	const SDL_Rect dstRect = RectToSdlRect(rect);
 	if (const auto it = _colorTextureCache.find(kGrayColor); it != _colorTextureCache.end())
 	{
-		SDL_RenderCopy(_sdlConfig.renderer.get(), it->second.get(), nullptr, &dstRect);
+		RenderCopy(it->second.get(), dstRect);
 	}
 }
 
@@ -504,22 +598,22 @@ void RenderManager::DrawTexture(const RenderTextureEvent& event) const
 {
 	//local angle and flip for texture
 	auto [angle, flip] = GetRotateAndAngleAndFlip(event.dir);
-	const SDL_Rect srcRect = RectToSdlRect(event.textureRect);
-	const SDL_Rect dstRect = RectToSdlRect(event.destRect);
+	const SDL_FRect src = ToFRect(RectToSdlRect(event.textureRect));
+	const SDL_FRect dst = ToFRect(RectToSdlRect(event.destRect));
 	SDL_Texture* atlas = _sdlConfig.atlasTexture.get();
 
 	if (event.color != 0u)
 	{
 		const auto [r, g, b, a] = IntToColor(event.color);
 		SDL_SetTextureColorMod(atlas, r, g, b);
-		SDL_RenderCopyEx(_sdlConfig.renderer.get(), atlas, &srcRect, &dstRect, angle, nullptr, flip);
+		SDL_RenderTextureRotated(_sdlConfig.renderer.get(), atlas, &src, &dst, angle, nullptr, flip);
 		//NOTE: one atlas serves every draw - the tint has to be off again before the next one
 		SDL_SetTextureColorMod(atlas, 255u, 255u, 255u);
 
 		return;
 	}
 
-	SDL_RenderCopyEx(_sdlConfig.renderer.get(), atlas, &srcRect, &dstRect, angle, nullptr, flip);
+	SDL_RenderTextureRotated(_sdlConfig.renderer.get(), atlas, &src, &dst, angle, nullptr, flip);
 }
 
 void RenderManager::RenderFPS(const RenderFPSEvent& event) const
@@ -570,7 +664,7 @@ void RenderManager::DrawHealthBar(const RenderHealthBarEvent& event) const
 	}
 
 	SetRenderDrawColor(color, 127u);
-	SDL_RenderFillRect(_sdlConfig.renderer.get(), &healthBarRect);
+	FillRect(healthBarRect);
 }
 
 void RenderManager::InitMenu(const GameConfig& gameConfig)

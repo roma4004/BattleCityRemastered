@@ -4,10 +4,10 @@
 #include "application/GameConfig.h"
 #include "application/WindowConfig.h"
 #include "application/UserInput.h"
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_mixer.h>
-#include <SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <algorithm>
 #include <array>
 #include <memory>
@@ -46,10 +46,11 @@ bool SDL_Config::ShouldPersistWindowSize() const
 
 SDL_Config::~SDL_Config()
 {
-	Mix_CloseAudio();
-	fontMedium.reset();
+	levelIntroMusic.reset();
+	mixer.reset();
+	MIX_Quit();
+	font.reset();
 	TTF_Quit();
-	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -75,7 +76,8 @@ std::expected<void, InitError> SDL_Config::Init()
 
 std::expected<void, InitError> SDL_Config::InitVideo()
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	//NOTE: SDL3 dropped SDL_INIT_EVERYTHING; EVENTS comes in with VIDEO, JOYSTICK with GAMEPAD
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD))
 	{
 		return std::unexpected(InitError{.stage = "SDL_Init Error", .detail = SDL_GetError()});
 	}
@@ -94,6 +96,10 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 
 	SDL_SetRenderDrawBlendMode(renderer.get(), SDL_BLENDMODE_BLEND);
 
+	//NOTE: SDL3 flipped the default to linear filtering; on pixel art that blurs every sprite and, on a
+	//shared atlas, bleeds neighbouring cells into each other at the edges
+	SDL_SetDefaultTextureScaleMode(renderer.get(), SDL_SCALEMODE_NEAREST);
+
 	return SetVSync(projectConfig.IsVsyncOn());
 }
 
@@ -101,9 +107,9 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 //every frame; the renderer and its textures survive the call
 std::expected<void, InitError> SDL_Config::SetVSync(const bool isOn)
 {
-	if (SDL_RenderSetVSync(renderer.get(), isOn ? 1 : 0) != 0)
+	if (!SDL_SetRenderVSync(renderer.get(), isOn ? 1 : 0))
 	{
-		return std::unexpected(InitError{.stage = "SDL_RenderSetVSync Error", .detail = SDL_GetError()});
+		return std::unexpected(InitError{.stage = "SDL_SetRenderVSync Error", .detail = SDL_GetError()});
 	}
 
 	return {};
@@ -111,17 +117,17 @@ std::expected<void, InitError> SDL_Config::SetVSync(const bool isOn)
 
 std::expected<void, InitError> SDL_Config::InitFonts()
 {
-	if (TTF_Init() == -1)
+	if (!TTF_Init())
 	{
-		return std::unexpected(InitError{.stage = "TTF_Init Error", .detail = TTF_GetError()});
+		return std::unexpected(InitError{.stage = "TTF_Init Error", .detail = SDL_GetError()});
 	}
 
 	fontPath = projectConfig.ResourcePath("Fonts.BattleCity");
 
-	if (fontMedium = OpenFont(kFontSizePtMedium);
-		fontMedium == nullptr)
+	if (font = OpenFont(kFontSizePtMedium);
+		font == nullptr)
 	{
-		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = TTF_GetError()});
+		return std::unexpected(InitError{.stage = "TTF font loading Error", .detail = SDL_GetError()});
 	}
 
 	return {};
@@ -129,16 +135,12 @@ std::expected<void, InitError> SDL_Config::InitFonts()
 
 std::shared_ptr<TTF_Font> SDL_Config::OpenFont(const int pointSize) const
 {
-	return {TTF_OpenFont(fontPath.string().c_str(), pointSize), TTF_CloseFont};
+	return {TTF_OpenFont(fontPath.string().c_str(), static_cast<float>(pointSize)), TTF_CloseFont};
 }
 
 std::expected<void, InitError> SDL_Config::InitTextures()
 {
-	if (!IMG_Init(IMG_INIT_PNG))
-	{
-		return std::unexpected(InitError{.stage = "IMG_Init Error", .detail = IMG_GetError()});
-	}
-
+	//NOTE: SDL3_image dropped IMG_Init/IMG_Quit - the decoders are always in
 	return LoadTexturePair("Images.Logo", logoSurface, logoTexture)
 		  .and_then([this]
 		   {
@@ -151,16 +153,25 @@ std::expected<void, InitError> SDL_Config::InitTextures()
 
 std::expected<void, InitError> SDL_Config::InitAudio()
 {
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+	if (!MIX_Init())
 	{
-		return std::unexpected(InitError{.stage = "Mix_OpenAudio Error, sound off", .detail = Mix_GetError()});
+		return std::unexpected(InitError{.stage = "MIX_Init Error, sound off", .detail = SDL_GetError()});
+	}
+
+	//NOTE: SDL3_mixer traded the one global device for an explicit mixer - a null spec lets it pick
+	if (mixer = {MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr), MIX_DestroyMixer};
+		mixer == nullptr)
+	{
+		return std::unexpected(InitError{.stage = "MIX_CreateMixerDevice Error, sound off",
+										 .detail = SDL_GetError()});
 	}
 
 	const std::string introMusicPath = projectConfig.ResourcePath("Music.LevelStarted").string();
-	if (levelIntroMusic = {Mix_LoadWAV(introMusicPath.c_str()), Mix_FreeChunk};
+	//NOTE: predecoded - one short chunk, and decoding it once keeps the playback path allocation-free
+	if (levelIntroMusic = {MIX_LoadAudio(mixer.get(), introMusicPath.c_str(), true), MIX_DestroyAudio};
 		levelIntroMusic == nullptr)
 	{
-		return std::unexpected(InitError{.stage = "Mix_LoadWAV Error, sound off", .detail = Mix_GetError()});
+		return std::unexpected(InitError{.stage = "MIX_LoadAudio Error, sound off", .detail = SDL_GetError()});
 	}
 
 	//TODO: move to soundManager
@@ -170,10 +181,10 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 		return {};
 	}
 
-	if (Mix_PlayChannel(-1, levelIntroMusic.get(), 0) == -1)
+	if (!MIX_PlayAudio(mixer.get(), levelIntroMusic.get()))
 	{
-		return std::unexpected(InitError{.stage = "Mix_PlayChannel Error, intro not played",
-										 .detail = Mix_GetError()});
+		return std::unexpected(InitError{.stage = "MIX_PlayAudio Error, intro not played",
+										 .detail = SDL_GetError()});
 	}
 
 	return {};
@@ -181,11 +192,11 @@ std::expected<void, InitError> SDL_Config::InitAudio()
 
 std::expected<std::shared_ptr<SDL_Surface>, InitError> SDL_Config::LoadSurface(const std::filesystem::path& path)
 {
-	std::shared_ptr<SDL_Surface> surface{IMG_Load(path.string().c_str()), SDL_FreeSurface};
+	std::shared_ptr<SDL_Surface> surface{IMG_Load(path.string().c_str()), SDL_DestroySurface};
 	if (surface == nullptr)
 	{
 		return std::unexpected(
-				InitError{.stage = "IMG " + path.string() + " Loading Error", .detail = IMG_GetError()});
+				InitError{.stage = "IMG " + path.string() + " Loading Error", .detail = SDL_GetError()});
 	}
 
 	return surface;
@@ -199,7 +210,7 @@ std::expected<std::shared_ptr<SDL_Texture>, InitError> SDL_Config::CreateTexture
 	if (texture == nullptr)
 	{
 		return std::unexpected(
-				InitError{.stage = "IMG " + path.string() + " Texture Creating Error", .detail = IMG_GetError()});
+				InitError{.stage = "IMG " + path.string() + " Texture Creating Error", .detail = SDL_GetError()});
 	}
 
 	return texture;
@@ -259,7 +270,10 @@ std::expected<void, InitError> SDL_Config::LoadAtlas()
 	}
 
 	SDL_Surface* rawSurface = surface->get();
-	if (SDL_SetColorKey(rawSurface, SDL_TRUE, SDL_MapRGB(rawSurface->format, 0, 0, 1)) != 0)
+	//NOTE: SDL3 keeps only the format enum on the surface - the channel layout comes from its details
+	const SDL_PixelFormatDetails* formatDetails = SDL_GetPixelFormatDetails(rawSurface->format);
+	const Uint32 colorKey = SDL_MapRGB(formatDetails, SDL_GetSurfacePalette(rawSurface), 0, 0, 1);
+	if (!SDL_SetSurfaceColorKey(rawSurface, true, colorKey))
 	{
 		return std::unexpected(InitError{.stage = "IMG atlas SetColorKey Error", .detail = SDL_GetError()});
 	}
@@ -333,7 +347,7 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		return;
 	}
 
-	constexpr Uint32 unsavableFlags = SDL_WINDOW_MINIMIZED | SDL_WINDOW_MAXIMIZED;
+	constexpr SDL_WindowFlags unsavableFlags = SDL_WINDOW_MINIMIZED | SDL_WINDOW_MAXIMIZED;
 	if ((SDL_GetWindowFlags(sdlWindowRaw) & unsavableFlags) != 0u)
 	{
 		return;
@@ -350,7 +364,7 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		SDL_GetWindowSize(sdlWindowRaw, &width, &height);
 
 		SDL_Rect bounds{};
-		if (SDL_GetDisplayUsableBounds(SDL_GetWindowDisplayIndex(sdlWindowRaw), &bounds) != 0)
+		if (!SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(sdlWindowRaw), &bounds))
 		{
 			bounds = SDL_Rect{.x = 0, .y = 0, .w = width, .h = height};
 		}
@@ -381,24 +395,41 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
 	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
-	const SDL_Rect rect{.x = static_cast<int>(windowConfig.pos.x),
-						.y = static_cast<int>(windowConfig.pos.y),
-						.w = static_cast<int>(windowConfig.size.x),
-						.h = static_cast<int>(windowConfig.size.y)};
 
-	return {SDL_CreateWindow(kWindowTitle, rect.x, rect.y, rect.w, rect.h, windowFlags), SDL_DestroyWindow};
+	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window{
+			SDL_CreateWindow(kWindowTitle,
+							 static_cast<int>(windowConfig.size.x),
+							 static_cast<int>(windowConfig.size.y),
+							 windowFlags),
+			SDL_DestroyWindow};
+
+	//NOTE: SDL3 dropped the position from SDL_CreateWindow - it opens centred and is moved afterwards
+	if (window != nullptr)
+	{
+		SDL_SetWindowPosition(window.get(),
+							  static_cast<int>(windowConfig.pos.x),
+							  static_cast<int>(windowConfig.pos.y));
+	}
+
+	return window;
 }
 
 std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 {
-	//NOTE: vsync is not a creation flag - InitVideo applies it through SetVSync
-	constexpr Uint32 renderFlags = SDL_RENDERER_ACCELERATED;
-
 	const int monitorIndex = projectConfig.MonitorNumber() - 1;
-	SDL_Rect bounds;
-	SDL_GetDisplayBounds(monitorIndex, &bounds);
 
-	SDL_Rect bordersSize;
+	//NOTE: SDL3 addresses displays by id, not by index - the ini still holds the 1-based number
+	SDL_Rect bounds{};
+	bool hasMonitor{false};
+	if (int displayCount{}; SDL_DisplayID* displays = SDL_GetDisplays(&displayCount))
+	{
+		hasMonitor = monitorIndex >= 0
+					 && monitorIndex < displayCount
+					 && SDL_GetDisplayBounds(displays[monitorIndex], &bounds);
+		SDL_free(displays);
+	}
+
+	SDL_Rect bordersSize{};
 	SDL_Window* sdlWindowRaw = sdlWindow.get();
 	SDL_GetWindowBordersSize(sdlWindowRaw, &bordersSize.y, &bordersSize.x, &bordersSize.h, &bordersSize.w);
 
@@ -409,7 +440,7 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 				|| projectConfig.IsCenterOnStart()
 				|| gameConfig.IsHost()
 				|| gameConfig.IsClient());
-	if (monitorIndex != -1 && centerOnMonitor)
+	if (hasMonitor && centerOnMonitor)
 	{
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};
@@ -421,5 +452,6 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 							  - bordersSize.y);
 	}
 
-	return {SDL_CreateRenderer(sdlWindowRaw, monitorIndex, renderFlags), SDL_DestroyRenderer};
+	//NOTE: vsync is not a creation flag - InitVideo applies it through SetVSync
+	return {SDL_CreateRenderer(sdlWindowRaw, nullptr), SDL_DestroyRenderer};
 }

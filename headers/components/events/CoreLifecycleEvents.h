@@ -32,7 +32,7 @@ struct GameStateChangedToEvent
 
 struct MatchStartedEvent {};
 
-//NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL2 on this
+//NOTE: named GameResetEvent, not ResetEvent - <windows.h> (pulled in transitively via SDL on this
 //MinGW/Windows toolchain) declares a WinAPI function literally named `ResetEvent` (synchapi.h),
 //which collides with a same-named struct in the global namespace (C++ tag names and function names
 //share one namespace, unlike C). Every listener for the former "Reset" string event must use this

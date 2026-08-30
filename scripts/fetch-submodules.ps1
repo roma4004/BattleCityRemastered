@@ -5,20 +5,20 @@ param([Parameter(Mandatory = $true)][string]$Root)
 $ErrorActionPreference = 'Stop'
 
 # Marker = a file that only exists once the group is checked out.
-# Only SDL2_ttf actually has nested submodules (freetype, harfbuzz) worth recursing into.
+# Only SDL3_ttf actually has nested submodules (freetype, harfbuzz, plutosvg) worth recursing into.
 $recursiveGroups = @(
-    @{ Marker = 'ThirdParty/SDL2/CMakeLists.txt'; Paths = @('ThirdParty/SDL2') },
-    @{ Marker = 'ThirdParty/SDL2_ttf/CMakeLists.txt'; Paths = @('ThirdParty/SDL2_ttf') },
+    @{ Marker = 'ThirdParty/SDL3/CMakeLists.txt'; Paths = @('ThirdParty/SDL3') },
+    @{ Marker = 'ThirdParty/SDL3_ttf/CMakeLists.txt'; Paths = @('ThirdParty/SDL3_ttf') },
     @{ Marker = 'ThirdParty/boost/uuid/CMakeLists.txt'; Paths = @('ThirdParty/boost') },
     @{ Marker = 'ThirdParty/ser20/CMakeLists.txt'; Paths = @('ThirdParty/ser20') },
     @{ Marker = 'ThirdParty/googletest/CMakeLists.txt'; Paths = @('ThirdParty/googletest') }
 )
 
-# SDL2IMAGE_VENDORED/SDL2MIXER_VENDORED are pinned OFF, so their external/* (dav1d, aom, libjxl,
+# SDL3IMAGE_VENDORED/SDLMIXER_VENDORED are pinned OFF, so their external/* (dav1d, aom, libjxl,
 # mpg123, fluidsynth with its test soundfonts - ~760 MB) is never configured. Don't clone it either.
 $flatGroups = @(
-    @{ Marker = 'ThirdParty/SDL2_image/CMakeLists.txt'; Paths = @('ThirdParty/SDL2_image') },
-    @{ Marker = 'ThirdParty/SDL2_mixer/CMakeLists.txt'; Paths = @('ThirdParty/SDL2_mixer') }
+    @{ Marker = 'ThirdParty/SDL3_image/CMakeLists.txt'; Paths = @('ThirdParty/SDL3_image') },
+    @{ Marker = 'ThirdParty/SDL3_mixer/CMakeLists.txt'; Paths = @('ThirdParty/SDL3_mixer') }
 )
 
 # Collected first, then fetched in one pass per pool: the groups are independent, and a separate

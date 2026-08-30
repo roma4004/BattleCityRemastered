@@ -9,7 +9,6 @@ include(cmake/SelectCompiler.cmake)
 
 project(BattleCity_remastered)
 #TODO: use std::filesystem for resource loading in code
-#TODO: migrate to SDL2 to SDL2pp
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #for Sourcetree
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -18,7 +17,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 include(cmake/CompilerSetup.cmake)
 
 # --- Global build settings ---
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required (e.g. SDL2 itself), unrelated to our own cmake_minimum_required above
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version for all subprojects" FORCE) #NOTE: compat shim for vendored subprojects with an old cmake_minimum_required, unrelated to our own cmake_minimum_required above
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 
 # --- Third-party dependencies (submodule fetch + configure + add_subdirectory) ---
@@ -157,7 +156,7 @@ add_library(game_platform STATIC ${GAME_PLATFORM_SOURCES})
 target_link_libraries(game_platform PRIVATE project_warnings)
 target_link_libraries(game_platform PUBLIC
         game_core
-        SDL2-static SDL2_ttf SDL2_image SDL2_mixer
+        SDL3::SDL3-static SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image SDL3_mixer::SDL3_mixer
 )
 
 add_executable(${PROJECT_NAME} source/main.cpp)
@@ -169,9 +168,8 @@ target_link_libraries(unit_tests PRIVATE project_warnings game_core gtest gtest_
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
 
-# SDL2main forces an undefined SDL_main reference unconditionally (that's how it hijacks the entry
-# point) - it must stay off game_platform's PUBLIC link set, exe-only.
-target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings game_platform SDL2main)
+#NOTE: SDL3 has no SDL2main equivalent - the entry point hijack is header-only in <SDL3/SDL_main.h>
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings game_platform)
 
 # --- Game assets (copied next to the exe post-build) ---
 set(GAME_ASSETS

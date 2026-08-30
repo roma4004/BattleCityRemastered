@@ -9,10 +9,22 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
-#include <SDL_events.h>
-#include <SDL_gamecontroller.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_gamepad.h>
 #include <algorithm>
 #include "utils/Log.h"
+
+namespace
+{
+//NOTE: SDL3 dropped SDL_NumJoysticks - the count only comes out of the list, which we own and free
+[[nodiscard]] int ConnectedJoystickCount()
+{
+	int count{};
+	SDL_free(SDL_GetJoysticks(&count));
+
+	return count;
+}
+}
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
 					 const SDL_Config& sdlConfig)
@@ -62,9 +74,8 @@ void UserInput::OnMenuPosChanged(const MenuPosChangedEvent& event)
 
 void UserInput::WindowDragEvents(const SDL_Event& event)
 {
-	const bool isWindowDrag = event.type == SDL_WINDOWEVENT
-							  && (event.window.event == SDL_WINDOWEVENT_MOVED
-								  || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED);
+	//NOTE: SDL3 split SDL_WINDOWEVENT into one event type per reason - RESIZED covers SDL2's SIZE_CHANGED
+	const bool isWindowDrag = event.type == SDL_EVENT_WINDOW_MOVED || event.type == SDL_EVENT_WINDOW_RESIZED;
 	if (!isWindowDrag)
 	{
 		return;
@@ -93,9 +104,9 @@ void UserInput::SwapControllers(const TabReleasedEvent&)
 PlayerSlot UserInput::ControllerSlotDefiner(const SDL_JoystickID instanceId) const
 {
 	bool isFirst{true};
-	if (SDL_NumJoysticks() > 1)
+	if (ConnectedJoystickCount() > 1)
 	{
-		const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
+		const auto isSameId = [instanceId](const std::shared_ptr<SDL_Gamepad>& controller)
 		{
 			return IsSameController(controller, instanceId);
 		};
@@ -128,22 +139,26 @@ void UserInput::OnWindowDragStop()
 				_isPausedByWindowDrag = false;
 				_events->EmitEvent(SetPauseEvent{.isPaused = _isPausedByWindowDrag});
 			}
+
+			//NOTE: announced here and not on every resize step - resizing the window back while the
+			//user is still dragging it fights the drag
+			_events->EmitEvent(WindowSizeChangedToEvent{.newSize = _windowSize});
 		}
 	}
 }
 
-SDL_Point UserInput::ToLogical(const int windowX, const int windowY) const
+SDL_Point UserInput::ToLogical(const float windowX, const float windowY) const
 {
 	float logicalX{};
 	float logicalY{};
-	SDL_RenderWindowToLogical(_sdlConfig.renderer.get(), windowX, windowY, &logicalX, &logicalY);
+	SDL_RenderCoordinatesFromWindow(_sdlConfig.renderer.get(), windowX, windowY, &logicalX, &logicalY);
 
 	return SDL_Point{.x = static_cast<int>(logicalX), .y = static_cast<int>(logicalY)};
 }
 
 void UserInput::MouseEvents(const SDL_Event& event)
 {
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+	if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && event.button.button == SDL_BUTTON_LEFT)
 	{
 		_mouseButtons.MouseLeftButton = true;
 
@@ -156,7 +171,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		return;
 	}
 
-	if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
+	if (event.type == SDL_EVENT_MOUSE_BUTTON_UP && event.button.button == SDL_BUTTON_LEFT)
 	{
 		_mouseButtons.MouseLeftButton = false;
 		_events->EmitEvent(EnterEvent{.isPressed = false});
@@ -164,7 +179,7 @@ void UserInput::MouseEvents(const SDL_Event& event)
 		return;
 	}
 
-	if (event.type == SDL_MOUSEMOTION)
+	if (event.type == SDL_EVENT_MOUSE_MOTION)
 	{
 		const SDL_Point mouse = ToLogical(event.motion.x, event.motion.y);
 
@@ -190,27 +205,27 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 	const PlayerSlot keyboardLeftSideSlot{_areControllersSwapped ? PlayerSlot::P2 : PlayerSlot::P1};
 	const PlayerSlot keyboardRightSideSlot{_areControllersSwapped ? PlayerSlot::P1 : PlayerSlot::P2};
 
-	switch (event.key.keysym.sym)
+	switch (event.key.key)
 	{
-		case SDLK_w:
+		case SDLK_W:
 			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_UP:
 			_events->EmitEvent(Key(keyboardRightSideSlot), MoveUpEvent{.isPressed = isPressed});
 			break;
-		case SDLK_a:
+		case SDLK_A:
 			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_LEFT:
 			_events->EmitEvent(Key(keyboardRightSideSlot), MoveLeftEvent{.isPressed = isPressed});
 			break;
-		case SDLK_s:
+		case SDLK_S:
 			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_DOWN:
 			_events->EmitEvent(Key(keyboardRightSideSlot), MoveDownEvent{.isPressed = isPressed});
 			break;
-		case SDLK_d:
+		case SDLK_D:
 			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RIGHT:
@@ -222,19 +237,19 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 		case SDLK_RCTRL:
 			_events->EmitEvent(Key(keyboardRightSideSlot), FireEvent{.isPressed = isPressed});
 			break;
-		case SDLK_m:
+		case SDLK_M:
 			if (isPressed == false)
 			{
 				_events->EmitEvent(MenuReleasedEvent{});
 			}
 			break;
-		case SDLK_p:
+		case SDLK_P:
 			if (isPressed == false)
 			{
 				_events->EmitEvent(PauseReleasedEvent{});
 			}
 			break;
-		case SDLK_r:
+		case SDLK_R:
 			_events->EmitEvent(ResetKeyEvent{.isPressed = isPressed});
 			break;
 		case SDLK_TAB:
@@ -254,11 +269,11 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 
 void UserInput::KeyboardEvents(const SDL_Event& event) const
 {
-	if (event.type == SDL_KEYDOWN)
+	if (event.type == SDL_EVENT_KEY_DOWN)
 	{
 		KeyboardKeyPressRelease(event, true);
 	}
-	else if (event.type == SDL_KEYUP)
+	else if (event.type == SDL_EVENT_KEY_UP)
 	{
 		KeyboardKeyPressRelease(event, false);
 	}
@@ -266,28 +281,28 @@ void UserInput::KeyboardEvents(const SDL_Event& event) const
 
 void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPressed) const
 {
-	if (SDL_NumJoysticks() > 0)
+	if (ConnectedJoystickCount() > 0)
 	{
-		const PlayerSlot controllerSlot{ControllerSlotDefiner(event.cdevice.which)};
+		const PlayerSlot controllerSlot{ControllerSlotDefiner(event.gbutton.which)};
 
-		switch (event.cbutton.button)
+		switch (event.gbutton.button)
 		{
-			case SDL_CONTROLLER_BUTTON_A:
+			case SDL_GAMEPAD_BUTTON_SOUTH:
 				_events->EmitEvent(Key(controllerSlot), FireEvent{.isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_B:
+			case SDL_GAMEPAD_BUTTON_EAST:
 				//NOTE: no listener consumes this yet
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::B,
 													  .isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_X:
+			case SDL_GAMEPAD_BUTTON_WEST:
 				//NOTE: no listener consumes this yet
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::X,
 													  .isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_Y:
+			case SDL_GAMEPAD_BUTTON_NORTH:
 				//NOTE: no listener consumes this yet
 				_events->EmitEvent(GamepadButtonEvent{.controllerSlot = controllerSlot,
 													  .button = GamepadButton::Y,
@@ -297,25 +312,25 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 					_events->EmitEvent(TabReleasedEvent{});
 				}
 				break;
-			case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			case SDL_GAMEPAD_BUTTON_DPAD_UP:
 				_events->EmitEvent(Key(controllerSlot), MoveUpEvent{.isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
 				_events->EmitEvent(Key(controllerSlot), MoveDownEvent{.isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
 				_events->EmitEvent(Key(controllerSlot), MoveLeftEvent{.isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+			case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
 				_events->EmitEvent(Key(controllerSlot), MoveRightEvent{.isPressed = isPressed});
 				break;
-			case SDL_CONTROLLER_BUTTON_START:
+			case SDL_GAMEPAD_BUTTON_START:
 				if (isPressed == false)
 				{
 					_events->EmitEvent(MenuReleasedEvent{});
 				}
 				break;
-			case SDL_CONTROLLER_BUTTON_BACK:
+			case SDL_GAMEPAD_BUTTON_BACK:
 				if (isPressed == false)
 				{
 					_events->EmitEvent(PauseReleasedEvent{});
@@ -332,25 +347,25 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 {
 	switch (event.type)
 	{
-		case SDL_CONTROLLERBUTTONDOWN:
+		case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
 		{
 			GamepadKeyPressRelease(event, true);
 			break;
 		}
-		case SDL_CONTROLLERBUTTONUP:
+		case SDL_EVENT_GAMEPAD_BUTTON_UP:
 		{
 			GamepadKeyPressRelease(event, false);
 			break;
 		}
-		case SDL_CONTROLLERDEVICEADDED:
+		case SDL_EVENT_GAMEPAD_ADDED:
 		{
-			Log::Info("joysticks: " + std::to_string(SDL_NumJoysticks()));
-			ConnectController({SDL_GameControllerOpen(event.cdevice.which), SDL_GameControllerClose});
+			Log::Info("joysticks: " + std::to_string(ConnectedJoystickCount()));
+			ConnectController({SDL_OpenGamepad(event.gdevice.which), SDL_CloseGamepad});
 			break;
 		}
-		case SDL_CONTROLLERDEVICEREMOVED:
+		case SDL_EVENT_GAMEPAD_REMOVED:
 		{
-			const SDL_JoystickID instanceId = event.cdevice.which;
+			const SDL_JoystickID instanceId = event.gdevice.which;
 			Log::Info("controller removed (instance " + std::to_string(instanceId) + ')');
 			DisconnectController(instanceId);
 			break;
@@ -361,21 +376,11 @@ void UserInput::GamepadEvents(const SDL_Event& event)
 	}
 }
 
-//NOTE: SDL fires this for every pixel of a drag, and each one refits the world and rescales every
-//object on the field - so the size is snapped to a step and a repeat of the same size is dropped
+//NOTE: SDL fires this for every pixel of a drag, so only the last size is kept - who cares about it
+//is told once, when the drag stops
 void UserInput::OnWindowResized(const UPoint newSize)
 {
-	constexpr std::size_t step{50u};
-	const UPoint snapped{.x = std::max(step, (newSize.x + step / 2u) / step * step),
-						 .y = std::max(step, (newSize.y + step / 2u) / step * step)};
-
-	if (snapped.x == _windowSize.x && snapped.y == _windowSize.y)
-	{
-		return;
-	}
-
-	_windowSize = snapped;
-	_events->EmitEvent(WindowSizeChangedToEvent{.newSize = snapped});
+	_windowSize = newSize;
 }
 
 void UserInput::Update()
@@ -383,25 +388,25 @@ void UserInput::Update()
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
-		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE))
+		if (event.type == SDL_EVENT_QUIT || (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE))
 		{
 			_isShutdown = true;
 		}
 
-		if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		if (event.type == SDL_EVENT_WINDOW_RESIZED)
 		{
 			OnWindowResized(UPoint{.x = static_cast<unsigned>(event.window.data1),
 								   .y = static_cast<unsigned>(event.window.data2)});
 		}
 
 		//NOTE: render targets lost their pixels - whoever drew into one has to draw it again
-		if (event.type == SDL_RENDER_TARGETS_RESET)
+		if (event.type == SDL_EVENT_RENDER_TARGETS_RESET)
 		{
 			_events->EmitEvent(RenderTargetsResetEvent{});
 		}
 
 		//NOTE: the GPU device died and came back - every texture it ever handed out has to be rebuilt
-		if (event.type == SDL_RENDER_DEVICE_RESET)
+		if (event.type == SDL_EVENT_RENDER_DEVICE_RESET)
 		{
 			_events->EmitEvent(RenderDeviceResetEvent{});
 		}
@@ -419,9 +424,9 @@ bool UserInput::IsShutdown() const { return _isShutdown; }
 
 bool UserInput::IsPause() const { return _isPause; }
 
-void UserInput::ConnectController(const std::shared_ptr<SDL_GameController>& newController)
+void UserInput::ConnectController(const std::shared_ptr<SDL_Gamepad>& newController)
 {
-	const auto isEmpty = [](const std::shared_ptr<SDL_GameController>& controller) { return controller == nullptr; };
+	const auto isEmpty = [](const std::shared_ptr<SDL_Gamepad>& controller) { return controller == nullptr; };
 
 	if (const auto it = std::ranges::find_if(_slotsForController, isEmpty);
 		it != _slotsForController.end())
@@ -436,7 +441,7 @@ void UserInput::ConnectController(const std::shared_ptr<SDL_GameController>& new
 
 void UserInput::DisconnectController(const SDL_JoystickID instanceId)
 {
-	const auto isSameId = [instanceId](const std::shared_ptr<SDL_GameController>& controller)
+	const auto isSameId = [instanceId](const std::shared_ptr<SDL_Gamepad>& controller)
 	{
 		return IsSameController(controller, instanceId);
 	};
@@ -450,41 +455,43 @@ void UserInput::DisconnectController(const SDL_JoystickID instanceId)
 
 void UserInput::InitControllers()
 {
-	const int numConnectedJoysticks = SDL_NumJoysticks();
-	Log::Detail(std::to_string(numConnectedJoysticks) + " gamepad(s) connected");
-
-	if (numConnectedJoysticks > 0)
+	int joystickCount{};
+	SDL_JoystickID* joysticks = SDL_GetJoysticks(&joystickCount);
+	if (joysticks == nullptr)
 	{
-		if (SDL_GameController* GameControllerOne = SDL_GameControllerOpen(0);
-			GameControllerOne != nullptr)
+		Log::Error(std::string{"SDL_GetJoysticks Error: "} + SDL_GetError());
+
+		return;
+	}
+
+	Log::Detail(std::to_string(joystickCount) + " gamepad(s) connected");
+
+	//NOTE: two seats, so the pads past the second one stay unopened
+	constexpr int kMaxControllers{2};
+	for (int i = 0; i < joystickCount && i < kMaxControllers; ++i)
+	{
+		if (SDL_Gamepad* gamepad = SDL_OpenGamepad(joysticks[i]);
+			gamepad != nullptr)
 		{
-			ConnectController({GameControllerOne, SDL_GameControllerClose});
-			Log::Info(std::string{"opened controller one: "} + SDL_GameControllerName(GameControllerOne));
+			ConnectController({gamepad, SDL_CloseGamepad});
+			Log::Info("opened controller " + std::to_string(i + 1) + ": " + SDL_GetGamepadName(gamepad));
 		}
 	}
 
-	if (numConnectedJoysticks > 1)
-	{
-		if (SDL_GameController* GameControllerTwo = SDL_GameControllerOpen(1);
-			GameControllerTwo != nullptr)
-		{
-			ConnectController({GameControllerTwo, SDL_GameControllerClose});
-			Log::Info(std::string{"opened controller two: "} + SDL_GameControllerName(GameControllerTwo));
-		}
-	}
+	SDL_free(joysticks);
 }
 
-bool UserInput::IsSameController(const std::shared_ptr<SDL_GameController>& controller, const SDL_JoystickID instanceId)
+bool UserInput::IsSameController(const std::shared_ptr<SDL_Gamepad>& controller, const SDL_JoystickID instanceId)
 {
 	if (controller == nullptr)
 	{
 		return false;
 	}
 
-	if (SDL_Joystick* joystick = SDL_GameControllerGetJoystick(controller.get());
+	if (SDL_Joystick* joystick = SDL_GetGamepadJoystick(controller.get());
 		joystick != nullptr)
 	{
-		return SDL_JoystickInstanceID(joystick) == instanceId;
+		return SDL_GetJoystickID(joystick) == instanceId;
 	}
 
 	return false;

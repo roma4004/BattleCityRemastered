@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- Local static-build copy of ThirdParty/SDL2_image's VisualC project; paths rewritten to point back into ThirdParty/SDL2_image, ConfigurationType switched to StaticLibrary. Do not edit the vendor submodule itself. -->
+<!-- Local static-build copy of ThirdParty/SDL3_image's VisualC project; paths rewritten to point back into ThirdParty/SDL3_image, ConfigurationType switched to StaticLibrary. Do not edit the vendor submodule itself. -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SolutionDir Condition="'$(SolutionDir)'==''">$(ProjectDir)</SolutionDir>
+  </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -20,9 +23,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>SDL2_image</ProjectName>
+    <ProjectName>SDL3_image</ProjectName>
     <ProjectGuid>{2BD5534E-00E2-4BEA-AC96-D9A92EA24696}</ProjectGuid>
-    <RootNamespace>SDL2_image</RootNamespace>
+    <RootNamespace>SDL3_image</RootNamespace>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -62,20 +65,20 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)ThirdParty\SDL2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\ThirdParty\SDL3_image\include;$(ProjectDir)..\..\ThirdParty\SDL3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(PlatformName)\$(Configuration);$(ProjectDir)$(OutDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)ThirdParty\SDL2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\ThirdParty\SDL3_image\include;$(ProjectDir)..\..\ThirdParty\SDL3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(PlatformName)\$(Configuration);$(ProjectDir)$(OutDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)ThirdParty\SDL2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\ThirdParty\SDL3_image\include;$(ProjectDir)..\..\ThirdParty\SDL3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(PlatformName)\$(Configuration);$(ProjectDir)$(OutDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)ThirdParty\SDL2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\ThirdParty\SDL3_image\include;$(ProjectDir)..\..\ThirdParty\SDL3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(PlatformName)\$(Configuration);$(ProjectDir)$(OutDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -83,16 +86,16 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL2_image.tlb</TypeLibraryName>
+      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL3_image.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL2_image\include;$(ProjectDir)..\..\ThirdParty\SDL2_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_ANI;LOAD_AVIF;LOAD_AVIF_DYNAMIC="libavif-16.dll";LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_TIF;LOAD_TIF_DYNAMIC="libtiff-6.dll";LOAD_WEBP;LOAD_WEBP_DYNAMIC="libwebp-7.dll";LOAD_WEBPDEMUX_DYNAMIC="libwebpdemux-2.dll";LOAD_WEBPMUX_DYNAMIC="libwebpmux-3.dll";LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -100,7 +103,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -111,15 +114,15 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL2_image.tlb</TypeLibraryName>
+      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL3_image.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL2_image\include;$(ProjectDir)..\..\ThirdParty\SDL2_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_ANI;LOAD_AVIF;LOAD_AVIF_DYNAMIC="libavif-16.dll";LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_TIF;LOAD_TIF_DYNAMIC="libtiff-6.dll";LOAD_WEBP;LOAD_WEBP_DYNAMIC="libwebp-7.dll";LOAD_WEBPDEMUX_DYNAMIC="libwebpdemux-2.dll";LOAD_WEBPMUX_DYNAMIC="libwebpmux-3.dll";LOAD_LIBPNG_DYNAMIC="libpng16-16.dll";SDL_IMAGE_LIBPNG;LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
@@ -127,7 +130,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
@@ -138,25 +141,25 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL2_image.tlb</TypeLibraryName>
+      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL3_image.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL2_image\include;$(ProjectDir)..\..\ThirdParty\SDL2_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_ANI;LOAD_AVIF;LOAD_AVIF_DYNAMIC="libavif-16.dll";LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_TIF;LOAD_TIF_DYNAMIC="libtiff-6.dll";LOAD_WEBP;LOAD_WEBP_DYNAMIC="libwebp-7.dll";LOAD_WEBPDEMUX_DYNAMIC="libwebpdemux-2.dll";LOAD_WEBPMUX_DYNAMIC="libwebpmux-3.dll";LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,60 +168,69 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL2_image.tlb</TypeLibraryName>
+      <TypeLibraryName>./$(Configuration)/$(Platform)/SDL3_image.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL2_image\include;$(ProjectDir)..\..\ThirdParty\SDL2_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_image\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;USE_STBIMAGE;LOAD_ANI;LOAD_AVIF;LOAD_AVIF_DYNAMIC="libavif-16.dll";LOAD_BMP;LOAD_GIF;LOAD_JPG;LOAD_LBM;LOAD_PCX;LOAD_PNG;LOAD_PNM;LOAD_QOI;LOAD_SVG;LOAD_TGA;LOAD_TIF;LOAD_TIF_DYNAMIC="libtiff-6.dll";LOAD_WEBP;LOAD_WEBP_DYNAMIC="libwebp-7.dll";LOAD_WEBPDEMUX_DYNAMIC="libwebpdemux-2.dll";LOAD_WEBPMUX_DYNAMIC="libwebpmux-3.dll";LOAD_LIBPNG_DYNAMIC="libpng16-16.dll";SDL_IMAGE_LIBPNG;LOAD_XCF;LOAD_XPM;LOAD_XV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_avif.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_bmp.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_gif.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_jpg.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_jxl.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_lbm.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_pcx.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_png.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_pnm.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_qoi.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_stb.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_svg.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_tga.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_tif.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_webp.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_WIC.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_xcf.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_xpm.c" />
-    <ClCompile Include="..\..\ThirdParty\SDL2_image\src\IMG_xv.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_ani.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_anim_decoder.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_anim_encoder.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_avif.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_bmp.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_gif.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_gpu.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_jpg.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_jxl.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_lbm.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_pcx.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_png.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_libpng.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_pnm.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_qoi.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_stb.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_svg.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_tga.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_tif.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_webp.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_WIC.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_xcf.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_xpm.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\IMG_xv.c" />
+    <ClCompile Include="..\..\ThirdParty\SDL3_image\src\xmlman.c" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\ThirdParty\SDL2_image\VisualC\Version.rc" />
+    <ResourceCompile Include="..\..\ThirdParty\SDL3_image\src\version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\ThirdParty\SDL2_image\include\SDL_image.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\include\SDL3_image\SDL_image.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG_ani.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG_anim_decoder.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG_anim_encoder.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG_libpng.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG_gif.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\IMG_avif.h" />
+    <ClInclude Include="..\..\ThirdParty\SDL3_image\src\xmlman.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\SDL2Wrappers\SDL2\SDL.vcxproj">
-      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

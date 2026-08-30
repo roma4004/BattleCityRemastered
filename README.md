@@ -2,9 +2,9 @@
 
 Please note the game is in a development state, so the latest version is on the "dev" branch.
 
-Like my old [Battle City on C++/QT QML](https://github.com/roma4004/battle_city_qt_qml) project, but remastered as a mentoring project 
-for teaching new programmers. 
-For me it is a place to practice design patterns and game architecture in modern C++. 
+Like my old [Battle City on C++/QT QML](https://github.com/roma4004/battle_city_qt_qml) project, but remastered as a mentoring project
+for teaching new programmers.
+For me it is a place to practice design patterns and game architecture in modern C++.
 If you want to join or study with me, let me know via direct message [Telegram/Dentair](https://t.me/Dentair).
 
 <img width="1201" height="948" alt="зображення" src="https://github.com/user-attachments/assets/cf1f9eea-8de7-4c58-b613-dd65f37728bc" />
@@ -28,7 +28,7 @@ Additional or extended features compared to the original title:
 11) Gamepad support, tested on Xbox and PlayStation controllers
 12) Control keys hint
 13) Parsing console arguments to run the host process and the client process at the same time, with shifted window position, network game mode started,
-    optional `skipintro` to keep the intro music playing from one window only, 
+    optional `skipintro` to keep the intro music playing from one window only,
     optional `pos=X,Y` / `size=WIDTH,HEIGHT` to place and size the window - either one can be passed alone, whatever is left out keeps its INI value (an explicit position also disables the automatic monitor centering)
 14) Save/load settings in a config INI file, creating a default INI file if it does not exist
 15) Tanks in bushes hide their health bar
@@ -55,7 +55,7 @@ Already reimplemented (from scratch) features from the original game:
   * Timer (freezes the enemy team, for 15 sec)
 12) Intro music
 13) Textures and animation based on the original, with some small differences and extensions
-14) Animation: tank spawn, BonusHelmet effect, bullet explosion, tank explosion 
+14) Animation: tank spawn, BonusHelmet effect, bullet explosion, tank explosion
 15) End game (win\lose condition) with a score board (statistics)
 16) Right side bar with respawn counters and level number (just like in the original)
 17) Auto-activating BonusHelmet for 5 seconds for each tank on its spawn
@@ -64,13 +64,13 @@ Already reimplemented (from scratch) features from the original game:
 20) Ice logic, tanks on it keep driving for a moment after the move input is released
 
 
-NOTE: about the multiplayer game. 
-It is two separate processes that let you truly play with full visual replication over TCP/IP. 
+NOTE: about the multiplayer game.
+It is two separate processes that let you truly play with full visual replication over TCP/IP.
 The game in host\client mode looks the same, but with strict host authority, so the client can only send key input.
   * (run game.exe twice) drag the window, choose "play as host" in one window and "play as client" in the other window
   * The host is auto paused while waiting for the client to join
   * Replicating all visual events (move, shot, died, spawn, statistics, animation)
-  * Logic is computed on the host, which accepts client inputs and partially mirrors the result back to the client to create the visual consequence 
+  * Logic is computed on the host, which accepts client inputs and partially mirrors the result back to the client to create the visual consequence
 Hint: `scripts/run-host-and-client.bat`/`.sh` starts both windows at once, with position offset (and optional argument - path to the exe).
 `scripts/run-host-and-client-skipintro.*` - same, but the client skips the intro autoplay (sound stays on), so it doesn't play twice.
 `scripts/run-host-and-client-tiled.*` - an example of the `pos`/`size` arguments: two 800x600 windows side by side.
@@ -80,10 +80,10 @@ Hint: `scripts/run-host-and-client.bat`/`.sh` starts both windows at once, with 
 Used technologies:
 * C++20,
 * EventSystem,
-* SDL2, SDL2_TTF, SDL2_Image, SDL2_Mixer,
+* SDL3, SDL3_TTF, SDL3_Image, SDL3_Mixer,
 * Boost (asio, uuid, property_tree/ini),
 * ser20 (C++20 fork of cereal) for serialization,
-* Google unit tests (180+ tests),
+* Google unit tests (270+ tests),
 * git submodules shared by both build systems, so it can be compiled both as a CMake project (CLion) and as a *.sln project (Rider, Visual Studio)
 
 Used design patterns:

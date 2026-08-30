@@ -1,10 +1,10 @@
 #pragma once
 #include "InitError.h"
 #include <filesystem>
-#include <SDL.h>//NOTE: do not replace with forward declaration, required for minGW
-#include <SDL_mixer.h>
-#include <SDL_render.h>
-#include <SDL_ttf.h>
+#include <SDL3/SDL.h>//NOTE: do not replace with forward declaration, required for minGW
+#include <SDL3/SDL_render.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <expected>
 #include <memory>
 #include <span>
@@ -43,9 +43,12 @@ struct SDL_Config final
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> sdlWindow{nullptr, nullptr};
 	std::shared_ptr<SDL_Renderer> renderer{nullptr};
 	std::filesystem::path fontPath{};
-	//NOTE: the only size opened up front - the text cache opens whatever else it needs on first use
-	std::shared_ptr<TTF_Font> fontMedium{nullptr};
-	std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)> levelIntroMusic{nullptr, nullptr};//TODO: soundManager
+	//NOTE: opened up front only so a missing font fails Init - drawing goes through the text cache,
+	//which opens every size it needs itself
+	std::shared_ptr<TTF_Font> font{nullptr};
+	//NOTE: the mixer owns the audio device - it has to outlive every MIX_Audio loaded through it
+	std::unique_ptr<MIX_Mixer, decltype(&MIX_DestroyMixer)> mixer{nullptr, nullptr};
+	std::unique_ptr<MIX_Audio, decltype(&MIX_DestroyAudio)> levelIntroMusic{nullptr, nullptr};//TODO: soundManager
 
 	std::shared_ptr<SDL_Texture> logoTexture{nullptr};
 	std::shared_ptr<SDL_Texture> atlasTexture{nullptr};

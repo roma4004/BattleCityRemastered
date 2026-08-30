@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Game logic, no SDL: every game source except main.cpp (the exe's own entry point in BattleCityRemastered.vcxproj) and the SDL-facing files in GamePlatform\GamePlatform.vcxproj. Compiled once, consumed by GamePlatform and UnitTests\UnitTests.vcxproj via ProjectReference. Keeping SDL out of here is what stops UnitTests from building SDL2/freetype at all - the SDL2 include paths and ProjectReferences deliberately live in GamePlatform only, so an SDL include added here simply fails to resolve. Mirrors CMake's game_core STATIC library. -->
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Game logic, no SDL: every game source except main.cpp (the exe's own entry point in BattleCityRemastered.vcxproj) and the SDL-facing files in GamePlatform\GamePlatform.vcxproj. Compiled once, consumed by GamePlatform and UnitTests\UnitTests.vcxproj via ProjectReference. Keeping SDL out of here is what stops UnitTests from building SDL3/freetype at all - the SDL3 include paths and ProjectReferences deliberately live in GamePlatform only, so an SDL include added here simply fails to resolve. Mirrors CMake's game_core STATIC library. -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -343,7 +343,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
-  <!-- No SDL2 ProjectReference here on purpose: they belong to GamePlatform, so a consumer that needs
-       only the logic (UnitTests) never drags the SDL2 build in. -->
+  <!-- No SDL3 ProjectReference here on purpose: they belong to GamePlatform, so a consumer that needs
+       only the logic (UnitTests) never drags the SDL3 build in. -->
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

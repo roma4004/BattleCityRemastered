@@ -3,7 +3,7 @@
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/managers/TextTextureCache.h"
-#include <SDL_render.h>
+#include <SDL3/SDL_render.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -37,6 +37,7 @@ struct RenderPlayerOneIconEvent;
 struct RenderPlayerTwoIconEvent;
 struct RenderStageNumberEvent;
 struct WorldGeometryChangedEvent;
+struct WindowSizeChangedToEvent;
 struct RenderTargetsResetEvent;
 struct RenderDeviceResetEvent;
 
@@ -75,6 +76,10 @@ class RenderManager
 
 	void Subscribe();
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
+	void OnWindowSizeChangedTo(const WindowSizeChangedToEvent&);
+	//NOTE: a letterbox only ever fills what the window has and the field does not - give the window the
+	//field's own proportions and there is nothing left to fill
+	void SnapWindowToLogicalAspect() const;
 	void OnRenderTargetsReset(const RenderTargetsResetEvent&);
 	void OnRenderDeviceReset(const RenderDeviceResetEvent&);
 	void ApplyLogicalSize();
@@ -93,6 +98,9 @@ class RenderManager
 	[[nodiscard]] static SDL_Color IntToColor(unsigned int color);
 	[[nodiscard]] static unsigned int ComponentsToColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 	[[nodiscard]] static SDL_Rect RectToSdlRect(const ObjRectangle& rect);
+	//NOTE: everything here is laid out in whole logical pixels; SDL3 wants floats only at the call
+	[[nodiscard]] static SDL_FRect ToFRect(const SDL_Rect& rect);
+	void FillRect(const SDL_Rect& rect) const;
 	void SetRenderDrawColor(unsigned int color, Uint8 transparency = 255) const;
 
 	void DrawMenuBackground(const RenderMenuBackgroundEvent& event) const;
@@ -121,7 +129,7 @@ class RenderManager
 	void UpdateWindowTitle(GameMode gameMode) const;
 
 	void CreateColorTexture(unsigned int color);
-	[[nodiscard]] static std::pair<double, SDL_RendererFlip> GetRotateAndAngleAndFlip(Direction dir);
+	[[nodiscard]] static std::pair<double, SDL_FlipMode> GetRotateAndAngleAndFlip(Direction dir);
 	void DrawColorTexture(const RenderColorTextureEvent& event);
 	void DrawTexture(const RenderTextureEvent& event) const;
 

@@ -1,22 +1,39 @@
 include(${CMAKE_CURRENT_LIST_DIR}/FetchSubmodules.cmake)
 
-# --- SDL2 (+ ttf/image/mixer) --- (per-library git submodules under ThirdParty/SDL2*, same set .sln uses)
-set(SDL2TTF_VENDORED ON CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL2_ttf" FORCE)
+# --- SDL3 (+ ttf/image/mixer) --- (per-library git submodules under ThirdParty/SDL3*, same set .sln uses)
+set(SDL_SHARED  OFF CACHE BOOL "Build SDL3 as a shared library" FORCE)
+set(SDL_STATIC  ON  CACHE BOOL "Build SDL3 as a static library" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "Build the SDL3_test library" FORCE)
+
+set(SDLTTF_VENDORED ON  CACHE BOOL "Use vendored FreeType/HarfBuzz inside SDL3_ttf" FORCE)
+set(SDLTTF_SAMPLES  OFF CACHE BOOL "Build SDL3_ttf samples" FORCE)
+set(SDLTTF_PLUTOSVG OFF CACHE BOOL "Colour emoji via plutosvg" FORCE) #NOTE: one bitmap font, no emoji
 # Pinned OFF, not left to SDL's "off when built as a subproject" default: FetchSubmodules.cmake skips
 # their external/* on purpose, so flipping these on would configure against directories we never clone.
-set(SDL2IMAGE_VENDORED OFF CACHE BOOL "Use vendored codecs inside SDL2_image" FORCE)
-set(SDL2MIXER_VENDORED OFF CACHE BOOL "Use vendored codecs inside SDL2_mixer" FORCE)
+set(SDLIMAGE_VENDORED OFF CACHE BOOL "Use vendored codecs inside SDL3_image" FORCE)
+set(SDLMIXER_VENDORED OFF CACHE BOOL "Use vendored codecs inside SDL3_mixer" FORCE)
 
-set(SDL2MIXER_MIDI    OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MP3     OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_FLAC    OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_MOD     OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OGG     OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_OPUS    OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_VORBIS  OFF CACHE BOOL "" FORCE)
-set(SDL2MIXER_WAVPACK OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_SAMPLES OFF CACHE BOOL "" FORCE)
+# PNG is the only format we load, and the built-in stb backend decodes it without libpng
+set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_JXL  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_TIF  OFF CACHE BOOL "" FORCE)
+set(SDLIMAGE_WEBP OFF CACHE BOOL "" FORCE)
 
-foreach(dir ${SDL2_SUBMODULES})
+set(SDLMIXER_TESTS    OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_EXAMPLES OFF CACHE BOOL "" FORCE)
+# WAVE stays on - the intro chunk is a .wav; the rest all want a codec out of the external/* we skip
+set(SDLMIXER_FLAC    OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_GME     OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_MIDI    OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_MOD     OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_MP3     OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_OPUS    OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_VORBIS_STB        OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_VORBIS_VORBISFILE OFF CACHE BOOL "" FORCE)
+set(SDLMIXER_WAVPACK OFF CACHE BOOL "" FORCE)
+
+foreach(dir ${SDL3_SUBMODULES})
     add_subdirectory(${dir} SYSTEM)
 endforeach()
 
