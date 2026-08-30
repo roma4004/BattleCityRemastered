@@ -111,8 +111,8 @@ void BonusManager::StartEffect(const BonusType type, EffectTarget target, const 
 		return;
 	}
 
-	_activeEffects.emplace_back(ActiveEffect{.type = type, .target = std::move(target), .timer = Timer{duration}});
-	EmitEffectStatus(type, _activeEffects.back().target, true);
+	_activeEffects.emplace_back(ActiveEffect{.type = type, .target = target, .timer = Timer{duration}});
+	EmitEffectStatus(type, target, true);
 }
 
 void BonusManager::FinishEffect(const BonusType type, const EffectTarget& target)
@@ -172,6 +172,13 @@ void BonusManager::OnBonusShovelPickup(const BonusShovelPickupEvent& event)
 
 void BonusManager::ApplyBonusEffectsOnSpawnTo(const BonusReApplyEvent& event)
 {
+	//NOTE: effect timing is the host's - the client is told when one starts and when it ends, and
+	//keeps no clock of its own to go stale
+	if (!_gameConfig.IsAuthority())
+	{
+		return;
+	}
+
 	const bool isFrozen = IsEffectActive(BonusType::Timer, event.faction);
 	_events->EmitEvent(Key(event.uuid), BonusTimerReApplyOnSpawnEvent{.isEnabled = isFrozen});
 

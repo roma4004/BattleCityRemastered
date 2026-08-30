@@ -306,6 +306,8 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 {
 	SetDirection(event.dir);
 	SetPos(event.pos);
+	//NOTE: the client runs no tick, so this is the one place its position changes
+	_effects.isTouchTheBushes = IsTouchBush();
 
 	//NOTE: fix for tank truck animation tick
 	_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = event.pos, .dir = event.dir});

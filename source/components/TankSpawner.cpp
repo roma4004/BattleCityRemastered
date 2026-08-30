@@ -388,11 +388,14 @@ void TankSpawner::DelayedSpawnWith(const DelayedTankSpawn& params)
 	{
 		_events->EmitEvent(AddToSpawnQueueEvent{.obj = tank});
 		_events->EmitEvent(AnimationCreateTankMoveEvent{.rect = params.rect, .name = params.name});
-		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .faction = params.faction});
 
+		//NOTE: ahead of the effects - their status travels as its own command, and the client has to
+		//have built the tank before one arrives for it
 		if (IsHost(_gameMode))
 		{
 			_events->EmitEvent(TankSpawnCompletedEvent{.uuid = params.uuid});
 		}
+
+		_events->EmitEvent(BonusReApplyEvent{.uuid = params.uuid, .name = params.name, .faction = params.faction});
 	}
 }
