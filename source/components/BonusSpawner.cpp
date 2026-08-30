@@ -5,7 +5,7 @@
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
-#include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/ReplicationEvents.h"
 #include "components/events/TimingEvents.h"
 #include "components/events/SpawnEvents.h"
 #include "entities/bonuses/Bonus.h"
@@ -44,32 +44,44 @@ void BonusSpawner::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::Reset));
 	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnWorldGeometryChanged));
-	_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnAnimationFinished));
 
+	//NOTE: the burst is only a picture on the client - what settles is the host's call, so the bonus
+	//waits for BonusSpawnComplete instead of its own clock, and one picked up mid-burst never arrives
 	if (IsAuthority(_gameMode))
 	{
+		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnSpawnAnimationFinished));
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::Update));
 	}
 	else
 	{
 		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnBonusSpawned));
+		_subs.push_back(_events->AddListener(this, &BonusSpawner::OnBonusSpawnCompleted));
 	}
 }
 
 void BonusSpawner::OnSpawnAnimationFinished(const SpawnAnimationFinishedEvent& event)
 {
-	const auto it = std::ranges::find(_pendingSpawns, event.uuid, &PendingSpawn::uuid);
+	//NOTE: the signal goes out only for a bonus that really settled - one already picked up gets none
+	if (MaterializePending(event.uuid) && IsHost(_gameMode))
+	{
+		_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = event.uuid});
+	}
+}
+
+void BonusSpawner::OnBonusSpawnCompleted(const BonusSpawnCompletedEvent& event) { MaterializePending(event.uuid); }
+
+bool BonusSpawner::MaterializePending(const Uuid uuid)
+{
+	const auto it = std::ranges::find(_pendingSpawns, uuid, &PendingSpawn::uuid);
 	if (it == _pendingSpawns.end())
 	{
-		return;
+		return false;
 	}
 
-	if (!it->isCancelled)
-	{
-		Materialize(*it);
-	}
-
+	Materialize(*it);
 	_pendingSpawns.erase(it);
+
+	return true;
 }
 
 void BonusSpawner::OnWorldGeometryChanged(const WorldGeometryChangedEvent&) { ResetSpawnRanges(); }
@@ -132,23 +144,7 @@ void BonusSpawner::SpawnBonus(const ObjRectangle rect, const BonusType type, Uui
 {
 	uuid = AnnounceSpawn(rect, type, uuid, isSuper);
 
-	PendingSpawn& pending =
-			_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isSuper = isSuper});
-
-	//NOTE: the burst starts a round trip after the host's, so the bonus can be gone before it ends -
-	//without this the burst still materialised one that nothing would ever remove
-	if (!IsAuthority(_gameMode))
-	{
-		//NOTE: found again by uuid rather than captured by reference - the vector reallocates
-		pending.despawn = _events->AddListener(Key(uuid), [this, uuid](const DespawnedEvent&)
-		{
-			if (const auto it = std::ranges::find(_pendingSpawns, uuid, &PendingSpawn::uuid);
-				it != _pendingSpawns.end())
-			{
-				it->isCancelled = true;
-			}
-		});
-	}
+	_pendingSpawns.emplace_back(PendingSpawn{.rect = rect, .type = type, .uuid = uuid, .isSuper = isSuper});
 
 	_events->EmitEvent(AnimationCreateBonusSpawnEvent{.rect = rect, .uuid = uuid});
 }

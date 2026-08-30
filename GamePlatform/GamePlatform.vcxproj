@@ -77,6 +77,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SER20_THREAD_SAFE=1;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -88,6 +90,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -101,6 +105,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SER20_THREAD_SAFE=1;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -112,6 +118,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -127,7 +135,7 @@
     <ClCompile Include="..\source\application\SDL_Config.cpp" />
     <ClCompile Include="..\source\application\UserInput.cpp" />
     <ClCompile Include="..\source\components\managers\RenderManager.cpp" />
-    <ClCompile Include="..\source\components\managers\TextTextureCache.cpp" />
+    <ClCompile Include="..\source\components\managers\TextCache.cpp" />
   </ItemGroup>
   <!-- Headers matching the .cpp files above; header+impl live in the same project. -->
   <ItemGroup>
@@ -136,7 +144,7 @@
     <ClInclude Include="..\headers\application\SDL_Config.h" />
     <ClInclude Include="..\headers\application\UserInput.h" />
     <ClInclude Include="..\headers\components\managers\RenderManager.h" />
-    <ClInclude Include="..\headers\components\managers\TextTextureCache.h" />
+    <ClInclude Include="..\headers\components\managers\TextCache.h" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>

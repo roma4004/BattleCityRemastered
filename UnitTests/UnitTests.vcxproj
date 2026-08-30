@@ -95,6 +95,8 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -113,6 +115,8 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -129,6 +133,8 @@
       <PreprocessorDefinitions>SER20_THREAD_SAFE=1;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -148,6 +154,8 @@
       <PreprocessorDefinitions>SER20_THREAD_SAFE=1;X64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>

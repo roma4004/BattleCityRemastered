@@ -5,7 +5,6 @@
 #include <memory>
 #include <vector>
 
-enum class GameMode : char8_t;
 class GameConfig;
 class EventSystem;
 struct MenuReleasedEvent;

@@ -4,6 +4,7 @@
 #include "../components/input/MouseButton.h"
 #include "components/EventSystem.h"
 #include "components/input/InputProviderForMenu.h"
+#include "enums/InputChannel.h"
 #include "enums/PlayerSlot.h"
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_rect.h>
@@ -11,10 +12,10 @@
 #include <memory>
 #include <vector>
 
+enum class GameMode : char8_t;
 union SDL_Event;
 struct SDL_Config;
 class EventSystem;
-class GameConfig;
 class WindowConfig;
 struct PauseStatusEvent;
 struct TabReleasedEvent;

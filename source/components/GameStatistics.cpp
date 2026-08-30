@@ -1,6 +1,7 @@
 #include "components/GameStatistics.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
+#include "components/events/ObjectLifecycleEvents.h"
 #include "enums/Faction.h"
 
 GameStatistics::GameStatistics(const std::shared_ptr<EventSystem>& events)
@@ -161,7 +162,7 @@ void GameStatistics::OnPlayerTwoDied(const std::string& author, Faction faction)
 	}
 }
 
-void GameStatistics::OnTankDied(const StatisticsTankDiedEvent& event)
+void GameStatistics::OnTankDied(const TankDiedEvent& event)
 {
 	if (event.who.starts_with("Enemy"))
 	{

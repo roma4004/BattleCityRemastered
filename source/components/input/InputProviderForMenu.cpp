@@ -6,7 +6,7 @@
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
 #include "enums/GameMode.h"
-#include "enums/PlayerSlot.h"
+#include "enums/InputChannel.h"
 
 InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _events{events}
@@ -69,13 +69,14 @@ void InputProviderForMenu::EnableMenuInput()
 {
 	_menuNavSubs.push_back(_events->AddListener(this, &InputProviderForMenu::OnMenuNavEnter));
 
-	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P1), this, &InputProviderForMenu::OnMenuNavUp));
-	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P1), this, &InputProviderForMenu::OnMenuNavDown));
-	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P1), this, &InputProviderForMenu::OnMenuNavFire));
-
-	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForMenu::OnMenuNavUp));
-	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForMenu::OnMenuNavDown));
-	_menuNavSubs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &InputProviderForMenu::OnMenuNavFire));
+	//NOTE: both local seats drive the menu in every mode - the peer scrolls nothing here, its keys
+	//arrive on the remote channels and the menu is not on them
+	for (const InputChannel channel: {InputChannel::LocalP1, InputChannel::LocalP2})
+	{
+		_menuNavSubs.push_back(_events->AddListener(Key(channel), this, &InputProviderForMenu::OnMenuNavUp));
+		_menuNavSubs.push_back(_events->AddListener(Key(channel), this, &InputProviderForMenu::OnMenuNavDown));
+		_menuNavSubs.push_back(_events->AddListener(Key(channel), this, &InputProviderForMenu::OnMenuNavFire));
+	}
 }
 
 void InputProviderForMenu::OnMenuNavUp(const MoveUpEvent& event) { _keys.up = event.isPressed; }

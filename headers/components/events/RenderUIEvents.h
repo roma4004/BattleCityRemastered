@@ -1,6 +1,8 @@
 #pragma once
 
 #include "geometry/Point.h"
+#include <string>
+#include <vector>
 
 struct MenuShowedEvent
 {
@@ -25,6 +27,23 @@ struct MenuPosChangedEvent
 struct RenderMenuBackgroundEvent
 {
 	Point pos;
+};
+
+//NOTE: one size for every line - per-line sizes would break the block apart
+struct TextBlockLine
+{
+	Point pos{};
+	unsigned int color{};
+	std::string text{};
+};
+
+struct RenderMenuTextBlockEvent
+{
+	Point menuPos;
+	int lineHeight;
+	//NOTE: a centred block gets its positions from the panel, so its lines carry none
+	bool isCentered;
+	std::vector<TextBlockLine> lines;
 };
 
 struct RenderMenuLogoEvent

@@ -77,6 +77,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SER20_THREAD_SAFE=1;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -88,6 +90,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -101,6 +105,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SER20_THREAD_SAFE=1;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -112,6 +118,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -136,10 +144,7 @@
     <ClCompile Include="..\source\components\EventSystem.cpp" />
     <ClCompile Include="..\source\components\GameStatistics.cpp" />
     <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp" />
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerOne.cpp" />
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerOneNet.cpp" />
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerTwo.cpp" />
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerTwoNet.cpp" />
+    <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp" />
     <ClCompile Include="..\source\components\LineOfSight.cpp" />
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp" />
     <ClCompile Include="..\source\components\managers\BonusManager.cpp" />
@@ -155,6 +160,7 @@
     <ClCompile Include="..\source\components\Menu.cpp" />
     <ClCompile Include="..\source\components\ObstacleSpawner.cpp" />
     <ClCompile Include="..\source\components\RightSideBar.cpp" />
+    <ClCompile Include="..\source\components\LobbyScreen.cpp" />
     <ClCompile Include="..\source\components\ScoreBoard.cpp" />
     <ClCompile Include="..\source\components\TankSpawner.cpp" />
     <ClCompile Include="..\source\entities\BaseObj.cpp" />
@@ -218,10 +224,7 @@
     <ClInclude Include="..\headers\components\EventSystem.h" />
     <ClInclude Include="..\headers\components\GameStatistics.h" />
     <ClInclude Include="..\headers\components\input\InputProviderForMenu.h" />
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerOne.h" />
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerOneNet.h" />
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerTwo.h" />
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerTwoNet.h" />
+    <ClInclude Include="..\headers\components\input\InputProviderForPlayer.h" />
     <ClInclude Include="..\headers\components\input\MouseButton.h" />
     <ClInclude Include="..\headers\components\input\PlayerKeys.h" />
     <ClInclude Include="..\headers\components\LineOfSight.h" />
@@ -240,6 +243,7 @@
     <ClInclude Include="..\headers\components\Menu.h" />
     <ClInclude Include="..\headers\components\ObstacleSpawner.h" />
     <ClInclude Include="..\headers\components\RightSideBar.h" />
+    <ClInclude Include="..\headers\components\LobbyScreen.h" />
     <ClInclude Include="..\headers\components\ScoreBoard.h" />
     <ClInclude Include="..\headers\components\events\SpawnEvents.h" />
     <ClInclude Include="..\headers\components\TankSpawner.h" />
@@ -276,6 +280,7 @@
     <ClInclude Include="..\headers\enums\DespawnReason.h" />
     <ClInclude Include="..\headers\enums\DisconnectReason.h" />
     <ClInclude Include="..\headers\enums\InputSignal.h" />
+    <ClInclude Include="..\headers\enums\InputChannel.h" />
     <ClInclude Include="..\headers\enums\PlayerSlot.h" />
     <ClInclude Include="..\headers\enums\PlayerTag.h" />
     <ClInclude Include="..\headers\enums\Direction.h" />
@@ -303,6 +308,7 @@
     <ClInclude Include="..\headers\network\PeerLink.h" />
     <ClInclude Include="..\headers\network\commands\AnyCommand.h" />
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h" />
+    <ClInclude Include="..\headers\network\commands\BonusSpawnComplete.h" />
     <ClInclude Include="..\headers\network\commands\BonusStatus.h" />
     <ClInclude Include="..\headers\network\commands\CommandBatch.h" />
     <ClInclude Include="..\headers\network\commands\CommandSerialization.h" />
@@ -318,6 +324,7 @@
     <ClInclude Include="..\headers\network\commands\StatisticsChange.h" />
     <ClInclude Include="..\headers\network\commands\TankShot.h" />
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h" />
+    <ClInclude Include="..\headers\network\commands\TierChange.h" />
     <ClInclude Include="..\headers\network\commands\PointSerialization.h" />
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h" />
     <ClInclude Include="..\headers\network\MessageFraming.h" />

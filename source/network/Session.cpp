@@ -1,4 +1,5 @@
 #include "network/Session.h"
+#include "enums/InputChannel.h"
 #include "enums/PlayerTag.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -101,27 +102,27 @@ const std::unordered_map<InputSignal, Session::InputEmitter> Session::kInputEmit
 		{InputSignal::MoveUp,
 		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
 		 {
-			 events.EmitEvent(Key(slot), ServerInMoveUpEvent{.isPressed = pressed});
+			 events.EmitEvent(Key(RemoteInput(slot)), MoveUpEvent{.isPressed = pressed});
 		 }},
 		{InputSignal::MoveDown,
 		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
 		 {
-			 events.EmitEvent(Key(slot), ServerInMoveDownEvent{.isPressed = pressed});
+			 events.EmitEvent(Key(RemoteInput(slot)), MoveDownEvent{.isPressed = pressed});
 		 }},
 		{InputSignal::MoveLeft,
 		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
 		 {
-			 events.EmitEvent(Key(slot), ServerInMoveLeftEvent{.isPressed = pressed});
+			 events.EmitEvent(Key(RemoteInput(slot)), MoveLeftEvent{.isPressed = pressed});
 		 }},
 		{InputSignal::MoveRight,
 		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
 		 {
-			 events.EmitEvent(Key(slot), ServerInMoveRightEvent{.isPressed = pressed});
+			 events.EmitEvent(Key(RemoteInput(slot)), MoveRightEvent{.isPressed = pressed});
 		 }},
 		{InputSignal::Fire,
 		 [](EventSystem& events, const PlayerSlot slot, const bool pressed)
 		 {
-			 events.EmitEvent(Key(slot), ServerInFireEvent{.isPressed = pressed});
+			 events.EmitEvent(Key(RemoteInput(slot)), FireEvent{.isPressed = pressed});
 		 }},
 		{InputSignal::PauseReleased,
 		 [](EventSystem& events, PlayerSlot, const bool)

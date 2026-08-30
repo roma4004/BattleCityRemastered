@@ -14,8 +14,10 @@
 #include "utils/Log.h"
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <string>
 
 RenderManager::RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig)
@@ -37,6 +39,7 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::PresentFrame));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnGameModeChangedTo));
 	_subs.push_back(_events->AddListener(this, &RenderManager::OnRenderText));
+	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuTextBlock));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuBackground));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawMenuLogo));
@@ -250,7 +253,7 @@ void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) co
 
 	constexpr bool isMediumFontSize{true};
 	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 390},
-				 IntToColor(2u),
+				 kSideBarCounterColor,
 				 respawnCount,
 				 isMediumFontSize);
 }
@@ -269,7 +272,7 @@ void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) co
 
 	constexpr bool isMediumFontSize{true};
 	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 460},
-				 IntToColor(2u),
+				 kSideBarCounterColor,
 				 respawnCount,
 				 isMediumFontSize);
 }
@@ -288,7 +291,7 @@ void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 
 	constexpr bool isMediumFontSize{true};
 	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 555},
-				 IntToColor(2u),
+				 kSideBarCounterColor,
 				 currentStageNumber,
 				 isMediumFontSize);
 }
@@ -420,44 +423,117 @@ void RenderManager::TextToRender(const Point pos, const SDL_Color color, const s
 void RenderManager::TextToRenderSized(const Point pos, const SDL_Color color, const std::string& text,
 									  const int basePointSize) const
 {
-	const TextTextureCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize, CurrentRenderScale());
+	const float scale = CurrentRenderScale();
+	const TextCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize, scale);
 	if (cached == nullptr)
 	{
 		return;
 	}
 
-	const SDL_Rect textRect{.x = pos.x, .y = pos.y, .w = cached->width, .h = cached->height};
-	RenderCopy(cached->texture.get(), textRect);
+	DrawText(*cached, pos.x, pos.y, scale);
 }
 
 void RenderManager::TextToRenderCentered(const SDL_Rect& box, const SDL_Color color, const std::string& text,
 										 const int basePointSize) const
 {
-	const TextTextureCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize,
-																	CurrentRenderScale());
+	const float scale = CurrentRenderScale();
+	const TextCache::CachedText* cached = _textCache.Acquire(text, color, basePointSize, scale);
 	if (cached == nullptr)
 	{
 		return;
 	}
 
-	const SDL_Rect textRect{.x = box.x + (box.w - cached->width) / 2,
-							.y = box.y + (box.h - cached->height) / 2,
-							.w = cached->width,
-							.h = cached->height};
-	RenderCopy(cached->texture.get(), textRect);
+	DrawText(*cached, box.x + (box.w - cached->width) / 2, box.y + (box.h - cached->height) / 2, scale);
 }
 
-void RenderManager::TextToRenderInBox(const SDL_Rect& box, const SDL_Color color, const std::string& text,
-									  const bool isMediumFontSize) const
+SDL_Rect RenderManager::MenuPanelRect(const Point menuPos) const
 {
-	const TextTextureCache::CachedText* cached =
-			_textCache.Acquire(text, color, BasePointSize(isMediumFontSize), CurrentRenderScale());
-	if (cached == nullptr)
+	const int inset = static_cast<int>(_menuParams.padding / 2u);
+
+	return SDL_Rect{.x = menuPos.x + inset,
+					.y = menuPos.y + inset,
+					.w = static_cast<int>(_menuParams.panelSize.x),
+					.h = static_cast<int>(_menuParams.panelSize.y)};
+}
+
+//NOTE: the tightest line decides, the line step caps it
+int RenderManager::FitBlockPointSize(const RenderMenuTextBlockEvent& event, const float scale) const
+{
+	const SDL_Rect panel = MenuPanelRect(event.menuPos);
+
+	for (int pointSize = BasePointSize(false); pointSize > kBlockMinPointSize; --pointSize)
+	{
+		const auto fits = [&](const TextBlockLine& line)
+		{
+			const Point size = _textCache.MeasureString(line.text, pointSize, scale);
+			const bool fitsWidth = event.isCentered ? size.x <= panel.w : line.pos.x + size.x <= panel.x + panel.w;
+
+			return fitsWidth && size.y <= event.lineHeight;
+		};
+
+		if (std::ranges::all_of(event.lines, fits))
+		{
+			return pointSize;
+		}
+	}
+
+	return kBlockMinPointSize;
+}
+
+void RenderManager::DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const
+{
+	if (event.lines.empty())
 	{
 		return;
 	}
 
-	RenderCopy(cached->texture.get(), box);
+	const float scale = CurrentRenderScale();
+	const size_t key = std::ranges::fold_left(event.lines, std::hash<int>{}(event.lineHeight),
+											  [](const size_t seed, const TextBlockLine& line)
+											  {
+												  return seed ^ (std::hash<std::string>{}(line.text)
+																 + std::hash<int>{}(line.pos.x) + 0x9e3779b9u
+																 + (seed << 6u) + (seed >> 2u));
+											  });
+
+	if (key != _menuBlockFit.key || scale != _menuBlockFit.scale)
+	{
+		_menuBlockFit = {.key = key, .scale = scale, .pointSize = FitBlockPointSize(event, scale)};
+	}
+
+	if (event.isCentered)
+	{
+		const SDL_Rect panel = MenuPanelRect(event.menuPos);
+		const int blockHeight = static_cast<int>(event.lines.size()) * event.lineHeight;
+		int lineY = panel.y + (panel.h - blockHeight) / 2;
+
+		for (const TextBlockLine& line: event.lines)
+		{
+			const SDL_Rect lineBox{.x = panel.x, .y = lineY, .w = panel.w, .h = event.lineHeight};
+			TextToRenderCentered(lineBox, IntToColor(line.color), line.text, _menuBlockFit.pointSize);
+			lineY += event.lineHeight;
+		}
+
+		return;
+	}
+
+	const int logicalHeight = static_cast<int>(_gameConfig.LogicalSize().y);
+	for (const TextBlockLine& line: event.lines)
+	{
+		if (line.pos.y < logicalHeight)
+		{
+			TextToRenderSized(line.pos, IntToColor(line.color), line.text, _menuBlockFit.pointSize);
+		}
+	}
+}
+
+//NOTE: glyphs are sized in output pixels - the logical scale is cancelled and folded into the position
+void RenderManager::DrawText(const TextCache::CachedText& cached, const int x, const int y, const float scale) const
+{
+	SDL_Renderer* const renderer = _sdlConfig.renderer.get();
+	SDL_SetRenderScale(renderer, 1.f / scale, 1.f / scale);
+	TTF_DrawRendererText(cached.text.get(), static_cast<float>(x) * scale, static_cast<float>(y) * scale);
+	SDL_SetRenderScale(renderer, 1.f, 1.f);
 }
 
 inline SDL_Rect RenderManager::RectToSdlRect(const ObjRectangle& rect)

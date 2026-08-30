@@ -60,16 +60,6 @@ struct BonusHelmetAppliedEvent
 	bool isActive;
 };
 
-struct BonusStarAppliedEvent
-{
-	std::string name;
-};
-
-struct BonusCaliberAppliedEvent
-{
-	std::string name;
-};
-
 struct BonusShipAppliedEvent
 {
 	std::string name;

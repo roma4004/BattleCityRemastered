@@ -8,7 +8,7 @@
 #include "components/events/ReplicationEvents.h"
 #include "components/events/StatisticsEvents.h"
 #include "enums/CommandType.h"
-#include "enums/PlayerSlot.h"
+#include "enums/InputChannel.h"
 #include "enums/StatisticsType.h"
 #include "network/commands/CommandBatch.h"
 #include "network/Serializer.h"
@@ -45,6 +45,8 @@ void Client::RegisterCommandHandlers()
 			{CommandType::RESPAWN_TANK, [this](const AnyCommand& cmd) { OnRespawnTank(cmd); }},
 			{CommandType::OBSTACLE_SPAWN, [this](const AnyCommand& cmd) { OnObstacleSpawn(cmd); }},
 			{CommandType::TANK_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnTankSpawnComplete(cmd); }},
+			{CommandType::BONUS_SPAWN_COMPLETE, [this](const AnyCommand& cmd) { OnBonusSpawnComplete(cmd); }},
+			{CommandType::TIER_CHANGE, [this](const AnyCommand& cmd) { OnTierChange(cmd); }},
 			{CommandType::BONUS_STATUS, [this](const AnyCommand& cmd) { OnBonusStatus(cmd); }},
 			{CommandType::DISCONNECT, [this](const AnyCommand& cmd) { OnDisconnect(cmd); }},
 	});
@@ -192,12 +194,16 @@ void Client::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
 
-	//NOTE: local dispatch is keyed by PlayerSlot::P2; on the wire the tag is PlayerTag::P2
-	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveUp));
-	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveLeft));
-	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveDown));
-	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnMoveRight));
-	_subs.push_back(_events->AddListener(Key(PlayerSlot::P2), this, &Client::OnFire));
+	//NOTE: both local seats go to the wire - this process drives one tank, so whichever half of the
+	//keyboard the player uses is his own; the seat he lands in is the tag SendKeyState puts on it
+	for (const InputChannel channel: {InputChannel::LocalP1, InputChannel::LocalP2})
+	{
+		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveUp));
+		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveLeft));
+		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveDown));
+		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveRight));
+		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnFire));
+	}
 
 	_subs.push_back(_events->AddListener(this, &Client::OnClientOutReadyToPlay));
 	_subs.push_back(_events->AddListener(this, &Client::OnPauseRequested));
@@ -317,7 +323,10 @@ void Client::OnStatisticsChange(const AnyCommand& command)
 				_events->EmitEvent(StatisticsTankHitEvent{.who = cmd.who, .author = cmd.author, .faction = faction});
 				break;
 			case StatisticsType::TankDied:
-				_events->EmitEvent(StatisticsTankDiedEvent{.who = cmd.who, .author = cmd.author, .faction = faction});
+				_events->EmitEvent(TankDiedEvent{.who = cmd.who,
+												 .uuid = cmd.uuid,
+												 .author = cmd.author,
+												 .faction = faction});
 				break;
 			case StatisticsType::BrickWallDied:
 				_events->EmitEvent(BrickWallDiedEvent{.author = cmd.author, .faction = faction});
@@ -404,22 +413,33 @@ void Client::OnTankSpawnComplete(const AnyCommand& command)
 	});
 }
 
+void Client::OnBonusSpawnComplete(const AnyCommand& command)
+{
+	_commandQueue.Enqueue([this, cmd = std::get<BonusSpawnComplete>(command)]()
+	{
+		_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = cmd.uuid});
+	});
+}
+
+void Client::OnTierChange(const AnyCommand& command)
+{
+	_commandQueue.Enqueue([this, cmd = std::get<TierChange>(command)]()
+	{
+		_events->EmitEvent(Key(cmd.uuid), TierChangedEvent{.who = cmd.who, .tier = cmd.tier, .uuid = cmd.uuid});
+	});
+}
+
 void Client::OnBonusStatus(const AnyCommand& command)
 {
 	_commandQueue.Enqueue([this, cmd = std::get<BonusStatus>(command)]()
 	{
-		//NOTE: only the bonuses whose effect outlives the pickup are replicated - the rest are applied
-		//once on the host and never reported, so they are as wrong here as a byte outside the enum
+		//NOTE: only the bonuses whose effect the client cannot see any other way are replicated here -
+		//a star and a caliber land as a TierChange, the rest are applied once on the host and never
+		//reported, so any of them is as wrong here as a byte outside the enum
 		switch (cmd.bonusType)
 		{
 			case BonusType::Helmet:
 				_events->EmitEvent(Key(cmd.name), BonusHelmetAppliedEvent{.name = cmd.name, .isActive = cmd.isEnable});
-				return;
-			case BonusType::Star:
-				_events->EmitEvent(Key(cmd.name), BonusStarAppliedEvent{.name = cmd.name});
-				return;
-			case BonusType::Caliber:
-				_events->EmitEvent(Key(cmd.name), BonusCaliberAppliedEvent{.name = cmd.name});
 				return;
 			case BonusType::Ship:
 				_events->EmitEvent(Key(cmd.name), BonusShipAppliedEvent{.name = cmd.name});
@@ -427,6 +447,8 @@ void Client::OnBonusStatus(const AnyCommand& command)
 			case BonusType::Tank:
 				_events->EmitEvent(BonusTankAppliedEvent{.name = cmd.name});
 				return;
+			case BonusType::Star:
+			case BonusType::Caliber:
 			case BonusType::None:
 			case BonusType::Timer:
 			case BonusType::Grenade:

@@ -2,6 +2,7 @@
 
 #include "enums/CommandType.h"
 #include "enums/StatisticsType.h"
+#include "utils/Uuid.h"
 #include <string>
 
 enum class Faction : char8_t;
@@ -17,5 +18,7 @@ struct StatisticsChange final
 	std::string who{};
 	std::string author{};
 	Faction faction{};
+	//NOTE: only TankDied carries it - a name is not identity
+	Uuid uuid{};
 };
 }//namespace network::commands

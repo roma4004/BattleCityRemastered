@@ -27,7 +27,21 @@ struct HealthChangedEvent
 	Uuid uuid;
 };
 
+//NOTE: the result of an upgrade, not its cause - the client sets it instead of replaying the formula
+struct TierChangedEvent
+{
+	std::string who;
+	unsigned short tier;
+	Uuid uuid;
+};
+
 struct TankSpawnCompletedEvent
+{
+	Uuid uuid;
+};
+
+//NOTE: the host sends it only for a bonus that really settled - one picked up mid-burst gets none
+struct BonusSpawnCompletedEvent
 {
 	Uuid uuid;
 };

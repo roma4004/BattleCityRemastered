@@ -6,6 +6,7 @@
 #include "components/EventSystem.h"
 #include "components/Menu.h"
 #include "components/RightSideBar.h"
+#include "components/LobbyScreen.h"
 #include "components/ScoreBoard.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
@@ -44,6 +45,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _bonusManager{std::make_unique<BonusManager>(_events, gameConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig)}
+	, _lobbyScreen{std::make_unique<LobbyScreen>(_events, gameConfig)}
 	, _rightSideBar{std::make_unique<RightSideBar>(_events, gameConfig)}
 	, _gameConfig{gameConfig}
 	, _selectedGameMode{GameMode::OnePlayer}
@@ -183,7 +185,7 @@ void Game::EnterLobby()
 {
 	ResetBattlefield();
 	_events->EmitEvent(SetPauseEvent{.isPaused = true});
-	_events->EmitEvent(ShowMenuEvent{.show = true});
+	_events->EmitEvent(ShowMenuEvent{.show = false});
 }
 
 void Game::Run()

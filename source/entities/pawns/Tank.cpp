@@ -86,8 +86,7 @@ void Tank::SubscribeAsClient()
 	//TODO: move bot timers to handle outside bot tank
 	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnTankShot));
 	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusHelmetApplied));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusStarApplied));
-	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusCaliberApplied));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnTierChanged));
 	_subs.push_back(_events->AddListener(Key(_name), this, &Tank::OnBonusShipApplied));
 }
 
@@ -99,9 +98,7 @@ void Tank::OnTankShot(const TankShotEvent& event)
 
 void Tank::OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event) { OnBonusHelmet(event.isActive); }
 
-void Tank::OnBonusStarApplied(const BonusStarAppliedEvent&) { OnBonusStar(); }
-
-void Tank::OnBonusCaliberApplied(const BonusCaliberAppliedEvent&) { OnBonusCaliber(); }
+void Tank::OnTierChanged(const TierChangedEvent& event) { _tier = event.tier; }
 
 void Tank::OnBonusShipApplied(const BonusShipAppliedEvent&) { OnBonusShip(); }
 
@@ -200,13 +197,13 @@ void Tank::OnBonusGrenade(const BonusGrenadePickupEvent&)
 	}
 }
 
-bool Tank::Upgrade(const TierUpgrade& upgrade)
+void Tank::Upgrade(const TierUpgrade& upgrade)
 {
 	Heal(kUpgradeHeal);
 
 	if (_tier > kMaxTier)
 	{
-		return false;
+		return;
 	}
 
 	_tier += upgrade.tiers;
@@ -218,7 +215,10 @@ bool Tank::Upgrade(const TierUpgrade& upgrade)
 	_calibre.tier = _tier;
 	_shootTimer.cooldown -= upgrade.cooldownCut;
 
-	return true;
+	if (IsHost(_gameMode))
+	{
+		_events->EmitEvent(TierChangedEvent{.who = _name, .tier = _tier, .uuid = _uuid});
+	}
 }
 
 void Tank::OnBonusStar()
@@ -229,10 +229,7 @@ void Tank::OnBonusStar()
 							   .radiusFactor = 1.25,
 							   .cooldownCut = milliseconds{150}};
 
-	if (Upgrade(star) && IsHost(_gameMode))
-	{
-		_events->EmitEvent(BonusStarAppliedEvent{.name = _name});
-	}
+	Upgrade(star);
 }
 
 void Tank::OnBonusCaliber()
@@ -243,10 +240,7 @@ void Tank::OnBonusCaliber()
 								  .radiusFactor = 1.75,
 								  .cooldownCut = milliseconds{450}};
 
-	if (Upgrade(caliber) && IsHost(_gameMode))
-	{
-		_events->EmitEvent(BonusCaliberAppliedEvent{.name = _name});
-	}
+	Upgrade(caliber);
 }
 
 void Tank::OnBonusShip()
@@ -269,14 +263,9 @@ void Tank::EmitDamageStatistics(const std::string& author, Faction faction)
 	_events->EmitEvent(StatisticsTankHitEvent{.who = _name, .author = author, .faction = faction});
 }
 
-//TODO: two "a tank died" signals - this one, and TankDiedEvent from ~Tank that RespawnManager
-//listens to. A tank cleared without damage fires only the second one.
-//NOTE: the one place a tank dies - the destructor only frees memory, and a field wiped on reset must
-//not look like a team being killed
 void Tank::EmitDeathStatistics(const std::string& author, Faction faction)
 {
-	_events->EmitEvent(StatisticsTankDiedEvent{.who = _name, .author = author, .faction = faction});
-	_events->EmitEvent(TankDiedEvent{.uuid = _uuid});
+	_events->EmitEvent(TankDiedEvent{.who = _name, .uuid = _uuid, .author = author, .faction = faction});
 	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .name = _name});
 
 	if (IsHost(_gameMode))
@@ -285,12 +274,10 @@ void Tank::EmitDeathStatistics(const std::string& author, Faction faction)
 	}
 }
 
-//NOTE: the client never runs the damage itself - its tanks die on the host's word
 void Tank::OnDespawned(const DespawnedEvent& event)
 {
 	Pawn::OnDespawned(event);
 
-	_events->EmitEvent(TankDiedEvent{.uuid = _uuid});
 	_events->EmitEvent(AnimationCreateTankExplosionEvent{.rect = _rect, .name = _name});
 }
 

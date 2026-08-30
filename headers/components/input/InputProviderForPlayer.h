@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "enums/InputChannel.h"
 #include "interfaces/IInputProvider.h"
 #include <memory>
 #include <vector>
@@ -12,10 +13,11 @@ struct MoveDownEvent;
 struct MoveRightEvent;
 struct FireEvent;
 
-class InputProviderForPlayerTwo final : public IInputProvider
+class InputProviderForPlayer final : public IInputProvider
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
+	InputChannel _channel;
 
 	void OnMoveUp(const MoveUpEvent& event);
 	void OnMoveLeft(const MoveLeftEvent& event);
@@ -24,9 +26,9 @@ class InputProviderForPlayerTwo final : public IInputProvider
 	void OnFire(const FireEvent& event);
 
 public:
-	explicit InputProviderForPlayerTwo(const std::shared_ptr<EventSystem>& events);
+	InputProviderForPlayer(const std::shared_ptr<EventSystem>& events, InputChannel channel);
 
-	~InputProviderForPlayerTwo() override = default;
+	~InputProviderForPlayer() override = default;
 
 	void Subscribe();
 

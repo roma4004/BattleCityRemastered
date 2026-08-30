@@ -2,7 +2,7 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
-#include "components/managers/TextTextureCache.h"
+#include "components/managers/TextCache.h"
 #include <SDL3/SDL_render.h>
 #include <cstddef>
 #include <memory>
@@ -21,6 +21,7 @@ struct PreTickUpdateEvent;
 struct PresentFrameEvent;
 struct GameModeChangedToEvent;
 struct RenderTextEvent;
+struct RenderMenuTextBlockEvent;
 struct RenderMenuBackgroundEvent;
 struct RenderMenuLogoEvent;
 struct RenderMenuSelectorIconEvent;
@@ -66,6 +67,19 @@ class RenderManager
 
 	MenuParams _menuParams{};
 
+	//NOTE: kept between frames - only the lines or the scale can change the answer
+	struct FittedBlock
+	{
+		size_t key{};
+		float scale{};
+		int pointSize{};
+	};
+
+	mutable FittedBlock _menuBlockFit{};
+
+	//NOTE: fitting only ever shrinks - every panel screen starts from the same size
+	static constexpr int kBlockMinPointSize{8};
+
 	SDL_Rect _fpsBox{};
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
 
@@ -75,8 +89,10 @@ class RenderManager
 	static constexpr int kSideBarItemWidth{71};
 	static constexpr int kSideBarColumnTop{60};
 	static constexpr int kSideBarCounterTextPadding{38};
+	//NOTE: opaque on purpose - the old Solid path promoted a transparent alpha, the engine does not
+	static constexpr SDL_Color kSideBarCounterColor{.r = 0, .g = 0, .b = 2, .a = 255};
 
-	mutable TextTextureCache _textCache;
+	mutable TextCache _textCache;
 
 	void Subscribe();
 	void OnWorldGeometryChanged(const WorldGeometryChangedEvent&);
@@ -114,6 +130,9 @@ class RenderManager
 	void DrawXBoxHint(const RenderMenuXBoxHintEvent& event) const;
 	void DrawPS5Hint(const RenderMenuPS5HintEvent& event) const;
 	void OnRenderText(const RenderTextEvent& event) const;
+	void DrawMenuTextBlock(const RenderMenuTextBlockEvent& event) const;
+	[[nodiscard]] SDL_Rect MenuPanelRect(Point menuPos) const;
+	[[nodiscard]] int FitBlockPointSize(const RenderMenuTextBlockEvent& event, float scale) const;
 	[[nodiscard]] float CurrentRenderScale() const;
 	[[nodiscard]] static int BasePointSize(bool isMediumFontSize);
 	void TextToRender(const Point& pos, const SDL_Color& color, int value, bool isMediumFontSize) const;
@@ -122,9 +141,7 @@ class RenderManager
 	//NOTE: keeps the proportions and the given size - a line wider than the box is not shrunk, it runs over
 	void TextToRenderCentered(const SDL_Rect& box, SDL_Color color, const std::string& text,
 							  int basePointSize) const;
-	//NOTE: unused so far - stretches the line to the box instead of keeping its own proportions
-	void TextToRenderInBox(const SDL_Rect& box, SDL_Color color, const std::string& text,
-						   bool isMediumFontSize = false) const;
+	void DrawText(const TextCache::CachedText& cached, int x, int y, float scale) const;
 
 	void ClearFrame(const PreTickUpdateEvent&) const;
 	void PresentFrame(const PresentFrameEvent&) const;

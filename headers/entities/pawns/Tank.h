@@ -19,9 +19,8 @@ struct PosChangedEvent;
 struct BonusTimerReApplyOnSpawnEvent;
 struct PostDrawEvent;
 struct TankShotEvent;
+struct TierChangedEvent;
 struct BonusHelmetAppliedEvent;
-struct BonusStarAppliedEvent;
-struct BonusCaliberAppliedEvent;
 struct BonusShipAppliedEvent;
 struct BonusTimerStatusChangeEvent;
 struct BonusHelmetStatusChangeEvent;
@@ -45,8 +44,7 @@ class Tank : public Pawn
 	void OnPostDraw(const PostDrawEvent&) const;
 	void OnTankShot(const TankShotEvent& event);
 	void OnBonusHelmetApplied(const BonusHelmetAppliedEvent& event);
-	void OnBonusStarApplied(const BonusStarAppliedEvent&);
-	void OnBonusCaliberApplied(const BonusCaliberAppliedEvent&);
+	void OnTierChanged(const TierChangedEvent& event);
 	void OnBonusShipApplied(const BonusShipAppliedEvent&);
 	void OnBonusHelmetStatusChange(const BonusHelmetStatusChangeEvent& event);
 	void OnBonusStarPickup(const BonusStarPickupEvent& event);
@@ -71,7 +69,7 @@ class Tank : public Pawn
 	static constexpr unsigned short kMaxTier{3u};
 	static constexpr int kUpgradeHeal{50};
 
-	[[nodiscard]] bool Upgrade(const TierUpgrade& upgrade);
+	void Upgrade(const TierUpgrade& upgrade);
 	void OnBonusStar();
 	void OnBonusCaliber();
 	void OnBonusShip();

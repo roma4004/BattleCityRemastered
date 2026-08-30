@@ -53,32 +53,6 @@ struct FireEvent
 	bool isPressed;
 };
 
-
-struct ServerInMoveUpEvent
-{
-	bool isPressed;
-};
-
-struct ServerInMoveDownEvent
-{
-	bool isPressed;
-};
-
-struct ServerInMoveLeftEvent
-{
-	bool isPressed;
-};
-
-struct ServerInMoveRightEvent
-{
-	bool isPressed;
-};
-
-struct ServerInFireEvent
-{
-	bool isPressed;
-};
-
 //NOTE: maps to the literal event name "Reset_" (UserInput.cpp:208) - no matching listener found
 //anywhere in the codebase; kept, not deleted, needs author follow-up.
 struct ResetKeyEvent

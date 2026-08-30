@@ -109,7 +109,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_mixer\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\src;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\flac\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libxmp\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\ogg\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\vorbis\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libgme;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;DECODER_WAV;DECODER_AIFF;DECODER_VOC;DECODER_AU;DECODER_WAVPACK;DECODER_FLAC_DRFLAC;DECODER_MOD_XMP;XMP_DYNAMIC="libxmp.dll";DECODER_MP3_DRMP3;DECODER_OGGVORBIS_STB;DECODER_OPUS;OPUS_DYNAMIC="libopusfile-0.dll";WAVPACK_DYNAMIC="libwavpack-1.dll";DECODER_GME;GME_DYNAMIC="libgme.dll";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;DECODER_WAV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -137,7 +137,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_mixer\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\src;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\flac\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libxmp\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\ogg\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\vorbis\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libgme;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;DECODER_WAV;DECODER_AIFF;DECODER_VOC;DECODER_AU;DECODER_WAVPACK;DECODER_FLAC_DRFLAC;DECODER_MOD_XMP;XMP_DYNAMIC="libxmp.dll";DECODER_MP3_DRMP3;DECODER_OGGVORBIS_STB;DECODER_OPUS;OPUS_DYNAMIC="libopusfile-0.dll";WAVPACK_DYNAMIC="libwavpack-1.dll";DECODER_GME;GME_DYNAMIC="libgme.dll";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;DECODER_WAV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
@@ -163,7 +163,7 @@
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_mixer\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\src;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\flac\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libxmp\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\ogg\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\vorbis\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libgme;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;DECODER_WAV;DECODER_AIFF;DECODER_VOC;DECODER_AU;DECODER_WAVPACK;DECODER_FLAC_DRFLAC;DECODER_MOD_XMP;XMP_DYNAMIC="libxmp.dll";DECODER_MP3_DRMP3;DECODER_OGGVORBIS_STB;DECODER_OPUS;OPUS_DYNAMIC="libopusfile-0.dll";WAVPACK_DYNAMIC="libwavpack-1.dll";DECODER_GME;GME_DYNAMIC="libgme.dll";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;DECODER_WAV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
@@ -190,7 +190,7 @@
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\ThirdParty\SDL3_mixer\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\src;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\flac\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libxmp\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\ogg\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\vorbis\include;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\external\libgme;$(ProjectDir)..\..\ThirdParty\SDL3_mixer\VisualC\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;DECODER_WAV;DECODER_AIFF;DECODER_VOC;DECODER_AU;DECODER_WAVPACK;DECODER_FLAC_DRFLAC;DECODER_MOD_XMP;XMP_DYNAMIC="libxmp.dll";DECODER_MP3_DRMP3;DECODER_OGGVORBIS_STB;DECODER_OPUS;OPUS_DYNAMIC="libopusfile-0.dll";WAVPACK_DYNAMIC="libwavpack-1.dll";DECODER_GME;GME_DYNAMIC="libgme.dll";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;DECODER_WAV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>

@@ -61,6 +61,11 @@ void ReplicationPublisher::Subscribe()
 		return ObstacleSpawn{.pos = e.pos, .obstacleType = e.type, .uuid = e.uuid};
 	});
 	Bind<TankSpawnCompletedEvent>([](const auto& e) { return TankSpawnComplete{.uuid = e.uuid}; });
+	Bind<BonusSpawnCompletedEvent>([](const auto& e) { return BonusSpawnComplete{.uuid = e.uuid}; });
+	Bind<TierChangedEvent>([](const auto& e)
+	{
+		return TierChange{.who = e.who, .tier = e.tier, .uuid = e.uuid};
+	});
 
 	SubscribeStatistics();
 	SubscribeBonus();
@@ -83,12 +88,13 @@ void ReplicationPublisher::SubscribeStatistics()
 								.author = e.author,
 								.faction = e.faction};
 	});
-	Bind<StatisticsTankDiedEvent>([](const auto& e)
+	Bind<TankDiedEvent>([](const auto& e)
 	{
 		return StatisticsChange{.statisticsType = StatisticsType::TankDied,
 								.who = e.who,
 								.author = e.author,
-								.faction = e.faction};
+								.faction = e.faction,
+								.uuid = e.uuid};
 	});
 	Bind<BrickWallDiedEvent>([](const auto& e)
 	{
@@ -129,14 +135,6 @@ void ReplicationPublisher::SubscribeBonus()
 	Bind<BonusHelmetAppliedEvent>([](const auto& e)
 	{
 		return BonusStatus{.name = e.name, .bonusType = BonusType::Helmet, .isEnable = e.isActive};
-	});
-	Bind<BonusStarAppliedEvent>([](const auto& e)
-	{
-		return BonusStatus{.name = e.name, .bonusType = BonusType::Star};
-	});
-	Bind<BonusCaliberAppliedEvent>([](const auto& e)
-	{
-		return BonusStatus{.name = e.name, .bonusType = BonusType::Caliber};
 	});
 	Bind<BonusShipAppliedEvent>([](const auto& e)
 	{

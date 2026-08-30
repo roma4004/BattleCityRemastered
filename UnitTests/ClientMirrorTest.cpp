@@ -70,20 +70,22 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 	EXPECT_EQ(enemy->GetHealth(), _tankHealth + _bonusHeal);
 }
 
-TEST_F(ClientMirrorTest, ABonusLandsWhenItsBurstEnds)
+//NOTE: the burst only draws here - what puts the bonus on the field is the host saying it settled
+TEST_F(ClientMirrorTest, ABonusLandsWhenTheHostSaysItSettled)
 {
 	const Uuid uuid = UuidUtils::GetRandomUuid();
 
 	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = uuid, .isSuper = false});
+	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
 
 	EXPECT_TRUE(_allObjects.empty());
 
-	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = uuid});
+	_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = uuid});
 
 	EXPECT_EQ(_allObjects.size(), 1u);
 }
 
-//NOTE: the burst starts a round trip late, so the host can retire the bonus mid-animation
+//NOTE: a bonus picked up mid-burst is never completed by the host, so no ghost is left behind
 TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 {
 	const Uuid uuid = UuidUtils::GetRandomUuid();
@@ -95,16 +97,14 @@ TEST_F(ClientMirrorTest, ABonusRetiredDuringItsBurstNeverLands)
 	EXPECT_TRUE(_allObjects.empty());
 }
 
-TEST_F(ClientMirrorTest, RetiringOneBonusLeavesTheOtherAlone)
+TEST_F(ClientMirrorTest, CompletingOneBonusLeavesTheOtherPending)
 {
-	const Uuid doomed = UuidUtils::GetRandomUuid();
-	const Uuid kept = UuidUtils::GetRandomUuid();
+	const Uuid settled = UuidUtils::GetRandomUuid();
+	const Uuid pending = UuidUtils::GetRandomUuid();
 
-	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = doomed, .isSuper = false});
-	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = kept, .isSuper = false});
-	_events->EmitEvent(Key(doomed), DespawnedEvent{.who = "Bonus", .uuid = doomed, .reason = DespawnReason::PickedUp});
-	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = doomed});
-	_events->EmitEvent(SpawnAnimationFinishedEvent{.uuid = kept});
+	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = settled, .isSuper = false});
+	_events->EmitEvent(BonusSpawnedEvent{.pos = _bonusPos, .type = BonusType::Star, .uuid = pending, .isSuper = false});
+	_events->EmitEvent(BonusSpawnCompletedEvent{.uuid = settled});
 
 	EXPECT_EQ(_allObjects.size(), 1u);
 }

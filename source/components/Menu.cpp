@@ -1,7 +1,6 @@
 #include "components/Menu.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
-#include "components/events/AnimationRenderEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/RenderUIEvents.h"
@@ -9,7 +8,6 @@
 
 Menu::Menu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
 	: _pos{.x = 25, .y = 0}
-	, _windowHeight{static_cast<int>(gameConfig.LogicalSize().y)}
 	, _yOffsetStart{static_cast<int>(gameConfig.LogicalSize().y)}
 	, _events{events}
 	, _input{std::make_unique<InputProviderForMenu>(events, gameConfig)}
@@ -47,62 +45,62 @@ void Menu::Draw()
 
 	_events->EmitEvent(RenderMenuBackgroundEvent{.pos = _pos});
 	_events->EmitEvent(RenderMenuLogoEvent{.pos = _pos});
-	DrawMenuText();
-	DrawControlHints();
+
+	std::vector<TextBlockLine> lines;
+	DrawMenuText(lines);
+	DrawControlHints(lines);
+
+	_events->EmitEvent(RenderMenuTextBlockEvent{.menuPos = _pos,
+												.lineHeight = kLineStep,
+												.isCentered = false,
+												.lines = std::move(lines)});
 }
 
-void Menu::DrawMenuLine(Point& posText, const bool isSelected, std::string text) const
+void Menu::DrawMenuLine(std::vector<TextBlockLine>& lines, Point& posText, const bool isSelected,
+						std::string text) const
 {
 	if (isSelected)
 	{
 		_events->EmitEvent(RenderMenuSelectorIconEvent{.pos = Point{.x = posText.x - 35, .y = posText.y - 10}});
 	}
 
-	DrawTextLine(posText, std::move(text));
+	DrawTextLine(lines, posText, std::move(text));
 }
 
-void Menu::DrawTextLine(Point& posText, std::string text) const
+void Menu::DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::string text)
 {
-	constexpr unsigned int color = {0xffffffffu};
-	_events->EmitEvent(RenderTextEvent{.pos = posText, .color = color, .text = text});
-	posText.y += 30;
+	constexpr unsigned int color{0xffffffffu};
+	lines.push_back(TextBlockLine{.pos = posText, .color = color, .text = std::move(text)});
+	posText.y += kLineStep;
 }
 
-void Menu::DrawMenuText() const
+//NOTE: built whole even while sliding in - a missing line would change the fitted size
+void Menu::DrawMenuText(std::vector<TextBlockLine>& lines) const
 {
 	Point relativePosText{.x = _pos.x + 180, .y = _pos.y + 145};
-	if (relativePosText.y >= _windowHeight)
-	{
-		return;
-	}
 
-	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::OnePlayer, "ONE PLAYER");
-	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::TwoPlayers, "TWO PLAYER");
-	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::CoopWithBot, "COOP WITH BOT");
-	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsHost, "PLAY AS HOST");
-	DrawMenuLine(relativePosText, _selectedGameMode == GameMode::PlayAsClient, "PLAY AS CLIENT");
+	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::OnePlayer, "ONE PLAYER");
+	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::TwoPlayers, "TWO PLAYER");
+	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::CoopWithBot, "COOP WITH BOT");
+	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::PlayAsHost, "PLAY AS HOST");
+	DrawMenuLine(lines, relativePosText, _selectedGameMode == GameMode::PlayAsClient, "PLAY AS CLIENT");
 }
 
-void Menu::DrawControlHints() const
+void Menu::DrawControlHints(std::vector<TextBlockLine>& lines) const
 {
 	const Point relativePos{.x = _pos.x + 100, .y = _pos.y + 280};
-	if (relativePos.y >= _windowHeight)
-	{
-		return;
-	}
-
 	constexpr int yBaseLineForControls = 150;
 	_events->EmitEvent(RenderMenuXBoxHintEvent{.pos = Point{.x = relativePos.x + 245, .y = relativePos.y}});
 	_events->EmitEvent(RenderMenuPS5HintEvent{
 			.pos = Point{.x = relativePos.x + 280, .y = relativePos.y + yBaseLineForControls}});
 
 	Point posText{.x = _pos.x + 40, .y = _pos.y + yBaseLineForControls + 200};
-	DrawTextLine(posText, "Controls: P1/P2    XBox    PS");
-	DrawTextLine(posText, "Pause       P      View    Create");
-	DrawTextLine(posText, "Menu        M      Menu    Options");
-	DrawTextLine(posText, "Swap       TAB     Y       Triangle");
-	DrawTextLine(posText, "Move Arrows/WASD   D-pad   D-pad");
-	DrawTextLine(posText, "Fire Space/LCtrl   A       Cross");
+	DrawTextLine(lines, posText, "Controls: P1/P2    XBox    PS");
+	DrawTextLine(lines, posText, "Pause       P      View    Create");
+	DrawTextLine(lines, posText, "Menu        M      Menu    Options");
+	DrawTextLine(lines, posText, "Swap       TAB     Y       Triangle");
+	DrawTextLine(lines, posText, "Move Arrows/WASD   D-pad   D-pad");
+	DrawTextLine(lines, posText, "Fire Space/LCtrl   A       Cross");
 }
 
 void Menu::DisplayMenu(const bool isDisplayed)

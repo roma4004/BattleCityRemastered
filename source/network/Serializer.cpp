@@ -17,6 +17,7 @@ constexpr std::array<const char*, kCommandTypeCount> kCommandNames{
 		"PositionChange",
 		"TankShot",
 		"HealthChange",
+		"TierChange",
 		"Despawn",
 		"StatisticsChange",
 		"KeyStateChange",
@@ -26,6 +27,7 @@ constexpr std::array<const char*, kCommandTypeCount> kCommandNames{
 		"RespawnTank",
 		"ObstacleSpawn",
 		"TankSpawnComplete",
+		"BonusSpawnComplete",
 		"SignalEvent",
 		"Disconnect"};
 

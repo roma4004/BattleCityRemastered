@@ -43,10 +43,3 @@ struct StatisticsTankHitEvent final
 	std::string author;
 	Faction faction{};
 };
-
-struct StatisticsTankDiedEvent final
-{
-	std::string who;
-	std::string author;
-	Faction faction{};
-};

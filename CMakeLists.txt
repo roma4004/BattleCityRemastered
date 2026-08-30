@@ -33,7 +33,7 @@ set(GAME_PLATFORM_SOURCES
         source/application/SDL_Config.cpp
         source/application/UserInput.cpp
         source/components/managers/RenderManager.cpp
-        source/components/managers/TextTextureCache.cpp
+        source/components/managers/TextCache.cpp
 )
 
 # game_core sources: every game .cpp except main.cpp (the exe's own entry point) and the platform list above
@@ -57,13 +57,11 @@ set(GAME_CORE_SOURCES
         source/components/Menu.cpp
         source/components/ObstacleSpawner.cpp
         source/components/RightSideBar.cpp
+        source/components/LobbyScreen.cpp
         source/components/ScoreBoard.cpp
         source/components/TankSpawner.cpp
         source/components/input/InputProviderForMenu.cpp
-        source/components/input/InputProviderForPlayerOne.cpp
-        source/components/input/InputProviderForPlayerOneNet.cpp
-        source/components/input/InputProviderForPlayerTwo.cpp
-        source/components/input/InputProviderForPlayerTwoNet.cpp
+        source/components/input/InputProviderForPlayer.cpp
         source/components/managers/AnimationManager.cpp
         source/components/managers/BonusManager.cpp
         source/components/managers/FramePerSecondManager.cpp

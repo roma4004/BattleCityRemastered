@@ -6,10 +6,7 @@
 #include "components/events/GameModeEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
 #include "components/events/ReplicationEvents.h"
-#include "components/input/InputProviderForPlayerOne.h"
-#include "components/input/InputProviderForPlayerOneNet.h"
-#include "components/input/InputProviderForPlayerTwo.h"
-#include "components/input/InputProviderForPlayerTwoNet.h"
+#include "components/input/InputProviderForPlayer.h"
 #include "components/events/SpawnEvents.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "entities/pawns/CoopBot.h"
@@ -18,6 +15,8 @@
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/InputChannel.h"
+#include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
 #include "utils/ColliderUtils.h"
 #include "enums/Faction.h"
@@ -300,28 +299,14 @@ void TankSpawner::OnClientRespawn(const TankType type, const Uuid uuid, const Ob
 	RespawnTank(type, uuid, rect);
 }
 
-namespace
-{
-template<typename TLocal, typename TNet>
-std::unique_ptr<IInputProvider> MakeProvider(const bool isNet, const std::shared_ptr<EventSystem>& events)
-{
-	if (isNet)
-	{
-		return std::make_unique<TNet>(events);
-	}
-
-	return std::make_unique<TLocal>(events);
-}
-}
-
+//NOTE: on a host the second seat belongs to the peer, so its tank listens to the wire, not to this
+//keyboard - the arrow keys here then reach no listener at all instead of being filtered at the source
 std::unique_ptr<IInputProvider> TankSpawner::GetInputProvider(const TankType type) const
 {
-	const bool isFirst = type == TankType::PLAYER1;
-	const bool isNet = IsClient(_gameMode) || (IsHost(_gameMode) && !isFirst);
+	const PlayerSlot slot{type == TankType::PLAYER1 ? PlayerSlot::P1 : PlayerSlot::P2};
+	const bool isPeerSeat{IsHost(_gameMode) && slot == PlayerSlot::P2};
 
-	return isFirst
-			   ? MakeProvider<InputProviderForPlayerOne, InputProviderForPlayerOneNet>(isNet, _events)
-			   : MakeProvider<InputProviderForPlayerTwo, InputProviderForPlayerTwoNet>(isNet, _events);
+	return std::make_unique<InputProviderForPlayer>(_events, isPeerSeat ? RemoteInput(slot) : LocalInput(slot));
 }
 
 std::shared_ptr<Tank> TankSpawner::CreateTank(const TankType type, PawnProperty pawnProperty)

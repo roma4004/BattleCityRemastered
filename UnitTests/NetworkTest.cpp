@@ -247,6 +247,23 @@ TEST_F(NetworkTest, BonusSpawnEventReplication)
 	EXPECT_TRUE(received->isSuper);
 }
 
+//NOTE: what makes the bonus real on the client - its own burst only draws
+TEST_F(NetworkTest, BonusSpawnCompleteEventReplication)
+{
+	const auto server = MakeHost();
+	const auto client = MakeClient(server->GetBoundPort());
+	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
+
+	std::optional<Uuid> received{};
+	auto bonusSpawnCompleteSub = _clientEvents->AddListener(
+			[&received](const BonusSpawnCompletedEvent& event) { received = event.uuid; });
+
+	_hostEvents->EmitEvent(BonusSpawnCompletedEvent{.uuid = _uuid});
+
+	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
+	EXPECT_EQ(_uuid, *received);
+}
+
 TEST_F(NetworkTest, BonusStatusEventReplication)
 {
 	const auto server = MakeHost();
@@ -266,22 +283,24 @@ TEST_F(NetworkTest, BonusStatusEventReplication)
 	EXPECT_EQ(isActiveOrigin, *received);
 }
 
-//NOTE: no payload of its own - under test is that its alternative reaches the right name
-TEST_F(NetworkTest, BonusCaliberStatusEventReplication)
+//NOTE: the tier travels as a result, on its own command - the client sets it rather than replaying
+//the upgrade formula, exactly as it does with health
+TEST_F(NetworkTest, TierEventReplication)
 {
 	const auto server = MakeHost();
 	const auto client = MakeClient(server->GetBoundPort());
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 
-	const auto nameOrigin{std::string("Player1")};
+	constexpr unsigned short tierOrigin{4u};
 
-	bool received{false};
-	auto bonusCaliberSub = _clientEvents->AddListener(Key(nameOrigin),
-			[&received](const BonusCaliberAppliedEvent&) { received = true; });
+	std::optional<unsigned short> received{};
+	auto tierSub = _clientEvents->AddListener(Key(_uuid),
+			[&received](const TierChangedEvent& event) { received = event.tier; });
 
-	_hostEvents->EmitEvent(BonusCaliberAppliedEvent{.name = nameOrigin});
+	_hostEvents->EmitEvent(TierChangedEvent{.who = "Player1", .tier = tierOrigin, .uuid = _uuid});
 
-	EXPECT_TRUE(PumpUntil([&received] { return received; }));
+	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); }));
+	EXPECT_EQ(tierOrigin, *received);
 }
 
 //NOTE: no payload of its own - under test is that its alternative reaches the right name

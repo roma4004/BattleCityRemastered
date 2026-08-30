@@ -20,6 +20,7 @@ class WorldScaleManager;
 class RenderManager;
 class EventSystem;
 class BonusManager;
+class LobbyScreen;
 class ScoreBoard;
 class GameStatistics;
 class RightSideBar;
@@ -99,6 +100,7 @@ private:
 	std::unique_ptr<RenderManager> _renderManager{nullptr};
 	std::unique_ptr<BonusManager> _bonusManager{nullptr};
 	std::unique_ptr<ScoreBoard> _scoreBoard{nullptr};
+	std::unique_ptr<LobbyScreen> _lobbyScreen{nullptr};
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 
 	std::vector<EventSubscription> _subs{};

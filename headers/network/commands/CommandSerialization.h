@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BonusSpawn.h"
+#include "BonusSpawnComplete.h"
 #include "BonusStatus.h"
 #include "Despawn.h"
 #include "Disconnect.h"
@@ -14,6 +15,7 @@
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
+#include "TierChange.h"
 #include "PointSerialization.h"
 #include "CommandBatch.h"
 #include "UuidSerialization.h"
@@ -130,6 +132,7 @@ void serialize(Archive& ar, network::commands::StatisticsChange& cmd, const unsi
 	ar & cmd.who;
 	ar & cmd.author;
 	ar & cmd.faction;
+	ar & cmd.uuid;
 }
 
 template<class Archive>
@@ -145,6 +148,22 @@ template<class Archive>
 void serialize(Archive& ar, network::commands::TankSpawnComplete& cmd, const unsigned int /*version*/)
 {
 	ar & cmd.type;
+	ar & cmd.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::BonusSpawnComplete& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.type;
+	ar & cmd.uuid;
+}
+
+template<class Archive>
+void serialize(Archive& ar, network::commands::TierChange& cmd, const unsigned int /*version*/)
+{
+	ar & cmd.type;
+	ar & cmd.who;
+	ar & cmd.tier;
 	ar & cmd.uuid;
 }
 

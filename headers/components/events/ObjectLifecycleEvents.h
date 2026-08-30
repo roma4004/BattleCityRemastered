@@ -4,6 +4,8 @@
 #include "utils/Uuid.h"
 #include <string>
 
+enum class Faction : char8_t;
+
 struct TankSpawnEvent
 {
 	Uuid uuid;
@@ -11,7 +13,10 @@ struct TankSpawnEvent
 
 struct TankDiedEvent
 {
-	Uuid uuid;
+	std::string who{};
+	Uuid uuid{};
+	std::string author{};
+	Faction faction{};
 };
 
 struct DespawnedEvent

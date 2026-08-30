@@ -74,6 +74,8 @@ private:
 	void OnRespawnTank(const AnyCommand& command);
 	void OnObstacleSpawn(const AnyCommand& command);
 	void OnTankSpawnComplete(const AnyCommand& command);
+	void OnBonusSpawnComplete(const AnyCommand& command);
+	void OnTierChange(const AnyCommand& command);
 	void OnBonusStatus(const AnyCommand& command);
 	void OnDisconnect(const AnyCommand& command);
 	void HandleDisconnect();

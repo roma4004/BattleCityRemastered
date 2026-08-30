@@ -2,11 +2,13 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "components/events/RenderUIEvents.h"
 #include "components/input/InputProviderForMenu.h"
 #include <memory>
 #include <string>
 #include <vector>
 
+enum class GameMode : char8_t;
 class GameConfig;
 class EventSystem;
 class GameStatistics;
@@ -18,7 +20,6 @@ struct MenuShowedEvent;
 class Menu final
 {
 	Point _pos{};
-	int _windowHeight{};
 	int _yOffsetStart{};
 
 	std::shared_ptr<EventSystem> _events{nullptr};
@@ -37,10 +38,12 @@ class Menu final
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);
 
-	void DrawTextLine(Point& posText, std::string text) const;
-	void DrawMenuText() const;
-	void DrawMenuLine(Point& posText, bool isSelected, std::string text) const;
-	void DrawControlHints() const;
+	static constexpr int kLineStep{30};
+
+	static void DrawTextLine(std::vector<TextBlockLine>& lines, Point& posText, std::string text);
+	void DrawMenuText(std::vector<TextBlockLine>& lines) const;
+	void DrawMenuLine(std::vector<TextBlockLine>& lines, Point& posText, bool isSelected, std::string text) const;
+	void DrawControlHints(std::vector<TextBlockLine>& lines) const;
 	void DisplayMenu(bool isDisplayed);
 
 public:

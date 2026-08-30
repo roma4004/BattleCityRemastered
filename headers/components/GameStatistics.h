@@ -10,6 +10,7 @@ enum class Faction : char8_t;
 
 class EventSystem;
 struct GameResetEvent;
+struct TankDiedEvent;
 
 struct StatisticsData final
 {
@@ -65,7 +66,7 @@ class GameStatistics final
 
 	void OnBulletHit(const StatisticsBulletHitEvent& event);
 	void OnTankHit(const StatisticsTankHitEvent& event);
-	void OnTankDied(const StatisticsTankDiedEvent& event);
+	void OnTankDied(const TankDiedEvent& event);
 	void OnBrickWallDied(const BrickWallDiedEvent& event);
 	void OnSteelWallDied(const SteelWallDiedEvent& event);
 	void OnBonusPickup(const StatisticsBonusPickupEvent& event);

@@ -129,19 +129,13 @@
     <ClCompile Include="..\source\components\input\InputProviderForMenu.cpp">
       <Filter>source\components\input</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerOne.cpp">
-      <Filter>source\components\input</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerOneNet.cpp">
-      <Filter>source\components\input</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerTwo.cpp">
-      <Filter>source\components\input</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\components\input\InputProviderForPlayerTwoNet.cpp">
+    <ClCompile Include="..\source\components\input\InputProviderForPlayer.cpp">
       <Filter>source\components\input</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\LineOfSight.cpp">
+      <Filter>source\components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\components\LobbyScreen.cpp">
       <Filter>source\components</Filter>
     </ClCompile>
     <ClCompile Include="..\source\components\managers\AnimationManager.cpp">
@@ -368,16 +362,7 @@
     <ClInclude Include="..\headers\components\input\InputProviderForMenu.h">
       <Filter>headers\components\input</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerOne.h">
-      <Filter>headers\components\input</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerOneNet.h">
-      <Filter>headers\components\input</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerTwo.h">
-      <Filter>headers\components\input</Filter>
-    </ClInclude>
-    <ClInclude Include="..\headers\components\input\InputProviderForPlayerTwoNet.h">
+    <ClInclude Include="..\headers\components\input\InputProviderForPlayer.h">
       <Filter>headers\components\input</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\input\MouseButton.h">
@@ -387,6 +372,9 @@
       <Filter>headers\components\input</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\LineOfSight.h">
+      <Filter>headers\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\components\LobbyScreen.h">
       <Filter>headers\components</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\components\managers\AnimationManager.h">
@@ -545,6 +533,9 @@
     <ClInclude Include="..\headers\enums\GameState.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\enums\InputChannel.h">
+      <Filter>headers\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\enums\InputSignal.h">
       <Filter>headers\enums</Filter>
     </ClInclude>
@@ -617,6 +608,9 @@
     <ClInclude Include="..\headers\network\commands\BonusSpawn.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\network\commands\BonusSpawnComplete.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\network\commands\BonusStatus.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
@@ -663,6 +657,9 @@
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\TankSpawnComplete.h">
+      <Filter>headers\network\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\network\commands\TierChange.h">
       <Filter>headers\network\commands</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\network\commands\UuidSerialization.h">

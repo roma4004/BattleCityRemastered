@@ -39,7 +39,7 @@
     <ClCompile Include="..\source\components\managers\RenderManager.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\components\managers\TextTextureCache.cpp">
+    <ClCompile Include="..\source\components\managers\TextCache.cpp">
       <Filter>source\components\managers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,7 +59,7 @@
     <ClInclude Include="..\headers\components\managers\RenderManager.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
-    <ClInclude Include="..\headers\components\managers\TextTextureCache.h">
+    <ClInclude Include="..\headers\components\managers\TextCache.h">
       <Filter>headers\components\managers</Filter>
     </ClInclude>
   </ItemGroup>

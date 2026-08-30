@@ -1,8 +1,7 @@
 #include "TestUtils.h"
 #include "components/TankSpawner.h"
 #include "components/managers/RespawnManager.h"
-#include "components/input/InputProviderForPlayerOne.h"
-#include "components/input/InputProviderForPlayerTwo.h"
+#include "components/input/InputProviderForPlayer.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/PawnProperty.h"
 #include "entities/pawns/Player.h"
@@ -43,12 +42,12 @@ template<>
 
 	if (name == "Player1")
 	{
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerOne>(events);
+		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, InputChannel::LocalP1);
 
 		return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig);
 	}
 
-	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayerTwo>(events);
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, InputChannel::LocalP2);
 
 	return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig);
 }

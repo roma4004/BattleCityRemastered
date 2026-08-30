@@ -1,5 +1,4 @@
 #include "application/UserInput.h"
-#include "application/GameConfig.h"
 #include "application/WindowConfig.h"
 #include "application/SDL_Config.h"
 #include "components/EventSystem.h"
@@ -208,34 +207,34 @@ void UserInput::KeyboardKeyPressRelease(const SDL_Event& event, const bool& isPr
 	switch (event.key.key)
 	{
 		case SDLK_W:
-			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_UP:
-			_events->EmitEvent(Key(keyboardRightSideSlot), MoveUpEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveUpEvent{.isPressed = isPressed});
 			break;
 		case SDLK_A:
-			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_LEFT:
-			_events->EmitEvent(Key(keyboardRightSideSlot), MoveLeftEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveLeftEvent{.isPressed = isPressed});
 			break;
 		case SDLK_S:
-			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_DOWN:
-			_events->EmitEvent(Key(keyboardRightSideSlot), MoveDownEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveDownEvent{.isPressed = isPressed});
 			break;
 		case SDLK_D:
-			_events->EmitEvent(Key(keyboardLeftSideSlot), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RIGHT:
-			_events->EmitEvent(Key(keyboardRightSideSlot), MoveRightEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), MoveRightEvent{.isPressed = isPressed});
 			break;
 		case SDLK_SPACE:
-			_events->EmitEvent(Key(keyboardLeftSideSlot), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardLeftSideSlot)), FireEvent{.isPressed = isPressed});
 			break;
 		case SDLK_RCTRL:
-			_events->EmitEvent(Key(keyboardRightSideSlot), FireEvent{.isPressed = isPressed});
+			_events->EmitEvent(Key(LocalInput(keyboardRightSideSlot)), FireEvent{.isPressed = isPressed});
 			break;
 		case SDLK_M:
 			if (isPressed == false)
@@ -288,7 +287,7 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 		switch (event.gbutton.button)
 		{
 			case SDL_GAMEPAD_BUTTON_SOUTH:
-				_events->EmitEvent(Key(controllerSlot), FireEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(LocalInput(controllerSlot)), FireEvent{.isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_EAST:
 				//NOTE: no listener consumes this yet
@@ -313,16 +312,16 @@ void UserInput::GamepadKeyPressRelease(const SDL_Event& event, const bool& isPre
 				}
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_UP:
-				_events->EmitEvent(Key(controllerSlot), MoveUpEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveUpEvent{.isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_DOWN:
-				_events->EmitEvent(Key(controllerSlot), MoveDownEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveDownEvent{.isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
-				_events->EmitEvent(Key(controllerSlot), MoveLeftEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveLeftEvent{.isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
-				_events->EmitEvent(Key(controllerSlot), MoveRightEvent{.isPressed = isPressed});
+				_events->EmitEvent(Key(LocalInput(controllerSlot)), MoveRightEvent{.isPressed = isPressed});
 				break;
 			case SDL_GAMEPAD_BUTTON_START:
 				if (isPressed == false)

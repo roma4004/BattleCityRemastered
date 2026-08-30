@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BonusSpawn.h"
+#include "BonusSpawnComplete.h"
 #include "BonusStatus.h"
 #include "Despawn.h"
 #include "Disconnect.h"
@@ -14,6 +15,7 @@
 #include "StatisticsChange.h"
 #include "TankShot.h"
 #include "TankSpawnComplete.h"
+#include "TierChange.h"
 #include "enums/CommandType.h"
 #include <variant>
 
@@ -23,7 +25,7 @@ namespace network::commands
 using AnyCommand = std::variant<
 	BonusSpawn, BonusStatus, Despawn, GameStateChange, HealthChange,
 	KeyStateChange, ObstacleSpawn, PositionChange, RespawnTank, SignalEvent, StatisticsChange, TankShot,
-	TankSpawnComplete, Disconnect>;
+	TankSpawnComplete, Disconnect, BonusSpawnComplete, TierChange>;
 
 inline CommandType GetCommandType(const AnyCommand& command)
 {
