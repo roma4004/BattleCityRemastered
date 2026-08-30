@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Bot.h"
+#include <memory>
 
 class BulletPool;
 

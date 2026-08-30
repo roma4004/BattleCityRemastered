@@ -3,6 +3,7 @@
 #include "IFortress.h"
 #include "Obstacle.h"
 #include <memory>
+#include <string>
 
 enum class Faction : char8_t;
 struct ObjRectangle;

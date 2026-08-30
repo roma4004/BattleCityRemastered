@@ -3,6 +3,8 @@
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include <chrono>
+#include <memory>
+#include <vector>
 
 enum class GameMode : char8_t;
 class INetworkNode;

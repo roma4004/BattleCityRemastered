@@ -4,6 +4,9 @@
 #include "enums/RespawnGroup.h"
 #include "utils/Uuid.h"
 #include <chrono>
+#include <memory>
+#include <string>
+#include <vector>
 
 enum class TankType : char8_t;
 enum class GameMode : char8_t;

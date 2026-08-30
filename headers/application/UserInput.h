@@ -8,6 +8,7 @@
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_rect.h>
 #include <chrono>
+#include <memory>
 #include <vector>
 
 union SDL_Event;

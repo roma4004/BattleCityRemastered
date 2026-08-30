@@ -4,7 +4,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
-#include <cmath>//NOTE: need for cmake build
+#include <cmath>//NOTE: required by GCC only - std::round; MSVC-STL leaks it
 #include <thread>
 
 FramePerSecondManager::FramePerSecondManager(const std::shared_ptr<EventSystem>& events,

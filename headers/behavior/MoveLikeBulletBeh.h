@@ -5,6 +5,7 @@
 #include "utils/Uuid.h"
 #include <memory>
 #include <optional>
+#include <vector>
 
 // enum class Direction : char8_t;
 class Bullet;

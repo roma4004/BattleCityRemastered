@@ -3,6 +3,7 @@
 #include "geometry/Point.h"
 #include "enums/DisconnectReason.h"
 #include "enums/GameState.h"
+#include <cstddef>
 
 struct ServerInClientReadyToStartGameEvent {};
 

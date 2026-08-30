@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Tank.h"
+#include <memory>
+#include <vector>
 
 class IInputProvider;
 class BulletPool;

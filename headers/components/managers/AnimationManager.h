@@ -6,6 +6,8 @@
 #include "enums/AnimationType.h"
 #include "utils/Uuid.h"
 #include <memory>
+#include <string>
+#include <string_view>
 #include <vector>
 
 enum class AnimationType : char8_t;

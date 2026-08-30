@@ -2,6 +2,7 @@
 #include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
 #include <chrono>
+#include <cstddef>
 
 struct LaunchOptions;
 

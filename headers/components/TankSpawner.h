@@ -4,8 +4,11 @@
 #include "geometry/ObjRectangle.h"
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
+#include <chrono>
+#include <memory>
 #include <optional>
 #include <random>
+#include <string>
 #include <vector>
 
 enum class Faction : char8_t;

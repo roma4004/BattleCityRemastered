@@ -2,6 +2,7 @@
 
 #include "components/EventSystem.h"
 #include "utils/Uuid.h"
+#include <memory>
 #include <vector>
 
 enum class GameMode : char8_t;

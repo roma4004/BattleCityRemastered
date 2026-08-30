@@ -3,7 +3,10 @@
 #include "AnimationManager.h"
 #include "components/EventSystem.h"
 #include "enums/TextureOffset.h"
+#include <cstdint>
 #include <memory>
+#include <string>
+#include <vector>
 
 enum class AnimationType : char8_t;
 

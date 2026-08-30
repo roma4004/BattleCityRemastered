@@ -1,8 +1,8 @@
 #pragma once
 #include "InitError.h"
 #include <filesystem>
-#include <SDL3/SDL.h>//NOTE: do not replace with forward declaration, required for minGW
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>//NOTE: decltype(&SDL_DestroyWindow) needs the function declared, not just the type
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <expected>

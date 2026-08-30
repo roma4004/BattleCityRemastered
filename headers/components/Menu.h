@@ -3,6 +3,7 @@
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include "components/input/InputProviderForMenu.h"
+#include <memory>
 #include <string>
 #include <vector>
 

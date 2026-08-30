@@ -4,7 +4,9 @@
 #include "entities/BulletCalibre.h"
 #include "interfaces/IDrawable.h"
 #include "utils/Uuid.h"
+#include <memory>
 #include <string>
+#include <vector>
 
 enum class Faction : char8_t;
 struct BulletResetProperty;

@@ -5,6 +5,8 @@
 #include "components/EventSystem.h"
 #include "interfaces/IDrawable.h"
 #include "interfaces/IPickupableBonus.h"
+#include <memory>
+#include <string>
 #include <vector>
 
 enum class Faction : char8_t;

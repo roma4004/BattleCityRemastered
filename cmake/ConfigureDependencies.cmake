@@ -37,6 +37,18 @@ foreach(dir ${SDL3_SUBMODULES})
     add_subdirectory(${dir} SYSTEM)
 endforeach()
 
+# harfbuzz is the only vendored library that still warns, and SYSTEM cannot reach it: SYSTEM quiets a
+# dependency's headers as seen from *our* sources, while these come out of harfbuzz compiling its own
+# .cc - a translation unit that carries no -W flag of ours at all. Two independent sources, measured
+# across all four presets: hb.hh raises -Wall/-Wextra/-Wmissing-format-attribute itself with
+# `#pragma GCC diagnostic warning`, and Clang's own default-on set adds -Wnontrivial-memcall x20.
+if (TARGET harfbuzz AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    target_compile_options(harfbuzz PRIVATE -w)
+    # -w covers warnings but not a pragma-set *error*: hb.hh escalates ~30 diagnostics to errors, so
+    # a newer compiler that starts diagnosing any of them fails the build on code we do not own.
+    target_compile_definitions(harfbuzz PRIVATE HB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR)
+endif ()
+
 # --- Boost --- (per-library git submodules under ThirdParty/boost/*, same set .sln uses)
 set(BUILD_TESTING OFF) # skip each submodule's own test/ subdirectory
 

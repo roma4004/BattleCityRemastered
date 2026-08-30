@@ -4,9 +4,12 @@
 #include "components/EventSystem.h"
 #include "components/managers/TextTextureCache.h"
 #include <SDL3/SDL_render.h>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;

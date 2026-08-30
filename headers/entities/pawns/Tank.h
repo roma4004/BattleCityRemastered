@@ -4,6 +4,10 @@
 #include "Pawn.h"
 #include "entities/BulletCalibre.h"
 #include "utils/Timer.h"
+#include <chrono>
+#include <memory>
+#include <string>
+#include <vector>
 
 enum class Faction : char8_t;
 struct UPoint;

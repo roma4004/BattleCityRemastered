@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 enum class Faction : char8_t;
 enum class Direction : char8_t;

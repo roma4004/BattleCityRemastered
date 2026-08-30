@@ -1,7 +1,9 @@
 #pragma once
 
 #include "MapData.h"
+#include <cstddef>
 #include <expected>
+#include <filesystem>
 #include <memory>
 
 class EventSystem;

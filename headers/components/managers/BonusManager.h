@@ -2,6 +2,8 @@
 #include "components/EventSystem.h"
 #include "enums/BonusType.h"
 #include "utils/Timer.h"
+#include <chrono>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>

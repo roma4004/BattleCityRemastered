@@ -3,6 +3,7 @@
 #include "MessageFraming.h"
 #include <array>
 #include <boost/asio/ip/tcp.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <functional>

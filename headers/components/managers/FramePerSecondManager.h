@@ -2,6 +2,8 @@
 
 #include "components/EventSystem.h"
 #include <chrono>
+#include <memory>
+#include <vector>
 
 class EventSystem;
 class ProjectConfig;

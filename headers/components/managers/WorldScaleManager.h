@@ -1,6 +1,8 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include <memory>
+#include <vector>
 
 class GameConfig;
 struct MapLoadedEvent;

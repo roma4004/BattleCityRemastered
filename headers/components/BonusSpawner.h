@@ -4,6 +4,8 @@
 #include "geometry/ObjRectangle.h"
 #include "utils/Timer.h"
 #include "utils/Uuid.h"
+#include <chrono>
+#include <memory>
 #include <random>
 #include <vector>
 

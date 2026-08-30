@@ -1,8 +1,11 @@
 #pragma once
 
 #include "Tank.h"
+#include <chrono>
+#include <memory>
 #include <random>
 #include <functional>
+#include <vector>
 
 struct BonusEffectProperty;
 class EventSystem;

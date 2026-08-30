@@ -70,6 +70,7 @@ google-explicit-constructor,
 google-runtime-operator,
 hicpp-exception-baseclass,
 hicpp-multiway-paths-covered,
+misc-include-cleaner,
 misc-misplaced-const,
 misc-new-delete-overloads,
 misc-no-recursion,
@@ -145,3 +146,8 @@ readability-static-definition-in-anonymous-namespace,
 readability-string-compare,
 readability-uniqueptr-delete-release,
 readability-use-anyofallof'
+
+CheckOptions:
+  #NOTE: umbrella headers - the check wants the exact sub-header, the project includes the umbrella.
+  #*Serialization.h are overload providers: nothing names them, but they supply serialize()
+  misc-include-cleaner.IgnoreHeaders: '.*SDL3/.*;.*ser20/.*;.*boost/.*;.*gtest/.*;.*gmock/.*;.*Serialization\.h'

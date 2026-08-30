@@ -1,6 +1,8 @@
 #pragma once
 
 #include "utils/Log.h"
+#include <cstddef>
+#include <exception>
 #include <expected>
 #include <filesystem>
 #include <optional>

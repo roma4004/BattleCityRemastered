@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <mutex>
 #include <queue>
+#include <utility>
 
 namespace network
 {

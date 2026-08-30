@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../BaseObjProperty.h"
+#include <memory>
+#include <vector>
 
 enum class Direction : char8_t;
 enum class GameMode : char8_t;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef>
+#include <cstddef>//NOTE: required by GCC only - std::size_t; MSVC-STL leaks it
 
 struct FPoint final
 {

@@ -2,6 +2,7 @@
 
 #include "commands/AnyCommand.h"
 #include "enums/CommandType.h"
+#include <cstddef>
 #include <expected>
 #include <functional>
 #include <initializer_list>
