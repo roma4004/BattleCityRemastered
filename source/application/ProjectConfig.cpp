@@ -1,5 +1,7 @@
 #include "application/ProjectConfig.h"
 #include "utils/Log.h"
+#include <filesystem>
+#include <system_error>
 #include <utility>
 #include <boost/property_tree/ini_parser.hpp>
 
@@ -39,6 +41,15 @@ ProjectConfig::~ProjectConfig()
 	{
 		SaveIni(_filePath);
 	}
+}
+
+std::filesystem::path ProjectConfig::DefaultFilePath()
+{
+	//NOTE: created here because SaveIni cannot make its own parent
+	std::error_code errorCode{};
+	std::filesystem::create_directories("Config", errorCode);
+
+	return "Config/config.ini";
 }
 
 std::filesystem::path ProjectConfig::ResourcePath(const std::string& key) const

@@ -10,6 +10,8 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <cstddef>
 #include <memory>
 
 namespace
@@ -100,7 +102,15 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 	//shared atlas, bleeds neighbouring cells into each other at the edges
 	SDL_SetDefaultTextureScaleMode(renderer.get(), SDL_SCALEMODE_NEAREST);
 
-	return SetVSync(projectConfig.IsVsyncOn());
+	if (const auto vsync = SetVSync(projectConfig.IsVsyncOn());
+		!vsync)
+	{
+		return std::unexpected(vsync.error());
+	}
+
+	SDL_ShowWindow(sdlWindow.get());
+
+	return {};
 }
 
 //TODO: runtime switch - update Window.vsync in ProjectConfig too, FramePerSecondManager reads it
@@ -387,14 +397,22 @@ void SDL_Config::SaveWindowState(ProjectConfig& outProjectConfig) const
 		int height{};
 		SDL_GetWindowSize(sdlWindowRaw, &width, &height);
 
-		outProjectConfig.Set("Window.width", static_cast<unsigned>(std::max(0, width)));
-		outProjectConfig.Set("Window.height", static_cast<unsigned>(std::max(0, height)));
+		//NOTE: stored unscaled, as InitWindow reads it. Queried live - the window may have moved to a
+		//display with another scale
+		const float scale = SDL_GetWindowDisplayScale(sdlWindowRaw);
+		const double divisor = scale > 0.0f ? static_cast<double>(scale) : 1.0;
+
+		outProjectConfig.Set("Window.width",
+							 static_cast<unsigned>(std::max(0L, std::lround(static_cast<double>(width) / divisor))));
+		outProjectConfig.Set("Window.height",
+							 static_cast<unsigned>(std::max(0L, std::lround(static_cast<double>(height) / divisor))));
 	}
 }
 
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow() const
 {
-	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE;
+	//NOTE: hidden until InitVideo is through - it is resized and moved right after creation
+	constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window{
 			SDL_CreateWindow(kWindowTitle,
@@ -403,13 +421,27 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> SDL_Config::InitWindow
 							 windowFlags),
 			SDL_DestroyWindow};
 
-	//NOTE: SDL3 dropped the position from SDL_CreateWindow - it opens centred and is moved afterwards
-	if (window != nullptr)
+	if (window == nullptr)
 	{
-		SDL_SetWindowPosition(window.get(),
-							  static_cast<int>(windowConfig.pos.x),
-							  static_cast<int>(windowConfig.pos.y));
+		return window;
 	}
+
+	//NOTE: SDL3 window coordinates are plain pixels - the process is DPI aware and the desktop scale is
+	//not folded in, so the stored size is read as unscaled and multiplied here. SaveWindowState divides
+	//it back out, else the window would grow by the scale every run.
+	if (const float scale = SDL_GetWindowDisplayScale(window.get());
+		scale > 0.0f)
+	{
+		const double factor = static_cast<double>(scale);
+		SDL_SetWindowSize(window.get(),
+						  static_cast<int>(std::lround(static_cast<double>(windowConfig.size.x) * factor)),
+						  static_cast<int>(std::lround(static_cast<double>(windowConfig.size.y) * factor)));
+	}
+
+	//NOTE: SDL3 dropped the position from SDL_CreateWindow - it opens centred and is moved afterwards
+	SDL_SetWindowPosition(window.get(),
+						  static_cast<int>(windowConfig.pos.x),
+						  static_cast<int>(windowConfig.pos.y));
 
 	return window;
 }
@@ -420,12 +452,18 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 
 	//NOTE: SDL3 addresses displays by id, not by index - the ini still holds the 1-based number
 	SDL_Rect bounds{};
+	SDL_Rect usableBounds{};
 	bool hasMonitor{false};
 	if (int displayCount{}; SDL_DisplayID* displays = SDL_GetDisplays(&displayCount))
 	{
 		hasMonitor = monitorIndex >= 0
 					 && monitorIndex < displayCount
 					 && SDL_GetDisplayBounds(displays[monitorIndex], &bounds);
+		//NOTE: usable leaves the taskbar out - centring goes by the full bounds, the clamp by these
+		if (hasMonitor && !SDL_GetDisplayUsableBounds(displays[monitorIndex], &usableBounds))
+		{
+			usableBounds = bounds;
+		}
 		SDL_free(displays);
 	}
 
@@ -442,14 +480,37 @@ std::shared_ptr<SDL_Renderer> SDL_Config::InitRender() const
 				|| gameConfig.IsClient());
 	if (hasMonitor && centerOnMonitor)
 	{
+		//NOTE: the real window, not the ini one - InitWindow already scaled it
+		int windowWidth{};
+		int windowHeight{};
+		SDL_GetWindowSize(sdlWindowRaw, &windowWidth, &windowHeight);
+
+		//NOTE: WindowConfig gives the direction, the distance comes off the real window - already
+		//scaled. The cast to int unwraps the host's negative offset, made by an unsigned subtraction.
+		const auto halfWindowApart = [](const std::size_t offset, const int windowSide)
+		{
+			const int direction = static_cast<int>(0 < static_cast<int>(offset))
+								  - static_cast<int>(static_cast<int>(offset) < 0);
+
+			return direction * (windowSide / 2);
+		};
+
 		const Point screenCenter{.x = bounds.x + bounds.w / 2,
 								 .y = bounds.y + bounds.h / 2};
-		const Point windowHalfSize{.x = static_cast<int>(windowConfig.size.x) / 2,
-								   .y = static_cast<int>(windowConfig.size.y) / 2};
-		SDL_SetWindowPosition(sdlWindowRaw,
-							  screenCenter.x - windowHalfSize.x + static_cast<int>(windowConfig.posOffset.x),
-							  screenCenter.y - windowHalfSize.y + static_cast<int>(windowConfig.posOffset.y)
-							  - bordersSize.y);
+		const Point centred{.x = screenCenter.x - windowWidth / 2
+								 + halfWindowApart(windowConfig.posOffset.x, windowWidth),
+							.y = screenCenter.y - windowHeight / 2
+								 + halfWindowApart(windowConfig.posOffset.y, windowHeight)
+								 - bordersSize.y};
+
+		//NOTE: the pair spans two windows and must stay on this display. Clamped, not shrunk - they
+		//overlap in the middle instead of leaving the screen; the top margin keeps the title bar
+		const int minX = usableBounds.x;
+		const int minY = usableBounds.y + bordersSize.y;
+		const int maxX = std::max(minX, usableBounds.x + usableBounds.w - windowWidth);
+		const int maxY = std::max(minY, usableBounds.y + usableBounds.h - windowHeight);
+
+		SDL_SetWindowPosition(sdlWindowRaw, std::clamp(centred.x, minX, maxX), std::clamp(centred.y, minY, maxY));
 	}
 
 	//NOTE: vsync is not a creation flag - InitVideo applies it through SetVSync

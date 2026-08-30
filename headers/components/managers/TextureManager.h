@@ -2,7 +2,6 @@
 
 #include "AnimationManager.h"
 #include "components/EventSystem.h"
-#include "enums/TextureOffset.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -19,7 +18,6 @@ struct DrawAnimationEvent;
 
 class TextureManager final
 {
-	TextureOffset _offset{};
 	std::unique_ptr<AnimationManager> _animationManager{nullptr};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -43,7 +41,6 @@ class TextureManager final
 	[[nodiscard]] ObjRectangle GetTextureRect(const std::string& name) const;
 	[[nodiscard]] ObjRectangle GetTankTextureRect(const std::string& name) const;
 	[[nodiscard]] ObjRectangle GetBonusTextureRect(const std::string& name) const;
-	[[nodiscard]] ObjRectangle GetTextTextureRect(const std::string& name) const;
 
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);

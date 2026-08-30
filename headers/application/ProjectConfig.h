@@ -26,6 +26,9 @@ public:
 
 	~ProjectConfig();
 
+	//NOTE: next to the exe - each build tree keeps its own settings, like its own binaries
+	[[nodiscard]] static std::filesystem::path DefaultFilePath();
+
 	//NOTE: only a file that exists and does not parse lands here; a missing one is written, not reported
 	[[nodiscard]] const std::optional<ConfigError>& LoadError() const { return _loadError; }
 

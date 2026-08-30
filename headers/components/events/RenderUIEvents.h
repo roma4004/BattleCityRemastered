@@ -47,7 +47,6 @@ struct RenderMenuPS5HintEvent
 	Point pos;
 };
 
-struct RenderRightSideBarEvent {};
 
 struct RenderEnemyIconBackgroundEvent {};
 

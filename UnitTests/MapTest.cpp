@@ -171,6 +171,6 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 										   .uuid = UuidUtils::GetRandomUuid()});
 
 	ASSERT_EQ(allObjects.size(), 2u);
-	EXPECT_FLOAT_EQ(allObjects[0]->GetWidth(), cell * ObstacleCellSpan(ObstacleType::Eagle));
-	EXPECT_FLOAT_EQ(allObjects[1]->GetWidth(), cell);
+	EXPECT_DOUBLE_EQ(allObjects[0]->GetWidth(), cell * ObstacleCellSpan(ObstacleType::Eagle));
+	EXPECT_DOUBLE_EQ(allObjects[1]->GetWidth(), cell);
 }

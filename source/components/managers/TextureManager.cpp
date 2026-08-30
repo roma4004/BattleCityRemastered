@@ -1,4 +1,5 @@
 ﻿#include "components/managers/TextureManager.h"
+#include "enums/TextureOffset.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/managers/AnimationManager.h"
@@ -27,6 +28,8 @@ void TextureManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
 }
 
+//NOTE: entity names only - DrawObjEvent comes from Bullet, Obstacle and Bonus. UI reads
+//TextureOffset directly and never lands here.
 ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 {
 	ObjRectangle textureRect{};
@@ -34,57 +37,29 @@ ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
 	{
 		textureRect = GetBonusTextureRect(name);
 	}
-	else if (name.ends_with("Text"))
-	{
-		textureRect = GetTextTextureRect(name);
-	}
 	else if (name == "Bullet")//TODO: replace with enum TextureType
 	{
-		textureRect = _offset.bullet;
+		textureRect = TextureOffset::kBullet;
 	}
 	else if (name == "Eagle")
 	{
-		textureRect = _offset.eagle;
+		textureRect = TextureOffset::kEagle;
 	}
 	else if (name == "BrickWall")
 	{
-		textureRect = _offset.brick;
+		textureRect = TextureOffset::kBrick;
 	}
 	else if (name == "SteelWall")
 	{
-		textureRect = _offset.steel;
+		textureRect = TextureOffset::kSteel;
 	}
 	else if (name == "Bush")
 	{
-		textureRect = _offset.bush;
+		textureRect = TextureOffset::kBush;
 	}
 	else if (name == "Ice")
 	{
-		textureRect = _offset.ice;
-	}
-	else if (name == "RightSideBar")
-	{
-		textureRect = _offset.rightSideBar;
-	}
-	else if (name == "EnemyIcon")
-	{
-		textureRect = _offset.enemyIcon;
-	}
-	else if (name == "EnemyIconBackground")
-	{
-		textureRect = _offset.enemyIconBackground;
-	}
-	else if (name == "PlayerOneIcon")
-	{
-		textureRect = _offset.playerOneIcon;
-	}
-	else if (name == "PlayerTwoIcon")
-	{
-		textureRect = _offset.playerTwoIcon;
-	}
-	else if (name == "StageNumberFlag")
-	{
-		textureRect = _offset.stageNumberFlag;
+		textureRect = TextureOffset::kIce;
 	}
 
 	return textureRect;
@@ -95,15 +70,15 @@ ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
 	ObjRectangle textureRect{};
 	if (name.starts_with("Enemy"))
 	{
-		textureRect = _offset.enemy;
+		textureRect = TextureOffset::kEnemy;
 	}
 	else if (name.ends_with("1"))
 	{
-		textureRect = _offset.playerOne;
+		textureRect = TextureOffset::kPlayerOne;
 	}
 	else if (name.ends_with("2"))
 	{
-		textureRect = _offset.playerTwo;
+		textureRect = TextureOffset::kPlayerTwo;
 	}
 
 	return textureRect;
@@ -113,59 +88,38 @@ ObjRectangle TextureManager::GetBonusTextureRect(const std::string& name) const
 {
 	if (name.ends_with("Helmet"))
 	{
-		return _offset.bonusHelmet;
+		return TextureOffset::kBonusHelmet;
 	}
 	else if (name.ends_with("Timer"))
 	{
-		return _offset.bonusTimer;
+		return TextureOffset::kBonusTimer;
 	}
 	else if (name.ends_with("Shovel"))
 	{
-		return _offset.bonusShovel;
+		return TextureOffset::kBonusShovel;
 	}
 	else if (name.ends_with("Star"))
 	{
-		return _offset.bonusStar;
+		return TextureOffset::kBonusStar;
 	}
 	else if (name.ends_with("Grenade"))
 	{
-		return _offset.bonusGrenade;
+		return TextureOffset::kBonusGrenade;
 	}
 	else if (name.ends_with("Tank"))
 	{
-		return _offset.bonusTank;
+		return TextureOffset::kBonusTank;
 	}
 	else if (name.ends_with("Caliber"))
 	{
-		return _offset.bonusCaliber;
+		return TextureOffset::kBonusCaliber;
 	}
 	else if (name.ends_with("Ship"))
 	{
-		return _offset.bonusShip;
+		return TextureOffset::kBonusShip;
 	}
 
 	Log::Error("TextureManager::GetBonusTextureRect: unrecognized bonus name '" + name + "'");
-	return ObjRectangle{};
-}
-
-ObjRectangle TextureManager::GetTextTextureRect(const std::string& name) const
-{
-	if (name.starts_with("Pause"))
-	{
-		return _offset.pauseText;
-	}
-
-	if (name.starts_with("GameOver"))
-	{
-		return _offset.gameOverText;
-	}
-
-	if (name.starts_with("gameWon"))
-	{
-		return _offset.gameWonText;
-	}
-
-	Log::Error("TextureManager::GetTextTextureRect: unrecognized text name '" + name + "'");
 	return ObjRectangle{};
 }
 
@@ -178,26 +132,26 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 			return AtlasFrames{.first = GetTankTextureRect(name)};
 		case AnimationType::Water_Flow:
 			//NOTE: the water frames sit to the left of the offset, so they are walked backwards
-			return AtlasFrames{.first = _offset.water, .step = -1};
+			return AtlasFrames{.first = TextureOffset::kWater, .step = -1};
 		case AnimationType::Bullet_Explosion:
 			destRect = rect.GetScaledBy(3.0);
-			return AtlasFrames{.first = _offset.bulletExplosion};
+			return AtlasFrames{.first = TextureOffset::kBulletExplosion};
 		case AnimationType::Tank_Explosion:
 			destRect = rect.GetScaledBy(1.3);
-			return AtlasFrames{.first = _offset.tankExplosion};
+			return AtlasFrames{.first = TextureOffset::kTankExplosion};
 		case AnimationType::Tank_Spawn:
-			return AtlasFrames{.first = _offset.tankSpawn};
+			return AtlasFrames{.first = TextureOffset::kTankSpawn};
 		case AnimationType::Bonus_Spawn:
 		{
 			//NOTE: the tank spawn burst entered from its last frame and walked backwards, so the bonus
 			//shrinks into place instead of blooming out of it
-			ObjRectangle lastFrame = _offset.tankSpawn;
+			ObjRectangle lastFrame = TextureOffset::kTankSpawn;
 			lastFrame.x += (kBonusSpawnFrames - 1) * kAtlasCellSize;
 
 			return AtlasFrames{.first = lastFrame, .step = -1};
 		}
 		case AnimationType::Helmet_Effect:
-			return AtlasFrames{.first = _offset.helmetEffect};
+			return AtlasFrames{.first = TextureOffset::kHelmetEffect};
 		case AnimationType::Count:
 			break;
 	}

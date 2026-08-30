@@ -33,7 +33,6 @@ struct RenderColorTextureEvent;
 struct RenderTextureEvent;
 struct RenderFPSEvent;
 struct RenderHealthBarEvent;
-struct RenderRightSideBarEvent;
 struct RenderEnemyIconBackgroundEvent;
 struct RenderEnemyIconsEvent;
 struct RenderPlayerOneIconEvent;
@@ -71,9 +70,11 @@ class RenderManager
 	std::unordered_map<unsigned int, std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>> _colorTextureCache;
 
 	static constexpr unsigned int kGrayColor{0x808080u};
-	static constexpr int kEnemyIconColumnPadding{55};
-	static constexpr int kEnemyIconBackgroundWidth{71};
-	static constexpr int kEnemyIconBackgroundTop{60};
+	//NOTE: one column - fps box, enemy grid, counters and the flag share x and width
+	static constexpr int kSideBarColumnPadding{55};
+	static constexpr int kSideBarItemWidth{71};
+	static constexpr int kSideBarColumnTop{60};
+	static constexpr int kSideBarCounterTextPadding{38};
 
 	mutable TextTextureCache _textCache;
 
@@ -90,7 +91,6 @@ class RenderManager
 	void DrawPauseText(const RenderPauseTextEvent&) const;
 	void DrawGameOverText(const RenderGameOverTextEvent&) const;
 	void DrawGameWonText(const RenderGameWonTextEvent&) const;
-	void DrawRightSideBar(const RenderRightSideBarEvent&) const;
 	void DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent&) const;
 	void DrawEnemyIcons(const RenderEnemyIconsEvent& event) const;
 	void DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) const;
@@ -143,6 +143,7 @@ class RenderManager
 
 	//NOTE: the band above the enemy icon background - the counter is centred in it
 	[[nodiscard]] static SDL_Rect CalcFpsBox(const UPoint& battlefieldSize);
+	[[nodiscard]] int SideBarColumnX() const;
 
 public:
 	RenderManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig, SDL_Config& sdlConfig);

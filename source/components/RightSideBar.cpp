@@ -22,7 +22,6 @@ void RightSideBar::OnDrawUserInterface(const DrawUserInterfaceEvent&) const { Dr
 
 void RightSideBar::Draw() const
 {
-	_events->EmitEvent(RenderRightSideBarEvent{});
 	_events->EmitEvent(RenderEnemyIconBackgroundEvent{});
 	_events->EmitEvent(RenderEnemyIconsEvent{.count = _enemiesRespawnCount});
 	_events->EmitEvent(RenderPlayerOneIconEvent{.respawnCount = _playerOneRespawnCount});

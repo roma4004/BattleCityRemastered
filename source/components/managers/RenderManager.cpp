@@ -54,7 +54,6 @@ void RenderManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &RenderManager::RenderFPS));
 
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawHealthBar));
-	_subs.push_back(_events->AddListener(this, &RenderManager::DrawRightSideBar));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawEnemyIconBackground));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawEnemyIcons));
 	_subs.push_back(_events->AddListener(this, &RenderManager::DrawPlayerOneIcons));
@@ -170,81 +169,63 @@ void RenderManager::ApplyLogicalSize()
 
 void RenderManager::DrawPauseText(const RenderPauseTextEvent&) const
 {
-	constexpr TextureOffset offset{};
 	constexpr SDL_Rect dstRect{.x = 135, .y = 142, .w = 300, .h = 75};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.pauseText.x),
-							   .y = static_cast<int>(offset.pauseText.y),
-							   .w = static_cast<int>(offset.pauseText.w),
-							   .h = static_cast<int>(offset.pauseText.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPauseText.x),
+							   .y = static_cast<int>(TextureOffset::kPauseText.y),
+							   .w = static_cast<int>(TextureOffset::kPauseText.w),
+							   .h = static_cast<int>(TextureOffset::kPauseText.h)};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawGameOverText(const RenderGameOverTextEvent&) const
 {
-	constexpr TextureOffset offset{};
 	constexpr SDL_Rect dstRect{.x = 200, .y = 152, .w = 200, .h = 75};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameOverText.x),
-							   .y = static_cast<int>(offset.gameOverText.y),
-							   .w = static_cast<int>(offset.gameOverText.w),
-							   .h = static_cast<int>(offset.gameOverText.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kGameOverText.x),
+							   .y = static_cast<int>(TextureOffset::kGameOverText.y),
+							   .w = static_cast<int>(TextureOffset::kGameOverText.w),
+							   .h = static_cast<int>(TextureOffset::kGameOverText.h)};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawGameWonText(const RenderGameWonTextEvent&) const
 {
-	constexpr TextureOffset offset{};
 	constexpr SDL_Rect dstRect{.x = 250, .y = 152, .w = 120, .h = 85};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.gameWonText.x),
-							   .y = static_cast<int>(offset.gameWonText.y),
-							   .w = static_cast<int>(offset.gameWonText.w),
-							   .h = static_cast<int>(offset.gameWonText.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kGameWonText.x),
+							   .y = static_cast<int>(TextureOffset::kGameWonText.y),
+							   .w = static_cast<int>(TextureOffset::kGameWonText.w),
+							   .h = static_cast<int>(TextureOffset::kGameWonText.h)};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
-}
-
-void RenderManager::DrawRightSideBar(const RenderRightSideBarEvent&) const
-{
-	SDL_Rect backgroundRect{RectToSdlRect(TextureOffset{}.rightSideBar)};
-	backgroundRect.x = static_cast<int>(_gameConfig.battlefieldSize.x);
-	constexpr unsigned int color{0xFF808080u};
-	constexpr Uint8 a{(color >> 24u) & 0xFFu};
-	constexpr Uint8 r{(color >> 16u) & 0xFFu};
-	constexpr Uint8 g{(color >> 8u) & 0xFFu};
-	constexpr Uint8 b{(color >> 0u) & 0xFFu};
-	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), r, g, b, a);
-	FillRect(backgroundRect);
 }
 
 void RenderManager::DrawEnemyIconBackground(const RenderEnemyIconBackgroundEvent&) const
 {
-	constexpr TextureOffset offset{};
-	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + kEnemyIconColumnPadding};
-	const SDL_Rect dstRect{.x = posX, .y = kEnemyIconBackgroundTop, .w = kEnemyIconBackgroundWidth, .h = 277};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIconBackground.x),
-							   .y = static_cast<int>(offset.enemyIconBackground.y),
-							   .w = static_cast<int>(offset.enemyIconBackground.w),
-							   .h = static_cast<int>(offset.enemyIconBackground.h)};
+	constexpr int backgroundHeight{277};
+	const SDL_Rect dstRect{
+			.x = SideBarColumnX(), .y = kSideBarColumnTop, .w = kSideBarItemWidth, .h = backgroundHeight};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kEnemyIconBackground.x),
+							   .y = static_cast<int>(TextureOffset::kEnemyIconBackground.y),
+							   .w = static_cast<int>(TextureOffset::kEnemyIconBackground.w),
+							   .h = static_cast<int>(TextureOffset::kEnemyIconBackground.h)};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, dstRect);
 }
 
 void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 {
 	const unsigned short numberOfIcons = event.count;
-	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.enemyIcon.x),
-							   .y = static_cast<int>(offset.enemyIcon.y),
-							   .w = static_cast<int>(offset.enemyIcon.w),
-							   .h = static_cast<int>(offset.enemyIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kEnemyIcon.x),
+							   .y = static_cast<int>(TextureOffset::kEnemyIcon.y),
+							   .w = static_cast<int>(TextureOffset::kEnemyIcon.w),
+							   .h = static_cast<int>(TextureOffset::kEnemyIcon.h)};
+
+	//NOTE: two-wide grid, inset so the icons sit inside their background
+	constexpr int columns{2};
+	constexpr int iconInset{5};
+	constexpr Point imageSize{.x = 30, .y = 25};
+	constexpr Point padding{.x = 1, .y = 2};
+	const Point startPos{.x = SideBarColumnX() + iconInset, .y = 65};
 
 	for (unsigned short i = 0u; i < numberOfIcons; ++i)
 	{
-		constexpr int columns{2};
-		constexpr int iconBackgroundPadding{55};
-		constexpr int iconPadding{iconBackgroundPadding + 5};
-		const Point startPos{.x = static_cast<int>(_gameConfig.battlefieldSize.x) + iconPadding,
-							 .y = 65};
-		constexpr Point imageSize{.x = 30, .y = 25};
-		constexpr Point padding{.x = 1, .y = 2};
-
 		const int row{i / columns};
 		const int col{i % columns};
 		const int posX{startPos.x + col * (imageSize.x + padding.x)};
@@ -258,58 +239,58 @@ void RenderManager::DrawEnemyIcons(const RenderEnemyIconsEvent& event) const
 void RenderManager::DrawPlayerOneIcons(const RenderPlayerOneIconEvent& event) const
 {
 	const unsigned short respawnCount = event.respawnCount;
-	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.playerOneIcon.x),
-							   .y = static_cast<int>(offset.playerOneIcon.y),
-							   .w = static_cast<int>(offset.playerOneIcon.w),
-							   .h = static_cast<int>(offset.playerOneIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayerOneIcon.x),
+							   .y = static_cast<int>(TextureOffset::kPlayerOneIcon.y),
+							   .w = static_cast<int>(TextureOffset::kPlayerOneIcon.w),
+							   .h = static_cast<int>(TextureOffset::kPlayerOneIcon.h)};
 
-	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
-	const SDL_Rect rect{.x = posX, .y = 350, .w = 71, .h = 70};
+	const int posX{SideBarColumnX()};
+	const SDL_Rect rect{.x = posX, .y = 350, .w = kSideBarItemWidth, .h = 70};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
 	constexpr bool isMediumFontSize{true};
-	constexpr int textPadding{38};
-	TextToRender(Point{.x = posX + textPadding, .y = 390}, IntToColor(2u), respawnCount, isMediumFontSize);
+	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 390},
+				 IntToColor(2u),
+				 respawnCount,
+				 isMediumFontSize);
 }
 
 void RenderManager::DrawPlayerTwoIcons(const RenderPlayerTwoIconEvent& event) const
 {
 	const unsigned short respawnCount = event.respawnCount;
-	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.playerTwoIcon.x),
-							   .y = static_cast<int>(offset.playerTwoIcon.y),
-							   .w = static_cast<int>(offset.playerTwoIcon.w),
-							   .h = static_cast<int>(offset.playerTwoIcon.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kPlayerTwoIcon.x),
+							   .y = static_cast<int>(TextureOffset::kPlayerTwoIcon.y),
+							   .w = static_cast<int>(TextureOffset::kPlayerTwoIcon.w),
+							   .h = static_cast<int>(TextureOffset::kPlayerTwoIcon.h)};
 
-	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
-	const SDL_Rect rect{.x = posX, .y = 420, .w = 71, .h = 70};
+	const int posX{SideBarColumnX()};
+	const SDL_Rect rect{.x = posX, .y = 420, .w = kSideBarItemWidth, .h = 70};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
 	constexpr bool isMediumFontSize{true};
-	constexpr int textPadding{38};
-	TextToRender(Point{.x = posX + textPadding, .y = 460}, IntToColor(2u), respawnCount, isMediumFontSize);
+	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 460},
+				 IntToColor(2u),
+				 respawnCount,
+				 isMediumFontSize);
 }
 
 void RenderManager::DrawStageNumber(const RenderStageNumberEvent& event) const
 {
 	const unsigned short currentStageNumber = event.stageNumber;
-	constexpr TextureOffset offset{};
-	constexpr SDL_Rect srcRect{.x = static_cast<int>(offset.stageNumberFlag.x),
-							   .y = static_cast<int>(offset.stageNumberFlag.y),
-							   .w = static_cast<int>(offset.stageNumberFlag.w),
-							   .h = static_cast<int>(offset.stageNumberFlag.h)};
+	constexpr SDL_Rect srcRect{.x = static_cast<int>(TextureOffset::kStageNumberFlag.x),
+							   .y = static_cast<int>(TextureOffset::kStageNumberFlag.y),
+							   .w = static_cast<int>(TextureOffset::kStageNumberFlag.w),
+							   .h = static_cast<int>(TextureOffset::kStageNumberFlag.h)};
 
-	constexpr int padding{55};
-	const int posX{static_cast<int>(_gameConfig.battlefieldSize.x) + padding};
-	const SDL_Rect rect{.x = posX, .y = 490, .w = 71, .h = 95};
+	const int posX{SideBarColumnX()};
+	const SDL_Rect rect{.x = posX, .y = 490, .w = kSideBarItemWidth, .h = 95};
 	RenderCopyWithClipping(_sdlConfig.atlasTexture.get(), srcRect, rect);
 
 	constexpr bool isMediumFontSize{true};
-	constexpr int textPadding{38};
-	TextToRender(Point{.x = posX + textPadding, .y = 555}, IntToColor(2u), currentStageNumber, isMediumFontSize);
+	TextToRender(Point{.x = posX + kSideBarCounterTextPadding, .y = 555},
+				 IntToColor(2u),
+				 currentStageNumber,
+				 isMediumFontSize);
 }
 
 unsigned int RenderManager::ColorToInt(const SDL_Color& color)
@@ -533,15 +514,17 @@ void RenderManager::CreateColorTexture(const unsigned int color)
 //first and the field is painted black back over it - what stays gray is exactly the letterbox bars
 void RenderManager::ClearFrame(const PreTickUpdateEvent&) const
 {
+	//NOTE: grey everywhere, black over the field only - that is the side panel's background,
+	//it needs no fill of its own
 	SetRenderDrawColor(kGrayColor);
 	SDL_RenderClear(_sdlConfig.renderer.get());
 
-	const UPoint logicalSize = _gameConfig.LogicalSize();
+	const UPoint battlefieldSize = _gameConfig.battlefieldSize;
 	SDL_SetRenderDrawColor(_sdlConfig.renderer.get(), 0u, 0u, 0u, 255u);
 	FillRect(SDL_Rect{.x = 0,
 					  .y = 0,
-					  .w = static_cast<int>(logicalSize.x),
-					  .h = static_cast<int>(logicalSize.y)});
+					  .w = static_cast<int>(battlefieldSize.x),
+					  .h = static_cast<int>(battlefieldSize.y)});
 }
 
 void RenderManager::PresentFrame(const PresentFrameEvent&) const
@@ -676,8 +659,14 @@ void RenderManager::InitMenu(const GameConfig& gameConfig)
 
 SDL_Rect RenderManager::CalcFpsBox(const UPoint& battlefieldSize)
 {
-	return SDL_Rect{.x = static_cast<int>(battlefieldSize.x) + kEnemyIconColumnPadding,
+	return SDL_Rect{.x = static_cast<int>(battlefieldSize.x) + kSideBarColumnPadding,
 					.y = 0,
-					.w = kEnemyIconBackgroundWidth,
-					.h = kEnemyIconBackgroundTop};
+					.w = kSideBarItemWidth,
+					.h = kSideBarColumnTop};
+}
+
+//NOTE: CalcFpsBox stays static - it runs before the geometry event; everything else asks here
+int RenderManager::SideBarColumnX() const
+{
+	return static_cast<int>(_gameConfig.battlefieldSize.x) + kSideBarColumnPadding;
 }

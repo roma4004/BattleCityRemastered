@@ -21,7 +21,7 @@ int main(const int argc, char* argv[])
 		return 1;
 	}
 
-	ProjectConfig projectConfig{"config.ini"};
+	ProjectConfig projectConfig{ProjectConfig::DefaultFilePath()};
 	//NOTE: not fatal - defaults play fine. Said out loud because the file is kept as it is, so
 	//otherwise the settings would just look ignored.
 	if (const auto& configError = projectConfig.LoadError())
