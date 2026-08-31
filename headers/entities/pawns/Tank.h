@@ -36,8 +36,6 @@ class Tank : public Pawn
 
 	using milliseconds = std::chrono::milliseconds;
 	std::shared_ptr<IShootable> _shootingBeh{nullptr};
-	// Whole-lifetime listeners registered directly in the constructor.
-	std::vector<EventSubscription> _permanentSubs{};
 
 	void SubscribeAsClient() override;
 	void SubscribeBonus();
@@ -91,7 +89,7 @@ protected:
 	void Shot(std::optional<Uuid> withUuid = std::nullopt);
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
-	void OnPosChanged(const PosChangedEvent& event);
+	void OnPosChanged(const PosChangedEvent& event) override;
 	[[nodiscard]] bool IsTouchBush() const;
 	[[nodiscard]] bool IsTouchIce() const;
 

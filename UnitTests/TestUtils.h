@@ -8,6 +8,7 @@
 #include "entities/obstacles/FortressWalls.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/events/SpawnEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
@@ -29,7 +30,32 @@ public:
 	{
 		return events->AddListener([objects = &allObjects](const AddToSpawnQueueEvent& event)
 		{
+			event.obj->Activate();
 			objects->emplace_back(event.obj);
+		});
+	}
+
+	//NOTE: the other half of what SpawnManager does on PostTickUpdate - a fixture that cares about
+	//an object leaving the world has to sweep it out, otherwise nothing ever calls Deactivate
+	[[nodiscard]] static EventSubscription WireWorldDisposal(const std::shared_ptr<EventSystem>& events,
+															std::vector<std::shared_ptr<BaseObj>>& allObjects)
+	{
+		return events->AddListener([objects = &allObjects](const PostTickUpdateEvent&)
+		{
+			const auto isDead = [](const std::shared_ptr<BaseObj>& obj)
+			{
+				return obj == nullptr || obj->GetIsAlive() == false;
+			};
+
+			for (const std::shared_ptr<BaseObj>& obj: *objects)
+			{
+				if (obj != nullptr && obj->GetIsAlive() == false)
+				{
+					obj->Deactivate();
+				}
+			}
+
+			std::erase_if(*objects, isDead);
 		});
 	}
 
@@ -91,10 +117,11 @@ public:
 				.dir = dir,
 				.gameMode = gameMode};
 
-		constexpr bool enableByDefault{true};
+		//NOTE: a fixture that builds one by hand is its own world - nothing enqueues it
+		auto bullet = std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre, std::move(author));
+		bullet->Activate();
 
-		return std::make_shared<Bullet>(std::move(pawnProperty), gameConfig, calibre, std::move(author),
-										enableByDefault);
+		return bullet;
 	}
 };
 
@@ -121,7 +148,10 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 			.dir = dir,
 			.gameMode = gameMode};
 
-	return std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig);
+	auto tank = std::make_shared<T>(std::move(pawnProperty), bulletPool, gameConfig);
+	tank->Activate();
+
+	return tank;
 }
 
 template<>

@@ -43,7 +43,13 @@ void SpawnManager::CreateSpawners()
 
 void SpawnManager::OnGameModeChangedTo(const GameModeChangedToEvent&) { CreateSpawners(); }
 
-void SpawnManager::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event) { _pendingSpawns.push_back(event.obj); }
+void SpawnManager::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event)
+{
+	//NOTE: the bus is entered here rather than in a constructor - the object is whole by now, so
+	//the call reaches the leaf, and a spawner emits nothing between this and the flush
+	event.obj->Activate();
+	_pendingSpawns.push_back(event.obj);
+}
 
 //NOTE: pour in, then sweep out - the two run back to back so nothing iterates the world in between
 void SpawnManager::OnPostTickUpdate(const PostTickUpdateEvent&)
@@ -68,5 +74,20 @@ void SpawnManager::FlushSpawnQueue()
 
 void SpawnManager::DisposeDeadObject()
 {
-	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
+	const auto isDead = [](const std::shared_ptr<BaseObj>& obj)
+	{
+		return obj == nullptr || obj->GetIsAlive() == false;
+	};
+
+	//NOTE: leaving the world is its own step - a pooled bullet outlives this and must not keep
+	//listening while it waits in the free list
+	for (const std::shared_ptr<BaseObj>& obj: _allObjects)
+	{
+		if (obj != nullptr && obj->GetIsAlive() == false)
+		{
+			obj->Deactivate();
+		}
+	}
+
+	std::erase_if(_allObjects, isDead);
 }

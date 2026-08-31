@@ -13,6 +13,7 @@
 #include "enums/Faction.h"
 #include "enums/GameMode.h"
 #include "enums/InputChannel.h"
+#include "enums/TextureType.h"
 #include "gtest/gtest.h"
 #include <memory>
 #include <set>
@@ -32,11 +33,13 @@ protected:
 	Uuid _uuid{};
 	GameMode _gameMode{GameMode::OnePlayer};
 	EventSubscription _spawnQueueSub{};
+	EventSubscription _disposalSub{};
 
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
 		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
+		_disposalSub = TestUtils::WireWorldDisposal(_events, _allObjects);
 		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_tankSize = _gameConfig.tankSize;
 
@@ -85,7 +88,7 @@ TEST_F(BulletPoolTest, ReturnedBulletLeavesTheBus)
 	int bulletDraws{0};
 	const EventSubscription drawSub = _events->AddListener([&bulletDraws](const DrawObjEvent& event)
 	{
-		if (event.name == "Bullet")
+		if (event.texture == TextureType::Bullet)
 		{
 			++bulletDraws;
 		}

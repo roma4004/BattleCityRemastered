@@ -14,23 +14,18 @@
 #include "entities/pawns/BulletResetProperty.h"
 #include "entities/pawns/PawnProperty.h"
 #include "enums/GameMode.h"
+#include "enums/TextureType.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
 
 Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre,
-			   std::string author,
-			   const bool enableByDefault)
+			   std::string author)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 	, _author{std::move(author)}
 	, _calibre{calibre}
 {
 	// NOTE: needed only for tests, TODO in test use tank shoot for bulletPool use instead of creating bullet
 	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, _calibre);
-
-	if (enableByDefault)
-	{
-		Bullet::Subscribe();
-	}
 
 	_name = "Bullet";
 }
@@ -45,20 +40,9 @@ void Bullet::Subscribe()
 	Pawn::Subscribe();
 
 	_subs.push_back(_events->AddListener(this, &Bullet::OnDraw));
-
-	if (IsClient(_gameMode))
-	{
-		SubscribeAsClient();
-	}
 }
 
 void Bullet::OnDraw(const DrawEvent&) const { Draw(); }
-
-void Bullet::SubscribeAsClient()
-{
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnDespawned));
-	_subs.push_back(_events->AddListener(Key(_uuid), this, &Bullet::OnPosChanged));
-}
 
 void Bullet::OnDespawned(const DespawnedEvent& event)
 {
@@ -67,7 +51,10 @@ void Bullet::OnDespawned(const DespawnedEvent& event)
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
 }
 
-void Bullet::Draw() const { _events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .name = _name}); }
+void Bullet::Draw() const
+{
+	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = _dir, .texture = TextureType::Bullet});
+}
 
 Uuid Bullet::GetUuid() const
 {
@@ -79,22 +66,8 @@ const std::string& Bullet::GetUuidStr() const
 	return _uuidStr;
 }
 
-void Bullet::Enable()
-{
-	Subscribe();
-}
-
-void Bullet::Disable()
-{
-	Log::Detail("bullet disabled " + _nameWithUuid);
-
-	Unsubscribe();
-}
-
 void Bullet::Reset(BulletResetProperty resetProperty)
 {
-	Disable();//TODO: remove and unsubscribe in bullet pool on return
-
 	SetRect(resetProperty.rect);
 	SetHealth(resetProperty.health);
 	SetDirection(resetProperty.dir);
@@ -118,8 +91,6 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	_nameWithUuid = _name + _uuidStr;
 
 	SetIsAlive(true);
-
-	Enable();
 }
 
 void Bullet::TickUpdate(const double deltaTime)
@@ -188,10 +159,4 @@ void Bullet::DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList)
 	}
 
 	_events->EmitEvent(AnimationCreateBulletExplosionEvent{.rect = _rect, .name = _name});
-}
-
-void Bullet::OnPosChanged(const PosChangedEvent& event)
-{
-	SetDirection(event.dir);
-	SetPos(event.pos);
 }

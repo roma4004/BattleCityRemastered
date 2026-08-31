@@ -72,7 +72,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)/headers;$(SolutionDir)/ThirdParty/ser20/include;$(SolutionDir)/ThirdParty/boost/align/include;$(SolutionDir)/ThirdParty/boost/any/include;$(SolutionDir)/ThirdParty/boost/asio/include;$(SolutionDir)/ThirdParty/boost/assert/include;$(SolutionDir)/ThirdParty/boost/bind/include;$(SolutionDir)/ThirdParty/boost/config/include;$(SolutionDir)/ThirdParty/boost/container_hash/include;$(SolutionDir)/ThirdParty/boost/winapi/include;$(SolutionDir)/ThirdParty/boost/preprocessor/include;$(SolutionDir)/ThirdParty/boost/predef/include;$(SolutionDir)/ThirdParty/boost/mp11/include;$(SolutionDir)/ThirdParty/boost/tuple/include;$(SolutionDir)/ThirdParty/boost/utility/include;$(SolutionDir)/ThirdParty/boost/core/include;$(SolutionDir)/ThirdParty/boost/integer/include;$(SolutionDir)/ThirdParty/boost/iterator/include;$(SolutionDir)/ThirdParty/boost/mpl/include;$(SolutionDir)/ThirdParty/boost/multi_index/include;$(SolutionDir)/ThirdParty/boost/optional/include;$(SolutionDir)/ThirdParty/boost/pool/include;$(SolutionDir)/ThirdParty/boost/property_tree/include;$(SolutionDir)/ThirdParty/boost/range/include;$(SolutionDir)/ThirdParty/boost/system/include;$(SolutionDir)/ThirdParty/boost/throw_exception/include;$(SolutionDir)/ThirdParty/boost/type_index/include;$(SolutionDir)/ThirdParty/boost/type_traits/include;$(SolutionDir)/ThirdParty/boost/uuid/include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(RepoRoot)/headers;$(RepoRoot)/ThirdParty/ser20/include;$(RepoRoot)/ThirdParty/boost/align/include;$(RepoRoot)/ThirdParty/boost/any/include;$(RepoRoot)/ThirdParty/boost/asio/include;$(RepoRoot)/ThirdParty/boost/assert/include;$(RepoRoot)/ThirdParty/boost/bind/include;$(RepoRoot)/ThirdParty/boost/config/include;$(RepoRoot)/ThirdParty/boost/container_hash/include;$(RepoRoot)/ThirdParty/boost/winapi/include;$(RepoRoot)/ThirdParty/boost/preprocessor/include;$(RepoRoot)/ThirdParty/boost/predef/include;$(RepoRoot)/ThirdParty/boost/mp11/include;$(RepoRoot)/ThirdParty/boost/tuple/include;$(RepoRoot)/ThirdParty/boost/utility/include;$(RepoRoot)/ThirdParty/boost/core/include;$(RepoRoot)/ThirdParty/boost/integer/include;$(RepoRoot)/ThirdParty/boost/iterator/include;$(RepoRoot)/ThirdParty/boost/mpl/include;$(RepoRoot)/ThirdParty/boost/multi_index/include;$(RepoRoot)/ThirdParty/boost/optional/include;$(RepoRoot)/ThirdParty/boost/pool/include;$(RepoRoot)/ThirdParty/boost/property_tree/include;$(RepoRoot)/ThirdParty/boost/range/include;$(RepoRoot)/ThirdParty/boost/system/include;$(RepoRoot)/ThirdParty/boost/throw_exception/include;$(RepoRoot)/ThirdParty/boost/type_index/include;$(RepoRoot)/ThirdParty/boost/type_traits/include;$(RepoRoot)/ThirdParty/boost/uuid/include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -350,8 +350,8 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
-      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\fetch-submodules.ps1" -Root "$(SolutionDir)."
-powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\fetch-submodules.ps1" -Root "$(RepoRoot)."
+powershell -NoProfile -ExecutionPolicy Bypass -File "$(RepoRoot)scripts\gen-vcxproj-filters.ps1" -Project "$(MSBuildProjectFullPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <!-- No SDL3 ProjectReference here on purpose: they belong to GamePlatform, so a consumer that needs

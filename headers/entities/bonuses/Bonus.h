@@ -44,6 +44,9 @@ public:
 
 	~Bonus() override;
 
+	void Activate() override;
+	void Deactivate() override;
+
 	void Subscribe();
 	void SubscribeAsClient();
 	void Expire();

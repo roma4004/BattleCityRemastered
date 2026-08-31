@@ -11,7 +11,7 @@ class EventSystem;
 
 class BrickWall : public Obstacle
 {
-	void Subscribe();
+	void Subscribe() override;
 	void OnDraw(const DrawEvent&) const;
 
 protected:

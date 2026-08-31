@@ -8,6 +8,7 @@
 #include <vector>
 
 enum class AnimationType : char8_t;
+enum class TextureType : char8_t;
 
 enum class Direction : char8_t;
 using Uint8 = uint8_t;
@@ -38,9 +39,8 @@ class TextureManager final
 
 	[[nodiscard]] AtlasFrames GetAnimFrames(AnimationType type, const std::string& name, ObjRectangle rect,
 											ObjRectangle& destRect) const;
-	[[nodiscard]] ObjRectangle GetTextureRect(const std::string& name) const;
+	[[nodiscard]] static ObjRectangle GetTextureRect(TextureType texture);
 	[[nodiscard]] ObjRectangle GetTankTextureRect(const std::string& name) const;
-	[[nodiscard]] ObjRectangle GetBonusTextureRect(const std::string& name) const;
 
 public:
 	explicit TextureManager(const std::shared_ptr<EventSystem>& events);

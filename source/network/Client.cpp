@@ -194,16 +194,15 @@ void Client::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &Client::OnNetworkEndFrame));
 
-	//NOTE: both local seats go to the wire - this process drives one tank, so whichever half of the
-	//keyboard the player uses is his own; the seat he lands in is the tag SendKeyState puts on it
-	for (const InputChannel channel: {InputChannel::LocalP1, InputChannel::LocalP2})
-	{
-		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveUp));
-		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveLeft));
-		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveDown));
-		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveRight));
-		_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnFire));
-	}
+	//NOTE: a keyboard half belongs to a seat, not to a machine - this process is player two
+	//(SendKeyState tags every press P2), so it takes the arrows like a second player anywhere else.
+	//Tab swaps the halves locally for whoever would rather drive that seat with WASD
+	constexpr InputChannel channel{InputChannel::LocalP2};
+	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveUp));
+	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveLeft));
+	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveDown));
+	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnMoveRight));
+	_subs.push_back(_events->AddListener(Key(channel), this, &Client::OnFire));
 
 	_subs.push_back(_events->AddListener(this, &Client::OnClientOutReadyToPlay));
 	_subs.push_back(_events->AddListener(this, &Client::OnPauseRequested));

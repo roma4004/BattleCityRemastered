@@ -7,6 +7,7 @@
 
 enum class Direction : char8_t;
 enum class AnimationType : char8_t;
+enum class TextureType : char8_t;
 
 //NOTE: these two are also the spawn's clock - AnimationManager reports the last frame by uuid
 struct AnimationCreateTankSpawnEvent
@@ -74,7 +75,7 @@ struct DrawObjEvent
 {
 	ObjRectangle rect;
 	Direction dir;
-	std::string name;
+	TextureType texture;
 	unsigned int rimColor{};//NOTE: 0 leaves the sprite frame as the atlas has it
 };
 

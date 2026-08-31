@@ -87,7 +87,10 @@ void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 			Log::Detail("bullet returned to a pool of " + std::to_string(_free.size()) + ", author "
 						+ bullet->GetAuthor() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
 
-			bullet->Disable();
+			//NOTE: the pool guarantees it itself rather than relying on SpawnManager having swept
+			//the bullet earlier in this same PostTickUpdate - a bullet in _free must not listen,
+			//or the next SpawnBullet would rename a subscribed one and subscribe it twice
+			bullet->Deactivate();
 			_free.push(bullet);
 		}
 	}

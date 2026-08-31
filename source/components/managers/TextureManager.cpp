@@ -1,5 +1,6 @@
 #include "components/managers/TextureManager.h"
 #include "enums/TextureOffset.h"
+#include "enums/TextureType.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "components/managers/AnimationManager.h"
@@ -28,41 +29,47 @@ void TextureManager::Subscribe()
 	_subs.push_back(_events->AddListener(this, &TextureManager::DrawAnimation));
 }
 
-//NOTE: entity names only - DrawObjEvent comes from Bullet, Obstacle and Bonus. UI reads
+//NOTE: entity sprites only - DrawObjEvent comes from Bullet, Obstacle and Bonus. UI reads
 //TextureOffset directly and never lands here.
-ObjRectangle TextureManager::GetTextureRect(const std::string& name) const
+ObjRectangle TextureManager::GetTextureRect(const TextureType texture)
 {
-	ObjRectangle textureRect{};
-	if (name.starts_with("Bonus"))
+	switch (texture)
 	{
-		textureRect = GetBonusTextureRect(name);
-	}
-	else if (name == "Bullet")//TODO: replace with enum TextureType
-	{
-		textureRect = TextureOffset::kBullet;
-	}
-	else if (name == "Eagle")
-	{
-		textureRect = TextureOffset::kEagle;
-	}
-	else if (name == "BrickWall")
-	{
-		textureRect = TextureOffset::kBrick;
-	}
-	else if (name == "SteelWall")
-	{
-		textureRect = TextureOffset::kSteel;
-	}
-	else if (name == "Bush")
-	{
-		textureRect = TextureOffset::kBush;
-	}
-	else if (name == "Ice")
-	{
-		textureRect = TextureOffset::kIce;
+		case TextureType::Bullet:
+			return TextureOffset::kBullet;
+		case TextureType::Eagle:
+			return TextureOffset::kEagle;
+		case TextureType::BrickWall:
+			return TextureOffset::kBrick;
+		case TextureType::SteelWall:
+			return TextureOffset::kSteel;
+		case TextureType::Bush:
+			return TextureOffset::kBush;
+		case TextureType::Ice:
+			return TextureOffset::kIce;
+		case TextureType::BonusTimer:
+			return TextureOffset::kBonusTimer;
+		case TextureType::BonusHelmet:
+			return TextureOffset::kBonusHelmet;
+		case TextureType::BonusGrenade:
+			return TextureOffset::kBonusGrenade;
+		case TextureType::BonusTank:
+			return TextureOffset::kBonusTank;
+		case TextureType::BonusStar:
+			return TextureOffset::kBonusStar;
+		case TextureType::BonusShovel:
+			return TextureOffset::kBonusShovel;
+		case TextureType::BonusCaliber:
+			return TextureOffset::kBonusCaliber;
+		case TextureType::BonusShip:
+			return TextureOffset::kBonusShip;
+		case TextureType::None:
+			break;
 	}
 
-	return textureRect;
+	Log::Error("TextureManager::GetTextureRect: nothing to draw for this texture");
+
+	return ObjRectangle{};
 }
 
 ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
@@ -82,45 +89,6 @@ ObjRectangle TextureManager::GetTankTextureRect(const std::string& name) const
 	}
 
 	return textureRect;
-}
-
-ObjRectangle TextureManager::GetBonusTextureRect(const std::string& name) const
-{
-	if (name.ends_with("Helmet"))
-	{
-		return TextureOffset::kBonusHelmet;
-	}
-	else if (name.ends_with("Timer"))
-	{
-		return TextureOffset::kBonusTimer;
-	}
-	else if (name.ends_with("Shovel"))
-	{
-		return TextureOffset::kBonusShovel;
-	}
-	else if (name.ends_with("Star"))
-	{
-		return TextureOffset::kBonusStar;
-	}
-	else if (name.ends_with("Grenade"))
-	{
-		return TextureOffset::kBonusGrenade;
-	}
-	else if (name.ends_with("Tank"))
-	{
-		return TextureOffset::kBonusTank;
-	}
-	else if (name.ends_with("Caliber"))
-	{
-		return TextureOffset::kBonusCaliber;
-	}
-	else if (name.ends_with("Ship"))
-	{
-		return TextureOffset::kBonusShip;
-	}
-
-	Log::Error("TextureManager::GetBonusTextureRect: unrecognized bonus name '" + name + "'");
-	return ObjRectangle{};
 }
 
 TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType type, const std::string& name,
@@ -163,9 +131,9 @@ TextureManager::AtlasFrames TextureManager::GetAnimFrames(const AnimationType ty
 
 void TextureManager::Draw(const DrawObjEvent& event) const
 {
-	const auto& [rect, dir, name, rimColor] = event;
+	const auto& [rect, dir, texture, rimColor] = event;
 	const ObjRectangle destRect = rect;
-	const ObjRectangle textureRect = GetTextureRect(name);
+	const ObjRectangle textureRect = GetTextureRect(texture);
 	if (constexpr ObjRectangle defaultSdlRect{};
 		ColliderUtils::AreEqualAbsolute(textureRect.x, defaultSdlRect.x)
 		&& ColliderUtils::AreEqualAbsolute(textureRect.y, defaultSdlRect.y)

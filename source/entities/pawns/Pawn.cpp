@@ -29,6 +29,10 @@ Pawn::Pawn(PawnProperty pawnProperty, const GameConfig& gameConfig, const Collis
 
 Pawn::~Pawn() = default;
 
+void Pawn::Activate() { Subscribe(); }
+
+void Pawn::Deactivate() { Unsubscribe(); }
+
 void Pawn::Subscribe()
 {
 	IsAuthority(_gameMode) ? Pawn::SubscribeAsAuthority() : Pawn::SubscribeAsClient();
@@ -40,6 +44,14 @@ void Pawn::SubscribeAsClient()
 {
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnHealthChanged));
 	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnDespawned));
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Pawn::OnPosChanged));
+}
+
+//NOTE: the client runs no tick, so this is the only place a pawn moves there
+void Pawn::OnPosChanged(const PosChangedEvent& event)
+{
+	SetDirection(event.dir);
+	SetPos(event.pos);
 }
 
 void Pawn::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
@@ -48,7 +60,8 @@ void Pawn::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(event.he
 
 void Pawn::SubscribeTickUpdate()
 {
-	//NOTE: guarded - Bullet::Enable() re-subscribes on pool reuse while already subscribed.
+	//NOTE: guarded - a tank that spawns with no grenade running gets an unfreeze it never asked
+	//for (Tank::OnBonusTimerReApplyOnSpawn), and it arrives while the tick is already subscribed.
 	if (!_tickUpdateSub)
 	{
 		_tickUpdateSub = _events->AddListener(this, &Pawn::OnTickUpdate);

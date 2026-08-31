@@ -36,6 +36,11 @@ protected:
 	~BaseObj() override;
 
 public:
+	//NOTE: entering and leaving the world, not construction and destruction - an object is
+	//built first and subscribes only when the world takes it, so the call reaches the leaf
+	virtual void Activate() {}
+	virtual void Deactivate() {}
+
 	[[nodiscard]] FPoint GetPos() const;
 	void SetPos(const FPoint& pos);
 	[[nodiscard]] double GetRightSide() const;

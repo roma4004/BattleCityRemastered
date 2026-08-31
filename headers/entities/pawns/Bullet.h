@@ -17,7 +17,6 @@ class ShootingBeh;
 class GameConfig;
 struct DrawEvent;
 struct DespawnedEvent;
-struct PosChangedEvent;
 
 class Bullet final : public Pawn, public IDrawable
 {
@@ -28,9 +27,6 @@ class Bullet final : public Pawn, public IDrawable
 	Uuid _authorUuid{};
 	BulletCalibre _calibre{};
 
-	void SubscribeAsClient() override;
-	void Enable();
-	void Disable();
 	void Reset(BulletResetProperty resetProperty);
 	void OnDraw(const DrawEvent&) const;
 
@@ -45,7 +41,7 @@ public:
 	static constexpr CollisionTags kCollision{tags::Passable{}, tags::Destructible{}, tags::Impenetrable{}};
 
 	Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre = {},
-		   std::string author = "", bool enableByDefault = false);
+		   std::string author = "");
 
 	~Bullet() override;
 
@@ -61,5 +57,4 @@ public:
 	[[nodiscard]] unsigned int GetTier() const;
 
 	void DealDamage(const std::vector<std::shared_ptr<BaseObj>>& objectList);
-	void OnPosChanged(const PosChangedEvent& event);
 };

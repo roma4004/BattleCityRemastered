@@ -33,14 +33,6 @@ Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletP
 	_shootingBeh = std::make_shared<ShootingBeh>(_rect, _dir, _uuid, _name, _faction, bulletPool, _calibre, _events,
 												 _gameConfig);
 
-	Tank::Subscribe();
-
-	if (IsClient(_gameMode))
-	{
-		_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnPosChanged));
-	}
-
-	_permanentSubs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnBonusTimerReApplyOnSpawn));
 }
 
 void Tank::OnBonusTimerReApplyOnSpawn(const BonusTimerReApplyOnSpawnEvent& event)
@@ -67,6 +59,8 @@ void Tank::Subscribe()
 	{
 		SubscribeAsClient();
 	}
+
+	_subs.push_back(_events->AddListener(Key(_uuid), this, &Tank::OnBonusTimerReApplyOnSpawn));
 
 	SubscribeBonus();
 }
@@ -291,9 +285,8 @@ void Tank::HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const
 
 void Tank::OnPosChanged(const PosChangedEvent& event)
 {
-	SetDirection(event.dir);
-	SetPos(event.pos);
-	//NOTE: the client runs no tick, so this is the one place its position changes
+	Pawn::OnPosChanged(event);
+
 	_effects.isTouchTheBushes = IsTouchBush();
 
 	//NOTE: fix for tank truck animation tick

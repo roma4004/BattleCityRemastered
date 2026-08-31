@@ -40,14 +40,12 @@ template<>
 			.dir = dir,
 			.gameMode = gameMode};
 
-	if (name == "Player1")
-	{
-		std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, InputChannel::LocalP1);
+	const InputChannel channel{name == "Player1" ? InputChannel::LocalP1 : InputChannel::LocalP2};
+	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, channel);
 
-		return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig);
-	}
+	auto player = std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider),
+										   gameConfig);
+	player->Activate();
 
-	std::unique_ptr<IInputProvider> inputProvider = std::make_unique<InputProviderForPlayer>(events, InputChannel::LocalP2);
-
-	return std::make_shared<Player>(std::move(pawnProperty), bulletPool, std::move(inputProvider), gameConfig);
+	return player;
 }

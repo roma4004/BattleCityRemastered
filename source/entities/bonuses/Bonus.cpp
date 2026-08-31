@@ -10,6 +10,7 @@
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
 #include "enums/Faction.h"
+#include "enums/TextureType.h"
 #include "utils/TimeUtils.h"
 #include <algorithm>
 #include <array>
@@ -135,11 +136,13 @@ Bonus::Bonus(const ObjRectangle& rect, const std::shared_ptr<EventSystem>& event
 	, _bonusType{bonusType}
 	, _isSuper{isSuper}
 	, _events{events}
-{
-	Subscribe();
-}
+{}
 
 Bonus::~Bonus() = default;
+
+void Bonus::Activate() { Subscribe(); }
+
+void Bonus::Deactivate() { _subs.clear(); }
 
 //NOTE: the one way off the field - picked up, expired or shot, the announcement is the same
 void Bonus::Despawn(const DespawnReason reason)
@@ -171,11 +174,42 @@ void Bonus::SubscribeAsClient()
 
 void Bonus::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
 
+namespace
+{
+[[nodiscard]] constexpr TextureType TextureOf(const BonusType type)
+{
+	switch (type)
+	{
+		case BonusType::Timer:
+			return TextureType::BonusTimer;
+		case BonusType::Helmet:
+			return TextureType::BonusHelmet;
+		case BonusType::Grenade:
+			return TextureType::BonusGrenade;
+		case BonusType::Tank:
+			return TextureType::BonusTank;
+		case BonusType::Star:
+			return TextureType::BonusStar;
+		case BonusType::Shovel:
+			return TextureType::BonusShovel;
+		case BonusType::Caliber:
+			return TextureType::BonusCaliber;
+		case BonusType::Ship:
+			return TextureType::BonusShip;
+		case BonusType::None:
+		case BonusType::lastId:
+			break;
+	}
+
+	return TextureType::None;
+}
+}//namespace
+
 void Bonus::Draw() const
 {
 	_events->EmitEvent(DrawObjEvent{.rect = _rect,
 									.dir = Direction::UP,
-									.name = _name,
+									.texture = TextureOf(_bonusType),
 									.rimColor = _isSuper ? SuperRimColor() : 0u});
 }
 

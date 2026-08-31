@@ -12,7 +12,7 @@ struct DrawEvent;
 
 class EagleTile final : public Obstacle, public IFortress
 {
-	void Subscribe();
+	void Subscribe() override;
 	void OnDraw(const DrawEvent&) const;
 
 protected:

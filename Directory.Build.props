@@ -4,6 +4,10 @@
      no solution context when a project is built on its own. -->
 <Project>
   <PropertyGroup>
+    <!-- The repository root, for the projects that sit a level or two down. $(SolutionDir) silently
+         falls back to the project's own directory when a project is built on its own, which sent the
+         pre-build scripts looking inside GameCore\ and UnitTests\. -->
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <OutDir>$(MSBuildThisFileDirectory)build\msbuild\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)build\msbuild\obj\$(Platform)\$(Configuration)\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>

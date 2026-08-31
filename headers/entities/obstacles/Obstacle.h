@@ -21,6 +21,8 @@ class Obstacle : public BaseObj, public IDrawable
 	void SubscribeAsClient();
 
 protected:
+	//NOTE: empty, not pure - WaterTile draws nothing of its own and has nothing to add here
+	virtual void Subscribe();
 	virtual void OnDespawned(const DespawnedEvent& event);
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
@@ -36,6 +38,9 @@ protected:
 
 public:
 	~Obstacle() override;
+
+	void Activate() override;
+	void Deactivate() override;
 
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;

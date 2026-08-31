@@ -40,7 +40,7 @@ protected:
 
 	void TearDown() override {}
 
-	//NOTE: one bus per node - on a shared bus a listener fires off the local emitting before anything
+	//NOTE: one bus per node - on a shared bus a listener fires off the local emit before anything
 	//crosses the wire, and the test passes with no networking at all
 	std::shared_ptr<EventSystem> _hostEvents{std::make_shared<EventSystem>()};
 	std::shared_ptr<EventSystem> _clientEvents{std::make_shared<EventSystem>()};

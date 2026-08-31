@@ -8,6 +8,7 @@
 #include "enums/GameMode.h"
 #include "enums/ObstacleType.h"
 #include "enums/Faction.h"
+#include "enums/TextureType.h"
 
 Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 				   const std::shared_ptr<EventSystem>& events, const Uuid uuid, const GameMode gameMode,
@@ -21,16 +22,23 @@ Obstacle::Obstacle(const ObjRectangle rect, const int health, std::string name,
 	, _events(events)
 	, _gameMode{gameMode}
 	, _obstacleType(obstacleType)
+{}
+
+Obstacle::~Obstacle() = default;
+
+void Obstacle::Activate()
 {
-	//NOTE: safe in a constructor only because nothing here is virtual - a leaf adds its own
-	//subscriptions from its own constructor, once it is complete
+	Subscribe();
+
 	if (IsClient(_gameMode))
 	{
 		SubscribeAsClient();
 	}
 }
 
-Obstacle::~Obstacle() = default;
+void Obstacle::Deactivate() { _subs.clear(); }
+
+void Obstacle::Subscribe() {}
 
 void Obstacle::SubscribeAsClient()
 {
@@ -44,9 +52,38 @@ void Obstacle::OnHealthChanged(const HealthChangedEvent& event) { SetHealth(even
 
 void Obstacle::OnDespawned(const DespawnedEvent&) { SetIsAlive(false); }
 
+namespace
+{
+//NOTE: Water animates instead of drawing a still, and Fortress never reaches an instance - the ring
+//around the eagle is built out of brick and steel walls
+[[nodiscard]] constexpr TextureType TextureOf(const ObstacleType type)
+{
+	switch (type)
+	{
+		case ObstacleType::Brick:
+			return TextureType::BrickWall;
+		case ObstacleType::Steel:
+			return TextureType::SteelWall;
+		case ObstacleType::Eagle:
+			return TextureType::Eagle;
+		case ObstacleType::Bush:
+			return TextureType::Bush;
+		case ObstacleType::Ice:
+			return TextureType::Ice;
+		case ObstacleType::None:
+		case ObstacleType::Fortress:
+		case ObstacleType::Water:
+		case ObstacleType::lastId:
+			break;
+	}
+
+	return TextureType::None;
+}
+}//namespace
+
 void Obstacle::Draw() const
 {
-	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .name = _name});
+	_events->EmitEvent(DrawObjEvent{.rect = _rect, .dir = Direction::UP, .texture = TextureOf(_obstacleType)});
 }
 
 void Obstacle::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)

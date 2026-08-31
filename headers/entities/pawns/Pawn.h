@@ -18,6 +18,7 @@ class EventSystem;
 class GameConfig;
 struct HealthChangedEvent;
 struct DespawnedEvent;
+struct PosChangedEvent;
 struct TickUpdateEvent;
 
 class Pawn : public BaseObj, public ITickUpdatable
@@ -27,6 +28,9 @@ protected:
 
 public:
 	~Pawn() override;
+
+	void Activate() override;
+	void Deactivate() override;
 
 	//BaseObj overrides
 	void TakeDamage(unsigned int damage, const std::string& author, Faction faction) override;
@@ -59,6 +63,7 @@ protected:
 	void UnsubscribeTickUpdate();
 	void OnTickUpdate(const TickUpdateEvent& event);
 	virtual void OnDespawned(const DespawnedEvent& event);
+	virtual void OnPosChanged(const PosChangedEvent& event);
 
 	//TODO: implement collision detection through quadtree
 	void TickUpdate(double deltaTime) override = 0;
