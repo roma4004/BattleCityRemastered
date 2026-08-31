@@ -1,4 +1,4 @@
-﻿#include "application/GameConfig.h"
+#include "application/GameConfig.h"
 #include "application/LaunchOptions.h"
 
 void GameConfig::Apply(const LaunchOptions& launchOptions)

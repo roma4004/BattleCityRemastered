@@ -1,4 +1,4 @@
-﻿#include "entities/obstacles/BushTile.h"
+#include "entities/obstacles/BushTile.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"

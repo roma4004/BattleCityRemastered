@@ -1,4 +1,4 @@
-﻿#include "entities/pawns/Bullet.h"
+#include "entities/pawns/Bullet.h"
 #include "utils/Log.h"
 #include "application/GameConfig.h"
 #include "behavior/MoveLikeBulletBeh.h"

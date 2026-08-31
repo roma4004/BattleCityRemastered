@@ -1,4 +1,4 @@
-﻿#include "components/AnimatedObjects.h"
+#include "components/AnimatedObjects.h"
 #include "enums/AnimationType.h"
 
 AnimatedObject::AnimatedObject(const std::string& objName, const ObjRectangle objRect, const AnimationType objType,

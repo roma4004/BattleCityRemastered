@@ -1,4 +1,4 @@
-﻿#include "components/managers/AnimationManager.h"
+#include "components/managers/AnimationManager.h"
 #include "utils/Log.h"
 #include "components/AnimatedObjects.h"
 #include "components/events/AnimationRenderEvents.h"

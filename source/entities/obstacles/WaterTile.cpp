@@ -1,4 +1,4 @@
-﻿#include "entities/obstacles/WaterTile.h"
+#include "entities/obstacles/WaterTile.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"
 #include "enums/ObstacleType.h"

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../EventSystem.h"
 #include "components/AnimatedObjects.h"

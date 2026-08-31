@@ -1,4 +1,4 @@
-﻿#include "geometry/Point.h"
+#include "geometry/Point.h"
 #include "TestUtils.h"
 #include "application/GameConfig.h"
 #include "application/ProjectConfig.h"

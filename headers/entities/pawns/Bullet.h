@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Pawn.h"
 #include "entities/BulletCalibre.h"

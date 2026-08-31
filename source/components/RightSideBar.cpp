@@ -1,4 +1,4 @@
-﻿#include "components/RightSideBar.h"
+#include "components/RightSideBar.h"
 #include "application/GameConfig.h"
 #include "components/EventSystem.h"
 #include "components/events/SpawnEvents.h"

@@ -1,4 +1,4 @@
-﻿#include "components/managers/TextureManager.h"
+#include "components/managers/TextureManager.h"
 #include "enums/TextureOffset.h"
 #include "components/EventSystem.h"
 #include "components/events/AnimationRenderEvents.h"

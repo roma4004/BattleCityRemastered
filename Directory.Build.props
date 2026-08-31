@@ -7,4 +7,11 @@
     <OutDir>$(MSBuildThisFileDirectory)build\msbuild\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)build\msbuild\obj\$(Platform)\$(Configuration)\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
+  <!-- Sources are UTF-8 without a BOM: MSVC falls back to the system ANSI codepage unless told
+       otherwise, GCC and clang assume UTF-8 already. -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
+    </ClCompile>
+  </ItemDefinitionGroup>
 </Project>

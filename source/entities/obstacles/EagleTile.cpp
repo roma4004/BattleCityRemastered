@@ -1,4 +1,4 @@
-﻿#include "entities/obstacles/EagleTile.h"
+#include "entities/obstacles/EagleTile.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "enums/ObstacleType.h"

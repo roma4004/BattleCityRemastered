@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
 #include <chrono>

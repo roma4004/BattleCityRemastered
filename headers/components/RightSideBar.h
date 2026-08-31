@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
 #include <memory>

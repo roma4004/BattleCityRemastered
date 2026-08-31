@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "IFortress.h"
 #include "Obstacle.h"

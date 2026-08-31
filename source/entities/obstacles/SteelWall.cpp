@@ -1,4 +1,4 @@
-﻿#include "entities/obstacles/SteelWall.h"
+#include "entities/obstacles/SteelWall.h"
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/StatisticsEvents.h"
