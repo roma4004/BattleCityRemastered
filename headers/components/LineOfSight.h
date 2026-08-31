@@ -13,22 +13,22 @@ class GameConfig;
 class LineOfSight final
 {
 	std::vector<ObjRectangle> _lineOfSightBoundaries{};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
 
 	std::vector<std::shared_ptr<BaseObj>> _upSideObstacles{};
 	std::vector<std::shared_ptr<BaseObj>> _leftSideObstacles{};
 	std::vector<std::shared_ptr<BaseObj>> _downSideObstacles{};
 	std::vector<std::shared_ptr<BaseObj>> _rightSideObstacles{};
 
+	void CheckLineOfSight(bool isWaterSkip, const std::vector<std::shared_ptr<BaseObj>>& objects);
+
 public:
-	LineOfSight(ObjRectangle tankRect, FPoint bulletSize, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	LineOfSight(ObjRectangle tankRect, FPoint bulletSize, const std::vector<std::shared_ptr<BaseObj>>& objects,
 				const GameConfig& gameConfig, bool isWaterSkip = true);
-	LineOfSight(ObjRectangle tankRect, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	LineOfSight(ObjRectangle tankRect, const std::vector<std::shared_ptr<BaseObj>>& objects,
 				const GameConfig& gameConfig, bool isWaterSkip = true);
 
 	~LineOfSight();
 
-	void CheckLineOfSight(bool isWaterSkip);
 	void SortToNearest();
 
 	[[nodiscard]] std::vector<std::shared_ptr<BaseObj>>& GetUpSideObstacles();

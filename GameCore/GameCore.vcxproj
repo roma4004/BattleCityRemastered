@@ -193,9 +193,11 @@
     <ClCompile Include="..\source\network\Serializer.cpp" />
     <ClCompile Include="..\source\utils\ColliderUtils.cpp" />
     <ClCompile Include="..\source\utils\Log.cpp" />
+    <ClCompile Include="..\source\utils\ObjectUtils.cpp" />
     <ClCompile Include="..\source\utils\Timer.cpp" />
     <ClCompile Include="..\source\utils\TimeUtils.cpp" />
     <ClCompile Include="..\source\utils\UuidUtils.cpp" />
+    <ClCompile Include="..\source\utils\WorldQuery.cpp" />
   </ItemGroup>
   <!-- Headers matching the .cpp files above; moved here from BattleCityRemastered.vcxproj so header+impl live in the same project. -->
   <ItemGroup>
@@ -336,6 +338,7 @@
     <ClInclude Include="..\headers\geometry\Point.h" />
     <ClInclude Include="..\headers\utils\ColliderUtils.h" />
     <ClInclude Include="..\headers\utils\Log.h" />
+    <ClInclude Include="..\headers\utils\ObjectUtils.h" />
     <ClInclude Include="..\headers\utils\PixelUtils.h" />
     <ClInclude Include="..\headers\utils\RandUtils.h" />
     <ClInclude Include="..\headers\utils\Timer.h" />
@@ -343,6 +346,7 @@
     <ClInclude Include="..\headers\utils\Uuid.h" />
     <ClInclude Include="..\headers\utils\Fraction.h" />
     <ClInclude Include="..\headers\utils\UuidUtils.h" />
+    <ClInclude Include="..\headers\utils\WorldQuery.h" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>

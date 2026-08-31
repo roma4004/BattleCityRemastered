@@ -33,9 +33,9 @@ protected:
 	BaseObj& operator=(const BaseObj&) = delete;
 	BaseObj& operator=(BaseObj&&) = delete;
 
-public:
 	~BaseObj() override;
 
+public:
 	[[nodiscard]] FPoint GetPos() const;
 	void SetPos(const FPoint& pos);
 	[[nodiscard]] double GetRightSide() const;

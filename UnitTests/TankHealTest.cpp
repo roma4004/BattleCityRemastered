@@ -32,8 +32,8 @@ protected:
 	{
 		_gameConfig.gameMode = GameMode::PlayAsHost;
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
+		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 		_healthSub = _events->AddListener([this](const HealthChangedEvent& event)
 		{
 			_reportedHealth.push_back(event);
@@ -46,7 +46,7 @@ TEST_F(TankHealTest, AMaxedTankStillReportsTheHealth)
 {
 	const std::shared_ptr<Enemy> enemy =
 			TestUtils::CreateTank<Enemy>(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyMaxed", Faction::EnemyTeam, &_allObjects,
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyMaxed", Faction::EnemyTeam, _allObjects,
 					_events, 4u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(std::string{"EnemyMaxed"}), BonusStarPickupEvent{});
@@ -61,7 +61,7 @@ TEST_F(TankHealTest, AnUpgradingTankReportsTheHealthToo)
 {
 	const std::shared_ptr<Enemy> enemy =
 			TestUtils::CreateTank<Enemy>(
-					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyFresh", Faction::EnemyTeam, &_allObjects,
+					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyFresh", Faction::EnemyTeam, _allObjects,
 					_events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(std::string{"EnemyFresh"}), BonusStarPickupEvent{});

@@ -41,7 +41,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
-	, _spawnManager{std::make_unique<SpawnManager>(_events, &_allObjects, gameConfig)}
+	, _spawnManager{std::make_unique<SpawnManager>(_events, _allObjects, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _bonusManager{std::make_unique<BonusManager>(_events, gameConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig)}
@@ -112,7 +112,6 @@ void Game::ApplyGameMode(const GameMode gameMode)
 	_gameConfig.gameMode = gameMode;
 
 	ResetBattlefield();
-	_isEnterLobbyPending = false;
 
 	SetCurrentGameMode(gameMode);
 
@@ -166,10 +165,9 @@ void Game::FlushSpawnQueue()
 
 void Game::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
-	if (event.state == GameState::Lobby)
-	{
-		_isEnterLobbyPending = true;
-	}
+	_gameState = event.state;
+
+	_isEnterLobbyPending = event.state == GameState::Lobby;
 }
 
 void Game::OnMatchStarted(const MatchStartedEvent&)
@@ -184,7 +182,6 @@ void Game::OnMatchStarted(const MatchStartedEvent&)
 void Game::EnterLobby()
 {
 	ResetBattlefield();
-	_events->EmitEvent(SetPauseEvent{.isPaused = true});
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 }
 
@@ -197,16 +194,14 @@ void Game::Run()
 			_events->EmitEvent(FrameStartEvent{});
 			_events->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTime});
 			_events->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTime});
-			TimeUtils::SetPaused(_userInput->IsPause());
+			const bool isRunning = !_userInput->IsPause() && _gameState != GameState::Lobby;
+			TimeUtils::SetPaused(!isRunning);
 
-			if (!_userInput->IsPause())
+			if (isRunning && IsAuthority(_gameMode))
 			{
-				if (IsAuthority(_gameMode))
-				{
-					_events->EmitEvent(RespawnTanksEvent{});
+				_events->EmitEvent(RespawnTanksEvent{});
 
-					_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTime});
-				}
+				_events->EmitEvent(TickUpdateEvent{.deltaTime = _deltaTime});
 			}
 
 			_events->EmitEvent(PostTickUpdateEvent{.deltaTime = _deltaTime});

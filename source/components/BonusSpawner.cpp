@@ -11,9 +11,9 @@
 #include "entities/bonuses/Bonus.h"
 #include "enums/BonusType.h"
 #include "enums/GameMode.h"
-#include "utils/ColliderUtils.h"
 #include "utils/RandUtils.h"
 #include "utils/UuidUtils.h"
+#include "utils/WorldQuery.h"
 #include <algorithm>
 
 class BaseObj;
@@ -26,7 +26,7 @@ constexpr int kSuperBonusOdds{5};
 }//namespace
 
 BonusSpawner::BonusSpawner(const std::shared_ptr<EventSystem>& events,
-						   std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig)
+						   const std::vector<std::shared_ptr<BaseObj>>& allObjects, const GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
 	, _distSpawnType{kFirstSpawnableBonusId, kLastSpawnableBonusId}
@@ -109,12 +109,7 @@ void BonusSpawner::Update(const TickUpdateEvent&)
 		const auto x = static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosX));
 		const auto y = static_cast<double>(RandUtils::GetRandNumber(_distSpawnPosY));
 		const ObjRectangle rect{.x = x, .y = y, .w = size, .h = size};
-		const bool isFreeSpawnSpot = !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
-		{
-			return ColliderUtils::IsCollide(rect, object->GetRect());
-		});
-
-		if (isFreeSpawnSpot)
+		if (WorldQuery::IsSpotFree(_allObjects, rect))
 		{
 			SpawnRandomBonus(rect);
 			_spawnTimer.Reset();

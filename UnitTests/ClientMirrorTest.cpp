@@ -39,9 +39,9 @@ protected:
 	{
 		_gameConfig.gameMode = GameMode::PlayAsClient;
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
-		_bonusSpawner = std::make_unique<BonusSpawner>(_events, &_allObjects, _gameConfig);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
+		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		_bonusSpawner = std::make_unique<BonusSpawner>(_events, _allObjects, _gameConfig);
 		_healthSub = _events->AddListener([this](const HealthChangedEvent& event)
 		{
 			_reportedHealth.push_back(event);
@@ -55,7 +55,7 @@ TEST_F(ClientMirrorTest, AClientTakesHealthOffTheWireInsteadOfHealingItself)
 	const std::shared_ptr<Enemy> enemy =
 			TestUtils::CreateTank<Enemy>(
 					_tankRect, _tankHealth, UuidUtils::GetRandomUuid(), "EnemyMirrored", Faction::EnemyTeam,
-					&_allObjects, _events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool,
+					_allObjects, _events, 1u, _gameConfig.tankSpeed, Direction::UP, _gameConfig.gameMode, _bulletPool,
 					_gameConfig);
 
 	_events->EmitEvent(Key(std::string{"EnemyMirrored"}), BonusStarPickupEvent{});

@@ -27,7 +27,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_statistics = std::make_shared<GameStatistics>(_events);
 		const double gridSize = _gameConfig.gridOffset;
 		_tankSize = gridSize * 3.0;// for better turns
@@ -52,7 +52,7 @@ protected:
 		const ObjRectangle rectBullet{.x = pos.x, .y = pos.y, .w = calibre.size.x, .h = calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, std::move(name), faction, &_allObjects,
+						rectBullet, _bulletHealth, _uuid, std::move(name), faction, _allObjects,
 						_events, calibre, dir, _gameMode, _gameConfig, std::move(author));
 		_allObjects.emplace_back(bullet);
 	}

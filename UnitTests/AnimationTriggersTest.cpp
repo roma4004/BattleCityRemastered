@@ -47,9 +47,9 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(8u);
-		_bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
+		_bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
 
 		_subs.push_back(_events->AddListener([this](const AnimationCreateBulletExplosionEvent& event)
 		{
@@ -74,7 +74,7 @@ protected:
 TEST_F(AnimationTriggersTest, BulletExplodesWhereItHit)
 {
 	const ObjRectangle bulletRect{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
+	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
 										  _events, _calibre, Direction::DOWN, GameMode::OnePlayer, _gameConfig,
 										  "Player1");
 	_allObjects.emplace_back(bullet);
@@ -92,7 +92,7 @@ TEST_F(AnimationTriggersTest, BulletExplodesWhereItHit)
 TEST_F(AnimationTriggersTest, ClientBulletExplodesOnDespawn)
 {
 	const ObjRectangle bulletRect{.x = 20.0, .y = 30.0, .w = _calibre.size.x, .h = _calibre.size.y};
-	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
+	auto bullet = TestUtils::CreateBullet(bulletRect, _health, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
 										  _events, _calibre, Direction::DOWN, GameMode::PlayAsClient, _gameConfig,
 										  "Player1");
 	_allObjects.emplace_back(bullet);
@@ -111,7 +111,7 @@ TEST_F(AnimationTriggersTest, TankExplodesWhereItDied)
 {
 	constexpr ObjRectangle tankRect{.x = 40.0, .y = 50.0, .w = 12.0, .h = 12.0};
 	auto tank = TestUtils::CreateTank<Player>(tankRect, _health, _uuid, "Player1", Faction::PlayerTeam,
-											  &_allObjects, _events, 1u, 142.0, Direction::UP,
+											  _allObjects, _events, 1u, 142.0, Direction::UP,
 											  GameMode::OnePlayer, _bulletPool, _gameConfig);
 
 	tank->TakeDamage(static_cast<unsigned int>(tank->GetHealth()), "Enemy1", Faction::EnemyTeam);
@@ -126,7 +126,7 @@ TEST_F(AnimationTriggersTest, ALiveTankTakenOffTheFieldExplodesNothing)
 {
 	{
 		auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health,
-												  _uuid, "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u,
+												  _uuid, "Player1", Faction::PlayerTeam, _allObjects, _events, 1u,
 												  142.0, Direction::UP, GameMode::OnePlayer, _bulletPool,
 												  _gameConfig);
 	}
@@ -138,7 +138,7 @@ TEST_F(AnimationTriggersTest, SpawnedTankAsksForItsSpawnBurst)
 {
 	std::shared_ptr<RespawnManager> respawnManager{nullptr};
 	std::shared_ptr<TankSpawner> tankSpawner{nullptr};
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, respawnManager, tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, respawnManager, tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 
@@ -160,7 +160,7 @@ TEST_F(AnimationTriggersTest, WaterTileAsksForItsFlowWhenBuilt)
 TEST_F(AnimationTriggersTest, HelmetPickupTurnsTheShieldOnAndOff)
 {
 	auto tank = TestUtils::CreateTank<Player>(ObjRectangle{.x = 0.0, .y = 0.0, .w = 12.0, .h = 12.0}, _health, _uuid,
-											  "Player1", Faction::PlayerTeam, &_allObjects, _events, 1u, 142.0,
+											  "Player1", Faction::PlayerTeam, _allObjects, _events, 1u, 142.0,
 											  Direction::UP, GameMode::OnePlayer, _bulletPool, _gameConfig);
 
 	_events->EmitEvent(Key(std::string{"Player1"}), BonusHelmetStatusChangeEvent{.isActive = true});

@@ -279,7 +279,7 @@ std::shared_ptr<BaseObj> Bot::HandleLineOfSight()
 void Bot::SetRandomDirection(const double deltaTime, const bool excludeCurrentDirection)
 {
 	const std::optional<Direction> excludeDirection{excludeCurrentDirection ? std::optional{_dir} : std::nullopt};
-	const std::vector<Direction> freePath{_moveBeh->GetFreePathSides(deltaTime, excludeDirection)};
+	const std::vector<Direction> freePath{_moveBeh->GetFreePathSides(deltaTime, excludeDirection, _allObjects)};
 
 	if (!freePath.empty())
 	{
@@ -331,7 +331,7 @@ void Bot::TickUpdate(const double deltaTime)
 		SetRandomDirection(deltaTime);
 	}
 
-	const bool isMove = _moveBeh->Move(_dir, deltaTime, outCollisions);
+	const bool isMove = _moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions);
 	if (!isMove)
 	{
 		// NOTE: bot got stuck against an obstacle, so pick among the remaining 3 sides, excluding the blocked one
@@ -354,7 +354,7 @@ void Bot::TickUpdate(const double deltaTime)
 	if (_effects.isTouchTheIce)
 	{
 		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
-			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
+			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
 		{
 			const FPoint pos = GetPos();
 			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});

@@ -91,8 +91,9 @@ private:
 	bool _reconnectPending{false};
 	//NOTE: tells our own cancellation apart from a dropped link, so teardown does not reconnect
 	std::atomic<bool> _isShuttingDown{false};
-	//NOTE: same, from the other end - the EOF after a goodbye is expected, so no reconnect
-	std::atomic<bool> _isHostGone{false};
+	//NOTE: a goodbye is not one of these - the host sends it while restarting the same mode, and
+	//the client is the only side that can dial back
+	std::atomic<bool> _isLinkUnrecoverable{false};
 	unsigned char _reconnectAttempts{0u};
 	//NOTE: one drop can be reported twice, by the read and by the write - give up once
 	bool _reconnectAbandoned{false};

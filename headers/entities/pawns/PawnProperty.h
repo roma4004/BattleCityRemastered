@@ -12,7 +12,7 @@ class EventSystem;
 struct PawnProperty
 {
 	BaseObjProperty baseObjProperty{};
-	std::vector<std::shared_ptr<BaseObj>>* allObjects{nullptr};
+	const std::vector<std::shared_ptr<BaseObj>>& allObjects;
 	std::shared_ptr<EventSystem> events{nullptr};
 	unsigned short tier{1u};
 	double speed{};

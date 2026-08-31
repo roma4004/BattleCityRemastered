@@ -22,7 +22,7 @@ class FortressManager final
 		std::weak_ptr<BaseObj> wall;
 	};
 
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
 	std::vector<Spot> _spots{};
@@ -32,12 +32,11 @@ class FortressManager final
 	void OnBonusShovel(const BonusShovelStatusChangeEvent& event);
 	void OnGameReset(const GameResetEvent&);
 
-	[[nodiscard]] bool IsSpotFree(const ObjRectangle& rect) const;
 	void ClearSpot(const Spot& spot) const;
 	void Rebuild(const Spot& spot, ObstacleType material) const;
 
 public:
-	FortressManager(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects);
+	FortressManager(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects);
 
 	~FortressManager();
 };

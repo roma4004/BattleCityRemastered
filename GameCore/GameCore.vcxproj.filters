@@ -276,6 +276,9 @@
     <ClCompile Include="..\source\utils\Log.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\utils\ObjectUtils.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\utils\Timer.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
@@ -283,6 +286,9 @@
       <Filter>source\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\source\utils\UuidUtils.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\utils\WorldQuery.cpp">
       <Filter>source\utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -701,6 +707,9 @@
     <ClInclude Include="..\headers\utils\Log.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\headers\utils\ObjectUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\headers\utils\PixelUtils.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
@@ -717,6 +726,9 @@
       <Filter>headers\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\headers\utils\UuidUtils.h">
+      <Filter>headers\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\headers\utils\WorldQuery.h">
       <Filter>headers\utils</Filter>
     </ClInclude>
   </ItemGroup>

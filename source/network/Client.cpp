@@ -91,7 +91,7 @@ void Client::ScheduleReconnect()
 		return;
 	}
 
-	if (_isHostGone || _reconnectAttempts >= kMaxReconnectAttempts)
+	if (_isLinkUnrecoverable || _reconnectAttempts >= kMaxReconnectAttempts)
 	{
 		if (!_reconnectAbandoned)
 		{
@@ -134,7 +134,7 @@ void Client::HandleDisconnect()
 	_isConnected = false;
 	_channel->SetWriteEnabled(false);
 
-	if (_isHostGone)
+	if (_isLinkUnrecoverable)
 	{
 		_channel->Close();
 	}
@@ -468,7 +468,7 @@ void Client::OnDisconnect(const AnyCommand& command)
 
 	//NOTE: on the network thread, not in the queued lambda - the EOF arrives well before the game
 	//thread drains the queue, and HandleDisconnect must already know why
-	_isHostGone = true;
+	_isLinkUnrecoverable = reason == DisconnectReason::ProtocolError;
 
 	_commandQueue.Enqueue([this, reason]()
 	{

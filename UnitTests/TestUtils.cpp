@@ -7,7 +7,7 @@
 #include "entities/pawns/Player.h"
 
 void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
-							   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig,
+							   const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
 							   const GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
 							   std::shared_ptr<TankSpawner>& tankSpawner)
 {
@@ -21,8 +21,8 @@ void TestUtils::ApplyGameMode(const std::shared_ptr<EventSystem>& events,
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
 		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
-		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
-		double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+		unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig)
 {
 	BaseObjProperty baseObjProperty{

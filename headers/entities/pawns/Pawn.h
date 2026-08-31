@@ -43,7 +43,7 @@ protected:
 	double _speed{};
 	std::string _uuidStr{};
 	unsigned short _tier{1u};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::unique_ptr<IMoveBeh> _moveBeh{nullptr};
 	Direction _dir{};

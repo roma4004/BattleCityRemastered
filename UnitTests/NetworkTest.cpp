@@ -434,7 +434,7 @@ TEST_F(NetworkTest, ClientReconnectsAfterEstablishedLinkDrops)
 	ASSERT_TRUE(PumpUntil([&client] { return client->IsConnected(); }));
 	ASSERT_TRUE(PumpUntil([&readySignals] { return readySignals == 1; })) << "host never got the first ready";
 
-	//NOTE: Abort, not just reset - an announced leave stops the reconnect, and this test wants one
+	//NOTE: Abort, not just reset - this test is about a link that dies without a goodbye
 	server->Abort();
 	server.reset();
 
@@ -493,7 +493,7 @@ TEST_F(NetworkTest, HostLearnsTheClientDroppedWithoutSayingGoodbye)
 }
 
 //NOTE: like the reconnection test above - about the link, not about a command riding it
-TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
+TEST_F(NetworkTest, HostShutdownTellsClientWhyAndKeepsTheReconnect)
 {
 	auto server = MakeHost();
 	const uint16_t port = server->GetBoundPort();
@@ -513,17 +513,14 @@ TEST_F(NetworkTest, HostShutdownTellsClientWhyAndStopsTheReconnect)
 	ASSERT_TRUE(PumpUntil([&received] { return received.has_value(); })) << "client never got the host's goodbye";
 	EXPECT_EQ(DisconnectReason::HostShutdown, *received);
 
-	//NOTE: comes from the branch that decides not to reconnect - no need to outwait a retry period
-	ASSERT_TRUE(PumpUntil([&gaveUp] { return gaveUp; }))
-			<< "client never gave up on the host that said it was leaving on purpose";
-
 	if (!ReboundHost(server, port))
 	{
 		GTEST_SKIP() << "port " << port << " still held by the OS - nothing to test against";
 	}
 
-	Pump();
-	EXPECT_FALSE(client->IsConnected()) << "client reconnected after the host said it was leaving on purpose";
+	EXPECT_TRUE(PumpUntil([&client] { return client->IsConnected(); }, std::chrono::milliseconds{10000}))
+			<< "client did not dial back the host that only announced a restart";
+	EXPECT_FALSE(gaveUp) << "client gave up on a host that was restarting the same mode";
 }
 
 TEST_F(NetworkTest, ClientQuitTellsHostWhy)

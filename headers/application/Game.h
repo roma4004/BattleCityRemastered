@@ -2,6 +2,7 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
+#include "enums/GameState.h"
 #include <chrono>
 #include <memory>
 #include <vector>
@@ -112,6 +113,7 @@ private:
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
+	GameState _gameState{};
 	//NOTE: deferred to PostTickUpdate - the peer goes away mid-frame, and the field may be mid-iteration
 	bool _isEnterLobbyPending{false};
 };

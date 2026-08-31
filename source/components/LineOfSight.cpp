@@ -5,13 +5,13 @@
 #include "entities/obstacles/WaterTile.h"
 #include "enums/Direction.h"
 #include "utils/ColliderUtils.h"
+#include "utils/ObjectUtils.h"
 #include <algorithm>
 
 //Used for checking line of sight for bullets, so range is bullet width and height 
 LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
-						 std::vector<std::shared_ptr<BaseObj>>* allObjects, const GameConfig& gameConfig,
+						 const std::vector<std::shared_ptr<BaseObj>>& objects, const GameConfig& gameConfig,
 						 const bool isWaterSkip)
-	: _allObjects{allObjects}
 {
 	const FPoint tankHalf{.x = tankRect.w / 2.0, .y = tankRect.h / 2.0};
 
@@ -39,13 +39,12 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, const FPoint bulletSize,
 			{.x = bulletSpawnPosDown.x, .y = bulletSpawnPosDown.y, .w = bulletSize.x, .h = sightSizeDown},
 			{.x = bulletSpawnPosRight.x, .y = bulletSpawnPosRight.y, .w = sightSizeRight, .h = bulletSize.y}};
 
-	CheckLineOfSight(isWaterSkip);
+	CheckLineOfSight(isWaterSkip, objects);
 }
 
 //Used for checking can tank reach the bonus, so range is tank width and height 
-LineOfSight::LineOfSight(const ObjRectangle tankRect, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+LineOfSight::LineOfSight(const ObjRectangle tankRect, const std::vector<std::shared_ptr<BaseObj>>& objects,
 						 const GameConfig& gameConfig, const bool isWaterSkip)
-	: _allObjects{allObjects}
 {
 	const double sightSizeUp{std::max(0.0, tankRect.y - 1.0)};
 	const double sightSizeLeft{std::max(0.0, tankRect.x - 1.0)};
@@ -58,16 +57,21 @@ LineOfSight::LineOfSight(const ObjRectangle tankRect, std::vector<std::shared_pt
 			{.x = tankRect.x, .y = tankRect.y + tankRect.h + 1, .w = tankRect.w, .h = sightSizeDown},
 			{.x = tankRect.x + tankRect.w + 1, .y = tankRect.y, .w = sightSizeRight, .h = tankRect.h}};
 
-	CheckLineOfSight(isWaterSkip);
+	CheckLineOfSight(isWaterSkip, objects);
 }
 
 LineOfSight::~LineOfSight() = default;
 
-void LineOfSight::CheckLineOfSight(const bool isWaterSkip = false)
+void LineOfSight::CheckLineOfSight(const bool isWaterSkip, const std::vector<std::shared_ptr<BaseObj>>& objects)
 {
 	// parse all seen in Line Of Sight obj
-	for (std::shared_ptr<BaseObj>& object: *_allObjects)
+	for (const std::shared_ptr<BaseObj>& object: objects)
 	{
+		if (!ObjectUtils::IsAlive(object))
+		{
+			continue;
+		}
+
 		const ObjRectangle& upSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::UP)];
 		const ObjRectangle& leftSightRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::LEFT)];
 		const ObjRectangle& downSideRect = _lineOfSightBoundaries[static_cast<size_t>(Direction::DOWN)];

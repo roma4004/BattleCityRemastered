@@ -33,6 +33,9 @@
     <ClCompile Include="BotsTest.cpp">
       <Filter></Filter>
     </ClCompile>
+    <ClCompile Include="BulletPoolTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
     <ClCompile Include="BulletsTestAdvanced.cpp">
       <Filter></Filter>
     </ClCompile>
@@ -43,6 +46,9 @@
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="CoopBotTest.cpp">
+      <Filter></Filter>
+    </ClCompile>
+    <ClCompile Include="DeadObjectFilterTest.cpp">
       <Filter></Filter>
     </ClCompile>
     <ClCompile Include="EnemyBotTest.cpp">

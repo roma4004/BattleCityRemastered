@@ -55,7 +55,17 @@ void Pawn::SubscribeTickUpdate()
 	}
 }
 
-void Pawn::OnTickUpdate(const TickUpdateEvent& event) { TickUpdate(event.deltaTime); }
+void Pawn::OnTickUpdate(const TickUpdateEvent& event)
+{
+	//NOTE: a pawn killed earlier in this same tick keeps its subscription until PostTickUpdate,
+	//so the broadcast still reaches it - a corpse neither moves nor shoots
+	if (!GetIsAlive())
+	{
+		return;
+	}
+
+	TickUpdate(event.deltaTime);
+}
 
 void Pawn::UnsubscribeTickUpdate() { _tickUpdateSub = EventSubscription{}; }
 
@@ -67,11 +77,6 @@ void Pawn::Unsubscribe()
 
 void Pawn::TakeDamage(const unsigned int damage, const std::string& author, Faction faction)
 {
-	if (!GetIsAlive())
-	{
-		return;
-	}
-
 	BaseObj::TakeDamage(damage, author, faction);
 
 	if (IsHost(_gameMode))

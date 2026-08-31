@@ -158,7 +158,7 @@ TEST(ObstacleSpawnerTest, ClientGivesTheEagleTheSameSpanTheMapDoes)
 {
 	auto events = std::make_shared<EventSystem>();
 	std::vector<std::shared_ptr<BaseObj>> allObjects;
-	auto spawnQueueSub = TestUtils::WireSpawnQueue(events, &allObjects);
+	auto spawnQueueSub = TestUtils::WireSpawnQueue(events, allObjects);
 
 	GameConfig gameConfig{};
 	gameConfig.gameMode = GameMode::PlayAsClient;

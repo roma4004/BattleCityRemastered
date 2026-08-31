@@ -18,7 +18,7 @@ class GameConfig;
 class SpawnManager
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 
@@ -33,7 +33,7 @@ class SpawnManager
 	void OnGameModeChangedTo(const GameModeChangedToEvent&);
 
 public:
-	SpawnManager(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	SpawnManager(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				 const GameConfig& gameConfig);
 
 	~SpawnManager();

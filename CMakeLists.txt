@@ -100,9 +100,11 @@ set(GAME_CORE_SOURCES
         source/network/Serializer.cpp
         source/utils/ColliderUtils.cpp
         source/utils/Log.cpp
+        source/utils/ObjectUtils.cpp
         source/utils/TimeUtils.cpp
         source/utils/Timer.cpp
         source/utils/UuidUtils.cpp
+        source/utils/WorldQuery.cpp
 )
 
 set(UNIT_TESTS_SOURCES
@@ -112,11 +114,13 @@ set(UNIT_TESTS_SOURCES
         UnitTests/BonusTestDestroy.cpp
         UnitTests/BonusTestEnemy.cpp
         UnitTests/BotsTest.cpp
+        UnitTests/BulletPoolTest.cpp
         UnitTests/MapTest.cpp
         UnitTests/BulletsTestAdvanced.cpp
         UnitTests/BulletsTestBasic.cpp
         UnitTests/CommandLineParserTest.cpp
         UnitTests/CoopBotTest.cpp
+        UnitTests/DeadObjectFilterTest.cpp
         UnitTests/EnemyBotTest.cpp
         UnitTests/GameStateManagerTest.cpp
         UnitTests/GameStateTest.cpp

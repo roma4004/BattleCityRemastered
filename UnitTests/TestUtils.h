@@ -20,16 +20,16 @@ class TestUtils
 {
 public:
 	static void ApplyGameMode(const std::shared_ptr<EventSystem>& events,
-							   std::vector<std::shared_ptr<BaseObj>>* allObjects, GameConfig& gameConfig,
+							   const std::vector<std::shared_ptr<BaseObj>>& allObjects, GameConfig& gameConfig,
 							   GameMode gameMode, std::shared_ptr<RespawnManager>& respawnManager,
 							   std::shared_ptr<TankSpawner>& tankSpawner);
 
 	[[nodiscard]] static EventSubscription WireSpawnQueue(const std::shared_ptr<EventSystem>& events,
-														  std::vector<std::shared_ptr<BaseObj>>* allObjects)
+														  std::vector<std::shared_ptr<BaseObj>>& allObjects)
 	{
-		return events->AddListener([allObjects](const AddToSpawnQueueEvent& event)
+		return events->AddListener([objects = &allObjects](const AddToSpawnQueueEvent& event)
 		{
-			allObjects->emplace_back(event.obj);
+			objects->emplace_back(event.obj);
 		});
 	}
 
@@ -66,14 +66,15 @@ public:
 	template<class T>
 	[[nodiscard]] static std::shared_ptr<T> CreateTank(
 			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
-			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
-			double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+			unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 			const GameConfig& gameConfig);
 
 	[[nodiscard]] static std::shared_ptr<Bullet> CreateBullet(
 			ObjRectangle rect, int health, Uuid uuid, std::string name, Faction faction,
-			std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events,
-			const BulletCalibre& calibre, Direction dir, GameMode gameMode, const GameConfig& gameConfig, std::string author)
+			const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+			const BulletCalibre& calibre, Direction dir, GameMode gameMode, const GameConfig& gameConfig,
+			std::string author)
 	{
 		BaseObjProperty baseObjProperty{
 				.rect = rect,
@@ -99,7 +100,7 @@ public:
 
 template<class T>
 std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uuid, std::string name,
-										 Faction faction, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+										 Faction faction, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 										 std::shared_ptr<EventSystem> events,
 										 unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode,
 										 std::shared_ptr<BulletPool> bulletPool,
@@ -126,8 +127,8 @@ std::shared_ptr<T> TestUtils::CreateTank(ObjRectangle rect, int health, Uuid uui
 template<>
 [[nodiscard]] std::shared_ptr<Player> TestUtils::CreateTank<Player>(
 		ObjRectangle rect, int tankHealth, Uuid uuid, std::string name, Faction faction,
-		std::vector<std::shared_ptr<BaseObj>>* allObjects, std::shared_ptr<EventSystem> events, unsigned short tier,
-		double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
+		const std::vector<std::shared_ptr<BaseObj>>& allObjects, std::shared_ptr<EventSystem> events,
+		unsigned short tier, double tankSpeed, Direction dir, GameMode gameMode, std::shared_ptr<BulletPool> bulletPool,
 		const GameConfig& gameConfig);
 
 //NOTE: an epsilon comparison is not transitive, so it is no equivalence relation and has no

@@ -31,7 +31,7 @@ void Player::Move(const Direction direction, const double deltaTime,
 		SetDirection(direction);
 	}
 
-	if (const bool isMove = _moveBeh->Move(direction, deltaTime, outCollisions);
+	if (const bool isMove = _moveBeh->Move(direction, deltaTime, _allObjects, outCollisions);
 		isNewDir || isMove)
 	{
 		const FPoint pos = GetPos();
@@ -75,7 +75,7 @@ void Player::TickUpdate(const double deltaTime)
 	if (_effects.isTouchTheIce)
 	{
 		if (auto* moveBeh = dynamic_cast<MoveLikeTankBeh*>(_moveBeh.get());
-			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime))
+			moveBeh && moveBeh->ApplyMoveVelocity(deltaTime, _allObjects))
 		{
 			const FPoint pos = GetPos();
 			_events->EmitEvent(AnimationTankUpdateEvent{.name = GetName(), .pos = pos, .dir = _dir});

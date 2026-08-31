@@ -6,10 +6,21 @@
 #include "utils/Log.h"
 #include <algorithm>
 #include <boost/asio/strand.hpp>
+#include <chrono>
 #include <mutex>
+#include <string>
+#include <thread>
 
 namespace network::commands
 {
+namespace
+{
+//NOTE: only allocation and serialization reach the catch below - the socket write reports through
+//its own completion handler - so this is a shape kept for UDP, where delivery is not guaranteed
+constexpr unsigned kMaxSendAttempts{3u};
+constexpr std::chrono::milliseconds kSendRetryPause{5};
+}//namespace
+
 Server::Server(boost::asio::io_context& ioContext, std::string host, uint16_t port,
 			   const std::shared_ptr<EventSystem>& events)
 	: _acceptor{tcp::acceptor(ioContext, tcp::endpoint(boost::asio::ip::make_address(host), port))}
@@ -26,42 +37,60 @@ void Server::StartSendThread()
 	_isRunning.store(true);
 	_sendThread = std::thread([this]()
 	{
-		while (this->_isRunning.load())
+		//NOTE: a frame being sent is held here instead of going back into the queue - re-queuing put it
+		//behind fresher frames and shuffled the order of the state the client sees
+		CommandBatch inFlight;
+		unsigned attempt{0u};
+
+		const auto onSendFailed = [&inFlight, &attempt](const std::string& what)
 		{
-			CommandBatch batch;
+			Log::Error("Server send thread: " + what);
+
+			if (++attempt >= kMaxSendAttempts)
 			{
-				std::unique_lock<std::mutex> lock(this->_sendQueueMutex);
-				this->_sendCondition.wait(
-						lock, [this] { return !this->_sendQueue.empty() || !this->_isRunning.load(); });
+				Log::Error("Server send thread: frame dropped after " + std::to_string(attempt) + " attempts");
+				inFlight.commands.clear();
+				attempt = 0u;
 
-				if (!this->_isRunning.load())
-					break;
-
-				if (this->_sendQueue.empty())
-					continue;
-
-				batch = std::move(this->_sendQueue.front());
-				this->_sendQueue.pop();
+				return;
 			}
 
-			if (!batch.commands.empty())
-			{
-				try
-				{
-					SendCommand(batch);
-				}
-				catch (const std::exception& e)
-				{
-					Log::Error(std::string("Server send thread: ") + e.what());
+			//NOTE: without it a permanent failure spins the thread at full speed
+			std::this_thread::sleep_for(kSendRetryPause);
+		};
 
-					// retry send
-					std::scoped_lock lock(this->_sendQueueMutex);
-					this->_sendQueue.push(std::move(batch));
-				}
-				catch (...)
+		while (_isRunning.load())
+		{
+			if (inFlight.commands.empty())
+			{
+				std::unique_lock lock(_sendQueueMutex);
+				_sendCondition.wait(lock, [this] { return !_sendQueue.empty() || !_isRunning.load(); });
+
+				if (!_isRunning.load())
 				{
-					Log::Error("Server send thread error: unknown exception");
+					break;
 				}
+
+				//NOTE: an idle frame queues an empty batch - taken off the queue and skipped, not sent
+				inFlight = std::move(_sendQueue.front());
+				_sendQueue.pop();
+
+				continue;
+			}
+
+			try
+			{
+				SendCommand(inFlight);
+				inFlight.commands.clear();
+				attempt = 0u;
+			}
+			catch (const std::exception& e)
+			{
+				onSendFailed(e.what());
+			}
+			catch (...)
+			{
+				onSendFailed("unknown exception");
 			}
 		}
 	});

@@ -24,7 +24,7 @@
 Tank::Tank(PawnProperty pawnProperty, const std::shared_ptr<BulletPool>& bulletPool, const GameConfig& gameConfig)
 	: Pawn{std::move(pawnProperty), gameConfig, kCollision}
 {
-	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _allObjects, _effects, gameConfig);
+	_moveBeh = std::make_unique<MoveLikeTankBeh>(_rect, _dir, _speed, _uuid, _effects, gameConfig);
 	_calibre = BulletCalibre{.speed = 300.0,
 							 .damage = 15,
 							 .damageRadius = 18.0,
@@ -302,7 +302,7 @@ void Tank::OnPosChanged(const PosChangedEvent& event)
 
 bool Tank::IsTouchBush() const
 {
-	auto bushCollisionsFilter = *_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	auto bushCollisionsFilter = _allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
 	{
 		return _uuid != object->GetUuid()
 			   && ColliderUtils::IsCollide(_rect, object->GetRect())
@@ -314,7 +314,7 @@ bool Tank::IsTouchBush() const
 
 bool Tank::IsTouchIce() const
 {
-	auto bushCollisionsFilter = *_allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
+	auto bushCollisionsFilter = _allObjects | std::views::filter([this](const std::shared_ptr<BaseObj>& object)
 	{
 		return _uuid != object->GetUuid()
 			   && ColliderUtils::IsCollide(_rect, object->GetRect())

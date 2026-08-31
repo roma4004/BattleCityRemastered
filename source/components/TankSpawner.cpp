@@ -25,10 +25,11 @@
 #include "utils/TimeUtils.h"
 #include "utils/Uuid.h"
 #include "utils/UuidUtils.h"
+#include "utils/WorldQuery.h"
 #include <algorithm>
 #include <memory>
 
-TankSpawner::TankSpawner(const GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+TankSpawner::TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 						 const std::shared_ptr<EventSystem>& events)
 	: _allObjects{allObjects}
 	, _events{events}
@@ -107,12 +108,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 	const double randomX = RandUtils::GetRandNumber(distRandX);
 
 	ObjRectangle spawnPos{.x = randomX, .y = 0, .w = tankSize, .h = tankSize};
-	auto isCollidePredicate = [&spawnPos](const auto& object)
-	{
-		return ColliderUtils::IsCollide(spawnPos, object->GetRect());
-	};
-
-	if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+	if (WorldQuery::IsSpotFree(_allObjects, spawnPos))
 	{
 		rect = spawnPos;
 	}
@@ -122,7 +118,7 @@ ObjRectangle TankSpawner::GetEnemyRandomPosX(const TankType type) const
 		while (spawnX < maxX)
 		{
 			spawnPos.x = spawnX;
-			if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+			if (WorldQuery::IsSpotFree(_allObjects, spawnPos))
 			{
 				rect = spawnPos;
 				break;
@@ -205,12 +201,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 
 	ObjRectangle rect{.x = -1.0, .y = -1.0, .w = tankSize, .h = tankSize};
 	ObjRectangle spawnPos{.x = randomX, .y = battleFieldSizeY - tankSize, .w = tankSize, .h = tankSize};
-	auto isCollidePredicate = [&spawnPos](const auto& object)
-	{
-		return ColliderUtils::IsCollide(spawnPos, object->GetRect());
-	};
-
-	if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+	if (WorldQuery::IsSpotFree(_allObjects, spawnPos))
 	{
 		rect = spawnPos;
 	}
@@ -220,7 +211,7 @@ ObjRectangle TankSpawner::GetPlayerRandomPosX(const bool isFirst) const
 		while (spawnX < maxX)
 		{
 			spawnPos.x = spawnX;
-			if (!std::ranges::any_of(*_allObjects, isCollidePredicate))
+			if (WorldQuery::IsSpotFree(_allObjects, spawnPos))
 			{
 				rect = spawnPos;
 				break;

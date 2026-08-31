@@ -5,10 +5,13 @@
 #include "components/EventSystem.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/ObjectLifecycleEvents.h"
+#include "components/events/TimingEvents.h"
 #include "entities/pawns/Bullet.h"
 #include "entities/pawns/PawnProperty.h"
+#include <algorithm>
+#include <iterator>
 
-BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 					   const GameConfig& gameConfig)
 	: _events{events}
 	, _allObjects{allObjects}
@@ -17,7 +20,7 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<s
 	// Pre-generate 20 default bullets
 	for (size_t i = 0u; i < 20u; ++i)
 	{
-		_bullets.push(CreateNewBullet());
+		_free.push(CreateNewBullet());
 	}
 
 	Subscribe();
@@ -26,77 +29,79 @@ BulletPool::BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<s
 void BulletPool::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &BulletPool::OnGameReset));
+	_subs.push_back(_events->AddListener(this, &BulletPool::OnPostTickUpdate));
 }
 
 void BulletPool::OnGameReset(const GameResetEvent&) { Clear(); }
 
-std::shared_ptr<Bullet> BulletPool::CreateNewBullet()
+std::shared_ptr<Bullet> BulletPool::CreateNewBullet() const
 {
 	PawnProperty pawnProperty{.baseObjProperty = {},
 							  .allObjects = _allObjects,
 							  .events = _events,
 							  .gameMode = _gameConfig.gameMode};
 
-	return {new Bullet{std::move(pawnProperty), _gameConfig}, [this](Bullet* b) { ReturnBullet(b); }};
+	return std::make_shared<Bullet>(std::move(pawnProperty), _gameConfig);
 }
 
 std::shared_ptr<BaseObj> BulletPool::SpawnBullet()
 {
 	std::scoped_lock lock(_bulletsMutex);
 
-	std::shared_ptr<BaseObj> bullet;
-	if (_bullets.empty())
+	std::shared_ptr<Bullet> bullet;
+	if (_free.empty())
 	{
 		bullet = CreateNewBullet();
 	}
 	else
 	{
-		bullet = _bullets.front();
-		_bullets.pop();
+		bullet = _free.front();
+		_free.pop();
 	}
+
+	_inFlight.push_back(bullet);
 
 	return bullet;
 }
 
-void BulletPool::ReturnBullet(BaseObj* bullet)
+//NOTE: the same frame step that takes a dead object out of _allObjects - a bullet spent this frame
+//is back on the free list before anything can shoot again
+void BulletPool::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
-	if (_isClearing)
-	{
-		delete bullet;
+	auto isSpent = [](const std::shared_ptr<Bullet>& bullet) { return !bullet->GetIsAlive(); };
 
-		return;
+	std::vector<std::shared_ptr<Bullet>> returned{};
+	{
+		std::scoped_lock lock(_bulletsMutex);
+
+		std::ranges::copy_if(_inFlight, std::back_inserter(returned), isSpent);
+		std::erase_if(_inFlight, isSpent);
+
+		for (const std::shared_ptr<Bullet>& bullet: returned)
+		{
+			Log::Detail("bullet returned to a pool of " + std::to_string(_free.size()) + ", author "
+						+ bullet->GetAuthor() + " uuid " + UuidUtils::GetStringUuid(bullet->GetUuid()));
+
+			bullet->Disable();
+			_free.push(bullet);
+		}
 	}
 
-	std::scoped_lock lock(_bulletsMutex);
-	if (auto* bulletCast = dynamic_cast<Bullet*>(bullet); bulletCast != nullptr)
+	//NOTE: announced with the lock released - a listener is free to shoot back
+	for (const std::shared_ptr<Bullet>& bullet: returned)
 	{
-		Log::Detail("bullet returned to a pool of " + std::to_string(_bullets.size()) + ", author "
-					+ bulletCast->GetAuthor() + " uuid " + UuidUtils::GetStringUuid(bulletCast->GetUuid()));
-
-		bulletCast->Disable();
-		_bullets.emplace(std::shared_ptr<BaseObj>(bullet, [this](BaseObj* b)
-		{
-			ReturnBullet(b);
-		}));
-
-		_events->EmitEvent(DespawnedEvent{
-				.who = bulletCast->GetName(),
-				.uuid = bulletCast->GetUuid(),
-				.reason = DespawnReason::Destroyed});
+		_events->EmitEvent(DespawnedEvent{.who = bullet->GetName(),
+										  .uuid = bullet->GetUuid(),
+										  .reason = DespawnReason::Destroyed});
 	}
 }
 
 void BulletPool::Clear()
 {
 	std::scoped_lock lock(_bulletsMutex);
-	_isClearing = true;
 
-	Log::Detail("bullet pool cleared, held " + std::to_string(_bullets.size()));
+	Log::Detail("bullet pool cleared, held " + std::to_string(_free.size() + _inFlight.size()));
 
-	while (!_bullets.empty())
-	{
-		_bullets.pop();
-	}
-
-	_isClearing = false;
+	_free = {};
+	_inFlight.clear();
 }

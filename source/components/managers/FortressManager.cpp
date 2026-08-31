@@ -6,10 +6,10 @@
 #include "components/events/SpawnEvents.h"
 #include "entities/BaseObj.h"
 #include "entities/obstacles/FortressWalls.h"
-#include "entities/pawns/Pawn.h"
 #include "enums/DespawnReason.h"
 #include "enums/ObstacleType.h"
 #include "utils/ColliderUtils.h"
+#include "utils/WorldQuery.h"
 #include "enums/Faction.h"
 #include <algorithm>
 
@@ -22,7 +22,7 @@ namespace
 }// namespace
 
 FortressManager::FortressManager(const std::shared_ptr<EventSystem>& events,
-								 std::vector<std::shared_ptr<BaseObj>>* allObjects)
+								 const std::vector<std::shared_ptr<BaseObj>>& allObjects)
 	: _allObjects{allObjects}
 	, _events{events}
 {
@@ -55,20 +55,6 @@ void FortressManager::OnSpotRegistered(const FortressSpotRegisteredEvent& event)
 	}
 
 	_spots.push_back(Spot{.rect = event.rect, .wall = event.wall});
-}
-
-bool FortressManager::IsSpotFree(const ObjRectangle& rect) const
-{
-	//NOTE: only a pawn blocks a rebuild - the spot always overlaps the wall standing in it
-	return !std::ranges::any_of(*_allObjects, [&rect](const std::shared_ptr<BaseObj>& object)
-	{
-		if (dynamic_cast<Pawn*>(object.get()))
-		{
-			return ColliderUtils::IsCollide(rect, object->GetRect());
-		}
-
-		return false;
-	});
 }
 
 void FortressManager::ClearSpot(const Spot& spot) const
@@ -106,7 +92,7 @@ void FortressManager::OnBonusShovel(const BonusShovelStatusChangeEvent& event)
 		if (event.isActive)
 		{
 			//NOTE: per spot - a tank standing in one gap must not stop the rest from being rebuilt
-			if (IsSpotFree(spot.rect))
+			if (WorldQuery::IsSpotFreeOfPawns(_allObjects, spot.rect))
 			{
 				ClearSpot(spot);
 				Rebuild(spot, ObstacleType::Steel);

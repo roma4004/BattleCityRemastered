@@ -31,7 +31,7 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_gridSize = _gameConfig.gridOffset;
 
 		_allObjects.reserve(4);
@@ -39,7 +39,7 @@ protected:
 		const ObjRectangle rectBullet{.x = 0.0, .y = 0.0, .w = _calibre.size.x, .h = _calibre.size.y};
 		std::shared_ptr<Bullet> bullet =
 				TestUtils::CreateBullet(
-						rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::PlayerTeam, &_allObjects,
+						rectBullet, _bulletHealth, _uuid, "Bullet1", Faction::PlayerTeam, _allObjects,
 						_events, _calibre, Direction::DOWN, _gameMode, _gameConfig, "Player1");
 		_allObjects.emplace_back(bullet);
 	}

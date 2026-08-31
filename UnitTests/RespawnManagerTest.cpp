@@ -25,10 +25,10 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
-		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
-		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
+		const auto bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
@@ -51,7 +51,7 @@ TEST_F(RespawnManagerTest, EnemyDiedRespawnCount)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
@@ -73,7 +73,7 @@ TEST_F(RespawnManagerTest, PlayerOneDiedRespawnCount)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
@@ -95,7 +95,7 @@ TEST_F(RespawnManagerTest, PlayerTwoDiedRespawnCount)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	_events->EmitEvent(TankDiedEvent{.uuid = _allObjects.back()->GetUuid()});
@@ -117,7 +117,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPoints)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
@@ -142,7 +142,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPoints)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
@@ -167,7 +167,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPoints)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
@@ -192,7 +192,7 @@ TEST_F(RespawnManagerTest, EnemyRunOutRespawnPointsAndTryMore)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
@@ -220,7 +220,7 @@ TEST_F(RespawnManagerTest, PlayerOneRunOutRespawnPointsAndTryMore)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{
@@ -248,7 +248,7 @@ TEST_F(RespawnManagerTest, PlayerTwoRunOutRespawnPointsAndTryMore)
 		}
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	for (unsigned short i = 0u; i < respawnOriginal; ++i)
 	{

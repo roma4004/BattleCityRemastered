@@ -36,7 +36,7 @@ class BonusSpawner final
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 
 	std::uniform_int_distribution<> _distSpawnPosY{};
 	std::uniform_int_distribution<> _distSpawnPosX{};
@@ -72,7 +72,7 @@ class BonusSpawner final
 	[[nodiscard]] Uuid AnnounceSpawn(ObjRectangle rect, BonusType type, Uuid uuid, bool isSuper) const;
 
 public:
-	BonusSpawner(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	BonusSpawner(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				 const GameConfig& gameConfig);
 
 	~BonusSpawner() = default;

@@ -25,10 +25,10 @@ protected:
 	void SetUp() override
 	{
 		_events = std::make_shared<EventSystem>();
-		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, &_allObjects);
+		_spawnQueueSub = TestUtils::WireSpawnQueue(_events, _allObjects);
 		_allObjects.reserve(6u);
-		const auto bulletPool = std::make_shared<BulletPool>(_events, &_allObjects, _gameConfig);
-		TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
+		const auto bulletPool = std::make_shared<BulletPool>(_events, _allObjects, _gameConfig);
+		TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, _gameConfig.gameMode, _respawnManager,
 								 _tankSpawner);
 		_events->EmitEvent(GameResetEvent{});
 		_instantSpawnAnimationSubs = TestUtils::WireInstantSpawnAnimations(_events);
@@ -41,7 +41,7 @@ protected:
 
 TEST_F(TankSpawnerTest, DemoGameModeStart)
 {
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::Demo, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::Demo, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
@@ -49,7 +49,7 @@ TEST_F(TankSpawnerTest, DemoGameModeStart)
 
 TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 {
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::OnePlayer, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 5u);
@@ -57,7 +57,7 @@ TEST_F(TankSpawnerTest, OnePlayersGameModeStart)
 
 TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 {
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::TwoPlayers, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
@@ -65,7 +65,7 @@ TEST_F(TankSpawnerTest, TwoPlayersGameModeStart)
 
 TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 {
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);
@@ -73,7 +73,7 @@ TEST_F(TankSpawnerTest, CoopWithBotGameModeStart)
 
 TEST_F(TankSpawnerTest, PlayAsHostGameModeStart)
 {
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsHost, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);// No one set pause, so expected spawn all
@@ -88,7 +88,7 @@ TEST_F(TankSpawnerTest, PlayAsClientGameModeStart)
 		spawning.emplace_back(event.uuid);
 	});
 
-	TestUtils::ApplyGameMode(_events, &_allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager, _tankSpawner);
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::PlayAsClient, _respawnManager, _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 

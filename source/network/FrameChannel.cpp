@@ -28,6 +28,8 @@ void FrameChannel::Close()
 void FrameChannel::CloseForReconnect()
 {
 	_writeInProgress = false;
+	//NOTE: the queue held frames for the link being replaced - stale input would reach the new one
+	_writeQueue.clear();
 	CloseSocket();
 }
 

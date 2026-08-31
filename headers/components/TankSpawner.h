@@ -44,7 +44,7 @@ class TankSpawner final
 		double speed;
 	};
 
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{nullptr};
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
 
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::shared_ptr<BulletPool> _bulletPool{nullptr};
@@ -83,7 +83,7 @@ class TankSpawner final
 	void OnClientRespawn(TankType type, Uuid uuid, ObjRectangle rect);
 
 public:
-	TankSpawner(const GameConfig& gameConfig, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	TankSpawner(const GameConfig& gameConfig, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 				const std::shared_ptr<EventSystem>& events);
 
 	~TankSpawner() = default;

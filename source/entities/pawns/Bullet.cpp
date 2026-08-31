@@ -16,7 +16,7 @@
 #include "enums/GameMode.h"
 #include "interfaces/IMoveBeh.h"
 #include "utils/UuidUtils.h"
-//
+
 Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const BulletCalibre& calibre,
 			   std::string author,
 			   const bool enableByDefault)
@@ -25,7 +25,7 @@ Bullet::Bullet(PawnProperty pawnProperty, const GameConfig& gameConfig, const Bu
 	, _calibre{calibre}
 {
 	// NOTE: needed only for tests, TODO in test use tank shoot for bulletPool use instead of creating bullet
-	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, _calibre, _allObjects);
+	_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig, _calibre);
 
 	if (enableByDefault)
 	{
@@ -106,7 +106,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	else
 	{
 		_moveBeh = std::make_unique<MoveLikeBulletBeh>(_rect, _dir, _uuid, _authorUuid, _gameConfig,
-													   resetProperty.calibre, _allObjects);
+													   resetProperty.calibre);
 	}
 
 	_author = std::move(resetProperty.author);
@@ -128,20 +128,17 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 
 void Bullet::TickUpdate(const double deltaTime)
 {
-	if (GetIsAlive())//TODO: maybe for all add check isAlive
+	std::vector<std::shared_ptr<BaseObj>> outCollisions;
+	const bool isMove = _moveBeh->Move(_dir, deltaTime, _allObjects, outCollisions);
+	if (!isMove)
 	{
-		std::vector<std::shared_ptr<BaseObj>> outCollisions;
-		const bool isMove = _moveBeh->Move(_dir, deltaTime, outCollisions);
-		if (!isMove)
-		{
-			DealDamage(outCollisions);
-			outCollisions.clear();
-		}
+		DealDamage(outCollisions);
+		outCollisions.clear();
+	}
 
-		if (isMove && IsHost(_gameMode))
-		{
-			_events->EmitEvent(PosChangedEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
-		}
+	if (isMove && IsHost(_gameMode))
+	{
+		_events->EmitEvent(PosChangedEvent{.who = _name, .pos = GetPos(), .dir = _dir, .uuid = _uuid});
 	}
 }
 

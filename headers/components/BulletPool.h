@@ -13,6 +13,7 @@ class BaseObj;
 class EventSystem;
 class GameConfig;
 struct GameResetEvent;
+struct PostTickUpdateEvent;
 
 class BulletPool final
 {
@@ -21,27 +22,25 @@ class BulletPool final
 	std::mutex _bulletsMutex{};
 	std::shared_ptr<EventSystem> _events{nullptr};
 	std::vector<EventSubscription> _subs{};
-	std::vector<std::shared_ptr<BaseObj>>* _allObjects{};
-	std::queue<std::shared_ptr<BaseObj>> _bullets{};
+	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
+	std::queue<std::shared_ptr<Bullet>> _free{};
+	std::vector<std::shared_ptr<Bullet>> _inFlight{};
 	const GameConfig& _gameConfig;
-	bool _isClearing{};
 
 	void OnGameReset(const GameResetEvent&);
+	void OnPostTickUpdate(const PostTickUpdateEvent&);
+
+	[[nodiscard]] std::shared_ptr<Bullet> CreateNewBullet() const;
 
 public:
-	BulletPool(const std::shared_ptr<EventSystem>& events, std::vector<std::shared_ptr<BaseObj>>* allObjects,
+	BulletPool(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
 			   const GameConfig& gameConfig);
 
 	~BulletPool() = default;
 
 	void Subscribe();
 
-	[[nodiscard]] std::shared_ptr<Bullet> CreateNewBullet();
-
 	[[nodiscard]] std::shared_ptr<BaseObj> SpawnBullet();
 
-	void ReturnBullet(BaseObj* bullet);
-
 	void Clear();
-
 };
