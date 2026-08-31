@@ -39,9 +39,11 @@ protected:
 	}
 };
 
-TEST_F(TankSpawnerTest, DemoGameModeStart)
+TEST_F(TankSpawnerTest, DemoPhaseStart)
 {
-	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::Demo, _respawnManager, _tankSpawner);
+	_gameConfig.gameState = GameState::Demo;
+	TestUtils::ApplyGameMode(_events, _allObjects, _gameConfig, GameMode::CoopWithBot, _respawnManager,
+							 _tankSpawner);
 	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(RespawnTanksEvent{});
 	EXPECT_EQ(_allObjects.size(), 6u);

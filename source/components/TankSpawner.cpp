@@ -15,6 +15,7 @@
 #include "entities/pawns/Player.h"
 #include "enums/Direction.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "enums/InputChannel.h"
 #include "enums/PlayerSlot.h"
 #include "enums/TankType.h"
@@ -234,10 +235,13 @@ void TankSpawner::RespawnPlayerTeam(const TankType type, const Uuid uuid,
 		return;
 	}
 
-	if (_gameMode == GameMode::OnePlayer
-		|| _gameMode == GameMode::TwoPlayers
-		|| IsNetworkGame(_gameMode)
-		|| (_gameMode == GameMode::CoopWithBot && isFirst))
+	//NOTE: the demo is the phase where nobody sits down - every seat goes to a bot
+	const bool isDemo = _gameConfig.gameState == GameState::Demo;
+	if (!isDemo
+		&& (_gameMode == GameMode::OnePlayer
+			|| _gameMode == GameMode::TwoPlayers
+			|| IsNetworkGame(_gameMode)
+			|| (_gameMode == GameMode::CoopWithBot && isFirst)))
 	{
 		SpawnPlayer(spawnRect, _gameConfig.tankSpeed, _gameConfig.tankHealth, uuid, type);
 		if (IsHost(_gameMode))

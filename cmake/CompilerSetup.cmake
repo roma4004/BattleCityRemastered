@@ -14,6 +14,21 @@ include(CheckCXXSourceCompiles)
 # Linked PRIVATE by our own targets only.
 add_library(project_warnings INTERFACE)
 
+# Coverage instrumentation, opt-in through the Coverage-MinGW preset. It rides on project_warnings
+# for the same reason the warnings do: only our four targets link it, so vendored ThirdParty code -
+# added SYSTEM - stays uninstrumented and out of the report. -fprofile-abs-path makes the .gcno
+# record absolute source paths, so gcovr resolves them from any working directory.
+# GCC only: MSYS2's clang 22 ships no libclang_rt.profile.a, so -fprofile-instr-generate fails at link.
+option(ENABLE_COVERAGE "Instrument our own targets with gcov" OFF)
+
+if (ENABLE_COVERAGE)
+    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(FATAL_ERROR "ENABLE_COVERAGE needs GCC; got ${CMAKE_CXX_COMPILER_ID}.")
+    endif ()
+    target_compile_options(project_warnings INTERFACE --coverage -fprofile-abs-path)
+    target_link_options(project_warnings INTERFACE --coverage)
+endif ()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Understood by both families.
     target_compile_options(project_warnings INTERFACE

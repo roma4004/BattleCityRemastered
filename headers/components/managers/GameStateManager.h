@@ -10,6 +10,7 @@ struct PauseStatusEvent;
 struct PreDrawUserInterfaceEvent;
 struct GameResetEvent;
 struct GameModeAppliedEvent;
+struct DemoStartedEvent;
 struct GameFinishedEvent;
 struct ServerInClientReadyToStartGameEvent;
 struct ClientConnectedToHostEvent;
@@ -27,6 +28,7 @@ class GameStateManager
 	GameState _state{GameState::Menu};
 	GameMode _gameMode{};
 	bool _hasPeer{false};
+	bool _isDemo{false};
 
 	void Subscribe();
 	void SetState(GameState state);
@@ -35,6 +37,7 @@ class GameStateManager
 	[[nodiscard]] GameState IdleStateForMode() const;
 
 	void OnGameModeApplied(const GameModeAppliedEvent& event);
+	void OnDemoStarted(const DemoStartedEvent&);
 	void OnPauseStatus(const PauseStatusEvent& event);
 	void OnGameFinished(const GameFinishedEvent& event);
 	void OnClientReady(const ServerInClientReadyToStartGameEvent&);

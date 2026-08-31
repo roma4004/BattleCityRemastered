@@ -44,7 +44,7 @@ int main(const int argc, char* argv[])
 		return 1;
 	}
 
-	Game game{gameConfig, projectConfig, windowConfig, sdlEnv, launchOptions->gameMode};
+	Game game{gameConfig, projectConfig, windowConfig, sdlEnv, *launchOptions};
 	game.Run();
 
 	//NOTE: before sdlEnv drops the window and while projectConfig is still alive - its destructor

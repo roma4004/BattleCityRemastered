@@ -114,11 +114,7 @@ void Bullet::Reset(BulletResetProperty resetProperty)
 	_faction = std::move(resetProperty.faction);
 	_calibre = resetProperty.calibre;
 
-	if (resetProperty.uuid != UuidUtils::GetNilUuid())
-	{
-		_uuid = resetProperty.uuid;
-		_uuidStr = UuidUtils::GetStringUuid(_uuid);
-	}
+	_uuidStr = UuidUtils::GetStringUuid(_uuid);
 	_nameWithUuid = _name + _uuidStr;
 
 	SetIsAlive(true);

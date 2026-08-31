@@ -1,7 +1,6 @@
 #pragma once
 
 #include "components/EventSystem.h"
-#include "enums/GameState.h"
 #include <memory>
 #include <vector>
 
@@ -11,7 +10,6 @@ struct MenuReleasedEvent;
 struct PauseReleasedEvent;
 struct SetPauseEvent;
 struct GameResetEvent;
-struct GameStateChangedToEvent;
 struct PreTickUpdateEvent;
 struct ShowMenuEvent;
 struct MenuShowedEvent;
@@ -36,13 +34,11 @@ class InputProviderForMenu final
 	std::vector<EventSubscription> _menuNavSubs{};
 	const GameConfig& _gameConfig;
 	MenuKeys _keys{};
-	GameState _gameState{};
 
 	void OnMenuReleased(const MenuReleasedEvent&);
 	void OnPauseReleased(const PauseReleasedEvent&);
 	void OnSetPause(const SetPauseEvent& event);
 	void OnGameReset(const GameResetEvent&);
-	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
 	void OnPreTickUpdate(const PreTickUpdateEvent&);
 	void OnShowMenu(const ShowMenuEvent& event);
 	void OnMenuShowed(const MenuShowedEvent& event);

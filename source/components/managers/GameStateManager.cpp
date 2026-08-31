@@ -14,6 +14,7 @@ GameStateManager::GameStateManager(const std::shared_ptr<EventSystem>& events)
 void GameStateManager::Subscribe()
 {
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnGameModeApplied));
+	_subs.push_back(_events->AddListener(this, &GameStateManager::OnDemoStarted));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::OnPauseStatus));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Draw));
 	_subs.push_back(_events->AddListener(this, &GameStateManager::Reset));
@@ -56,6 +57,11 @@ void GameStateManager::Resume()
 
 GameState GameStateManager::IdleStateForMode() const
 {
+	if (_isDemo)
+	{
+		return GameState::Demo;
+	}
+
 	return IsNetworkGame(_gameMode) && !_hasPeer ? GameState::Lobby : GameState::Playing;
 }
 
@@ -63,10 +69,17 @@ void GameStateManager::OnGameModeApplied(const GameModeAppliedEvent& event)
 {
 	_gameMode = event.mode;
 	_hasPeer = false;
+	_isDemo = false;
 
 	//NOTE: announced even when the phase keeps its name - spawners act on entering one, not on a diff
 	_state = IdleStateForMode();
 	AnnouncePhase();
+}
+
+void GameStateManager::OnDemoStarted(const DemoStartedEvent&)
+{
+	_isDemo = true;
+	SetState(GameState::Demo);
 }
 
 void GameStateManager::OnPauseStatus(const PauseStatusEvent& event)

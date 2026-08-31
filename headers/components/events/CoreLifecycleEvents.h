@@ -70,6 +70,8 @@ struct NextGameModeEvent {};
 
 struct ApplyGameModeEvent {};
 
+struct DemoStartedEvent {};
+
 struct PlayersBaseFinishedEvent {};
 
 struct GameFinishedEvent

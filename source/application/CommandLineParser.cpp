@@ -43,10 +43,12 @@ std::expected<LaunchOptions, ArgError> CommandLineParser::Parse(const int argc, 
 		if (arg.ends_with("host"))
 		{
 			launchOptions.gameMode = GameMode::PlayAsHost;
+			launchOptions.isDemo = false;
 		}
 		else if (arg.ends_with("client"))
 		{
 			launchOptions.gameMode = GameMode::PlayAsClient;
+			launchOptions.isDemo = false;
 		}
 		else if (arg.ends_with("skipintro"))
 		{

@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 #include "components/WorldGeometry.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include <chrono>
 #include <cstddef>
 
@@ -16,6 +17,8 @@ public:
 	//NOTE: here so nothing subscribes to GameModeChangedToEvent merely to read it. Game writes it
 	//before the reset event goes out.
 	GameMode gameMode{};
+
+	GameState gameState{GameState::Menu};
 
 	[[nodiscard]] bool IsAuthority() const { return ::IsAuthority(gameMode); }
 	[[nodiscard]] bool IsClient() const { return ::IsClient(gameMode); }

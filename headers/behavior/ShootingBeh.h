@@ -4,6 +4,7 @@
 #include "interfaces/IShootable.h"
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -42,5 +43,5 @@ public:
 
 	~ShootingBeh() override;
 
-	[[nodiscard]] Uuid Shot(Uuid uuid = {}) override;
+	[[nodiscard]] Uuid Shot(std::optional<Uuid> uuid) override;
 };

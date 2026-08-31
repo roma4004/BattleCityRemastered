@@ -6,6 +6,9 @@
 
 struct UPoint;
 struct GameModeChangedToEvent;
+struct AddToSpawnQueueEvent;
+struct PostTickUpdateEvent;
+struct GameResetEvent;
 class BaseObj;
 class EventSystem;
 class FortressManager;
@@ -18,7 +21,9 @@ class GameConfig;
 class SpawnManager
 {
 	std::shared_ptr<EventSystem> _events{nullptr};
-	const std::vector<std::shared_ptr<BaseObj>>& _allObjects;
+	//NOTE: the world itself - spawners and pawns hold a const& to it, this class is its only writer
+	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
+	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
 	const GameConfig& _gameConfig;
 	std::vector<EventSubscription> _subs{};
 
@@ -31,10 +36,14 @@ class SpawnManager
 	void Subscribe();
 	void CreateSpawners();
 	void OnGameModeChangedTo(const GameModeChangedToEvent&);
+	void OnAddToSpawnQueue(const AddToSpawnQueueEvent& event);
+	void OnPostTickUpdate(const PostTickUpdateEvent&);
+	void OnGameReset(const GameResetEvent&);
+	void FlushSpawnQueue();
+	void DisposeDeadObject();
 
 public:
-	SpawnManager(const std::shared_ptr<EventSystem>& events, const std::vector<std::shared_ptr<BaseObj>>& allObjects,
-				 const GameConfig& gameConfig);
+	SpawnManager(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig);
 
 	~SpawnManager();
 };

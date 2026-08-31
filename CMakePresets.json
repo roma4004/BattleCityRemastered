@@ -42,6 +42,15 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "Coverage-MinGW",
+      "displayName": "Coverage-MinGW",
+      "description": "Debug + gcov instrumentation on our own targets (ENABLE_COVERAGE); report with gcovr.",
+      "inherits": "Debug-MinGW",
+      "cacheVariables": {
+        "ENABLE_COVERAGE": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -60,6 +69,10 @@
     {
       "name": "Release-Clang",
       "configurePreset": "Release-Clang"
+    },
+    {
+      "name": "Coverage-MinGW",
+      "configurePreset": "Coverage-MinGW"
     }
   ],
   "testPresets": [
@@ -73,6 +86,13 @@
     {
       "name": "Debug-Clang",
       "configurePreset": "Debug-Clang",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "Coverage-MinGW",
+      "configurePreset": "Coverage-MinGW",
       "output": {
         "outputOnFailure": true
       }

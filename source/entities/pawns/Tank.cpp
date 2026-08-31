@@ -132,7 +132,7 @@ void Tank::TakeDamage(const unsigned int damage, const std::string& author, Fact
 
 unsigned int Tank::GetTier() const { return _tier; }
 
-void Tank::Shot(const Uuid withUuid)
+void Tank::Shot(const std::optional<Uuid> withUuid)
 {
 	const Uuid bulletUuid = _shootingBeh->Shot(withUuid);
 

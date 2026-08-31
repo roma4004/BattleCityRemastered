@@ -2,7 +2,6 @@
 
 #include "geometry/Point.h"
 #include "components/EventSystem.h"
-#include "enums/GameState.h"
 #include <chrono>
 #include <memory>
 #include <vector>
@@ -10,7 +9,6 @@
 enum class GameMode : char8_t;
 class INetworkNode;
 class IDrawable;
-class BaseObj;
 class Menu;
 class UserInput;
 class TextureManager;
@@ -28,8 +26,8 @@ class RightSideBar;
 class GameConfig;
 class WindowConfig;
 class ProjectConfig;
+struct LaunchOptions;
 struct SDL_Config;
-struct AddToSpawnQueueEvent;
 struct PostTickUpdateEvent;
 struct DeltaTimeEvent;
 struct PreviousGameModeEvent;
@@ -48,7 +46,7 @@ class Game final
 {
 public:
 	Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
-		 SDL_Config& sdlConfig, GameMode gameMode);
+		 SDL_Config& sdlConfig, const LaunchOptions& launchOptions);
 	~Game();
 
 	Game(const Game&) = delete;
@@ -63,20 +61,15 @@ public:
 private:
 	void Subscribe();
 
-	void ResetBattlefield();
 	void EnterLobby();
 	void ApplyGameMode(GameMode gameMode);
 	void PrevGameMode(const PreviousGameModeEvent&);
 	void NextGameMode(const NextGameModeEvent&);
 	void OnApplyGameMode(const ApplyGameModeEvent&);
 
-	void OnAddToSpawnQueue(const AddToSpawnQueueEvent& event);
 	void OnPostTickUpdate(const PostTickUpdateEvent&);
 	void OnDeltaTime(const DeltaTimeEvent& event);
 	void OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event);
-
-	void DisposeDeadObject();
-	void FlushSpawnQueue();
 
 
 	void OnGameStateChangedTo(const GameStateChangedToEvent& event);
@@ -105,15 +98,12 @@ private:
 	std::unique_ptr<RightSideBar> _rightSideBar{nullptr};
 
 	std::vector<EventSubscription> _subs{};
-	std::vector<std::shared_ptr<BaseObj>> _allObjects{};
-	std::vector<std::shared_ptr<BaseObj>> _pendingSpawns{};
 
 	GameConfig& _gameConfig;
 
 	GameMode _selectedGameMode{};
 	GameMode _gameMode{};
 	double _deltaTime{};
-	GameState _gameState{};
 	//NOTE: deferred to PostTickUpdate - the peer goes away mid-frame, and the field may be mid-iteration
 	bool _isEnterLobbyPending{false};
 };

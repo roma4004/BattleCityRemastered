@@ -6,6 +6,7 @@
 #include "utils/Timer.h"
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -87,7 +88,7 @@ protected:
 	// bonuses
 	BonusEffectProperty _effects{};
 
-	void Shot(Uuid withUuid = {});
+	void Shot(std::optional<Uuid> withUuid = std::nullopt);
 
 	void HandleBonusPickUp(const std::shared_ptr<BaseObj>& object) const;
 	void OnPosChanged(const PosChangedEvent& event);

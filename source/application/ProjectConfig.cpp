@@ -81,7 +81,7 @@ void ProjectConfig::DefaultInitIni()
 		Set("Window.height", 600u);
 		Set("Window.posX", 100u);
 		Set("Window.posY", 100u);
-		Set("Window.vsync", false);
+		Set("Window.vsync", 0);
 		Set("Window.MonitorNumber", 1u);
 		Set("Window.centerOnStart", false);
 

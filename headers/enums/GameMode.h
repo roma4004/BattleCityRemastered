@@ -2,8 +2,6 @@
 
 enum class GameMode : char8_t
 {
-	Demo,
-
 	OnePlayer,
 	TwoPlayers,
 	CoopWithBot,
@@ -29,11 +27,8 @@ enum class GameMode : char8_t
 
 [[nodiscard]] constexpr bool IsLocalGame(const GameMode mode) { return !IsNetworkGame(mode); }
 
-//NOTE: seat two is taken in every mode but one - by a bot in CoopWithBot/Demo, by the peer in a net game
+//NOTE: seat two is taken in every mode but one - by a bot in CoopWithBot, by the peer in a net game
 [[nodiscard]] constexpr bool HasSecondPlayer(const GameMode mode) { return mode != GameMode::OnePlayer; }
 
-//NOTE: Demo fills both seats with bots, CoopWithBot only the second one
-[[nodiscard]] constexpr bool UsesCoopBots(const GameMode mode)
-{
-	return mode == GameMode::Demo || mode == GameMode::CoopWithBot;
-}
+//NOTE: seat one is the phase's call, not the mode's - the demo hands both seats to bots
+[[nodiscard]] constexpr bool UsesCoopBots(const GameMode mode) { return mode == GameMode::CoopWithBot; }

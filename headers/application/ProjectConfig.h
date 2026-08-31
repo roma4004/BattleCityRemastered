@@ -35,7 +35,10 @@ public:
 	//NOTE: the default doubles as the message SDL prints when the key is missing
 	[[nodiscard]] std::filesystem::path ResourcePath(const std::string& key) const;
 
-	[[nodiscard]] bool IsVsyncOn() const { return Get<bool>("Window.vsync", false); }
+	//NOTE: SDL takes more than on/off - -1 is adaptive, n waits n refreshes, 0 is off. An older ini
+	//holding true/false does not parse as an int and falls back to the default, which is off either way
+	[[nodiscard]] int VSyncMode() const { return Get<int>("Window.vsync", 0); }
+	[[nodiscard]] bool IsVsyncOn() const { return VSyncMode() != 0; }
 	[[nodiscard]] int MonitorNumber() const { return Get<int>("Window.MonitorNumber", 1); }
 	[[nodiscard]] bool IsCenterOnStart() const { return Get<bool>("Window.centerOnStart", false); }
 	[[nodiscard]] bool IsFreshIni() const { return _isFreshIni; }

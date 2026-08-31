@@ -43,11 +43,12 @@ std::optional<ArgError> ParseError(const std::initializer_list<const char*> args
 }//namespace
 
 //NOTE: plain launch must stay untouched - every option here is a deliberate override, not a default
-TEST(CommandLineParserTest, NoArgumentsGivesDemoMode)
+TEST(CommandLineParserTest, NoArgumentsGivesDemoPhase)
 {
 	const auto options = Parse({});
 
-	EXPECT_EQ(options.gameMode, GameMode::Demo);
+	EXPECT_TRUE(options.isDemo);
+	EXPECT_EQ(options.gameMode, GameMode::CoopWithBot);
 	EXPECT_FALSE(options.skipIntroMusic);
 	EXPECT_FALSE(options.windowPos.has_value());
 	EXPECT_FALSE(options.windowSize.has_value());

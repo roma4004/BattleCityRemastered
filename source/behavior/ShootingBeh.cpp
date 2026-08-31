@@ -13,6 +13,7 @@
 #include "enums/Direction.h"
 #include <functional>
 #include <memory>
+#include <optional>
 // #include <boost/uuid/uuid_io.hpp>
 
 ShootingBeh::ShootingBeh(ObjRectangle& rect, Direction& dir, Uuid& uuid, std::string& name, Faction& faction,
@@ -103,7 +104,7 @@ ObjRectangle ShootingBeh::GetBulletStartRect() const
 	return bulletRect;
 }
 
-Uuid ShootingBeh::Shot(const Uuid uuid)
+Uuid ShootingBeh::Shot(const std::optional<Uuid> uuid)
 {
 	const ObjRectangle rect = GetBulletStartRect();
 	if (rect.x < 0.0 || rect.y < 0.0)
@@ -113,7 +114,7 @@ Uuid ShootingBeh::Shot(const Uuid uuid)
 	}
 
 	//TODO: refactor to network event ShotBullet{rect, bulletResetProperty, uuid}
-	auto bulletAsBase = _bulletPool->SpawnBullet();
+	auto bulletAsBase = _bulletPool->SpawnBullet(uuid);
 	if (auto* bullet = dynamic_cast<Bullet*>(bulletAsBase.get()); bullet != nullptr)
 	{
 		BulletResetProperty bulletResetProperty = {
@@ -122,7 +123,6 @@ Uuid ShootingBeh::Shot(const Uuid uuid)
 				.health = 1,
 				.author = _name,
 				.faction = _faction,
-				.uuid = uuid,
 				.authorUuid = _uuid,
 				.calibre = _calibre,
 		};

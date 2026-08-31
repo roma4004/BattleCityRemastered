@@ -29,7 +29,7 @@ struct SDL_Config final
 	[[nodiscard]] std::expected<void, InitError> Init();
 
 	//NOTE: the only way in - the ini value at startup, a runtime switch later
-	[[nodiscard]] std::expected<void, InitError> SetVSync(bool isOn);
+	[[nodiscard]] std::expected<void, InitError> SetVSync(int mode);
 
 	//NOTE: the kept surfaces are the source of truth once a device reset takes the textures
 	[[nodiscard]] std::expected<void, InitError> RecreateTexturesFromSurfaces();

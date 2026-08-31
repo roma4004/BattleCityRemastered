@@ -7,7 +7,7 @@
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
-#include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include <iomanip>
 #include <sstream>
 
@@ -210,7 +210,7 @@ void ScoreBoard::RenderTextWithAlignment(const Point pos, const unsigned int col
 
 void ScoreBoard::DisplayScore(const bool isDisplayed)
 {
-	if (isDisplayed && _gameConfig.gameMode == GameMode::Demo)
+	if (isDisplayed && _gameConfig.gameState == GameState::Demo)
 	{
 		return;
 	}

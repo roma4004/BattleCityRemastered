@@ -5,7 +5,7 @@
 #include "components/events/InputEvents.h"
 #include "components/events/RenderUIEvents.h"
 #include "components/events/TimingEvents.h"
-#include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "enums/InputChannel.h"
 
 InputProviderForMenu::InputProviderForMenu(const std::shared_ptr<EventSystem>& events, const GameConfig& gameConfig)
@@ -21,7 +21,6 @@ void InputProviderForMenu::Subscribe()
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPauseReleased));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnSetPause));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameReset));
-	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnGameStateChangedTo));
 
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnPreTickUpdate));
 	_subs.push_back(_events->AddListener(this, &InputProviderForMenu::OnShowMenu));
@@ -33,7 +32,6 @@ void InputProviderForMenu::OnMenuReleased(const MenuReleasedEvent&) { ToggleMenu
 void InputProviderForMenu::OnPauseReleased(const PauseReleasedEvent&) { TogglePause(); }
 void InputProviderForMenu::OnSetPause(const SetPauseEvent& event) { SetPause(event.isPaused); }
 void InputProviderForMenu::OnGameReset(const GameResetEvent&) { Reset(); }
-void InputProviderForMenu::OnGameStateChangedTo(const GameStateChangedToEvent& event) { _gameState = event.state; }
 void InputProviderForMenu::OnPreTickUpdate(const PreTickUpdateEvent&) { MenuUpdate(); }
 
 void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
@@ -49,8 +47,8 @@ void InputProviderForMenu::OnShowMenu(const ShowMenuEvent& event)
 //TODO: change direction without move (one turn before move)
 void InputProviderForMenu::OnMenuShowed(const MenuShowedEvent& event)
 {
-	//NOTE: neither owns the pause here - Demo runs behind an open menu, a lobby is not running at all
-	if (_gameConfig.gameMode == GameMode::Demo || _gameState == GameState::Lobby)
+	//NOTE: neither owns the pause here - a demo runs behind an open menu, a lobby is not running at all
+	if (_gameConfig.gameState == GameState::Demo || _gameConfig.gameState == GameState::Lobby)
 	{
 		return;
 	}

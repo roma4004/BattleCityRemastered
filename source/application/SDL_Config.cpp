@@ -102,7 +102,7 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 	//shared atlas, bleeds neighbouring cells into each other at the edges
 	SDL_SetDefaultTextureScaleMode(renderer.get(), SDL_SCALEMODE_NEAREST);
 
-	if (const auto vsync = SetVSync(projectConfig.IsVsyncOn());
+	if (const auto vsync = SetVSync(projectConfig.VSyncMode());
 		!vsync)
 	{
 		return std::unexpected(vsync.error());
@@ -115,9 +115,9 @@ std::expected<void, InitError> SDL_Config::InitVideo()
 
 //TODO: runtime switch - update Window.vsync in ProjectConfig too, FramePerSecondManager reads it
 //every frame; the renderer and its textures survive the call
-std::expected<void, InitError> SDL_Config::SetVSync(const bool isOn)
+std::expected<void, InitError> SDL_Config::SetVSync(const int mode)
 {
-	if (!SDL_SetRenderVSync(renderer.get(), isOn ? 1 : 0))
+	if (!SDL_SetRenderVSync(renderer.get(), mode))
 	{
 		return std::unexpected(InitError{.stage = "SDL_SetRenderVSync Error", .detail = SDL_GetError()});
 	}

@@ -1,6 +1,7 @@
 #include "application/Game.h"
 #include "utils/Log.h"
 #include "application/GameConfig.h"
+#include "application/LaunchOptions.h"
 #include "application/UserInput.h"
 #include "application/WindowConfig.h"
 #include "components/EventSystem.h"
@@ -8,7 +9,6 @@
 #include "components/RightSideBar.h"
 #include "components/LobbyScreen.h"
 #include "components/ScoreBoard.h"
-#include "components/events/SpawnEvents.h"
 #include "components/events/CoreLifecycleEvents.h"
 #include "components/events/GameModeEvents.h"
 #include "components/events/InputEvents.h"
@@ -22,6 +22,7 @@
 #include "components/managers/TextureManager.h"
 #include "components/managers/WorldScaleManager.h"
 #include "enums/GameMode.h"
+#include "enums/GameState.h"
 #include "network/ClientHandler.h"
 #include "network/ServerHandler.h"
 #include "utils/TimeUtils.h"
@@ -29,11 +30,9 @@
 #include <memory>
 //#include <fstream>
 
-class BaseObj;
-
 // std::ofstream error_log_server("error_log_Server.txt");
 Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const WindowConfig& windowConfig,
-		   SDL_Config& sdlConfig, const GameMode gameMode)
+		   SDL_Config& sdlConfig, const LaunchOptions& launchOptions)
 	: _events{std::make_shared<EventSystem>()}
 	, _menu{std::make_unique<Menu>(_events, gameConfig)}
 	, _textureManager(std::make_unique<TextureManager>(_events))
@@ -41,7 +40,7 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 	, _userInput{std::make_unique<UserInput>(_events, windowConfig, sdlConfig)}
 	, _fpsManager{std::make_unique<FramePerSecondManager>(_events, projectConfig)}
 	, _worldScaleManager{std::make_unique<WorldScaleManager>(_events, gameConfig)}
-	, _spawnManager{std::make_unique<SpawnManager>(_events, _allObjects, gameConfig)}
+	, _spawnManager{std::make_unique<SpawnManager>(_events, gameConfig)}
 	, _renderManager{std::make_unique<RenderManager>(_events, gameConfig, sdlConfig)}
 	, _bonusManager{std::make_unique<BonusManager>(_events, gameConfig)}
 	, _scoreBoard{std::make_unique<ScoreBoard>(_events, gameConfig)}
@@ -52,10 +51,11 @@ Game::Game(GameConfig& gameConfig, const ProjectConfig& projectConfig, const Win
 {
 	Subscribe();
 
-	ApplyGameMode(gameMode);
+	ApplyGameMode(launchOptions.gameMode);
 
-	if (gameMode == GameMode::Demo)
+	if (launchOptions.isDemo)
 	{
+		_events->EmitEvent(DemoStartedEvent{});
 		_events->EmitEvent(ShowMenuEvent{.show = true});
 	}
 }
@@ -68,7 +68,6 @@ void Game::Subscribe()
 	_subs.push_back(_events->AddListener(this, &Game::NextGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::OnApplyGameMode));
 	_subs.push_back(_events->AddListener(this, &Game::OnGameModeChangedTo));
-	_subs.push_back(_events->AddListener(this, &Game::OnAddToSpawnQueue));
 	_subs.push_back(_events->AddListener(this, &Game::OnPostTickUpdate));
 	_subs.push_back(_events->AddListener(this, &Game::OnDeltaTime));
 	_subs.push_back(_events->AddListener(this, &Game::OnSelectedGameModeChangedTo));
@@ -78,13 +77,8 @@ void Game::Subscribe()
 
 void Game::OnApplyGameMode(const ApplyGameModeEvent&) { ApplyGameMode(_selectedGameMode); }
 
-void Game::OnAddToSpawnQueue(const AddToSpawnQueueEvent& event) { _pendingSpawns.push_back(event.obj); }
-
 void Game::OnPostTickUpdate(const PostTickUpdateEvent&)
 {
-	FlushSpawnQueue();
-	DisposeDeadObject();
-
 	if (_isEnterLobbyPending)
 	{
 		_isEnterLobbyPending = false;
@@ -96,22 +90,13 @@ void Game::OnDeltaTime(const DeltaTimeEvent& event) { _deltaTime = event.deltaTi
 
 void Game::OnSelectedGameModeChangedTo(const SelectedGameModeChangedToEvent& event) { _selectedGameMode = event.mode; }
 
-void Game::ResetBattlefield()
-{
-	_allObjects.clear();
-	_allObjects.reserve(1000);
-	_pendingSpawns.clear();
-
-	_events->EmitEvent(GameResetEvent{});
-}
-
 void Game::ApplyGameMode(const GameMode gameMode)
 {
 	//NOTE: before the reset - listeners of GameResetEvent read the mode off the config, so it has
 	//to be the new one already
 	_gameConfig.gameMode = gameMode;
 
-	ResetBattlefield();
+	_events->EmitEvent(GameResetEvent{});
 
 	SetCurrentGameMode(gameMode);
 
@@ -127,7 +112,7 @@ void Game::PrevGameMode(const PreviousGameModeEvent&)
 	--mode;
 
 	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
-	constexpr int minMode = 1;
+	constexpr int minMode = 0;
 	const int newMode = mode < minMode ? maxMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
@@ -140,7 +125,7 @@ void Game::NextGameMode(const NextGameModeEvent&)
 	++mode;
 
 	constexpr int maxMode = static_cast<int>(GameMode::EndIterator) - 1;
-	constexpr int minMode = 1;
+	constexpr int minMode = 0;
 	const int newMode = mode > maxMode ? minMode : mode;
 	_selectedGameMode = static_cast<GameMode>(newMode);
 
@@ -149,39 +134,27 @@ void Game::NextGameMode(const NextGameModeEvent&)
 
 //TODO: push other tank mechanic like velosity with ice effect
 
-void Game::DisposeDeadObject()
-{
-	std::erase_if(_allObjects, [](const auto& obj) { return obj.get() == nullptr || obj->GetIsAlive() == false; });
-}
-
-void Game::FlushSpawnQueue()
-{
-	_allObjects.insert(_allObjects.end(), std::make_move_iterator(_pendingSpawns.begin()),
-					   std::make_move_iterator(_pendingSpawns.end()));
-	_pendingSpawns.clear();
-}
-
 //TODO: recheck rule of 3/5 for all classes
 
 void Game::OnGameStateChangedTo(const GameStateChangedToEvent& event)
 {
-	_gameState = event.state;
+	_gameConfig.gameState = event.state;
 
 	_isEnterLobbyPending = event.state == GameState::Lobby;
 }
 
 void Game::OnMatchStarted(const MatchStartedEvent&)
 {
-	ResetBattlefield();
+	_events->EmitEvent(GameResetEvent{});
 
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 	_events->EmitEvent(SetPauseEvent{.isPaused = false});
 }
 
-//NOTE: the mode is kept - demoting to Demo tears the link down, and nobody could reconnect
+//NOTE: the mode is kept - dropping it tears the link down, and nobody could reconnect
 void Game::EnterLobby()
 {
-	ResetBattlefield();
+	_events->EmitEvent(GameResetEvent{});
 	_events->EmitEvent(ShowMenuEvent{.show = false});
 }
 
@@ -194,7 +167,7 @@ void Game::Run()
 			_events->EmitEvent(FrameStartEvent{});
 			_events->EmitEvent(NetCommandUpdateEvent{.deltaTime = _deltaTime});
 			_events->EmitEvent(PreTickUpdateEvent{.deltaTime = _deltaTime});
-			const bool isRunning = !_userInput->IsPause() && _gameState != GameState::Lobby;
+			const bool isRunning = !_userInput->IsPause() && _gameConfig.gameState != GameState::Lobby;
 			TimeUtils::SetPaused(!isRunning);
 
 			if (isRunning && IsAuthority(_gameMode))

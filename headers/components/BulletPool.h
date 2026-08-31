@@ -1,9 +1,11 @@
 #pragma once
 
 #include "components/EventSystem.h"
+#include "utils/Uuid.h"
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <vector>
 
@@ -40,7 +42,7 @@ public:
 
 	void Subscribe();
 
-	[[nodiscard]] std::shared_ptr<BaseObj> SpawnBullet();
+	[[nodiscard]] std::shared_ptr<BaseObj> SpawnBullet(std::optional<Uuid> uuid);
 
 	void Clear();
 };

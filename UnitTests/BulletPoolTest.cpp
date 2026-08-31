@@ -53,7 +53,7 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	std::set<const BaseObj*> firstRound{};
 	for (size_t i = 0u; i < shots; ++i)
 	{
-		inFlight.push_back(_bulletPool->SpawnBullet());
+		inFlight.push_back(_bulletPool->SpawnBullet(std::nullopt));
 		firstRound.insert(inFlight.back().get());
 	}
 
@@ -72,7 +72,7 @@ TEST_F(BulletPoolTest, SpentBulletsAreHandedOutAgain)
 	std::set<const BaseObj*> secondRound{};
 	for (size_t i = 0u; i < shots; ++i)
 	{
-		inFlight.push_back(_bulletPool->SpawnBullet());
+		inFlight.push_back(_bulletPool->SpawnBullet(std::nullopt));
 		secondRound.insert(inFlight.back().get());
 	}
 

@@ -27,7 +27,7 @@ namespace
 
 UserInput::UserInput(const std::shared_ptr<EventSystem>& events, const WindowConfig& windowConfig,
 					 const SDL_Config& sdlConfig)
-	: _selectedGameMode{GameMode::Demo}
+	: _selectedGameMode{GameMode::OnePlayer}
 	, _windowSize{windowConfig.size}
 	, _events{events}
 	, _sdlConfig{sdlConfig}
@@ -408,6 +408,13 @@ void UserInput::Update()
 		if (event.type == SDL_EVENT_RENDER_DEVICE_RESET)
 		{
 			_events->EmitEvent(RenderDeviceResetEvent{});
+		}
+
+		//NOTE: unlike the reset above, this one does not come back - nothing to rebuild, so say why and leave
+		if (event.type == SDL_EVENT_RENDER_DEVICE_LOST)
+		{
+			Log::Error("render device lost and not recoverable: " + std::string{SDL_GetError()});
+			_isShutdown = true;
 		}
 
 		WindowDragEvents(event);
